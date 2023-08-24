@@ -24,6 +24,7 @@ import { ResultsComponent } from './components/results/results.component';
 import { SimulateComponent } from './components/simulate/simulate.component';
 import { PassresetComponent } from './components/auth/passreset/passreset.component';
 import { NouserComponent } from './components/auth/nouser/nouser.component';
+import { ButtonSettingsComponent } from './components/button-settings/button-settings.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { NouserComponent } from './components/auth/nouser/nouser.component';
     ResultsComponent,
     SimulateComponent,
     PassresetComponent,
-    NouserComponent
+    NouserComponent,
+    ButtonSettingsComponent
   ],
   imports: [BrowserModule, routing, FormsModule, HttpClientModule],
   providers: [],
