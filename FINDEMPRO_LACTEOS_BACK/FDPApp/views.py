@@ -1,14 +1,8 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 from scipy.stats import kstest
 import random
 
-
-def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
-
-
-def generate_random_numbers(request):
+def kstest_view(request):
     N = 10
 
     actual = []
@@ -21,3 +15,5 @@ def generate_random_numbers(request):
         'actual': actual,
         'ks_test_result': x,
     }
+
+    return render(request, 'myapp/kstest_template.html', context)
