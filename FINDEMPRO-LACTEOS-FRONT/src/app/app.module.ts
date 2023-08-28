@@ -10,9 +10,6 @@ import { Routes, RouterModule, Router} from '@angular/router';
 import myAppConfig from './config/my-app-config';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-
-/* login */
-import { routing } from "./app.routing";
 import { FooterComponent } from './components/footer/footer.component';
 import { MenuComponent } from './components/menu/menu.component';
 import { SettingsThemeComponent } from './components/settings-theme/settings-theme.component';
@@ -27,6 +24,24 @@ import { NouserComponent } from './components/auth/nouser/nouser.component';
 import { ButtonSettingsComponent } from './components/button-settings/button-settings.component';
 import { ChangeComponent } from './components/change/change.component';
 import { ProfileSettingsComponent } from './components/profile-settings/profile-settings.component';
+
+const routes: Routes = [
+  { path: "", component: AppComponent},
+  { path: "login", component: LoginComponent},
+  { path: "signup", component: SignupComponent },
+  { path: "home", component: HomeComponent},
+  { path: "instructions", component: InstructionsComponent},
+  { path: "product", component: CrudComponent},
+  { path: "profile", component: ProfileComponent},
+  { path: "profile/update", component: ProfileSettingsComponent},
+  { path: "results", component: ResultsComponent},
+  { path: "simulate", component: SimulateComponent},
+  { path: "change", component: ChangeComponent},
+  { path: "error", component: ErrorComponent, pathMatch: "full" },
+  { path: "passreset", component: PassresetComponent, pathMatch: "full" },
+  { path: "nouser", component: NouserComponent, pathMatch: "full" },
+];
+export const appRoutes: Routes = routes;
 
 @NgModule({
   declarations: [
@@ -50,7 +65,11 @@ import { ProfileSettingsComponent } from './components/profile-settings/profile-
     ChangeComponent,
     ProfileSettingsComponent
   ],
-  imports: [BrowserModule, routing, FormsModule, HttpClientModule],
+  imports: [
+    RouterModule.forRoot(routes),
+    BrowserModule, 
+    FormsModule, 
+    HttpClientModule],
   providers: [],
   bootstrap: [AppComponent]
 })
