@@ -13,6 +13,8 @@ import { SimulateComponent } from "./components/simulate/simulate.component";
 import { ErrorComponent } from "./components/error/error.component";
 import { PassresetComponent } from "./components/auth/passreset/passreset.component";
 import { NouserComponent } from "./components/auth/nouser/nouser.component";
+import { ChangeComponent } from "./components/change/change.component";
+import { ProfileSettingsComponent } from "./components/profile-settings/profile-settings.component";
 
 const appRoutes = [
   { path: "", component: AppComponent, pathMatch: "full" },
@@ -22,9 +24,10 @@ const appRoutes = [
   { path: "instructions", component: InstructionsComponent, pathMatch: "full" },
   { path: "product", component: CrudComponent, pathMatch: "full" },
   { path: "profile", component: ProfileComponent, pathMatch: "full" },
+  { path: "profile/update", component: ProfileSettingsComponent, pathMatch: "full" },
   { path: "results", component: ResultsComponent, pathMatch: "full" },
   { path: "simulate", component: SimulateComponent, pathMatch: "full" },
-  { path: "change", component: SimulateComponent, pathMatch: "full" },
+  { path: "change", component: ChangeComponent, pathMatch: "full" },
   { path: "error", component: ErrorComponent, pathMatch: "full" },
   { path: "passreset", component: PassresetComponent, pathMatch: "full" },
   { path: "nouser", component: NouserComponent, pathMatch: "full" },
