@@ -41,7 +41,6 @@
                                                     </div>
                                                 </div>
                                                 <!-- end carousel -->
-
                                             </div>
                                         </div>
                                     </div>
@@ -59,14 +58,26 @@
 
                                                 <div class="mb-3">
                                                     <label for="useremail" class="form-label">Correo electronico <span class="text-danger">*</span></label>
-                                                    <input type="email" class="form-control" id="useremail" placeholder="Introducir la dirección de correo electrónico" required>
+                                                    <input 
+                                                    type="email" 
+                                                    formControlName="email"
+                                                    class="form-control" 
+                                                    id="useremail" 
+                                                    placeholder="Introducir la dirección de correo electrónico" 
+                                                    required>
                                                     <div class="invalid-feedback">
                                                         Por favor ingresa tu correo electronico
                                                     </div>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label for="username" class="form-label">Nombre de usuario <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" id="username" placeholder="Introducir nombre de usuario" required>
+                                                    <input 
+                                                    type="text" 
+                                                    class="form-control" 
+                                                    id="username" 
+                                                    placeholder="Introducir nombre de usuario" 
+                                                    formControlName="username"
+                                                    required>
                                                     <div class="invalid-feedback">
                                                         Por favor ingresa tu nombre de usuario
                                                     </div>
@@ -75,7 +86,16 @@
                                                 <div class="mb-3">
                                                     <label class="form-label" for="password-input">Contrasenia</label>
                                                     <div class="position-relative auth-pass-inputgroup">
-                                                        <input type="password" class="form-control pe-5 password-input" onpaste="return false" placeholder="Introducir la contraseña" id="password-input" aria-describedby="passwordInput" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required>
+                                                        <input 
+                                                        type="password" 
+                                                        formControlName="password"
+                                                        class="form-control pe-5 password-input" 
+                                                        onpaste="return false" 
+                                                        placeholder="Introducir la contraseña" 
+                                                        id="password-input" 
+                                                        aria-describedby="passwordInput" 
+                                                        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" 
+                                                        required>
                                                         <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
                                                         <div class="invalid-feedback">
                                                             Por favor ingresa tu contrasenia
@@ -96,26 +116,15 @@
                                                 </div>
 
                                                 <div class="mt-4">
-                                                    <button class="btn btn-success w-100" type="submit">Registrarse</button>
+                                                    <button class="btn btn-success w-100" 
+                                                    (click)="signup()"
+                                                    type="submit">Registrarse</button>
                                                 </div>
-
-                                                <!-- <div class="mt-4 text-center">
-                                                    <div class="signin-other-title">
-                                                        <h5 class="fs-13 mb-4 title text-muted">Create account with</h5>
-                                                    </div>
-
-                                                    <div>
-                                                        <button type="button" class="btn btn-primary btn-icon waves-effect waves-light"><i class="ri-facebook-fill fs-16"></i></button>
-                                                        <button type="button" class="btn btn-danger btn-icon waves-effect waves-light"><i class="ri-google-fill fs-16"></i></button>
-                                                        <button type="button" class="btn btn-dark btn-icon waves-effect waves-light"><i class="ri-github-fill fs-16"></i></button>
-                                                        <button type="button" class="btn btn-info btn-icon waves-effect waves-light"><i class="ri-twitter-fill fs-16"></i></button>
-                                                    </div>
-                                                </div> -->
                                             </form>
                                         </div>
 
                                         <div class="mt-5 text-center">
-                                            <p class="mb-0">Ya tienes una cuenta ? <a href="auth-iniciarsesion.html" class="fw-semibold text-primary text-decoration-underline"> Iniciar sesion</a> </p>
+                                            <p class="mb-0">Ya tienes una cuenta ? <a href="/login" class="fw-semibold text-primary text-decoration-underline"> Iniciar sesion</a> </p>
                                         </div>
                                     </div>
                                 </div>

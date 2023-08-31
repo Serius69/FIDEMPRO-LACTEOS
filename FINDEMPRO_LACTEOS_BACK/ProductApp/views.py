@@ -30,3 +30,4 @@ def productApi(request,id=0):
         product=product.objects.get(id=id)
         product.delete()
         return JsonResponse("Deleted Successfully",safe=False)
+

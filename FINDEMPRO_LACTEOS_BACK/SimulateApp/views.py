@@ -34,7 +34,7 @@ def cargar_datos(request):
 
     for i in range(1, nmsimul + 1):
         # Aquí va la lógica de la simulación (reemplaza el contenido de la función simulate)
-
+        totalnoatendidos = 0 ##retirar
         # Al final de cada iteración, actualiza los valores de totalganancianeta y totalnoatendidos
 
     promedio_ganancia = totalganancianeta / nmsimul

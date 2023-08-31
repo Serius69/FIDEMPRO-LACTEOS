@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule ,CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
@@ -32,14 +32,15 @@ const routes: Routes = [
   { path: "home", component: HomeComponent},
   { path: "instructions", component: InstructionsComponent},
   { path: "product", component: CrudComponent},
+  { path: "product/:id", component: CrudComponent},
   { path: "profile", component: ProfileComponent},
   { path: "profile/update", component: ProfileSettingsComponent},
   { path: "results", component: ResultsComponent},
   { path: "simulate", component: SimulateComponent},
   { path: "change", component: ChangeComponent},
-  { path: "error", component: ErrorComponent, pathMatch: "full" },
-  { path: "passreset", component: PassresetComponent, pathMatch: "full" },
-  { path: "nouser", component: NouserComponent, pathMatch: "full" },
+  { path: "error", component: ErrorComponent},
+  { path: "passreset", component: PassresetComponent},
+  { path: "nouser", component: NouserComponent},
 ];
 export const appRoutes: Routes = routes;
 
@@ -71,6 +72,7 @@ export const appRoutes: Routes = routes;
     FormsModule, 
     HttpClientModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppModule { }

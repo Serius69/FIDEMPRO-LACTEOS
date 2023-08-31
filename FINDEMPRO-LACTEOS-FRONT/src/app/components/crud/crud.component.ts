@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
+import { VariableService } from '../../../services/variable.service';
 import { BehaviorSubject } from 'rxjs';
 
 @Component({
@@ -7,18 +8,18 @@ import { BehaviorSubject } from 'rxjs';
   templateUrl: './crud.component.html'
 })
 export class CrudComponent {
-  StudentArray : any[] = [];
+  VariableArray : any[] = [];
  
   name: string ="";
   address: string ="";
   fee: Number =0;
   description: string ="";
  
-  currentStudentID = "";
+  currentVariableID = "";
  
   constructor(private http: HttpClient )
   {
-    this.getAllStudent();
+    this.getAllVariable();
   }
  
   saveRecords()
@@ -33,33 +34,30 @@ export class CrudComponent {
     this.http.post("http://127.0.0.1:8000/product/new",bodyData).subscribe((resultData: any)=>
     {
         console.log(resultData);
-        alert("Student Registered Successfully");
-        this.getAllStudent();
+        alert("Variable Registered Successfully");
+        this.getAllVariable();
     });
   }
  
  
-  getAllStudent()
+  getAllVariable()
   {
     this.http.get("http://127.0.0.1:8000/product/getall")
     .subscribe((resultData: any)=>
     {
         console.log(resultData);
-        this.StudentArray = resultData;
+        this.VariableArray = resultData;
     });
   }
- 
  
   setUpdate(data: any)
   {
    this.name = data.name;
    this.address = data.address;
    this.fee = data.fee;
-   this.currentStudentID = data.id;
+   this.currentVariableID = data.id;
    
   }
- 
- 
  
   UpdateRecords()
   {
@@ -70,25 +68,25 @@ export class CrudComponent {
       "fee" : this.fee
     };
     
-    this.http.put("http://127.0.0.1:8000/student/"+ this.currentStudentID , bodyData).subscribe((resultData: any)=>
+    this.http.put("http://127.0.0.1:8000/Variable/"+ this.currentVariableID , bodyData).subscribe((resultData: any)=>
     {
         console.log(resultData);
-        alert("Student Registered Updateddd")
+        alert("Variable Registered Updateddd")
         this.name = '';
         this.address = '';
         this.fee  = 0;
-        this.getAllStudent();
+        this.getAllVariable();
     });
   }
 
 
   setDelete(data: any)
   {
-    this.http.delete("http://127.0.0.1:8000/student"+ "/"+ data.id).subscribe((resultData: any)=>
+    this.http.delete("http://127.0.0.1:8000/Variable"+ "/"+ data.id).subscribe((resultData: any)=>
     {
         console.log(resultData);
-        alert("Student Deletedddd")
-        this.getAllStudent();
+        alert("Variable Deletedddd")
+        this.getAllVariable();
     });
  
   }
