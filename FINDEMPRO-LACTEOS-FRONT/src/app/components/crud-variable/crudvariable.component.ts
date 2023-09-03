@@ -1,22 +1,21 @@
+import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
-import { VariableService } from '../../../services/variable.service';
-import { BehaviorSubject } from 'rxjs';
+import { Variable } from 'src/app/common/variable';
 
 @Component({
-  selector: 'app-crud',
-  templateUrl: './crud.component.html'
+  selector: 'app-change',
+  templateUrl: './crudvariable.component.html'
 })
-export class CrudComponent {
-  VariableArray : any[] = [];
+export class CrudVariableComponent{
  
-  name: string ="";
-  address: string ="";
-  fee: Number =0;
-  description: string ="";
- 
-  currentVariableID = "";
- 
+
+  VariableArray: Variable[] = [];
+  id = 0;
+  name = "";
+  type = "";
+  quantity = 0;
+  description = "";
+
   constructor(private http: HttpClient )
   {
     this.getAllVariable();
@@ -24,14 +23,13 @@ export class CrudComponent {
  
   saveRecords()
   {
-  
     let bodyData = {
       "name" : this.name,
-      "address" : this.address,
-      "fee" : this.fee
+      "type" : this.type,
+      "quantity" : this.quantity
     };
  
-    this.http.post("http://127.0.0.1:8000/product/new",bodyData).subscribe((resultData: any)=>
+    this.http.post("http://127.0.0.1:8000/variable/new",bodyData).subscribe((resultData: any)=>
     {
         console.log(resultData);
         alert("Variable Registered Successfully");
@@ -42,7 +40,7 @@ export class CrudComponent {
  
   getAllVariable()
   {
-    this.http.get("http://127.0.0.1:8000/product/getall")
+    this.http.get("http://127.0.0.1:8000/variable/getall")
     .subscribe((resultData: any)=>
     {
         console.log(resultData);
@@ -53,28 +51,28 @@ export class CrudComponent {
   setUpdate(data: any)
   {
    this.name = data.name;
-   this.address = data.address;
-   this.fee = data.fee;
-   this.currentVariableID = data.id;
+   this.type = data.type;
+   this.quantity = data.quantity;
+   this.id = data.id;
    
   }
- 
+
   UpdateRecords()
   {
     let bodyData = 
     {
       "name" : this.name,
-      "address" : this.address,
-      "fee" : this.fee
+      "type" : this.type,
+      "quantity" : this.quantity
     };
     
-    this.http.put("http://127.0.0.1:8000/Variable/"+ this.currentVariableID , bodyData).subscribe((resultData: any)=>
+    this.http.put("http://127.0.0.1:8000/variable/"+ this.id , bodyData).subscribe((resultData: any)=>
     {
         console.log(resultData);
         alert("Variable Registered Updateddd")
         this.name = '';
-        this.address = '';
-        this.fee  = 0;
+        this.type = '';
+        this.quantity  = 0;
         this.getAllVariable();
     });
   }
@@ -90,6 +88,5 @@ export class CrudComponent {
     });
  
   }
-
 
 }

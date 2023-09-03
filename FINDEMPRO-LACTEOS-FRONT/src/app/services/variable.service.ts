@@ -1,24 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Variable } from '../common/variable';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VariableService {
-  private apiUrl = 'tu_url_api';
+  private apiUrl = 'http://localhost:8000/api/v1';
 
   constructor(private http: HttpClient) { }
 
-  getVariables(): Observable<Variable[]> {
+  getAll(): Observable<Variable[]> {
     return this.http.get<Variable[]>(`${this.apiUrl}/variables`);
   }
 
-  updateVariable(variable: Variable): Observable<Variable> {
-    return this.http.put<Variable>(`${this.apiUrl}/variables/${variable.id}`, variable);
+  create(variable: Variable): Observable<Variable> {
+    return this.http.post<Variable>(`${this.apiUrl}/variables`, variable);
   }
 
-  deleteVariable(id: number): Observable<any> {
+  update(id: string, variable: Variable): Observable<Variable> {
+    return this.http.put<Variable>(`${this.apiUrl}/variables/${id}`, variable);
+  }
+
+  delete(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/variables/${id}`);
   }
 }

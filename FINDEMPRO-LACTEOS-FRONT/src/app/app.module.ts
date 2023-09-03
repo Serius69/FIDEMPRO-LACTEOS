@@ -14,7 +14,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { MenuComponent } from './components/menu/menu.component';
 import { SettingsThemeComponent } from './components/settings-theme/settings-theme.component';
 import { InstructionsComponent } from './components/instructions/instructions.component';
-import { CrudComponent } from './components/crud/crud.component';
+import { CrudComponent } from './components/crud-product/crudproduct.component';
 import { ErrorComponent } from './components/error/error.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { ResultsComponent } from './components/results/results.component';
@@ -22,7 +22,7 @@ import { SimulateComponent } from './components/simulate/simulate.component';
 import { PassresetComponent } from './components/auth/passreset/passreset.component';
 import { NouserComponent } from './components/auth/nouser/nouser.component';
 import { ButtonSettingsComponent } from './components/button-settings/button-settings.component';
-import { ChangeComponent } from './components/change/change.component';
+import { ChangeComponent } from './components/crud-variable/crudvariable.component';
 import { ProfileSettingsComponent } from './components/profile-settings/profile-settings.component';
 
 const routes: Routes = [

@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ChangeComponent } from './change.component';
+import { CrudVariableComponent } from './crudvariable.component';
 
-describe('ChangeComponent', () => {
-  let component: ChangeComponent;
-  let fixture: ComponentFixture<ChangeComponent>;
+describe('CrudVariableComponent', () => {
+  let component: CrudVariableComponent;
+  let fixture: ComponentFixture<CrudVariableComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ChangeComponent ]
+      declarations: [ CrudVariableComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ChangeComponent);
+    fixture = TestBed.createComponent(CrudVariableComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CrudComponent } from './crud.component';
+import { CrudComponent } from './crudproduct.component';
 
-describe('CrudComponent', () => {
+describe('CrudProductComponent', () => {
   let component: CrudComponent;
   let fixture: ComponentFixture<CrudComponent>;
 
