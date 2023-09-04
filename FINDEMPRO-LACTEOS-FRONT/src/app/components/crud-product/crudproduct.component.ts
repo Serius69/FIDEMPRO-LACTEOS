@@ -6,7 +6,7 @@ import { Product } from 'src/app/common/product';
   selector: 'app-crudproduct',
   templateUrl: './crudproduct.component.html'
 })
-export class CrudComponent {
+export class CrudProductComponent {
   ProductArray: Product[] = [];
   id = 0;
   name = "";

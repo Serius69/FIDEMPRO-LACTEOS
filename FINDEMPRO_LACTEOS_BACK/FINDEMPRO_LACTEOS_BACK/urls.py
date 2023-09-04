@@ -5,7 +5,13 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from users.views import UserViewSet, UserLogIn
+
+# views
+from SimulateApp import views
+from ProductApp import views
+from VariableApp import views
 from FDPApp import views
+
 
 # Create a router and register the UserViewSet
 router = DefaultRouter()
@@ -21,8 +27,10 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     
     # Your custom view
-    path('kstest/', views.kstest_view, name='kstest'),
-    
+    path('ks-test/', views.ks_test_view, name='ks_test_view'),
+    path('product/', views.ks_test_view, name='ks_test_view'),
+   
+
     # Redirect to the API root
     path('', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

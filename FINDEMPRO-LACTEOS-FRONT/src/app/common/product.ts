@@ -1,6 +1,10 @@
 export class Product {
-    id: number = 0;
-    name: string = "";
-    type: string = "";
-    description: string = "";
+    constructor(
+        public id: number = 0,
+        public name: string = "",
+        public type: string = "",
+        public description: string = "",
+        public lastUpdate: Date | undefined = undefined,
+        public status: number = 0
+    ) {}
 }

@@ -14,7 +14,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { MenuComponent } from './components/menu/menu.component';
 import { SettingsThemeComponent } from './components/settings-theme/settings-theme.component';
 import { InstructionsComponent } from './components/instructions/instructions.component';
-import { CrudComponent } from './components/crud-product/crudproduct.component';
+import { CrudProductComponent } from './components/crud-product/crudproduct.component';
 import { ErrorComponent } from './components/error/error.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { ResultsComponent } from './components/results/results.component';
@@ -22,7 +22,7 @@ import { SimulateComponent } from './components/simulate/simulate.component';
 import { PassresetComponent } from './components/auth/passreset/passreset.component';
 import { NouserComponent } from './components/auth/nouser/nouser.component';
 import { ButtonSettingsComponent } from './components/button-settings/button-settings.component';
-import { ChangeComponent } from './components/crud-variable/crudvariable.component';
+import { CrudVariableComponent } from './components/crud-variable/crudvariable.component';
 import { ProfileSettingsComponent } from './components/profile-settings/profile-settings.component';
 
 const routes: Routes = [
@@ -31,13 +31,14 @@ const routes: Routes = [
   { path: "signup", component: SignupComponent },
   { path: "home", component: HomeComponent},
   { path: "instructions", component: InstructionsComponent},
-  { path: "product", component: CrudComponent},
-  { path: "product/:id", component: CrudComponent},
+  { path: "product", component: CrudProductComponent},
+  { path: "product/:id", component: CrudProductComponent},
   { path: "profile", component: ProfileComponent},
-  { path: "profile/update", component: ProfileSettingsComponent},
+  { path: "profile/setting", component: ProfileSettingsComponent},
   { path: "results", component: ResultsComponent},
   { path: "simulate", component: SimulateComponent},
-  { path: "change", component: ChangeComponent},
+  { path: "variable", component: CrudVariableComponent},
+  { path: "variable/:id", component: CrudVariableComponent},
   { path: "error", component: ErrorComponent},
   { path: "passreset", component: PassresetComponent},
   { path: "nouser", component: NouserComponent},
@@ -55,7 +56,7 @@ export const appRoutes: Routes = routes;
     MenuComponent,
     SettingsThemeComponent,
     InstructionsComponent,
-    CrudComponent,
+    CrudProductComponent,
     ErrorComponent,
     ProfileComponent,
     ResultsComponent,
@@ -63,7 +64,7 @@ export const appRoutes: Routes = routes;
     PassresetComponent,
     NouserComponent,
     ButtonSettingsComponent,
-    ChangeComponent,
+    CrudVariableComponent,
     ProfileSettingsComponent
   ],
   imports: [

@@ -1,5 +1,4 @@
 <div class="main-content">
-
     <div class="page-content">
         <div class="container-fluid">
             <div class="profile-foreground position-relative mx-n4 mt-n4">
@@ -16,11 +15,11 @@
                     </div>
                     <!--end col-->
                     <div class="col">
-                        <div class="p-2">
-                            <h3 class="text-white mb-1">User</h3>
-                            <p class="text-white-75">Type user</p>
+                        <div class="p-2" *ngIf="user">
+                            <h3 class="text-white mb-1">{{ user.nombre }}</h3>
+                            <p class="text-white-75">{{ user.email }}</p>
                             <div class="hstack text-white-50 gap-1">
-                                <div class="me-2"><i class="ri-map-pin-user-line me-1 text-white-75 fs-16 align-middle"></i>California, United States</div>
+                                <div class="me-2"><i class="ri-map-pin-user-line me-1 text-white-75 fs-16 align-middle"></i>{{ user.email }}</div>
                                 <div>
                                     <i class="ri-building-line me-1 text-white-75 fs-16 align-middle"></i>.
                                 </div>
@@ -36,16 +35,9 @@
                                     <p class="fs-14 mb-0">Productos</p>
                                 </div>
                             </div>
-                            <!-- <div class="col-lg-6 col-4">
-                                <div class="p-2">
-                                    <h4 class="text-white mb-1">1.3K</h4>
-                                    <p class="fs-14 mb-0">Following</p>
-                                </div>
-                            </div> -->
                         </div>
                     </div>
                     <!--end col-->
-
                 </div>
                 <!--end row-->
             </div>
@@ -91,7 +83,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div class="card">
                                             <div class="card-body">
                                                 <h5 class="card-title mb-3">Info</h5>
@@ -100,29 +91,21 @@
                                                         <tbody>
                                                             <tr>
                                                                 <th class="ps-0" scope="row">Nombre completo :</th>
-                                                                <td class="text-muted">Nombre</td>
+                                                                <td class="text-muted">{{ user.nombre }}</td>
                                                             </tr>
                                                             <tr>
                                                                 <th class="ps-0" scope="row">E-mail :</th>
-                                                                <td class="text-muted">user@email.com</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <th class="ps-0" scope="row">Ubicacion :</th>
-                                                                <td class="text-muted">California, United States
-                                                                </td>
+                                                                <td class="text-muted">{{ user.email }}</td>
                                                             </tr>
                                                             <tr>
                                                                 <th class="ps-0" scope="row">Fecha de registro</th>
-                                                                <td class="text-muted">24 Nov 2021</td>
+                                                                <td class="text-muted">{{ user.nombre }}</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
                                             </div><!-- end card body -->
-                                        </div><!-- end card -->          
-
-                                       
-                                    </div>
+                                        </div><!-- end card -->  </div>
                                     <!--end col-->
                                     <div class="col-xxl-9">
                                         <div class="card">
@@ -143,64 +126,23 @@
                                                         </div>
                                                     </div>
                                                     <div class="swiper-wrapper">
-                                                        <div class="swiper-slide">
+                                                        <div class="swiper-slide" *ngFor="let product of ProductArray">
                                                             <div class="card profile-project-card profile-project-success mb-0">
                                                                 <div class="card-body p-4">
                                                                     <div class="d-flex">
                                                                         <div class="flex-grow-1 text-muted overflow-hidden">
                                                                             <h5 class="fs-14 text-truncate mb-1">
-                                                                                <a href="#" class="text-dark">Nombre producto</a>
+                                                <span class="fw-semibold text-dark">{{ product.lastUpdate }}</span>
                                                                             </h5>
-                                                                            <p class="text-muted text-truncate mb-0">Ultima Actualizacion : <span class="fw-semibold text-dark">4 hr Ago</span></p>
+                                                                            <p class="text-muted text-truncate mb-0">Ultima Actualizacion : 
+                                                                                <span class="fw-semibold text-dark">{{ product.lastUpdate }}</span>
+
+                                                                            </p>
                                                                         </div>
                                                                         <div class="flex-shrink-0 ms-2">
-                                                                            <div class="badge badge-soft-warning fs-10"> Falta informacion</div>
+                                                                            <div class="badge badge-soft-warning fs-10">{{ product.status }}</div>
                                                                         </div>
                                                                     </div>                                                                            
-                                                                </div>
-                                                                <!-- end card body -->
-                                                            </div>
-                                                            <!-- end card -->
-                                                        </div>
-                                                        <!-- end slide item -->
-                                                        <div class="swiper-slide">
-                                                            <div class="card profile-project-card profile-project-danger mb-0">
-                                                                <div class="card-body p-4">
-                                                                    <div class="d-flex">
-                                                                        <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                            <h5 class="fs-14 text-truncate mb-1">
-                                                                                <a href="#" class="text-dark">Nombre producto</a>
-                                                                            </h5>
-                                                                            <p class="text-muted text-truncate mb-0">Ultima Actualizacion : <span class="fw-semibold text-dark">4 hr Ago</span></p>
-                                                                        </div>
-                                                                        <div class="flex-shrink-0 ms-2">
-                                                                            <div class="badge badge-soft-success fs-10"> Informacion completa</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="d-flex mt-4">
-                                                                        
-                                                                    </div>
-                                                                </div><!-- end card body -->
-                                                            </div><!-- end card -->
-                                                        </div><!-- end slide item -->
-                                                        <div class="swiper-slide">
-                                                            <div class="card profile-project-card profile-project-warning mb-0">
-                                                                <div class="card-body p-4">
-                                                                    <div class="d-flex">
-                                                                        <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                            <h5 class="fs-14 text-truncate mb-1">
-                                                                                <a href="#" class="text-dark">Nombre producto</a>
-                                                                            </h5>
-                                                                            <p class="text-muted text-truncate mb-0"> Last Update : <span class="fw-semibold text-dark">1 hr Ago</span></p>
-                                                                        </div>
-                                                                        <div class="flex-shrink-0 ms-2">
-                                                                            <div class="badge badge-soft-warning fs-10"> Inprogress</div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="d-flex mt-4">
-                                                                        
-                                                                    </div>
                                                                 </div>
                                                                 <!-- end card body -->
                                                             </div>
@@ -212,13 +154,11 @@
                                             </div>
                                             <!-- end card body -->
                                         </div><!-- end card -->
-
                                     </div>
                                     <!--end col-->
                                 </div>
                                 <!--end row-->
-                            </div>
-                            
+                            </div>                            
                             <div class="tab-pane fade" id="projects" role="tabpanel">
                                 <div class="card">
                                     <div class="card-body">
@@ -270,149 +210,6 @@
                                                 <!-- end card -->
                                             </div>
                                             <!--end col-->
-                                            <div class="col-xxl-3 col-sm-6">
-                                                <div class="card profile-project-card profile-project-success">
-                                                    <div class="card-body p-4">
-                                                        <div class="d-flex">
-                                                            <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                <h5 class="fs-14 text-truncate"><a href="#" class="text-dark">ABC Project Customization</a></h5>
-                                                                <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">2 month Ago</span></p>
-                                                            </div>
-                                                            <div class="flex-shrink-0 ms-2">
-                                                                <div class="badge badge-soft-primary fs-10"> Progress</div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="d-flex mt-4">
-                                                            <div class="flex-grow-1">
-                                                                <div class="d-flex align-items-center gap-2">
-                                                                    <div>
-                                                                        <h5 class="fs-12 text-muted mb-0">Members :</h5>
-                                                                    </div>
-                                                                    <div class="avatar-group">
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-8.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-7.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-6.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <div class="avatar-title rounded-circle bg-primary">
-                                                                                    2+
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- end card body -->
-                                                </div>
-                                                <!-- end card -->
-                                            </div>
-                                            <!--end col-->
-                                            
-                                            <div class="col-xxl-3 col-sm-6">
-                                                <div class="card profile-project-card profile-project-warning">
-                                                    <div class="card-body p-4">
-                                                        <div class="d-flex">
-                                                            <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                <h5 class="fs-14 text-truncate"><a href="#" class="text-dark">Project Update</a></h5>
-                                                                <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">48 min Ago</span></p>
-                                                            </div>
-                                                            <div class="flex-shrink-0 ms-2">
-                                                                <div class="badge badge-soft-warning fs-10">Inprogress</div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="d-flex mt-4">
-                                                            <div class="flex-grow-1">
-                                                                <div class="d-flex align-items-center gap-2">
-                                                                    <div>
-                                                                        <h5 class="fs-12 text-muted mb-0">Members :</h5>
-                                                                    </div>
-                                                                    <div class="avatar-group">
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-6.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-5.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-4.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- end card body -->
-                                                </div>
-                                                <!-- end card -->
-                                            </div>
-                                            <!--end col-->
-                                             <div class="col-xxl-3 col-sm-6">
-                                                <div class="card profile-project-card profile-project-warning">
-                                                    <div class="card-body p-4">
-                                                        <div class="d-flex">
-                                                            <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                <h5 class="fs-14 text-truncate"><a href="#" class="text-dark">Project Update</a></h5>
-                                                                <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-dark">48 min Ago</span></p>
-                                                            </div>
-                                                            <div class="flex-shrink-0 ms-2">
-                                                                <div class="badge badge-soft-warning fs-10">Inprogress</div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="d-flex mt-4">
-                                                            <div class="flex-grow-1">
-                                                                <div class="d-flex align-items-center gap-2">
-                                                                    <div>
-                                                                        <h5 class="fs-12 text-muted mb-0">Members :</h5>
-                                                                    </div>
-                                                                    <div class="avatar-group">
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-6.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-5.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="avatar-group-item shadow">
-                                                                            <div class="avatar-xs">
-                                                                                <img src="assets/images/users/avatar-4.jpg" alt="" class="rounded-circle img-fluid" />
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- end card body -->
-                                                </div>
-                                                <!-- end card -->
-                                            </div>
-                                            <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="mt-4">
                                                     <ul class="pagination pagination-separated justify-content-center mb-0">
@@ -421,18 +218,6 @@
                                                         </li>
                                                         <li class="page-item active">
                                                             <a href="javascript:void(0);" class="page-link">1</a>
-                                                        </li>
-                                                        <li class="page-item">
-                                                            <a href="javascript:void(0);" class="page-link">2</a>
-                                                        </li>
-                                                        <li class="page-item">
-                                                            <a href="javascript:void(0);" class="page-link">3</a>
-                                                        </li>
-                                                        <li class="page-item">
-                                                            <a href="javascript:void(0);" class="page-link">4</a>
-                                                        </li>
-                                                        <li class="page-item">
-                                                            <a href="javascript:void(0);" class="page-link">5</a>
                                                         </li>
                                                         <li class="page-item">
                                                             <a href="javascript:void(0);" class="page-link"><i class="mdi mdi-chevron-right"></i></a>
@@ -524,19 +309,4 @@
 
         </div><!-- container-fluid -->
     </div><!-- End Page-content -->
-
-    <footer class="footer">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-sm-6">
-                    <script>document.write(new Date().getFullYear())</script> © UCB-SIS.
-                </div>
-                <div class="col-sm-6">
-                    <div class="text-sm-end d-none d-sm-block">
-                        Diseñado y desarrollado por Sergio Troche.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
 </div><!-- end main content-->

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'VariableApp',
     'ProductApp',
     'FDPApp',
+    'SimulateApp',
 ]
 
 MIDDLEWARE = [
