@@ -25,6 +25,7 @@ export class CrudProductComponent {
       type: this.type,
       quantity: this.quantity,
       description: this.description
+      
     };
 
     this.ProductService.create(bodyData).subscribe(resultData => {
