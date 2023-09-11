@@ -23,11 +23,6 @@ import { CryptoStatComponent } from './crypto/crypto-stat/crypto-stat.component'
 import { CurrenciesComponent } from './crypto/currencies/currencies.component';
 import { TopPerformersComponent } from './crypto/top-performers/top-performers.component';
 import { NewsFeedComponent } from './crypto/news-feed/news-feed.component';
-import { ProjectsStatComponent } from './projects/projects-stat/projects-stat.component';
-import { ActiveProjectComponent } from './projects/active-project/active-project.component';
-import { MyTaskComponent } from './projects/my-task/my-task.component';
-import { TeamMembersComponent } from './projects/team-members/team-members.component';
-import { NftStatComponent } from './nft/nft-stat/nft-stat.component';
 
 @NgModule({
   declarations: [
@@ -45,11 +40,6 @@ import { NftStatComponent } from './nft/nft-stat/nft-stat.component';
     CurrenciesComponent,
     TopPerformersComponent,
     NewsFeedComponent,
-    ProjectsStatComponent,
-    ActiveProjectComponent,
-    MyTaskComponent,
-    TeamMembersComponent,
-    NftStatComponent,
   ],
   imports: [
     CommonModule,
@@ -60,7 +50,7 @@ import { NftStatComponent } from './nft/nft-stat/nft-stat.component';
     FeatherModule.pick(allIcons),
     NgApexchartsModule,
   ],
-  exports: [BestSellingComponent, TopSellingComponent, RecentOrdersComponent, TopPagesComponent, StatComponent, AnalaticsStatComponent, CrmStatComponent, DealsStatusComponent, UpcomingActivitiesComponent, ClosingDealsComponent, CryptoStatComponent, CurrenciesComponent, TopPerformersComponent, NewsFeedComponent, ProjectsStatComponent, ActiveProjectComponent, MyTaskComponent, TeamMembersComponent,
-    NftStatComponent]
+  exports: [BestSellingComponent, TopSellingComponent, RecentOrdersComponent, TopPagesComponent, StatComponent, AnalaticsStatComponent, CrmStatComponent, DealsStatusComponent, UpcomingActivitiesComponent, ClosingDealsComponent, CryptoStatComponent, CurrenciesComponent, TopPerformersComponent, NewsFeedComponent,
+]
 })
 export class WidgetModule { }
