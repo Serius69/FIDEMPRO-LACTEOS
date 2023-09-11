@@ -37,8 +37,7 @@ export class UsersService {
 
   getUserLogged(): Observable<User> {
     const token = this.getToken();
-    // Aquí deberías hacer una solicitud para obtener el usuario actual basado en el token
-    // Ejemplo:
+    
     return this.http.get<User>(`${this.apiUrl}/usuario-actual`, {
       headers: {
         Authorization: `Bearer ${token}`,
