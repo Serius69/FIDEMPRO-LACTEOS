@@ -1,0 +1,39 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Range Area Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Basic Range Area Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="rangearea.series" [chart]="rangearea.chart" [plotOptions]="rangearea.plotOptions"
+                    [labels]="rangearea.labels" [colors]="rangearea.colors" [dataLabels]="rangearea.dataLabels"
+                    [title]="rangearea.title" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Combo</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <div>
+                    <apx-chart [series]="Combo.series" [chart]="Combo.chart" [plotOptions]="Combo.plotOptions"
+                        [labels]="Combo.labels" [colors]="Combo.colors" [dataLabels]="Combo.dataLabels"
+                        [title]="Combo.title" [stroke]="Combo.stroke" [fill]="Combo.fill"
+                        [forecastDataPoints]="Combo.forecastDataPoints" dir="ltr"></apx-chart>
+                </div>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->

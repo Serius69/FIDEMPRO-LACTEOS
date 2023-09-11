@@ -1,0 +1,39 @@
+<div class="">
+    <!-- card -->
+    <div class="card card-animate">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1 overflow-hidden">
+                    <p class="text-uppercase fw-medium text-muted text-truncate mb-0">{{title}}</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <h5 class="fs-14 mb-0"
+                        [ngClass]=" {'text-success': profit === 'up', 'text-danger': profit === 'down', 'text-muted': profit === 'equal'}">
+                        <i class="fs-13 align-middle float-start"
+                            [ngClass]=" {'ri-arrow-right-up-line': profit === 'up', 'ri-arrow-right-down-line': profit === 'down'}"></i>
+                        <span *ngIf="profit == 'up' || profit == 'equal'">+</span> <span
+                            *ngIf="profit == 'down'">-</span>{{persantage}} %
+                    </h5>
+                </div>
+            </div>
+            <div class="d-flex align-items-end justify-content-between mt-4">
+                <div>
+                    <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                        <span *ngIf="title == 'TOTAL EARNINGS' || title == 'MY BALANCE'">$</span><span [CountTo]="value"
+                            class="counter-value" [from]="0" [duration]="1"></span><span
+                            *ngIf="title == 'TOTAL EARNINGS' || title == 'MY BALANCE'">K</span><span
+                            *ngIf="title == 'CUSTOMERS'">M</span>
+                    </h4>
+                    <a href="javascript:void(0);" class="text-decoration-underline">{{link}}</a>
+                </div>
+                <div class="avatar-sm flex-shrink-0">
+                    <span class="avatar-title rounded fs-3"
+                        [ngClass]=" { 'bg-success-subtle': icon === 'bx-dollar-circle', 'bg-info-subtle': icon === 'bx-shopping-bag', 'bg-warning-subtle ': icon === 'bx-user-circle', 'bg-primary-subtle ': icon === 'bx-wallet'}">
+                        <i class="bx {{icon}}"
+                            [ngClass]=" { 'text-success': icon === 'bx-dollar-circle', 'text-info': icon === 'bx-shopping-bag', 'text-warning ': icon === 'bx-user-circle', 'text-primary ': icon === 'bx-wallet'}"></i>
+                    </span>
+                </div>
+            </div>
+        </div><!-- end card body -->
+    </div><!-- end card -->
+</div><!-- end col -->

@@ -1,0 +1,212 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Line Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Basic Line Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="basicLineChart.series" [chart]="basicLineChart.chart"
+                    [markers]="basicLineChart.markers" [dataLabels]="basicLineChart.dataLabels"
+                    [stroke]="basicLineChart.stroke" [colors]="basicLineChart.colors" [title]="basicLineChart.title"
+                    [xaxis]="basicLineChart.xaxis"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Zoomable Timeseries</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="zoomableTimeseriesChart.series" [chart]="zoomableTimeseriesChart.chart"
+                    [markers]="zoomableTimeseriesChart.markers" [dataLabels]="zoomableTimeseriesChart.dataLabels"
+                    [stroke]="zoomableTimeseriesChart.stroke" [colors]="zoomableTimeseriesChart.colors"
+                    [title]="zoomableTimeseriesChart.title" [xaxis]="zoomableTimeseriesChart.xaxis"
+                    [colors]="zoomableTimeseriesChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Line with Data Labels</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="lineWithDataLabelsChart.series" [chart]="lineWithDataLabelsChart.chart"
+                    [xaxis]="lineWithDataLabelsChart.xaxis" [stroke]="lineWithDataLabelsChart.stroke"
+                    [colors]="lineWithDataLabelsChart.colors" [dataLabels]="lineWithDataLabelsChart.dataLabels"
+                    [legend]="lineWithDataLabelsChart.legend" [markers]="lineWithDataLabelsChart.markers"
+                    [grid]="lineWithDataLabelsChart.grid" [yaxis]="lineWithDataLabelsChart.yaxis"
+                    [title]="lineWithDataLabelsChart.title" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Dashed Line</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="dashedLineChart.series" [chart]="dashedLineChart.chart"
+                    [colors]="dashedLineChart.colors" [dataLabels]="dashedLineChart.dataLabels"
+                    [stroke]="dashedLineChart.stroke" [series]="dashedLineChart.series" [title]="dashedLineChart.title"
+                    [markers]="dashedLineChart.markers" [xaxis]="dashedLineChart.xaxis"
+                    [tooltip]="dashedLineChart.tooltip" [grid]="dashedLineChart.grid" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Line with Annotations</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="lineAnnotationsChart.series" [chart]="lineAnnotationsChart.chart"
+                    [xaxis]="lineAnnotationsChart.xaxis" [dataLabels]="lineAnnotationsChart.dataLabels"
+                    [grid]="lineAnnotationsChart.grid" [stroke]="lineAnnotationsChart.stroke"
+                    [title]="lineAnnotationsChart.title" [labels]="lineAnnotationsChart.labels"
+                    [annotations]="lineAnnotationsChart.annotations" [colors]="lineAnnotationsChart.colors"
+                    dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Brush Charts</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <div>
+                    <div id="brushchart_line2" class="apex-charts" dir="ltr">
+                        <apx-chart [series]="brushLineChart.series" [chart]="brushLineChart.chart"
+                            [xaxis]="brushLineChart.xaxis" [dataLabels]="brushLineChart.dataLabels"
+                            [colors]="brushLineChart.colors" [fill]="brushLineChart.fill"
+                            [markers]="brushLineChart.markers" [stroke]="brushLineChart.stroke"></apx-chart>
+                    </div>
+                    <div id="brushchart_line" class="apex-charts" dir="ltr">
+                        <apx-chart [series]="brushAreaChart.series" [chart]="brushAreaChart.chart"
+                            [xaxis]="brushAreaChart.xaxis" [colors]="brushAreaChart.colors" [fill]="brushAreaChart.fill"
+                            [yaxis]="brushAreaChart.yaxis" dir="ltr"></apx-chart>
+                    </div>
+                </div>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Stepline Charts</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="stepLineChart.series" [chart]="stepLineChart.chart"
+                    [markers]="stepLineChart.markers" [stroke]="stepLineChart.stroke"
+                    [dataLabels]="stepLineChart.dataLabels" [title]="stepLineChart.title"
+                    [colors]="stepLineChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Gradient Charts</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="gradientChart.series" [chart]="gradientChart.chart" [xaxis]="gradientChart.xaxis"
+                    [dataLabels]="gradientChart.dataLabels" [grid]="gradientChart.grid" [stroke]="gradientChart.stroke"
+                    [title]="gradientChart.title" [markers]="gradientChart.markers" [yaxis]="gradientChart.yaxis"
+                    [fill]="gradientChart.fill" dir="ltr">
+                </apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Missing Data/ Null Value Charts</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="missingDataChart.series" [chart]="missingDataChart.chart"
+                    [xaxis]="missingDataChart.xaxis" [stroke]="missingDataChart.stroke"
+                    [labels]="missingDataChart.labels" [title]="missingDataChart.title"
+                    [colors]="missingDataChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Syncing Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <div id="syncingchart-line" class="apex-charts" dir="ltr">
+                    <apx-chart [series]="SyncingLineChart.series" [chart]="SyncingLineChart.chart"
+                        [colors]="SyncingLineChart.colors" [dataLabels]="SyncingLineChart.dataLabels"
+                        [stroke]="SyncingLineChart.stroke" [markers]="SyncingLineChart.markers"
+                        [tooltip]="SyncingLineChart.tooltip" [grid]="SyncingLineChart.grid"
+                        [yaxis]="SyncingLineChart.yaxis" [xaxis]="SyncingLineChart.xaxis" dir="ltr"></apx-chart>
+                </div>
+                <div id="syncingchart-area" class="apex-charts" dir="ltr">
+                    <apx-chart [series]="Syncingline2Chart.series" [chart]="Syncingline2Chart.chart"
+                        [colors]="Syncingline2Chart.colors" [dataLabels]="Syncingline2Chart.dataLabels"
+                        [stroke]="Syncingline2Chart.stroke" [markers]="Syncingline2Chart.markers"
+                        [tooltip]="Syncingline2Chart.tooltip" [grid]="Syncingline2Chart.grid"
+                        [yaxis]="Syncingline2Chart.yaxis" [xaxis]="Syncingline2Chart.xaxis" dir="ltr"></apx-chart>
+                </div>
+                <div id="syncingchart-area" class="apex-charts" dir="ltr">
+                    <apx-chart [series]="SyncingAreaChart.series" [chart]="SyncingAreaChart.chart"
+                        [colors]="SyncingAreaChart.colors" [dataLabels]="SyncingAreaChart.dataLabels"
+                        [stroke]="SyncingAreaChart.stroke" [markers]="SyncingAreaChart.markers"
+                        [tooltip]="SyncingAreaChart.tooltip" [grid]="SyncingAreaChart.grid"
+                        [yaxis]="SyncingAreaChart.yaxis" [xaxis]="SyncingAreaChart.xaxis" dir="ltr"></apx-chart>
+                </div>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+</div>
+<!-- end row -->

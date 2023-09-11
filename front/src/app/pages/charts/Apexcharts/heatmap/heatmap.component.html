@@ -1,0 +1,71 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Heatmap Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Basic Heatmap Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+              <div class="live-preview">
+                <apx-chart [series]="basicHeatmapChart.series" [chart]="basicHeatmapChart.chart"
+                [dataLabels]="basicHeatmapChart.dataLabels" [title]="basicHeatmapChart.title"
+                [colors]="basicHeatmapChart.colors" [stroke]="basicHeatmapChart.stroke" dir="ltr"></apx-chart>
+              </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Heatmap - Multiple Series</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="multipleSeriesChart.series" [chart]="multipleSeriesChart.chart"
+            [dataLabels]="multipleSeriesChart.dataLabels" [colors]="multipleSeriesChart.colors"
+            [grid]="multipleSeriesChart.grid" [xaxis]="multipleSeriesChart.xaxis"
+            [title]="multipleSeriesChart.title" [stroke]="multipleSeriesChart.stroke" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Heatmap Color Range</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="colorRangeChart.series" [chart]="colorRangeChart.chart"
+            [dataLabels]="colorRangeChart.dataLabels" [plotOptions]="colorRangeChart.plotOptions"
+            [title]="colorRangeChart.title" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Heatmap - Range Without Shades</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="rangeWithoutShadesChart.series" [chart]="rangeWithoutShadesChart.chart"
+            [dataLabels]="rangeWithoutShadesChart.dataLabels" [colors]="rangeWithoutShadesChart.colors"
+            [stroke]="rangeWithoutShadesChart.stroke" [plotOptions]="rangeWithoutShadesChart.plotOptions"
+            [xaxis]="rangeWithoutShadesChart.xaxis" [title]="rangeWithoutShadesChart.title" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

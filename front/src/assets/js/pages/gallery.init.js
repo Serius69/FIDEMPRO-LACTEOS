@@ -1,1 +1,65 @@
-document.addEventListener("DOMContentLoaded",function(e){document.querySelector(".gallery-wrapper")&&(t=new Isotope(".gallery-wrapper",{itemSelector:".element-item",layoutMode:"fitRows"}));var t,r=document.querySelector(".categories-filter"),r=(r&&r.addEventListener("click",function(e){!matchesSelector(e.target,"li a")||(e=e.target.getAttribute("data-filter"))&&t.arrange({filter:e})}),document.querySelectorAll(".categories-filter"));r&&Array.from(r).forEach(function(e){var t;(t=e).addEventListener("click",function(e){matchesSelector(e.target,"li a")&&(t.querySelector(".active").classList.remove("active"),e.target.classList.add("active"))})})});var lightbox=GLightbox({selector:".image-popup",title:!1});
+/*
+Template Name: Velzon - Admin & Dashboard Template
+Author: Themesbrand
+Website: https://Themesbrand.com/
+Contact: Themesbrand@gmail.com
+File: Gallery init
+*/
+
+// Portfolio Filter
+document.addEventListener("DOMContentLoaded", function (event) {
+
+    // init Isotope
+    var GalleryWrapper = document.querySelector('.gallery-wrapper');
+    if (GalleryWrapper) {
+        var iso = new Isotope('.gallery-wrapper', {
+            itemSelector: '.element-item',
+            layoutMode: 'fitRows'
+        });
+    }
+
+    // bind filter button click
+    var filtersElem = document.querySelector('.categories-filter');
+    if (filtersElem) {
+        filtersElem.addEventListener('click', function (event) {
+            // only work with buttons
+            if (!matchesSelector(event.target, 'li a')) {
+                return;
+            }
+            var filterValue = event.target.getAttribute('data-filter');
+            if (filterValue) {
+                // use matching filter function
+                iso.arrange({
+                    filter: filterValue
+                });
+            }
+        });
+    }
+
+    // change is-checked class on buttons
+    var buttonGroups = document.querySelectorAll('.categories-filter');
+    if (buttonGroups) {
+        Array.from(buttonGroups).forEach(function (btnGroup) {
+            var buttonGroup = btnGroup;
+            radioButtonGroup(buttonGroup);
+        });
+    }
+
+    function radioButtonGroup(buttonGroup) {
+        buttonGroup.addEventListener('click', function (event) {
+            // only work with buttons
+            if (!matchesSelector(event.target, 'li a')) {
+                return;
+            }
+            buttonGroup.querySelector('.active').classList.remove('active');
+            event.target.classList.add('active');
+        });
+    }
+});
+
+
+// GLightbox Popup
+var lightbox = GLightbox({
+    selector: '.image-popup',
+    title: false,
+});

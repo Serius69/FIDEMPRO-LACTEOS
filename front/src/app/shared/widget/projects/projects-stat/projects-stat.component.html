@@ -1,0 +1,19 @@
+<div class="card card-animate">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="avatar-sm flex-shrink-0">
+                <span class="avatar-title  text-primary rounded-2 fs-2" [ngClass]=" { 'bg-primary-subtle': icon === 'briefcase', 'bg-warning-subtle': icon === 'award', 'bg-info-subtle': icon === 'clock'}">
+                    <i-feather name="{{icon}}" class="feather-icon-align" [ngClass]=" { 'text-primary': icon === 'briefcase', 'text-warning': icon === 'award', 'text-info': icon === 'clock'}"></i-feather>
+                </span>
+            </div>
+            <div class="flex-grow-1 overflow-hidden ms-3">
+                <p class="text-uppercase fw-medium text-muted text-truncate mb-3">{{title}}</p>
+                <div class="d-flex align-items-center mb-3">
+                    <h4 class="fs-4 flex-grow-1 mb-0"><span [CountTo]="value" class="counter-value" [from]="0" [duration]="1"></span></h4>
+                    <span class="badge fs-12" [ngClass]=" {'bg-success-subtle text-success': profit === 'up', 'bg-danger-subtle text-danger': profit === 'down'}"><i class="fs-13 align-middle me-1" [ngClass]=" {'ri-arrow-up-s-line': profit === 'up', 'ri-arrow-down-s-line': profit === 'down'}"></i>{{persantage}} %</span>
+                </div>
+                <p class="text-muted text-truncate mb-0">{{month}} this month</p>
+            </div>
+        </div>
+    </div><!-- end card body -->
+</div>

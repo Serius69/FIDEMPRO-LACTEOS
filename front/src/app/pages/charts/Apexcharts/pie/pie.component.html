@@ -1,0 +1,147 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Pie Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Simple Pie Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="simplePieChart.series" [chart]="simplePieChart.chart"
+            [labels]="simplePieChart.labels" [legend]="simplePieChart.legend"
+            [dataLabels]="simplePieChart.dataLabels" [responsive]="simplePieChart.responsive"
+            [colors]="simplePieChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Simple Donut Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="simpleDonutChart.series" [chart]="simpleDonutChart.chart"
+            [labels]="simpleDonutChart.labels" [responsive]="simpleDonutChart.responsive"
+            [legend]="simpleDonutChart.legend" [dataLabels]="simpleDonutChart.dataLabels"
+            [colors]="simpleDonutChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Updating Donut Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+              <div>
+                <apx-chart [series]="updatingDonutChart.series" [chart]="updatingDonutChart.chart"
+                [labels]="updatingDonutChart.labels" [grid]="updatingDonutChart.grid"
+                [plotOptions]="updatingDonutChart.plotOptions" [legend]="updatingDonutChart.legend" [colors]="updatingDonutChart.colors" dir="ltr"></apx-chart>
+
+                  <div class="d-flex align-items-start flex-wrap gap-2 justify-content-center mt-4">
+                      <button id="add" class="btn btn-light btn-sm">
+                          + ADD
+                      </button>
+
+                      <button id="remove" class="btn btn-light btn-sm">
+                          - REMOVE
+                      </button>
+
+                      <button id="randomize" class="btn btn-light btn-sm">
+                          RANDOMIZE
+                      </button>
+
+                      <button id="reset" class="btn btn-light btn-sm">
+                          RESET
+                      </button>
+                  </div>
+              </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Monochrome Pie Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="monochromePieChart.series" [chart]="monochromePieChart.chart"
+            [labels]="monochromePieChart.labels" [theme]="monochromePieChart.theme"
+            [plotOptions]="monochromePieChart.plotOptions" [title]="monochromePieChart.title" [dataLabels]="monochromePieChart.dataLabels" [legend]="monochromePieChart.legend" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Gradient Donut Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="gradientDonutChart.series" [chart]="gradientDonutChart.chart"
+            [plotOptions]="gradientDonutChart.plotOptions" [dataLabels]="gradientDonutChart.dataLabels"
+            [fill]="gradientDonutChart.fill" [title]="gradientDonutChart.title"
+            [legend]="gradientDonutChart.legend" [colors]="gradientDonutChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Patterned Donut Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="patternedDonutChart.series" [chart]="patternedDonutChart.chart"
+            [stroke]="patternedDonutChart.stroke" [plotOptions]="patternedDonutChart.plotOptions"
+            [labels]="patternedDonutChart.labels" [dataLabels]="patternedDonutChart.dataLabels"
+            [fill]="patternedDonutChart.fill" [states]="patternedDonutChart.states"
+            [theme]="patternedDonutChart.theme" [title]="patternedDonutChart.title"
+            [legend]="patternedDonutChart.legend" [colors]="patternedDonutChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Pie Chart with Image Fill</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="pieWithImageChart.series" [chart]="pieWithImageChart.chart"
+            [colors]="pieWithImageChart.colors" [fill]="pieWithImageChart.fill"
+            [stroke]="pieWithImageChart.stroke" [dataLabels]="pieWithImageChart.dataLabels"
+            [legend]="pieWithImageChart.legend" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

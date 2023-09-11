@@ -1,0 +1,39 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Polararea Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Basic Polararea Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart class="apex-charts" [series]="basicPolarChart.series" [chart]="basicPolarChart.chart"
+            [labels]="basicPolarChart.labels" [stroke]="basicPolarChart.stroke"
+            [fill]="basicPolarChart.fill" [legend]="basicPolarChart.legend"
+            [colors]="basicPolarChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">PolarArea Monochrome</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart class="apex-charts" [series]="monochromeChart.series" [chart]="monochromeChart.chart"
+            [labels]="monochromeChart.labels" [title]="monochromeChart.title"
+            [theme]="monochromeChart.theme" [fill]="monochromeChart.fill" [yaxis]="monochromeChart.yaxis"
+            [stroke]="monochromeChart.stroke" [legend]="monochromeChart.legend"
+            [plotOptions]="monochromeChart.plotOptions" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

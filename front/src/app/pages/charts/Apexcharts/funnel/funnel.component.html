@@ -1,0 +1,39 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Funnel Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Funnel Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="Funnel.series" [chart]="Funnel.chart" [dataLabels]="Funnel.dataLabels"
+                    [title]="Funnel.title" [colors]="Funnel.colors" [stroke]="Funnel.stroke" [xaxis]="Funnel.xaxis"
+                    [legend]="Funnel.legend" [plotOptions]="Funnel.plotOptions" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Pyramid</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <div id="chart">
+                    <apx-chart [series]="Pyramid.series" [chart]="Pyramid.chart" [dataLabels]="Pyramid.dataLabels"
+                        [plotOptions]="Pyramid.plotOptions" [xaxis]="Pyramid.xaxis" [colors]="Pyramid.colors"
+                        [title]="Pyramid.title" [legend]="Pyramid.legend" class="apex-charts"></apx-chart>
+                </div>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->

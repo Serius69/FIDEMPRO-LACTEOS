@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { CookieService } from "ngx-cookie-service";
-import { User } from "../common/user"; // Asegúrate de importar la clase User si es necesario
+import { User } from "../core/common/user"; // Asegúrate de importar la clase User si es necesario
 
 @Injectable({
   providedIn: "root",

@@ -1,0 +1,75 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Mixed Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Line & Column Charts</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="lineChart.series" [chart]="lineChart.chart" [yaxis]="lineChart.yaxis"
+            [xaxis]="lineChart.xaxis" [labels]="lineChart.labels" [stroke]="lineChart.stroke"
+            [title]="lineChart.title" [dataLabels]="lineChart.dataLabels" [fill]="lineChart.fill"
+            [tooltip]="lineChart.tooltip" [colors]="lineChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Multiple Y-Axis Charts</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="multipleYAxisChart.series" [chart]="multipleYAxisChart.chart"
+            [xaxis]="multipleYAxisChart.xaxis" [markers]="multipleYAxisChart.markers"
+            [stroke]="multipleYAxisChart.stroke" [yaxis]="multipleYAxisChart.yaxis"
+            [dataLabels]="multipleYAxisChart.dataLabels" [title]="multipleYAxisChart.title"
+            [fill]="multipleYAxisChart.fill" [tooltip]="multipleYAxisChart.tooltip"
+            [legend]="multipleYAxisChart.legend" [colors]="multipleYAxisChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Line & Area Charts</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="lineAreaChart.series" [chart]="lineAreaChart.chart" [yaxis]="lineAreaChart.yaxis"
+            [xaxis]="lineAreaChart.xaxis" [labels]="lineAreaChart.labels" [stroke]="lineAreaChart.stroke"
+            [markers]="lineAreaChart.markers" [fill]="lineAreaChart.fill" [tooltip]="lineAreaChart.tooltip" [colors]="lineAreaChart.colors" dir="ltr">
+        </apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Line, Column & Area Charts</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="lineColumnAreaChart.series" [chart]="lineColumnAreaChart.chart"
+            [yaxis]="lineColumnAreaChart.yaxis" [xaxis]="lineColumnAreaChart.xaxis"
+            [labels]="lineColumnAreaChart.labels" [stroke]="lineColumnAreaChart.stroke"
+            [plotOptions]="lineColumnAreaChart.plotOptions" [markers]="lineColumnAreaChart.markers"
+            [fill]="lineColumnAreaChart.fill" [tooltip]="lineColumnAreaChart.tooltip"
+            [colors]="lineColumnAreaChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

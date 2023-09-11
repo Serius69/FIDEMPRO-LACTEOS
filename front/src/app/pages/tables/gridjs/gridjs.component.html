@@ -1,0 +1,368 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Grid Js" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0 flex-grow-1">Base Example</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <div class="search-box d-inline-block mb-2">
+                <input type="text" class="form-control search" placeholder="Search..." [(ngModel)]="service.searchTerm">
+                <i class="ri-search-line search-icon"></i>
+            </div>
+          
+            <div class="table-responsive">
+              <table class="table table-gridjs">
+                <thead>
+                <tr>
+                <th class="sort" sortable="id" (sort)="onSort($event)">ID</th>
+                <th class="sort" sortable="name" (sort)="onSort($event)">Name</th>
+                <th class="sort" sortable="email" (sort)="onSort($event)">Email</th>
+                <th class="sort" sortable="position" (sort)="onSort($event)">Position</th>
+                <th class="sort" sortable="company" (sort)="onSort($event)">Company</th>
+                <th class="sort" sortable="country" (sort)="onSort($event)">Country</th>
+                <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let data of gridjsList$ | async">
+                  <td><ngb-highlight [result]="data.id" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.name" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.email" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.position" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.company" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.country" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td data-column-id="actions" class="gridjs-td"><span><a href="javascript:void(0);" class="text-reset text-decoration-underline">Details</a></span></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row justify-content-md-between align-items-md-center">
+              <div class="col-sm-12 col-md-5">
+                  <div class="dataTables_info mb-2" id="tickets-table_info" role="status" aria-live="polite">
+                      Showing
+                      {{service.startIndex}} to
+                      {{service.endIndex}} of {{service.totalRecords}}
+                      entries
+                  </div>
+              </div>
+              <!-- Pagination -->
+              <div class="col-sm-12 col-md-5">
+                  <div class="text-md-right float-md-end gridjs-pagination">
+                    <ngb-pagination
+                    [collectionSize]="(total$ | async)!" [(page)]="service.page" [pageSize]="service.pageSize">
+                  </ngb-pagination>
+                  </div>
+              </div>
+              <!-- End Pagination -->
+            </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Card Table</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+			<div class="table-card">
+            <div class="table-responsive">
+              <table class="table table-gridjs">
+                <thead>
+                <tr>
+                <th class="sort" data-sort="name">Name</th>
+                <th class="sort" data-sort="email">Email</th>
+                <th class="sort" data-sort="position">Position</th>
+                <th class="sort" data-sort="company">Company</th>
+                <th class="sort" data-sort="country">Country</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let data of gridjsList$ | async">
+
+                  <td><ngb-highlight [result]="data.name" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.email" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.position" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.company" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.country" [term]="service.searchTerm"></ngb-highlight></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+			</div>
+            <div class="row justify-content-md-between align-items-md-center mt-3">
+              <div class="col-sm-12 col-md-5">
+                  <div class="dataTables_info mb-2" id="tickets-table_info" role="status" aria-live="polite">
+                      Showing
+                      {{service.startIndex}} to
+                      {{service.endIndex}} of {{service.totalRecords}}
+                      entries
+                  </div>
+              </div>
+              <!-- Pagination -->
+              <div class="col-sm-12 col-md-5">
+                  <div class="text-md-right float-md-end gridjs-pagination">
+                    <ngb-pagination
+                    [collectionSize]="(total$ | async)!" [(page)]="service.page" [pageSize]="service.pageSize">
+                  </ngb-pagination>
+                  </div>
+              </div>
+              <!-- End Pagination -->
+            </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Pagination</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-gridjs">
+                <thead>
+                <tr>
+                <th class="sort" data-sort="id">ID</th>
+                <th class="sort" data-sort="name">Name</th>
+                <th class="sort" data-sort="email">Email</th>
+                <th class="sort" data-sort="position">Position</th>
+                <th class="sort" data-sort="company">Company</th>
+                <th class="sort" data-sort="country">Country</th>
+                <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let data of gridjsList$ | async">
+                  <td><ngb-highlight [result]="data.id" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.name" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.email" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.position" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.company" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.country" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td data-column-id="actions" class="gridjs-td"><span><button type="button" class="btn btn-sm btn-light">Details</button></span></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row justify-content-md-between align-items-md-center">
+              <div class="col-sm-12 col-md-5">
+                  <div class="dataTables_info mb-2" id="tickets-table_info" role="status" aria-live="polite">
+                      Showing
+                      {{service.startIndex}} to
+                      {{service.endIndex}} of {{service.totalRecords}}
+                      entries
+                  </div>
+              </div>
+              <!-- Pagination -->
+              <div class="col-sm-12 col-md-5">
+                  <div class="text-md-right float-md-end gridjs-pagination">
+                    <ngb-pagination
+                    [collectionSize]="(total$ | async)!" [(page)]="service.page" [pageSize]="service.pageSize">
+                  </ngb-pagination>
+                  </div>
+              </div>
+              <!-- End Pagination -->
+            </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Search</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+       
+                <div class="search-box d-inline-block mb-2">
+                    <input type="text" class="form-control search" placeholder="Search..." [(ngModel)]="service.searchTerm">
+                    <i class="ri-search-line search-icon"></i>
+               
+
+          </div>
+          
+            <div class="table-responsive">
+              <table class="table table-gridjs">
+                <thead>
+                <tr>
+                <th class="sort" data-sort="id">ID</th>
+                <th class="sort" data-sort="name">Name</th>
+                <th class="sort" data-sort="email">Email</th>
+                <th class="sort" data-sort="position">Position</th>
+                <th class="sort" data-sort="company">Company</th>
+                <th class="sort" data-sort="country">Country</th>
+                <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let data of gridjsList$ | async">
+                  <td><ngb-highlight [result]="data.id" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.name" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.email" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.position" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.company" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.country" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td data-column-id="actions" class="gridjs-td"><span><a href="javascript:void(0);" class="text-reset text-decoration-underline">Details</a></span></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row justify-content-md-between align-items-md-center">
+              <div class="col-sm-12 col-md-5">
+                  <div class="dataTables_info mb-2" id="tickets-table_info" role="status" aria-live="polite">
+                      Showing
+                      {{service.startIndex}} to
+                      {{service.endIndex}} of {{service.totalRecords}}
+                      entries
+                  </div>
+              </div>
+              <!-- Pagination -->
+              <div class="col-sm-12 col-md-5">
+                  <div class="text-md-right float-md-end gridjs-pagination">
+                    <ngb-pagination
+                    [collectionSize]="(total$ | async)!" [(page)]="service.page" [pageSize]="service.pageSize">
+                  </ngb-pagination>
+                  </div>
+              </div>
+              <!-- End Pagination -->
+            </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Sorting</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-gridjs">
+                <thead>
+                <tr>
+                <th class="sort" data-sort="name" sortable="name" (sort)="onSort($event)">Name</th>
+                <th class="sort" data-sort="email" sortable="email" (sort)="onSort($event)">Email</th>
+                <th class="sort" data-sort="position" sortable="position" (sort)="onSort($event)">Position</th>
+                <th class="sort" data-sort="company" sortable="company" (sort)="onSort($event)">Company</th>
+                <th class="sort" data-sort="country" sortable="country" (sort)="onSort($event)">Country</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let data of gridjsList$ | async">
+                  <td><ngb-highlight [result]="data.name" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.email" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.position" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.company" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.country" [term]="service.searchTerm"></ngb-highlight></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row justify-content-md-between align-items-md-center">
+              <div class="col-sm-12 col-md-5">
+                  <div class="dataTables_info mb-2" id="tickets-table_info" role="status" aria-live="polite">
+                      Showing
+                      {{service.startIndex}} to
+                      {{service.endIndex}} of {{service.totalRecords}}
+                      entries
+                  </div>
+              </div>
+              <!-- Pagination -->
+              <div class="col-sm-12 col-md-5">
+                  <div class="text-md-right float-md-end gridjs-pagination">
+                    <ngb-pagination
+                    [collectionSize]="(total$ | async)!" [(page)]="service.page" [pageSize]="service.pageSize">
+                  </ngb-pagination>
+                  </div>
+              </div>
+              <!-- End Pagination -->
+            </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Loading State</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-gridjs">
+                <thead>
+                <tr>
+                <th class="sort" data-sort="name" sortable="name" (sort)="onSort($event)">Name</th>
+                <th class="sort" data-sort="email" sortable="email" (sort)="onSort($event)">Email</th>
+                <th class="sort" data-sort="position" sortable="position" (sort)="onSort($event)">Position</th>
+                <th class="sort" data-sort="company" sortable="company" (sort)="onSort($event)">Company</th>
+                <th class="sort" data-sort="country" sortable="country" (sort)="onSort($event)">Country</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let data of gridjsList$ | async">
+                  <td><ngb-highlight [result]="data.name" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.email" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.position" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.company" [term]="service.searchTerm"></ngb-highlight></td>
+                  <td><ngb-highlight [result]="data.country" [term]="service.searchTerm"></ngb-highlight></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row justify-content-md-between align-items-md-center">
+              <div class="col-sm-12 col-md-5">
+                  <div class="dataTables_info mb-2" id="tickets-table_info" role="status" aria-live="polite">
+                      Showing
+                      {{service.startIndex}} to
+                      {{service.endIndex}} of {{service.totalRecords}}
+                      entries
+                  </div>
+              </div>
+              <!-- Pagination -->
+              <div class="col-sm-12 col-md-5">
+                  <div class="text-md-right float-md-end gridjs-pagination">
+                    <ngb-pagination
+                    [collectionSize]="(total$ | async)!" [(page)]="service.page" [pageSize]="service.pageSize">
+                  </ngb-pagination>
+                  </div>
+              </div>
+              <!-- End Pagination -->
+            </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

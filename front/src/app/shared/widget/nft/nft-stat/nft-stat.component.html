@@ -1,0 +1,36 @@
+<div class="card card-height-100">
+    <div class="card-body">
+        <div class="float-end">
+            <div class="dropdown card-header-dropdown" ngbDropdown>
+                <a class="text-reset dropdown-btn arrow-none" href="javascript:void(0);" data-bs-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false" ngbDropdownToggle>
+                    <span class="text-muted fs-18"><i class="mdi mdi-dots-vertical align-middle"></i></span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
+                    <a class="dropdown-item" href="javascript:void(0);">Today</a>
+                    <a class="dropdown-item" href="javascript:void(0);">Last Week</a>
+                    <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                    <a class="dropdown-item" href="javascript:void(0);">Current Year</a>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="avatar-sm flex-shrink-0">
+                <span class="avatar-title bg-info-subtle rounded fs-3">
+                    <i class="bx {{icon}} text-info"></i>
+                </span>
+            </div>
+            <div class="flex-grow-1 ps-3">
+                <h5 class="text-muted text-uppercase fs-13 mb-0">{{title}}</h5>
+            </div>
+        </div>
+        <div class="mt-4 pt-1">
+            <h4 class="fs-22 fw-semibold ff-secondary mb-0">$<span [CountTo]="value" class="counter-value" [from]="0"
+                    [duration]="1"></span></h4>
+            <p class="mt-4 mb-0 text-muted"><span class="badge bg-{{bg_color}}-subtle text-{{bg_color}} mb-0 me-1"> <i
+                        class="align-middle"
+                        [ngClass]=" { 'ri-arrow-up-line': profit === 'up','ri-arrow-down-line': profit === 'down'}"></i>
+                    {{persantage}} % </span> vs. previous month</p>
+        </div>
+    </div>
+</div>

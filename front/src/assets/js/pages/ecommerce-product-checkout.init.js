@@ -1,1 +1,88 @@
-document.addEventListener("DOMContentLoaded",function(){var e=document.querySelectorAll('[data-plugin="choices"]');e&&Array.from(e).forEach(function(e){new Choices(e,{placeholderValue:"This is a placeholder set in the config",searchPlaceholderValue:"Search results here"})})});var CheckoutTab=document.querySelectorAll(".checkout-tab");CheckoutTab&&Array.from(document.querySelectorAll(".checkout-tab")).forEach(function(o){o.querySelectorAll(".nexttab")&&Array.from(o.querySelectorAll(".nexttab")).forEach(function(t){var e=o.querySelectorAll('button[data-bs-toggle="pill"]');e&&(Array.from(e).forEach(function(e){e.addEventListener("show.bs.tab",function(e){e.target.classList.add("done")})}),t.addEventListener("click",function(){var e=t.getAttribute("data-nexttab");e&&document.getElementById(e).click()}))});document.querySelectorAll(".previestab")&&Array.from(o.querySelectorAll(".previestab")).forEach(function(r){r.addEventListener("click",function(){var e=r.getAttribute("data-previous");if(e){var t=r.closest("form").querySelectorAll(".custom-nav .done").length;if(t){for(var o=t-1;o<t;o++)r.closest("form").querySelectorAll(".custom-nav .done")[o]&&r.closest("form").querySelectorAll(".custom-nav .done")[o].classList.remove("done");document.getElementById(e).click()}}})});var r=o.querySelectorAll('button[data-bs-toggle="pill"]');r&&Array.from(r).forEach(function(e,t){e.setAttribute("data-position",t),e.addEventListener("click",function(){0<o.querySelectorAll(".custom-nav .done").length&&Array.from(o.querySelectorAll(".custom-nav .done")).forEach(function(e){e.classList.remove("done")});for(var e=0;e<=t;e++)r[e].classList.contains("active")?r[e].classList.remove("done"):r[e].classList.add("done")})})});
+/*
+Template Name: Velzon - Admin & Dashboard Template
+Author: Themesbrand
+Website: https://Themesbrand.com/
+Contact: Themesbrand@gmail.com
+File: Ecommerce product Js File
+*/
+
+
+// Chocies Select plugin
+document.addEventListener('DOMContentLoaded', function () {
+    var genericExamples = document.querySelectorAll('[data-plugin="choices"]');
+    if (genericExamples) {
+        Array.from(genericExamples).forEach(function (genericExamp) {
+            var element = genericExamp;
+            new Choices(element, {
+                placeholderValue: 'This is a placeholder set in the config',
+                searchPlaceholderValue: 'Search results here',
+            });
+        });
+    }
+});
+
+// Checkout nav tab
+var CheckoutTab = document.querySelectorAll(".checkout-tab");
+if (CheckoutTab) {
+    Array.from(document.querySelectorAll(".checkout-tab")).forEach(function (form) {
+
+        // next tab
+        var NextTab = form.querySelectorAll(".nexttab");
+        if (NextTab) {
+            Array.from(form.querySelectorAll(".nexttab")).forEach(function (nextButton) {
+                var tabEl = form.querySelectorAll('button[data-bs-toggle="pill"]');
+                if (tabEl) {
+                    Array.from(tabEl).forEach(function (item) {
+                        item.addEventListener('show.bs.tab', function (event) {
+                            event.target.classList.add('done');
+                        });
+                    });
+                    nextButton.addEventListener("click", function () {
+                        var nextTab = nextButton.getAttribute('data-nexttab');
+                        if (nextTab) {
+                            document.getElementById(nextTab).click();
+                        }
+                    });
+                }
+
+            });
+        }
+
+        //Pervies tab
+        var previesTab = document.querySelectorAll(".previestab");
+        if (previesTab) {
+            Array.from(form.querySelectorAll(".previestab")).forEach(function (prevButton) {
+
+                prevButton.addEventListener("click", function () {
+                    var prevTab = prevButton.getAttribute('data-previous');
+                    if (prevTab) {
+                        var totalDone = prevButton.closest("form").querySelectorAll(".custom-nav .done").length;
+                        if (totalDone) {
+                            for (var i = totalDone - 1; i < totalDone; i++) {
+                                (prevButton.closest("form").querySelectorAll(".custom-nav .done")[i]) ? prevButton.closest("form").querySelectorAll(".custom-nav .done")[i].classList.remove('done'): '';
+                            }
+                            document.getElementById(prevTab).click();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Step number click
+        var tabButtons = form.querySelectorAll('button[data-bs-toggle="pill"]');
+        if (tabButtons) {
+            Array.from(tabButtons).forEach(function (button, i) {
+                button.setAttribute("data-position", i);
+                button.addEventListener("click", function () {
+                    (form.querySelectorAll(".custom-nav .done").length > 0) ?
+                    Array.from(form.querySelectorAll(".custom-nav .done")).forEach(function (doneTab) {
+                        doneTab.classList.remove('done');
+                    }): '';
+                    for (var j = 0; j <= i; j++) {
+                        tabButtons[j].classList.contains('active') ? tabButtons[j].classList.remove('done') : tabButtons[j].classList.add('done');
+                    }
+                });
+            });
+        }
+    });
+}

@@ -1,0 +1,244 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Form Advanced" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Custom country select input</h4>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div>
+                            <label class="form-label">Simple select example</label>
+                            <ng-select [items]="Default" bindLabel="countryName" [(ngModel)]="selectedAccount"></ng-select>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Select input flag with img & name</label>
+                            <ng-select appearance="outline" [searchable]="false" [clearable]="false" labelForId="heroId">
+                                <ng-option value="batman" *ngFor="let data of Default">
+                                    <img src="{{data.flagImg}}" alt="country flag" class="options-flagimg" height="20">
+                                    {{data.countryName}}
+                                    <span class="countrylist-codeno text-muted">{{data.countryCode}}</span>
+                                </ng-option>
+                            </ng-select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div>
+                            <label class="form-label">Select input with buttons & Flag with number</label>
+                            <div class="input-group" data-input-flag>
+                                <button class="btn btn-light border" type="button" data-bs-toggle="dropdown" aria-expanded="false"><img src="assets/images/flags/us.svg" alt="flag img" height="20" class="country-flagimg rounded"><span class="ms-2 country-codeno">+ 1</span></button>
+                                <input type="text" class="form-control rounded-end flag-input" value="" placeholder="Enter number" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" />
+                                <div class="dropdown-menu w-100">
+                                    <div class="p-2 px-3 pt-1 searchlist-input">
+                                        <input type="text" class="form-control form-control-sm border search-countryList" placeholder="Search country name or country code..." />
+                                    </div>
+                                    <ul class="list-unstyled dropdown-menu-list mb-0"></ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Select input with buttons & Flag</label>
+                            <div class="input-group" data-input-flag data-option-countrycode="false">
+                                <button class="btn btn-light border" type="button" data-bs-toggle="dropdown" aria-expanded="false"><img src="assets/images/flags/us.svg" alt="flag img" height="20" class="country-flagimg rounded"><span class="ms-2 country-codeno">+ 1</span></button>
+                                <input type="text" class="form-control rounded-end flag-input" value="" placeholder="Enter number" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" />
+                                <div class="dropdown-menu w-100">
+                                    <div class="p-2 px-3 pt-1 searchlist-input">
+                                        <input type="text" class="form-control form-control-sm border search-countryList" placeholder="Search country name or country code..." />
+                                    </div>
+                                    <ul class="list-unstyled dropdown-menu-list mb-0"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end card body -->
+        </div>
+        <!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Form Input Spin</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+              <div>
+                  <div class="row gy-4">
+                      <div class="col-sm-6">
+                          <div>
+                              <h5 class="fs-13 fw-medium text-muted">Default</h5>
+
+                              <div class="input-step">
+                                  <button type="button" class="minus" (click)="decrement()">–</button>
+                                  <input type="number" class="product-quantity" value="{{counter}}" min="0" max="100" readonly>
+                                  <button type="button" class="plus" (click)="increment()">+</button>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div class="col-sm-6">
+                          <div>
+                              <h5 class="fs-13 fw-medium text-muted">Light</h5>
+                              <div class="input-step light">
+                                  <button type="button" class="minus" (click)="lightdecrement()">–</button>
+                                  <input type="number" class="product-quantity" value="{{lightcounter}}" min="0" max="100" readonly>
+                                  <button type="button" class="plus" (click)="lightincrement()">+</button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <!-- end row -->
+
+                  <div class="mt-4 pt-2">
+                      <div class="row gy-4">
+                          <div class="col-sm-6">
+                              <div>
+                                  <h5 class="fs-13 fw-medium text-muted">Default (Full width)</h5>
+                                  <div class="input-step full-width">
+                                      <button type="button" class="minus" (click)="defaultfulldecrement()">–</button>
+                                      <input type="number" class="product-quantity" value="{{defaultfullcounter}}" min="0" max="100" readonly>
+                                      <button type="button" class="plus" (click)="defaultfullincrement()">+</button>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="col-sm-6">
+                              <div>
+                                  <h5 class="fs-13 fw-medium text-muted">Light (Full width)</h5>
+                                  <div class="input-step full-width light">
+                                      <button type="button" class="minus" (click)="lightfulldecrement()">–</button>
+                                      <input type="number" class="product-quantity" value="{{lightfullcounter}}" min="0" max="100" readonly>
+                                      <button type="button" class="plus" (click)="lightfullincrement()">+</button>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                      <!-- end row -->
+                  </div>
+
+                  <div class="row mt-4 pt-2">
+                      <h5 class="fs-13 fw-medium text-muted">Colored</h5>
+                      <div class="d-flex flex-wrap align-items-start gap-2">
+                          <div class="input-step step-primary">
+                              <button type="button" class="minus" (click)="primarydecrement()">–</button>
+                              <input type="number" class="product-quantity" value="{{primarycounter}}" min="0" max="100" readonly>
+                              <button type="button" class="plus" (click)="primaryincrement()">+</button>
+                          </div>
+                          <div class="input-step step-secondary">
+                              <button type="button" class="minus" (click)="secondarydecrement()">–</button>
+                              <input type="number" class="product-quantity" value="{{secondarycounter}}" min="0" max="100" readonly>
+                              <button type="button" class="plus" (click)="secondaryincrement()">+</button>
+                          </div>
+                          <div class="input-step step-success">
+                              <button type="button" class="minus" (click)="successdecrement()">–</button>
+                              <input type="number" class="product-quantity" value="{{successcounter}}" min="0" max="100" readonly>
+                              <button type="button" class="plus" (click)="successincrement()">+</button>
+                          </div>
+                          <div class="input-step step-info">
+                              <button type="button" class="minus" (click)="infodecrement()">–</button>
+                              <input type="number" class="product-quantity" value="{{infocounter}}" min="0" max="100" readonly>
+                              <button type="button" class="plus" (click)="infoincrement()">+</button>
+                          </div>
+                          <div class="input-step step-warning">
+                              <button type="button" class="minus" (click)="warningdecrement()">–</button>
+                              <input type="number" class="product-quantity" value="{{warningcounter}}" min="0" max="100" readonly>
+                              <button type="button" class="plus" (click)="warningincrement()">+</button>
+                          </div>
+                          <div class="input-step step-danger">
+                              <button type="button" class="minus" (click)="dangerdecrement()">–</button>
+                              <input type="number" class="product-quantity" value="{{dangercounter}}" min="0" max="100" readonly>
+                              <button type="button" class="plus" (click)="dangerincrement()">+</button>
+                          </div>
+
+                      </div>
+                  </div>
+              </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Auto Complete</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+              <div>
+                  <div class="row g-3">
+                      <div class="col-lg-6">
+                          <div>
+                            <label for="autoCompleteFruit" class="text-muted">Search Result of Fruit Names</label>
+                            <ng-autocomplete
+                                [data]="Fruit"
+                                [searchKeyword]="keyword"
+                                placeholder="Enter the Fruit Name"
+                                (selected)='selectEvent($event)'
+                                (inputChanged)='onChangeSearch($event)'
+                                (inputFocused)='onFocused($event)'
+                                historyIdentifier="Fruit"
+                                [itemTemplate]="itemTemplate"
+                                [notFoundTemplate]="notFoundTemplate">
+                            </ng-autocomplete>
+
+                            <ng-template #itemTemplate let-item>
+                                <a [innerHTML]="item.name"></a>
+                            </ng-template>
+
+                            <ng-template #notFoundTemplate let-notFound>
+                                <div [innerHTML]="notFound"></div>
+                            </ng-template>
+                          </div>
+                      </div>
+                      <!-- end col -->
+                      <div class="col-lg-6">
+                          <div>
+                              <label for="autoCompleteCars" class="text-muted">Search Result of Car Names</label>
+                              <ng-autocomplete
+                                [data]="Cars"
+                                [searchKeyword]="keyword"
+                                placeholder="Enter the Cars Name"
+                                (selected)='selectEvent($event)'
+                                (inputChanged)='onChangeSearch($event)'
+                                (inputFocused)='onFocused($event)'
+                                historyIdentifier="Cars"
+                                [itemTemplate]="itemTemplate"
+                                [notFoundTemplate]="notFoundTemplate">
+                            </ng-autocomplete>
+
+                            <ng-template #itemTemplate let-item>
+                                <a [innerHTML]="item.name"></a>
+                            </ng-template>
+
+                            <ng-template #notFoundTemplate let-notFound>
+                                <div [innerHTML]="notFound"></div>
+                            </ng-template>
+                          </div>
+                      </div>
+                      <!-- end col -->
+                  </div>
+                  <!-- end row -->
+              </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

@@ -1,0 +1,20 @@
+<div id="layout-wrapper" (window:resize)="onResize($event)">
+    <!-- Top Bar -->
+    <app-topbar (mobileMenuButtonClicked)="onToggleMobileMenu()"></app-topbar>
+    <!-- Side Bar -->
+    <app-sidebar *ngIf="issemiboxLayoutRequested()"></app-sidebar>
+    <app-two-column-sidebar *ngIf="isTwoColumnLayoutRequested()"></app-two-column-sidebar>
+    <app-sidebar class="d-none" id="side-bar"></app-sidebar>
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+                <!-- Main Content -->
+                <router-outlet></router-outlet>
+            </div>
+        </div>
+        <!-- Footer -->
+        <app-footer></app-footer>
+    </div>
+</div>
+<!-- Right Side Bar -->
+<app-rightsidebar (settingsButtonClicked)="onSettingsButtonClicked()"></app-rightsidebar>

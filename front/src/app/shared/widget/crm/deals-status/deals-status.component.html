@@ -1,0 +1,22 @@
+<table class="table table-borderless table-hover table-nowrap align-middle mb-0">
+    <thead class="table-light">
+        <tr class="text-muted">
+            <th scope="col">Name</th>
+            <th scope="col" style="width: 20%;">Last Contacted</th>
+            <th scope="col" >Sales Representative</th>
+            <th scope="col" style="width: 16%;">Status</th>
+            <th scope="col" style="width: 12%;">Deal Value</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+        <tr *ngFor="let data of DealsStatus">
+            <td>{{data.name}}</td>
+            <td>{{data.date}}</td>
+            <td><img src="{{data.profile}}" alt="" class="avatar-xs rounded-circle me-2">
+                <a href="javascript:void(0);" class="text-body fw-medium">{{data.userName}}</a></td>
+            <td><span class="badge bg-success-subtle text-success p-2" [ngClass]=" { 'bg-warning-subtle text-warning': data.status === 'Intro Call', 'bg-danger-subtle text-danger': data.status === 'Stuck', 'bg-info-subtle text-info ': data.status === 'New Lead'}">{{data.status}}</span></td>
+            <td><div class="text-nowrap">${{data.value}}</div></td>
+        </tr>
+    </tbody><!-- end tbody -->
+</table><!-- end table -->

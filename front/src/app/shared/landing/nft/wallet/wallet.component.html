@@ -1,0 +1,26 @@
+ <!-- start wallet -->
+ <section class="section" id="wallet">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <h2 class="mb-3 fw-semibold lh-base">Connect NFT Marketplace</h2>
+                    <p class="text-muted">A non-fungible token is a non-interchangeable unit of data stored on a blockchain, a form of digital ledger, that can be sold and traded.</p>
+                </div>
+            </div><!-- end col -->
+        </div><!-- end row -->
+
+        <div class="row g-4">
+            <div class="col-lg-4" *ngFor="let data of walletData">
+                <div class="card text-center border shadow-none">
+                    <div class="card-body py-5 px-4">
+                        <img src="{{data.image}}" alt="" height="55" class="mb-3 pb-2">
+                        <h5>{{data.title}}</h5>
+                        <p class="text-muted pb-1">{{data.content}}</p>
+                        <a href="javascript:void(0);" class="btn {{data.btn_color}}">Connect Wallet</a>
+                    </div>
+                </div>
+            </div><!-- end col -->
+        </div><!-- end row -->
+    </div><!-- end container -->
+</section><!-- end wallet -->

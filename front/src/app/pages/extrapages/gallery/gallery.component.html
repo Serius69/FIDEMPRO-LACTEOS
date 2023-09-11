@@ -1,0 +1,67 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Gallery" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-lg-12">
+      <div class="">
+          <div class="card-body">
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="text-center">
+                          <ul class="list-inline categories-filter animation-nav" id="filter">
+                              <li class="list-inline-item"><a class="categories active" data-filter="*" (click)="activeCategory('all')"
+                                [ngClass]="{'active': galleryFilter ==='all'}">All</a></li>
+                              <li class="list-inline-item"><a class="categories" data-filter=".project" (click)="activeCategory('project')" [ngClass]="{'active': galleryFilter ==='project'}">Project</a></li>
+                              <li class="list-inline-item"><a class="categories" data-filter=".designing" (click)="activeCategory('designing')" [ngClass]="{'active': galleryFilter ==='designing'}">Designing</a></li>
+                              <li class="list-inline-item"><a class="categories" data-filter=".photography" (click)="activeCategory('photography')" [ngClass]="{'active': galleryFilter ==='photography'}">Photography</a></li>
+                              <li class="list-inline-item"><a class="categories" data-filter=".development" (click)="activeCategory('development')" [ngClass]="{'active': galleryFilter ==='development'}">Development</a></li>
+                          </ul>
+                      </div>
+
+                      <div class="row gallery-wrapper">
+                          <div class="element-item col-xxl-3 col-xl-4 col-sm-6 project designing development"  data-category="designing development" *ngFor="let data of filterredImages; let i=index">
+                              <div class="gallery-box card">
+                                  <div class="gallery-container">
+                                      <a class="image-popup" title="">
+                                          <img class="gallery-img img-fluid mx-auto" src="{{data.img}}" alt=""/>
+                                          <div class="gallery-overlay" (click)="open(i)">
+                                              <h5 class="overlay-caption">{{data.title}}</h5>
+                                          </div>
+                                      </a>
+                                  </div>
+
+                                  <div class="box-content">
+                                      <div class="d-flex align-items-center mt-1">
+                                          <div class="flex-grow-1 text-muted">by <a href="javascript:void(0);" class="text-body text-truncate">{{data.auther}}</a></div>
+                                          <div class="flex-shrink-0">
+                                              <div class="d-flex gap-3">
+                                                  <button type="button" class="btn btn-sm fs-12 btn-link text-body text-decoration-none px-0">
+                                                      <i class="ri-thumb-up-fill text-muted align-bottom me-1"></i> {{data.likes}}
+                                                  </button>
+                                                  <button type="button" class="btn btn-sm fs-12 btn-link text-body text-decoration-none px-0">
+                                                      <i class="ri-question-answer-fill text-muted align-bottom me-1"></i> {{data.comments}}
+                                                  </button>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                      <!-- end row -->
+
+                      <div class="text-center my-2">
+                          <a href="javascript:void(0);" class="text-success"><i class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load More </a>
+                      </div>
+                  </div>
+              </div>
+              <!-- end row -->
+          </div>
+          <!-- ene card body -->
+      </div>
+      <!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

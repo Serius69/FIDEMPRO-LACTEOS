@@ -1,0 +1,337 @@
+<div class="chat-wrapper d-lg-flex gap-1 mx-n4 mt-n4 p-1">
+    <div class="file-manager-sidebar border" id="menusidebar">
+        <div class="p-4 d-flex flex-column h-100">
+            <div class="mb-3">
+                <button class="btn btn-success w-100" data-bs-target="#createProjectModal" data-bs-toggle="modal"
+                    (click)="openProjectModal(projectcontent)"><i class="ri-add-line align-bottom"></i> Add
+                    Project</button>
+            </div>
+
+            <ngx-simplebar class="px-4 mx-n4" style="height: calc(100vh - 468px);">
+                <ul class="to-do-menu list-unstyled" id="projectlist-data">
+                    <li *ngFor="let data of projectList">
+                        <a data-bs-toggle="collapse" href="javascript:void(0);" class="nav-link fs-13 active"
+                            (click)="collapse.toggle()" [attr.aria-expanded]="!data.coll">{{data.title}}</a>
+                        <div class="collapse show" id="velzonAdmin" #collapse="ngbCollapse" [(ngbCollapse)]="data.coll">
+                            <ul class="mb-0 sub-menu list-unstyled ps-3 vstack gap-2 mb-2">
+                                <li *ngFor="let data of data.subItem">
+                                    <a href="javascript:void(0);"><i
+                                            class="ri-stop-mini-fill align-middle fs-15 text-{{data.color}}"></i>
+                                        {{data.version}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </ngx-simplebar>
+
+
+            <div class="mt-auto text-center">
+                <img src="assets/images/task.png" alt="Task" class="img-fluid" />
+            </div>
+        </div>
+    </div>
+    <!--end side content-->
+    <div class="file-manager-content w-100 p-4 pb-0">
+        <div class="row mb-4">
+            <div class="col-auto order-1 d-block d-lg-none">
+                <button type="button" class="btn btn-soft-success btn-icon btn-sm fs-16 file-menu-btn">
+                    <i class="ri-menu-2-fill align-bottom"></i>
+                </button>
+            </div>
+            <div class="col-sm order-3 order-sm-2 mt-3 mt-sm-0">
+                <h5 class="fw-semibold mb-0">Velzon Admin & Dashboard <span
+                        class="badge bg-primary align-bottom ms-2">v2.0.0</span></h5>
+            </div>
+
+            <div class="col-auto order-2 order-sm-3 ms-auto">
+                <div class="hstack gap-2">
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <button class="btn btn-icon fw-semibold btn-soft-danger"><i
+                                class="ri-arrow-go-back-line"></i></button>
+                        <button class="btn btn-icon fw-semibold btn-soft-success"><i
+                                class="ri-arrow-go-forward-line"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-3 bg-light rounded mb-4">
+            <div class="row g-2">
+                <div class="col-lg-auto">
+                    <select class="form-control" data-choices data-choices-search-false name="choices-select-sortlist"
+                        id="choices-select-sortlist" (click)="SortFilter();">
+                        <option value="">Sort</option>
+                        <option value="Aid">By ID</option>
+                        <option value="Atask">By Name</option>
+                    </select>
+                </div>
+                <div class="col-lg-auto">
+                    <select class="form-control" data-choices data-choices-search-false name="choices-select-status"
+                        id="choices-select-status" (click)="taskFilter();">
+                        <option value="">All Tasks</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Inprogress">Inprogress</option>
+                        <option value="Pending">Pending</option>
+                        <option value="New">New</option>
+                    </select>
+                </div>
+                <div class="col-lg">
+                    <div class="search-box">
+                        <input type="text" id="searchTaskList" class="form-control search"
+                            placeholder="Search task name" [(ngModel)]="term">
+                        <i class="ri-search-line search-icon"></i>
+                    </div>
+                </div>
+                <div class="col-lg-auto">
+                    <button class="btn btn-primary createTask" type="button" data-bs-toggle="modal"
+                        data-bs-target="#createTask" (click)="openModal(content)">
+                        <i class="ri-add-fill align-bottom"></i> Add Tasks
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="todo-content position-relative px-4 mx-n4" id="todo-content">
+            <div class="todo-task" id="todo-task">
+                <div class="table-responsive">
+                    <table mat-table #dataTable fxFlex [dataSource]="todoDatas | filter:term | sortBy:sortBy:sortField"
+                        cdkDropList (cdkDropListDropped)="todoTable($event)"
+                        class="table align-middle position-relative table-nowrap" style="border-color:'#e9ebec;'">
+
+                        <ng-container matColumnDef="task">
+                            <th mat-header-cell *matHeaderCellDef> Task Name </th>
+                            <td *matCellDef="let element">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="task-handle px-1 bg-light rounded">: :</div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="form-check">
+                                            <input class="form-check-input me-1" type="checkbox" value="15"
+                                                id="todo{{element._id}}" name="checkAll"
+                                                (change)="checkUncheckAll($event,element._id)"
+                                                [checked]="element.status === 'Completed'">
+                                            <label class="form-check-label" for="todo15">{{element.title}}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="subItem">
+                            <th mat-header-cell *matHeaderCellDef> Assigned </th>
+                            <td class="assignedto" *matCellDef="let element">
+                                <div class="avatar-group">
+                                    <a href="javascript: void(0);" class="avatar-group-item"
+                                        *ngFor="let data of element.assigned_to" placement="top"
+                                        ngbTooltip="{{data.name}}">
+                                        <img src="assets/images/users/{{data.profile}}" alt=""
+                                            class="rounded-circle avatar-xxs" />
+                                    </a>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="dueDate">
+                            <th mat-header-cell *matHeaderCellDef> Due Date </th>
+                            <td *matCellDef="let element">
+                                {{element.due_date | date :'longDate'}}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="status">
+                            <th mat-header-cell *matHeaderCellDef> Status </th>
+                            <td *matCellDef="let element" class="status">
+                                <span class="badge  text-uppercase"
+                                    [ngClass]=" { 'bg-warning-subtle text-warning': element.status === 'Pending', 'bg-success-subtle text-success': element.status === 'Completed', 'bg-secondary-subtle text-secondary': element.status === 'Inprogress', 'bg-info-subtle text-info': element.status === 'New'}">{{element.status}}</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="priority">
+                            <th mat-header-cell *matHeaderCellDef> Priority </th>
+                            <td *matCellDef="let element">
+                                <span class="badge text-uppercase"
+                                    [ngClass]=" { 'bg-danger': element.priority === 'High', 'bg-warning': element.priority === 'Medium','bg-success': element.priority === 'Low'}">{{element.priority}}</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="action">
+                            <th mat-header-cell *matHeaderCellDef> Action </th>
+                            <td *matCellDef="let element">
+                                <div class="hstack gap-2">
+                                    <button class="btn btn-sm btn-soft-danger remove-list" data-bs-toggle="modal"
+                                        data-bs-target="#removeTaskItemModal" data-remove-id="15"
+                                        (click)="confirm(deleteModel,element._id)">
+                                        <i class="ri-delete-bin-5-fill align-bottom"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-soft-info edit-list" data-bs-toggle="modal"
+                                        data-bs-target="#createTask" data-edit-id="15"
+                                        (click)="editModal(content,element._id)">
+                                        <i class="ri-pencil-fill align-bottom"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index;" cdkDrag
+                            id="row-{{deleteId}}"></tr>
+
+                        <div *cdkDragPlaceholder></div>
+
+                    </table>
+                </div>
+            </div>
+            <div class="py-4 mt-4 text-center" id="noresult" style="display: none;">
+                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                    colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px"></lord-icon>
+                <h5 class="mt-4">Sorry! No Result Found</h5>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- removeItemModal -->
+<ng-template #deleteModel let-modal>
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                id="close-removetodomodal" (click)="modal.dismiss('Cross click')"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mt-2 text-center">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop"
+                    colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                    <h4>Are you sure ?</h4>
+                    <p class="text-muted mx-4 mb-0">Are you sure you want to remove this task ?</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal"
+                    (click)="modal.close('Close click')">Close</button>
+                <button type="button" class="btn w-sm btn-danger" id="remove-todoitem" (click)="deleteData(deleteId)"
+                    (click)="modal.close('Close click')">Yes, Delete It!</button>
+            </div>
+        </div>
+    </div><!-- /.modal-content -->
+</ng-template>
+
+<!-- Add Todo Data -->
+<ng-template #content role="document" let-modal>
+    <div class="modal-header p-3 bg-success-subtle">
+        <h5 class="modal-title" id="createTaskLabel">Create Task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" id="createTaskBtn-close" aria-label="Close"
+            (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <div id="task-error-msg" class="alert alert-danger py-2"></div>
+
+        <form autocomplete="off" action="" id="creattask-form" (ngSubmit)="saveTodo()" [formGroup]="todoForm">
+            <input type="hidden" id="taskid-input" class="form-control">
+            <div class="mb-3">
+                <label for="task-title-input" class="form-label">Task Title</label>
+                <input type="text" id="task-title-input" class="form-control" placeholder="Enter task title"
+                    formControlName="title" [ngClass]="{ 'is-invalid': submitted && form['title'].errors }">
+                <div *ngIf="submitted && form['title'].errors" class="invalid-feedback" align="left">
+                    <div *ngIf="form['title'].errors['required']">Task Title is required</div>
+                </div>
+            </div>
+            <div class="mb-3 position-relative">
+                <label for="task-assign-input" class="form-label">Assigned To</label>
+                <ng-select appearance="outline" [searchable]="false" [clearable]="false" labelForId="heroId"
+                    [multiple]="true" formControlName="subItem"
+                    [ngClass]="{ 'is-invalid': submitted && form['subItem'].errors }">
+                    <ng-option *ngFor="let data of AssignedData" value="{{data.id}}">
+                        <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                            <div class="avatar-xxs flex-shrink-0 me-2">
+                                <img src="assets/images/users/{{data.profile}}" alt=""
+                                    class="img-fluid rounded-circle" />
+                            </div>
+                            <div class="flex-grow-1">{{data.name}}</div>
+                        </a>
+                    </ng-option>
+                </ng-select>
+                <div *ngIf="submitted && form['subItem'].errors" class="invalid-feedback" align="left">
+                    <div *ngIf="form['subItem'].errors['required']">Assigned To required</div>
+                </div>
+            </div>
+            <div class="row g-4 mb-3">
+                <div class="col-lg-6">
+                    <label for="task-status" class="form-label">Status</label>
+                    <select class="form-control" data-choices data-choices-search-false id="task-status-input"
+                        formControlName="status" [ngClass]="{ 'is-invalid': submitted && form['status'].errors }">
+                        <option value="">Status</option>
+                        <option value="New" selected>New</option>
+                        <option value="Inprogress">Inprogress</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                    <div *ngIf="submitted && form['status'].errors" class="invalid-feedback" align="left">
+                        <div *ngIf="form['status'].errors['required']">Status is required</div>
+                    </div>
+                </div>
+                <!--end col-->
+                <div class="col-lg-6">
+                    <label for="priority-field" class="form-label">Priority</label>
+                    <select class="form-control" data-choices data-choices-search-false id="priority-field"
+                        formControlName="priority" [ngClass]="{ 'is-invalid': submitted && form['priority'].errors }">
+                        <option value="">Priority</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                    <div *ngIf="submitted && form['priority'].errors" class="invalid-feedback" align="left">
+                        <div *ngIf="form['priority'].errors['required']">Status is required</div>
+                    </div>
+                </div>
+                <!--end col-->
+            </div>
+            <div class="mb-4">
+                <label for="duedate-field" class="form-label">Due Date</label>
+                <input class="form-control flatpickr-input" type="text" placeholder="Due date" mwlFlatpickr
+                    [altInput]="true" [convertModelValue]="true" [dateFormat]="'Y-m-d'" formControlName="due_date"
+                    [ngClass]="{ 'is-invalid': submitted && form['due_date'].errors }">
+                <div *ngIf="submitted && form['due_date'].errors" class="invalid-feedback" align="left">
+                    <div *ngIf="form['due_date'].errors['required']">Client Name is required</div>
+                </div>
+            </div>
+
+            <div class="hstack gap-2 justify-content-end">
+                <button type="button" class="btn btn-ghost-success" data-bs-dismiss="modal"><i
+                        class="ri-close-fill align-bottom"></i> Close</button>
+                <button type="submit" class="btn btn-primary" id="addNewTodo">Add Task</button>
+            </div>
+        </form>
+    </div>
+</ng-template>
+
+<!-- Project Section -->
+<!-- Create Recent Model -->
+<ng-template #projectcontent role="document" let-modal>
+    <div class="modal-header p-3 bg-success-subtle">
+        <h5 class="modal-title" id="createFileModalLabel">Create Project</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" id="addFileBtn-close" aria-label="Close"
+            (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <form autocomplete="off" class="needs-validation createfile-form" id="createfile-form" novalidate
+            (ngSubmit)="saveRecent()" [formGroup]="projectForm">
+            <input type="hidden" name="id" value="" formControlName="ids" />
+            <div class="mb-4">
+                <label for="filename-input" class="form-label">Project Name</label>
+                <input type="text" class="form-control" id="filename-input" value="" required
+                    placeholder="Enter project name" formControlName="title"
+                    [ngClass]="{ 'is-invalid': submitted && projectform['title'].errors }">
+                <div class="invalid-feedback">Please enter a Project Name.</div>
+                <input type="hidden" class="form-control" id="fileid-input" value="" placeholder="Enter project name">
+            </div>
+            <div class="hstack gap-2 justify-content-end">
+                <button type="button" class="btn btn-ghost-success" data-bs-dismiss="modal"
+                    (click)="modal.close('Close click')"><i class="ri-close-line align-bottom"></i> Close</button>
+                <button type="submit" class="btn btn-primary" id="addNewFile">Create</button>
+            </div>
+        </form>
+    </div>
+</ng-template>

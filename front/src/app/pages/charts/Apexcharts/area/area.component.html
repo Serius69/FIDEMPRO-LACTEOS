@@ -1,0 +1,194 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Area Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Basic Area Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="basicAreaChart.series" [chart]="basicAreaChart.chart"
+                    [xaxis]="basicAreaChart.xaxis" [stroke]="basicAreaChart.stroke"
+                    [dataLabels]="basicAreaChart.dataLabels" [yaxis]="basicAreaChart.yaxis"
+                    [labels]="basicAreaChart.labels" [legend]="basicAreaChart.legend" [title]="basicAreaChart.title"
+                    [subtitle]="basicAreaChart.subtitle" [colors]="basicAreaChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Spline Area Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="splineAreaChart.series" [chart]="splineAreaChart.chart"
+                    [xaxis]="splineAreaChart.xaxis" [stroke]="splineAreaChart.stroke"
+                    [tooltip]="splineAreaChart.tooltip" [dataLabels]="splineAreaChart.dataLabels"
+                    [colors]="splineAreaChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Area Chart - Datetime X - Axis Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <div>
+                    <div class="toolbar d-flex align-items-start justify-content-center flex-wrap gap-2">
+                        <button type="button" class="btn btn-soft-primary timeline-btn btn-sm" id="one_month">
+                            1M
+                        </button>
+                        <button type="button" class="btn btn-soft-primary timeline-btn btn-sm" id="six_months">
+                            6M
+                        </button>
+                        <button type="button" class="btn btn-soft-primary timeline-btn btn-sm active" id="one_year">
+                            1Y
+                        </button>
+                        <button type="button" class="btn btn-soft-primary timeline-btn btn-sm" id="all">
+                            ALL
+                        </button>
+                    </div>
+                    <apx-chart #chart [series]="datetimeXaxisChart.series" [chart]="datetimeXaxisChart.chart"
+                        [colors]="datetimeXaxisChart.colors" [yaxis]="datetimeXaxisChart.yaxis"
+                        [dataLabels]="datetimeXaxisChart.dataLabels" [markers]="datetimeXaxisChart.markers"
+                        [stroke]="datetimeXaxisChart.stroke" [grid]="datetimeXaxisChart.grid"
+                        [xaxis]="datetimeXaxisChart.xaxis" [tooltip]="datetimeXaxisChart.tooltip"
+                        [annotations]="datetimeXaxisChart.annotations" [colors]="datetimeXaxisChart.colors"
+                        dir="ltr"></apx-chart>
+                </div>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Area with Negative Values Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="nagativeValueChart.series" [chart]="nagativeValueChart.chart"
+                    [xaxis]="nagativeValueChart.xaxis" [stroke]="nagativeValueChart.stroke"
+                    [tooltip]="nagativeValueChart.tooltip" [dataLabels]="nagativeValueChart.dataLabels"
+                    [fill]="nagativeValueChart.fill" [yaxis]="nagativeValueChart.yaxis"
+                    [title]="nagativeValueChart.title" [colors]="nagativeValueChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Area Chart - Github Style</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <div>
+                    <div class="bg-light">
+                        <apx-chart [series]="githubmMonthAreaChart.series" [chart]="githubmMonthAreaChart.chart"
+                            [colors]="githubmMonthAreaChart.colors" [yaxis]="githubmMonthAreaChart.yaxis"
+                            [dataLabels]="githubmMonthAreaChart.dataLabels" [fill]="githubmMonthAreaChart.fill"
+                            [stroke]="githubmMonthAreaChart.stroke" [xaxis]="githubmMonthAreaChart.xaxis"
+                            dir="ltr"></apx-chart>
+                    </div>
+
+                    <div class="github-style d-flex align-items-center my-2">
+                        <div class="flex-shrink-0 me-2">
+                            <img class="avatar-sm rounded" src="assets/images/users/avatar-2.jpg"
+                                data-hovercard-user-id="634573" alt="" />
+                        </div>
+                        <div class="flex-grow-1">
+                            <a class="font-size-14 text-body fw-medium">coder</a>
+                            <div class="cmeta text-muted font-size-11">
+                                <span class="commits text-body fw-medium"></span> commits
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-light">
+                        <apx-chart [series]="githubmYearAreaChart.series" [chart]="githubmYearAreaChart.chart"
+                            [colors]="githubmYearAreaChart.colors" [legend]="githubmYearAreaChart.legend"
+                            [dataLabels]="githubmYearAreaChart.dataLabels" [fill]="githubmYearAreaChart.fill"
+                            [stroke]="githubmYearAreaChart.stroke" [xaxis]="githubmYearAreaChart.xaxis"
+                            dir="ltr"></apx-chart>
+                    </div>
+                </div>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Stacked Area Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="stackedAreaChart.series" [chart]="stackedAreaChart.chart"
+                    [xaxis]="stackedAreaChart.xaxis" [dataLabels]="stackedAreaChart.dataLabels"
+                    [yaxis]="stackedAreaChart.yaxis" [colors]="stackedAreaChart.colors"
+                    [legend]="stackedAreaChart.legend" [fill]="stackedAreaChart.fill" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Irregular Timeseries Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="irregularTimeseriesChart.series" [chart]="irregularTimeseriesChart.chart"
+                    [dataLabels]="irregularTimeseriesChart.dataLabels" [markers]="irregularTimeseriesChart.markers"
+                    [fill]="irregularTimeseriesChart.fill" [yaxis]="irregularTimeseriesChart.yaxis"
+                    [xaxis]="irregularTimeseriesChart.xaxis" [title]="irregularTimeseriesChart.title"
+                    [tooltip]="irregularTimeseriesChart.tooltip" [legend]="irregularTimeseriesChart.legend"
+                    [colors]="irregularTimeseriesChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Area Chart With Null Values Chart</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="nullValuesAreaChart.series" [chart]="nullValuesAreaChart.chart"
+                    [xaxis]="nullValuesAreaChart.xaxis" [stroke]="nullValuesAreaChart.stroke"
+                    [tooltip]="nullValuesAreaChart.tooltip" [dataLabels]="nullValuesAreaChart.dataLabels"
+                    [fill]="nullValuesAreaChart.fill" [markers]="nullValuesAreaChart.markers"
+                    [theme]="nullValuesAreaChart.theme" [yaxis]="nullValuesAreaChart.yaxis"
+                    [title]="nullValuesAreaChart.title" [colors]="nullValuesAreaChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->

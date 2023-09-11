@@ -1,79 +1,64 @@
-import { NgModule ,CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
-import { AppComponent } from './app.component';
-import { LoginComponent } from './components/auth/login/login.component';
-import { HeaderComponent } from './components/header/header.component';
-import { HomeComponent } from './components/home/home.component';
-import { SignupComponent } from './components/auth/signup/signup.component';
-import { Routes, RouterModule, Router} from '@angular/router';
-import myAppConfig from './config/my-app-config';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-import { FooterComponent } from './components/footer/footer.component';
-import { MenuComponent } from './components/menu/menu.component';
-import { SettingsThemeComponent } from './components/settings-theme/settings-theme.component';
-import { InstructionsComponent } from './components/instructions/instructions.component';
-import { CrudProductComponent } from './components/crud-product/crudproduct.component';
-import { ErrorComponent } from './components/error/error.component';
-import { ProfileComponent } from './components/profile/profile.component';
-import { ResultsComponent } from './components/results/results.component';
-import { SimulateComponent } from './components/simulate/simulate.component';
-import { PassresetComponent } from './components/auth/passreset/passreset.component';
-import { NouserComponent } from './components/auth/nouser/nouser.component';
-import { ButtonSettingsComponent } from './components/button-settings/button-settings.component';
-import { CrudVariableComponent } from './components/crud-variable/crudvariable.component';
-import { ProfileSettingsComponent } from './components/profile-settings/profile-settings.component';
+// search module
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
-const routes: Routes = [
-  { path: "", component: AppComponent},
-  { path: "login", component: LoginComponent},
-  { path: "signup", component: SignupComponent },
-  { path: "home", component: HomeComponent},
-  { path: "instructions", component: InstructionsComponent},
-  { path: "product", component: CrudProductComponent},
-  { path: "product/:id", component: CrudProductComponent},
-  { path: "profile", component: ProfileComponent},
-  { path: "profile/setting", component: ProfileSettingsComponent},
-  { path: "results", component: ResultsComponent},
-  { path: "simulate", component: SimulateComponent},
-  { path: "variable", component: CrudVariableComponent},
-  { path: "variable/:id", component: CrudVariableComponent},
-  { path: "error", component: ErrorComponent},
-  { path: "passreset", component: PassresetComponent},
-  { path: "nouser", component: NouserComponent},
-];
-export const appRoutes: Routes = routes;
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+
+import { LayoutsModule} from "./layouts/layouts.module";
+import { PagesModule } from "./pages/pages.module";
+
+// Auth
+import { HttpClientModule, HttpClient, HTTP_INTERCEPTORS  } from '@angular/common/http';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { environment } from '../environments/environment';
+import { initFirebaseBackend } from './authUtils';
+import { FakeBackendInterceptor } from './core/helpers/fake-backend';
+import { ErrorInterceptor } from './core/helpers/error.interceptor';
+import { JwtInterceptor } from './core/helpers/jwt.interceptor';
+
+// Language
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+
+export function createTranslateLoader(http: HttpClient): any {
+  return new TranslateHttpLoader(http, 'assets/i18n/', '.json');
+}
+
+if (environment.defaultauth === 'firebase') {
+  initFirebaseBackend(environment.firebaseConfig);
+} else {
+  FakeBackendInterceptor;
+}
 
 @NgModule({
   declarations: [
-    AppComponent,
-    LoginComponent,
-    HeaderComponent,
-    HomeComponent,
-    SignupComponent,
-    FooterComponent,
-    MenuComponent,
-    SettingsThemeComponent,
-    InstructionsComponent,
-    CrudProductComponent,
-    ErrorComponent,
-    ProfileComponent,
-    ResultsComponent,
-    SimulateComponent,
-    PassresetComponent,
-    NouserComponent,
-    ButtonSettingsComponent,
-    CrudVariableComponent,
-    ProfileSettingsComponent
+    AppComponent
   ],
   imports: [
-    RouterModule.forRoot(routes),
-    BrowserModule, 
-    FormsModule, 
-    HttpClientModule],
-  providers: [],
-  bootstrap: [AppComponent],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    TranslateModule.forRoot({
+      defaultLanguage: 'en',
+      loader: {
+        provide: TranslateLoader,
+        useFactory: (createTranslateLoader),
+        deps: [HttpClient]
+      }
+    }),
+    BrowserAnimationsModule,
+    HttpClientModule,
+    BrowserModule,
+    AppRoutingModule,
+    LayoutsModule,
+    PagesModule,
+    Ng2SearchPipeModule
+  ],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: FakeBackendInterceptor, multi: true },
+  ],
+  bootstrap: [AppComponent]
 })
 export class AppModule { }

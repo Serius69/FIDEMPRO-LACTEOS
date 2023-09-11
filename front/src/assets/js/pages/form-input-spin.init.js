@@ -1,1 +1,48 @@
-function isData(){var t=document.getElementsByClassName("plus"),e=document.getElementsByClassName("minus"),n=document.getElementsByClassName("product");t&&Array.from(t).forEach(function(t){t.addEventListener("click",function(e){parseInt(t.previousElementSibling.value)<e.target.previousElementSibling.getAttribute("max")&&(e.target.previousElementSibling.value++,n&&Array.from(n).forEach(function(t){updateQuantity(e.target)}))})}),e&&Array.from(e).forEach(function(t){t.addEventListener("click",function(e){parseInt(t.nextElementSibling.value)>e.target.nextElementSibling.getAttribute("min")&&(e.target.nextElementSibling.value--,n&&Array.from(n).forEach(function(t){updateQuantity(e.target)}))})})}isData();
+/*
+Template Name: Velzon - Admin & Dashboard Template
+Author: Themesbrand
+Website: https://Themesbrand.com/
+Contact: Themesbrand@gmail.com
+File: Form input spin Js File
+*/
+
+// input spin
+isData();
+
+function isData() {
+    var plus = document.getElementsByClassName('plus');
+    var minus = document.getElementsByClassName('minus');
+    var product = document.getElementsByClassName("product");
+
+    if (plus) {
+        Array.from(plus).forEach(function (e) {
+            e.addEventListener('click', function (event) {
+                // if(event.target.previousElementSibling.value )
+                if (parseInt(e.previousElementSibling.value) < event.target.previousElementSibling.getAttribute('max')) {
+                    event.target.previousElementSibling.value++;
+                    if (product) {
+                        Array.from(product).forEach(function (x) {
+                            updateQuantity(event.target);
+                        })
+                    }
+
+                }
+            });
+        });
+    }
+
+    if (minus) {
+        Array.from(minus).forEach(function (e) {
+            e.addEventListener('click', function (event) {
+                if (parseInt(e.nextElementSibling.value) > event.target.nextElementSibling.getAttribute('min')) {
+                    event.target.nextElementSibling.value--;
+                    if (product) {
+                        Array.from(product).forEach(function (x) {
+                            updateQuantity(event.target);
+                        })
+                    }
+                }
+            });
+        });
+    }
+}

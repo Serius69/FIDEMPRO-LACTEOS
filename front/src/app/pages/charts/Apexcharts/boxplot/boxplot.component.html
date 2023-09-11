@@ -1,0 +1,53 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Boxplot Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Basic Box Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="basicBoxChart.series" [chart]="basicBoxChart.chart"
+            [plotOptions]="basicBoxChart.plotOptions" [title]="basicBoxChart.title" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Boxplot with Scatter Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="scatterBoxChart.series" [chart]="scatterBoxChart.chart"
+            [xaxis]="scatterBoxChart.xaxis" [title]="scatterBoxChart.title"
+            [colors]="scatterBoxChart.colors" [tooltip]="scatterBoxChart.tooltip" [plotOptions]="scatterBoxChart.plotOptions" dir="ltr"></apx-chart>
+          </div>
+      </div><!-- end card -->
+  </div>
+<!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Horizontal BoxPlot</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+              <apx-chart [series]="horizontalBoxChart.series" [chart]="horizontalBoxChart.chart"
+                [xaxis]="horizontalBoxChart.xaxis" [title]="horizontalBoxChart.title"
+                [colors]="horizontalBoxChart.colors" [tooltip]="horizontalBoxChart.tooltip" [plotOptions]="horizontalBoxChart.plotOptions" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->

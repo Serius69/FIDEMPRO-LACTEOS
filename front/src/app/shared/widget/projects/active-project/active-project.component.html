@@ -1,0 +1,42 @@
+<table class="table table-nowrap table-centered align-middle">
+    <thead class="bg-light text-muted">
+        <tr>
+            <th scope="col">Project Name</th>
+            <th scope="col">Project Lead</th>
+            <th scope="col">Progress</th>
+            <th scope="col">Assignee</th>
+            <th scope="col">Status</th>
+            <th scope="col" style="width: 10%;">Due Date</th>
+        </tr><!-- end tr -->
+    </thead><!-- thead -->
+
+    <tbody>
+        <tr *ngFor="let data of ActiveProjects">
+            <td class="fw-medium">{{data.Pname}}</td>
+            <td>
+                <img src="{{data.profile}}" class="avatar-xxs rounded-circle me-1" alt="">
+                <a href="javascript: void(0);" class="text-reset">{{data.Uname}}</a>
+            </td>
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-1 text-muted fs-13">{{data.progress}}%</div>
+                    <ngb-progressbar [value]="data.progress" [striped]="true" class="progress progress-sm  flex-grow-1"
+                        style="height: 6px;"></ngb-progressbar>
+                </div>
+            </td>
+            <td>
+                <div class="avatar-group flex-nowrap">
+                    <div class="avatar-group-item" *ngFor="let user of data.assignee">
+                        <a href="javascript: void(0);" class="d-inline-block">
+                            <img src="{{user.profile}}" alt="" class="rounded-circle avatar-xxs">
+                        </a>
+                    </div>
+                </div>
+            </td>
+            <td><span class="badge"
+                    [ngClass]=" {'bg-warning-subtle text-warning': data.status === 'Progress', 'bg-danger-subtle text-danger': data.status === 'Pending', 'bg-success-subtle text-success': data.status === 'Completed'}">{{data.status}}</span>
+            </td>
+            <td class="text-muted">{{data.date}}</td>
+        </tr><!-- end tr -->
+    </tbody><!-- end tbody -->
+</table><!-- end table -->

@@ -1,0 +1,77 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Chartjs" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Line Chart</h4>
+          </div>
+          <div class="card-body">
+            <canvas baseChart height="300" [datasets]="lineAreaChart.datasets" [labels]="lineAreaChart.labels"
+            [options]="lineAreaChart.options" [type]="'line'">
+          </canvas>
+          </div>
+      </div>
+  </div> <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Bar Chart</h4>
+          </div>
+          <div class="card-body">
+            <canvas baseChart [datasets]="lineBarChart.datasets" [type]="'bar'" [options]="lineBarChart.options" height="300" [labels]="lineBarChart.labels"></canvas>
+          </div>
+      </div>
+  </div> <!-- end col -->
+</div> <!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Pie Chart</h4>
+          </div>
+          <div class="card-body">
+            <canvas baseChart [datasets]="pieChart.datasets" [type]="'pie'" [options]="pieChart.options" [labels]="pieChart.labels" height="260"></canvas>
+          </div>
+      </div>
+  </div> <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Donut Chart</h4>
+          </div>
+          <div class="card-body">
+            <canvas baseChart [datasets]="donutChart.datasets" [type]="'doughnut'" [options]="donutChart.options" [labels]="donutChart.labels" height="260"></canvas>
+          </div>
+      </div>
+  </div> <!-- end col -->
+</div> <!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Polar Chart</h4>
+          </div>
+          <div class="card-body">
+            <canvas baseChart [datasets]="polarChart.datasets" [type]="'polarArea'" [options]="polarChart.options" height="300" [labels]="polarChart.labels" ></canvas>
+          </div>
+      </div>
+  </div> <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Radar Chart</h4>
+          </div>
+          <div class="card-body">
+            <canvas baseChart [datasets]="radarChart.datasets" [type]="'radar'" [options]="radarChart.options" height="300" [labels]="radarChart.labels"></canvas>
+          </div>
+      </div>
+  </div> <!-- end col -->
+</div> <!-- end row -->

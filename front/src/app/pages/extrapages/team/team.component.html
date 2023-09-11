@@ -1,0 +1,563 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Team" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="card">
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-sm-4">
+                <div class="search-box">
+                    <input type="text" class="form-control"
+                        placeholder="Search for name, tasks, projects or something..." [(ngModel)]="term">
+                    <i class="ri-search-line search-icon"></i>
+                </div>
+            </div>
+            <!--end col-->
+            <div class="col-sm-auto ms-auto">
+                <div class="list-grid-nav hstack gap-1" ngbDropdown>
+                    <ul ngbNav #Border="ngbNav" [activeId]="1" class="d-flex gap-1">
+                        <li [ngbNavItem]="1">
+                            <a ngbNavLink class="btn btn-soft-info nav-link btn-icon fs-14 filter-button"
+                                id="grid-view-button">
+                                <i class="ri-grid-fill"></i>
+                            </a>
+                            <ng-template ngbNavContent>
+                                <div class="team-list grid-view-filter row">
+                                    <div class="col" *ngFor="let data of Team | filter:term; let i = index " id="t_{{data.id}}">
+                                        <div class="card team-box">
+                                            <div class="team-cover">
+                                                <img src="{{data.backgroundImg}}" alt="" class="img-fluid" />
+                                            </div>
+                                            <div class="card-body p-4">
+                                                <div class="row align-items-center team-row">
+                                                    <div class="col team-settings">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div class="flex-shrink-0 me-2">
+                                                                    <button type="button"
+                                                                        class="btn btn-light btn-icon rounded-circle btn-sm favourite-btn star_{{data.id}}"
+                                                                        [ngClass]="{'active': data.isActive == true}"
+                                                                        (click)="activeMenu(data.id)">
+                                                                        <i class="ri-star-fill fs-14"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col text-end dropdown" ngbDropdown>
+                                                                <a href="javascript:void(0);" class="arrow-none"
+                                                                    id="dropdownMenuLink2" data-bs-toggle="dropdown"
+                                                                    aria-expanded="false" ngbDropdownToggle>
+                                                                    <i class="ri-more-fill fs-17"></i>
+                                                                </a>
+                                                                <ul class="dropdown-menu dropdown-menu-end"
+                                                                    aria-labelledby="dropdownMenuLink2" ngbDropdownMenu>
+                                                                    <li><a class="dropdown-item" (click)="EditData(content,i)"
+                                                                            href="javascript:void(0);"><i
+                                                                                class="ri-pencil-line me-2 align-bottom text-muted" ></i>Edit</a>
+                                                                    </li>
+                                                                    <li><a class="dropdown-item"
+                                                                            href="javascript:void(0);"
+                                                                            (click)="confirm(deleteModel,data.id)"><i
+                                                                                class="ri-delete-bin-5-line me-2 align-middle float-start"></i>Delete</a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4 col">
+                                                        <div class="team-profile-img">
+                                                            <div class="avatar-lg img-thumbnail rounded-circle flex-shrink-0"
+                                                                *ngIf="data.userImage">
+                                                                <img src="{{data.userImage}}"
+                                                                    class="rounded-circle img-fluid userprofile" alt="">
+                                                            </div>
+                                                            <div class="avatar-lg img-thumbnail rounded-circle flex-shrink-0"
+                                                                *ngIf="!data.userImage">
+                                                                <div
+                                                                    class="avatar-title border bg-light text-primary rounded-circle text-uppercase">
+                                                                    {{ data.name.charAt(0) }}</div>
+                                                            </div>
+                                                            <div class="team-content">
+                                                                <a data-bs-toggle="offcanvas"
+                                                                    aria-controls="offcanvasExample"
+                                                                    (click)="openEnd(viewContent)"
+                                                                    (click)="viewDataGet(data.id)">
+                                                                    <h5 class="fs-16 mb-1">{{data.name}}</h5>
+                                                                </a>
+                                                                <p class="text-muted mb-0">{{data.jobPosition}}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4 col">
+                                                        <div class="row text-muted text-center">
+                                                            <div class="col-6 border-end border-end-dashed">
+                                                                <h5 class="mb-1">{{data.projectCount}}</h5>
+                                                                <p class="text-muted mb-0">Projects</p>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <h5 class="mb-1">{{data.taskCount}}</h5>
+                                                                <p class="text-muted mb-0">Tasks</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-2 col">
+                                                        <div class="text-end">
+                                                            <a routerLink="/pages/profile"
+                                                                class="btn btn-light view-btn">View Profile</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end card-->
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-12">
+                                        <div class="text-center mb-3">
+                                            <a href="javascript:void(0);" class="text-success arrow-none"><i
+                                                    class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load
+                                                More </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end row-->
+                            </ng-template>
+                        </li>
+                        <li [ngbNavItem]="2">
+                            <a ngbNavLink id="list-view-button"
+                                class="btn btn-soft-info nav-link  btn-icon fs-14 filter-button">
+                                <i class="ri-list-unordered"></i>
+                            </a>
+                            <ng-template ngbNavContent>
+                                <div class="team-list list-view-filter row">
+                                    <div class="col" *ngFor="let data of Team | filter:term;let i = index;" id="t_{{data.id}}">
+                                        <div class="card team-box">
+                                            <div class="team-cover">
+                                                <img src="{{data.backgroundImg}}" alt="" class="img-fluid" />
+                                            </div>
+                                            <div class="card-body p-4">
+                                                <div class="row align-items-center team-row">
+                                                    <div class="col team-settings">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div class="flex-shrink-0 me-2">
+                                                                    <button type="button"
+                                                                        class="btn btn-light btn-icon rounded-circle btn-sm favourite-btn star_{{data.id}}"
+                                                                        [ngClass]="{'active': data.isActive == true}"
+                                                                        (click)="activeMenu(data.id)">
+                                                                        <i class="ri-star-fill fs-14"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col text-end dropdown" ngbDropdown>
+                                                                <a href="javascript:void(0);" class="arrow-none"
+                                                                    id="dropdownMenuLink2" data-bs-toggle="dropdown"
+                                                                    aria-expanded="false" ngbDropdownToggle>
+                                                                    <i class="ri-more-fill fs-17"></i>
+                                                                </a>
+                                                                <ul class="dropdown-menu dropdown-menu-end"
+                                                                    aria-labelledby="dropdownMenuLink2" ngbDropdownMenu>
+                                                                    <li><a class="dropdown-item"
+                                                                            href="javascript:void(0);" (click)="EditData(content,i)"><i
+                                                                                class="ri-pencil-line me-2 align-bottom text-muted"></i>Edit</a>
+                                                                    </li>
+                                                                    <li><a class="dropdown-item"
+                                                                            href="javascript:void(0);"
+                                                                            (click)="confirm(deleteModel,data.id)"><i
+                                                                                class="ri-delete-bin-5-line me-2 align-middle"></i>Delete</a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4 col">
+                                                        <div class="team-profile-img">
+                                                            <div class="avatar-lg img-thumbnail rounded-circle flex-shrink-0"
+                                                                *ngIf="data.userImage">
+                                                                <img src="{{data.userImage}}"
+                                                                    class="rounded-circle img-fluid userprofile" alt="">
+                                                            </div>
+                                                            <div class="avatar-lg img-thumbnail rounded-circle flex-shrink-0"
+                                                                *ngIf="!data.userImage">
+                                                                <div
+                                                                    class="avatar-title border bg-light text-primary rounded-circle text-uppercase">
+                                                                    {{ data.name.charAt(0) }}</div>
+                                                            </div>
+                                                            <div class="team-content">
+                                                                <a data-bs-toggle="offcanvas"
+                                                                    aria-controls="offcanvasExample"
+                                                                    (click)="openEnd(viewContent)"
+                                                                    (click)="viewDataGet(data.id)">
+                                                                    <h5 class="fs-16 mb-1">{{data.name}}</h5>
+                                                                </a>
+                                                                <p class="text-muted mb-0">{{data.jobPosition}}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-4 col">
+                                                        <div class="row text-muted text-center">
+                                                            <div class="col-6 border-end border-end-dashed">
+                                                                <h5 class="mb-1">{{data.projectCount}}</h5>
+                                                                <p class="text-muted mb-0">Projects</p>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <h5 class="mb-1">{{data.taskCount}}</h5>
+                                                                <p class="text-muted mb-0">Tasks</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-2 col">
+                                                        <div class="text-end">
+                                                            <a routerLink="/pages/profile"
+                                                                class="btn btn-light view-btn">View Profile</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end card-->
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-12">
+                                        <div class="text-center mb-3">
+                                            <a href="javascript:void(0);" class="text-success"><i
+                                                    class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load
+                                                More </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end row-->
+                            </ng-template>
+                        </li>
+                    </ul>
+                    <button type="button" id="dropdownMenuLink1" data-bs-toggle="dropdown" aria-expanded="false"
+                        class="btn btn-soft-info btn-icon fs-14 arrow-none d-block" ngbDropdownToggle><i
+                            class="ri-more-2-fill"></i></button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink1" ngbDropdownMenu>
+                        <li><a class="dropdown-item" href="javascript:void(0);">All</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);">Last Week</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);">Last Month</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);">Last Year</a></li>
+                    </ul>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addmembers"
+                        (click)="openModal(content)"><i class="ri-add-fill me-1 align-bottom"></i> Add Members</button>
+                </div>
+            </div>
+            <!--end col-->
+        </div>
+        <!--end row-->
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div>
+            <div [ngbNavOutlet]="Border"></div>
+
+            <!-- Modal -->
+            <ng-template #content role="document" let-modal>
+                <div class="modal-body">
+                    <form (ngSubmit)="saveTeam()" [formGroup]="teamForm">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <input type="hidden" id="memberid-input" class="form-control" value="">
+                                <div class="px-1 pt-1">
+                                    <div
+                                        class="modal-team-cover position-relative mb-0 mt-n4 mx-n4 rounded-top overflow-hidden">
+                                        <img src="assets/images/small/img-9.jpg" alt="" id="cover-img"
+                                            class="img-fluid">
+
+                                        <div class="d-flex position-absolute start-0 end-0 top-0 p-3">
+                                            <div class="flex-grow-1">
+                                                <h5 class="modal-title text-white" id="createMemberLabel">Add New
+                                                    Members</h5>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <div class="d-flex gap-3 align-items-center">
+                                                    <div>
+                                                        <label for="cover-image-input" class="mb-0"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Select Cover Image">
+                                                            <div class="avatar-xs">
+                                                                <div
+                                                                    class="avatar-title bg-light border rounded-circle text-muted cursor-pointer">
+                                                                    <i class="ri-image-fill"></i>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                        <input class="form-control d-none" value=""
+                                                            id="cover-image-input" type="file"
+                                                            accept="image/png, image/gif, image/jpeg"
+                                                            (change)="bgfileChange($event)">
+                                                    </div>
+                                                    <button type="button" class="btn-close btn-close-white"
+                                                        id="createMemberBtn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"
+                                                        (click)="modal.dismiss('Cross click')"></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-4 mt-n5 pt-2">
+                                    <div class="position-relative d-inline-block">
+                                        <div class="position-absolute bottom-0 end-0">
+                                            <label for="member-image-input" class="mb-0" data-bs-toggle="tooltip"
+                                                data-bs-placement="right" title="Select Member Image">
+                                                <div class="avatar-xs">
+                                                    <div
+                                                        class="avatar-title bg-light border rounded-circle text-muted cursor-pointer">
+                                                        <i class="ri-image-fill"></i>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                            <input class="form-control d-none" value="" id="member-image-input"
+                                                type="file" accept="image/png, image/gif, image/jpeg"
+                                                (change)="fileChange($event)">
+                                        </div>
+                                        <div class="avatar-lg">
+                                            <div class="avatar-title bg-light rounded-circle">
+                                                <img src="assets/images/users/user-dummy-img.jpg" id="member-img"
+                                                    class="avatar-md rounded-circle h-auto" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="teammembersName" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="teammembersName"
+                                        placeholder="Enter name" formControlName="name"
+                                        [ngClass]="{ 'is-invalid': submitted && form['name'].errors }">
+                                    <div class="invalid-feedback">Please Enter a member name.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="designation" class="form-label">Designation</label>
+                                    <input type="text" class="form-control" id="designation"
+                                        placeholder="Enter designation" formControlName="jobPosition"
+                                        [ngClass]="{ 'is-invalid': submitted && form['jobPosition'].errors }">
+                                    <div class="invalid-feedback">Please Enter a designation.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="totalProjects" class="form-label">Projects</label>
+                                    <input type="number" class="form-control" id="totalProjects"
+                                        placeholder="Total projects" formControlName="projectCount"
+                                        [ngClass]="{ 'is-invalid': submitted && form['projectCount'].errors }">
+                                    <div class="invalid-feedback">Please Enter a projectd.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="totalTasks" class="form-label">Tasks</label>
+                                    <input type="number" class="form-control" id="totalTasks" placeholder="Total tasks"
+                                        formControlName="taskCount"
+                                        [ngClass]="{ 'is-invalid': submitted && form['taskCount'].errors }">
+                                    <div class="invalid-feedback">Please Enter a tasks.</div>
+                                </div>
+
+                                <div class="hstack gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                                        (click)="modal.dismiss('Cross click')">Close</button>
+                                    <button type="submit" class="btn btn-success" id="addNewMember"
+                                        (click)="modal.dismiss('Cross click')">Add Member</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </ng-template>
+
+            <ng-template #viewContent let-offcanvas>
+                <div class="offcanvas-body profile-offcanvas p-0">
+                    <div class="team-cover">
+                        <img src="assets/images/small/img-9.jpg" alt="" class="img-fluid" />
+                    </div>
+                    <div class="p-3">
+                        <div class="team-settings">
+                            <div class="row">
+                                <div class="col">
+                                    <button type="button" class="btn btn-light btn-icon rounded-circle btn-sm favourite-btn "> <i class="ri-star-fill fs-14"></i> </button>
+                                </div>
+                                <div class="col text-end dropdown" ngbDropdown>
+                                    <a href="javascript:void(0);" class="arrow-none" id="dropdownMenuLink14"
+                                        data-bs-toggle="dropdown" aria-expanded="false" ngbDropdownToggle>
+                                        <i class="ri-more-fill fs-17"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink14"
+                                        ngbDropdownMenu>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i
+                                                    class="ri-star-line me-2 align-middle float-start"></i>Favorites</a>
+                                        </li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"><i
+                                                    class="ri-delete-bin-5-line me-2 align-middle float-start"></i>Delete</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end col-->
+                    </div>
+                    <div class="p-3 text-center profile_img">
+                        <div class="profileImg"></div>
+                        <div class="mt-3">
+                            <h5 class="fs-15"><a href="javascript:void(0);"
+                                    class="link-primary arrow-none team_name">Nancy Martino</a></h5>
+                            <p class="text-muted">Team Leader & HR</p>
+                        </div>
+                        <div class="hstack gap-2 justify-content-center mt-4">
+                            <div class="avatar-xs">
+                                <a href="javascript:void(0);"
+                                    class="avatar-title arrow-none bg-secondary-subtle text-secondary rounded fs-16">
+                                    <i class="ri-facebook-fill"></i>
+                                </a>
+                            </div>
+                            <div class="avatar-xs">
+                                <a href="javascript:void(0);"
+                                    class="avatar-title arrow-none bg-success-subtle text-success rounded fs-16">
+                                    <i class="ri-slack-fill"></i>
+                                </a>
+                            </div>
+                            <div class="avatar-xs">
+                                <a href="javascript:void(0);"
+                                    class="avatar-title arrow-none bg-info-subtle text-info rounded fs-16">
+                                    <i class="ri-linkedin-fill"></i>
+                                </a>
+                            </div>
+                            <div class="avatar-xs">
+                                <a href="javascript:void(0);"
+                                    class="avatar-title arrow-none bg-danger-subtle text-danger rounded fs-16">
+                                    <i class="ri-dribbble-fill"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-0 text-center">
+                        <div class="col-6">
+                            <div class="p-3 border border-dashed border-start-0">
+                                <h5 class="mb-1 project_count">124</h5>
+                                <p class="text-muted mb-0">Projects</p>
+                            </div>
+                        </div>
+                        <!--end col-->
+                        <div class="col-6">
+                            <div class="p-3 border border-dashed border-start-0">
+                                <h5 class="mb-1 task_count">81</h5>
+                                <p class="text-muted mb-0">Tasks</p>
+                            </div>
+                        </div>
+                        <!--end col-->
+                    </div>
+                    <!--end row-->
+                    <div class="p-3">
+                        <h5 class="fs-15 mb-3">Personal Details</h5>
+                        <div class="mb-3">
+                            <p class="text-muted text-uppercase fw-semibold fs-12 mb-2">Number</p>
+                            <h6>+(256) 2451 8974</h6>
+                        </div>
+                        <div class="mb-3">
+                            <p class="text-muted text-uppercase fw-semibold fs-12 mb-2">Email</p>
+                            <h6>nancymartino@email.com</h6>
+                        </div>
+                        <div>
+                            <p class="text-muted text-uppercase fw-semibold fs-12 mb-2">Location</p>
+                            <h6 class="mb-0">Carson City - USA</h6>
+                        </div>
+                    </div>
+                    <div class="p-3 border-top">
+                        <h5 class="fs-15 mb-4">File Manager</h5>
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0 avatar-xs">
+                                <div class="avatar-title bg-danger-subtle text-danger rounded fs-16">
+                                    <i class="ri-image-2-line"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1"><a href="javascript:void(0);">Images</a></h6>
+                                <p class="text-muted mb-0">4469 Files</p>
+                            </div>
+                            <div class="text-muted">
+                                12 GB
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0 avatar-xs">
+                                <div class="avatar-title bg-secondary-subtle text-secondary rounded fs-16">
+                                    <i class="ri-file-zip-line"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1"><a href="javascript:void(0);">Documents</a></h6>
+                                <p class="text-muted mb-0">46 Files</p>
+                            </div>
+                            <div class="text-muted">
+                                3.46 GB
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0 avatar-xs">
+                                <div class="avatar-title bg-success-subtle text-success rounded fs-16">
+                                    <i class="ri-live-line"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1"><a href="javascript:void(0);">Media</a></h6>
+                                <p class="text-muted mb-0">124 Files</p>
+                            </div>
+                            <div class="text-muted">
+                                4.3 GB
+                            </div>
+                        </div>
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 avatar-xs">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded fs-16">
+                                    <i class="ri-error-warning-line"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1"><a href="javascript:void(0);">Others</a></h6>
+                                <p class="text-muted mb-0">18 Files</p>
+                            </div>
+                            <div class="text-muted">
+                                846 MB
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--end offcanvas-body-->
+                <div class="offcanvas-foorter border p-3 hstack gap-3 text-center position-relative">
+                    <button class="btn btn-light w-100"><i class="ri-question-answer-fill align-bottom ms-1"></i> Send
+                        Message</button>
+                    <a routerLink="/pages/profile" class="btn btn-primary w-100"><i
+                            class="ri-user-3-fill align-bottom ms-1"></i> View Profile</a>
+                </div>
+            </ng-template>
+        </div>
+    </div><!-- end col -->
+</div>
+<!--end row-->
+
+
+<!-- removeItemModal -->
+<ng-template #deleteModel let-modal>
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close"
+                (click)="modal.dismiss('Cross click')"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mt-2 text-center">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop"
+                    colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                    <h4>Are you Sure ?</h4>
+                    <p class="text-muted mx-4 mb-0">Are you Sure You want to Remove this Product ?</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal"
+                    (click)="modal.close('Close click')">Close</button>
+                <button type="button" class="btn w-sm btn-danger " id="delete-product" (click)="deleteData(deleteId)"
+                    (click)="modal.close('Close click')">Yes, Delete It!</button>
+            </div>
+        </div>
+    </div><!-- /.modal-content -->
+</ng-template>

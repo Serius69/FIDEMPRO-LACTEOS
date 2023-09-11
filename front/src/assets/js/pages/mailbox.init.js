@@ -1,1 +1,514 @@
-var url="assets/json/",allmaillist="";const loader=document.querySelector("#elmLoader");var getJSON=function(e,t){var a=new XMLHttpRequest;a.open("GET",url+e,!0),a.responseType="json",a.onload=function(){var e=a.status;200===e?(document.getElementById("elmLoader").innerHTML="",t(null,a.response)):t(e,a.response)},a.send()};function loadMailData(e){document.querySelector('#mail-filter-navlist button[data-bs-target="#pills-primary"]').click(),document.querySelector("#mail-list").innerHTML="",Array.from(e).forEach(function(e,t){var a=e.readed?"":"unread",l=e.starred?"active":"",c=e.counted?"("+e.counted+")":"";document.querySelector("#mail-list").innerHTML+='<li class="'+a+'">        <div class="col-mail col-mail-1">            <div class="form-check checkbox-wrapper-mail fs-14">                <input class="form-check-input" type="checkbox" value="'+e.id+'" id="checkbox-'+e.id+'">                <label class="form-check-label" for="checkbox-'+e.id+'"></label>            </div>            <input type="hidden" value='+e.userImg+' class="mail-userimg" />            <button type="button" class="btn avatar-xs p-0 favourite-btn fs-15 '+l+'">            <i class="ri-star-fill"></i>            </button>            <a href="javascript: void(0);" class="title"><span class="title-name">'+e.name+"</span> "+c+'</a>        </div>        <div class="col-mail col-mail-2">            <a href="javascript: void(0);" class="subject"><span class="subject-title">'+e.title+'</span> – <span class="teaser">'+e.description+'</span>            </a>            <div class="date">'+e.date+"</div>        </div>    </li>",favouriteBtn(),emailDetailShow(),emailDetailChange(),checkBoxAll()})}function loadSocialMailData(e){Array.from(e).forEach(function(e,t){var a=e.readed?"":"unread",l=e.starred?"active":"",c=e.counted?"("+e.counted+")":"";document.getElementById("social-mail-list").innerHTML+='<li class="'+a+'">                <div class="col-mail col-mail-1">                    <div class="form-check checkbox-wrapper-mail fs-14">                        <input class="form-check-input" type="checkbox" value="'+e.id+'" id="checkbox-'+e.id+'">                        <label class="form-check-label" for="checkbox-'+e.id+'"></label>                    </div>                    <input type="hidden" value='+e.userImg+' class="mail-userimg" />                    <button type="button" class="btn avatar-xs p-0 favourite-btn fs-15 '+l+'">                    <i class="ri-star-fill"></i>                    </button>                    <a href="javascript: void(0);" class="title"><span class="title-name">'+e.name+"</span> "+c+'</a>                </div>                <div class="col-mail col-mail-2">                    <a href="javascript: void(0);" class="subject"><span class="subject-title">'+e.title+'</span> – <span class="teaser">'+e.description+'</span>                    </a>                    <div class="date">'+e.date+"</div>                </div>            </li>",emailDetailShow(),emailDetailChange(),checkBoxAll()})}function loadPromotionsMailData(e){Array.from(e).forEach(function(e,t){var a=e.readed?"":"unread",l=e.starred?"active":"",c=e.counted?"("+e.counted+")":"";document.getElementById("promotions-mail-list").innerHTML+='<li class="'+a+'">                <div class="col-mail col-mail-1">                    <div class="form-check checkbox-wrapper-mail fs-14">                        <input class="form-check-input" type="checkbox" value="'+e.id+'" id="checkbox-'+e.id+'">                        <label class="form-check-label" for="checkbox-'+e.id+'"></label>                    </div>                    <input type="hidden" value='+e.userImg+' class="mail-userimg" />                    <button type="button" class="btn avatar-xs p-0 favourite-btn fs-15 '+l+'">                    <i class="ri-star-fill"></i>                    </button>                    <a href="javascript: void(0);" class="title"><span class="title-name">'+e.name+"</span> "+c+'</a>                </div>                <div class="col-mail col-mail-2">                    <a href="javascript: void(0);" class="subject"><span class="subject-title">'+e.title+'</span> – <span class="teaser">'+e.description+'</span>                    </a>                    <div class="date">'+e.date+"</div>                </div>            </li>",emailDetailShow(),emailDetailChange(),checkBoxAll()})}function favouriteBtn(){Array.from(document.querySelectorAll(".favourite-btn")).forEach(function(e){e.addEventListener("click",function(){e.classList.contains("active")?e.classList.remove("active"):e.classList.add("active")})})}function emailDetailShow(){var a=document.getElementsByTagName("body")[0],t=(Array.from(document.querySelectorAll(".message-list a")).forEach(function(e){e.addEventListener("click",function(t){a.classList.add("email-detail-show"),Array.from(document.querySelectorAll(".message-list li.unread")).forEach(function(e){e.classList.contains("unread")&&t.target.closest("li").classList.remove("unread")})})}),Array.from(document.querySelectorAll(".close-btn-email")).forEach(function(e){e.addEventListener("click",function(){a.classList.remove("email-detail-show")})}),!1),l=document.getElementsByClassName("email-menu-sidebar");Array.from(document.querySelectorAll(".email-menu-btn")).forEach(function(e){e.addEventListener("click",function(){Array.from(l).forEach(function(e){e.classList.add("menubar-show"),t=!0})})}),window.addEventListener("click",function(e){document.querySelector(".email-menu-sidebar").classList.contains("menubar-show")&&(t||document.querySelector(".email-menu-sidebar").classList.remove("menubar-show"),t=!1)}),favouriteBtn()}function checkBoxAll(){Array.from(document.querySelectorAll(".checkbox-wrapper-mail input")).forEach(function(e){e.addEventListener("click",function(e){1==e.target.checked?e.target.closest("li").classList.add("active"):e.target.closest("li").classList.remove("active")})});var e=document.querySelectorAll(".checkbox-wrapper-mail input");function a(){var e=document.querySelectorAll(".checkbox-wrapper-mail input"),t=document.querySelectorAll(".checkbox-wrapper-mail input:checked").length;Array.from(e).forEach(function(e){e.checked=!0,e.parentNode.parentNode.parentNode.classList.add("active")}),document.getElementById("email-topbar-actions").style.display=0<t?"none":"block",0<t?Array.from(e).forEach(function(e){e.checked=!1,e.parentNode.parentNode.parentNode.classList.remove("active")}):Array.from(e).forEach(function(e){e.checked=!0,e.parentNode.parentNode.parentNode.classList.add("active")}),this.onclick=l,removeItems()}function l(){var e=document.querySelectorAll(".checkbox-wrapper-mail input"),t=document.querySelectorAll(".checkbox-wrapper-mail input:checked").length;Array.from(e).forEach(function(e){e.checked=!1,e.parentNode.parentNode.parentNode.classList.remove("active")}),document.getElementById("email-topbar-actions").style.display=0<t?"none":"block",0<t?Array.from(e).forEach(function(e){e.checked=!1,e.parentNode.parentNode.parentNode.classList.remove("active")}):Array.from(e).forEach(function(e){e.checked=!0,e.parentNode.parentNode.parentNode.classList.add("active")}),this.onclick=a}Array.from(e).forEach(function(e){e.addEventListener("click",function(e){var t=document.querySelectorAll(".checkbox-wrapper-mail input"),a=document.getElementById("checkall"),l=document.querySelectorAll(".checkbox-wrapper-mail input:checked").length;a.checked=0<l,a.indeterminate=0<l&&l<t.length,e.target.closest("li").classList.contains("active"),document.getElementById("email-topbar-actions").style.display=0<l?"block":"none"})}),document.getElementById("checkall").onclick=a}getJSON("mail-list.init.json",function(e,t){null!==e?console.log("Something went wrong: "+e):(allmaillist=t[0].primary,socialmaillist=t[0].social,promotionsmaillist=t[0].promotions,loadMailData(allmaillist),loadSocialMailData(socialmaillist),loadPromotionsMailData(promotionsmaillist))}),Array.from(document.querySelectorAll(".mail-list a")).forEach(function(l){l.addEventListener("click",function(){var t,e,a=document.querySelector(".mail-list a.active");a&&a.classList.remove("active"),l.classList.add("active"),l.querySelector(".mail-list-link").hasAttribute("data-type")?(t=l.querySelector(".mail-list-link").innerHTML,e=allmaillist.filter(e=>e.labeltype===t)):(t=l.querySelector(".mail-list-link").innerHTML,document.getElementById("mail-list").innerHTML="",e="All"!=t?allmaillist.filter(e=>e.tabtype===t):allmaillist,document.getElementById("mail-filter-navlist").style.display="All"!=t&&"Inbox"!=t?"none":"block"),loadMailData(e),favouriteBtn()})}),favouriteBtn(),ClassicEditor.create(document.querySelector("#email-editor")).then(function(e){e.ui.view.editable.element.style.height="200px"}).catch(function(e){console.error(e)});var currentChatId="users-chat";function scrollToBottom(a){setTimeout(function(){var e=document.getElementById(a).querySelector("#chat-conversation .simplebar-content-wrapper")?document.getElementById(a).querySelector("#chat-conversation .simplebar-content-wrapper"):"",t=document.getElementsByClassName("chat-conversation-list")[0]?document.getElementById(a).getElementsByClassName("chat-conversation-list")[0].scrollHeight-window.innerHeight+750:0;t&&e.scrollTo({top:t,behavior:"smooth"})},100)}function removeItems(){document.getElementById("removeItemModal").addEventListener("show.bs.modal",function(e){document.getElementById("delete-record").addEventListener("click",function(){Array.from(document.querySelectorAll(".message-list li")).forEach(function(e){var t,a;e.classList.contains("active")&&(t=e.querySelector(".form-check-input").value,a=t,allmaillist=allmaillist.filter(function(e){return e.id!=a}),e.remove())}),document.getElementById("btn-close").click(),document.getElementById("email-topbar-actions")&&(document.getElementById("email-topbar-actions").style.display="none"),checkall.indeterminate=!1,checkall.checked=!1})})}scrollToBottom(currentChatId),removeItems();var markAllReadBtn=document.getElementById("mark-all-read"),dummyUserImage=(markAllReadBtn.addEventListener("click",function(e){0===document.querySelectorAll(".message-list li.unread").length&&(document.getElementById("unreadConversations").style.display="block",setTimeout(function(){document.getElementById("unreadConversations").style.display="none"},1e3)),Array.from(document.querySelectorAll(".message-list li.unread")).forEach(function(e){e.classList.contains("unread")&&e.classList.remove("unread")})}),"assets/images/users/user-dummy-img.jpg"),mailChatDetailElm=!1;function emailDetailChange(){Array.from(document.querySelectorAll(".message-list li")).forEach(function(c){c.addEventListener("click",function(){var e=c.querySelector(".subject-title").innerHTML,a=(document.querySelector(".email-subject-title").innerHTML=e,c.querySelector(".title-name").innerHTML),t=(Array.from(document.querySelectorAll(".accordion-item.left")).forEach(function(e){e.querySelector(".email-user-name").innerHTML=a;var t=c.querySelector(".mail-userimg").value;e.querySelector("img").setAttribute("src",t)}),document.querySelector(".user-name-text").innerHTML),l=document.querySelector(".header-profile-user").getAttribute("src");Array.from(document.querySelectorAll(".accordion-item.right")).forEach(function(e){e.querySelector(".email-user-name-right").innerHTML=t,e.querySelector("img").setAttribute("src",l)})})})}Array.from(document.querySelectorAll(".email-chat-list a")).forEach(function(l){l.addEventListener("click",function(e){document.getElementById("emailchat-detailElem").style.display="block",mailChatDetailElm=!0;var t=document.querySelector(".email-chat-list a.active"),t=(t&&t.classList.remove("active"),this.classList.add("active"),scrollToBottom("users-chat"),l.querySelector(".chatlist-user-name").innerHTML),a=l.querySelector(".chatlist-user-image img").getAttribute("src"),t=(document.querySelector(".email-chat-detail .profile-username").innerHTML=t,document.getElementById("users-conversation"));Array.from(t.querySelectorAll(".left .chat-avatar")).forEach(function(e){a?e.querySelector("img").setAttribute("src",a):e.querySelector("img").setAttribute("src",dummyUserImage)})})}),document.getElementById("emailchat-btn-close").addEventListener("click",function(){document.getElementById("emailchat-detailElem").style.display="none"});
+/*
+Template Name: Velzon - Admin & Dashboard Template
+Author: Themesbrand
+Website: https://Themesbrand.com/
+Contact: Themesbrand@gmail.com
+File: mailbox init Js File
+*/
+
+var url="assets/json/";
+var allmaillist = '';
+const loader = document.querySelector("#elmLoader");
+// showing loading
+
+//mail list by json
+var getJSON = function (jsonurl, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url + jsonurl, true);
+    xhr.responseType = "json";
+    xhr.onload = function () {
+        var status = xhr.status;
+        if (status === 200) {
+            document.getElementById("elmLoader").innerHTML = '';
+            callback(null, xhr.response);
+        } else {
+            callback(status, xhr.response);
+        }
+    };
+    xhr.send();
+};
+
+// load mail data
+function loadMailData(datas) {
+    var triggerEl = document.querySelector('#mail-filter-navlist button[data-bs-target="#pills-primary"]')
+    triggerEl.click()
+    document.querySelector("#mail-list").innerHTML = '';
+
+    Array.from(datas).forEach(function (mailData, index) {
+
+        var checkReaded = mailData.readed ? "" : "unread";
+        var checkStarred = mailData.starred ? "active" : "";
+        var mailcounted = mailData.counted ? '(' + mailData.counted + ')' : "";
+
+        document.querySelector("#mail-list").innerHTML +=
+            '<li class="' + checkReaded + '">\
+        <div class="col-mail col-mail-1">\
+            <div class="form-check checkbox-wrapper-mail fs-14">\
+                <input class="form-check-input" type="checkbox" value="' + mailData.id + '" id="checkbox-' + mailData.id + '">\
+                <label class="form-check-label" for="checkbox-' + mailData.id + '"></label>\
+            </div>\
+            <input type="hidden" value=' + mailData.userImg + ' class="mail-userimg" />\
+            <button type="button" class="btn avatar-xs p-0 favourite-btn fs-15 ' + checkStarred + '">\
+            <i class="ri-star-fill"></i>\
+            </button>\
+            <a href="javascript: void(0);" class="title"><span class="title-name">' + mailData.name + '</span> ' + mailcounted + '</a>\
+        </div>\
+        <div class="col-mail col-mail-2">\
+            <a href="javascript: void(0);" class="subject"><span class="subject-title">' + mailData.title + '</span> – <span class="teaser">' + mailData.description + '</span>\
+            </a>\
+            <div class="date">' + mailData.date + '</div>\
+        </div>\
+    </li>';
+        favouriteBtn();
+        emailDetailShow();
+        emailDetailChange();
+        checkBoxAll();
+    });
+}
+
+// load social mail data
+function loadSocialMailData(datas) {
+    Array.from(datas).forEach(function (mailData, index) {
+        var checkReaded = mailData.readed ? "" : "unread";
+        var checkStarred = mailData.starred ? "active" : "";
+        var mailcounted = mailData.counted ? '(' + mailData.counted + ')' : "";
+
+        document.getElementById("social-mail-list").innerHTML +=
+            '<li class="' + checkReaded + '">\
+                <div class="col-mail col-mail-1">\
+                    <div class="form-check checkbox-wrapper-mail fs-14">\
+                        <input class="form-check-input" type="checkbox" value="' + mailData.id + '" id="checkbox-' + mailData.id + '">\
+                        <label class="form-check-label" for="checkbox-' + mailData.id + '"></label>\
+                    </div>\
+                    <input type="hidden" value=' + mailData.userImg + ' class="mail-userimg" />\
+                    <button type="button" class="btn avatar-xs p-0 favourite-btn fs-15 ' + checkStarred + '">\
+                    <i class="ri-star-fill"></i>\
+                    </button>\
+                    <a href="javascript: void(0);" class="title"><span class="title-name">' + mailData.name + '</span> ' + mailcounted + '</a>\
+                </div>\
+                <div class="col-mail col-mail-2">\
+                    <a href="javascript: void(0);" class="subject"><span class="subject-title">' + mailData.title + '</span> – <span class="teaser">' + mailData.description + '</span>\
+                    </a>\
+                    <div class="date">' + mailData.date + '</div>\
+                </div>\
+            </li>';
+        emailDetailShow();
+        emailDetailChange();
+        checkBoxAll();
+    });
+}
+
+// load promotions mail data
+function loadPromotionsMailData(datas) {
+    Array.from(datas).forEach(function (mailData, index) {
+        var checkReaded = mailData.readed ? "" : "unread";
+        var checkStarred = mailData.starred ? "active" : "";
+        var mailcounted = mailData.counted ? '(' + mailData.counted + ')' : "";
+
+        document.getElementById("promotions-mail-list").innerHTML +=
+            '<li class="' + checkReaded + '">\
+                <div class="col-mail col-mail-1">\
+                    <div class="form-check checkbox-wrapper-mail fs-14">\
+                        <input class="form-check-input" type="checkbox" value="' + mailData.id + '" id="checkbox-' + mailData.id + '">\
+                        <label class="form-check-label" for="checkbox-' + mailData.id + '"></label>\
+                    </div>\
+                    <input type="hidden" value=' + mailData.userImg + ' class="mail-userimg" />\
+                    <button type="button" class="btn avatar-xs p-0 favourite-btn fs-15 ' + checkStarred + '">\
+                    <i class="ri-star-fill"></i>\
+                    </button>\
+                    <a href="javascript: void(0);" class="title"><span class="title-name">' + mailData.name + '</span> ' + mailcounted + '</a>\
+                </div>\
+                <div class="col-mail col-mail-2">\
+                    <a href="javascript: void(0);" class="subject"><span class="subject-title">' + mailData.title + '</span> – <span class="teaser">' + mailData.description + '</span>\
+                    </a>\
+                    <div class="date">' + mailData.date + '</div>\
+                </div>\
+            </li>';
+        emailDetailShow();
+        emailDetailChange();
+        checkBoxAll();
+    });
+}
+
+// get json
+getJSON("mail-list.init.json", function (err, data) {
+    if (err !== null) {
+        console.log("Something went wrong: " + err);
+    } else {
+        allmaillist = data[0].primary;
+        socialmaillist = data[0].social;
+        promotionsmaillist = data[0].promotions;
+
+        loadMailData(allmaillist);
+        loadSocialMailData(socialmaillist);
+        loadPromotionsMailData(promotionsmaillist);
+    }
+});
+
+
+// mail list click event
+Array.from(document.querySelectorAll('.mail-list a')).forEach(function (mailTab) {
+    mailTab.addEventListener("click", function () {
+        var chatUserList = document.querySelector(".mail-list a.active");
+        if (chatUserList) chatUserList.classList.remove("active");
+        mailTab.classList.add('active');
+
+        if (mailTab.querySelector('.mail-list-link').hasAttribute('data-type')) {
+            var tabname = mailTab.querySelector('.mail-list-link').innerHTML;
+            var filterData = allmaillist.filter(maillist => maillist.labeltype === tabname);
+        } else {
+            var tabname = mailTab.querySelector('.mail-list-link').innerHTML;
+            document.getElementById("mail-list").innerHTML = '';
+            if (tabname != 'All') {
+                var filterData = allmaillist.filter(maillist => maillist.tabtype === tabname);
+            } else {
+                var filterData = allmaillist;
+            }
+            if (tabname != 'All' && tabname != 'Inbox') {
+                document.getElementById("mail-filter-navlist").style.display = "none";
+            } else {
+                document.getElementById("mail-filter-navlist").style.display = "block";
+            }
+        }
+        loadMailData(filterData);
+        favouriteBtn();
+    });
+})
+
+// favourite btn
+function favouriteBtn() {
+    Array.from(document.querySelectorAll(".favourite-btn")).forEach(function (item) {
+        item.addEventListener("click", function () {
+            if (item.classList.contains("active")) {
+                item.classList.remove("active");
+            } else {
+                item.classList.add("active");
+            }
+        });
+    });
+}
+favouriteBtn();
+
+// emailDetailShow
+function emailDetailShow() {
+    var bodyElement = document.getElementsByTagName('body')[0];
+    Array.from(document.querySelectorAll(".message-list a")).forEach(function (item) {
+        item.addEventListener("click", function (event) {
+            bodyElement.classList.add("email-detail-show");
+            Array.from(document.querySelectorAll(".message-list li.unread")).forEach(function (element) {
+                if (element.classList.contains("unread")) {
+                    event.target.closest('li').classList.remove("unread");
+                }
+            });
+        });
+    });
+
+    Array.from(document.querySelectorAll(".close-btn-email")).forEach(function (item) {
+        item.addEventListener("click", function () {
+            bodyElement.classList.remove("email-detail-show");
+        });
+    });
+
+    var isShowMenu = false;
+    var emailMenuSidebar = document.getElementsByClassName('email-menu-sidebar');
+    Array.from(document.querySelectorAll(".email-menu-btn")).forEach(function (item) {
+        item.addEventListener("click", function () {
+            Array.from(emailMenuSidebar).forEach(function (elm) {
+                elm.classList.add("menubar-show");
+                isShowMenu = true;
+            });
+        });
+    });
+
+    window.addEventListener('click', function (e) {
+        if (document.querySelector(".email-menu-sidebar").classList.contains('menubar-show')) {
+            if (!isShowMenu) {
+                document.querySelector(".email-menu-sidebar").classList.remove("menubar-show");
+            }
+            isShowMenu = false;
+        }
+    });
+    favouriteBtn();
+}
+
+// editor
+ClassicEditor.create(document.querySelector('#email-editor')).then(function (editor) {
+        editor.ui.view.editable.element.style.height = '200px';
+    })
+    .catch(function (error) {
+        console.error(error);
+    });
+
+// check all
+function checkBoxAll() {
+    // checkbox-wrapper-mail
+    Array.from(document.querySelectorAll(".checkbox-wrapper-mail input")).forEach(function (element) {
+        element.addEventListener('click', function (el) {
+            if (el.target.checked == true) {
+                el.target.closest('li').classList.add("active");
+            } else {
+                el.target.closest('li').classList.remove("active");
+            }
+        });
+    });
+
+    // checkbox
+    var checkboxes = document.querySelectorAll('.tab-pane.show .checkbox-wrapper-mail input');
+    Array.from(checkboxes).forEach(function (element) {
+        element.addEventListener('click', function (event) {
+            var checkboxes = document.querySelectorAll('.tab-pane.show .checkbox-wrapper-mail input');
+            var checkall = document.getElementById('checkall');
+            var checkedCount = document.querySelectorAll('.tab-pane.show .checkbox-wrapper-mail input:checked').length;
+            checkall.checked = checkedCount > 0;
+            checkall.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+
+            if (event.target.closest('li').classList.contains("active")) {
+                (checkedCount > 0) ? document.getElementById("email-topbar-actions").style.display = 'block': document.getElementById("email-topbar-actions").style.display = 'none';
+            } else {
+                (checkedCount > 0) ? document.getElementById("email-topbar-actions").style.display = 'block': document.getElementById("email-topbar-actions").style.display = 'none';
+            }
+        });
+    });
+
+
+    function checkAll() {
+        var checkboxes = document.querySelectorAll('.tab-pane.show .checkbox-wrapper-mail input');
+        var checkedCount = document.querySelectorAll('.tab-pane.show .checkbox-wrapper-mail input:checked').length;
+        Array.from(checkboxes).forEach(function (chkbox) {
+            chkbox.checked = true;
+            chkbox.parentNode.parentNode.parentNode.classList.add("active");
+        });
+        (checkedCount > 0) ? document.getElementById("email-topbar-actions").style.display = 'none' : document.getElementById("email-topbar-actions").style.display = 'block';
+
+        if (checkedCount > 0) {
+            Array.from(checkboxes).forEach(function (chkbox) {
+                chkbox.checked = false;
+                chkbox.parentNode.parentNode.parentNode.classList.remove("active");
+            });
+        } else {
+            Array.from(checkboxes).forEach(function (chkbox) {
+                chkbox.checked = true;
+                chkbox.parentNode.parentNode.parentNode.classList.add("active");
+            });
+        }
+        this.onclick = uncheckAll;
+        removeItems();
+    }
+
+    function uncheckAll() {
+        var checkboxes = document.querySelectorAll('.tab-pane.show .checkbox-wrapper-mail input');
+        var checkedCount = document.querySelectorAll('.tab-pane.show .checkbox-wrapper-mail input:checked').length;
+        Array.from(checkboxes).forEach(function (chkbox) {
+            chkbox.checked = false;
+            chkbox.parentNode.parentNode.parentNode.classList.remove("active");
+        });
+        (checkedCount > 0) ? document.getElementById("email-topbar-actions").style.display = 'none' : document.getElementById("email-topbar-actions").style.display = 'block';
+        if (checkedCount > 0) {
+            Array.from(checkboxes).forEach(function (chkbox) {
+                chkbox.checked = false;
+                chkbox.parentNode.parentNode.parentNode.classList.remove("active");
+            });
+        } else {
+            Array.from(checkboxes).forEach(function (chkbox) {
+                chkbox.checked = true;
+                chkbox.parentNode.parentNode.parentNode.classList.add("active");
+            });
+        }
+        this.onclick = checkAll;
+    }
+
+    var checkall = document.getElementById("checkall");
+    checkall.onclick = checkAll;
+}
+
+//User current Id
+var currentChatId = "users-chat";
+scrollToBottom(currentChatId);
+// // Scroll to Bottom
+function scrollToBottom(id) {
+    setTimeout(() => {
+        var scrollEl = new SimpleBar(document.getElementById('chat-conversation'));
+        scrollEl.getScrollElement().scrollTop = document.getElementById("users-conversation").scrollHeight;
+    }, 100);
+}
+
+// removeItems
+function removeItems() {
+    var removeItem = document.getElementById('removeItemModal');
+    removeItem.addEventListener('show.bs.modal', function (event) {
+        document.getElementById("delete-record").addEventListener("click", function () {
+            Array.from(document.querySelectorAll(".message-list li")).forEach(function (element) {
+                var filtered = '';
+                if (element.classList.contains("active")) {
+
+                    var getid = element.querySelector('.form-check-input').value;
+
+                    function arrayRemove(arr, value) {
+                        return arr.filter(function (ele) {
+                            return ele.id != value;
+                        });
+                    }
+
+                    var filtered = arrayRemove(allmaillist, getid);
+
+                    allmaillist = filtered;
+
+                    element.remove();
+                }
+            });
+            document.getElementById("btn-close").click();
+            if (document.getElementById("email-topbar-actions"))
+                document.getElementById("email-topbar-actions").style.display = 'none';
+            checkall.indeterminate = false;
+            checkall.checked = false;
+        });
+    })
+}
+removeItems();
+
+function removeSingleItem() {
+    var getid = 0;
+    document.querySelectorAll(".remove-mail").forEach(function (item) {
+        item.addEventListener('click', function (event) {
+            getid = item.getAttribute('data-remove-id');
+            document.getElementById("delete-record").addEventListener("click", function () {
+                var filtered = '';
+                function arrayRemove(arr, value) {
+                    return arr.filter(function (ele) {
+                        return ele.id != value;
+                    });
+                }
+                filtered = arrayRemove(allmaillist, getid);
+                allmaillist = filtered;
+                loadMailData(allmaillist);
+                document.getElementById("close-btn-email").click();
+            });
+        });
+    });
+}
+removeSingleItem();
+
+var markAllReadBtn = document.getElementById("mark-all-read");
+
+markAllReadBtn.addEventListener('click', function (event) {
+    if (document.querySelectorAll(".message-list li.unread").length === 0) {
+        document.getElementById("unreadConversations").style.display = "block";
+        setTimeout(hideclipboardNew, 1000);
+
+        function hideclipboardNew() {
+            document.getElementById("unreadConversations").style.display = "none";
+        }
+    };
+
+    Array.from(document.querySelectorAll(".message-list li.unread")).forEach(function (element) {
+        if (element.classList.contains("unread")) {
+            element.classList.remove("unread");
+        }
+    });
+});
+
+var dummyUserImage = "assets/images/users/user-dummy-img.jpg";
+
+// email chat detail element
+var mailChatDetailElm = false;
+document.querySelectorAll(".email-chat-list a").forEach(function (item) {
+    if (item.classList.contains("active")) {
+        document.getElementById("emailchat-detailElem").style.display = "block";
+        var userListName = document.querySelector(".email-chat-list a.active").querySelector(".chatlist-user-name").innerHTML;
+        var userListProfile = document.querySelector(".email-chat-list a.active").querySelector(".chatlist-user-image img").getAttribute("src");
+        document.querySelector(".email-chat-detail .profile-username").innerHTML = userListName;
+        document.getElementById("users-conversation").querySelectorAll(".left .chat-avatar").forEach(function (item) {
+            if (userListProfile) {
+                item.querySelector("img").setAttribute("src", userListProfile);
+            } else {
+                item.querySelector("img").setAttribute("src", dummyUserImage);
+            }
+        });
+    }
+    item.addEventListener("click", function (event) {
+        document.getElementById("emailchat-detailElem").style.display = "block";
+        mailChatDetailElm = true;
+
+        // chat user list link active
+        var chatUserList = document.querySelector(".email-chat-list a.active");
+        if (chatUserList) chatUserList.classList.remove("active");
+        this.classList.add("active");
+
+        var currentChatId = "users-chat";
+        scrollToBottom(currentChatId);
+
+        //user Name and user Profile change on click
+        var username = item.querySelector(".chatlist-user-name").innerHTML;
+        var userProfile = item.querySelector(".chatlist-user-image img").getAttribute("src");
+
+        document.querySelector(".email-chat-detail .profile-username").innerHTML = username;
+        var conversationImg = document.getElementById("users-conversation");
+        Array.from(conversationImg.querySelectorAll(".left .chat-avatar")).forEach(function (item) {
+            if (userProfile) {
+                item.querySelector("img").setAttribute("src", userProfile);
+            } else {
+                item.querySelector("img").setAttribute("src", dummyUserImage);
+            }
+        });
+    });
+});
+
+document.getElementById("emailchat-btn-close").addEventListener("click", function () {
+    document.getElementById("emailchat-detailElem").style.display = "none";
+    mailChatDetailElm = false;
+    document.querySelector(".email-chat-list a.active").classList.remove("active");
+})
+
+// emailDetailChange
+function emailDetailChange() {
+    Array.from(document.querySelectorAll(".message-list li")).forEach(function (item) {
+        item.addEventListener("click", function () {
+            var mailListId = item.querySelector(".checkbox-wrapper-mail .form-check-input").value
+            document.querySelector(".remove-mail").setAttribute("data-remove-id", mailListId);;
+            var subjectTitle = item.querySelector(".subject-title").innerHTML;
+            document.querySelector(".email-subject-title").innerHTML = subjectTitle;
+
+            var emailTitleLeftName = item.querySelector(".title-name").innerHTML;
+            Array.from(document.querySelectorAll(".accordion-item.left")).forEach(function (subitem) {
+                subitem.querySelector(".email-user-name").innerHTML = emailTitleLeftName;
+                var userImg = item.querySelector(".mail-userimg").value;
+                subitem.querySelector("img").setAttribute("src", userImg)
+            });
+
+            var messageUserName = document.querySelector(".user-name-text").innerHTML;
+            var usermailProfile = document.querySelector(".header-profile-user").getAttribute("src");
+            Array.from(document.querySelectorAll(".accordion-item.right")).forEach(function (subitem) {
+                subitem.querySelector(".email-user-name-right").innerHTML = messageUserName;
+                subitem.querySelector("img").setAttribute("src", usermailProfile);
+            });
+        });
+    });
+}
+
+const triggerTabList = document.querySelectorAll('#mail-filter-navlist .nav-tabs button')
+triggerTabList.forEach(triggerEl => {
+    const tabTrigger = new bootstrap.Tab(triggerEl)
+
+    triggerEl.addEventListener('click', event => {
+        event.preventDefault()
+
+        var activeTab = document.querySelector(".tab-content .tab-pane.show")
+
+        tabTrigger.show()
+    })
+})
+
+
+function resizeEvent(){
+    var windowSize = document.documentElement.clientWidth;
+    if (windowSize < 767) {
+        var chatUserList = document.querySelector(".email-chat-list a.active");
+        if (chatUserList) chatUserList.classList.remove("active");
+        document.getElementById("emailchat-detailElem").style.display = "none";
+    }
+}
+resizeEvent();
+
+window.onresize = resizeEvent;
+
+

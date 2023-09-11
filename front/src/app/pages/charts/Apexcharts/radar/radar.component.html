@@ -1,0 +1,57 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Radar Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Basic Radar Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="basicRadarChart.series" [chart]="basicRadarChart.chart"
+            [xaxis]="basicRadarChart.xaxis" [stroke]="basicRadarChart.stroke" [colors]="basicRadarChart.colors" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Radar Chart - Multiple series</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="multipleSeriesChart.series" [chart]="multipleSeriesChart.chart"
+            [stroke]="multipleSeriesChart.stroke" [fill]="multipleSeriesChart.fill"
+            [markers]="multipleSeriesChart.markers" [colors]="multipleSeriesChart.colors"
+            [xaxis]="multipleSeriesChart.xaxis" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Radar Chart - Polygon Fill</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="polygonFillChart.series" [chart]="polygonFillChart.chart"
+            [xaxis]="polygonFillChart.xaxis" [stroke]="polygonFillChart.stroke"
+            [colors]="polygonFillChart.colors" [dataLabels]="polygonFillChart.dataLabels"
+            [tooltip]="polygonFillChart.tooltip" [plotOptions]="polygonFillChart.plotOptions"
+            [markers]="polygonFillChart.markers" [yaxis]="polygonFillChart.yaxis"
+            [fill]="polygonFillChart.fill" [title]="polygonFillChart.title" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->

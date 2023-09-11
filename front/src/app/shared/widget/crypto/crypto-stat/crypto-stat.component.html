@@ -1,0 +1,18 @@
+<div class="card">
+    <div class="card-body">
+         <div class="d-flex align-items-center">
+             <div class="avatar-sm flex-shrink-0">
+                 <span class="avatar-title bg-light text-primary rounded-circle fs-3">
+                    <i class="{{icon}} align-middle"></i>
+                 </span>
+             </div>
+             <div class="flex-grow-1 ms-3">
+                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">{{title}}</p>
+                <h4 class=" mb-0">$<span [CountTo]="value" class="counter-value" [from]="0" [duration]="1"></span></h4>
+             </div>
+             <div class="flex-shrink-0 align-self-end">
+                 <span class="badge" [ngClass]=" { 'bg-success-subtle text-success': profit === 'up', 'bg-danger-subtle text-danger': profit === 'down'}"><i class="align-middle me-1" [ngClass]=" { 'ri-arrow-up-s-fill': profit === 'up', 'ri-arrow-down-s-fill': profit === 'down'}"></i>{{persantage}} %<span>
+             </span></span></div>
+         </div>
+    </div><!-- end card body -->
+</div><!-- end card -->

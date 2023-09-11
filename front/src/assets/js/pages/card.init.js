@@ -1,1 +1,70 @@
-var Portlet=function(){(el=document.querySelector('.card a[data-toggle="reload"]'))&&el.addEventListener("click",function(e){e.preventDefault();var e=el.closest(".card"),t=(insertEl='<div class="card-preloader"><div class="card-status"><div class="spinner-border text-success"><span class="visually-hidden">Loading...</span></div></div></div>',e.children[1].insertAdjacentHTML("beforeend",insertEl),e.getElementsByClassName("card-preloader")[0]);setTimeout(function(){t.remove()},500+5*Math.random()*300)})},growingLoader=(Portlet(),function(){(element=document.querySelector('.card a[data-toggle="growing-reload"]'))&&element.addEventListener("click",function(e){e.preventDefault();var e=element.closest(".card"),t=(insertEl='<div class="card-preloader"><div class="card-status"><div class="spinner-grow text-danger"><span class="visually-hidden">Loading...</span></div></div></div>',e.children[1].insertAdjacentHTML("beforeend",insertEl),e.getElementsByClassName("card-preloader")[0]);setTimeout(function(){t.remove()},500+5*Math.random()*300)})}),customLoader=(growingLoader(),function(){(customLoader1=document.querySelector('.card a[data-toggle="customer-loader"]'))&&customLoader1.addEventListener("click",function(e){e.preventDefault();var e=customLoader1.closest(".card"),t=(insertEl='<div class="card-preloader"><div class="card-status"><img src="assets/images/logo-sm.png" alt="" class="img-fluid custom-loader"></div></div>',e.children[1].insertAdjacentHTML("beforeend",insertEl),e.getElementsByClassName("card-preloader")[0]);setTimeout(function(){t.remove()},500+5*Math.random()*300)})});function delthis(e){document.getElementById(e).remove()}customLoader();
+/*
+Template Name: Velzon - Admin & Dashboard Template
+Author: Themesbrand
+Website: https://Themesbrand.com/
+Contact: Themesbrand@gmail.com
+File: Card init js
+*/
+
+var Portlet = function() {
+    el = document.querySelector('.card a[data-toggle="reload"]');
+    if (el) {
+        el.addEventListener("click", function(ev) {
+            ev.preventDefault();
+            var $portlet = el.closest(".card");
+            insertEl =
+                '<div class="card-preloader"><div class="card-status"><div class="spinner-border text-success"><span class="visually-hidden">Loading...</span></div></div></div>';
+            $portlet.children[1].insertAdjacentHTML("beforeend", insertEl);
+            var $pd = $portlet.getElementsByClassName("card-preloader")[0];
+            setTimeout(function() {
+                $pd.remove();
+            }, 500 + 300 * (Math.random() * 5));
+        });
+    }
+};
+
+Portlet();
+
+var growingLoader = function() {
+    element = document.querySelector('.card a[data-toggle="growing-reload"]');
+    if (element) {
+        element.addEventListener("click", function(ev) {
+            ev.preventDefault();
+            var $portlet = element.closest(".card");
+            insertEl =
+                '<div class="card-preloader"><div class="card-status"><div class="spinner-grow text-danger"><span class="visually-hidden">Loading...</span></div></div></div>';
+            $portlet.children[1].insertAdjacentHTML("beforeend", insertEl);
+            var $pd = $portlet.getElementsByClassName("card-preloader")[0];
+            setTimeout(function() {
+                $pd.remove();
+            }, 500 + 300 * (Math.random() * 5));
+        });
+    }
+};
+growingLoader();
+
+var customLoader = function() {
+    customLoader1 = document.querySelector(
+        '.card a[data-toggle="customer-loader"]'
+    );
+    if (customLoader1) {
+        customLoader1.addEventListener("click", function(elem) {
+            elem.preventDefault();
+            var $portlet = customLoader1.closest(".card");
+            insertEl =
+                '<div class="card-preloader"><div class="card-status"><img src="assets/images/logo-sm.png" alt="" class="img-fluid custom-loader"></div></div>';
+            $portlet.children[1].insertAdjacentHTML("beforeend", insertEl);
+            var $pd = $portlet.getElementsByClassName("card-preloader")[0];
+            setTimeout(function() {
+                $pd.remove();
+            }, 500 + 300 * (Math.random() * 5));
+        });
+    }
+};
+
+customLoader();
+
+//card-remove Js
+function delthis(id) {
+    document.getElementById(id).remove();
+}

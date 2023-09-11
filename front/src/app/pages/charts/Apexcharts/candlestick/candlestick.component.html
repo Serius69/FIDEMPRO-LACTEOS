@@ -1,0 +1,79 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Candlestick Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Basic Candlestick Chart</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="basicCandlestickChart.series" [chart]="basicCandlestickChart.chart" [plotOptions]="basicCandlestickChart.plotOptions"
+            [xaxis]="basicCandlestickChart.xaxis" [yaxis]="basicCandlestickChart.yaxis"
+            [title]="basicCandlestickChart.title" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Candlestick Synced with Brush Chart (Combo)</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+              <div>
+                <div id="combo_candlestick" class="apex-charts" dir="ltr">
+                  <apx-chart #chartCandle [series]="chartCandleOptions.series" [chart]="chartCandleOptions.chart"
+                      [xaxis]="chartCandleOptions.xaxis" [plotOptions]="chartCandleOptions.plotOptions" dir="ltr"></apx-chart>
+              </div>
+              <div id="combo_candlestick_chart" class="apex-charts" dir="ltr">
+                  <apx-chart #chartBar [series]="chartBarOptions.series" [chart]="chartBarOptions.chart"
+                      [xaxis]="chartBarOptions.xaxis" [yaxis]="chartBarOptions.yaxis"
+                      [dataLabels]="chartBarOptions.dataLabels" [stroke]="chartBarOptions.stroke"
+                      [plotOptions]="chartBarOptions.plotOptions" dir="ltr"></apx-chart>
+              </div>
+              </div>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+  <div class="col-xl-6">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="card-title mb-0">Category X-Axis</h4>
+          </div><!-- end card header -->
+
+          <div class="card-body">
+            <apx-chart [series]="categoryXAxisChart.series" [chart]="categoryXAxisChart.chart"
+            [xaxis]="categoryXAxisChart.xaxis" [plotOptions]="categoryXAxisChart.plotOptions" [yaxis]="categoryXAxisChart.yaxis"
+            [title]="categoryXAxisChart.title" [tooltip]="categoryXAxisChart.tooltip" dir="ltr"></apx-chart>
+          </div><!-- end card-body -->
+      </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+  <div class="col-xl-6">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title mb-0">Candlestick with line</h4>
+        </div><!-- end card header -->
+
+        <div class="card-body">
+            <apx-chart [series]="candlestickLineChart.series" [chart]="candlestickLineChart.chart"
+            [plotOptions]="candlestickLineChart.plotOptions" [colors]="candlestickLineChart.colors" [stroke]="candlestickLineChart.stroke"
+            [tooltip]="candlestickLineChart.tooltip" [xaxis]="candlestickLineChart.xaxis" dir="ltr"></apx-chart>
+        </div><!-- end card-body -->
+    </div><!-- end card -->
+  </div>
+  <!-- end col -->
+
+</div>
+<!-- end row -->

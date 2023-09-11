@@ -1,0 +1,17 @@
+<div class="col">
+    <div class="py-4 px-3">
+        <h5 class="text-muted text-uppercase fs-13">{{title}} <i class="fs-18 float-end align-middle"
+                [ngClass]=" { 'ri-arrow-up-circle-line text-success': profit === 'up', 'ri-arrow-down-circle-line text-danger': profit === 'down'}"></i>
+        </h5>
+        <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+                <i class="{{icon}} display-6 text-muted"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <h2 class="mb-0">{{sign}}<span [CountTo]="value" class="counter-value" [from]="0"
+                        [duration]="1"></span>{{percentage}}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div><!-- end col -->

@@ -1,0 +1,29 @@
+<table class="table table-borderless table-nowrap table-centered align-middle mb-0">
+    <thead class="table-light text-muted">
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Dedline</th>
+            <th scope="col">Status</th>
+            <th scope="col">Assignee</th>
+        </tr>
+    </thead><!-- end thead -->
+    <tbody>
+        <tr *ngFor="let data of MyTask"> 
+            <td>
+                <div class="form-check">
+                    <input class="form-check-input fs-15" type="checkbox" value="" id="checkTask1">
+                    <label class="form-check-label ms-1" for="checkTask1">
+                        {{data.name}}
+                    </label>
+                  </div>
+            </td>
+            <td class="text-muted">{{data.dedline}}</td>
+            <td><span class="badge bg-success-subtle text-success" [ngClass]=" { 'bg-warning-subtle text-warning': data.status === 'Progress', 'bg-danger-subtle text-danger': data.status === 'Pending'}">{{data.status}}</span></td>
+            <td>
+                <a href="javascript: void(0);" class="d-inline-block" data-bs-toggle="tooltip" ngbTooltip="{{data.assignee.name}}" placement="top">
+                    <img src="{{data.assignee.profile}}" alt="" class="rounded-circle avatar-xxs">
+                </a>
+            </td>
+        </tr><!-- end -->
+    </tbody><!-- end tbody -->
+</table><!-- end table -->

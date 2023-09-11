@@ -1,0 +1,44 @@
+<!-- start plan -->
+<section class="section bg-light" id="categories">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+                <div class="text-center mb-5">
+                    <h2 class="mb-3 fw-semibold lh-base">Trending All Categories</h2>
+                    <p class="text-muted">The process of creating an NFT may cost less than a dollar, but the process of
+                        selling it can cost up to a thousand dollars. For example, Allen Gannett, a software developer.
+                    </p>
+                </div>
+            </div><!-- end col -->
+        </div><!-- end row -->
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- Swiper -->
+                <div class="swiper mySwiper pb-4">
+                    <swiper [config]="Responsive">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide" *ngFor="let data of ClientLogo">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row g-1 mb-3">
+                                            <div class="col-6" *ngFor="let user of data.images">
+                                                <img src="{{user.img}}" alt="" class="img-fluid rounded mt-1"
+                                                    *ngFor="let user of user.image">
+                                            </div><!--end col-->
+                                        </div><!--end row-->
+                                        <a href="javascript:void(0);" class="float-end"> View All <i
+                                                class="ri-arrow-right-line align-bottom"></i></a>
+                                        <h5 class="mb-0 fs-16"><a href="javascript:void(0);">Artwork <span
+                                                    class="badge bg-success-subtle text-success">206</span></a></h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="swiper-pagination swiper-pagination-dark"></div>
+                    </swiper>
+                </div>
+            </div>
+        </div>
+    </div><!-- end container -->
+</section>
+<!-- end plan -->

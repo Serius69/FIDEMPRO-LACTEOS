@@ -1,0 +1,31 @@
+<table class="table table-hover table-borderless table-centered align-middle table-nowrap mb-0">
+    <thead class="text-muted bg-light-subtle">
+        <tr>
+            <th>Coin Name</th>
+            <th>Price</th>
+            <th>24h Change</th>
+            <th>Total Balance</th>
+            <th>Total Coin</th>
+            <th>Actions</th>
+        </tr>
+    </thead><!-- end thead -->
+    <tbody>
+        <tr *ngFor="let data of Currencies">
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="me-2">
+                        <img src="{{data.image}}" alt="" class="avatar-xxs">
+                    </div>
+                    <div>
+                        <h6 class="fs-14 mb-0">{{data.coinName}}</h6>
+                    </div>
+                </div>
+            </td>
+            <td>${{data.price}}</td>
+            <td><h6 class="fs-13 mb-0" [ngClass]=" { 'text-success': data.profit === 'up', 'text-danger': data.profit === 'down'}"><i class="mdi align-middle me-1" [ngClass]=" { 'mdi-trending-up': data.profit === 'up', 'mdi-trending-down': data.profit === 'down'}"></i>{{data.change}}</h6></td>
+            <td>${{data.balance}}</td>
+            <td>{{data.coin}}</td>
+            <td><a href="crypto/buy-sell" class="btn btn-sm btn-soft-secondary">Trade</a></td>
+        </tr><!-- end -->
+    </tbody><!-- end tbody -->
+</table><!-- end table -->

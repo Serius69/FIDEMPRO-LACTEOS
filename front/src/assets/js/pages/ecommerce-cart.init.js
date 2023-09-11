@@ -1,1 +1,70 @@
-var taxRate=.125,shippingRate=65,discountRate=.15,currencySign="$";function recalculateCart(){var t=0,e=(Array.from(document.getElementsByClassName("product")).forEach(function(e){Array.from(e.getElementsByClassName("product-line-price")).forEach(function(e){t+=parseFloat(e.innerHTML)})}),t*taxRate),n=t*discountRate,r=0<t?shippingRate:0,c=t+e+r-n;document.getElementById("cart-subtotal").innerHTML=currencySign+t.toFixed(2),document.getElementById("cart-tax").innerHTML=currencySign+e.toFixed(2),document.getElementById("cart-shipping").innerHTML=currencySign+r.toFixed(2),document.getElementById("cart-total").innerHTML=currencySign+c.toFixed(2),document.getElementById("cart-discount").innerHTML="-"+currencySign+n.toFixed(2)}function updateQuantity(e){var t,n,r=e.closest(".product"),c=((r||r.getElementsByClassName("product-price"))&&Array.from(r.getElementsByClassName("product-price")).forEach(function(e){t=parseFloat(e.innerHTML)}),e.previousElementSibling&&e.previousElementSibling.classList.contains("product-quantity")?n=e.previousElementSibling.value:e.nextElementSibling&&e.nextElementSibling.classList.contains("product-quantity")&&(n=e.nextElementSibling.value),t*n);Array.from(r.getElementsByClassName("product-line-price")).forEach(function(e){e.innerHTML=c.toFixed(2),recalculateCart()})}var removeProduct=document.getElementById("removeItemModal");removeProduct&&removeProduct.addEventListener("show.bs.modal",function(t){document.getElementById("remove-product").addEventListener("click",function(e){t.relatedTarget.closest(".product").remove(),document.getElementById("close-modal").click(),recalculateCart()})});
+/*
+Template Name: Velzon - Admin & Dashboard Template
+Author: Themesbrand
+Website: https://Themesbrand.com/
+Contact: Themesbrand@gmail.com
+File: Ecommerce cart Js File
+*/
+
+
+var taxRate = 0.125;
+var shippingRate = 65.00;
+var discountRate = 0.15;
+
+var currencySign = "$";
+
+function recalculateCart() {
+
+    var subtotal = 0;
+
+    Array.from(document.getElementsByClassName("product")).forEach(function (item) {
+        Array.from(item.getElementsByClassName('product-line-price')).forEach(function (e) {
+            subtotal += parseFloat(e.innerHTML);
+        });
+    });
+
+    /* Calculate totals */
+    var tax = subtotal * taxRate;
+    var discount = subtotal * discountRate;
+
+    var shipping = (subtotal > 0 ? shippingRate : 0);
+    var total = subtotal + tax + shipping - discount;
+
+    document.getElementById("cart-subtotal").innerHTML = currencySign + subtotal.toFixed(2);
+    document.getElementById("cart-tax").innerHTML = currencySign + tax.toFixed(2);
+    document.getElementById("cart-shipping").innerHTML = currencySign + shipping.toFixed(2);
+    document.getElementById("cart-total").innerHTML = currencySign + total.toFixed(2);
+    document.getElementById("cart-discount").innerHTML = "-" + currencySign + discount.toFixed(2);
+}
+
+function updateQuantity(quantityInput) {
+    var productRow = quantityInput.closest('.product');
+    var price;
+    if (productRow || productRow.getElementsByClassName('product-price'))
+        Array.from(productRow.getElementsByClassName('product-price')).forEach(function (e) {
+            price = parseFloat(e.innerHTML);
+        });
+
+    if (quantityInput.previousElementSibling && quantityInput.previousElementSibling.classList.contains("product-quantity")) {
+        var quantity = quantityInput.previousElementSibling.value;
+    } else if (quantityInput.nextElementSibling && quantityInput.nextElementSibling.classList.contains("product-quantity")) {
+        var quantity = quantityInput.nextElementSibling.value;
+    }
+    var linePrice = price * quantity;
+    /* Update line price display and recalc cart totals */
+    Array.from(productRow.getElementsByClassName('product-line-price')).forEach(function (e) {
+        e.innerHTML = linePrice.toFixed(2);
+        recalculateCart();
+    });
+}
+
+// Remove product from cart
+var removeProduct = document.getElementById('removeItemModal')
+if (removeProduct)
+    removeProduct.addEventListener('show.bs.modal', function (e) {
+        document.getElementById('remove-product').addEventListener('click', function (event) {
+            e.relatedTarget.closest('.product').remove();
+            document.getElementById("close-modal").click();
+            recalculateCart();
+        });
+    });

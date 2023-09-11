@@ -1,0 +1,27 @@
+<div class="card card-animate">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div>
+                <p class="fw-medium text-muted mb-0">{{title}}</p>
+                <h2 class="mt-4 ff-secondary fw-semibold">
+                    <span [CountTo]="value" class="counter-value" [from]="0" [duration]="1"></span><span
+                        *ngIf="title == 'Users' || title == 'Sessions'">K</span><span
+                        *ngIf="title == 'Avg. Visit Duration'">sec</span><span *ngIf="title == 'Bounce Rate'">%</span>
+                </h2>
+                <p class="mb-0 text-muted"><span class="badge bg-light text-success mb-0"
+                        [ngClass]=" { 'text-danger': profit === 'down'}">
+                        <i class="align-middle"
+                            [ngClass]=" { 'ri-arrow-up-line': profit === 'up','ri-arrow-down-line': profit === 'down'}"></i>
+                        {{persantage}} %
+                    </span> vs. previous month</p>
+            </div>
+            <div>
+                <div class="avatar-sm flex-shrink-0">
+                    <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                        <i-feather name="{{icon}}" class="text-info feather-icon-align"></i-feather>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div><!-- end card body -->
+</div> <!-- end card-->

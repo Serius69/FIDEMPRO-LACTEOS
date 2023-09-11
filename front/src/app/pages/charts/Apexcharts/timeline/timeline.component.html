@@ -1,0 +1,107 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Timeline Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Basic TimeLine Charts</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="basicTimelineChart.series" [chart]="basicTimelineChart.chart"
+                    [plotOptions]="basicTimelineChart.plotOptions" [xaxis]="basicTimelineChart.xaxis"
+                    [colors]="basicTimelineChart.colors" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Different Color For Each Bar</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="differentColorChart.series" [chart]="differentColorChart.chart"
+                    [fill]="differentColorChart.fill" [grid]="differentColorChart.grid"
+                    [dataLabels]="differentColorChart.dataLabels" [plotOptions]="differentColorChart.plotOptions"
+                    [xaxis]="differentColorChart.xaxis" [yaxis]="differentColorChart.yaxis" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Multi Series Timeline</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="multiSeriesTimelineChart.series" [chart]="multiSeriesTimelineChart.chart"
+                    [dataLabels]="multiSeriesTimelineChart.dataLabels"
+                    [plotOptions]="multiSeriesTimelineChart.plotOptions" [xaxis]="multiSeriesTimelineChart.xaxis"
+                    [legend]="multiSeriesTimelineChart.legend" [colors]="multiSeriesTimelineChart.colors"
+                    dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Advanced Timeline (Multiple Range)</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="advancedTimelineChart.series" [chart]="advancedTimelineChart.chart"
+                    [fill]="advancedTimelineChart.fill" [legend]="advancedTimelineChart.legend"
+                    [plotOptions]="advancedTimelineChart.plotOptions" [xaxis]="advancedTimelineChart.xaxis"
+                    [stroke]="advancedTimelineChart.stroke" [colors]="advancedTimelineChart.colors"
+                    dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
+
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Multiple series – Group rows</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="multipleSeriesChart.series" [chart]="multipleSeriesChart.chart"
+                    [plotOptions]="multipleSeriesChart.plotOptions" [colors]="multipleSeriesChart.colors"
+                    [fill]="multipleSeriesChart.fill" [xaxis]="multipleSeriesChart.xaxis"
+                    [legend]="multipleSeriesChart.legend" [tooltip]="multipleSeriesChart.tooltip" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Dumbbell Chart (Horizontal)</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <apx-chart [series]="Dumbbell.series" [chart]="Dumbbell.chart" [plotOptions]="Dumbbell.plotOptions"
+                    [colors]="Dumbbell.colors" [fill]="Dumbbell.fill" [xaxis]="Dumbbell.xaxis"
+                    [legend]="Dumbbell.legend" [tooltip]="Dumbbell.tooltip" dir="ltr"></apx-chart>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>
+<!-- end row -->
