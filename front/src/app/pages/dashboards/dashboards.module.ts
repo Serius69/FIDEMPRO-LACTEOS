@@ -29,13 +29,11 @@ import { WidgetModule } from '../../shared/widget/widget.module';
 // Component
 import { AnalyticsComponent } from './analytics/analytics.component';
 import { CrmComponent } from './crm/crm.component';
-import { ProjectsComponent } from './projects/projects.component';
 
 @NgModule({
   declarations: [
     AnalyticsComponent,
     CrmComponent,
-    ProjectsComponent,
   ],
   imports: [
     CommonModule,

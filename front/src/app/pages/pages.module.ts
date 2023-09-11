@@ -52,7 +52,6 @@ import { AppsModule } from "./apps/apps.module";
     WidgetModule,
     NgxUsefulSwiperModule,
     LightboxModule,
-    DashboardsModule,
     AppsModule,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
