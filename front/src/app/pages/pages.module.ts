@@ -30,7 +30,6 @@ import { ToastsContainer } from './dashboards/dashboard/toasts-container.compone
 import { DashboardsModule } from "./dashboards/dashboards.module";
 import { AppsModule } from "./apps/apps.module";
 
-
 @NgModule({
   declarations: [
     DashboardComponent,
@@ -53,6 +52,7 @@ import { AppsModule } from "./apps/apps.module";
     NgxUsefulSwiperModule,
     LightboxModule,
     AppsModule,
+    DashboardsModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

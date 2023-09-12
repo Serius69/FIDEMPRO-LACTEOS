@@ -30,23 +30,16 @@ import { defineElement } from 'lord-icon-element';
 import lottie from 'lottie-web';
 
 // Component pages
-import { FormRoutingModule } from './form-routing.module';
-import { SharedModule } from '../../shared/shared.module';
-import { ValidationComponent } from './validation/validation.component';
-import { WizardComponent } from './wizard/wizard.component';
-import { LayoutsComponent } from './layouts/layouts.component';
+import { CrudProductComponent } from './crud/crudproduct.component';
 
 const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
   url: 'https://httpbin.org/post',
   maxFilesize: 50,
   acceptedFiles: 'image/*'
 };
-
 @NgModule({
   declarations: [
-    ValidationComponent,
-    WizardComponent,
-    LayoutsComponent
+    CrudProductComponent
   ],
   imports: [
     CommonModule,
@@ -58,23 +51,20 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
     UiSwitchModule,
     FlatpickrModule,
     ColorPickerModule,
-    NgxMaskDirective, 
-    NgxMaskPipe,
     NgxSliderModule,
     ArchwizardModule,
     CKEditorModule,
-    AutocompleteLibModule,
-    FormRoutingModule,
-    SharedModule,
     DropzoneModule,
+    AutocompleteLibModule
   ],
   providers:[
     provideNgxMask(),
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class FormModule { 
+export class ProductModule { 
   constructor() {
     defineElement(lottie.loadAnimation);
   }
 }
+

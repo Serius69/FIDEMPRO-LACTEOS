@@ -13,10 +13,13 @@ const routes: Routes = [
       path: '', loadChildren: () => import('./dashboards/dashboards.module').then(m => m.DashboardsModule)
     },
     {
-      path: 'home', loadChildren: () => import('./apps/apps.module').then(m => m.AppsModule)
+      path: 'dashboard', loadChildren: () => import('./dashboards/dashboards.module').then(m => m.DashboardsModule)
     },
     {
-      path: 'product', loadChildren: () => import('./crud/crud.module').then(m => m.CrudModule)
+      path: 'product', loadChildren: () => import('./product/product.module').then(m => m.ProductModule)
+    },    
+    {
+      path: 'variable', loadChildren: () => import('./variable/variable.module').then(m => m.VariableModule)
     },
     {
       path: 'simulate', loadChildren: () => import('./simulate/simulate.module').then(m => m.SimulateModule)

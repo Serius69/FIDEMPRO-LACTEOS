@@ -18,42 +18,6 @@ export const MENU: MenuItem[] = [
         link: '/analytics',
         parentId: 2
       },
-      {
-        id: 4,
-        label: 'MENUITEMS.DASHBOARD.LIST.CRM',
-        link: '/crm',
-        parentId: 2
-      },
-      {
-        id: 5,
-        label: 'MENUITEMS.DASHBOARD.LIST.ECOMMERCE',
-        link: '',
-        parentId: 2
-      },
-      {
-        id: 6,
-        label: 'MENUITEMS.DASHBOARD.LIST.CRYPTO',
-        link: '/crypto',
-        parentId: 2
-      },
-      {
-        id: 7,
-        label: 'MENUITEMS.DASHBOARD.LIST.PROJECTS',
-        link: '/projects',
-        parentId: 2
-      },
-      {
-        id: 7,
-        label: 'MENUITEMS.DASHBOARD.LIST.NFT',
-        link: '/nft',
-        parentId: 2
-      },
-      {
-        id: 8,
-        label: 'MENUITEMS.DASHBOARD.LIST.JOB',
-        link: '/job',
-        parentId: 2,
-      }
     ]
   },
   {
