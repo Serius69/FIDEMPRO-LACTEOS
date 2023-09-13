@@ -29,7 +29,9 @@ import { DashboardComponent } from './dashboards/dashboard/dashboard.component';
 import { ToastsContainer } from './dashboards/dashboard/toasts-container.component';
 import { DashboardsModule } from "./dashboards/dashboards.module";
 import { AppsModule } from "./apps/apps.module";
-
+import { ProductModule } from './product/product.module';
+import { VariableModule } from './variable/variable.module';
+import { SimulateModule } from './simulate/simulate.module';
 @NgModule({
   declarations: [
     DashboardComponent,
@@ -52,7 +54,10 @@ import { AppsModule } from "./apps/apps.module";
     NgxUsefulSwiperModule,
     LightboxModule,
     AppsModule,
-    DashboardsModule
+    DashboardsModule,
+    ProductModule,
+    VariableModule,
+    SimulateModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

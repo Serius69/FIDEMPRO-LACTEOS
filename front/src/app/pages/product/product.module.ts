@@ -31,7 +31,8 @@ import lottie from 'lottie-web';
 
 // Component pages
 import { CrudProductComponent } from './crud/crudproduct.component';
-
+import { AddComponent } from './add/add.component';
+import { ProductRoutingModule } from './product-routing.module';
 const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
   url: 'https://httpbin.org/post',
   maxFilesize: 50,
@@ -39,7 +40,8 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
 };
 @NgModule({
   declarations: [
-    CrudProductComponent
+    CrudProductComponent,
+    AddComponent
   ],
   imports: [
     CommonModule,
@@ -55,7 +57,8 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
     ArchwizardModule,
     CKEditorModule,
     DropzoneModule,
-    AutocompleteLibModule
+    AutocompleteLibModule,
+    ProductRoutingModule
   ],
   providers:[
     provideNgxMask(),
