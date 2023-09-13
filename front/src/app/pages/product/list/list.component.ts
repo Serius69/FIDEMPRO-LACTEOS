@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ProductService } from 'src/app/core/services/product.service';
+import { ProductService } from 'src/app/pages/product/product.service';
 import { Product } from 'src/app/core/common/product';
 
 import { projectListWidgets, projectListWidgets1, projectListWidgets2 } from './data';
 import { projectListModel, projectListModel1, projectListModel2 } from './list.model';
 import { listService } from './list.service';
+import { DecimalPipe } from '@angular/common';
 @Component({
   selector: 'app-list',
-  templateUrl: './list.component.html'
+  templateUrl: './list.component.html',
+  providers: [listService, DecimalPipe]
 })
 export class ListComponent implements OnInit {
   ProductArray: Product[] = [];

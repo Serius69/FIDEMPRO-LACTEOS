@@ -92,7 +92,7 @@ export const MENU: MenuItem[] = [
           {
             id: 15,
             label: 'MENUITEMS.APPS.LIST.CREATEPRODUCT',
-            link: '/ecommerce/add-product',
+            link: '/ecommerce/create',
             parentId: 12
           },
           {

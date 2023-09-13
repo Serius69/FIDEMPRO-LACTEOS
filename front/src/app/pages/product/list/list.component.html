@@ -5,8 +5,7 @@
 <div class="row g-4 mb-3">
     <div class="col-sm-auto">
         <div>
-            <a routerLink="/projects/create" class="btn btn-success"><i class="ri-add-line align-bottom me-1"></i> Add
-                New</a>
+            <a routerLink="/projects/create" class="btn btn-success"><i class="ri-add-line align-bottom me-1"></i> Add New</a>
         </div>
     </div>
     <div class="col-sm">
@@ -92,7 +91,7 @@
                     <div class="mt-auto">
                         <div class="d-flex mb-2">
                             <div class="flex-grow-1">
-                                <div>Tasks</div>
+                                <div>Variables</div>
                             </div>
                             <div class="flex-shrink-0">
                                 <div><i class="ri-list-check align-bottom me-1 text-muted"></i>{{data.number}}</div>
@@ -109,7 +108,7 @@
             <!-- end card body -->
             <div class="card-footer bg-transparent border-top-dashed py-2">
                 <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
+                    <!-- <div class="flex-grow-1">
                         <div class="avatar-group">
                             <div class="avatar-group-item" *ngFor="let user of data.users">
                                 <a href="javascript: void(0);" class="d-block" ngbTooltip="{{user.name}}"
@@ -126,15 +125,13 @@
                                 </a>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="flex-shrink-0">
                         <div class="text-muted">
                             <i class="ri-calendar-event-fill mx-1 align-bottom"></i>{{data.date}}
                         </div>
                     </div>
-
                 </div>
-
             </div>
             <!-- end card footer -->
         </div>
@@ -144,204 +141,6 @@
 </div>
 <!-- end row -->
 
-<div class="row">
-    <div class="col-xxl-3 col-sm-6 project-card" *ngFor="let data of projectListWidgets1" id="pl1_{{data.id}}">
-        <div class="card">
-            <div class="card-body">
-                <div class="p-3 mt-n3 mx-n3 bg-{{data.bg_color}}-subtle text-{{data.bg_color}} rounded-top">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="mb-0 fs-14"><a routerLink="/projects/overview"
-                                    class="text-body">{{data.label}}</a></h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <div class="d-flex gap-1 align-items-center my-n2">
-                                <button type="button" class="btn avatar-xs p-0 favourite-btn heart_icon_{{data.id}}"
-                                    [ngClass]="{'active': data.isIcon !== true}" (click)="activeMenu(data.id)">
-                                    <span class="avatar-title bg-transparent fs-15">
-                                        <i class="ri-star-fill"></i>
-                                    </span>
-                                </button>
-                                <div class="dropdown" ngbDropdown>
-                                    <button
-                                        class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15 arrow-none"
-                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true"
-                                        ngbDropdownToggle>
-                                        <i-feather name="more-horizontal" class="icon-sm"></i-feather>
-                                    </button>
-
-                                    <div class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
-                                        <a class="dropdown-item" routerLink="/projects/overview"><i
-                                                class="ri-eye-fill align-bottom me-2 text-muted float-start"></i>
-                                            View</a>
-                                        <a class="dropdown-item" routerLink="/projects/create"><i
-                                                class="ri-pencil-fill align-bottom me-2 text-muted float-start"></i>
-                                            Edit</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal"
-                                            data-bs-target="#removeProjectModal"
-                                            (click)="confirm(deleteModel,data.id)"><i
-                                                class="ri-delete-bin-fill align-bottom me-2 text-muted float-start"></i>
-                                            Remove</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="py-3">
-                    <div class="row gy-3">
-                        <div class="col-6">
-                            <div>
-                                <p class="text-muted mb-1">Status</p>
-                                <div class="badge bg-{{data.statusClass}}-subtle text-{{data.statusClass}} fs-12">
-                                    {{data.status}}</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div>
-                                <p class="text-muted mb-1">Deadline</p>
-                                <h5 class="fs-14">{{data.deadline}}</h5>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center mt-3">
-                        <p class="text-muted mb-0 me-2">Team :</p>
-                        <div class="avatar-group">
-                            <div class="avatar-group-item" *ngFor="let user of data.users">
-                                <a href="javascript: void(0);" class="d-block" ngbTooltip="{{user.name}}"
-                                    placement="top" *ngIf="!user.profile">
-                                    <div class="avatar-xxs">
-                                        <span class="avatar-title rounded-circle {{user.variant}}">
-                                            {{user.text}}
-                                        </span>
-                                    </div>
-                                </a>
-                                <a href="javascript: void(0);" class="d-block" ngbTooltip="{{user.name}}"
-                                    placement="top" *ngIf="user.profile">
-                                    <img :src="{{user.profile}}" alt="" class="rounded-circle avatar-xxs">
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div class="d-flex mb-2">
-                        <div class="flex-grow-1">
-                            <div>Progress</div>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <div>{{data.progressBar}}%</div>
-                        </div>
-                    </div>
-                    <ngb-progressbar [value]="data.progressBar" type="success" class="progress-sm"></ngb-progressbar>
-                </div>
-
-            </div>
-            <!-- end card body -->
-        </div>
-        <!-- end card -->
-    </div>
-    <!-- end col -->
-</div>
-<!-- end row -->
-
-<div class="row">
-    <div class="col-xxl-3 col-sm-6 project-card" *ngFor="let data of projectListWidgets2" id="pl1_{{data.id}}">
-        <div class="card">
-            <div class="card-body">
-                <div class="p-3 mt-n3 mx-n3 {{data.bg_color}} rounded-top">
-                    <div class="d-flex gap-1 align-items-center justify-content-end my-n2">
-                        <button type="button" class="btn avatar-xs p-0 favourite-btn heart_icon_{{data.id}}"
-                            [ngClass]="{'active': data.isIcon !== true}" (click)="activeMenu(data.id)">
-                            <span class="avatar-title bg-transparent fs-15">
-                                <i class="ri-star-fill"></i>
-                            </span>
-                        </button>
-                        <div class="dropdown" ngbDropdown>
-                            <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15 arrow-none"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true" ngbDropdownToggle>
-                                <i-feather name="more-horizontal" class="icon-sm"></i-feather>
-                            </button>
-
-                            <div class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
-                                <a class="dropdown-item" routerLink="/projects/overview"><i
-                                        class="ri-eye-fill align-bottom me-2 text-muted float-start"></i> View</a>
-                                <a class="dropdown-item" routerLink="/projects/create"><i
-                                        class="ri-pencil-fill align-bottom me-2 text-muted float-start"></i> Edit</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal"
-                                    data-bs-target="#removeProjectModal" (click)="confirm(deleteModel,data.id)"><i
-                                        class="ri-delete-bin-fill align-bottom me-2 text-muted float-start"></i>
-                                    Remove</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-center pb-3">
-                        <img src="{{data.img}}" alt="" height="32">
-                    </div>
-                </div>
-
-                <div class="py-3">
-                    <h5 class="fs-14 mb-3"><a routerLink="/projects/overview" class="text-body">{{data.label}}</a></h5>
-                    <div class="row gy-3">
-                        <div class="col-6">
-                            <div>
-                                <p class="text-muted mb-1">Status</p>
-                                <div class="badge bg-{{data.statusClass}}-subtle text-{{data.statusClass}} fs-12">
-                                    {{data.status}}</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div>
-                                <p class="text-muted mb-1">Deadline</p>
-                                <h5 class="fs-14">{{data.deadline}}</h5>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center mt-3">
-                        <p class="text-muted mb-0 me-2">Team :</p>
-                        <div class="avatar-group">
-                            <div class="avatar-group-item" *ngFor="let user of data.users">
-                                <a href="javascript: void(0);" class="d-block" ngbTooltip="{{user.name}}"
-                                    placement="top" *ngIf="!user.profile">
-                                    <div class="avatar-xxs">
-                                        <span class="avatar-title rounded-circle {{user.variant}}">
-                                            {{user.text}}
-                                        </span>
-                                    </div>
-                                </a>
-                                <a href="javascript: void(0);" class="d-block" ngbTooltip="{{user.name}}"
-                                    placement="top" *ngIf="user.profile">
-                                    <img :src="{{user.profile}}" alt="" class="rounded-circle avatar-xxs">
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div class="d-flex mb-2">
-                        <div class="flex-grow-1">
-                            <div>Tasks</div>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <div><i class="ri-list-check align-bottom me-1 text-muted"></i> {{data.number}}</div>
-                        </div>
-                    </div>
-                    <ngb-progressbar [value]="data.progressBar" type="success" class="progress-sm"></ngb-progressbar>
-                </div>
-
-            </div>
-            <!-- end card body -->
-        </div>
-        <!-- end card -->
-    </div>
-    <!-- end col -->
-</div>
-<!-- end row -->
 
 <div class="row g-0 text-center text-sm-start align-items-center mb-4">
     <div class="col-sm-6">
@@ -359,18 +158,6 @@
             </li>
             <li class="page-item active">
                 <a href="javascript:void(0);" class="page-link">1</a>
-            </li>
-            <li class="page-item ">
-                <a href="javascript:void(0);" class="page-link">2</a>
-            </li>
-            <li class="page-item">
-                <a href="javascript:void(0);" class="page-link">3</a>
-            </li>
-            <li class="page-item">
-                <a href="javascript:void(0);" class="page-link">4</a>
-            </li>
-            <li class="page-item">
-                <a href="javascript:void(0);" class="page-link">5</a>
             </li>
             <li class="page-item">
                 <a href="javascript:void(0);" class="page-link">Next</a>

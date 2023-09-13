@@ -40,6 +40,7 @@ import { SimplebarAngularModule } from 'simplebar-angular';
 import { ListComponent } from './list/list.component';
 import { AddComponent } from './add/add.component';
 import { ProductRoutingModule } from './product-routing.module';
+import { OverviewComponent } from './overview/overview.component';
 
 const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
   url: 'https://httpbin.org/post',
@@ -49,6 +50,7 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
 @NgModule({
   declarations: [
     ListComponent,
+    OverviewComponent,
     AddComponent
   ],
   imports: [

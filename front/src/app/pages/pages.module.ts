@@ -31,6 +31,7 @@ import { DashboardsModule } from "./dashboards/dashboards.module";
 import { ProductModule } from './product/product.module';
 import { VariableModule } from './variable/variable.module';
 import { SimulateModule } from './simulate/simulate.module';
+import { HomeModule } from './home/home.module';
 @NgModule({
   declarations: [
     DashboardComponent,
@@ -55,7 +56,8 @@ import { SimulateModule } from './simulate/simulate.module';
     DashboardsModule,
     ProductModule,
     VariableModule,
-    SimulateModule
+    SimulateModule,
+    HomeModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

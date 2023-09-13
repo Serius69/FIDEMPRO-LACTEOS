@@ -30,8 +30,9 @@ import { defineElement } from 'lord-icon-element';
 import lottie from 'lottie-web';
 
 // Component pages
-import { CrudVariableComponent } from './crud/crudvariable.component';
 import { CreateComponent } from './create/create.component';
+import { ListComponent } from './list/list.component';
+import { OverviewComponent } from './overview/overview.component';
 
 const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
   url: 'https://httpbin.org/post',
@@ -40,8 +41,9 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
 };
 @NgModule({
   declarations: [
-    CrudVariableComponent,
-    CreateComponent
+    ListComponent,
+    CreateComponent,
+    OverviewComponent
   ],
   imports: [
     CommonModule,

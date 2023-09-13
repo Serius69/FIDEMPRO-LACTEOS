@@ -2,15 +2,20 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 // Component pages
-import { CrudVariableComponent } from './crud/crudvariable.component';
+
 import { CreateComponent } from './create/create.component';
+import { ListComponent } from '../product/list/list.component';
 const routes: Routes = [
   {
-    path:"list",
-    component: CrudVariableComponent
+    path:"listvariable",
+    component: ListComponent
   },
   {
-    path:"add-variable",
+    path:"create",
+    component: CreateComponent
+  },
+  {
+    path:"overview",
     component: CreateComponent
   },
   
