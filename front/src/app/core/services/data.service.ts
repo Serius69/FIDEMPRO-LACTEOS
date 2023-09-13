@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FDP } from '../core/common/fdp';
+import { FDP } from '../common/fdp';
 
 @Injectable({
   providedIn: 'root',

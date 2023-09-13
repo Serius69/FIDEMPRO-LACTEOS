@@ -10,7 +10,7 @@ const routes: Routes = [
     component: InstructionsComponent
   },
   {
-    path:"simulate",
+    path:"simulation",
     component: SimulateComponent
   },
   
@@ -20,4 +20,4 @@ const routes: Routes = [
     imports: [RouterModule.forChild(routes)],
     exports: [RouterModule]
 })
-export class ProductRoutingModule {}
+export class SimulateRoutingModule {}

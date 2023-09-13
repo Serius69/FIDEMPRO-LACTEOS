@@ -1,7 +1,7 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgbDropdownModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltipModule, NgbProgressbarModule, NgbDropdownModule, NgbNavModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 // Select Droup down
 import { NgSelectModule } from '@ng-select/ng-select';
 // Ui Switch
@@ -29,10 +29,18 @@ import {AutocompleteLibModule} from 'angular-ng-autocomplete';
 import { defineElement } from 'lord-icon-element';
 import lottie from 'lottie-web';
 
+// Feather Icon
+import { FeatherModule } from 'angular-feather';
+import { allIcons } from 'angular-feather/icons';
+// Simple bar
+import { SimplebarAngularModule } from 'simplebar-angular';
+// Ng Select
+
 // Component pages
-import { CrudProductComponent } from './crud/crudproduct.component';
+import { ListComponent } from './list/list.component';
 import { AddComponent } from './add/add.component';
 import { ProductRoutingModule } from './product-routing.module';
+
 const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
   url: 'https://httpbin.org/post',
   maxFilesize: 50,
@@ -40,7 +48,7 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
 };
 @NgModule({
   declarations: [
-    CrudProductComponent,
+    ListComponent,
     AddComponent
   ],
   imports: [
@@ -58,7 +66,10 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
     CKEditorModule,
     DropzoneModule,
     AutocompleteLibModule,
-    ProductRoutingModule
+    ProductRoutingModule,
+    NgbTooltipModule,
+    FeatherModule.pick(allIcons),
+    SimplebarAngularModule
   ],
   providers:[
     provideNgxMask(),

@@ -32,12 +32,8 @@ import lottie from 'lottie-web';
 // Component pages
 import { InstructionsComponent } from './instructions/instructions.component';
 import { SimulateComponent } from './simulate/simulate.component';
+import { SimulateRoutingModule } from './simulate-routing.module';
 
-const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
-  url: 'https://httpbin.org/post',
-  maxFilesize: 50,
-  acceptedFiles: 'image/*'
-};
 @NgModule({
   declarations: [
     InstructionsComponent,
@@ -57,7 +53,8 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
     ArchwizardModule,
     CKEditorModule,
     DropzoneModule,
-    AutocompleteLibModule
+    AutocompleteLibModule,
+    SimulateRoutingModule
   ]
 })
 export class SimulateModule { }

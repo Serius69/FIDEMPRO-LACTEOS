@@ -2,12 +2,12 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 // Component pages
-import { CrudProductComponent } from './crud/crudproduct.component';
+import { ListComponent } from './list/list.component';
 import { AddComponent } from './add/add.component';
 const routes: Routes = [
   {
     path:"list",
-    component: CrudProductComponent
+    component: ListComponent
   },
   {
     path:"add-product",

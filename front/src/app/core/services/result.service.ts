@@ -1,9 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DataNumber } from 'src/app/core/common/result';
-import { DataStringNumber } from 'src/app/core/common/result';
-import { DataStringStringNumber } from 'src/app/core/common/result';
+import { DataNumber,DataStringNumber,DataStringStringNumber } from '../common/result';
 
 @Injectable({
   providedIn: 'root'
