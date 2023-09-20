@@ -1,5 +1,5 @@
 <!-- Start Breadcrumbs -->
-<app-breadcrumbs title="Create Product" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<app-breadcrumbs title="Create Variable" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
 <!-- End Breadcrumbs -->
 
 <div class="row">
@@ -8,69 +8,18 @@
             <div class="card">
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label" for="product-title-input">Product Title</label>
+                        <label class="form-label" for="product-title-input">Variable Title</label>
                         <input type="text" class="form-control" id="product-title-input"
                             placeholder="Enter product title">
                     </div>
                     <div>
-                        <label>Product Description</label>
-                        <ckeditor [editor]="Editor" data="
-                        <p>Tommy Hilfiger men striped pink sweatshirt. Crafted with cotton. Material composition is 100% organic cotton. This is one of the world’s leading designer lifestyle brands and is internationally recognized for celebrating the essence of classic American cool style, featuring preppy with a twist designs.</p>
-                        <ul>
-                          <li>Full Sleeve</li>
-                          <li>Cotton</li>
-                          <li>All Sizes available</li>
-                          <li>4 Different Color</li>
-                        </ul>
-                        ">
+                        <label>Variable Description</label>
+                        <ckeditor [editor]="Editor" data="">
                         </ckeditor>
                     </div>
                 </div>
             </div>
             <!-- end card -->
-
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Product Gallery</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <h5 class="fs-14 mb-1">Product Image</h5>
-                        <p class="text-muted">Add Product main Image.</p>
-                        <div class="text-center">
-                            <div class="position-relative d-inline-block">
-                                <div class="position-absolute top-100 start-100 translate-middle">
-                                    <label for="product-image-input" class="mb-0" placement="right"
-                                        ngbTooltip="Select Image">
-                                        <div class="avatar-xs">
-                                            <div
-                                                class="avatar-title bg-light border rounded-circle text-muted cursor-pointer">
-                                                <i class="ri-image-fill"></i>
-                                            </div>
-                                        </div>
-                                    </label>
-                                    <input class="form-control d-none" value="" id="product-image-input" type="file"
-                                        accept="image/png, image/gif, image/jpeg" (change)="fileChange($event)">
-                                </div>
-                                <div class="avatar-lg">
-                                    <div class="avatar-title bg-light rounded">
-                                        <img src="" id="product-img" class="avatar-md h-auto" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div>
-                        <h5 class="fs-14 mb-1">Product Gallery</h5>
-                        <p class="text-muted">Add Product Gallery Images.</p>
-                        <dropzone class="dropzone_sec"></dropzone>
-                        <!-- end dropzon-preview -->
-                    </div>
-                </div>
-            </div>
-            <!-- end card -->
-
             <div class="card">
                 <div class="card-header">
                     <ul ngbNav #customNav="ngbNav" [activeId]="1"
@@ -206,15 +155,6 @@
                         <option value="Draft">Draft</option>
                     </select>
                 </div>
-
-                <div>
-                    <label for="choices-publish-visibility-input" class="form-label">Visibility</label>
-                    <select class="form-select" id="choices-publish-visibility-input" data-choices
-                        data-choices-search-false>
-                        <option value="Public" selected>Public</option>
-                        <option value="Hidden">Hidden</option>
-                    </select>
-                </div>
             </div>
             <!-- end card body -->
         </div>
@@ -222,23 +162,7 @@
 
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Publish Schedule</h5>
-            </div>
-            <!-- end card body -->
-            <div class="card-body">
-                <div>
-                    <label for="datepicker-publish-input" class="form-label">Publish Date & Time</label>
-                    <input class="form-control flatpickr-input" type="text" placeholder="Enter publish date"
-                        mwlFlatpickr [altInput]="true" [enableTime]="true" [convertModelValue]="true"
-                        [dateFormat]="'Y-m-d H:i'">
-                </div>
-            </div>
-        </div>
-        <!-- end card -->
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Product Categories</h5>
+                <h5 class="card-title mb-0">Variable Categories</h5>
             </div>
             <div class="card-body">
                 <p class="text-muted mb-2"> <a href="javascript:void(0);"
@@ -260,7 +184,7 @@
         <!-- end card -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Product Tags</h5>
+                <h5 class="card-title mb-0">Variable Tags</h5>
             </div>
             <div class="card-body">
                 <div class="hstack gap-3 align-items-start">
@@ -272,19 +196,6 @@
             <!-- end card body -->
         </div>
         <!-- end card -->
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Product Short Description</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-2">Add short description for product</p>
-                <textarea class="form-control" placeholder="Must enter minimum of a 100 characters" rows="3"></textarea>
-            </div>
-            <!-- end card body -->
-        </div>
-        <!-- end card -->
-
     </div>
 </div>
 <!-- end row -->
