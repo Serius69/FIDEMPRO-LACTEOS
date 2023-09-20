@@ -6,14 +6,13 @@ from django.views.generic.base import RedirectView
 from rest_framework.routers import DefaultRouter
 from users.views import UserViewSet, UserLogIn
 
-# views
-from simulate import views
-from product import views
-from variable import views
-from fdp import views
+# Importa las vistas de tus aplicaciones
+from simulate import views as simulate_views
+from product import views as product_views
+from variable import views as variable_views
+from fdp import views as fdp_views
 
-
-# Create a router and register the UserViewSet
+# Crea un router y registra las vistas de usuarios
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 
@@ -25,13 +24,13 @@ urlpatterns = [
     path('api/v1/', include(router.urls)),
     path('api-user-login/', UserLogIn.as_view()),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+       
+    # Incluye las URLs de las otras aplicaciones
+    path('product/', include('product.urls')),
+    path('simulate/', include('simulate.urls')),
+    path('variable/', include('variable.urls')),
+    path('fdp/', include('fdp.urls')),
     
-    # Your custom view
-    path('ks-test/', views.ks_test_view, name='ks_test_view'),
-    path('product/', views.ks_test_view, name='ks_test_view'),
-   
-    path('api/', include('api.urls')),
-    
-    # Redirect to the API root
+    # Redirige a la raíz de la API
     path('', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

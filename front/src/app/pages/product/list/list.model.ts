@@ -1,4 +1,4 @@
-export interface projectListModel {
+export interface productListModel {
   id?: any;
   time?: string;
   img?: string;
@@ -16,7 +16,7 @@ export interface projectListModel {
   isIcon?: any;
 }
 
-export interface projectListModel1 {
+export interface productListModel1 {
   id?: any;
   label?: string;
   status?: string;
@@ -33,7 +33,7 @@ export interface projectListModel1 {
   isIcon?: any;
 }
 
-export interface projectListModel2 {
+export interface productListModel2 {
   id?: any;
   img?: string;
   label?: string;

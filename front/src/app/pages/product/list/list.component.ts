@@ -1,17 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ProductService } from 'src/app/pages/product/product.service';
 import { Product } from 'src/app/core/common/product';
 
-import { projectListWidgets, projectListWidgets1, projectListWidgets2 } from './data';
-import { projectListModel, projectListModel1, projectListModel2 } from './list.model';
-import { listService } from './list.service';
+import { productListWidgets, productListWidgets1, productListWidgets2 } from './data';
+import { productListModel, productListModel1, productListModel2 } from './list.model';
+import { ListService } from './list.service';
 import { DecimalPipe } from '@angular/common';
 @Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
-  providers: [listService, DecimalPipe]
+  providers: [ListService, DecimalPipe]
 })
 export class ListComponent implements OnInit {
   ProductArray: Product[] = [];
@@ -23,17 +22,17 @@ export class ListComponent implements OnInit {
 
 // bread crumb items
   breadCrumbItems!: Array<{}>;
-  projectListWidgets!: projectListModel[];
-  projectListWidgets1!: projectListModel1[];
-  projectListWidgets2!: projectListModel2[];
-  projectmodel!: Observable<projectListModel2[]>;
+  productListWidgets!: productListModel[];
+  productListWidgets1!: productListModel1[];
+  productListWidgets2!: productListModel2[];
+  productmodel!: Observable<productListModel2[]>;
   total: Observable<number>;
   sellers?: any;
   ProductService: any;
 
   constructor(private modalService: NgbModal,
-    public service: listService) {
-    this.projectmodel = service.companies$;
+    public service: ListService) {
+    this.productmodel = service.products$;
     this.total = service.total$;
   }
 
@@ -56,12 +55,12 @@ export class ListComponent implements OnInit {
    * Fetches the data
    */
   private fetchData() {
-    // this.projectListWidgets = projectListWidgets;
-    this.projectListWidgets1 = projectListWidgets1;
-    this.projectListWidgets2 = projectListWidgets2;
+    // this.productListWidgets = productListWidgets;
+    this.productListWidgets1 = productListWidgets1;
+    this.productListWidgets2 = productListWidgets2;
     setTimeout(() => {
-      this.projectmodel.subscribe(x => {
-        this.projectListWidgets = Object.assign([], x);
+      this.productmodel.subscribe(x => {
+        this.productListWidgets = Object.assign([], x);
       });
       document.getElementById('elmLoader')?.classList.add('d-none')
     }, 1200);

@@ -5,7 +5,7 @@
 <div class="row g-4 mb-3">
     <div class="col-sm-auto">
         <div>
-            <a routerLink="/projects/create" class="btn btn-success"><i class="ri-add-line align-bottom me-1"></i> Add New</a>
+            <a routerLink="/products/create" class="btn btn-success"><i class="ri-add-line align-bottom me-1"></i> Add New</a>
         </div>
     </div>
     <div class="col-sm">
@@ -31,7 +31,7 @@
 </div>
 
 <div class="row">
-    <div class="col-xxl-3 col-sm-6 project-card" *ngFor="let data of projectListWidgets" id="pl1_{{data.id}}">
+    <div class="col-xxl-3 col-sm-6 product-card" *ngFor="let data of productListWidgets" id="pl1_{{data.id}}">
         <div class="card card-height-100">
             <div class="card-body">
                 <div class="d-flex flex-column h-100">
@@ -57,10 +57,10 @@
                                     </button>
 
                                     <div class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
-                                        <a class="dropdown-item" routerLink="/projects/overview"><i
+                                        <a class="dropdown-item" routerLink="/products/overview"><i
                                                 class="ri-eye-fill align-bottom me-2 text-muted float-start"></i>
                                             View</a>
-                                        <a class="dropdown-item" routerLink="/projects/create"><i
+                                        <a class="dropdown-item" routerLink="/products/create"><i
                                                 class="ri-pencil-fill align-bottom me-2 text-muted float-start"></i>
                                             Edit</a>
                                         <div class="dropdown-divider"></div>
@@ -83,7 +83,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1">
-                            <h5 class="mb-1 fs-15"><a routerLink="/projects/overview"
+                            <h5 class="mb-1 fs-15"><a routerLink="/products/overview"
                                     class="text-body">{{data.label}}</a></h5>
                             <p class="text-muted text-truncate-two-lines mb-3">{{data.caption}}</p>
                         </div>

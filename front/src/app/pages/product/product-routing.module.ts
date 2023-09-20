@@ -10,7 +10,6 @@ const routes: Routes = [
     path:"list",
     component: ListComponent
   },
-  
   {
     path:"overview",
     component: OverviewComponent

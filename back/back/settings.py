@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'product',
     'fdp',
     'simulate',
+    'back'
 ]
 
 MIDDLEWARE = [
@@ -85,7 +86,7 @@ WSGI_APPLICATION = 'back.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'fidempro_lacteos',
+        'NAME': 'back',
         'USER': 'mysql',
         'PASSWORD': 'mysql',
         'HOST':'localhost',

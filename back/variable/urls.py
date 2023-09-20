@@ -1,13 +1,7 @@
 from django.urls import path
-from rest_framework import routers
-from django.conf.urls import include
-from .views import MovieViewSet, RatingViewSet, UserViewSet
-
-router = routers.DefaultRouter()
-router.register('users', UserViewSet)
-router.register('movies', MovieViewSet)
-router.register('ratings', RatingViewSet)
+from . import views
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('api/variables/', views.VariableList, name='variable-list'),
+    path('api/variables/<int:id>/', views.VariableDetail, name='variable-detail'),
 ]
