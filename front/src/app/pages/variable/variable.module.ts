@@ -33,6 +33,7 @@ import lottie from 'lottie-web';
 import { CreateComponent } from './create/create.component';
 import { ListComponent } from './list/list.component';
 import { OverviewComponent } from './overview/overview.component';
+import { VariableRoutingModule } from './variable-routing.module';
 
 const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
   url: 'https://httpbin.org/post',
@@ -59,7 +60,8 @@ const DEFAULT_DROPZONE_CONFIG: DropzoneConfigInterface = {
     ArchwizardModule,
     CKEditorModule,
     DropzoneModule,
-    AutocompleteLibModule
+    AutocompleteLibModule,
+    VariableRoutingModule
   ],
   providers:[
     provideNgxMask(),

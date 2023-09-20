@@ -30,13 +30,13 @@
                 <div class="col-lg-6 col-4">
                     <div class="p-2">
                         <h4 class="text-white mb-1">24.3K</h4>
-                        <p class="fs-14 mb-0">Followers</p>
+                        <p class="fs-14 mb-0">Products</p>
                     </div>
                 </div>
                 <div class="col-lg-6 col-4">
                     <div class="p-2">
                         <h4 class="text-white mb-1">1.3K</h4>
-                        <p class="fs-14 mb-0">Following</p>
+                        <p class="fs-14 mb-0">Variables</p>
                     </div>
                 </div>
             </div>
@@ -62,19 +62,6 @@
                                 <div class="col-xxl-3">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h5 class="card-title mb-5">Complete Your Profile</h5>
-                                            <div class="progress animated-progess custom-progress progress-label">
-                                                <div class="progress-bar bg-danger" role="progressbar"
-                                                    style="width: 30%" aria-valuenow="30" aria-valuemin="0"
-                                                    aria-valuemax="100">
-                                                    <div class="label">30%</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="card">
-                                        <div class="card-body">
                                             <h5 class="card-title mb-3">Info</h5>
                                             <div class="table-responsive">
                                                 <table class="table table-borderless mb-0">
@@ -83,10 +70,6 @@
                                                             <th class="ps-0" scope="row">Full Name :</th>
                                                             <td class="text-muted">{{userData.first_name}}
                                                                 {{userData.last_name}}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th class="ps-0" scope="row">Mobile :</th>
-                                                            <td class="text-muted">{{userData.phone}}</td>
                                                         </tr>
                                                         <tr>
                                                             <th class="ps-0" scope="row">E-mail :</th>
@@ -110,22 +93,6 @@
 
                                     <div class="card">
                                         <div class="card-body">
-                                            <h5 class="card-title mb-4">Portfolio</h5>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <div *ngFor="let data of userData.portfolio">
-                                                    <a href="javascript:void(0);" class="avatar-xs d-block">
-                                                        <span
-                                                            class="avatar-title rounded-circle fs-16 bg-{{data.bg_color}} text-body">
-                                                            <i class="ri-{{data.logo}}-fill"></i>
-                                                        </span>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div><!-- end card body -->
-                                    </div><!-- end card -->
-
-                                    <div class="card">
-                                        <div class="card-body">
                                             <h5 class="card-title mb-4">Skills</h5>
                                             <div class="d-flex flex-wrap gap-2 fs-15">
                                                 <a href="javascript:void(0);"
@@ -139,86 +106,7 @@
                                         <div class="card-body">
                                             <div class="d-flex align-items-center mb-4">
                                                 <div class="flex-grow-1">
-                                                    <h5 class="card-title mb-0">Suggestions</h5>
-                                                </div>
-                                                <div class="flex-shrink-0">
-                                                    <div class="dropdown" ngbDropdown>
-                                                        <a href="javascript:void(0);" class="arrow-none" role="button"
-                                                            id="dropdownMenuLink2" data-bs-toggle="dropdown"
-                                                            aria-expanded="false" ngbDropdownToggle>
-                                                            <i class="ri-more-2-fill fs-14"></i>
-                                                        </a>
-
-                                                        <ul class="dropdown-menu dropdown-menu-end"
-                                                            aria-labelledby="dropdownMenuLink2" ngbDropdownMenu>
-                                                            <li><a class="dropdown-item"
-                                                                    href="javascript:void(0);">View</a></li>
-                                                            <li><a class="dropdown-item"
-                                                                    href="javascript:void(0);">Edit</a></li>
-                                                            <li><a class="dropdown-item"
-                                                                    href="javascript:void(0);">Delete</a></li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="d-flex align-items-center py-3">
-                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                        <img src="assets/images/users/avatar-3.jpg" alt=""
-                                                            class="img-fluid rounded-circle" />
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <div>
-                                                            <h5 class="fs-14 mb-1">Esther James</h5>
-                                                            <p class="fs-13 text-muted mb-0">Frontend Developer</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-shrink-0 ms-2">
-                                                        <button type="button" class="btn btn-sm btn-outline-success"><i
-                                                                class="ri-user-add-line align-middle"></i></button>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center py-3">
-                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                        <img src="assets/images/users/avatar-4.jpg" alt=""
-                                                            class="img-fluid rounded-circle" />
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <div>
-                                                            <h5 class="fs-14 mb-1">Jacqueline Steve</h5>
-                                                            <p class="fs-13 text-muted mb-0">UI/UX Designer</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-shrink-0 ms-2">
-                                                        <button type="button" class="btn btn-sm btn-outline-success"><i
-                                                                class="ri-user-add-line align-middle"></i></button>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center py-3">
-                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                        <img src="assets/images/users/avatar-5.jpg" alt=""
-                                                            class="img-fluid rounded-circle" />
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <div>
-                                                            <h5 class="fs-14 mb-1">George Whalen</h5>
-                                                            <p class="fs-13 text-muted mb-0">Backend Developer</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-shrink-0 ms-2">
-                                                        <button type="button" class="btn btn-sm btn-outline-success"><i
-                                                                class="ri-user-add-line align-middle"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div><!-- end card body -->
-                                    </div><!--end card-->
-
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center mb-4">
-                                                <div class="flex-grow-1">
-                                                    <h5 class="card-title mb-0">Popular Posts</h5>
+                                                    <h5 class="card-title mb-0">Most used variables</h5>
                                                 </div>
                                                 <div class="flex-shrink-0">
                                                     <div class="dropdown" ngbDropdown>
@@ -231,11 +119,9 @@
                                                         <ul class="dropdown-menu dropdown-menu-end"
                                                             aria-labelledby="dropdownMenuLink1" ngbDropdownMenu>
                                                             <li><a class="dropdown-item"
-                                                                    href="javascript:void(0);">View</a></li>
+                                                                    href="javascript:void(0);">List</a></li>
                                                             <li><a class="dropdown-item"
                                                                     href="javascript:void(0);">Edit</a></li>
-                                                            <li><a class="dropdown-item"
-                                                                    href="javascript:void(0);">Delete</a></li>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -297,7 +183,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden">
-                                                            <p class="mb-1">Designation :</p>
+                                                            <p class="mb-1">Business :</p>
                                                             <h6 class="text-truncate mb-0">{{userData.designation}}</h6>
                                                         </div>
                                                     </div>
@@ -311,7 +197,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden">
-                                                            <p class="mb-1">Website :</p>
+                                                            <p class="mb-1">Scale :</p>
                                                             <a href="javascript:void(0);"
                                                                 class="fw-semibold">{{userData.website}}</a>
                                                         </div>
@@ -338,60 +224,7 @@
                                                                 <ng-template ngbNavContent>
                                                                     <div class="profile-timeline order-status">
                                                                         <ngb-accordion #acc="ngbAccordion"
-                                                                            activeIds="static-1" [closeOthers]="true">
-                                                                            <ngb-panel id="static-1">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="true"
-                                                                                        aria-controls="collapseOne">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-2.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Jacqueline Steve
-                                                                                                </h6>
-                                                                                                <small
-                                                                                                    class="text-muted">We
-                                                                                                    has changed 2
-                                                                                                    attributes on
-                                                                                                    05:16PM</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="ps-5">
-                                                                                        <div id="collapseOne"
-                                                                                            class="accordion-collapse collapse show"
-                                                                                            aria-labelledby="headingOne"
-                                                                                            data-bs-parent="#accordionExample">
-                                                                                            In an awareness campaign, it
-                                                                                            is vital for people to begin
-                                                                                            put 2 and 2 together and
-                                                                                            begin to recognize your
-                                                                                            cause. Too much or too
-                                                                                            little spacing, as in the
-                                                                                            example below, can make
-                                                                                            things unpleasant for the
-                                                                                            reader. The goal is to make
-                                                                                            your text as comfortable to
-                                                                                            read as possible. A
-                                                                                            wonderful serenity has taken
-                                                                                            possession of my entire
-                                                                                            soul, like these sweet
-                                                                                            mornings of spring which I
-                                                                                            enjoy with my whole heart.
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
+                                                                            activeIds="static-2" [closeOthers]="true">                                                                            
                                                                             <ngb-panel id="static-2">
                                                                                 <ng-template ngbPanelTitle>
                                                                                     <a class="accordion-button p-2 shadow-none"
@@ -469,173 +302,6 @@
                                                                                     </div>
                                                                                 </ng-template>
                                                                             </ngb-panel>
-                                                                            <ngb-panel id="static-3">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false"
-                                                                                        aria-controls="collapseThree">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-5.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    New ticket received
-                                                                                                </h6>
-                                                                                                <small
-                                                                                                    class="text-muted mb-2">User
-                                                                                                    <span
-                                                                                                        class="text-secondary">Erica245</span>
-                                                                                                    submitted a ticket -
-                                                                                                    02:33PM</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-4">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false">
-                                                                                        <div class="d-flex">
-                                                                                            <div
-                                                                                                class="flex-shrink-0 avatar-xs">
-                                                                                                <div
-                                                                                                    class="avatar-title bg-light text-muted rounded-circle">
-                                                                                                    <i
-                                                                                                        class="ri-user-3-fill"></i>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Nancy Martino</h6>
-                                                                                                <small
-                                                                                                    class="text-muted">Commented
-                                                                                                    on 12:57PM</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="accordion-body ps-5">
-                                                                                        " A wonderful serenity has taken
-                                                                                        possession of my entire soul,
-                                                                                        like these sweet mornings of
-                                                                                        spring which I enjoy with my
-                                                                                        whole heart. Each design is a
-                                                                                        new, unique piece of art birthed
-                                                                                        into this world, and while you
-                                                                                        have the opportunity to be
-                                                                                        creative and make your own style
-                                                                                        choices. "
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-5">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-7.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Lewis Arnold</h6>
-                                                                                                <small
-                                                                                                    class="text-muted">Create
-                                                                                                    new project buildng
-                                                                                                    product -
-                                                                                                    10:05AM</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="accordion-body">
-                                                                                        <p class="text-muted mb-2">Every
-                                                                                            team project can have a
-                                                                                            velzon. Use the velzon to
-                                                                                            share information with your
-                                                                                            team to understand and
-                                                                                            contribute to your project.
-                                                                                        </p>
-                                                                                        <div class="avatar-group">
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="Christi"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title="Christi">
-                                                                                                <img src="assets/images/users/avatar-4.jpg"
-                                                                                                    alt=""
-                                                                                                    class="rounded-circle avatar-xs">
-                                                                                            </a>
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="Frank Hook"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title="Frank Hook">
-                                                                                                <img src="assets/images/users/avatar-3.jpg"
-                                                                                                    alt=""
-                                                                                                    class="rounded-circle avatar-xs">
-                                                                                            </a>
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="Ruby"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title=" Ruby">
-                                                                                                <div class="avatar-xs">
-                                                                                                    <div
-                                                                                                        class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                        R
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="more"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title="more">
-                                                                                                <div class="avatar-xs">
-                                                                                                    <div
-                                                                                                        class="avatar-title rounded-circle">
-                                                                                                        2+
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
                                                                         </ngb-accordion>
                                                                     </div>
                                                                 </ng-template>
@@ -654,83 +320,6 @@
                                                                                     <a class="accordion-button p-2 shadow-none"
                                                                                         data-bs-toggle="collapse"
                                                                                         href="javascript:void(0);"
-                                                                                        aria-expanded="true"
-                                                                                        aria-controls="collapseOne">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-3.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Joseph Parker</h6>
-                                                                                                <small
-                                                                                                    class="text-muted">New
-                                                                                                    people joined with
-                                                                                                    our company -
-                                                                                                    Yesterday</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="ps-5">
-                                                                                        <div id="collapseOne"
-                                                                                            class="accordion-collapse collapse show"
-                                                                                            aria-labelledby="headingOne"
-                                                                                            data-bs-parent="#accordionExample">
-                                                                                            It makes a statement, it’s
-                                                                                            impressive graphic design.
-                                                                                            Increase or decrease the
-                                                                                            letter spacing depending on
-                                                                                            the situation and try, try
-                                                                                            again until it looks right,
-                                                                                            and each letter has the
-                                                                                            perfect spot of its own.
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-2">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false"
-                                                                                        aria-controls="collapseTwo">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="avatar-xs">
-                                                                                                <div
-                                                                                                    class="avatar-title rounded-circle bg-light text-danger">
-                                                                                                    <i
-                                                                                                        class="ri-shopping-bag-line"></i>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Your order is placed
-                                                                                                    <span
-                                                                                                        class="badge bg-success-subtle text-success align-middle">Completed</span>
-                                                                                                </h6>
-                                                                                                <small
-                                                                                                    class="text-muted">These
-                                                                                                    customers can rest
-                                                                                                    assured their order
-                                                                                                    has been placed - 1
-                                                                                                    week Ago</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-3">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
                                                                                         aria-expanded="false"
                                                                                         aria-controls="collapseThree">
                                                                                         <div class="d-flex">
@@ -738,8 +327,7 @@
                                                                                                 class="flex-shrink-0 avatar-xs">
                                                                                                 <div
                                                                                                     class="avatar-title bg-light text-success rounded-circle">
-                                                                                                    <i
-                                                                                                        class="ri-home-3-line"></i>
+                                                                                                    <i class="ri-home-3-line"></i>
                                                                                                 </div>
                                                                                             </div>
                                                                                             <div
@@ -794,92 +382,6 @@
                                                                                     </div>
                                                                                 </ng-template>
                                                                             </ngb-panel>
-                                                                            <ngb-panel id="static-4">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-6.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    New ticket created
-                                                                                                    <span
-                                                                                                        class="badge bg-info-subtle text-info align-middle">Inprogress</span>
-                                                                                                </h6>
-                                                                                                <small
-                                                                                                    class="text-muted mb-2">User
-                                                                                                    <span
-                                                                                                        class="text-secondary">Jack365</span>
-                                                                                                    submitted a ticket -
-                                                                                                    2 week Ago</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="accordion-body ps-5">
-                                                                                        " A wonderful serenity has taken
-                                                                                        possession of my entire soul,
-                                                                                        like these sweet mornings of
-                                                                                        spring which I enjoy with my
-                                                                                        whole heart. Each design is a
-                                                                                        new, unique piece of art birthed
-                                                                                        into this world, and while you
-                                                                                        have the opportunity to be
-                                                                                        creative and make your own style
-                                                                                        choices. "
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-5">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-5.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Jennifer Carter</h6>
-                                                                                                <small
-                                                                                                    class="text-muted">Commented
-                                                                                                    - 4 week Ago</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="accordion-body ps-5">
-                                                                                        <p
-                                                                                            class="text-muted fst-italic mb-2">
-                                                                                            " This is an awesome admin
-                                                                                            dashboard template. It is
-                                                                                            extremely well structured
-                                                                                            and uses state of the art
-                                                                                            components (e.g. one of the
-                                                                                            only templates using
-                                                                                            boostrap 5.1.3 so far). I
-                                                                                            integrated it into a Rails 6
-                                                                                            project. Needs manual
-                                                                                            integration work of course
-                                                                                            but the template structure
-                                                                                            made it easy. "</p>
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
                                                                         </ngb-accordion>
                                                                     </div>
 
@@ -895,104 +397,6 @@
                                                                         <ngb-accordion #acc="ngbAccordion"
                                                                             activeIds="static-1" [closeOthers]="true">
                                                                             <ngb-panel id="static-1">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="true"
-                                                                                        aria-controls="collapseOne">
-                                                                                        <div class="d-flex">
-                                                                                            <div
-                                                                                                class="flex-shrink-0 avatar-xs">
-                                                                                                <div
-                                                                                                    class="avatar-title bg-light text-success rounded-circle">
-                                                                                                    M
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Megan Elmore</h6>
-                                                                                                <small
-                                                                                                    class="text-muted">Adding
-                                                                                                    a new event with
-                                                                                                    attachments - 1
-                                                                                                    month Ago.</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="accordion-body ps-5">
-                                                                                        <div class="row g-2">
-                                                                                            <div class="col-auto">
-                                                                                                <div
-                                                                                                    class="d-flex border border-dashed p-2 rounded position-relative">
-                                                                                                    <div
-                                                                                                        class="flex-shrink-0">
-                                                                                                        <i
-                                                                                                            class="ri-image-2-line fs-17 text-danger"></i>
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="flex-grow-1 ms-2">
-                                                                                                        <h6><a href="javascript:void(0);"
-                                                                                                                class="stretched-link">Business
-                                                                                                                Template
-                                                                                                                - UI/UX
-                                                                                                                design</a>
-                                                                                                        </h6>
-                                                                                                        <small>685
-                                                                                                            KB</small>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div class="col-auto">
-                                                                                                <div
-                                                                                                    class="d-flex border border-dashed p-2 rounded position-relative">
-                                                                                                    <div
-                                                                                                        class="flex-shrink-0">
-                                                                                                        <i
-                                                                                                            class="ri-file-zip-line fs-17 text-info"></i>
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="flex-grow-1 ms-2">
-                                                                                                        <h6><a href="javascript:void(0);"
-                                                                                                                class="stretched-link">Bank
-                                                                                                                Management
-                                                                                                                System -
-                                                                                                                PSD</a>
-                                                                                                        </h6>
-                                                                                                        <small>8.78
-                                                                                                            MB</small>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div class="col-auto">
-                                                                                                <div
-                                                                                                    class="d-flex border border-dashed p-2 rounded position-relative">
-                                                                                                    <div
-                                                                                                        class="flex-shrink-0">
-                                                                                                        <i
-                                                                                                            class="ri-file-zip-line fs-17 text-info"></i>
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="flex-grow-1 ms-2">
-                                                                                                        <h6><a href="javascript:void(0);"
-                                                                                                                class="stretched-link">Bank
-                                                                                                                Management
-                                                                                                                System -
-                                                                                                                PSD</a>
-                                                                                                        </h6>
-                                                                                                        <small>8.78
-                                                                                                            MB</small>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-2">
                                                                                 <ng-template ngbPanelTitle>
                                                                                     <a class="accordion-button p-2 shadow-none"
                                                                                         data-bs-toggle="collapse"
@@ -1038,211 +442,6 @@
                                                                                     </div>
                                                                                 </ng-template>
                                                                             </ngb-panel>
-                                                                            <ngb-panel id="static-3">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false"
-                                                                                        aria-controls="collapseThree">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-5.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    New ticket received
-                                                                                                </h6>
-                                                                                                <small
-                                                                                                    class="text-muted mb-2">User
-                                                                                                    <span
-                                                                                                        class="text-secondary">Erica245</span>
-                                                                                                    submitted a ticket -
-                                                                                                    5 month Ago</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div
-                                                                                        class="accordion-body ps-5 fst-italic">
-                                                                                        Powerful, clean & modern
-                                                                                        responsive bootstrap 5 admin
-                                                                                        template. The maximum file size
-                                                                                        for uploads in this demo :
-                                                                                        <div class="row mt-2">
-                                                                                            <div class="col-xxl-6">
-                                                                                                <div
-                                                                                                    class="row border border-dashed gx-2 p-2">
-                                                                                                    <div class="col-3">
-                                                                                                        <img src="assets/images/small/img-3.jpg"
-                                                                                                            alt=""
-                                                                                                            class="img-fluid rounded" />
-                                                                                                    </div><!--end col-->
-                                                                                                    <div class="col-3">
-                                                                                                        <img src="assets/images/small/img-5.jpg"
-                                                                                                            alt=""
-                                                                                                            class="img-fluid rounded" />
-                                                                                                    </div><!--end col-->
-                                                                                                    <div class="col-3">
-                                                                                                        <img src="assets/images/small/img-7.jpg"
-                                                                                                            alt=""
-                                                                                                            class="img-fluid rounded" />
-                                                                                                    </div><!--end col-->
-                                                                                                    <div class="col-3">
-                                                                                                        <img src="assets/images/small/img-9.jpg"
-                                                                                                            alt=""
-                                                                                                            class="img-fluid rounded" />
-                                                                                                    </div><!--end col-->
-                                                                                                </div><!--end row-->
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-4">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false">
-                                                                                        <div class="d-flex">
-                                                                                            <div
-                                                                                                class="flex-shrink-0 avatar-xs">
-                                                                                                <div
-                                                                                                    class="avatar-title bg-light text-muted rounded-circle">
-                                                                                                    <i
-                                                                                                        class="ri-user-3-fill"></i>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Nancy Martino</h6>
-                                                                                                <small
-                                                                                                    class="text-muted">Commented
-                                                                                                    on 24 Nov,
-                                                                                                    2021.</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div
-                                                                                        class="accordion-body ps-5 fst-italic">
-                                                                                        " A wonderful serenity has taken
-                                                                                        possession of my entire soul,
-                                                                                        like these sweet mornings of
-                                                                                        spring which I enjoy with my
-                                                                                        whole heart. Each design is a
-                                                                                        new, unique piece of art birthed
-                                                                                        into this world, and while you
-                                                                                        have the opportunity to be
-                                                                                        creative and make your own style
-                                                                                        choices. "
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
-                                                                            <ngb-panel id="static-5">
-                                                                                <ng-template ngbPanelTitle>
-                                                                                    <a class="accordion-button p-2 shadow-none"
-                                                                                        data-bs-toggle="collapse"
-                                                                                        href="javascript:void(0);"
-                                                                                        aria-expanded="false">
-                                                                                        <div class="d-flex">
-                                                                                            <div class="flex-shrink-0">
-                                                                                                <img src="assets/images/users/avatar-7.jpg"
-                                                                                                    alt=""
-                                                                                                    class="avatar-xs rounded-circle" />
-                                                                                            </div>
-                                                                                            <div
-                                                                                                class="flex-grow-1 ms-3">
-                                                                                                <h6 class="fs-14 mb-1">
-                                                                                                    Lewis Arnold</h6>
-                                                                                                <small
-                                                                                                    class="text-muted">Create
-                                                                                                    new project buildng
-                                                                                                    product - 8 month
-                                                                                                    Ago</small>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </a>
-                                                                                </ng-template>
-                                                                                <ng-template ngbPanelContent>
-                                                                                    <div class="accordion-body ps-5">
-                                                                                        <p class="text-muted mb-2">Every
-                                                                                            team project can have a
-                                                                                            velzon. Use the velzon to
-                                                                                            share information with your
-                                                                                            team to understand and
-                                                                                            contribute to your project.
-                                                                                        </p>
-                                                                                        <div class="avatar-group">
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="Christi"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title="Christi">
-                                                                                                <img src="assets/images/users/avatar-4.jpg"
-                                                                                                    alt=""
-                                                                                                    class="rounded-circle avatar-xs">
-                                                                                            </a>
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="Frank Hook"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title="Frank Hook">
-                                                                                                <img src="assets/images/users/avatar-3.jpg"
-                                                                                                    alt=""
-                                                                                                    class="rounded-circle avatar-xs">
-                                                                                            </a>
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="Ruby"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title=" Ruby">
-                                                                                                <div class="avatar-xs">
-                                                                                                    <div
-                                                                                                        class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                        R
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                            <a href="javascript: void(0);"
-                                                                                                class="avatar-group-item"
-                                                                                                ngbTooltip="more"
-                                                                                                placement="top"
-                                                                                                data-bs-toggle="tooltip"
-                                                                                                data-bs-trigger="hover"
-                                                                                                data-bs-placement="top"
-                                                                                                title=""
-                                                                                                data-bs-original-title="more">
-                                                                                                <div class="avatar-xs">
-                                                                                                    <div
-                                                                                                        class="avatar-title rounded-circle">
-                                                                                                        2+
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </ng-template>
-                                                                            </ngb-panel>
                                                                         </ngb-accordion>
                                                                     </div>
                                                                 </ng-template>
@@ -1261,7 +460,7 @@
 
                                     <div class="card">
                                         <div class="card-body">
-                                            <h5 class="card-title">Projects</h5>
+                                            <h5 class="card-title">Products</h5>
                                             <!-- Swiper -->
                                             <div class="swiper project-swiper mt-4">
                                                 <swiper [config]="config">
@@ -1275,8 +474,7 @@
                                                                             class="flex-grow-1 text-muted overflow-hidden">
                                                                             <h5 class="fs-14 text-truncate mb-1"><a
                                                                                     href="javascript:void(0);"
-                                                                                    class="text-body">ABC Project
-                                                                                    Customization</a></h5>
+                                                                                    class="text-body">Name</a></h5>
                                                                             <p class="text-muted text-truncate mb-0">
                                                                                 Last Update : <span
                                                                                     class="fw-semibold text-body">4 hr
@@ -1294,21 +492,15 @@
                                                                                 class="d-flex align-items-center gap-2">
                                                                                 <div>
                                                                                     <h5 class="fs-12 text-muted mb-0">
-                                                                                        Members :</h5>
+                                                                                        Variables :</h5>
                                                                                 </div>
                                                                                 <div class="avatar-group">
                                                                                     <div class="avatar-group-item">
                                                                                         <div class="avatar-xs">
-                                                                                            <img src="assets/images/users/avatar-4.jpg"
-                                                                                                alt=""
-                                                                                                class="rounded-circle img-fluid" />
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="avatar-group-item">
-                                                                                        <div class="avatar-xs">
-                                                                                            <img src="assets/images/users/avatar-5.jpg"
-                                                                                                alt=""
-                                                                                                class="rounded-circle img-fluid" />
+                                                                                            <div
+                                                                                                class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                A
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
                                                                                     <div class="avatar-group-item">
@@ -1321,9 +513,18 @@
                                                                                     </div>
                                                                                     <div class="avatar-group-item">
                                                                                         <div class="avatar-xs">
-                                                                                            <img src="assets/images/users/avatar-2.jpg"
-                                                                                                alt=""
-                                                                                                class="rounded-circle img-fluid" />
+                                                                                            <div
+                                                                                                class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                A
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="avatar-group-item">
+                                                                                        <div class="avatar-xs">
+                                                                                            <div
+                                                                                                class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                A
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -1344,7 +545,7 @@
                                                                             class="flex-grow-1 text-muted overflow-hidden">
                                                                             <h5 class="fs-14 text-truncate mb-1"><a
                                                                                     href="javascript:void(0);"
-                                                                                    class="text-body">Client - John</a>
+                                                                                    class="text-body">Name</a>
                                                                             </h5>
                                                                             <p class="text-muted text-truncate mb-0">
                                                                                 Last Update : <span
@@ -1363,21 +564,22 @@
                                                                                 class="d-flex align-items-center gap-2">
                                                                                 <div>
                                                                                     <h5 class="fs-12 text-muted mb-0">
-                                                                                        Members :</h5>
+                                                                                        Variables :</h5>
                                                                                 </div>
                                                                                 <div class="avatar-group">
                                                                                     <div class="avatar-group-item">
                                                                                         <div class="avatar-xs">
-                                                                                            <img src="assets/images/users/avatar-2.jpg"
-                                                                                                alt=""
-                                                                                                class="rounded-circle img-fluid" />
+                                                                                            <div
+                                                                                                class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                A
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
                                                                                     <div class="avatar-group-item">
                                                                                         <div class="avatar-xs">
                                                                                             <div
                                                                                                 class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                C
+                                                                                                A
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
@@ -1397,8 +599,7 @@
                                                                             class="flex-grow-1 text-muted overflow-hidden">
                                                                             <h5 class="fs-14 text-truncate mb-1"><a
                                                                                     href="javascript:void(0);"
-                                                                                    class="text-body">Brand logo
-                                                                                    Design</a></h5>
+                                                                                    class="text-body">Name</a></h5>
                                                                             <p class="text-muted text-truncate mb-0">
                                                                                 Last Update : <span
                                                                                     class="fw-semibold text-body">2 hr
@@ -1416,14 +617,15 @@
                                                                                 class="d-flex align-items-center gap-2">
                                                                                 <div>
                                                                                     <h5 class="fs-12 text-muted mb-0">
-                                                                                        Members :</h5>
+                                                                                        Variables :</h5>
                                                                                 </div>
                                                                                 <div class="avatar-group">
                                                                                     <div class="avatar-group-item">
                                                                                         <div class="avatar-xs">
-                                                                                            <img src="assets/images/users/avatar-5.jpg"
-                                                                                                alt=""
-                                                                                                class="rounded-circle img-fluid" />
+                                                                                            <div
+                                                                                                class="avatar-title rounded-circle bg-light text-primary">
+                                                                                                A
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>

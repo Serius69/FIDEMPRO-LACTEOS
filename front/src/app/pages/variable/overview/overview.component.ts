@@ -6,13 +6,11 @@ import { restApiService } from "../../../core/services/rest-api.service";
 
 // Swiper Slider
 import { SwiperOptions } from 'swiper';
-
 import { Variable, variableList } from 'src/app/core/common/variable';
 
 @Component({
   selector: 'app-overview',
-  templateUrl: './overview.component.html',
-  styleUrls: ['./overview.component.scss']
+  templateUrl: './overview.component.html'
 })
 
 /**

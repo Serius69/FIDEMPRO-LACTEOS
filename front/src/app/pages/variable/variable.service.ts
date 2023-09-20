@@ -1,6 +1,6 @@
 import { Injectable, PipeTransform } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
 import { Variable } from '../../core/common/variable';
 import { SortColumn, SortDirection } from './variable-sortable.directive';
 import { debounceTime, delay, switchMap, tap } from 'rxjs/operators';

@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
 
 import { Variable } from 'src/app/core/common/variable';
 import { AdvancedService } from '../../variable/variable.service';
-import { NgbdProductsSortableHeader, productSortEvent } from '../variable-sortable.directive';
+import { NgbdProductsSortableHeader, variableSortEvent } from '../variable-sortable.directive';
 
 // Products Services
 import { restApiService } from "../../../core/services/rest-api.service";
@@ -67,7 +67,6 @@ export class ListComponent {
   searchproducts: any;
   publishedproduct: any;
 
-
   constructor(private modalService: NgbModal,
     private router: Router,
     public service: AdvancedService,
@@ -85,7 +84,6 @@ export class ListComponent {
       { label: 'Ecommerce' },
       { label: 'Products', active: true }
     ];
-
 
     /**
      * fetches data
@@ -156,7 +154,7 @@ export class ListComponent {
   * @param param0 sort the column
   *
   */
-  onSort({ column, direction }: productSortEvent) {
+  onSort({ column, direction }: variableSortEvent) {
     // resetting other headers
     this.headers.forEach(header => {
       if (header.productsortable !== column) {
@@ -373,5 +371,36 @@ export class ListComponent {
   gopublishdetail(id: any) {
     // this.router.navigate(['/ecommerce/product-detail/1', this.publishedproduct[id]])
   }
+
+    /**
+   * Pagination
+   */
+  // loadPage(page: number) {
+  //   this.startIndex = (this.page - 1) * this.pageSize + 1;
+  //   this.endIndex = (this.page - 1) * this.pageSize + this.pageSize;
+  //   if (this.endIndex > this.totalRecords) {
+  //     this.endIndex = this.totalRecords;
+  //   }
+  //   this.products = this.allproducts.slice(this.startIndex - 1, this.endIndex);
+  // }
+
+  /**
+* change navigation
+*/
+onNavChange(changeEvent: NgbNavChangeEvent) {
+  if (changeEvent.nextId === 1) {
+    this.activeindex = '1'
+    this.service.variableStatus = ''
+  }
+  if (changeEvent.nextId === 2) {
+    this.activeindex = '2'
+    this.service.variableStatus = 'published'
+  }
+  if (changeEvent.nextId === 3) {
+    this.activeindex = '3'
+    this.service.variableStatus = ''
+  }
+}
+
 
 }

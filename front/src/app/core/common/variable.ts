@@ -11,13 +11,12 @@ export interface Variable {
 export const variableList: Variable[] = [
   {
       id: 1,
-      name: 'Full Sleeve Sweatshirt for Men (Pink)',
-      description: 'Tommy Hilfiger',
+      name: 'Full',
+      description: 'Tommy',
       base: '26 Mar, 2021',
       unit: '',
       idproduct: 5.50,
       quantity: 120.40,
       status: 1,
-      
   }
 ];

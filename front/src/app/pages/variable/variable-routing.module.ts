@@ -4,19 +4,20 @@ import { Routes, RouterModule } from '@angular/router';
 // Component pages
 
 import { CreateComponent } from './create/create.component';
-import { ListComponent } from '../product/list/list.component';
+import { ListComponent } from './list/list.component';
+import { OverviewComponent } from './overview/overview.component';
 const routes: Routes = [
   {
-    path:"listvariable",
+    path:"variable/list",
     component: ListComponent
   },
   {
-    path:"create",
+    path:"variable/create",
     component: CreateComponent
   },
   {
-    path:"overview",
-    component: CreateComponent
+    path:"variable/overview",
+    component: OverviewComponent
   },
   
 ];
@@ -25,4 +26,4 @@ const routes: Routes = [
     imports: [RouterModule.forChild(routes)],
     exports: [RouterModule]
 })
-export class ProductRoutingModule {}
+export class VariableRoutingModule {}

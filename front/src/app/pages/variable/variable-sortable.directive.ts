@@ -5,7 +5,7 @@ export type SortColumn = keyof Variable | '';
 export type SortDirection = 'asc' | 'desc' | '';
 const rotate: {[key: string]: SortDirection} = { 'asc': 'desc', 'desc': '', '': 'asc' };
 
-export interface productSortEvent {
+export interface variableSortEvent {
   column: SortColumn;
   direction: SortDirection;
 }
@@ -22,7 +22,7 @@ export class NgbdProductsSortableHeader {
 
   @Input() productsortable: SortColumn = '';
   @Input() direction: SortDirection = '';
-  @Output() productsort = new EventEmitter<productSortEvent>();
+  @Output() productsort = new EventEmitter<variableSortEvent>();
 
   rotate() {
     this.direction = rotate[this.direction];

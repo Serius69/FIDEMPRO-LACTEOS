@@ -39,13 +39,13 @@ export const MENU: MenuItem[] = [
       {
         id: 7,
         label: 'Add',
-        link: '/add',
+        link: '/variable/create',
         parentId: 6
       },
       {
         id: 7,
         label: 'List',
-        link: '/listvariable',
+        link: '/variable/list',
         parentId: 6
       },
     ]

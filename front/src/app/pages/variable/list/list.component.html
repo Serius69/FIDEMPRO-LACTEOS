@@ -170,7 +170,7 @@
                 class="nav nav-tabs-custom card-header-tabs border-bottom-0">
                 <li [ngbNavItem]="1">
                   <a ngbNavLink>
-                    All <span class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">{{total}}</span>
+                    All <span class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">{{totalpublish}}</span>
                   </a>
                   <ng-template ngbNavContent>
                     <div class="mt-3">
@@ -180,18 +180,27 @@
                             <thead>
                               <tr class="bg-light text-muted">
                                 <th scope="col">#</th>
-                                <th scope="col" class="sort" productsortable="image" (productsort)="onSort($event)">
-                                  Product</th>
-                                <th scope="col" class="sort" productsortable="stock" (productsort)="onSort($event)">
-                                  Stock</th>
-                                <th scope="col" class="sort" productsortable="price" (productsort)="onSort($event)">
-                                  Price</th>
-                                <th scope="col" class="sort" productsortable="orders" (productsort)="onSort($event)">
-                                  Orders</th>
-                                <th scope="col" class="sort" productsortable="rating" (productsort)="onSort($event)">
-                                  Rating</th>
-                                <th scope="col" class="sort" productsortable="publishedDate"
-                                  (productsort)="onSort($event)">
+                                <th scope="col" class="sort" productsortable="name" 
+                                
+                                >
+                                  name</th>
+                                <th scope="col" class="sort" productsortable="description" 
+                                >
+
+                                  description</th>
+                                <th scope="col" class="sort" productsortable="base" 
+                                
+                                >
+                                  base</th>
+                                <th scope="col" class="sort" productsortable="unit" 
+                                
+                                >
+                                  unit</th>
+                                <th scope="col" class="sort" productsortable="unit" 
+                                >
+                                  product</th>
+                                <th scope="col" class="sort" productsortable="publishedDate" 
+                                >
                                   Published</th>
                                 <th scope="col">Action</th>
                               </tr>
@@ -279,9 +288,9 @@
                             <!-- Pagination -->
                             <div class="col-sm-12 col-md-5">
                               <div class="text-md-right float-md-end pagination-rounded gridjs-pagination mb-3">
-                                <ngb-pagination [collectionSize]="(total$ | async)!" [(page)]="service.page"
+                                <!-- <ngb-pagination [collectionSize]="(total$ | async)!" [(page)]="service.page"
                                   [pageSize]="service.pageSize">
-                                </ngb-pagination>
+                                </ngb-pagination> -->
                               </div>
                             </div>
                             <!-- End Pagination -->
