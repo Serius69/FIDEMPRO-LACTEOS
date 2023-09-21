@@ -22,7 +22,8 @@ interface State {
 @Injectable({ providedIn: 'root' })
 export class ListService {
   // URL
-  private baseUrl = 'http://localhost:8000/product';
+  private baseUrl = 'http://localhost:8000/product'; // Reemplaza con la URL de tu API
+
 
   private _loading$ = new BehaviorSubject<boolean>(true);
   private _search$ = new Subject<void>();
@@ -117,7 +118,7 @@ export class ListService {
 
   private _search(): Observable<GetResponseProducts> {
     const { pageSize, page, searchTerm, category } = this._state;
-    return this.httpClient.get<GetResponseProducts>(this.baseUrl, {
+    return this.httpClient.get<GetResponseProducts>(this.baseUrl+"/list", {
     //   params: {
     //     page: page.toString(),
     //     pageSize: pageSize.toString(),

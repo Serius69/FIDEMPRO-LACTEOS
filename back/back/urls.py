@@ -1,18 +1,14 @@
-from django.conf import settings
-from django.urls import path, include, reverse_lazy
-from django.conf.urls.static import static
+# project/urls.py
+
 from django.contrib import admin
-from django.views.generic.base import RedirectView
+from django.urls import path, include, reverse_lazy  # Import reverse_lazy
 from rest_framework.routers import DefaultRouter
 from users.views import UserViewSet, UserLogIn
+from django.views.generic.base import RedirectView  # Import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static  # Import the 'static' function
 
-# Importa las vistas de tus aplicaciones
-from simulate import views as simulate_views
-from product import views as product_views
-from variable import views as variable_views
-from fdp import views as fdp_views
-
-# Crea un router y registra las vistas de usuarios
+# Create a router and register user-related views
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 
@@ -24,13 +20,14 @@ urlpatterns = [
     path('api/v1/', include(router.urls)),
     path('api-user-login/', UserLogIn.as_view()),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-       
-    # Incluye las URLs de las otras aplicaciones
+    
+    # URLs of other applications
+    path('users/', include('users.urls')), 
     path('product/', include('product.urls')),
     path('simulate/', include('simulate.urls')),
     path('variable/', include('variable.urls')),
     path('fdp/', include('fdp.urls')),
     
-    # Redirige a la raíz de la API
+    # Redirect to the root of the API
     path('', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

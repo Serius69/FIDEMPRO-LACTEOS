@@ -8,20 +8,27 @@ import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { defineElement  } from 'lord-icon-element';
 import lottie from 'lottie-web';
 
-import { ToastsContainer } from './login/toasts-container.component';
-
 
 import { AccountRoutingModule } from './account-routing.module';
-import { SigninModule } from "./auth/signin/signin.module";
-import { SignupModule } from "./auth/signup/signup.module";
-import { RegisterComponent } from './register/register.component';
-import { LoginComponent } from './login/login.component';
+import { LoginComponent } from './auth/login/login.component';
+import { RegisterComponent } from './auth/register/register.component';
+import { ToastsContainer } from './auth/login/toasts-container.component';
+import { LockscreenComponent } from './auth/lockscreen2/lockscreen.component';
+import { LogoutComponent } from './auth/logout/logout.component';
+import { PassCreateComponent } from './auth/pass-create/pass-create.component';
+import { PassResetComponent } from './auth/pass-reset/pass-reset.component';
+import { SuccessMsgComponent } from './auth/success-msg/success-msg.component';
 
 @NgModule({
   declarations: [
     RegisterComponent,
     LoginComponent,
-    ToastsContainer
+    ToastsContainer,
+    LockscreenComponent,
+    LogoutComponent,
+    PassCreateComponent,
+    PassResetComponent,
+    SuccessMsgComponent
   ],
   imports: [
     CommonModule,
@@ -29,7 +36,7 @@ import { LoginComponent } from './login/login.component';
     FormsModule,
     NgbToastModule,
     AccountRoutingModule,
-    SigninModule
+    
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

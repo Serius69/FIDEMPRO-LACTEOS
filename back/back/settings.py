@@ -148,9 +148,9 @@ REST_FRAMEWORK = {
        'rest_framework.authentication.TokenAuthentication',
    )
 }
-
-CORS_ALLOWED_ORIGINS = [
-   "http://localhost:4200",
-]
+CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOWED_ORIGINS = [
+#    "http://localhost:4200",
+# ]
 
 AUTH_USER_MODEL = 'users.User'
