@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.urls import path, include, reverse_lazy  # Import reverse_lazy
 from rest_framework.routers import DefaultRouter
-from users.views import UserViewSet, UserLogIn, UserInfoViewSet
+from users.views import UserViewSet, UserLogIn
 from django.views.generic.base import RedirectView  # Import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static  # Import the 'static' function
@@ -11,7 +11,6 @@ from django.conf.urls.static import static  # Import the 'static' function
 # Create a router and register user-related views
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
-router.register(r'userinfo', UserInfoViewSet, basename='userinfo')
 
 urlpatterns = [
     # Admin site (if needed)
