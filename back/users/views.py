@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -40,3 +41,25 @@ class UserRegister(generics.CreateAPIView):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class UserInfoViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A simple ViewSet for retrieving user information.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]  # You can adjust permissions as needed
+
+    def list(self, request, *args, **kwargs):
+        # Assuming you want to retrieve information for the currently logged-in user
+        user = self.request.user
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_current_user(request):
+    user = request.user  # Get the current authenticated user
+    serializer = UserSerializer(user)  # Serialize the user data
+    return Response(serializer.data)

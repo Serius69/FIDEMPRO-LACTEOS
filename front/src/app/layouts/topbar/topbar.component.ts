@@ -5,7 +5,6 @@ import { EventService } from '../../core/services/event.service';
 //Logout
 import { environment } from '../../../environments/environment';
 import { AuthenticationService } from '../../core/services/auth.service';
-import { AuthfakeauthenticationService } from '../../core/services/authfake.service';
 import { TokenStorageService } from '../../core/services/token-storage.service';
 import { Router } from '@angular/router';
 
@@ -39,7 +38,7 @@ export class TopbarComponent implements OnInit {
   userData: any;
 
   constructor(@Inject(DOCUMENT) private document: any, private eventService: EventService, public languageService: LanguageService,
-    public _cookiesService: CookieService, public translate: TranslateService, private authService: AuthenticationService, private authFackservice: AuthfakeauthenticationService,
+    public _cookiesService: CookieService, public translate: TranslateService, private authService: AuthenticationService, 
     private router: Router, private TokenStorageService: TokenStorageService) { }
 
   ngOnInit(): void {

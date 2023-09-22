@@ -13,7 +13,7 @@ import { AccountRoutingModule } from './account-routing.module';
 import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { ToastsContainer } from './auth/login/toasts-container.component';
-import { LockscreenComponent } from './auth/lockscreen2/lockscreen.component';
+import { LockscreenComponent } from './auth/lockscreen/lockscreen.component';
 import { LogoutComponent } from './auth/logout/logout.component';
 import { PassCreateComponent } from './auth/pass-create/pass-create.component';
 import { PassResetComponent } from './auth/pass-reset/pass-reset.component';
