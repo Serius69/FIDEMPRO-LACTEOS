@@ -1,8 +1,8 @@
 /*
 Template Name: findempro - Admin & Dashboard Template
-Author: Themesbrand
-Website: https://Themesbrand.com/
-Contact: Themesbrand@gmail.com
+Author: Sergio Troche
+Website: https://Sergio Troche.com/
+Contact: Sergio Troche@gmail.com
 File: CRM Dashboard init js
 */
 

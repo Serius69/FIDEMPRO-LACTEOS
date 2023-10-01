@@ -1,8 +1,8 @@
 /*
 Template Name: findempro - Admin & Dashboard Template
-Author: Themesbrand
-Website: https://Themesbrand.com/
-Contact: Themesbrand@gmail.com
+Author: Sergio Troche
+Website: https://Sergio Troche.com/
+Contact: Sergio Troche@gmail.com
 File: job Dashboard init js
 */
 
@@ -203,7 +203,7 @@ var jobListAllData = [
     ["Web Designer", "Force Medicines", "Ugashik, US", "$412 - $241 ", "3+ year", "Freelancer"],
     ["Full Stack Engineer", "Syntyce Solutions", "Zuweihir, UAE", "$650 - $900", "0-1+ year", "Full Time"],
     ["Assistant / Store Keeper", "Moetic Fashion", "Limestone, US", "$340 - $800", "0-3 year", "Intership"],
-    ["Project Manager", "Themesbrand", "California, US", "$400 - $600", "3+ year", "Part Time"],
+    ["Project Manager", "Sergio Troche", "California, US", "$400 - $600", "3+ year", "Part Time"],
     ["Education Training", "Micro Design", "Germany", "$750 - $940", "1.5+ year", "Freelancer"],
     ["Graphic Designer", "Digitech Galaxy", "Mughairah, UAE", "$160 - $230", "2-3+ year", "Full Time"],
     ["React Developer", "iTest Factory", "Khabākhib, UAE", "$90 - $160", "5+ year", "Intership"],

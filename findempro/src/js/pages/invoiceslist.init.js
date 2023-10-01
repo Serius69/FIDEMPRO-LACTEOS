@@ -1,8 +1,8 @@
 /*
 Template Name: findempro - Admin & Dashboard Template
-Author: Themesbrand
-Website: https://Themesbrand.com/
-Contact: Themesbrand@gmail.com
+Author: Sergio Troche
+Website: https://Sergio Troche.com/
+Contact: Sergio Troche@gmail.com
 File: invoceslist init js
 */
 
@@ -102,8 +102,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -166,8 +166,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -230,8 +230,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -294,8 +294,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -358,8 +358,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -422,8 +422,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -486,8 +486,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -550,8 +550,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -614,8 +614,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -678,8 +678,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -742,8 +742,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -806,8 +806,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -870,8 +870,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -934,8 +934,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -998,8 +998,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -1062,8 +1062,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -1126,8 +1126,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -1190,8 +1190,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -1254,8 +1254,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -1318,8 +1318,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -1382,8 +1382,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'
@@ -1446,8 +1446,8 @@ var Invoices = [{
     },
     company_details: {
         legal_registration_no: "987654",
-        email: 'findempro@themesbrand.com',
-        website: 'www.themesbrand.com',
+        email: 'findempro@Sergio Troche.com',
+        website: 'www.Sergio Troche.com',
         contact_no: '0123456789',
         address: 'California, United States',
         zip_code: '90201'

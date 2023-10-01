@@ -1,8 +1,8 @@
 /*
 Template Name: findempro - Admin & Dashboard Template
-Author: Themesbrand
-Website: https://Themesbrand.com/
-Contact: Themesbrand@gmail.comom
+Author: Sergio Troche
+Website: https://Sergio Troche.com/
+Contact: Sergio Troche@gmail.comom
 File: Coming soon Init Js File
 */
 

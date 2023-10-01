@@ -3,7 +3,6 @@ from allauth.account.forms import LoginForm,SignupForm,ChangePasswordForm,ResetP
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
 
-
 class UserLoginForm(LoginForm):
     def __init__(self, *args, **kwargs):
         super(UserLoginForm, self).__init__(*args, **kwargs)

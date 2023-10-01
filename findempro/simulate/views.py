@@ -2,8 +2,7 @@
 from django.shortcuts import render
 
 from scipy import stats  # Import scipy for KS test
-from .models import DataPoint
-from .models import FDP
+from .models import *
 
 def ks_test_view(request):
     # Retrieve the dataset and FDP parameters

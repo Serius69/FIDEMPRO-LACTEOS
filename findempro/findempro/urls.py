@@ -32,6 +32,12 @@ urlpatterns = [
     path('components/',include('components.urls')),
     # Pages
     path('pages/',include('pages.urls')),
+    # Products
+    path('product/',include('product.urls')),
+    # Variables
+    path('variable/',include('variable.urls')),
+    # Simulate
+    path('simulate/',include('simulate.urls')),
     path(
         "account/password/change/",
         login_required(MyPasswordChangeView.as_view()),

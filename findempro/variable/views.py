@@ -1,41 +1,39 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable
-from .serializers import VariableSerializer
+from .forms import VariableForm  # Create a Django form for Variable
 
-@api_view(['GET', 'POST'])
-def VariableList(request):
-    if request.method == 'GET':
-        variables = Variable.objects.all()
-        serializer = VariableSerializer(variables, many=True)
-        return Response(serializer.data)
+def variable_list(request):
+    variables = Variable.objects.all()
+    return render(request, 'variable_list.html', {'variables': variables})
 
-    elif request.method == 'POST':
-        serializer = VariableSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+def variable_detail(request, id):
+    variable = get_object_or_404(Variable, id=id)
+    return render(request, 'variable_detail.html', {'variable': variable})
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def VariableDetail(request, id):
-    try:
-        variable = Variable.objects.get(id=id)
-    except Variable.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+def add_variable(request):
+    if request.method == 'POST':
+        form = VariableForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('variable_list')
+    else:
+        form = VariableForm()
+    return render(request, 'add_variable.html', {'form': form})
 
-    if request.method == 'GET':
-        serializer = VariableSerializer(variable)
-        return Response(serializer.data)
+def edit_variable(request, id):
+    variable = get_object_or_404(Variable, id=id)
+    if request.method == 'POST':
+        form = VariableForm(request.POST, instance=variable)
+        if form.is_valid():
+            form.save()
+            return redirect('variable_list')
+    else:
+        form = VariableForm(instance=variable)
+    return render(request, 'edit_variable.html', {'form': form, 'variable': variable})
 
-    elif request.method == 'PUT':
-        serializer = VariableSerializer(variable, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
+def delete_variable(request, id):
+    variable = get_object_or_404(Variable, id=id)
+    if request.method == 'POST':
         variable.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return redirect('variable_list')
+    return render(request, 'delete_variable.html', {'variable': variable})
