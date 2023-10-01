@@ -14,7 +14,7 @@ from pathlib import Path
 from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Quick-start development settings - unsuitable for production
@@ -158,9 +158,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR,"static")]
-
+## For deploy use the next one
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -185,11 +187,11 @@ EMAIL_HOST = "smtp-relay.brevo.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = "xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-jaMQ5WV1OrqwAgd4"
-EMAIL_HOST_PASSWORD = "xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-jaMQ5WV1OrqwAgd4"
-# DEFAULT_FROM_EMAIL = "sergio.troche@ucb.edu.bo"
+EMAIL_HOST_USER = "sergio.troche@ucb.edu.bo"
+EMAIL_HOST_PASSWORD = "xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-OnbHEM6D2wCRyJ3Y"
+DEFAULT_FROM_EMAIL = "sergio.troche@ucb.edu.bo"
 # SMTP key
-#  xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-jaMQ5WV1OrqwAgd4
+#  xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-OnbHEM6D2wCRyJ3Y
 #  All Auth Configurations
 
 LOGIN_REDIRECT_URL = "/"

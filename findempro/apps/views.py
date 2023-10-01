@@ -8,11 +8,6 @@ from django.contrib import messages
 # Create your views here.
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
-
-# Calendar
-apps_calendar_view = AppsView.as_view(template_name="apps/apps-calendar.html")
-# Chat
-apps_chat_view = AppsView.as_view(template_name="apps/apps-chat.html")
 # Mail Box
 apps_mailbox_view = AppsView.as_view(template_name="apps/email/apps-mailbox.html")
 apps_basicaction_view = AppsView.as_view(template_name="apps/email/apps-email-basic.html")

@@ -23,7 +23,7 @@ function tConvert(e){var e=new Date(e),e=(time_s=e.getHours()+":"+e.getMinutes()
                                 <td class="text-end">$`+t.order_summary.estimated_tex+`</td>
                             </tr>
                             <tr>
-                                <td>Discount <small class="text-muted">(findempro15)</small></td>
+                                <td>Discount <small class="text-muted">(VELZON15)</small></td>
                                 <td class="text-end">- $`+t.order_summary.discount+`</td>
                             </tr>
                             <tr>

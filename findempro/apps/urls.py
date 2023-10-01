@@ -1,7 +1,5 @@
 from django.urls import path
 from apps.views import(
-    apps_calendar_view,
-    apps_chat_view,
     apps_mailbox_view,
     apps_basicaction_view,
     apps_invoiceaction_view,
@@ -80,10 +78,7 @@ from apps.views import(
 app_name = "apps"
 
 urlpatterns = [
-    # Calendar
-    path("calendar", view=apps_calendar_view, name="calendar"),
     # Chat
-    path("chat", view=apps_chat_view, name="chat"),
     path("mailbox", view=apps_mailbox_view, name="mailbox"),
     path("basicaction", view=apps_basicaction_view, name="basicaction"),
     path("invoiceaction", view=apps_invoiceaction_view, name="invoiceaction"),
