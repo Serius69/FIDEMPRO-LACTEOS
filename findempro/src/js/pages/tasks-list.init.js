@@ -101,7 +101,7 @@ xhttp.onload = function () {
 
         tasksList.add({
             id: '<a href="apps-tasks-details.html" class="fw-medium link-primary">#VLZ' + raw.id + "</a>",
-            project_name: '<a href="apps-projects-overview.html" class="fw-medium link-primary">' + raw.project_name + "</a>",
+            project_name: '<a href="apps-products-overview.html" class="fw-medium link-primary">' + raw.project_name + "</a>",
             tasks_name: raw.tasks_name,
             client_name: raw.client_name,
             assignedto: imgHtml,
@@ -231,7 +231,7 @@ Array.prototype.slice.call(forms).forEach(function (form) {
             ) {
                 tasksList.add({
                     id: '<a href="apps-tasks-details.html" class="fw-medium link-primary">#VLZ'+count+"</a>",
-                    project_name: '<a href="apps-projects-overview.html" class="fw-medium link-primary">'+projectNameField.value+"</a>",
+                    project_name: '<a href="apps-products-overview.html" class="fw-medium link-primary">'+projectNameField.value+"</a>",
                     tasks_name: tasksTitleField.value,
                     client_name: clientNameField.value,
                     assignedto: assignToUsers(),
@@ -270,7 +270,7 @@ Array.prototype.slice.call(forms).forEach(function (form) {
                     if (selectedid == itemId) {
                         x.values({
                             id: '<a href="javascript:void(0);" class="fw-medium link-primary">'+idField.value+"</a>",
-                            project_name: '<a href="apps-projects-overview.html" class="fw-medium link-primary">' +projectNameField.value+"</a>",
+                            project_name: '<a href="apps-products-overview.html" class="fw-medium link-primary">' +projectNameField.value+"</a>",
                             tasks_name: tasksTitleField.value,
                             client_name: clientNameField.value,
                             assignedto: assignToUsers(),

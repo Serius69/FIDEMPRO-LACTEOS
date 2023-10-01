@@ -36,12 +36,12 @@ function getChartColorsArray(chartId) {
     }
 }
 
-// Projects Overview
-var linechartcustomerColors = getChartColorsArray("projects-overview-chart");
+// products Overview
+var linechartcustomerColors = getChartColorsArray("products-overview-chart");
 if (linechartcustomerColors) {
     var options = {
         series: [{
-            name: 'Number of Projects',
+            name: 'Number of products',
             type: 'bar',
             data: [34, 65, 46, 68, 49, 61, 42, 44, 78, 52, 63, 67]
         }, {
@@ -49,7 +49,7 @@ if (linechartcustomerColors) {
             type: 'area',
             data: [89.25, 98.58, 68.74, 108.87, 77.54, 84.03, 51.24, 28.57, 92.57, 42.36, 88.51, 36.57]
         }, {
-            name: 'Active Projects',
+            name: 'Active products',
             type: 'bar',
             data: [8, 12, 7, 17, 21, 11, 5, 9, 7, 29, 12, 35]
         }],
@@ -154,7 +154,7 @@ if (linechartcustomerColors) {
             }]
         }
     };
-    var chart = new ApexCharts(document.querySelector("#projects-overview-chart"), options);
+    var chart = new ApexCharts(document.querySelector("#products-overview-chart"), options);
     chart.render();
 }
 
@@ -206,8 +206,8 @@ if (isApexSeries) {
 }
 
 // Project Status charts
-var donutchartProjectsStatusColors = getChartColorsArray("prjects-status");
-if (donutchartProjectsStatusColors) {
+var donutchartproductsStatusColors = getChartColorsArray("prjects-status");
+if (donutchartproductsStatusColors) {
     var options = {
         series: [125, 42, 58, 89],
         labels: ["Completed", "In Progress", "Yet to Start", "Cancelled"],
@@ -238,7 +238,7 @@ if (donutchartProjectsStatusColors) {
             lineCap: "round",
             width: 0
         },
-        colors: donutchartProjectsStatusColors,
+        colors: donutchartproductsStatusColors,
     };
     var chart = new ApexCharts(document.querySelector("#prjects-status"), options);
     chart.render();

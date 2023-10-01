@@ -51,7 +51,25 @@
                             </div>
                         </li> <!-- end Dashboard Menu -->
 
-                        
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="#sidebarIcons" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="sidebarIcons">
+                                <i class="ri-compasses-2-line"></i> <span data-key="t-companies">Companies</span>
+                            </a>
+                            <div class="collapse menu-dropdown" id="sidebarIcons">
+                                <ul class="nav nav-sm flex-column">
+                                    <li class="nav-item">
+                                        <a href="{% url 'apps:companies.list' %}" class="nav-link" data-key="t-list-companies">List</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{% url 'apps:companies.create' %}" class="nav-link" data-key="t-create-companie">Add</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        {% comment %} <a href="{% url 'components:icons.crypto' %}" class="nav-link"> <span data-key="t-crypto-svg">Crypto SVG</span></a> {% endcomment %}
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
 
                         {% comment %} <li class="nav-item">
                             <a class="nav-link menu-link" href="#sidebarPages" data-bs-toggle="collapse" role="button"
@@ -122,13 +140,13 @@
                             <div class="collapse menu-dropdown" id="sidebarLayouts">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{% url 'apps:projects.list'%}" class="nav-link" data-key="t-list-products">List Products</a>
+                                        <a href="{% url 'apps:products.list'%}" class="nav-link" data-key="t-list-products">List Products</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{% url 'apps:projects.overview'%}" class="nav-link" data-key="t-overview-product">Overview Product</a>
+                                        <a href="{% url 'apps:products.overview'%}" class="nav-link" data-key="t-overview-product">Overview Product</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{% url 'apps:projects.create'%}" class="nav-link" data-key="t-create-product"> Create Product</a>
+                                        <a href="{% url 'apps:products.create'%}" class="nav-link" data-key="t-create-product"> Create Product</a>
                                     </li>
                                 </ul>
                             </div>
@@ -142,44 +160,36 @@
                             <div class="collapse menu-dropdown" id="sidebarForms">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{% url 'apps:ecommerce.products' %}" class="nav-link" data-key="t-list-variables"> List Variables</a>
+                                        <a href="{% url 'apps:variables.list' %}" class="nav-link" data-key="t-list-variables"> List Variables</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{% url 'apps:ecommerce.product_details' %}" class="nav-link" data-key="t-overview-variable"> Overview Variable</a>
+                                        <a href="{% url 'apps:variables.overview' %}" class="nav-link" data-key="t-overview-variable"> Overview Variable</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{% url 'apps:ecommerce.add_product' %}" class="nav-link" data-key="t-create-variable"> Create Variable</a>
+                                        <a href="{% url 'apps:variables.create' %}" class="nav-link" data-key="t-create-variable"> Create Variable</a>
                                     </li>
                                 </ul>
                             </div>
-                        </li>
+                        </li>                      
                         
-                        
-
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="#sidebarTables" data-bs-toggle="collapse" role="button"
                                 aria-expanded="false" aria-controls="sidebarTables">
-                                <i class="ri-layout-grid-line"></i> <span data-key="t-tables">Tables</span>
+                                <i class="ri-layout-grid-line"></i> <span data-key="t-simulate">Simulate</span>
                             </a>
                             <div class="collapse menu-dropdown" id="sidebarTables">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{% url 'components:tables.basic' %}" class="nav-link" data-key="t-basic-tables">Basic Tables</a>
+                                        <a href="{% url 'apps:simulate.init' %}" class="nav-link" data-key="t-simulate-init">Init</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{% url 'components:tables.gridjs' %}" class="nav-link" data-key="t-grid-js">Grid Js</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'components:tables.listjs' %}" class="nav-link" data-key="t-list-js">List Js</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'components:tables.datatables' %}" class="nav-link" data-key="t-datatables">Datatables </a>
+                                        <a href="{% url 'apps:reports.list' %}" class="nav-link" data-key="t-report-list">Reports List</a>
                                     </li>
                                 </ul>
                             </div>
                         </li>
 
-                        <li class="nav-item">
+                        {% comment %} <li class="nav-item">
                             <a class="nav-link menu-link" href="#sidebarCharts" data-bs-toggle="collapse" role="button"
                                 aria-expanded="false" aria-controls="sidebarCharts">
                                 <i class="ri-pie-chart-line"></i> <span data-key="t-charts">Charts</span>
@@ -257,36 +267,9 @@
                                     </li>
                                 </ul>
                             </div>
-                        </li>
+                        </li> {% endcomment %}
 
-                        <li class="nav-item">
-                            <a class="nav-link menu-link" href="#sidebarIcons" data-bs-toggle="collapse" role="button"
-                                aria-expanded="false" aria-controls="sidebarIcons">
-                                <i class="ri-compasses-2-line"></i> <span data-key="t-icons">Icons</span>
-                            </a>
-                            <div class="collapse menu-dropdown" id="sidebarIcons">
-                                <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                        <a href="{% url 'components:icons.remix' %}" class="nav-link" data-key="t-remix">Remix</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'components:icons.boxicons' %}" class="nav-link" data-key="t-boxicons">Boxicons</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'components:icons.materialdesign' %}" class="nav-link" data-key="t-material-design">Material Design</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'components:icons.lineawesome' %}" class="nav-link" data-key="t-line-awesome">Line Awesome</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'components:icons.feather' %}" class="nav-link" data-key="t-feather">Feather</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        {% comment %} <a href="{% url 'components:icons.crypto' %}" class="nav-link"> <span data-key="t-crypto-svg">Crypto SVG</span></a> {% endcomment %}
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
+                        
                     </ul>
                 </div>
                 <!-- Sidebar -->

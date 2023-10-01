@@ -100,8 +100,8 @@ function loadTeamData(datas) {
                         <div class="col-lg-4 col">\
                             <div class="row text-muted text-center">\
                                 <div class="col-6 border-end border-end-dashed">\
-                                    <h5 class="mb-1 projects-num">'+teamData.projects+'</h5>\
-                                    <p class="text-muted mb-0">Projects</p>\
+                                    <h5 class="mb-1 products-num">'+teamData.products+'</h5>\
+                                    <p class="text-muted mb-0">products</p>\
                                 </div>\
                                 <div class="col-6">\
                                     <h5 class="mb-1 tasks-num">'+teamData.tasks+'</h5>\
@@ -176,7 +176,7 @@ function editMemberList() {
                     document.getElementById("memberid-input").value = item.id;
                     document.getElementById('teammembersName').value = item.memberName;
                     document.getElementById('designation').value = item.position;
-                    document.getElementById('project-input').value = item.projects;
+                    document.getElementById('project-input').value = item.products;
                     document.getElementById('task-input').value = item.tasks;
                     document.getElementById("memberlist-form").classList.remove('was-validated');
                 }
@@ -261,7 +261,7 @@ Array.from(document.querySelectorAll(".addMembers-modal")).forEach(function (ele
                             "nickname": nicknameValue,
                             'memberName': inputName,
                             'position': inputDesignation,
-                            'projects': "0",
+                            'products': "0",
                             'tasks': "0"
                         };
 
@@ -282,7 +282,7 @@ Array.from(document.querySelectorAll(".addMembers-modal")).forEach(function (ele
                                     "nickname": nicknameValue,
                                     'memberName': inputName,
                                     'position': inputDesignation,
-                                    'projects': document.getElementById('project-input').value,
+                                    'products': document.getElementById('project-input').value,
                                     'tasks': document.getElementById('task-input').value
                                 }
                                 return editObj;
@@ -367,7 +367,7 @@ function memberDetailShow() {
                 memberProfileImg = "/static/images/users/user-dummy-img.jpg"
             }
             var memberCoverImg = item.querySelector(".team-cover img").src;
-            var memberProject = item.querySelector(".projects-num").innerHTML;
+            var memberProject = item.querySelector(".products-num").innerHTML;
             var memberTask = item.querySelector(".tasks-num").innerHTML;
 
             document.querySelector("#member-overview .profile-img").src = memberProfileImg;

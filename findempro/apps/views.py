@@ -8,87 +8,31 @@ from django.contrib import messages
 # Create your views here.
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
-# Mail Box
-apps_mailbox_view = AppsView.as_view(template_name="apps/email/apps-mailbox.html")
-apps_basicaction_view = AppsView.as_view(template_name="apps/email/apps-email-basic.html")
-apps_invoiceaction_view = AppsView.as_view(template_name="apps/email/apps-email-ecommerce.html")
-
-# Ecommerce
-apps_ecommerce_products_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-products.html")
-apps_ecommerce_product_details_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-product-details.html")
-apps_ecommerce_add_product_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-add-product.html")
-# apps_ecommerce_orders_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-orders.html")
-apps_ecommerce_order_details_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-order-details.html")
-# apps_ecommerce_customers_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-customers.html")
-apps_ecommerce_cart_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-cart.html")
-apps_ecommerce_checkout_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-checkout.html")
-apps_ecommerce_sellers_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-sellers.html")
-apps_ecommerce_seller_details_view = AppsView.as_view(template_name="apps/ecommerce/apps-ecommerce-seller-details.html")
-
-# Projects
-apps_projects_list_view = AppsView.as_view(template_name="apps/projects/apps-projects-list.html")
-apps_projects_overview_view = AppsView.as_view(template_name="apps/projects/apps-projects-overview.html")
-apps_projects_create_view = AppsView.as_view(template_name="apps/projects/apps-projects-create.html")
-
-# Tasks
-apps_tasks_kanban_view = AppsView.as_view(template_name="apps/tasks/apps-tasks-kanban.html")
-apps_tasks_list_view = AppsView.as_view(template_name="apps/tasks/apps-tasks-list-view.html")
-apps_tasks_details_view = AppsView.as_view(template_name="apps/tasks/apps-tasks-details.html")
-
+# Companies
+apps_companies_grid= AppsView.as_view(template_name="apps/companies/companies-grid.html")
+apps_companies_list = AppsView.as_view(template_name="apps/companies/companies-list.html")
+apps_companies_overview = AppsView.as_view(template_name="apps/companies/companies-overview.html")
+apps_companies_add = AppsView.as_view(template_name="apps/companies/companies-add.html")
+# Products
+apps_products_list = AppsView.as_view(template_name="apps/products/products-list.html")
+apps_product_overview = AppsView.as_view(template_name="apps/products/products-overview.html")
+apps_product_add = AppsView.as_view(template_name="apps/products/products-add.html")
+# Variables
+apps_variables_list = AppsView.as_view(template_name="apps/variables/variable-list.html")
+apps_variables_overview= AppsView.as_view(template_name="apps/variables/variable-overview.html")
+apps_variables_add = AppsView.as_view(template_name="apps/variables/variable-add.html")
+apps_variables_stats = AppsView.as_view(template_name="apps/variables/variable-stats.html")
+#Users pages
+apps_users_list = AppsView.as_view(template_name="apps/users/users-list.html")
+apps_users_overview = AppsView.as_view(template_name="apps/users/users-overview.html")
+apps_users_add = AppsView.as_view(template_name="apps/users/users-add.html")
 # CRM
-# apps_crm_contacts_view = AppsView.as_view(template_name="apps/crm/apps-crm-contacts.html")
-# apps_crm_companies_view = AppsView.as_view(template_name="apps/crm/apps-crm-companies.html")
 apps_crm_deals_view = AppsView.as_view(template_name="apps/crm/apps-crm-deals.html")
-# apps_crm_leads_view = AppsView.as_view(template_name="apps/crm/apps-crm-leads.html")
-
-# Crypto
-apps_crypto_transactions_view = AppsView.as_view(template_name="apps/crypto/apps-crypto-transactions.html")
-apps_crypto_buy_sell_view = AppsView.as_view(template_name="apps/crypto/apps-crypto-buy-sell.html")
-apps_crypto_orders_view = AppsView.as_view(template_name="apps/crypto/apps-crypto-orders.html")
-apps_crypto_wallet_view = AppsView.as_view(template_name="apps/crypto/apps-crypto-wallet.html")
-apps_crypto_ico_view = AppsView.as_view(template_name="apps/crypto/apps-crypto-ico.html")
-apps_crypto_kyc_view = AppsView.as_view(template_name="apps/crypto/apps-crypto-kyc.html")
-
-# Invoices
-apps_invoices_list_view = AppsView.as_view(template_name="apps/invoices/apps-invoices-list.html")
-apps_invoices_details_view = AppsView.as_view(template_name="apps/invoices/apps-invoices-details.html")
-apps_invoices_create_view = AppsView.as_view(template_name="apps/invoices/apps-invoices-create.html")
-
-# Support Tickets
-# apps_tickets_list_view = AppsView.as_view(template_name="apps/support-tickets/apps-tickets-list.html")
-apps_tickets_details_view = AppsView.as_view(template_name="apps/support-tickets/apps-tickets-details.html")
-
-#NFT pages
-apps_nft_marketplace_view = AppsView.as_view(template_name="apps/nft/apps-nft-marketplace.html")
-apps_nft_explore_view = AppsView.as_view(template_name="apps/nft/apps-nft-explore.html")
-apps_nft_liveauction_view = AppsView.as_view(template_name="apps/nft/apps-nft-auction.html")
-apps_nft_itemdetails_view= AppsView.as_view(template_name="apps/nft/apps-nft-item-details.html")
-apps_nft_collections_view= AppsView.as_view(template_name="apps/nft/apps-nft-collections.html")
-apps_nft_creators_view = AppsView.as_view(template_name="apps/nft/apps-nft-creators.html")
-apps_nft_ranking_view = AppsView.as_view(template_name="apps/nft/apps-nft-ranking.html")
-apps_nft_wallet_view = AppsView.as_view(template_name="apps/nft/apps-nft-wallet.html")
-apps_nft_create_view = AppsView.as_view(template_name="apps/nft/apps-nft-create.html")
-
-#Job Pages
-# apps_job_application_view = AppsView.as_view(template_name="apps/jobs/apps-job-application.html")
-apps_job_candidate_grid_view = AppsView.as_view(template_name="apps/jobs/apps-job-candidate-grid.html")
-apps_job_candidate_lists_view = AppsView.as_view(template_name="apps/jobs/apps-job-candidate-lists.html")
-apps_job_companies_lists_view = AppsView.as_view(template_name="apps/jobs/apps-job-companies-lists.html")
-apps_job_categories_view = AppsView.as_view(template_name="apps/jobs/apps-job-categories.html")
-apps_job_details_view = AppsView.as_view(template_name="apps/jobs/apps-job-details.html")
-apps_job_grid_lists_view = AppsView.as_view(template_name="apps/jobs/apps-job-grid-lists.html")
-apps_job_lists_view = AppsView.as_view(template_name="apps/jobs/apps-job-lists.html")
-apps_job_new_view = AppsView.as_view(template_name="apps/jobs/apps-job-new.html")
-apps_job_statistics_view = AppsView.as_view(template_name="apps/jobs/apps-job-statistics.html")
-
-# Calendar
-apps_file_manager_view = AppsView.as_view(template_name="apps/apps-file-manager.html")
-
-# Calendar
-apps_todo_view = AppsView.as_view(template_name="apps/apps-todo.html")
-
-apps_api_key_view = AppsView.as_view(template_name="apps/apps-api-key.html")
-
+# Simulate
+apps_simulate_init = AppsView.as_view(template_name="apps/simulate/simulate-init.html")
+# Reports
+apps_reports_list = AppsView.as_view(template_name="apps/reports/reports-list.html")
+apps_reports_overview = AppsView.as_view(template_name="apps/reports/reports-overview.html")
 
 # Crm Contact views
 def apps_crm_contacts_view(request,pk):
@@ -204,101 +148,101 @@ def apps_crm_delete_leads_view(request,pk):
     messages.success(request,"Contact deleted successfully!")
     return redirect("apps:crm.leads")
 
-def apps_job_application_view(request):
+def apps_users_application_view(request):
     apps = JobApplication.objects.all().order_by('-id')
     if request.method == "POST":
         form = JobApplicationForm(request.POST or None, request.FILES or None)
         if form.is_valid():
             form.save()
             messages.success(request,"Application inserted Successfully!")
-            return redirect("apps:job.application")
+            return redirect("apps:users.application")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:job.application")
-    return render(request,'apps/jobs/apps-job-application.html',{'apps':apps})
+            return redirect("apps:users.application")
+    return render(request,'apps/userss/apps-users-application.html',{'apps':apps})
 
-def apps_job_update_application_view(request,pk):
+def apps_users_update_application_view(request,pk):
     apps = JobApplication.objects.get(pk=pk)
     if request.method == "POST":
         form = JobApplicationForm(request.POST or None, request.FILES or None, instance=apps)
         if form.is_valid():
             form.save()
             messages.success(request,"Application updated Successfully!")
-            return redirect("apps:job.application")
+            return redirect("apps:users.application")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:job.application")
-    return render(request,'apps/jobs/apps-job-application.html')
+            return redirect("apps:users.application")
+    return render(request,'apps/userss/apps-users-application.html')
 
-def apps_job_delete_application_view(request,pk):
+def apps_users_delete_application_view(request,pk):
     apps = JobApplication.objects.get(pk=pk)
     apps.delete()
     messages.success(request,"Application deleted Successfully!")
-    return redirect("apps:job.application")
+    return redirect("apps:users.application")
 
-def apps_ecommerce_orders_view(request):
+def apps_companies_orders_view(request):
     orders = EcommerceOrder.objects.all().order_by('-id')
     if request.method == "POST":
         form = EcommerceOrderForm(request.POST or None, request.FILES or None)
         if form.is_valid():
             form.save()
             messages.success(request,"Order inserted Successfully!")
-            return redirect("apps:ecommerce.orders")
+            return redirect("apps:companies.orders")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:ecommerce.orders")
-    return render(request,'apps/ecommerce/apps-ecommerce-orders.html',{'orders':orders})
+            return redirect("apps:companies.orders")
+    return render(request,'apps/companies/apps-companies-orders.html',{'orders':orders})
 
-def apps_ecommerce_update_orders_view(request,pk):
+def apps_companies_update_orders_view(request,pk):
     orders = EcommerceOrder.objects.get(pk=pk)
     if request.method == 'POST':
         form = EcommerceOrderForm(request.POST or None, request.FILES or None,instance=orders)
         if form.is_valid():
             form.save()
             messages.success(request,"Order updated Successfully!")
-            return redirect("apps:ecommerce.orders")
+            return redirect("apps:companies.orders")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:ecommerce.orders")
-    return render(request,'apps/ecommerce/apps-ecommerce-orders.html')
+            return redirect("apps:companies.orders")
+    return render(request,'apps/companies/apps-companies-orders.html')
 
-def apps_ecommerce_delete_orders_view(request,pk):
+def apps_companies_delete_orders_view(request,pk):
     orders = EcommerceOrder.objects.get(pk=pk)
     orders.delete()
     messages.success(request,"Order deleted Successfully!")
-    return redirect("apps:ecommerce.orders")
+    return redirect("apps:companies.orders")
 
-def apps_ecommerce_customers_view(request):
+def apps_companies_customers_view(request):
     customers = EcommerceCustomer.objects.all().order_by('-id')
     if request.method == "POST":
         form = EcommerceCustomerForm(request.POST or None, request.FILES or None)
         if form.is_valid():
             form.save()
             messages.success(request,"Customer inserted Successfully!")
-            return redirect("apps:ecommerce.customers")
+            return redirect("apps:companies.customers")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:ecommerce.customers")
-    return render(request,'apps/ecommerce/apps-ecommerce-customers.html',{'customers':customers})
+            return redirect("apps:companies.customers")
+    return render(request,'apps/companies/apps-companies-customers.html',{'customers':customers})
 
-def apps_ecommerce_update_customers_view(request,pk):
+def apps_companies_update_customers_view(request,pk):
     customers = EcommerceCustomer.objects.get(pk=pk)
     if request.method == 'POST':
         form = EcommerceCustomerForm(request.POST or None, request.FILES or None,instance=customers)
         if form.is_valid():
             form.save()
             messages.success(request,"Customer updated Successfully!")
-            return redirect("apps:ecommerce.customers")
+            return redirect("apps:companies.customers")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:ecommerce.customers")
-    return render(request,'apps/ecommerce/apps-ecommerce-customers.html')
+            return redirect("apps:companies.customers")
+    return render(request,'apps/companies/apps-companies-customers.html')
 
-def apps_ecommerce_delete_customers_view(request,pk):
+def apps_companies_delete_customers_view(request,pk):
     customers = EcommerceCustomer.objects.get(pk=pk)
     customers.delete()
     messages.success(request,"Customer deleted Successfully!")
-    return redirect("apps:ecommerce.customers")
+    return redirect("apps:companies.customers")
 
 def apps_tickets_list_view(request):
     tickets = TicketList.objects.all().order_by('-id')

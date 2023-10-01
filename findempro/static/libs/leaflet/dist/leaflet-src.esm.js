@@ -1590,7 +1590,7 @@ function toLatLng(a, b, c) {
 
 var CRS = {
 	// @method latLngToPoint(latlng: LatLng, zoom: Number): Point
-	// Projects geographical coordinates into pixel coordinates for a given zoom.
+	// products geographical coordinates into pixel coordinates for a given zoom.
 	latLngToPoint: function (latlng, zoom) {
 		var projectedPoint = this.projection.project(latlng),
 		    scale = this.scale(zoom);
@@ -1599,7 +1599,7 @@ var CRS = {
 	},
 
 	// @method pointToLatLng(point: Point, zoom: Number): LatLng
-	// The inverse of `latLngToPoint`. Projects pixel coordinates on a given
+	// The inverse of `latLngToPoint`. products pixel coordinates on a given
 	// zoom into geographical coordinates.
 	pointToLatLng: function (point, zoom) {
 		var scale = this.scale(zoom),
@@ -1609,7 +1609,7 @@ var CRS = {
 	},
 
 	// @method project(latlng: LatLng): Point
-	// Projects geographical coordinates into coordinates in units accepted for
+	// products geographical coordinates into coordinates in units accepted for
 	// this CRS (e.g. meters for EPSG:3857, for passing it to WMS services).
 	project: function (latlng) {
 		return this.projection.project(latlng);
@@ -4080,7 +4080,7 @@ var Map = Evented.extend({
 	},
 
 	// @method project(latlng: LatLng, zoom: Number): Point
-	// Projects a geographical coordinate `LatLng` according to the projection
+	// products a geographical coordinate `LatLng` according to the projection
 	// of the map's CRS, then scales it according to `zoom` and the CRS's
 	// `Transformation`. The result is pixel coordinate relative to
 	// the CRS origin.
@@ -6685,11 +6685,11 @@ var Mercator = {
  * The bounds (specified in CRS units) where the projection is valid
 
  * @method project(latlng: LatLng): Point
- * Projects geographical coordinates into a 2D point.
+ * products geographical coordinates into a 2D point.
  * Only accepts actual `L.LatLng` instances, not arrays.
 
  * @method unproject(point: Point): LatLng
- * The inverse of `project`. Projects a 2D point into a geographical location.
+ * The inverse of `project`. products a 2D point into a geographical location.
  * Only accepts actual `L.Point` instances, not arrays.
 
  * Note that the projection instances do not inherit from Leaflet's `Class` object,
