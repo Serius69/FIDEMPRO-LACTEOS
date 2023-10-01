@@ -1,24 +1,20 @@
 from django.urls import path
 from dashboards.views import (
     dashboard_view,
-    dashboard_analytics_view,
-    dashboard_crm_view,
-    dashboard_crypto_view,
-    dashboard_products_view,
-    dashboard_nft_view,
-    dashboard_job_view
+    dashboard_admin,
+    dashboard_finance_status,
+    dashboard_products,
+    dashboard_variables,
 )
 
 app_name = 'dashboards'
 
 urlpatterns = [
-    path('',view =dashboard_view,name="dashboard"),
-    path('dashboard-analytics',view =dashboard_analytics_view,name="dashboard_analytics"),
-    path('dashboard-crm', view =dashboard_crm_view,name="dashboard_crm"),
-    path('dashboard-crypto', view =dashboard_crypto_view,name="dashboard_crypto"),
-    path('dashboard-products', view =dashboard_products_view,name="dashboard_products"),
-    path('dashboard-nft', view =dashboard_nft_view,name="dashboard_nft"),    
-    path('dashboard-job', view =dashboard_job_view,name="dashboard_job"),    
+    path('',view =dashboard_view,name="index"),
+    path('dashboard-admin',view =dashboard_admin,name="dashboard_admin"),
+    path('dashboard-finance', view =dashboard_finance_status,name="dashboard_finance_status"),
+    path('dashboard-products', view =dashboard_products,name="dashboard_products"),
+    path('dashboard-variables', view =dashboard_variables,name="dashboard_variables"),
 ]
 
 

@@ -7,12 +7,10 @@ class DashboardView(LoginRequiredMixin,TemplateView):
     pass
     
 dashboard_view = DashboardView.as_view(template_name="dashboards/index.html")
-dashboard_analytics_view = DashboardView.as_view(template_name="dashboards/dashboard-analytics.html")
-dashboard_crm_view = DashboardView.as_view(template_name="dashboards/dashboard-crm.html")
-dashboard_crypto_view = DashboardView.as_view(template_name="dashboards/dashboard-crypto.html")
-dashboard_products_view = DashboardView.as_view(template_name="dashboards/dashboard-products.html")
-dashboard_nft_view = DashboardView.as_view(template_name="dashboards/dashboard-nft.html")
-dashboard_job_view = DashboardView.as_view(template_name="dashboards/dashboard-job.html")
+dashboard_admin = DashboardView.as_view(template_name="dashboards/dashboard-admin.html")
+dashboard_finance_status = DashboardView.as_view(template_name="dashboards/dashboard-financestatus.html")
+dashboard_products= DashboardView.as_view(template_name="dashboards/dashboard-products.html")
+dashboard_variables = DashboardView.as_view(template_name="dashboards/dashboard-variables.html")
 
 
 

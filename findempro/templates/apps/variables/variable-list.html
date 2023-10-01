@@ -13,7 +13,7 @@
             <div class="page-content">
                 <div class="container-fluid">
                     {% block pagetitle %}
-                    {% include "partials/page-title.html" with pagetitle="Jobs" title="Job Lists" %}
+                    {% include "partials/page-title.html" with pagetitle="Jobs" title="Variable Lists" %}
                     {% endblock pagetitle %}
 
                     <div class="row">
@@ -21,9 +21,9 @@
                             <div class="card">
                                 <div class="card-body">
                                     <div class="d-flex align-items-center">
-                                        <h6 class="card-title mb-0 flex-grow-1">Search Jobs</h6>
+                                        <h6 class="card-title mb-0 flex-grow-1">Search Variables</h6>
                                         <div class="flex-shrink-0">
-                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#CreateJobModal"><i class="ri-add-line align-bottom me-1"></i> Create New Job</button>
+                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#CreateJobModal"><i class="ri-add-line align-bottom me-1"></i> Create New Variable</button>
                                         </div>
                                     </div>  
 
@@ -32,16 +32,6 @@
                                             <div class="search-box">
                                                 <input type="text" class="form-control search bg-light border-light" id="searchJob" autocomplete="off" placeholder="Search for jobs or companies..." >
                                                 <i class="ri-search-line search-icon"></i>
-                                            </div>
-                                        </div>
-                                        <div class="col-xxl-2 col-md-6">
-                                            <div class="input-light">
-                                                <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="idStatus">
-                                                    <option value="All">All Selected</option>
-                                                    <option value="Newest" selected>Newest</option>
-                                                    <option value="Popular">Popular</option>
-                                                    <option value="Oldest">Oldest</option>
-                                                </select>
                                             </div>
                                         </div>
                                         <div class="col-xl-12 d-none" id="found-job-alert">
