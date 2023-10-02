@@ -1,5 +1,5 @@
 /*
-Template Name: findempro - Admin & Dashboard Template
+Template Name: findempro - Financial Decision Support System for Small and Medium-sized Enterprises (SMEs) in the Dairy Secto
 Author: Sergio Troche
 Website: https://Sergio Troche.com/
 Contact: Sergio Troche@gmail.com
@@ -199,7 +199,7 @@ loadCharts();
 
 var jobListAllData = [
     ["Marketing Director", "Meta4Systems", "Vinninga, Sweden", "$250 - $800", "0-5 year", "Full Time"],
-    ["UI/UX designer", "Zoetic Fashion", "Cullera, Spain", "$400+", "0-2 year", "Part Time"],
+    ["Variable Name", "Zoetic Fashion", "Cullera, Spain", "$400+", "0-2 year", "Part Time"],
     ["Web Designer", "Name", "Ugashik, US", "$412 - $241 ", "3+ year", "Freelancer"],
     ["Full Stack Engineer", "Syntyce Solutions", "Zuweihir, UAE", "$650 - $900", "0-1+ year", "Full Time"],
     ["Assistant / Store Keeper", "Moetic Fashion", "Limestone, US", "$340 - $800", "0-3 year", "Intership"],
@@ -233,7 +233,7 @@ if (document.getElementById("recomended-jobs")){
             name: 'Experience',
             width: '150px',
         },{
-            name: 'Job Type',
+            name: 'Variable Type',
             width: '150px',
         }],
         sort: true,

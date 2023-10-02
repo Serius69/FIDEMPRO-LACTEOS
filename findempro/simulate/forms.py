@@ -1,25 +1,32 @@
-from django.db import models
+from django import forms
+from .models import DairySME, FinancialData, ProbabilityDensityFunction, SimulationScenario, ScenarioPDF, DecisionAnalysis
 
-
-class SimulateForm(forms.ModelForm):
+class DairySMEForm(forms.ModelForm):
     class Meta:
-        model = Product
-        fields = ('name', 'type', 'quantity', 'description')
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'textinputclass'}),
-            'description': forms.Textarea(attrs={'class': 'editable medium-editor-textarea postcontent'}),
-        }
+        model = DairySME
+        fields = ('name', 'location', 'description')
 
-    def __init__(self, *args, **kwargs):
-        super(ProductForm, self).__init__(*args, **kwargs)
-        self.fields['name'].label = 'Product Name'
-        self.fields['type'].label = 'Product Type'
-        self.fields['quantity'].label = 'Quantity'
-        self.fields['description'].label = 'Description'
-        self.fields['description'].help_text = 'Enter a description for the product.'
+class FinancialDataForm(forms.ModelForm):
+    class Meta:
+        model = FinancialData
+        fields = ('sme', 'year', 'revenue', 'expenses', 'profit')
 
-    def clean_quantity(self):
-        quantity = self.cleaned_data.get('quantity')
-        if quantity < 0:
-            raise forms.ValidationError("Quantity cannot be negative.")
-        return quantity
+class ProbabilityDensityFunctionForm(forms.ModelForm):
+    class Meta:
+        model = ProbabilityDensityFunction
+        fields = ('name', 'function_data')
+
+class SimulationScenarioForm(forms.ModelForm):
+    class Meta:
+        model = SimulationScenario
+        fields = ('name', 'description', 'pdfs')
+
+class ScenarioPDFForm(forms.ModelForm):
+    class Meta:
+        model = ScenarioPDF
+        fields = ('scenario', 'pdf', 'weight')
+
+class DecisionAnalysisForm(forms.ModelForm):
+    class Meta:
+        model = DecisionAnalysis
+        fields = ('sme', 'year', 'decision_description', 'recommendation')
