@@ -199,19 +199,19 @@ loadCharts();
 
 var jobListAllData = [
     ["Marketing Director", "Meta4Systems", "Vinninga, Sweden", "$250 - $800", "0-5 year", "Full Time"],
-    ["Variable Name", "Zoetic Fashion", "Cullera, Spain", "$400+", "0-2 year", "Part Time"],
+    ["Variable Name", "Name", "Cullera, Spain", "$400+", "0-2 year", "Part Time"],
     ["Web Designer", "Name", "Ugashik, US", "$412 - $241 ", "3+ year", "Freelancer"],
     ["Full Stack Engineer", "Syntyce Solutions", "Zuweihir, UAE", "$650 - $900", "0-1+ year", "Full Time"],
     ["Assistant / Store Keeper", "Moetic Fashion", "Limestone, US", "$340 - $800", "0-3 year", "Intership"],
     ["Project Manager", "Sergio Troche", "California, US", "$400 - $600", "3+ year", "Part Time"],
-    ["Education Training", "Micro Design", "Germany", "$750 - $940", "1.5+ year", "Freelancer"],
+    ["Education Training", "Name", "Germany", "$750 - $940", "1.5+ year", "Freelancer"],
     ["Graphic Designer", "Digitech Galaxy", "Mughairah, UAE", "$160 - $230", "2-3+ year", "Full Time"],
     ["React Developer", "iTest Factory", "Khabākhib, UAE", "$90 - $160", "5+ year", "Intership"],
-    ["Executive, HR Operations", "Micro Design", "Texanna, US", "$50 - $120", "1-5 year", "Part Time"],
+    ["Executive, HR Operations", "Name", "Texanna, US", "$50 - $120", "1-5 year", "Part Time"],
     ["Project Manager", "Meta4Systems", "Limestone, US", "$210 - $300", "0-2+ year", "Freelancer"],
     ["Full Stack Engineer", "Name", "Ugashik, US", "$120 - $180", "2-5 year", "Part Time"],
     ["Full Stack Engineer", "Digitech Galaxy", "Maidaq, UAE", "$900 - $1020", "3-5 year", "Full Time"],
-    ["Marketing Director", "Zoetic Fashion", "Quesada, US", "$600 - $870", "0-5 year", "Freelancer"],
+    ["Marketing Director", "Name", "Quesada, US", "$600 - $870", "0-5 year", "Freelancer"],
 ];
 
 // recomended-jobs

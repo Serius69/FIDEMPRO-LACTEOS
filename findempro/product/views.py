@@ -4,7 +4,7 @@ from .forms import ProductForm  # Create a Django form for Product
 
 def product_list(request):
     products = Product.objects.all()
-    return render(request, 'product_list.html', {'products': products})
+    return render(request, 'apps/products/products_list.html', {'products': products})
 
 def product_detail(request, id):
     product = get_object_or_404(Product, id=id)

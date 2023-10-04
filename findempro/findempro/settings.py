@@ -44,13 +44,12 @@ LOCAL_APPS = [
     "dashboards",
     "apps",
     "layouts",
-    "components",
     "pages",
     "product",
     "variable",
-    "companie",
-    "finance"
-
+    "company",
+    "finance",
+    "simulate"
     ]
 THIRDPARTY_APPS = [
     # Crispy Forms

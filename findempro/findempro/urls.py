@@ -28,8 +28,6 @@ urlpatterns = [
     path('apps/',include('apps.urls')),
     # Layouts
     path('layouts/',include('layouts.urls')),
-    # Components
-    path('components/',include('components.urls')),
     # Pages
     path('pages/',include('pages.urls')),
     # Products

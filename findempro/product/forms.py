@@ -23,3 +23,16 @@ class ProductForm(forms.ModelForm):
         if quantity < 0:
             raise forms.ValidationError("Quantity cannot be negative.")
         return quantity
+
+class ProductAddForm(ProductForm):
+    class Meta(ProductForm.Meta):
+        exclude = []
+
+class ProductUpdateForm(ProductForm):
+    class Meta(ProductForm.Meta):
+        exclude = []
+
+class ProductDeleteForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = []  # No fields, as this is a delete form

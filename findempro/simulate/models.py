@@ -15,10 +15,11 @@ class DataPoint(models.Model):
 
     def __str__(self):
         return f'DataPoint: {self.value}'
-
     class Meta:
-        app_label = 'simulate'
+            app_label = 'simulate'
 
+
+# Model to represent a Dairy SME
 class DairySME(models.Model):
     name = models.CharField(max_length=100)
     location = models.CharField(max_length=100)
@@ -27,6 +28,10 @@ class DairySME(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        app_label = 'simulate'  # Add this line to specify the app_label
+
+# Model to represent Financial Data for SMEs
 class FinancialData(models.Model):
     sme = models.ForeignKey(DairySME, on_delete=models.CASCADE)
     year = models.PositiveIntegerField()
@@ -37,29 +42,33 @@ class FinancialData(models.Model):
     def __str__(self):
         return f"{self.sme.name} - {self.year}"
 
+# Model to represent Probability Density Functions (PDF)
 class ProbabilityDensityFunction(models.Model):
     name = models.CharField(max_length=100)
     function_data = models.TextField()  # Store PDF function data (e.g., JSON, serialized data)
 
     def __str__(self):
         return self.name
+    
 
+# Model to represent Simulation Scenarios
 class SimulationScenario(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    pdfs = models.ManyToManyField(ProbabilityDensityFunction, through='ScenarioPDF')
 
     def __str__(self):
         return self.name
 
+# Model to link Simulation Scenarios with Probability Density Functions
 class ScenarioPDF(models.Model):
     scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
     pdf = models.ForeignKey(ProbabilityDensityFunction, on_delete=models.CASCADE)
-    weight = models.FloatField()  # Add a weight for the PDF's contribution to the scenario
 
     def __str__(self):
         return f"{self.scenario.name} - {self.pdf.name}"
 
+
+# Model to represent Decision Support Analysis
 class DecisionAnalysis(models.Model):
     sme = models.ForeignKey(DairySME, on_delete=models.CASCADE)
     year = models.PositiveIntegerField()
@@ -68,3 +77,5 @@ class DecisionAnalysis(models.Model):
 
     def __str__(self):
         return f"{self.sme.name} - {self.year} Analysis"
+
+
