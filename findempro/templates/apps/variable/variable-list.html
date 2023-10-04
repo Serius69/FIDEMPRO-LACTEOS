@@ -23,7 +23,7 @@
                                     <div class="d-flex align-items-center">
                                         <h6 class="card-title mb-0 flex-grow-1">Search Variables</h6>
                                         <div class="flex-shrink-0">
-                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#CreateJobModal"><i class="ri-add-line align-bottom me-1"></i> Create New Variable</button>
+                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#CreateVariableModal"><i class="ri-add-line align-bottom me-1"></i> Create New Variable</button>
                                         </div>
                                     </div>  
 
@@ -197,18 +197,19 @@
             </div>
             <!-- End Page-content -->
 
-            <div class="modal fade" id="CreateJobModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal fade" id="CreateVariableModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content border-0">
-                        <form id="createjob-form" autocomplete="off" class="needs-validation" novalidate>
+                        <form id="createvariable-form" autocomplete="off" class="needs-validation" novalidate>
                             <div class="modal-body">
-                                <input type="hidden" id="id-field" />
+                                <input type="hidden" id="variable-id-field" />
                                 <div class="row g-3">
                                     <div class="col-lg-12">
                                         <div class="px-1 pt-1">
                                             <div class="modal-team-cover position-relative mb-0 mt-n4 mx-n4 rounded-top overflow-hidden">
-                                                <img src="{% static 'images/small/img-9.jpg' %}" alt="" id="modal-cover-img" class="img-fluid">
-
+                                                <!-- You can add an image related to the variable here -->
+                                                <img src="{% static 'images/variable_image.jpg' %}" alt="" id="modal-cover-img" class="img-fluid">
+            
                                                 <div class="d-flex position-absolute start-0 end-0 top-0 p-3">
                                                     <div class="flex-grow-1">
                                                         <h5 class="modal-title text-white" id="exampleModalLabel">Create New Variable</h5>
@@ -216,7 +217,8 @@
                                                     <div class="flex-shrink-0">
                                                         <div class="d-flex gap-3 align-items-center">
                                                             <div>
-                                                                <label for="cover-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Select Cover Image">
+                                                                <!-- You can allow the user to select an image for the variable -->
+                                                                <label for="cover-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Select Image">
                                                                     <div class="avatar-xs">
                                                                         <div class="avatar-title bg-light border rounded-circle text-muted cursor-pointer">
                                                                             <i class="ri-image-fill"></i>
@@ -225,7 +227,7 @@
                                                                 </label>
                                                                 <input class="form-control d-none" value="" id="cover-image-input" type="file" accept="image/png, image/gif, image/jpeg">
                                                             </div>
-                                                            <button type="button" class="btn-close btn-close-white"  id="close-jobListModal" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            <button type="button" class="btn-close btn-close-white" id="close-variableModal" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -234,79 +236,95 @@
                                         <div class="text-center mb-4 mt-n5 pt-2">
                                             <div class="position-relative d-inline-block">
                                                 <div class="position-absolute bottom-0 end-0">
-                                                    <label for="companylogo-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                    <!-- You can allow the user to select a logo for the variable -->
+                                                    <label for="variablelogo-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
                                                         <div class="avatar-xs cursor-pointer">
                                                             <div class="avatar-title bg-light border rounded-circle text-muted">
                                                                 <i class="ri-image-fill"></i>
                                                             </div>
                                                         </div>
                                                     </label>
-                                                    <input class="form-control d-none" value="" id="companylogo-image-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                    <input class="form-control d-none" value="" id="variablelogo-image-input" type="file" accept="image/png, image/gif, image/jpeg">
                                                 </div>
                                                 <div class="avatar-lg p-1">
                                                     <div class="avatar-title bg-light rounded-circle">
-                                                        <img src="{% static 'images/users/multi-user.jpg' %}" id="companylogo-img" class="avatar-md rounded-circle object-fit-cover" />
+                                                        <!-- You can display the variable's logo here -->
+                                                        <img src="{% static 'images/variable_logo.jpg' %}" id="variablelogo-img" class="avatar-md rounded-circle object-fit-cover" />
                                                     </div>
                                                 </div>
                                             </div>
-                                            <h5 class="fs-13 mt-3">Company Logo</h5>
+                                            <h5 class="fs-13 mt-3">Variable Logo</h5>
                                         </div>
                                         <div>
-                                            <label for="jobtitle-field" class="form-label">Job Title</label>
-                                            <input type="text" id="jobtitle-field" class="form-control" placeholder="Enter job title" required />
-                                            <div class="invalid-feedback">Please enter a job title.</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div>
-                                            <label for="companyname-field" class="form-label">Company Name</label>
-                                            <input type="text" id="companyname-field" class="form-control" placeholder="Enter company name" required />
-                                            <div class="invalid-feedback">Please enter a company name.</div>
+                                            <label for="variable-name-field" class="form-label">Variable Name</label>
+                                            <input type="text" id="variable-name-field" class="form-control" placeholder="Enter variable name" required />
+                                            <div class="invalid-feedback">Please enter a variable name.</div>
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
                                         <div>
-                                            <label for="job_type-field" class="form-label">Variable Type</label>
-                                            <select class="form-select" id="job_type-field" required>
-                                                <option value="Full Time">Full Time</option>
-                                                <option value="Part Time">Part Time</option>
-                                                <option value="Freelance">Freelance</option>
-                                                <option value="Internship">Internship</option>
+                                            <label for="variable-product-field" class="form-label">Associated Product</label>
+                                            <select class="form-select" id="variable-product-field" required>
+                                                <option value="Product 1">Product 1</option>
+                                                <option value="Product 2">Product 2</option>
+                                                <!-- You can load available products dynamically from your database -->
                                             </select>
-                                            <div class="invalid-feedback">Please select a Variable Type.</div>
+                                            <div class="invalid-feedback">Please select the associated product for the variable.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div>
+                                            <label for="variable-type-field" class="form-label">Variable Type</label>
+                                            <select class="form-select" id="variable-type-field" required>
+                                                <option value="Endogenous">Endogenous</option>
+                                                <option value="Exogenous">Exogenous</option>
+                                                <!-- Add more variable type options as needed -->
+                                            </select>
+                                            <div class="invalid-feedback">Please select a variable type.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div>
+                                            <label for="variable-area-field" class="form-label">Variable Area</label>
+                                            <select class="form-select" id="variable-area-field" required>
+                                                <option value="Production">Production</option>
+                                                <option value="Marketing">Marketing</option>
+                                                <!-- Add more variable area options as needed -->
+                                            </select>
+                                            <div class="invalid-feedback">Please select a variable area.</div>
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="experience-field" class="form-label">Experience</label>
-                                            <input type="text" id="experience-field" class="form-control" placeholder="Enter experience" required />
-                                            <div class="invalid-feedback">Please enter a job experience.</div>
+                                            <label for="variable-experience-field" class="form-label">Experience</label>
+                                            <input type="text" id="variable-experience-field" class="form-control" placeholder="Enter experience" required />
+                                            <div class="invalid-feedback">Please enter the required experience for the variable.</div>
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="location-field" class="form-label">Location</label>
-                                            <input type="text" id="location-field" class="form-control" placeholder="Enter location" required />
-                                            <div class="invalid-feedback">Please enter a location.</div>
+                                            <label for="variable-location-field" class="form-label">Location</label>
+                                            <input type="text" id="variable-location-field" class="form-control" placeholder="Enter location" required />
+                                            <div class="invalid-feedback">Please enter the location for the variable.</div>
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="Salary-field" class="form-label">Salary</label>
-                                            <input type="number" id="Salary-field" class="form-control" placeholder="Enter salary" />
+                                            <label for="variable-salary-field" class="form-label">Salary</label>
+                                            <input type="number" id="variable-salary-field" class="form-control" placeholder="Enter salary" />
                                         </div>
                                     </div>
                                     <div class="col-lg-12">
                                         <div>
-                                            <label for="website-field" class="form-label">Tags</label>
-                                            <input class="form-control" id="taginput-choices" data-choices data-choices-text-unique-true type="text" value="Design, Remote" />
+                                            <label for="variable-tags-field" class="form-label">Tags</label>
+                                            <input class="form-control" id="variable-tags-field" data-choices data-choices-text-unique-true type="text" value="Simulation, Probability" />
                                         </div>
                                     </div>
                                     <div class="col-lg-12">
                                         <div>
-                                            <label for="description-field" class="form-label">Description</label>
-                                            <textarea class="form-control" id="description-field" rows="3" placeholder="Enter description" required></textarea>
-                                            <div class="invalid-feedback">Please enter a description.</div>
+                                            <label for="variable-description-field" class="form-label">Description</label>
+                                            <textarea class="form-control" id="variable-description-field" rows="3" placeholder="Enter description" required></textarea>
+                                            <div class="invalid-feedback">Please enter a description for the variable.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -314,14 +332,15 @@
                             <div class="modal-footer">
                                 <div class="hstack gap-2 justify-content-end">
                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                                    <button type="submit" class="btn btn-success" id="add-btn">Add Job</button>
+                                    <button type="submit" class="btn btn-success" id="add-variable-btn">Add Variable</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            <!--end add modal-->
+            <!-- End of Add Variable Modal -->
+            
 
             {% block footer %}
             {% include "partials/footer.html" %}
