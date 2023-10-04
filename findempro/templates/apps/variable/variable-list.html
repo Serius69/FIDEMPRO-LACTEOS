@@ -48,7 +48,77 @@
 
                     <div class="row">
                         <div class="col-xxl-9">
-                            <div id="job-list"></div>
+                            {% comment %} <div id="job-list">
+                            </div> {% endcomment %}
+
+                            {% for variable in variables %}
+                            <div class="card joblist-card">
+                                <div class="card-body">
+                                    <div class="d-flex mb-4">
+                                        <div class="avatar-sm">
+                                            <div class="avatar-title bg-light rounded">
+                                                <img src="'+ datas[i].companyLogo + '" alt="" class="avatar-xxs companyLogo-img">
+                                            </div>
+                                        </div>
+                                        <div class="ms-3 flex-grow-1">
+                                            <img src="'+ datas[i].coverImg + '" alt="" class="d-none cover-img">
+                                            <a href="#!"><h5 class="job-title">{{variable.name}}</h5></a>
+                                            <p class="company-name text-muted mb-0">{{variable.fk1.name}}</p>
+                                        </div>
+                                        <div>
+                                            <button type="button" class="btn btn-ghost-primary btn-icon custom-toggle" data-bs-toggle="button">
+                                                <span class="icon-on"><i class="ri-bookmark-line"></i></span>
+                                                <span class="icon-off"><i class="ri-bookmark-fill"></i></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted job-description">{{variable.description}}</p>
+                                    {% comment %} <div>'+ tagHtml + '</div> {% endcomment %}
+                                </div>
+                                <div class="card-footer border-top-dashed">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">\
+                                        <div><i class="ri-briefcase-2-line align-bottom me-1"></i> <span class="job-type">{{variable.type}}</span></div>
+                                        <div class="d-none"><span class="job-experience">'+ datas[i].experience + '</span></div>
+                                        <div><i class="ri-map-pin-2-line align-bottom me-1"></i>  <span class="job-location">'+ datas[i].location + '</span></div>
+                                        <div><i class="ri-user-3-line align-bottom me-1"></i> '+ datas[i].applied + '</div>
+                                        <div><i class="ri-time-line align-bottom me-1"></i> <span class="job-postdate">{{variable.createdDate}}</span></div>
+                                        
+                                        <div class="dropdown">
+                                            <button
+                                                class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
+                                                data-bs-toggle="dropdown" aria-haspopup="true"
+                                                aria-expanded="true">
+                                                <i data-feather="more-horizontal" class="icon-sm"></i>
+                                            </button>
+
+                                            <div class="dropdown-menu dropdown-menu-end">
+                                                <a class="dropdown-item"
+                                                    href="{% url 'apps:variables.overview' variable.id %}"><i
+                                                        class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                    View</a>
+                                                <a class="dropdown-item" href="{% url 'apps:variables.edit' %}"><i
+                                                        class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                    Edit</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                    data-bs-target="#removeProductModal"><i
+                                                        class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                    Remove</a>
+                                            </div>
+                                        </div>
+                                    </div>\
+                                </div>\
+                            </div>
+                            {% comment %} End card {% endcomment %}
+                            {% empty %}
+                            <div class="text-center py-4">
+                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                <h5 class="mt-2">Sorry there isn't any variable register in the database</h5>
+                                <p class="text-muted mb-0">You have to "Add Product".</p>
+                            </div>
+
+                            {% endfor %}
+                            {% comment %} Fin de la lista {% endcomment %}
 
                             <div class="row g-0 justify-content-end mb-4" id="pagination-element">
                                 <!-- end col -->

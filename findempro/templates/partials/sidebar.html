@@ -75,10 +75,7 @@
                             <div class="collapse menu-dropdown" id="sidebarIcons">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{% url 'apps:companies.list' %}" class="nav-link" data-key="t-list-companies">List</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'apps:companies.create' %}" class="nav-link" data-key="t-create-companie">Add</a>
+                                        <a href="{% url 'apps:company.list' %}" class="nav-link" data-key="t-list-companies">List</a>
                                     </li>
                                     <li class="nav-item">
                                         {% comment %} <a href="{% url 'components:icons.crypto' %}" class="nav-link"> <span data-key="t-crypto-svg">Crypto SVG</span></a> {% endcomment %}
@@ -158,12 +155,9 @@
                                     <li class="nav-item">
                                         <a href="{% url 'apps:products.list'%}" class="nav-link" data-key="t-list-products">List Products</a>
                                     </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'apps:products.overview'%}" class="nav-link" data-key="t-overview-product">Overview Product</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'apps:products.create'%}" class="nav-link" data-key="t-create-product"> Create Product</a>
-                                    </li>
+                                    {% comment %} <li class="nav-item">
+                                        <a href="{% url 'apps:products.overview' product.id %}" class="nav-link" data-key="t-overview-product">Overview Product</a>
+                                    </li> {% endcomment %}
                                 </ul>
                             </div>
                         </li>
@@ -178,12 +172,9 @@
                                     <li class="nav-item">
                                         <a href="{% url 'apps:variables.list' %}" class="nav-link" data-key="t-list-variables"> List Variables</a>
                                     </li>
-                                    <li class="nav-item">
+                                    {% comment %} <li class="nav-item">
                                         <a href="{% url 'apps:variables.overview' %}" class="nav-link" data-key="t-overview-variable"> Overview Variable</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{% url 'apps:variables.create' %}" class="nav-link" data-key="t-create-variable"> Create Variable</a>
-                                    </li>
+                                    </li> {% endcomment %}
                                 </ul>
                             </div>
                         </li>                      

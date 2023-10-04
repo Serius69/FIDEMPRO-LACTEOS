@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Sellers{% endblock title %}
+{% block title %}Companies{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -37,39 +37,58 @@
                                     <div class="col-lg-auto">
                                         <div class="hstack gap-2">
                                             <button type="button" class="btn btn-danger"><i class="ri-equalizer-fill me-1 align-bottom"></i> Filters</button>
-                                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSeller"><i class="ri-add-fill me-1 align-bottom"></i> Add Companie</button>
+                                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSeller"><i class="ri-add-fill me-1 align-bottom"></i> Add Company</button>
                                         </div>
                                     </div>
                                     <!--end col-->
                                 </div>
                                 <!--end row-->
                             </div>
-                        </div>
-    
-                        <div class="row mt-4" id="seller-list"></div>
-                        <!--end row-->
-    
-                        <div class="row align-items-center mb-4 text-center text-sm-start" id="pagination-element">
-                            <div class="col-sm">
-                                <div class="text-muted">
-                                    Showing 1 to 8 of 12 entries
+                        </div>    
+                        <!-- List of Companies -->
+                        <div class="row mt-4" id="company-list">
+
+                            {% for company in companies %}
+                            <div class="col-xl-3 col-lg-4 col-md-6">
+                                <div class="card">
+                                    <img src="{{ company.image_src }}" class="card-img-top" alt="{{ company.name }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ company.name }}</h5>
+                                        <!-- Display other company information here -->
+                                        <a href="{% url 'company_overview' company.id %}" class="btn btn-primary">View Details</a>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-sm-auto  mt-3 mt-sm-0">
+
+                            {% empty %}
+                            <div class="text-center py-4">
+                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                <h5 class="mt-2">Sorry there isn't any company register in the database</h5>
+                                <p class="text-muted mb-0">You have to "Add Product".</p>
+                            </div>
+                            {% endfor %}                            
+                        </div>
+                        <!-- End List of Companies -->
+                        </div>
+                        <!--end row-->
+                        <div class="row g-0 justify-content-end mb-4" id="pagination-element">
+                            <!-- end col -->
+                            <div class="col-sm-6">
                                 <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
                                     <div class="page-item">
-                                        <a href="javascript:void(0);" class="page-link" id="page-prev"><i class="mdi mdi-chevron-left"></i></a>
+                                        <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
                                     </div>
                                     <span id="page-num" class="pagination"></span>
                                     <div class="page-item">
-                                        <a href="javascript:void(0);" class="page-link" id="page-next"><i class="mdi mdi-chevron-right"></i></a>
+                                        <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
                                     </div>
                                 </div>
-                            </div>
+                            </div><!-- end col -->
                         </div>
-                        <!-- pagination-element -->
+                        <!-- end row -->
     
-                        <div id="noresult" class="d-none">
+
+                        <div class="d-none">
                             <div class="text-center py-4">
                                 <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
                                 <h5 class="mt-2">Sorry! No Result Found</h5>
@@ -82,21 +101,21 @@
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="addSellerLabel">Add Companie</h5>
+                                        <h5 class="modal-title" id="addSellerLabel">Add Company</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-content border-0 mt-3">
                                         <ul class="nav nav-tabs nav-tabs-custom nav-success p-2 pb-0 bg-light" role="tablist">
                                             <li class="nav-item">
-                                                <a class="nav-link" data-bs-toggle="tab" href="#businessDetails" role="tab" aria-selected="false">
-                                                    Business Details
+                                                <a class="nav-link" data-bs-toggle="tab" href="#companyDetails" role="tab" aria-selected="false">
+                                                    Company Details
                                                 </a>
                                             </li>
                                         </ul>
                                     </div>
                                     <div class="modal-body">
                                         <div class="tab-content">
-                                            <div class="tab-pane active" id="businessDetails" role="tabpanel">
+                                            <div class="tab-pane active" id="companyDetails" role="tabpanel">
                                                 <form action="#">
                                                     <div class="row">
                                                         <div class="col-lg-12">
@@ -111,47 +130,20 @@
                                                                 <label for="choices-single-default" class="form-label">Company Type</label>
                                                                 <select class="form-control" data-trigger name="choices-single-default" id="choices-single-default">
                                                                     <option value="">Select type</option>
-                                                                    <option value="All" selected>All</option>
-                                                                    <option value="Merchandising">Merchandising</option>
-                                                                    <option value="Manufacturing">Manufacturing</option>
-                                                                    <option value="Partnership">Partnership</option>
-                                                                    <option value="Corporation">Corporation</option>
+                                                                    <option value="Dairy">Dairy</option>
                                                                 </select>
                                                             </div>
                                                         </div>
                                                         <!--end col-->
                                                         <div class="col-lg-6">
                                                             <div class="mb-3">
-                                                                <label for="pancardInput" class="form-label">Pan Card Number</label>
-                                                                <input type="text" class="form-control" id="pancardInput" placeholder="Enter your pan-card number">
-                                                            </div>
-                                                        </div>
-                                                        <!--end col-->
-                                                        <div class="col-lg-4">
-                                                            <div class="mb-3">
-                                                                <label for="websiteInput" class="form-label">Website</label>
-                                                                <input type="url" class="form-control" id="websiteInput" placeholder="Enter your URL">
-                                                            </div>
-                                                        </div>
-                                                        <!--end col-->
-                                                        <div class="col-lg-4">
-                                                            <div class="mb-3">
-                                                                <label for="faxInput" class="form-label">Fax</label>
-                                                                <input type="text" class="form-control" id="faxInput" placeholder="Enter your fax">
-                                                            </div>
-                                                        </div>
-                                                        <!--end col-->
-                                                        <div class="col-lg-4">
-                                                            <div class="mb-3">
-                                                                <label for="companyemailInput" class="form-label">Email</label>
-                                                                <input type="email" class="form-control" id="companyemailInput" placeholder="Enter your email">
-                                                            </div>
-                                                        </div>
-                                                        <!--end col-->
-                                                        <div class="col-lg-6">
-                                                            <div class="mb-3">
-                                                                <label for="worknumberInput" class="form-label">Number</label>
-                                                                <input type="number" class="form-control" id="worknumberInput" placeholder="Enter your number">
+                                                                <label for="choices-single-default" class="form-label">Location</label>
+                                                                <select class="form-control" data-trigger name="choices-single-default" id="choices-single-default">
+                                                                    <option value="">Select location</option>
+                                                                    <option value="Dairy">La Paz</option>
+                                                                    <option value="Dairy">Cochabamba</option>
+                                                                    <option value="Dairy">Santa Cruz</option>
+                                                                </select>
                                                             </div>
                                                         </div>
                                                         <!--end col-->

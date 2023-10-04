@@ -9,23 +9,18 @@ from django.contrib import messages
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 # Companies
-apps_companies_grid= AppsView.as_view(template_name="apps/companies/companies-grid.html")
-apps_companies_list = AppsView.as_view(template_name="apps/companies/companies-list.html")
-apps_companies_overview = AppsView.as_view(template_name="apps/companies/companies-overview.html")
-apps_companies_add = AppsView.as_view(template_name="apps/companies/companies-add.html")
+apps_companies_list = AppsView.as_view(template_name="apps/company/company-list.html")
+apps_companies_overview = AppsView.as_view(template_name="apps/company/company-overview.html")
 # Products
-apps_products_list = AppsView.as_view(template_name="apps/products/products-list.html")
-apps_product_overview = AppsView.as_view(template_name="apps/products/products-overview.html")
-apps_product_add = AppsView.as_view(template_name="apps/products/products-add.html")
+apps_products_list = AppsView.as_view(template_name="apps/product/products-list.html")
+apps_product_overview = AppsView.as_view(template_name="apps/product/products-overview.html")
 # Variables
-apps_variables_list = AppsView.as_view(template_name="apps/variables/variable-list.html")
-apps_variables_overview= AppsView.as_view(template_name="apps/variables/variable-overview.html")
-apps_variables_add = AppsView.as_view(template_name="apps/variables/variable-add.html")
-apps_variables_stats = AppsView.as_view(template_name="apps/variables/variable-stats.html")
+apps_variables_list = AppsView.as_view(template_name="apps/variable/variable-list.html")
+apps_variables_overview= AppsView.as_view(template_name="apps/variable/variable-overview.html")
+apps_variables_stats = AppsView.as_view(template_name="apps/variable/variable-stats.html")
 #Users pages
-apps_users_list = AppsView.as_view(template_name="apps/users/users-list.html")
-apps_users_overview = AppsView.as_view(template_name="apps/users/users-overview.html")
-apps_users_add = AppsView.as_view(template_name="apps/users/users-add.html")
+apps_users_list = AppsView.as_view(template_name="apps/user/users-list.html")
+apps_users_overview = AppsView.as_view(template_name="apps/user/users-overview.html")
 # CRM
 apps_crm_deals_view = AppsView.as_view(template_name="apps/crm/apps-crm-deals.html")
 # Simulate

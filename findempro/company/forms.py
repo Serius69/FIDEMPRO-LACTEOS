@@ -1,23 +1,24 @@
 from django import forms
 from .models import *
-
-class ProductForm(forms.ModelForm):
+class CompanyForm(forms.ModelForm):
     class Meta:
-        model = Companie
-        fields = ('name', 'type', 'quantity', 'description')
+        model = Company
+        fields = ('name', 'type', 'location', 'image_src')  # Update the fields to match the Company model
+
         widgets = {
             'name': forms.TextInput(attrs={'class': 'textinputclass'}),
-            'description': forms.Textarea(attrs={'class': 'editable medium-editor-textarea postcontent'}),
+            'location': forms.TextInput(attrs={'class': 'textinputclass'}),
+            'type': forms.TextInput(attrs={'class': 'textinputclass'}),
+            'image_src': forms.TextInput(attrs={'class': 'textinputclass'}),
         }
 
     def __init__(self, *args, **kwargs):
-        super(ProductForm, self).__init__(*args, **kwargs)
-        self.fields['name'].label = 'Product Name'
-        self.fields['type'].label = 'Product Type'
-        self.fields['quantity'].label = 'Quantity'
-        self.fields['description'].label = 'Description'
-        self.fields['description'].help_text = 'Enter a description for the product.'
-
+        super(CompanyForm, self).__init__(*args, **kwargs)
+        self.fields['name'].label = 'Company Name'
+        self.fields['type'].label = 'Company Type'
+        self.fields['location'].label = 'Location'
+        self.fields['image_src'].label = 'Tags'
+        
     def clean_quantity(self):
         quantity = self.cleaned_data.get('quantity')
         if quantity < 0:

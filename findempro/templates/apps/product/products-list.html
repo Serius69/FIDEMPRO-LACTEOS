@@ -19,7 +19,7 @@
                         <div class="row g-4 mb-3">
                             <div class="col-sm-auto">
                                 <div>
-                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSeller"><i class="ri-add-fill me-1 align-bottom"></i> Add Companie</button>
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSeller"><i class="ri-add-fill me-1 align-bottom"></i> Add Product</button>
 
                                 </div>
                             </div>
@@ -42,7 +42,7 @@
                                         <div class="d-flex flex-column h-100">
                                             <div class="d-flex">
                                                 <div class="flex-grow-1">
-                                                    <p class="text-muted mb-4">Updated 3hrs ago</p>
+                                                    <p class="text-muted mb-4">Last updated: {{product.last_updated}}</p>
                                                 </div>
                                                 <div class="flex-shrink-0">
                                                     <div class="d-flex gap-1 align-items-center">
@@ -61,10 +61,10 @@
     
                                                             <div class="dropdown-menu dropdown-menu-end">
                                                                 <a class="dropdown-item"
-                                                                    href="{% url 'apps:products.overview' %}"><i
+                                                                    href="{% url 'apps:products.overview' product.id %}"><i
                                                                         class="ri-eye-fill align-bottom me-2 text-muted"></i>
                                                                     View</a>
-                                                                <a class="dropdown-item" href="{% url 'apps:products.create' %}"><i
+                                                                <a class="dropdown-item" href="{% url 'apps:products.edit' %}"><i
                                                                         class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                                                     Edit</a>
                                                                 <div class="dropdown-divider"></div>
@@ -95,11 +95,11 @@
                                             <div class="mt-auto">
                                                 <div class="d-flex mb-2">
                                                     <div class="flex-grow-1">
-                                                        <div>Tasks</div>
+                                                        <div>Variables</div>
                                                     </div>
                                                     <div class="flex-shrink-0">
                                                         <div><i class="ri-list-check align-bottom me-1 text-muted"></i>
-                                                            18/42</div>
+                                                            {{product.name}}</div>
                                                     </div>
                                                 </div>
                                                 <div class="progress progress-sm animated-progress">
@@ -139,7 +139,7 @@
                                             </div>
                                             <div class="flex-shrink-0">
                                                 <div class="text-muted">
-                                                    <i class="ri-calendar-event-fill me-1 align-bottom"></i> 10 Jul, 2021
+                                                    <i class="ri-calendar-event-fill me-1 align-bottom"></i>Created Date: {{ product.createdDate }}
                                                 </div>
                                             </div>
     
@@ -151,37 +151,33 @@
                                 <!-- end card -->
                             </div>
                             <!-- end col -->
+
+                            {% empty %}
+                            <div class="text-center py-4">
+                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                <h5 class="mt-2">Sorry there isn't any product register in the database</h5>
+                                <p class="text-muted mb-0">You have to "Add Product".</p>
+                            </div>
+
                             {% endfor %}
                             {% comment %} Fin de la lista {% endcomment %}
                         </div>
                         <!-- end row -->    
-                        <div class="row g-0 text-center text-sm-start align-items-center mb-4">
-                            <div class="col-sm-6">
-                                <div>
-                                    <p class="mb-sm-0 text-muted">Showing <span class="fw-semibold">1</span> to <span
-                                            class="fw-semibold">10</span> of <span
-                                            class="fw-semibold text-decoration-underline">12</span> entries</p>
-                                </div>
-                            </div>
+                        <div class="row g-0 justify-content-end mb-4" id="pagination-element">
                             <!-- end col -->
                             <div class="col-sm-6">
-                                <ul
-                                    class="pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                                    <li class="page-item disabled">
-                                        <a href="#" class="page-link">Previous</a>
-                                    </li>
-                                    <li class="page-item active">
-                                        <a href="#" class="page-link">1</a>
-                                    </li>
-                                    <li class="page-item ">
-                                        <a href="#" class="page-link">2</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a href="#" class="page-link">Next</a>
-                                    </li>
-                                </ul>
+                                <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
+                                    <div class="page-item">
+                                        <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
+                                    </div>
+                                    <span id="page-num" class="pagination"></span>
+                                    <div class="page-item">
+                                        <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
+                                    </div>
+                                </div>
                             </div><!-- end col -->
-                        </div><!-- end row -->
+                        </div>
+                        <!-- end row -->
                     </div>
                     <!-- container-fluid -->
                 </div>

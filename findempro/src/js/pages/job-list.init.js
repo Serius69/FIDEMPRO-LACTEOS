@@ -111,7 +111,9 @@ function loadJobListData(datas, page) {
             })
         }
         if (datas[i]) {
-        document.querySelector("#job-list").innerHTML += '<div class="card joblist-card">\
+        document.querySelector("#job-list").innerHTML += 
+        
+        '<div class="card joblist-card">\
             <div class="card-body">\
                 <div class="d-flex mb-4">\
                     <div class="avatar-sm">\
@@ -144,7 +146,9 @@ function loadJobListData(datas, page) {
                     <div><a href="#!" class="btn btn-primary viewjob-list">View More <i class="ri-arrow-right-line align-bottom ms-1"></i></a></div>\
                 </div>\
             </div>\
-        </div>';
+        </div>'
+        
+        ;
         }
         // });
     }
