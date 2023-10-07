@@ -7,12 +7,12 @@ class PagesView(TemplateView):
 
 # Authenticatin
 authentication_signin_basic= PagesView.as_view(template_name="pages/authentication/auth-signin-basic.html")
-authentication_signin_cover= PagesView.as_view(template_name="pages/authentication/auth-signin-cover.html")
+authentication_signin_cover= PagesView.as_view(template_name="account/login.html")
 authentication_signup_basic= PagesView.as_view(template_name="pages/authentication/auth-signup-basic.html")
 authentication_signup_cover= PagesView.as_view(template_name="pages/authentication/auth-signup-cover.html")
 authentication_pass_reset_basic= PagesView.as_view(template_name="pages/authentication/auth-pass-reset-basic.html")
 authentication_pass_reset_cover= PagesView.as_view(template_name="pages/authentication/auth-pass-reset-cover.html")
-authentication_lockscreen_basic= PagesView.as_view(template_name="pages/authentication/auth-lockscreen-basic.html")
+authentication_lockscreen_basic= PagesView.as_view(template_name="account/lockscreen.html")
 authentication_lockscreen_cover= PagesView.as_view(template_name="pages/authentication/auth-lockscreen-cover.html")
 authentication_logout_basic= PagesView.as_view(template_name="pages/authentication/auth-logout-basic.html")
 authentication_logout_cover= PagesView.as_view(template_name="pages/authentication/auth-logout-cover.html")

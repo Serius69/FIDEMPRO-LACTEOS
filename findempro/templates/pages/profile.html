@@ -89,14 +89,14 @@
                                         <div class="tab-pane active" id="overview-tab" role="tabpanel">
                                             <div class="row">
                                                 <div class="col-xxl-3">
-                                                    <div class="card">
+                                                    {% comment %} <div class="card">
                                                         <div class="card-body">
                                                             <h5 class="card-title mb-5">Complete Your Profile</h5>
                                                             <div class="progress animated-progess custom-progress progress-label">
                                                                 <div class="progress-bar bg-danger" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"><div class="label">30%</div></div>
                                                             </div>
                                                         </div>
-                                                      </div>
+                                                    </div> {% endcomment %}
 
                                                     <div class="card">
                                                         <div class="card-body">
@@ -127,44 +127,9 @@
                                                     </div><!-- end card -->
                                                 </div><!--end col-->
                                                 <div class="col-xxl-9">
-                                                    {% comment %} <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-3">About</h5>
-                                                            <p>{{user.date_joined}}</p>
-                                                            <div class="row">
-                                                                <div class="col-6 col-md-4">
-                                                                    <div class="d-flex mt-4">
-                                                                        <div class="flex-shrink-0 avatar-xs align-self-center me-3">
-                                                                            <div class="avatar-title bg-light rounded-circle fs-16 text-primary">
-                                                                                <i class="ri-user-2-fill"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="flex-grow-1 overflow-hidden">
-                                                                            <p class="mb-1">Designation :</p>
-                                                                            <h6 class="text-truncate mb-0">Lead Designer / Developer</h6>
-                                                                        </div>
-                                                                    </div>
-                                                                </div><!--end col-->
-                                                                <div class="col-6 col-md-4">
-                                                                    <div class="d-flex mt-4">
-                                                                        <div class="flex-shrink-0 avatar-xs align-self-center me-3">
-                                                                            <div class="avatar-title bg-light rounded-circle fs-16 text-primary">
-                                                                                <i class="ri-global-line"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="flex-grow-1 overflow-hidden">
-                                                                            <p class="mb-1">Website :</p>
-                                                                            <a href="#" class="fw-semibold">www.findempro.com</a>
-                                                                        </div>
-                                                                    </div>
-                                                                </div><!--end col-->
-                                                            </div><!--end row-->
-                                                        </div><!--end card-body-->
-                                                    </div><!-- end card --> {% endcomment %}
-
                                                     <div class="card">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title">Products</h5>
+                                                        <h5 class="card-title">Products </h5>
+                                                        <div class="card-body">                                                            
                                                             <!-- Swiper -->
                                                             <div class="swiper project-swiper mt-n4">
                                                                 <div class="d-flex justify-content-end gap-2 mb-2">
@@ -180,6 +145,7 @@
                                                                     </div>
                                                                 </div>
                                                                 <div class="swiper-wrapper">
+                                                                    {% for product in products %}
                                                                     <div class="swiper-slide">
                                                                         <div class="card profile-project-card shadow-none profile-project-success mb-0">
                                                                             <div class="card-body p-4">
@@ -189,7 +155,7 @@
                                                                                         <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-body">4 hr Ago</span></p>
                                                                                     </div>
                                                                                     <div class="flex-shrink-0 ms-2">
-                                                                                        <div class="badge bg-warning-subtle text-warning fs-10">Inprogress</div>
+                                                                                        <div class="badge bg-warning-subtle text-warning fs-10">In progress</div>
                                                                                     </div>
                                                                                 </div>
                                                                                 <div class="d-flex mt-4">
@@ -231,13 +197,22 @@
                                                                         <!-- end card -->
                                                                     </div>                                                                    
                                                                     <!-- end slide item -->
+                                                                    {% empty %}
+                                                                    <div class="text-center py-12">
+                                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                        <h5 class="mt-2">Sorry there isn't any product register in the database</h5>
+                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                            <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">List Products</span>
+                                                                        </a>
+                                                                    </div>
+                                                                    {% endfor %}
                                                                 </div>
                                                             </div>
+                                                            <!-- Missing closing div for swiper project-swiper -->
                                                         </div>
                                                         <!-- end card body -->
                                                     </div><!-- end card -->
-
-                                                </div><!--end col-->
+                                                </div><!-- end col -->                                                
                                             </div><!--end row-->
                                         </div>
                                         <div class="tab-pane fade" id="products" role="tabpanel">
@@ -245,14 +220,20 @@
                                                 <div class="card-body">
                                                     <div class="row">
                                                         <div class="col-xxl-3 col-sm-6">
+                                                            {% for product in products %}
                                                             <div class="card profile-project-card shadow-none profile-project-warning">
                                                                 <div class="card-body p-4">
                                                                     <div class="d-flex">
                                                                         <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                            <h5 class="fs-14 text-truncate"><a href="#" class="text-body">Chat App Update</a></h5>
-                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-body">2 year Ago</span></p>
+                                                                            <h5 class="fs-14 text-truncate"><a href="#" class="text-body">{{product.name}}</a></h5>
+                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-body">{{product.last_updated}}</span></p>
                                                                         </div>
                                                                         <div class="flex-shrink-0 ms-2">
+                                                                            {% if user.is_staff %}
+                                                                            <div class="badge bg-warning-subtle text-warning fs-10">Ready for simulation</div>
+                                                                            {% else %}
+                                                                            <div class="badge bg-warning-subtle text-warning fs-10">Inprogress</div>
+                                                                            {% endif %}
                                                                             <div class="badge bg-warning-subtle text-warning fs-10">Inprogress</div>
                                                                         </div>
                                                                     </div>
@@ -265,9 +246,16 @@
                                                                                 </div>
                                                                                 <div class="avatar-group">
                                                                                     <div class="avatar-group-item">
+                                                                                        {% for product in products %}
                                                                                         <div class="avatar-xs">
                                                                                             <img src="{% static 'images/users/avatar-1.jpg'%}" alt="" class="rounded-circle img-fluid" />
                                                                                         </div>
+                                                                                        {% empty %}
+                                                                                        <div class="avatar-xs">
+                                                                                            <img src="" alt="" class="rounded-circle img-fluid" value="no variables" />
+                                                                                        </div>
+                                                                                        {% endfor %}
+
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -277,6 +265,15 @@
                                                                 <!-- end card body -->
                                                             </div>
                                                             <!-- end card -->
+                                                            {% empty %}
+                                                                    <div class="text-center py-12">
+                                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                        <h5 class="mt-2">Sorry there isn't any product register in the database</h5>
+                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                            <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">List Products</span>
+                                                                        </a>
+                                                                    </div>
+                                                            {% endfor %}
                                                         </div><!--end col-->
                                                         <div class="col-lg-12">
                                                             <div class="mt-4">
@@ -302,21 +299,22 @@
                                                 <div class="card-body">
                                                     <div class="d-flex align-items-center mb-4">
                                                         <h5 class="card-title flex-grow-1 mb-0">Variables</h5>
-                                                        <div class="flex-shrink-0">
-                                                            <input class="form-control d-none" type="file" id="formFile">
-                                                            <label for="formFile" class="btn btn-danger"><i class="ri-upload-2-fill me-1 align-bottom"></i> Upload File</label>
-                                                        </div>
+                                                        {% comment %} <div class="flex-shrink-0">
+                                                            <input class="form-control d-none" type="file" id="formVariable">
+                                                            <label for="formVariable" class="btn btn-danger"><i class="ri-upload-2-fill me-1 align-bottom"></i> Upload Variable</label>
+                                                        </div> {% endcomment %}
                                                     </div>
+                                                    {% for product in products %}
                                                     <div class="row">
                                                         <div class="col-lg-12">
                                                             <div class="table-responsive">
                                                                 <table class="table table-borderless align-middle mb-0">
                                                                     <thead class="table-light">
                                                                         <tr>
-                                                                            <th scope="col">File Name</th>
-                                                                            <th scope="col">Type</th>
-                                                                            <th scope="col">Size</th>
-                                                                            <th scope="col">Upload Date</th>
+                                                                            <th scope="col">Variable Name</th>
+                                                                            <th scope="col">Unit</th>
+                                                                            <th scope="col">Type</th>                                                                            
+                                                                            <th scope="col">Created Date</th>
                                                                             <th scope="col">Action</th>
                                                                         </tr>
                                                                     </thead>
@@ -334,7 +332,7 @@
                                                                                     </div>
                                                                                 </div>
                                                                             </td>
-                                                                            <td>Zip File</td>
+                                                                            <td>Zip Variable</td>
                                                                             <td>4.57 MB</td>
                                                                             <td>12 Dec 2021</td>
                                                                             <td>
@@ -359,6 +357,15 @@
                                                             </div> {% endcomment %}
                                                         </div>
                                                     </div>
+                                                    {% empty %}
+                                                                    <div class="text-center py-12">
+                                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                        <h5 class="mt-2">Sorry there isn't any variable register in the database</h5>
+                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                            <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">List Products</span>
+                                                                        </a>
+                                                                    </div>
+                                                            {% endfor %}
                                                 </div>
                                             </div>
                                         </div><!--end tab-pane-->
