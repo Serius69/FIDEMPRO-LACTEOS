@@ -77,7 +77,7 @@ urlpatterns = [
     path("pages/pricing",view =pages_pricing,name="pages.pricing"),
     path("pages/gallery",view =pages_gallery,name="pages.gallery"),
     path("pages/maintenance",view =pages_maintenance,name="pages.maintenance"),
-    path("pages/coming-soon",view =pages_coming_soon,name="pages.coming_soon"),
+    path("pages/",view =pages_coming_soon,name="pages.coming_soon"),
     path("pages/sitemap",view =pages_sitemap,name="pages.sitemap"),
     path("pages/search-results",view =pages_search_results,name="pages.search_results"),
     path("pages/privacy-policy",view =pages_privacy_policy,name="pages.privacy_policy"),

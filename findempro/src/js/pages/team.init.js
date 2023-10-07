@@ -111,7 +111,7 @@ function loadTeamData(datas) {
                         </div>\
                         <div class="col-lg-2 col">\
                             <div class="text-end">\
-                                <a href="pages-profile.html" class="btn btn-light view-btn">View Profile</a>\
+                                <a href="profile.html" class="btn btn-light view-btn">View Profile</a>\
                             </div>\
                         </div>\
                     </div>\

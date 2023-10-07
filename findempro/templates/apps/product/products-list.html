@@ -235,19 +235,19 @@
                                     <div class="modal-body">
                                         <div class="tab-content">
                                             <div class="tab-pane active" id="companyDetails" role="tabpanel">
-                                                <form action="#">
+                                                <form id="productForm">
                                                     <div class="row">
                                                         <div class="col-lg-12">
                                                             <div class="mb-3">
-                                                                <label for="companynameInput" class="form-label">Product Name</label>
-                                                                <input type="text" class="form-control" id="companynameInput" placeholder="Enter your company name">
+                                                                <label for="productName" class="form-label">Product Name</label>
+                                                                <input type="text" class="form-control" id="productName" name="productName" placeholder="Enter the product name" required>
                                                             </div>
                                                         </div>
                                                         <!--end col-->
                                                         <div class="col-lg-6">
                                                             <div class="mb-3">
-                                                                <label for="choices-single-default" class="form-label">Product Type</label>
-                                                                <select class="form-control" data-trigger name="choices-single-default" id="choices-single-default">
+                                                                <label for="productType" class="form-label">Product Type</label>
+                                                                <select class="form-control" id="productType" name="productType" required>
                                                                     <option value="">Select type</option>
                                                                     <option value="Dairy">Dairy</option>
                                                                 </select>
@@ -256,16 +256,16 @@
                                                         <!--end col-->
                                                         <div class="col-lg-6">
                                                             <div class="mb-3">
-                                                                <label for="companylogoInput" class="form-label">Product Logo</label>
-                                                                <input type="file" class="form-control" id="companylogoInput">
+                                                                <label for="productImage" class="form-label">Product Image</label>
+                                                                <input type="file" class="form-control" id="productImage" name="productImage">
                                                             </div>
                                                         </div>
                                                         <!--end col-->
                                                         <div class="col-lg-12">
                                                             <div>
-                                                                <label for="variable-description-field" class="form-label">Description</label>
-                                                                <textarea class="form-control" id="variable-description-field" rows="3" placeholder="Enter description" required></textarea>
-                                                                <div class="invalid-feedback">Please enter a description for the company.</div>
+                                                                <label for="productDescription" class="form-label">Description</label>
+                                                                <textarea class="form-control" id="productDescription" name="productDescription" rows="3" placeholder="Enter description" required></textarea>
+                                                                <div class="invalid-feedback">Please enter a description for the product.</div>
                                                             </div>
                                                         </div>
                                                         <!--end col-->
@@ -282,6 +282,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    
                                 </div>
                             </div>
                         </div>

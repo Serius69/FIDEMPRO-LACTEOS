@@ -64,7 +64,7 @@ function loadCandidateListData(datas, page) {
                         <div class="avatar-sm rounded">'+ isUserProfile + '</div>\
                     </div>\
                     <div class="ms-lg-3 my-3 my-lg-0">\
-                        <a href="pages-profile.html"><h5 class="fs-16 mb-2">'+ datas[i].candidateName + '</h5></a>\
+                        <a href="profile.html"><h5 class="fs-16 mb-2">'+ datas[i].candidateName + '</h5></a>\
                         <p class="text-muted mb-0">'+ datas[i].designation + '</p>\
                     </div>\
                     <div class="d-flex gap-4 mt-0 text-muted mx-auto">\
