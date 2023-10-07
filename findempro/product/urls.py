@@ -1,12 +1,12 @@
-from django.urls import path
-from . import views
-
-app_name = 'product'  # Define un espacio de nombres para evitar conflictos
+from django.urls import path, include
+from product.views import(
+    product_list,
+    product_overview,
+)
 
 urlpatterns = [
-    # URL para listar todos los productos o agregar uno nuevo
-    path('list', views.product_list, name='product-list'),
+    # Companies
+    path("list", view=product_list, name="product.list"),
+    path("overview/<int:pk>", view=product_overview, name="product.overview"),
 
-    # URL para actualizar y eliminar un producto específico
-    path('detail/<int:id>/', views.product_detail, name='product-detail'),
 ]

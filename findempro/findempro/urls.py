@@ -24,12 +24,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # Dashboard
     path('',include('dashboards.urls')),
-    # Apps
-    path('apps/',include('apps.urls')),
     # Layouts
     path('layouts/',include('layouts.urls')),
     # Pages
     path('pages/',include('pages.urls')),
+    # Products
+    path('business/', include('business.urls')),
     # Products
     path('product/',include('product.urls')),
     # Variables

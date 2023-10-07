@@ -1,10 +1,10 @@
 from django import forms
-from .models import *
+from .models import Variable, Node, Edge
 
 class VariableForm(forms.ModelForm):
     class Meta:
         model = Variable
-        fields = ('name', 'unity', 'quantity')
+        fields = ('name', 'unit', 'quantity')
         widgets = {
             'name': forms.TextInput(attrs={'class': 'textinputclass'}),
         }

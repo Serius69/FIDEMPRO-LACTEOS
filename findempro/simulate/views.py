@@ -25,3 +25,6 @@ def ks_test_view(request):
     }
 
     return render(request, 'ks_test_result.html', context)
+
+def simulate_init(request):
+    return render(request, 'simulate/simulate-init.html', context)

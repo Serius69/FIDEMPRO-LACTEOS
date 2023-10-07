@@ -1,7 +1,9 @@
 from django.urls import path
-from . import views
+from simulate.views import(
+    simulate_init
+)
 
 urlpatterns = [
-        # Simualte
-    path("simulate/init", view=apps_simulate_init, name="simulate.init"),
+        # Simulate
+    path("simulate/init", view=simulate_init, name="simulate.init"),
 ]

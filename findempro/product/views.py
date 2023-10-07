@@ -4,61 +4,56 @@ from .models import Product
 from .forms import ProductForm
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin  # Create a Django form for Product
-# Create your business views here.
+# Create your product views here.
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
-# Companies
-# View for listing all business
-apps_products_list = AppsView.as_view(template_name="business/business-list.html")
-apps_product_overview = AppsView.as_view(template_name="business/business-overview.html")
-
 # List
-def business_list(request,pk):
-    businesses = Product.objects.all().order_by('-id')
-    if businesses:
-        business = Product.objects.get(pk=pk)
-    context = {'business': business}
-    return render(request, 'business/business-list.html.html', context)
+def product_list(request,pk):
+    productes = Product.objects.all().order_by('-id')
+    if productes:
+        product = Product.objects.get(pk=pk)
+    context = {'product': product}
+    return render(request, 'product/product-list.html.html', context)
 
 # Detail
-def business_view(request,pk):
-    business = Product.objects.all().order_by('-id')
-    if business:
-        company = Product.objects.get(pk=pk)
-    return render(request,"apps/crm/apps-crm-business.html",{'business':business,'company':company})
+def product_overview(request,pk):
+    product = Product.objects.all().order_by('-id')
+    if product:
+        product = Product.objects.get(pk=pk)
+    return render(request,"product/product-overview.html",{'product':product,'product':product})
 
 # Create
-def business_view(request):
-    business = Product.objects.all().order_by('-id')
+def create_product_view(request):
+    product = Product.objects.all().order_by('-id')
     if request.method == "POST":
         form = ProductForm(request.POST or None,request.FILES or None)
         if form.is_valid():
             form.save()
             messages.success(request,"Company inserted successfully!")
-            return redirect("apps:crm.business")
+            return redirect("apps:crm.product")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.business")
-    return render(request,"apps/crm/apps-crm-business.html",{'business':business})
+            return redirect("apps:crm.product")
+    return render(request,"product/product-list.html",{'product':product})
 
 # Update
-def update_business_view(request,pk):
-    business = Product.objects.get(pk=pk)
+def update_product_view(request,pk):
+    product = Product.objects.get(pk=pk)
     if request.method == "POST":
-        form = ProductForm(request.POST or None,request.FILES or None,instance=business)
+        form = ProductForm(request.POST or None,request.FILES or None,instance=product)
         if form.is_valid():
             form.save()
             messages.success(request,"Company updated successfully!")
-            return redirect("apps:crm.business")
+            return redirect("apps:crm.product")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.business")
-    return render(request,"apps/crm/apps-crm-business.html")
+            return redirect("apps:crm.product")
+    return render(request,"product/product-list.html")
 
 # Delete
-def delete_business_view(request,pk):
-    business = Product.objects.get(pk=pk)
-    business.delete()
+def delete_product_view(request,pk):
+    product = Product.objects.get(pk=pk)
+    product.delete()
     messages.success(request,"Product deleted successfully!")
-    return redirect("apps:business.list")
+    return redirect("apps:product.list")
 

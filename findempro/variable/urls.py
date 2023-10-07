@@ -1,8 +1,12 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from variable.views import(
+    variable_list,
+    variable_overview,
+)
 
 urlpatterns = [
-     # Variables
-    path("variables/list", view=apps_variables_list, name="variables.list"),
-    path("variables/overview/<int:pk>", view=apps_variables_overview, name="variables.overview"),
-    ]
+    # Companies
+    path("company/list", view=variable_list, name="company.list"),
+    path("company/overview/<int:pk>", view=variable_overview, name="company.overview"),
+
+]

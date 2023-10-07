@@ -1,12 +1,12 @@
 from django.urls import path, include
 from business.views import(
-    apps_companies_list,
-    apps_companies_overview,
+    business_list,
+    business_overview,
 )
 
 urlpatterns = [
     # Companies
-    path("company/list", view=apps_companies_list, name="company.list"),
-    path("company/overview/<int:pk>", view=apps_companies_overview, name="company.overview"),
+    path("list", view=business_list, name="business.list"),
+    path("overview/<int:pk>", view=business_overview, name="business.overview"),
 
 ]
