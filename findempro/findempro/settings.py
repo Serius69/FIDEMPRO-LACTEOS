@@ -47,7 +47,7 @@ LOCAL_APPS = [
     "pages",
     "product",
     "variable",
-    "company",
+    "business",
     "finance",
     "simulate"
     ]

@@ -1,37 +1,38 @@
-from pyexpat.errors import messages
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product
-from .forms import ProductForm
+from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin  # Create a Django form for Product
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Business
+from .forms import *
+from django.contrib import messages
+
 # Create your business views here.
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 # Companies
 # View for listing all business
-apps_products_list = AppsView.as_view(template_name="business/business-list.html")
-apps_product_overview = AppsView.as_view(template_name="business/business-overview.html")
+apps_business_list = AppsView.as_view(template_name="apps/business/business-list.html")
+apps_business_overview = AppsView.as_view(template_name="apps/business/business-overview.html")
 
 # List
 def business_list(request,pk):
-    businesses = Product.objects.all().order_by('-id')
+    businesses = Business.objects.all().order_by('-id')
     if businesses:
-        business = Product.objects.get(pk=pk)
+        business = Business.objects.get(pk=pk)
     context = {'business': business}
     return render(request, 'business/business-list.html.html', context)
 
 # Detail
 def business_view(request,pk):
-    business = Product.objects.all().order_by('-id')
+    business = Business.objects.all().order_by('-id')
     if business:
-        company = Product.objects.get(pk=pk)
+        company = Business.objects.get(pk=pk)
     return render(request,"apps/crm/apps-crm-business.html",{'business':business,'company':company})
 
 # Create
 def business_view(request):
-    business = Product.objects.all().order_by('-id')
+    business = Business.objects.all().order_by('-id')
     if request.method == "POST":
-        form = ProductForm(request.POST or None,request.FILES or None)
+        form = BusinessForm(request.POST or None,request.FILES or None)
         if form.is_valid():
             form.save()
             messages.success(request,"Company inserted successfully!")
@@ -43,9 +44,9 @@ def business_view(request):
 
 # Update
 def update_business_view(request,pk):
-    business = Product.objects.get(pk=pk)
+    business = Business.objects.get(pk=pk)
     if request.method == "POST":
-        form = ProductForm(request.POST or None,request.FILES or None,instance=business)
+        form = BusinessForm(request.POST or None,request.FILES or None,instance=business)
         if form.is_valid():
             form.save()
             messages.success(request,"Company updated successfully!")
@@ -57,8 +58,7 @@ def update_business_view(request,pk):
 
 # Delete
 def delete_business_view(request,pk):
-    business = Product.objects.get(pk=pk)
+    business = Business.objects.get(pk=pk)
     business.delete()
-    messages.success(request,"Product deleted successfully!")
+    messages.success(request,"Business deleted successfully!")
     return redirect("apps:business.list")
-

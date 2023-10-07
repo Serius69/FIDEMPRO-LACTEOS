@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from product.models import Product
 
-class Company(models.Model):
+class Business(models.Model):
     id = models.CharField(max_length=10, primary_key=True)
     image_src = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
@@ -12,7 +12,12 @@ class Company(models.Model):
     type = models.CharField(max_length=20)
     location = models.CharField(max_length=255)
     last_updated = models.DateTimeField(auto_now=True)
-
+    STATUS_CHOICES = (
+        (1, 'Active'),
+        (2, 'Inactive'),
+        (3, 'Archived'),
+    )
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
     # Add a foreign key for User with PROTECT on_delete behavior
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     
@@ -24,8 +29,8 @@ class Company(models.Model):
     def __str__(self):
         return self.name
 
-class CompanyProduct(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+class BusinessProduct(models.Model):
+    company = models.ForeignKey(Business, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     
     def __str__(self):

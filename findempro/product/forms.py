@@ -15,7 +15,6 @@ class ProductForm(forms.ModelForm):
         self.fields['name'].label = 'Product Name'
         self.fields['type'].label = 'Product Type'
         self.fields['quantity'].label = 'Quantity'
-        self.fields['description'].label = 'Description'
         self.fields['description'].help_text = 'Enter a description for the product.'
 
     def clean_quantity(self):

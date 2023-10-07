@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('api/variables/', views.variable_list, name='variable-list'),
-    path('api/variables/<int:id>/', views.variable_detail, name='variable-detail'),
-]
+     # Variables
+    path("variables/list", view=apps_variables_list, name="variables.list"),
+    path("variables/overview/<int:pk>", view=apps_variables_overview, name="variables.overview"),
+    ]

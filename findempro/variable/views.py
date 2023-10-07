@@ -1,39 +1,64 @@
+from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable
 from .forms import VariableForm  # Create a Django form for Variable
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+# Create your variable views here.
+class AppsView(LoginRequiredMixin,TemplateView):
+    pass
+# Companiesb 
+# View for listing all variable
+products_list = AppsView.as_view(template_name="variable/variable-list.html")
+product_overview = AppsView.as_view(template_name="variable/variable-overview.html")
+variables_stats = AppsView.as_view(template_name="variable/variable-stats.html")
 
-def variable_list(request):
-    variables = Variable.objects.all()
-    return render(request, 'variable_list.html', {'variables': variables})
+# List
+def variable_list(request,pk):
+    variables = Variable.objects.all().order_by('-id')
+    if variables:
+        variable = Variable.objects.get(pk=pk)
+    context = {'variable': variable}
+    return render(request, 'variable/variable-list.html.html', context)
 
-def variable_detail(request, id):
-    variable = get_object_or_404(Variable, id=id)
-    return render(request, 'variable_detail.html', {'variable': variable})
+# Detail
+def variable_view(request,pk):
+    variable = Variable.objects.all().order_by('-id')
+    if variable:
+        company = Variable.objects.get(pk=pk)
+    return render(request,"apps/crm/apps-crm-variable.html",{'variable':variable,'company':company})
 
-def add_variable(request):
-    if request.method == 'POST':
-        form = VariableForm(request.POST)
+# Create
+def variable_view(request):
+    variable = Variable.objects.all().order_by('-id')
+    if request.method == "POST":
+        form = VariableForm(request.POST or None,request.FILES or None)
         if form.is_valid():
             form.save()
-            return redirect('variable_list')
-    else:
-        form = VariableForm()
-    return render(request, 'add_variable.html', {'form': form})
+            messages.success(request,"Company inserted successfully!")
+            return redirect("apps:crm.variable")
+        else:
+            messages.error(request,"Something went wrong!")
+            return redirect("apps:crm.variable")
+    return render(request,"apps/crm/apps-crm-variable.html",{'variable':variable})
 
-def edit_variable(request, id):
-    variable = get_object_or_404(Variable, id=id)
-    if request.method == 'POST':
-        form = VariableForm(request.POST, instance=variable)
+# Update
+def update_variable_view(request,pk):
+    variable = Variable.objects.get(pk=pk)
+    if request.method == "POST":
+        form = VariableForm(request.POST or None,request.FILES or None,instance=variable)
         if form.is_valid():
             form.save()
-            return redirect('variable_list')
-    else:
-        form = VariableForm(instance=variable)
-    return render(request, 'edit_variable.html', {'form': form, 'variable': variable})
+            messages.success(request,"Company updated successfully!")
+            return redirect("apps:crm.variable")
+        else:
+            messages.error(request,"Something went wrong!")
+            return redirect("apps:crm.variable")
+    return render(request,"apps/crm/apps-crm-variable.html")
 
-def delete_variable(request, id):
-    variable = get_object_or_404(Variable, id=id)
-    if request.method == 'POST':
-        variable.delete()
-        return redirect('variable_list')
-    return render(request, 'delete_variable.html', {'variable': variable})
+# Delete
+def delete_variable_view(request,pk):
+    variable = Variable.objects.get(pk=pk)
+    variable.delete()
+    messages.success(request,"Variable deleted successfully!")
+    return redirect("apps:variable.list")
