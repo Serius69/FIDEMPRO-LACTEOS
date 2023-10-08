@@ -1,8 +1,16 @@
-
 from django.shortcuts import render
+import pkg_resources
 
 from scipy import stats  # Import scipy for KS test
-from .models import *
+from .models import DataPoint, FDP, SimulationScenario
+from .forms import *  # Replace with your actual form import
+from django.contrib import messages
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class AppsView(LoginRequiredMixin, TemplateView):
+    # Add methods or attributes specific to this view if needed
+    template_name = 'your_template.html'  # Replace with your template name
 
 def ks_test_view(request):
     # Retrieve the dataset and FDP parameters
@@ -27,4 +35,8 @@ def ks_test_view(request):
     return render(request, 'ks_test_result.html', context)
 
 def simulate_init(request):
+    businesses = SimulationScenario.objects.all().order_by('-id')
+    business = businesses.first()  # Retrieve the first object if it exists
+
+    context = {'simulate': business}
     return render(request, 'simulate/simulate-init.html', context)

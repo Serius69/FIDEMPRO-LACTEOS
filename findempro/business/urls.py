@@ -3,7 +3,7 @@ from business.views import(
     business_list,
     business_overview,
 )
-
+app_name='business'
 urlpatterns = [
     # Companies
     path("list", view=business_list, name="business.list"),

@@ -8,12 +8,12 @@ from django.views.generic import TemplateView
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 # List
-def variable_list(request,pk):
+def variable_list(request):
     variables = Variable.objects.all().order_by('-id')
-    if variables:
-        variable = Variable.objects.get(pk=pk)
-    context = {'variable': variable}
-    return render(request, 'variable/variable-list.html.html', context)
+    # if variables:
+    #     variable = Variable.objects.get(pk=pk)
+    context = {'variable': variables}
+    return render(request, 'variable/variable-list.html', context)
 
 # Detail
 def variable_overview(request,pk):
@@ -21,7 +21,7 @@ def variable_overview(request,pk):
     if variables:
         variable = Variable.objects.get(pk=pk)
     
-    return render(request,"variable/variable-overview",{'variable':variable,'variable':variable})
+    return render(request,"variable/variable-overview.html",{'variable':variable,'variable':variable})
 
 # Create
 def create_variable_view(request):

@@ -28,10 +28,10 @@ urlpatterns = [
     path('layouts/',include('layouts.urls')),
     # Pages
     path('pages/',include('pages.urls')),
-    # Products
+    # Business
     path('business/', include('business.urls')),
     # Products
-    path('product/',include('product.urls')),
+    path('product/',include('product.urls',)),
     # Variables
     path('variable/',include('variable.urls')),
     # Simulate

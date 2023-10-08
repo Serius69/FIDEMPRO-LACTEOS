@@ -9,11 +9,11 @@ from django.contrib import messages
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 # List
-def business_list(request,pk):
+def business_list(request):
     businesses = Business.objects.all().order_by('-id')
-    if businesses:
-        business = Business.objects.get(pk=pk)
-    context = {'business': business}
+    # if businesses:
+    #     business = Business.objects.get(pk=pk)
+    context = {'business': businesses}
     return render(request, 'business/business-list.html', context)
 
 # Detail
@@ -31,10 +31,10 @@ def create_business_view(request):
         if form.is_valid():
             form.save()
             messages.success(request,"Company inserted successfully!")
-            return redirect("apps:crm.business")
+            return redirect("business:crm.business")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.business")
+            return redirect("business:crm.business")
     return render(request,"business/business-list.html",{'business':business})
 
 # Update
@@ -45,10 +45,10 @@ def update_business_view(request,pk):
         if form.is_valid():
             form.save()
             messages.success(request,"Company updated successfully!")
-            return redirect("apps:crm.business")
+            return redirect("business:crm.business")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.business")
+            return redirect("business:crm.business")
     return render(request,"business/business-list.html")
 
 # Delete
@@ -56,4 +56,4 @@ def delete_business_view(request,pk):
     business = Business.objects.get(pk=pk)
     business.delete()
     messages.success(request,"Business deleted successfully!")
-    return redirect("apps:business.list")
+    return redirect("business:business.list")

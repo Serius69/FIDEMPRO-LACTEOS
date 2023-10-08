@@ -3,7 +3,7 @@ from product.views import(
     product_list,
     product_overview,
 )
-
+app_name = 'product'
 urlpatterns = [
     # Companies
     path("list", view=product_list, name="product.list"),

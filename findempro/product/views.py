@@ -8,12 +8,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin  # Create a Django for
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 # List
-def product_list(request,pk):
-    productes = Product.objects.all().order_by('-id')
-    if productes:
-        product = Product.objects.get(pk=pk)
-    context = {'product': product}
-    return render(request, 'product/product-list.html.html', context)
+def product_list(request):
+    products = Product.objects.all().order_by('-id')
+    # if productes:
+    #     product = Product.objects.get(pk=pk)
+    context = {'product': products}
+    return render(request, 'product/product-list.html', context)
 
 # Detail
 def product_overview(request,pk):

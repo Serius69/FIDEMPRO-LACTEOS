@@ -7,17 +7,11 @@ class FDP(models.Model):
     def __str__(self):
         return self.name
 
-    class Meta:
-        app_label = 'simulate'
-
 class DataPoint(models.Model):
     value = models.FloatField()
 
     def __str__(self):
         return f'DataPoint: {self.value}'
-    class Meta:
-            app_label = 'simulate'
-
 
 # Model to represent a Dairy SME
 class DairySME(models.Model):
@@ -27,9 +21,6 @@ class DairySME(models.Model):
 
     def __str__(self):
         return self.name
-
-    class Meta:
-        app_label = 'simulate'  # Add this line to specify the app_label
 
 # Model to represent Financial Data for SMEs
 class FinancialData(models.Model):
@@ -49,10 +40,10 @@ class ProbabilityDensityFunction(models.Model):
 
     def __str__(self):
         return self.name
-    
 
 # Model to represent Simulation Scenarios
 class SimulationScenario(models.Model):
+    pdfs = models.CharField(max_length=100)  # Adjust the field type and options as needed
     name = models.CharField(max_length=100)
     description = models.TextField()
 
@@ -63,6 +54,7 @@ class SimulationScenario(models.Model):
 class ScenarioPDF(models.Model):
     scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
     pdf = models.ForeignKey(ProbabilityDensityFunction, on_delete=models.CASCADE)
+    weight = models.FloatField()  # Define the 'weight' field here if it's intended to be part of the model
 
     def __str__(self):
         return f"{self.scenario.name} - {self.pdf.name}"
@@ -77,5 +69,3 @@ class DecisionAnalysis(models.Model):
 
     def __str__(self):
         return f"{self.sme.name} - {self.year} Analysis"
-
-

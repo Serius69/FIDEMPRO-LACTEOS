@@ -3,10 +3,11 @@ from variable.views import(
     variable_list,
     variable_overview,
 )
+app_name = 'variable'
 
 urlpatterns = [
     # Companies
-    path("company/list", view=variable_list, name="company.list"),
-    path("company/overview/<int:pk>", view=variable_overview, name="company.overview"),
+    path("list", view=variable_list, name="variable.list"),
+    path("overview/<int:pk>", view=variable_overview, name="variable.overview"),
 
 ]
