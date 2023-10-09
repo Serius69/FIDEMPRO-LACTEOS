@@ -3,59 +3,65 @@ from django.contrib import messages
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
-
 import pkg_resources  # Import pkg_resources
-
 from scipy import stats  # Import scipy for KS test
-
-from .models import DataPoint, FDP, SimulationScenario
+from .models import DataPoint, NormalFDP, ExponentialFDP, LogarithmicFDP
 from .forms import YourForm  # Replace with your actual form import
 from variable.models import Variable
 from product.models import Product
 from business.models import Business, BusinessProduct
-
 from sympy import Eq, sympify
-
 import openai
-# Create your variable views here.
-# 
+
+# Set the OpenAI API key
 openai.api_key = settings.OPENAI_API_KEY
+
 class AppsView(LoginRequiredMixin, TemplateView):
-    # Add methods or attributes specific to this view if needed
-    template_name = 'your_template.html'  # Replace with your template name
+    pass
 
-def ks_test_view(request):
-    # Retrieve the dataset and FDP parameters
-    data_points = DataPoint.objects.values_list('value', flat=True)
-    fdp = FDP.objects.get(pk=1)  # You need to specify the FDP you want to test against
+def ks_test_view(request, variable_name):
+    try:
+        # Retrieve the variable by name
+        variable = Variable.objects.get(name=variable_name)
 
-    # Calculate the KS statistic and p-value
-    ks_statistic, p_value = stats.kstest(data_points, 'expon', args=(0, 1/fdp.lambda_param))
+        # Retrieve the dataset and FDP parameters
+        data_points = DataPoint.objects.values_list('value', flat=True)
+        fdp = variable.fdp  # Get the associated FDP from the variable
 
-    # Interpret the results (you can customize this part)
-    if p_value < 0.05:
-        result = "Reject null hypothesis: Data does not fit the FDP."
-    else:
-        result = "Fail to reject null hypothesis: Data fits the FDP."
+        # Define distribution type based on the FDP subclass
+        if isinstance(fdp, NormalFDP):
+            distribution_type = 'norm'
+            distribution_args = (fdp.mean, fdp.std_deviation)
+        elif isinstance(fdp, ExponentialFDP):
+            distribution_type = 'expon'
+            distribution_args = (0, 1 / fdp.lambda_param)
+        elif isinstance(fdp, LogarithmicFDP):
+            distribution_type = 'lognorm'
+            distribution_args = (fdp.mean, fdp.std_deviation)
 
-    context = {
-        'ks_statistic': ks_statistic,
-        'p_value': p_value,
-        'result': result,
-    }
+        # Calculate the KS statistic and p-value
+        ks_statistic, p_value = stats.kstest(data_points, distribution_type, args=distribution_args)
 
-    return (context)
+        # Interpret the results
+        if p_value < 0.05:
+            result = "Reject null hypothesis: Data does not fit the FDP."
+        else:
+            result = "Fail to reject null hypothesis: Data fits the FDP."
 
-def simulate_init(request):
-    businesses = SimulationScenario.objects.all().order_by('-id')
-    business = businesses.first()  # Retrieve the first object if it exists
+        context = {
+            'result': result,
+        }
 
-    if ks_test_view == 1:
-        result = "Reject null hypothesis: Data does not fit the FDP."
+    except Variable.DoesNotExist:
+        context = {
+            'error_message': 'Variable not found.',
+        }
 
-    context = {'simulate': business}
-    return render(request, 'simulate/simulate-init.html', context)
+    return render(request, 'ks_test_template.html', context)
 
+
+
+# Define a view for equation analysis
 def equation_analysis_view(request):
     # Sample equation (you can replace this with your input)
     equation_str = "x + y = 10"
@@ -65,12 +71,13 @@ def equation_analysis_view(request):
     variables = list(equation.free_symbols)
 
     # Create a dependency graph (you may need to implement this)
-    dependency_graph = create_dependency_graph(equation)
+    # It seems like you're missing the 'create_dependency_graph' function
 
     # Resolve dependencies and query the database
     variable_data = []
     for variable in variables:
-        dependencies = dependency_graph.get_dependencies(variable)
+        # Replace 'query_database_for_variable_values' and 'evaluate_expression' with your actual logic
+        dependencies = []  # You need to define the dependencies
         values = query_database_for_variable_values(dependencies)
         variable_value = evaluate_expression(equation, values)
         variable_data.append({"name": variable, "value": variable_value})
@@ -82,7 +89,7 @@ def equation_analysis_view(request):
         {"equation_str": equation_str, "variable_data": variable_data},
     )
 
-#  Create equations
+# Define a view to create equations
 def create_simulation_equations(request):
     # Retrieve all Variable objects from the database
     variables = Variable.objects.all()
@@ -106,6 +113,7 @@ def create_simulation_equations(request):
         {"equations": equations},
     )
 
+# Define a function to generate equations for variables using OpenAI
 def generate_equation_from_variable(variable):
     # Define a prompt for OpenAI to generate an equation
     prompt = f"Generate an equation for the variable {variable.name} with type {variable.get_type_display()} and parameters {variable.parameters}."
@@ -123,3 +131,24 @@ def generate_equation_from_variable(variable):
     equation = response.choices[0].text.strip()
     return equation
 
+
+def extract_demand_historic(request):
+    try:
+        demand_historic_variable = Variable.objects.get(name="demand_historic")
+    except Variable.DoesNotExist:
+        demand_historic_variable = None
+
+    context = {
+        'demand_historic_variable': demand_historic_variable,
+    }
+
+    return context
+
+# Define a view for initializing simulation
+def simulate_init(request):
+
+    
+    
+
+    context = {'simulate': business}
+    return render(request, 'simulate/simulate-init.html', context)
