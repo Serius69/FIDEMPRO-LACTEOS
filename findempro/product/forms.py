@@ -4,7 +4,7 @@ from .models import Product
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ('name', 'type', 'quantity', 'description')
+        fields = ('name', 'type' , 'description')
         widgets = {
             'name': forms.TextInput(attrs={'class': 'textinputclass'}),
             'description': forms.Textarea(attrs={'class': 'editable medium-editor-textarea postcontent'}),
@@ -16,12 +16,6 @@ class ProductForm(forms.ModelForm):
         self.fields['type'].label = 'Product Type'
         self.fields['quantity'].label = 'Quantity'
         self.fields['description'].help_text = 'Enter a description for the product.'
-
-    def clean_quantity(self):
-        quantity = self.cleaned_data.get('quantity')
-        if quantity < 0:
-            raise forms.ValidationError("Quantity cannot be negative.")
-        return quantity
 
 class ProductAddForm(ProductForm):
     class Meta(ProductForm.Meta):

@@ -34,10 +34,10 @@ def create_product_view(request):
         if form.is_valid():
             form.save()
             messages.success(request,"Company inserted successfully!")
-            return redirect("apps:crm.product")
+            return redirect("product:product.overview")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.product")
+            return redirect("product:product.overview")
     return render(request,"product/product-list.html",context)
 
 # Update
@@ -48,10 +48,10 @@ def update_product_view(request,pk):
         if form.is_valid():
             form.save()
             messages.success(request,"Company updated successfully!")
-            return redirect("apps:crm.product")
+            return redirect("product:product.overview")
         else:
             messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.product")
+            return redirect("product:product.overview")
     return render(request,"product/product-list.html")
 
 # Delete

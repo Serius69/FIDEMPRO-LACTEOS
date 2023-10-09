@@ -1,8 +1,8 @@
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.contrib.auth.models import User
-from product.models import Product
+from django.contrib.auth.models import User  # Ensure User is correctly imported
+from django.apps import apps
 
 class Business(models.Model):
     id = models.CharField(max_length=10, primary_key=True)
@@ -22,17 +22,13 @@ class Business(models.Model):
 
     # Add a foreign key for User with PROTECT on_delete behavior
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    # Many-to-many relationship with Product
-    products = models.ManyToManyField(Product, blank=True)
-    
-    tags = models.JSONField()
     
     def __str__(self):
         return self.name
 
 class BusinessProduct(models.Model):
     company = models.ForeignKey(Business, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey('product.Product', on_delete=models.CASCADE)
     
     def __str__(self):
         return f"{self.company.name} - {self.product.name}"

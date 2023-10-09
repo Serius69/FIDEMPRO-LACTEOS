@@ -61,14 +61,20 @@
                                                             </select>
                                                         </div>
                                                     </div><!--end col-->
-                                                    <div class="col-md-12">
+                                                    <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="compnayNameinput" class="form-label"><span data-key="t-home"> Historic Demand</span></label>
+                                                            <label for="lastNameinput" class="form-label"><span data-key="t-timeunit"> Information of questionary to use</span></label>
 
-                                                            <input type="text" class="form-control" placeholder="Enter company name" id="compnayNameinput">
+                                                            <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
+                                                                <option selected>Choose...</option>
+                                                                {% for questionary in questionaries %}
+                                                                <option value="1">{{questionary.name}}</option>
+                                                                {% empty %}
+                                                                <option>...</option>
+                                                                {% endfor %}
+                                                            </select>
                                                         </div>
                                                     </div><!--end col-->
-                                                    
                                                     {% for variable in variables %}
                                                     <div class="col-md-6">
                                                         <div class="mb-3">
@@ -79,9 +85,7 @@
                                                     </div><!--end col-->
                                                     {% empty %}
                                                     <p class="text-muted">There isnt varaibles save in the database with the product</p>
-                                                    <p class="text-muted">Go to the Variable List to identify the variables and equations:  </p>
-                                                   
-
+                                                    <p class="text-muted">Go to the Variable List to identify the variables and equations:  </p>                                                  
                                                     {% endfor %}
 
                                                     <div class="col-lg-12">

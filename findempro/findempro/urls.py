@@ -34,6 +34,8 @@ urlpatterns = [
     path('product/',include('product.urls',)),
     # Variables
     path('variable/',include('variable.urls')),
+    # Question
+    path('question/',include('question.urls')),
     # Simulate
     path('simulate/',include('simulate.urls')),
     path(

@@ -2,11 +2,12 @@ from django.db import models
 from django.urls import reverse 
 from django.utils import timezone
 from product.models import Product
-from fontawesomepicker.fields import FontAwesomeIconField
+# from fontawesomepicker.fields import FontAwesomeIconField
 class VariableCategory(models.Model):
-    name = models.CharField(max_length = 70)
-    unity = models.CharField(max_length = 20)
-    quantity = models.IntegerField()
+    category = models.CharField(max_length = 70, unique=True, default=1)
+    description = models.CharField(max_length = 20, default='No description available.')
+    def __str__(self):
+        return self.name
 class Variable(models.Model):
     name = models.CharField(max_length = 70)
     unit = models.CharField(max_length = 20)
@@ -23,10 +24,10 @@ class Variable(models.Model):
         (3, 'Archived'),
     )
     status = models.IntegerField(choices=STATUS_CHOICES, default=1)
-    icon = FontAwesomeIconField(blank=True, null=True)
+    # icon = FontAwesomeIconField(blank=True, null=True)
 
-    # fk_variablecategory = models.ForeignKey(VariableCategory, on_delete=models.CASCADE, related_name='target_edges')
-    fk_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='fk_product')
+    fk_category = models.ForeignKey(VariableCategory, on_delete=models.CASCADE, related_name='fk_category', default=1)
+    fk_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='fk_product', default=1)
 
     def __str__(self):
         return self.name
