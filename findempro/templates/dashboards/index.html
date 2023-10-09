@@ -1,0 +1,118 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Home{% endblock title %}
+{% block extra_css %}
+        <!-- plugin css -->
+        <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css'%}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+                <div class="page-content">
+                    <div class="container-fluid">
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Dashboards" title="Home" %}
+                        {% endblock pagetitle %}
+                        <!-- end page title -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-xxl-6">
+                                        <div class="card">
+                                            <div class="row g-0">
+                                                <div class="col-md-4">
+                                                    <img class="rounded-start img-fluid h-100 object-cover" src="{% static 'images/small/img-12.jpg' %}" alt="Card image">
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <div class="card-header">
+                                                        <h5 class="card-title mb-0">Bienvenido al Sistema de Apoyo a Decisiones Financieras para PYMES del Sector Lácteo</h5>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p class="card-text mb-2">
+                                                            
+                                                            ¡Potencia tu estrategia financiera con inteligencia y precisión! Nuestro Sistema Web está diseñado exclusivamente para brindar a las PYMES del sector lácteo el apoyo necesario en la toma de decisiones financieras basadas en datos con un enfoque innovador.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->
+                                    <div class="col-xxl-6">
+                                        <div class="card">
+                                            <div class="row g-0">
+                                                <div class="col-md-8">
+                                                    <div class="card-header">
+                                                        <h5 class="card-title mb-0">Manage white space in responsive layouts ?</h5>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p class="card-text mb-2">
+                                                            1. Análisis Basado en Datos: Gracias a nuestras avanzadas funciones de densidad probabilística, te ofrecemos una visión profunda y precisa del comportamiento de la demanda en tu sector. Entender las tendencias pasadas y futuras es esencial para tomar decisiones informadas.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <img class="rounded-end img-fluid h-100 object-cover" src="{% static 'images/small/img-4.jpg' %}" alt="Card image">
+                                                </div>
+                                            </div>
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->
+
+                                    <div class="col-xxl-6">
+                                        <div class="card">
+                                            <div class="row g-0">
+                                                <div class="col-md-4">
+                                                    <img class="rounded-start img-fluid h-100 object-cover" src="{% static 'images/small/img-9.jpg' %}" alt="Card image">
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title mb-2">Give your text a good structure</h5>
+                                                        <p class="card-text text-muted mb-0">
+                                                            2. Simulación Precisa: ¿Qué sucede si cambian las condiciones? Nuestra simulación financiera te permite explorar múltiples escenarios en función de la demanda proyectada. Visualiza los posibles resultados y ajusta tu estrategia para maximizar tus ingresos y minimizar los riesgos.
+                                                            </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->
+
+                                    <div class="col-xxl-6">
+                                        <div class="card">
+                                            <div class="row g-0">
+                                                <div class="col-md-8">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title mb-2">Manage white space in responsive layouts ?</h5>
+                                                        <p class="card-text text-muted mb-0">For that very reason, I went on a quest and spoke to many different professional graphic designers and asked them what graphic design tips they live.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <img class="rounded-end img-fluid h-100 object-cover" src="{% static 'images/small/img-2.jpg' %}" alt="Card image">
+                                                </div>
+                                            </div>
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->
+                                </div><!-- end row -->
+                            </div><!-- end col -->
+                        </div><!-- end row -->
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+            </div>
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+</div>
+<!-- end main content-->
+{% endblock content %}
+{% block extra_js %}
+<!-- apexcharts -->
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
+
+<!-- Vector map-->
+<script src="{% static 'libs/jsvectormap/dist/js/jsvectormap.min.js'%}"></script>
+<script src="{% static 'libs/jsvectormap/dist/maps/world-merc.js'%}"></script>
+
+<!-- Dashboard init -->
+<script  src="{% static 'js/pages/dashboard-analytics.init.js'%}"></script>
+{% endblock extra_js %}
