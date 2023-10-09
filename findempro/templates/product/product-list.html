@@ -256,6 +256,20 @@
                                                         <!--end col-->
                                                         <div class="col-lg-6">
                                                             <div class="mb-3">
+                                                                <label for="productType" class="form-label">Business</label>
+                                                                <select class="form-control" id="productType" name="productBusiness" required>
+                                                                    <option value="">Select type</option>
+                                                                    {% for business in businesses %}
+                                                                    <option value={{business.id}}>{{business.name}}</option>
+                                                                    {% empty %}
+                                                                    <option value=".">...</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
                                                                 <label for="productImage" class="form-label">Product Image</label>
                                                                 <input type="file" class="form-control" id="productImage" name="productImage">
                                                             </div>

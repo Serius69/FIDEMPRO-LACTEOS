@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse  # Import reverse from django.urls
 from django.utils import timezone
+from business.models import Business
 from multiselectfield import MultiSelectField
   # Import timezone for date fields
 class Product(models.Model):
@@ -17,7 +18,7 @@ class Product(models.Model):
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)  # Automatically updated on save
     image = models.ImageField(upload_to='images/job/application',blank=True,null=True)
-
+    fk_business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name='fk_product')
 
     def __str__(self):
         return self.name
@@ -27,7 +28,7 @@ class Product(models.Model):
         return reverse('product-detail', args=[str(self.id)])
 
     def get_photo_url(self):
-        if self.profile_pic and hasattr(self.profile_pic, 'url'):
-            return self.profile_pic.url
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
         else:
             return "/static/images/users/user-dummy-img.jpg"

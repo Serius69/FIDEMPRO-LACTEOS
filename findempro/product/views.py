@@ -1,6 +1,7 @@
 from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product
+from business.models import Business
 from .forms import ProductForm
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin  # Create a Django form for Product
@@ -10,9 +11,10 @@ class AppsView(LoginRequiredMixin,TemplateView):
 # List
 def product_list(request):
     products = Product.objects.all().order_by('-id')
+    businesses = Business.objects.all().order_by('-id')
     # if productes:
     #     product = Product.objects.get(pk=pk)
-    context = {'product': products}
+    context = {'product': products, 'business': businesses}
     return render(request, 'product/product-list.html', context)
 
 # Detail
@@ -24,7 +26,9 @@ def product_overview(request,pk):
 
 # Create
 def create_product_view(request):
-    product = Product.objects.all().order_by('-id')
+    products = Product.objects.all().order_by('-id')
+    businesses = Business.objects.all().order_by('-id')
+    context = {'product': products, 'business': businesses}
     if request.method == "POST":
         form = ProductForm(request.POST or None,request.FILES or None)
         if form.is_valid():
@@ -34,7 +38,7 @@ def create_product_view(request):
         else:
             messages.error(request,"Something went wrong!")
             return redirect("apps:crm.product")
-    return render(request,"product/product-list.html",{'product':product})
+    return render(request,"product/product-list.html",context)
 
 # Update
 def update_product_view(request,pk):

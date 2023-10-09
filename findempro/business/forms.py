@@ -13,4 +13,3 @@ class BusinessForm(forms.ModelForm):
         self.fields['location'].label = 'Location'
         self.fields['image_src'].label = 'Business Logo'
         self.fields['description'].label = 'Description'
-
