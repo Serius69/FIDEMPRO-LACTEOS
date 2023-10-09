@@ -46,8 +46,8 @@
                                             </div>
                                         </div>
                                         {% for question in generated_questions|linebreaksbr %}
-                                        <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ question }}</span></label>
-                                        <input type="tel" class="form-control" placeholder="Answer the question" id="phonenumberInput">
+                                        <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ question.question }}</span></label>
+                                        <input type="tel" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
                                         {% endfor %}
                                         {% comment %} <div>'+ tagHtml + '</div> {% endcomment %}
                                     </div>

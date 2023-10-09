@@ -7,13 +7,27 @@ class FDP(models.Model):
     def __str__(self):
         return self.name
 
+class NormalFDP(FDP):
+    mean = models.FloatField()
+    std_deviation = models.FloatField()
+
+    def __str__(self):
+        return f"Normal - {self.name}"
+
+class ExponentialFDP(FDP):
+    def __str__(self):
+        return f"Exponential - {self.name}"
+
+class LogarithmicFDP(FDP):
+    def __str__(self):
+        return f"Logarithmic - {self.name}"
+
 class DataPoint(models.Model):
     value = models.FloatField()
 
     def __str__(self):
         return f'DataPoint: {self.value}'
 
-# Model to represent a Dairy SME
 class DairySME(models.Model):
     name = models.CharField(max_length=100)
     location = models.CharField(max_length=100)
@@ -22,7 +36,6 @@ class DairySME(models.Model):
     def __str__(self):
         return self.name
 
-# Model to represent Financial Data for SMEs
 class FinancialData(models.Model):
     sme = models.ForeignKey(DairySME, on_delete=models.CASCADE)
     year = models.PositiveIntegerField()
@@ -33,7 +46,6 @@ class FinancialData(models.Model):
     def __str__(self):
         return f"{self.sme.name} - {self.year}"
 
-# Model to represent Probability Density Functions (PDF)
 class ProbabilityDensityFunction(models.Model):
     name = models.CharField(max_length=100)
     function_data = models.TextField()  # Store PDF function data (e.g., JSON, serialized data)
@@ -41,16 +53,14 @@ class ProbabilityDensityFunction(models.Model):
     def __str__(self):
         return self.name
 
-# Model to represent Simulation Scenarios
 class SimulationScenario(models.Model):
-    pdfs = models.CharField(max_length=100)  # Adjust the field type and options as needed
+    pdfs = models.ManyToManyField(ProbabilityDensityFunction)  # Use ManyToManyField to link with PDFs
     name = models.CharField(max_length=100)
     description = models.TextField()
 
     def __str__(self):
         return self.name
 
-# Model to link Simulation Scenarios with Probability Density Functions
 class ScenarioPDF(models.Model):
     scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
     pdf = models.ForeignKey(ProbabilityDensityFunction, on_delete=models.CASCADE)
@@ -59,8 +69,6 @@ class ScenarioPDF(models.Model):
     def __str__(self):
         return f"{self.scenario.name} - {self.pdf.name}"
 
-
-# Model to represent Decision Support Analysis
 class DecisionAnalysis(models.Model):
     sme = models.ForeignKey(DairySME, on_delete=models.CASCADE)
     year = models.PositiveIntegerField()
