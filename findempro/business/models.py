@@ -12,15 +12,16 @@ class Business(models.Model):
     type = models.CharField(max_length=20)
     location = models.CharField(max_length=255)
     last_updated = models.DateTimeField(auto_now=True)
+    description = models.TextField()  # Add this field
     STATUS_CHOICES = (
         (1, 'Active'),
         (2, 'Inactive'),
         (3, 'Archived'),
     )
     status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+
     # Add a foreign key for User with PROTECT on_delete behavior
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    
     # Many-to-many relationship with Product
     products = models.ManyToManyField(Product, blank=True)
     

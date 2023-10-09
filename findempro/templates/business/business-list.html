@@ -96,8 +96,8 @@
                             </div>
                         </div>
     
-                         <!-- Modal -->
-                         <div class="modal fade zoomIn" id="addBusiness" tabindex="-1" aria-labelledby="addBusinessLabel" aria-hidden="true">
+                        <!-- Modal -->
+                        <div class="modal fade zoomIn" id="addBusiness" tabindex="-1" aria-labelledby="addBusinessLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
@@ -116,7 +116,9 @@
                                     <div class="modal-body">
                                         <div class="tab-content">
                                             <div class="tab-pane active" id="businessDetails" role="tabpanel">
-                                                <form action="#" id="businessForm">
+                                                <form method="POST" class="post-form" id="businessForm" enctype="multipart/form-data">
+                                                    {% csrf_token %}
+                                                    {{ form.as_p }}
                                                     <div class="row">
                                                         <div class="col-lg-12">
                                                             <div class="mb-3">
@@ -171,20 +173,14 @@
                                                                 <button type="submit" class="btn btn-primary"><i class="ri-save-3-line align-bottom me-1"></i> Save</button>
                                                             </div>
                                                         </div>
-                                                        <!--end col-->
-                                                    </div>
-                                                    <!--end row-->
-                                                </form>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    
                                 </div>
                             </div>
-                        </div>
-                        <!--end modal-->
-    
+                            <!-- end modal -->
                     </div>
                     <!-- container-fluid -->
                 </div>

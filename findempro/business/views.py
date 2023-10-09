@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Business
-from .forms import *
+from business.forms import BusinessForm
 from django.contrib import messages
 
 # Create your business views here.
@@ -23,19 +23,20 @@ def business_overview(request,pk):
         business = Business.objects.get(pk=pk)
     return render(request,"business/business-overview.html",{'business':business,'business':business})
 
-# Create
 def create_business_view(request):
-    business = Business.objects.all().order_by('-id')
     if request.method == "POST":
-        form = BusinessForm(request.POST or None,request.FILES or None)
+        form = BusinessForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request,"Company inserted successfully!")
-            return redirect("business:crm.business")
+            messages.success(request, "Business inserted successfully!")
+            return redirect("business:business.list")
         else:
-            messages.error(request,"Something went wrong!")
-            return redirect("business:crm.business")
-    return render(request,"business/business-list.html",{'business':business})
+            messages.error(request, "Something went wrong! Please check your inputs.")
+    else:
+        form = BusinessForm()
+
+    return render(request, "business/business-list.html", {'form': form})
+
 
 # Update
 def update_business_view(request,pk):
@@ -44,7 +45,7 @@ def update_business_view(request,pk):
         form = BusinessForm(request.POST or None,request.FILES or None,instance=business)
         if form.is_valid():
             form.save()
-            messages.success(request,"Company updated successfully!")
+            messages.success(request,"Business updated successfully!")
             return redirect("business:crm.business")
         else:
             messages.error(request,"Something went wrong!")
