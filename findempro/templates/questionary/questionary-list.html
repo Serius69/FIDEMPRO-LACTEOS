@@ -35,8 +35,6 @@
     
                         <div class="row">
                             <div class="col-xxl-9">
-                                {% comment %} <div id="job-list">
-                                </div> {% endcomment %}
                                 {% for variable, generated_questions in generated_questions_list %}
                                 <div class="card joblist-card">
                                     <div class="card-body">
@@ -46,8 +44,10 @@
                                             </div>
                                         </div>
                                         {% for question in generated_questions|linebreaksbr %}
+
                                         <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ question.question }}</span></label>
-                                        <input type="tel" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
+                                        <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
+                                        
                                         {% endfor %}
                                         {% comment %} <div>'+ tagHtml + '</div> {% endcomment %}
                                     </div>

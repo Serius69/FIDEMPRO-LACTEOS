@@ -5,10 +5,9 @@ from django.contrib.auth.models import User  # Ensure User is correctly imported
 from django.apps import apps
 
 class Business(models.Model):
-    id = models.CharField(max_length=10, primary_key=True)
     image_src = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
-    date_created = models.DateTimeField(default=timezone.now)
+    date_created = models.DateTimeField(auto_now_add=True)
     type = models.CharField(max_length=20)
     location = models.CharField(max_length=255)
     last_updated = models.DateTimeField(auto_now=True)
@@ -27,8 +26,8 @@ class Business(models.Model):
         return self.name
 
 class BusinessProduct(models.Model):
-    company = models.ForeignKey(Business, on_delete=models.CASCADE)
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
     product = models.ForeignKey('product.Product', on_delete=models.CASCADE)
     
     def __str__(self):
-        return f"{self.company.name} - {self.product.name}"
+        return f"{self.business.name} - {self.product.name}"

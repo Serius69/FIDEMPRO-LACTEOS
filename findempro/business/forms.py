@@ -8,8 +8,8 @@ class BusinessForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BusinessForm, self).__init__(*args, **kwargs)
-        self.fields['name'].label = 'Business Name'
-        self.fields['type'].label = 'Business Type'
-        self.fields['location'].label = 'Location'
-        self.fields['image_src'].label = 'Business Logo'
-        self.fields['description'].label = 'Description'
+        self.fields['name'].label = 'name'
+        self.fields['type'].label = 'type'
+        self.fields['location'].label = 'location'
+        self.fields['image_src'].label = 'image_src'
+        self.fields['description'].label = 'description'

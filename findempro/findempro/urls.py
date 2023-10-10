@@ -29,8 +29,8 @@ urlpatterns = [
     # Pages
     path('pages/',include('pages.urls')),
     # Business
-    path('business/', include('business.urls')),
-    # Products
+    path('business/', include('business.urls', namespace='business')),    
+    # Products    
     path('product/',include('product.urls',)),
     # Variables
     path('variable/',include('variable.urls')),

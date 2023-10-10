@@ -8,5 +8,5 @@ urlpatterns = [
     # Companies
     path("list/", business_list, name="business.list"),
     path("overview/<int:pk>/", business_overview, name="business.overview"),
-    path("business/new/", create_business_view, name='business_new'),
+    path("new/", create_business_view, name='business.create'),
 ]

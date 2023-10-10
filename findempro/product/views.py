@@ -59,5 +59,5 @@ def delete_product_view(request,pk):
     product = Product.objects.get(pk=pk)
     product.delete()
     messages.success(request,"Product deleted successfully!")
-    return redirect("apps:product.list")
+    return redirect("product:product.list")
 
