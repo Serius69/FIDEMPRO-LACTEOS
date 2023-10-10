@@ -1,5 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
+{% load crispy_forms_tags %}
 {% block title %}Business{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
@@ -37,7 +38,10 @@
                         <div class="col-lg-auto">
                             <div class="hstack gap-2">
                                 <button type="button" class="btn btn-danger"><i class="ri-equalizer-fill me-1 align-bottom"></i> Filters</button>
-                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness"><i class="ri-add-fill me-1 align-bottom"></i> Add Business</button>
+                                {% comment %} <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness"><i class="ri-add-fill me-1 align-bottom"></i> Add Business</button> {% endcomment %}
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBusinessModal">
+                                    Open Modal
+                                </button>
                             </div>
                         </div>
                         <!--end col-->
@@ -85,7 +89,7 @@
         </div>
         <!-- end row -->
 
-        <!-- Modal -->
+         <!-- Modal -->
         <div class="modal fade zoomIn" id="addBusiness" tabindex="-1" aria-labelledby="addBusinessLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
@@ -111,16 +115,16 @@
                                     <div class="row">
                                         <div class="col-lg-12">
                                             <div class="mb-3">
-                                                <label for="{{ form.name.id_for_label }}" class="form-label">Business Name</label>
-                                                <input type="text" class="form-control" id="{{ form.name.id_for_label }}" placeholder="Enter your business name" required>
+                                                <label for="name" class="form-label">Name</label>
+                                                <input type="text" class="form-control" id="id_name" placeholder="Enter your business name" required>
                                                 <div class="invalid-feedback">Please enter a business name.</div>
                                             </div>
                                         </div>
                                         <!--end col-->
                                         <div class="col-lg-6">
                                             <div class="mb-3">
-                                                <label for="{{ form.type.id_for_label }}" class="form-label">Business Type</label>
-                                                <select class="form-control" name="{{ form.type.name }}" id="{{ form.type.id_for_label }}" required>
+                                                <label for="type" class="form-label">Type</label>
+                                                <select class="form-control" name="type" id="id_type" required>
                                                     <option value="">Select type</option>
                                                     <option value="Dairy">Dairy</option>
                                                 </select>
@@ -130,8 +134,8 @@
                                         <!--end col-->
                                         <div class="col-lg-6">
                                             <div class="mb-3">
-                                                <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
-                                                <select class="form-control" name="{{ form.location.name }}" id="{{ form.location.id_for_label }}" required>
+                                                <label for="location" class="form-label">Location</label>
+                                                <select class="form-control" name="location" id="id_location" required>
                                                     <option value="">Select location</option>
                                                     <option value="LaPaz">La Paz</option>
                                                     <option value="Cochabamba">Cochabamba</option>
@@ -143,15 +147,15 @@
                                         <!--end col-->
                                         <div class="col-lg-6">
                                             <div class="mb-3">
-                                                <label for="{{ form.image_src.id_for_label }}" class="form-label">Business Logo</label>
-                                                <input type="file" class="form-control" id="{{ form.image_src.id_for_label }}" name="{{ form.image_src.name }}">
+                                                <label for="image_src" class="form-label">Logo</label>
+                                                <input type="file" class="form-control" id="id_image_src" name="image_src">
                                             </div>
                                         </div>
                                         <!--end col-->
                                         <div class="col-lg-12">
                                             <div class="mb-3">
-                                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
-                                                <textarea class="form-control" id="{{ form.description.id_for_label }}" name="{{ form.description.name }}" rows="3" placeholder="Enter description" required></textarea>
+                                                <label for="description" class="form-label">Description</label>
+                                                <textarea class="form-control" id="id_description" name="description" rows="3" placeholder="Enter description" required></textarea>
                                                 <div class="invalid-feedback">Please enter a description for the business.</div>
                                             </div>
                                         </div>
@@ -171,7 +175,27 @@
             </div>
             <!-- end modal -->
         </div>
-        <!-- container-fluid -->
+        <!-- container-fluid --> 
+        <!-- Modal for adding a new business -->
+        {% comment %} <div class="modal fade" id="addBusinessModal" tabindex="-1" aria-labelledby="addBusinessLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addBusinessLabel">Add Business</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- business/business-form.html -->
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div> {% endcomment %}
+
     </div>
     <!-- End Page-content -->
     {% if messages %}
@@ -190,6 +214,40 @@
 {% endblock content %}
 
 {% block extra_js %}
+
+<script>
+    // Function to show the modal
+    function showAddBusinessModal() {
+        $('#addBusinessModal').modal('show');
+    }
+    
+    // Function to hide the modal
+    function hideAddBusinessModal() {
+        $('#addBusinessModal').modal('hide');
+    }
+    
+    // Function to handle form submission
+    $('#businessForm').on('submit', function (event) {
+        event.preventDefault();
+        
+        $.ajax({
+            type: 'POST',
+            url: '{% url "business:business.create" %}',  // Replace with your actual URL
+            data: $(this).serialize(),
+            success: function (response) {
+                if (response.success) {
+                    
+                    // Business created successfully, you can show a success message here if needed.
+                    hideAddBusinessModal();  // Hide the modal after successful submission
+                } else {
+                    // Handle errors and display them to the user
+                    // You can update the modal content with error messages here
+                }
+            }
+        });
+    });
+</script>
+
 <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
 
     {% for message in messages %}

@@ -7,21 +7,28 @@ from django.http import HttpResponse
 from .models import Business
 from .forms import BusinessForm
 from django.urls import reverse
-
+from django.http import JsonResponse
 # Create your business views here.
 
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
 # List
+# def business_list(request):
+#     form = BusinessForm()
+#     try:
+#         businesses = Business.objects.all().order_by('-id')
+#         context = {'businesses': businesses, 'form': form}  # Corrected the context variable name
+#         return render(request, 'business/business-list.html', context)
+#     except Exception as e:
+#         messages.error(request, f"An error occurred: {str(e)}")
+#         return HttpResponse(status=500)  # Return an HTTP 500 error response
+
 def business_list(request):
-    try:
-        businesses = Business.objects.all().order_by('-id')
-        context = {'businesses': businesses}  # Corrected the context variable name
-        return render(request, 'business/business-list.html', context)
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)  # Return an HTTP 500 error response
+    form = BusinessForm()
+    businesses = Business.objects.all().order_by('-id')
+    context = {'businesses': businesses, 'form': form}
+    return render(request, 'business/business-list.html', context)
 
 # Detail
 def business_overview(request, pk):
@@ -33,35 +40,66 @@ def business_overview(request, pk):
         return HttpResponse(status=500)  # Return an HTTP 500 error response
 
 # Create
+# def create_business_view(request):
+#     new_business = None  # Initialize new_business to None
+#     business_list = Business.objects.all().order_by('-id')
+#     if request.method == "POST":
+#         # Create a form instance and populate it with data from the request
+#         form = BusinessForm(request.POST or None, request.FILES or None)
+#         try:
+#             # Check if the form data is valid
+#             if form.is_valid():
+#                 # Create a new business object but don't save it to the database yet (commit=False)
+#                 new_business = form.save(commit=False)
+#                 # Save the new business object to the database
+#                 new_business.save()
+#                 new_business.publish()
+#                 messages.success(request, "Business inserted successfully!")
+#                 # Redirect to the business overview page, passing the new business's primary key (pk)
+#                 return redirect("business:business.list")
+#             else:
+#                 messages.error(request, "Please check your inputs.")
+#                 return redirect("business:business.list")
+#         except Exception as e:
+#             messages.error(request, f"An error occurred: {str(e)}")
+#     else:
+#         # If it's not a POST request, create an empty form
+#         form = BusinessForm()
+#     messages.error(request, f"An error occurred")
+#     context = {'businesses': business_list}
+#     new_business.publish()
+
+#     # Render the business overview page, passing the new_business (which may be None)
+#     return render(request, "business/business-list.html", context)
+
+
+# def create_business_view(request):
+#     if request.method == 'POST':
+#         form = BusinessForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             business = form.save()  # Save the form data to the database
+#             messages.success(request, 'Business created successfully')
+#             return redirect('business:business_list')
+#         else:
+#             print(form.errors)  # Add this line to print form errors for debugging
+#     else:
+#         form = BusinessForm()
+#     return render(request, 'business/business-form.html', {'form': form})
+
+
 def create_business_view(request):
-    new_business = None  # Initialize new_business to None
-
-    if request.method == "POST":
-        # Create a form instance and populate it with data from the request
+    if request.method == 'POST':
         form = BusinessForm(request.POST, request.FILES)
-
-        try:
-            # Check if the form data is valid
-            if form.is_valid():
-                # Create a new business object but don't save it to the database yet (commit=False)
-                new_business = form.save(commit=False)
-                # Set the user for the new business object
-                new_business.user = request.user
-                # Save the new business object to the database
-                new_business.save()
-                messages.success(request, "Business inserted successfully!")
-                # Redirect to the business overview page, passing the new business's primary key (pk)
-                return redirect("business:business.overview", pk=new_business.pk)
-            else:
-                messages.error(request, "Please check your inputs.")
-        except Exception as e:
-            messages.error(request, f"An error occurred: {str(e)}")
+        if form.is_valid():
+            business = form.save()  # Save the form data to the database
+            messages.success(request, 'Business created successfully')
+            return JsonResponse({'success': True})
+        else:
+            # Handle form validation errors
+            return JsonResponse({'success': False, 'errors': form.errors})
     else:
-        # If it's not a POST request, create an empty form
         form = BusinessForm()
-
-    # Render the business overview page, passing the new_business (which may be None)
-    return render(request, "business/business-overview.html", {'business': new_business})
+    return render(request, 'business/business-form.html', {'form': form})
 
 # Update
 def update_business_view(request, pk):
