@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Project Overview{% endblock title %}
+{% block title %}Product Overview{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -29,17 +29,20 @@
                                                         </div>
                                                         <div class="col-md">
                                                             <div>
-                                                                <h4 class="fw-bold">findempro - Admin & Dashboard</h4>
+                                                                <h4 class="fw-bold">{{product.name}}</h4>
                                                                 <div class="hstack gap-3 flex-wrap">
                                                                     {% comment %} name companie {% endcomment %}
-                                                                    <div><i class="ri-building-line align-bottom me-1"></i> Sergio Troche</div>
+                                                                    <div><i class="ri-building-line align-bottom me-1"></i> {{product.fk_business.name}}</div>
                                                                     <div class="vr"></div>
-                                                                    <div>Create Date : <span class="fw-medium">15 Sep, 2021</span></div>
+                                                                    <div>Create Date : <span class="fw-medium">{{product.date_created}}</span></div>
                                                                     <div class="vr"></div>
-                                                                    <div>Due Date : <span class="fw-medium">29 Dec, 2021</span></div>
+                                                                    <div>Updated Date : <span class="fw-medium">{{product.last_updated}}</span></div>
                                                                     <div class="vr"></div>
-                                                                    <div class="badge rounded-pill bg-info fs-12">New</div>
-                                                                    <div class="badge rounded-pill bg-danger fs-12">High</div>
+                                                                    {% with days_since_creation=product.date_created|timesince:current_datetime %}
+                                                                        {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
+                                                                            <div class="badge rounded-pill bg-info fs-12">New</div>
+                                                                        {% endif %}
+                                                                    {% endwith %}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -99,7 +102,7 @@
                                                     <div class="card-body">
                                                         <div class="text-muted">
                                                             <h6 class="mb-3 fw-semibold text-uppercase">Description</h6>
-                                                            <p>Description</p>    
+                                                            <p>{{product.description}}</p>    
                 
                                                             <div class="pt-3 border-top border-top-dashed mt-4">
                                                                 <div class="row">
@@ -107,13 +110,13 @@
                                                                     <div class="col-lg-3 col-sm-6">
                                                                         <div>
                                                                             <p class="mb-2 text-uppercase fw-medium">Create Date :</p>
-                                                                            <h5 class="fs-15 mb-0">15 Sep, 2021</h5>
+                                                                            <h5 class="fs-15 mb-0">{{product.date_created}}</h5>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-lg-3 col-sm-6">
                                                                         <div>
                                                                             <p class="mb-2 text-uppercase fw-medium">Due Date :</p>
-                                                                            <h5 class="fs-15 mb-0">29 Dec, 2021</h5>
+                                                                            <h5 class="fs-15 mb-0">{{product.last_updated}}</h5>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-lg-3 col-sm-6">
@@ -132,7 +135,7 @@
                                                             </div>
                 
                                                             <div class="pt-3 border-top border-top-dashed mt-4">
-                                                                <h6 class="mb-3 fw-semibold text-uppercase">Resources</h6>
+                                                                <h6 class="mb-3 fw-semibold text-uppercase">Reports</h6>
                                                                 <div class="row g-3">
                                                                     <div class="col-xxl-4 col-lg-6">
                                                                         <div class="border rounded border-dashed p-2">
@@ -166,38 +169,6 @@
                                                                         </div>
                                                                     </div>
                                                                     <!-- end col -->
-                                                                    <div class="col-xxl-4 col-lg-6">
-                                                                        <div class="border rounded border-dashed p-2">
-                                                                            <div class="d-flex align-items-center">
-                                                                                <div class="flex-shrink-0 me-3">
-                                                                                    <div class="avatar-sm">
-                                                                                        <div class="avatar-title bg-light text-secondary rounded fs-24">
-                                                                                            <i class="ri-file-ppt-2-line"></i>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="flex-grow-1 overflow-hidden">
-                                                                                    <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">findempro admin.ppt</a></h5>
-                                                                                    <div>2.4MB</div>
-                                                                                </div>
-                                                                                <div class="flex-shrink-0 ms-2">
-                                                                                    <div class="d-flex gap-1">
-                                                                                        <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                                                                        <div class="dropdown">
-                                                                                            <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                                <i class="ri-more-fill"></i>
-                                                                                            </button>
-                                                                                            <ul class="dropdown-menu">
-                                                                                                <li><a class="dropdown-item" href="#"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
-                                                                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
-                                                                                            </ul>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <!-- end col -->
                                                                 </div>
                                                                 <!-- end row -->
                                                             </div>
@@ -209,7 +180,7 @@
 
                                                    <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1">Members</h4>
+                                                        <h4 class="card-title mb-0 flex-grow-1">Equations</h4>
                                                         <div class="flex-shrink-0">
                                                             <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteMembersModal"><i class="ri-share-line me-1 align-bottom"></i> Invite Member</button>
                                                         </div>
@@ -218,154 +189,26 @@
                                                     <div class="card-body">
                                                         <div data-simplebar style="height: 235px;" class="mx-n3 px-3">
                                                             <div class="vstack gap-3">
+                                                                {% for equation in financial_equations %}
                                                                 <div class="d-flex align-items-center">
                                                                     <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="img-fluid rounded-circle">
+                                                                        <img src="{% static 'images/users/avatar-2.jpg' %}" alt="" class="img-fluid rounded-circle">
                                                                     </div>
                                                                     <div class="flex-grow-1">
-                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Nancy Martino</a></h5>
+                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">{{ equation.name }}</a></h5>
                                                                     </div>
                                                                     <div class="flex-shrink-0">
-                                                                        <div class="d-flex align-items-center gap-1">
-                                                                            <button type="button" class="btn btn-light btn-sm">Message</button>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                    <i class="ri-more-fill"></i>
-                                                                                </button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
+                                                                        <!-- Aquí puedes agregar botones o acciones para cada ecuación financiera -->
                                                                     </div>
                                                                 </div>
-                                                                <!-- end member item -->
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <div class="avatar-title bg-danger-subtle text-danger rounded-circle">
-                                                                            HB
-                                                                        </div>
+                                                                <!-- end equation item -->
+                                                                {% empty %}
+                                                                    <div class="col text-center py-4">
+                                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                        <h5 class="mt-2">Sorry, there isn't any equition registered in the database</h5>
+                                                                        <p class="text-muted mb-0">You have to "Add Business".</p>
                                                                     </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Henry Baird</a></h5>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0">
-                                                                        <div class="d-flex align-items-center gap-1">
-                                                                            <button type="button" class="btn btn-light btn-sm">Message</button>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                    <i class="ri-more-fill"></i>
-                                                                                </button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <!-- end member item -->
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <img src="{% static 'images/users/avatar-3.jpg'%}" alt="" class="img-fluid rounded-circle">
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Frank Hook</a></h5>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0">
-                                                                        <div class="d-flex align-items-center gap-1">
-                                                                            <button type="button" class="btn btn-light btn-sm">Message</button>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                    <i class="ri-more-fill"></i>
-                                                                                </button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <!-- end member item -->
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="img-fluid rounded-circle">
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Jennifer Carter</a></h5>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0">
-                                                                        <div class="d-flex align-items-center gap-1">
-                                                                            <button type="button" class="btn btn-light btn-sm">Message</button>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                    <i class="ri-more-fill"></i>
-                                                                                </button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <!-- end member item -->
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <div class="avatar-title bg-success-subtle text-success rounded-circle">
-                                                                            AC
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Alexis Clarke</a></h5>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0">
-                                                                        <div class="d-flex align-items-center gap-1">
-                                                                            <button type="button" class="btn btn-light btn-sm">Message</button>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                    <i class="ri-more-fill"></i>
-                                                                                </button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <!-- end member item -->
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
-                                                                        <img src="{% static 'images/users/avatar-7.jpg'%}" alt="" class="img-fluid rounded-circle">
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">Joseph Parker</a></h5>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0">
-                                                                        <div class="d-flex align-items-center gap-1">
-                                                                            <button type="button" class="btn btn-light btn-sm">Message</button>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-icon btn-sm fs-16 text-muted dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                    <i class="ri-more-fill"></i>
-                                                                                </button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
-                                                                                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
-                                                                                </ul>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <!-- end member item -->
+                                                                {% endfor %}
                                                             </div>
                                                             <!-- end list -->
                                                         </div>
@@ -381,30 +224,21 @@
                                                         <h5 class="card-title mb-4">Skills</h5>
                                                         <div class="d-flex flex-wrap gap-2 fs-16">
                                                             <div class="badge fw-medium bg-secondary-subtle text-secondary">UI/UX</div>
-                                                            <div class="badge fw-medium bg-secondary-subtle text-secondary">Figma</div>
-                                                            <div class="badge fw-medium bg-secondary-subtle text-secondary">HTML</div>
-                                                            <div class="badge fw-medium bg-secondary-subtle text-secondary">CSS</div>
-                                                            <div class="badge fw-medium bg-secondary-subtle text-secondary">Javascript</div>
-                                                            <div class="badge fw-medium bg-secondary-subtle text-secondary">C#</div>
-                                                            <div class="badge fw-medium bg-secondary-subtle text-secondary">Nodejs</div>
                                                         </div>
                                                     </div>
                                                     <!-- end card body -->
                                                 </div>
-                                                <!-- end card -->
-
-                                             
+                                                <!-- end card -->                                            
 
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
                                                         <h4 class="card-title mb-0 flex-grow-1">Simulations</h4>
                                                         <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-info btn-sm"><i class="ri-upload-2-fill me-1 align-bottom"></i> New Simulation</button>
+                                                            <button type="button" class="btn btn-soft-info btn-sm" href=""><i class="ri-upload-2-fill me-1 align-bottom"></i> New Simulation</button>
                                                         </div>
                                                     </div>
-
-                                                    <div class="card-body">
-                                                        
+                                                    {% for simulation in simulations %}
+                                                    <div class="card-body">                                                        
                                                         <div class="vstack gap-2">
                                                             <div class="border rounded border-dashed p-2">
                                                                 <div class="d-flex align-items-center">
@@ -442,6 +276,13 @@
                                                         </div>
                                                     </div>
                                                     <!-- end card body -->
+                                                    {% empty %}
+                                                        <div class="col text-center py-4">
+                                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                            <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
+                                                            <p class="text-muted mb-0">You have to "Add Business".</p>
+                                                        </div>
+                                                    {% endfor %}  
                                                 </div>
                                                 <!-- end card -->
                                             </div>
@@ -599,7 +440,7 @@
                                                                                     </div>
                                                                                 </div>
                                                                                 <div class="ms-3 flex-grow-1">
-                                                                                    <h5 class="fs-14 mb-0"><a href="javascript:void(0);" class="text-body">Project Screenshots Collection</a></h5>
+                                                                                    <h5 class="fs-14 mb-0"><a href="javascript:void(0);" class="text-body">Product Screenshots Collection</a></h5>
                                                                                 </div>
                                                                             </div>
                                                                         </td>
@@ -824,7 +665,7 @@
                                                                 </div>
                                                                 <div class="team-content">
                                                                     <a href="#" class="d-block"><h5 class="fs-16 mb-1">Frank Hook</h5></a>
-                                                                    <p class="text-muted mb-0">Project Manager</p>
+                                                                    <p class="text-muted mb-0">Product Manager</p>
                                                                 </div>
                                                             </div>
                                                         </div>

@@ -38,10 +38,8 @@
                         <div class="col-lg-auto">
                             <div class="hstack gap-2">
                                 <button type="button" class="btn btn-danger"><i class="ri-equalizer-fill me-1 align-bottom"></i> Filters</button>
-                                {% comment %} <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness"><i class="ri-add-fill me-1 align-bottom"></i> Add Business</button> {% endcomment %}
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBusiness">
-                                    Open Modal
-                                </button>
+                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness"><i class="ri-add-fill me-1 align-bottom"></i> Add Business</button>
+                               
                             </div>
                         </div>
                         <!--end col-->
@@ -51,24 +49,24 @@
             </div>
             <!-- List of Companies -->
             <div class="row mt-4" id="business-list">
-                {% for business in businesses %}
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card">
-                        <img src="{{ business.image_src }}" class="card-img-top" alt="{{ business.name }}">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ business.name }}</h5>
-                            <!-- Display other business information here -->
-                            <a href="{% url 'business:business.overview' business.id %}" class="btn btn-primary">View Details</a>
+                    {% for business in businesses %}
+                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                            <div class="card">
+                                <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" class="card-img-top" alt="{{ business.name }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ business.name }}</h5>
+                                    <p class="card-text">{{ business.description }}</p>
+                                    <a href="{% url 'business:business.overview' business.id %}" class="btn btn-primary">View Details</a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-4">
-                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                    <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
-                    <p class="text-muted mb-0">You have to "Add Business".</p>
-                </div>
-                {% endfor %}
+                    {% empty %}
+                        <div class="col text-center py-4">
+                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                            <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
+                            <p class="text-muted mb-0">You have to "Add Business".</p>
+                        </div>
+                    {% endfor %}           
             </div>
             <!-- End List of Companies -->
         </div>
@@ -114,7 +112,7 @@
                                     <div class="row">
                                         <div class="col-lg-12">
                                             <div class="mb-3">
-                                                <label for="name" class="form-label">Name</label>
+                                                <label for="name" class="form-label">Business Name</label>
                                                 <input type="text" class="form-control" name="name" id="name" placeholder="Enter your business name" required>
                                                 <div class="invalid-feedback">Please enter a business name.</div>
                                             </div>
@@ -122,7 +120,7 @@
                                         <!--end col-->
                                         <div class="col-lg-6">
                                             <div class="mb-3">
-                                                <label for="type" class="form-label">Type</label>
+                                                <label for="type" class="form-label">Business Type</label>
                                                 <select class="form-control" name="type" id="type" required>
                                                     <option value="">Select type</option>
                                                     <option value="Dairy">Dairy</option>
@@ -194,9 +192,6 @@
     function hideAddBusinessModal() {
         $('#addBusiness').modal('hide');
     }
-
-    // Function to handle form submission
-    // Function to handle form submission
     // Function to handle form submission
     $('#businessForm').on('submit', async function (event) {
         event.preventDefault();
