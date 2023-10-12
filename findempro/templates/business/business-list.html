@@ -39,7 +39,7 @@
                             <div class="hstack gap-2">
                                 <button type="button" class="btn btn-danger"><i class="ri-equalizer-fill me-1 align-bottom"></i> Filters</button>
                                 {% comment %} <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness"><i class="ri-add-fill me-1 align-bottom"></i> Add Business</button> {% endcomment %}
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBusinessModal">
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBusiness">
                                     Open Modal
                                 </button>
                             </div>
@@ -58,7 +58,7 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ business.name }}</h5>
                             <!-- Display other business information here -->
-                            <a href="{% url 'business_overview' business.id %}" class="btn btn-primary">View Details</a>
+                            <a href="{% url 'business:business.overview' business.id %}" class="btn btn-primary">View Details</a>
                         </div>
                     </div>
                 </div>
@@ -111,12 +111,11 @@
                             <div class="tab-pane active" id="businessDetails" role="tabpanel">
                                 <form method="POST" class="post-form" id="businessForm" enctype="multipart/form-data">
                                     {% csrf_token %}
-                                    {{ form.as_p }}
                                     <div class="row">
                                         <div class="col-lg-12">
                                             <div class="mb-3">
                                                 <label for="name" class="form-label">Name</label>
-                                                <input type="text" class="form-control" id="id_name" placeholder="Enter your business name" required>
+                                                <input type="text" class="form-control" name="name" id="name" placeholder="Enter your business name" required>
                                                 <div class="invalid-feedback">Please enter a business name.</div>
                                             </div>
                                         </div>
@@ -124,7 +123,7 @@
                                         <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="type" class="form-label">Type</label>
-                                                <select class="form-control" name="type" id="id_type" required>
+                                                <select class="form-control" name="type" id="type" required>
                                                     <option value="">Select type</option>
                                                     <option value="Dairy">Dairy</option>
                                                 </select>
@@ -135,7 +134,7 @@
                                         <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="location" class="form-label">Location</label>
-                                                <select class="form-control" name="location" id="id_location" required>
+                                                <select class="form-control" name="location" id="location" required>
                                                     <option value="">Select location</option>
                                                     <option value="LaPaz">La Paz</option>
                                                     <option value="Cochabamba">Cochabamba</option>
@@ -148,14 +147,14 @@
                                         <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="image_src" class="form-label">Logo</label>
-                                                <input type="file" class="form-control" id="id_image_src" name="image_src">
+                                                <input type="file" class="form-control" id="image_src" name="image_src">
                                             </div>
                                         </div>
                                         <!--end col-->
                                         <div class="col-lg-12">
                                             <div class="mb-3">
                                                 <label for="description" class="form-label">Description</label>
-                                                <textarea class="form-control" id="id_description" name="description" rows="3" placeholder="Enter description" required></textarea>
+                                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description" required></textarea>
                                                 <div class="invalid-feedback">Please enter a description for the business.</div>
                                             </div>
                                         </div>
@@ -176,39 +175,8 @@
             <!-- end modal -->
         </div>
         <!-- container-fluid --> 
-        <!-- Modal for adding a new business -->
-        {% comment %} <div class="modal fade" id="addBusinessModal" tabindex="-1" aria-labelledby="addBusinessLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addBusinessLabel">Add Business</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- business/business-form.html -->
-                        <form method="post" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            {{ form.as_p }}
-                            <button type="submit">Save</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div> {% endcomment %}
-
     </div>
     <!-- End Page-content -->
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    
-    {% block footer %}
-    {% include "partials/footer.html" %}
-    {% endblock footer %}
 </div>
 <!-- end main content-->
 {% endblock content %}
@@ -216,67 +184,60 @@
 {% block extra_js %}
 
 <script>
+    
     // Function to show the modal
     function showAddBusinessModal() {
-        $('#addBusinessModal').modal('show');
+        $('#addBusiness').modal('show');
     }
-    
+
     // Function to hide the modal
     function hideAddBusinessModal() {
-        $('#addBusinessModal').modal('hide');
+        $('#addBusiness').modal('hide');
     }
-    
+
     // Function to handle form submission
-    $('#businessForm').on('submit', function (event) {
+    // Function to handle form submission
+    // Function to handle form submission
+    $('#businessForm').on('submit', async function (event) {
         event.preventDefault();
-        
-        $.ajax({
-            type: 'POST',
-            url: '{% url "business:business.create" %}',  // Replace with your actual URL
-            data: $(this).serialize(),
-            success: function (response) {
-                if (response.success) {
-                    
-                    // Business created successfully, you can show a success message here if needed.
-                    hideAddBusinessModal();  // Hide the modal after successful submission
-                } else {
-                    // Handle errors and display them to the user
-                    // You can update the modal content with error messages here
+
+        try {
+            const formData = new FormData(this);
+            const response = await fetch('{% url "business:business.create" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            });
+
+            if (response.ok) {
+                // Business created successfully, you can show a success message here if needed.
+                hideAddBusinessModal();  // Hide the modal after successful submission
+            } else {
+                // Handle errors and display them to the user
+                const responseData = await response.json();
+                if (responseData.errors && responseData.errors.name) {
+                    // Display the specific error message for the "name" field
+                    const errorDiv = document.getElementById('error-name'); // Adjust the element ID as needed
+                    if (errorDiv) {
+                        errorDiv.textContent = responseData.errors.name[0];
+                    }
                 }
             }
-        });
+        } catch (error) {
+            // Handle network or other errors
+            console.error(error);
+        }
     });
+
+    // Function to get the CSRF token from cookies (assuming Django uses cookies)
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
 </script>
 
-<script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
-
-    {% for message in messages %}
-            {% if message.tags == 'alert-success' %}
-            <!-- sweetalert js -->
-            <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script>
-                var m = "{{ message }}";
-                Swal.fire({
-                    icon: 'success',
-                    title: m,
-                    showConfirmButton: false,
-                    timer: 1500,
-                })
-            </script>
-            {% else %}
-                <!-- sweetalert js -->
-                <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-                <script>
-                var m = "{{ message }}";
-                Swal.fire({
-                    icon: 'error',
-                    title: m,
-                    showConfirmButton: false,
-                    timer: 1500,
-                })
-                </script>
-            {% endif %}
-        {% endfor %}
-<!-- apexcharts -->
-<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
 {% endblock extra_js %}
