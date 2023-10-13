@@ -23,7 +23,7 @@
                                     <div class="d-flex align-items-center">
                                         <h6 class="card-title mb-0 flex-grow-1">Search Variables</h6>
                                         <div class="flex-shrink-0">
-                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#CreateVariableModal"><i class="ri-add-line align-bottom me-1"></i> Create New Variable</button>
+                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVariable"><i class="ri-add-line align-bottom me-1"></i> Add Variable</button>
                                         </div>
                                     </div>  
 
@@ -221,10 +221,11 @@
                     </div><!-- /.modal-content -->
                 </div><!-- /.modal-dialog -->
             </div><!-- /.modal -->
-            <div class="modal fade" id="CreateVariableModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal fade" id="addVariable" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content border-0">
-                        <form id="createvariable-form" autocomplete="off" class="needs-validation" novalidate>
+                        <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
+                            {% csrf_token %}
                             <div class="modal-body">
                                 <input type="hidden" id="variable-id-field" />
                                 <div class="row g-3">
@@ -232,7 +233,7 @@
                                         <div class="px-1 pt-1">
                                             <div class="modal-team-cover position-relative mb-0 mt-n4 mx-n4 rounded-top overflow-hidden">
                                                 <!-- You can add an image related to the variable here -->
-                                                <img src="{% static 'images/variable_image.jpg' %}" alt="" id="modal-cover-img" class="img-fluid">
+                                                {% comment %} <img src="{% static 'images/variable_image.jpg' %}" alt="" id="modal-cover-img" class="img-fluid"> {% endcomment %}
             
                                                 <div class="d-flex position-absolute start-0 end-0 top-0 p-3">
                                                     <div class="flex-grow-1">
@@ -261,14 +262,14 @@
                                             <div class="position-relative d-inline-block">
                                                 <div class="position-absolute bottom-0 end-0">
                                                     <!-- You can allow the user to select a logo for the variable -->
-                                                    <label for="variablelogo-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                    <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
                                                         <div class="avatar-xs cursor-pointer">
                                                             <div class="avatar-title bg-light border rounded-circle text-muted">
                                                                 <i class="ri-image-fill"></i>
                                                             </div>
                                                         </div>
                                                     </label>
-                                                    <input class="form-control d-none" value="" id="variablelogo-image-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                    <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png, image/gif, image/jpeg" name='image_src'>
                                                 </div>
                                                 <div class="avatar-lg p-1">
                                                     <div class="avatar-title bg-light rounded-circle">
@@ -280,15 +281,15 @@
                                             <h5 class="fs-13 mt-3">Variable Logo</h5>
                                         </div>
                                         <div>
-                                            <label for="variable-name-field" class="form-label">Variable Name</label>
-                                            <input type="text" id="variable-name-field" class="form-control" placeholder="Enter variable name" required />
+                                            <label for="name" class="form-label">Variable Name</label>
+                                            <input type="text" id="name" class="form-control" placeholder="Enter variable name" name="name" required />
                                             <div class="invalid-feedback">Please enter a variable name.</div>
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
                                         <div>
-                                            <label for="variable-product-field" class="form-label">Associated Product</label>
-                                            <select class="form-select" id="variable-product-field" required>
+                                            <label for="fk_product" class="form-label">Associated Product</label>
+                                            <select class="form-select" id="fk_product" name="fk_product" required >
                                                 {% for product in products %}
                                                 <option value={{product.id}}>{{product.name}}</option>
                                                 {% empty %}
@@ -300,46 +301,27 @@
                                     </div>
                                     <div class="col-lg-6">
                                         <div>
-                                            <label for="variable-type-field" class="form-label">Variable Type</label>
-                                            <select class="form-select" id="variable-type-field" required>
-                                                <option value="Endogenous">Endogenous</option>
-                                                <option value="Exogenous">Exogenous</option>
-                                                <!-- Add more variable type options as needed -->
+                                            <label for="type" class="form-label">Variable Type</label>
+                                            <select class="form-select" id="type" name="type" required>
+                                                <option value="1">Endogenous</option>
+                                                <option value="2">Exogenous</option>
                                             </select>
                                             <div class="invalid-feedback">Please select a variable type.</div>
                                         </div>
                                     </div>
-                                    <div class="col-lg-6">
-                                        <div>
-                                            <label for="variable-area-field" class="form-label">Variable Area</label>
-                                            <select class="form-select" id="variable-area-field" required>
-                                                <option value="Production">Production</option>
-                                                <option value="Marketing">Marketing</option>
-                                                <!-- Add more variable area options as needed -->
-                                            </select>
-                                            <div class="invalid-feedback">Please select a variable area.</div>
-                                        </div>
-                                    </div>
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="variable-salary-field" class="form-label">Unit</label>
-                                            <select class="form-select" id="variable-area-field" required>
-                                                <option value="Production">Production</option>
-                                                <option value="Marketing">Marketing</option>
-                                                <!-- Add more variable area options as needed -->
+                                            <label for="unit" class="form-label">Unit</label>
+                                            <select class="form-select" id="unit" name="unit" required>
+                                                <option value="Lt">Lt</option>
+                                                <option value="Bs">Bs</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-lg-12">
                                         <div>
-                                            <label for="variable-tags-field" class="form-label">Tags</label>
-                                            <input class="form-control" id="variable-tags-field" data-choices data-choices-text-unique-true type="text" value="Simulation, Probability" />
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-12">
-                                        <div>
-                                            <label for="variable-description-field" class="form-label">Description</label>
-                                            <textarea class="form-control" id="variable-description-field" rows="3" placeholder="Enter description" required></textarea>
+                                            <label for="description" class="form-label">Description</label>
+                                            <textarea class="form-control" id="description" rows="3" placeholder="Enter description" name="description" required></textarea>
                                             <div class="invalid-feedback">Please enter a description for the variable.</div>
                                         </div>
                                     </div>
@@ -356,7 +338,19 @@
                 </div>
             </div>
             <!-- End of Add Variable Modal -->
-            
+            <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorLabel" aria-hidden="true" style="display: none;">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="errorLabel">Form Submission Error</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="errorModalContent">
+                            <!-- Display form validation errors here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {% block footer %}
             {% include "partials/footer.html" %}
@@ -369,7 +363,69 @@
 {% endblock content %}
 
 {% block extra_js %}
+<script>
+        
+    // Function to show the modal
+    function showAddBusinessModal() {
+        $('#addVariable').modal('show');
+    }
+
+    // Function to hide the modal
+    function hideAddBusinessModal() {
+        $('#addVariable').modal('hide');
+    }
+    // Function to handle form submission
+    $('#variableForm').on('submit', async function (event) {
+        event.preventDefault();
+
+        try {
+            const formData = new FormData(this);
+            const response = await fetch('{% url "variable:variable.create" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            });
+
+            if (response.ok) {
+                // Business created successfully, you can show a success message here if needed.
+                hideAddBusinessModal();  // Hide the modal after successful submission
+            } else {
+                // Handle errors and display them to the user
+                const responseData = await response.json();
+                const errorModalContent = document.getElementById('errorModalContent'); // Use the correct ID
+                if (responseData.errors && responseData.errors.name) {
+                    // Display the specific error message for the "name" field
+                    const errorMessagesDiv = document.getElementById('error-messages');
+                    if (errorModalContent) {
+                        errorModalContent.innerHTML = '';  // Clear previous error messages
+
+                        // Iterate through errors and display them
+                        for (const field in responseData.errors) {
+                            const errorsForField = responseData.errors[field];
+                            errorsForField.forEach((error) => {
+                                errorMessagesDiv.innerHTML += `<p>${error}</p>`;
+                            });
+                        }
+                    }
+                }
+                $('#errorModal').modal('show');
+            }
+        } catch (error) {
+            // Handle network or other errors
+            console.error(error);
+        }
+    });
+
+    // Function to get the CSRF token from cookies (assuming Django uses cookies)
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+</script>
         <!-- apexcharts -->
         <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
-        <script src="{% static 'js/pages/job-list.init.js' %}"></script>
 {% endblock extra_js %}

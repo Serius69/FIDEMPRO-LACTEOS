@@ -2,7 +2,6 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from business.models import Business
-from multiselectfield import MultiSelectField
 
 # Define the ProductCategory model
 # class ProductCategory(models.Model):
@@ -20,7 +19,7 @@ class Product(models.Model):
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
     image_src = models.ImageField(upload_to='images/product', blank=True, null=True)
-    fk_business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name='business',default=1)
+    fk_business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name='fk_business',default=1)
     # fk_category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='products', default=1)
 
     def __str__(self):

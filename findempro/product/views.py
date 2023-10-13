@@ -51,7 +51,7 @@ def create_product_view(request):
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
         form = ProductForm()
-    return render(request, 'product/product-form.html', {'form': form})
+    return render(request, 'product/product-list.html', {'form': form})
 # Update
 def update_product_view(request,pk):
     product = Product.objects.get(pk=pk)
