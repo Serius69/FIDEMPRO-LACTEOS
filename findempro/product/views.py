@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
 from django.utils import timezone
+from django.http import HttpResponseForbidden
 import logging
 # Create your product views here.
 class AppsView(LoginRequiredMixin,TemplateView):
@@ -67,9 +68,15 @@ def update_product_view(request,pk):
     return render(request,"product/product-list.html")
 
 # Delete
-def delete_product_view(request,pk):
-    product = Product.objects.get(pk=pk)
-    product.delete()
-    messages.success(request,"Product deleted successfully!")
-    return redirect("product:product.list")
-
+def delete_product_view(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    
+    # Realiza la eliminación lógica (por ejemplo, establecer un campo "eliminado" en True)
+    if request.method == 'POST':
+        product.status = 0
+        product.save()
+        messages.success(request, "Product deleted successfully!")
+        return redirect("product:product.list")
+    
+    # Si se accede a la vista mediante GET, puedes mostrar un error o redirigir
+    return HttpResponseForbidden("GET request not allowed for this view")

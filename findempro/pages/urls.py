@@ -21,22 +21,15 @@ authentication_500,
 authentication_pass_change_basic,
 authentication_pass_change_cover,
 authentication_offline,
-pages_starter,
-pages_profile,
 pages_profile_settings,
 pages_team,
 pages_timeline,
 pages_faqs,
-pages_pricing,
-pages_gallery,
 pages_maintenance,
 pages_coming_soon,
 pages_sitemap,
 pages_search_results,
 pages_privacy_policy,
-pages_landing,
-pages_nft_landing,
-pages_job_landing,
 pages_terms_conditions
 
 )
@@ -68,23 +61,15 @@ urlpatterns = [
     path("authentication/offline",view =authentication_offline,name="authentication.offline"),
     
     # Pages              
-    path("pages/starter-page",view =pages_starter,name="pages.starter"),
-    path("pages/profile",view =pages_profile,name="pages.profile"),
     path("pages/profile-settings",view =pages_profile_settings,name="pages.profile_settings"),
     path("pages/team",view =pages_team,name="pages.team"),
     path("pages/timeline",view =pages_timeline,name="pages.timeline"),
     path("pages/faqs",view =pages_faqs,name="pages.faqs"),
-    path("pages/pricing",view =pages_pricing,name="pages.pricing"),
-    path("pages/gallery",view =pages_gallery,name="pages.gallery"),
     path("pages/maintenance",view =pages_maintenance,name="pages.maintenance"),
     path("pages/",view =pages_coming_soon,name="pages.coming_soon"),
     path("pages/sitemap",view =pages_sitemap,name="pages.sitemap"),
     path("pages/search-results",view =pages_search_results,name="pages.search_results"),
     path("pages/privacy-policy",view =pages_privacy_policy,name="pages.privacy_policy"),
     path("pages/terms-conditions",view =pages_terms_conditions,name="pages.terms_conditions"),
-
-    path("pages/landing",view=pages_landing,name="pages.landing"),
-    path("pages/nft-landing",view=pages_nft_landing,name="pages.nft_landing"),
-    path("pages/job-landing",view=pages_job_landing,name="pages.job_landing"),
 ] 
 

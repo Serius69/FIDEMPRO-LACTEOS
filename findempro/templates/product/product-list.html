@@ -8,19 +8,15 @@
             <!-- Start right Content here -->
             <!-- ============================================================== -->
             <div class="main-content">
-
                 <div class="page-content">
                     <div class="container-fluid">
-
                         {% block pagetitle %}
                         {% include "partials/page-title.html" with pagetitle="products" title="Product List" %}
                         {% endblock pagetitle %}
-
                         <div class="row g-4 mb-3">
                             <div class="col-sm-auto">
                                 <div>
                                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Add Product</button>
-
                                 </div>
                             </div>
                             <div class="col-sm">
@@ -70,9 +66,9 @@
                                                                     Edit</a>
                                                                 <div class="dropdown-divider"></div>
                                                                 <a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                                                    data-bs-target="#removeProductModal"><i
-                                                                        class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                                                    Remove</a>
+                                                                data-bs-target="#removeProductModal"><i
+                                                                class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                Remove</a>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -99,11 +95,11 @@
                                             <div class="mt-auto">
                                                 <div class="d-flex mb-2">
                                                     <div class="flex-grow-1">
-                                                        <div>Variables</div>
+                                                        <div>Number of variables</div>
                                                     </div>
                                                     <div class="flex-shrink-0">
                                                         <div><i class="ri-list-check align-bottom me-1 text-muted"></i>
-                                                            {{product.name}}</div>
+                                                            {{ product.variables.count }}</div>
                                                     </div>
                                                 </div>
                                                 <div class="progress progress-sm animated-progress">
@@ -121,34 +117,38 @@
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1">
                                                 <div class="avatar-group">
-                                                    <a href="javascript: void(0);" class="avatar-group-item"
+                                                    {% for variable in variables %}
+                                                    <a href="" class="avatar-group-item"
                                                         data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                                        data-bs-placement="top" title="Darline Williams">
+                                                        data-bs-placement="top" title="{{ business.name }}">
                                                         <div class="avatar-xxs">
-                                                            <img src="{% static 'images/users/avatar-2.jpg' %}" alt=""
+                                                            <img src="{{ MEDIA_URL }}{{ product.image_src.url }}" alt=""
                                                                 class="rounded-circle img-fluid">
                                                         </div>
                                                     </a>
-                                                    <a href="javascript: void(0);" class="avatar-group-item"
+                                                    {% empty %}
+                                                    <a href="" class="avatar-group-item"
                                                         data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                                        data-bs-placement="top" title="Add Members">
+                                                        data-bs-placement="top" title="No variables">
                                                         <div class="avatar-xxs">
-                                                            <div
-                                                                class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
-                                                                +
-                                                            </div>
+                                                            <img src="." alt=""
+                                                                class="rounded-circle img-fluid">
                                                         </div>
                                                     </a>
+                                                    {% endfor %}
+                                                    <div class="avatar-xxs">
+                                                        <button class="btn btn-primary btn-rounded btn-icon" data-bs-toggle="modal" data-bs-target="#addVariable">
+                                                            <i class="ri-add-line"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="flex-shrink-0">
                                                 <div class="text-muted">
-                                                    <i class="ri-calendar-event-fill me-1 align-bottom"></i>Created Date: {{ product.createdDate }}
+                                                    <i class="ri-calendar-event-fill me-1 align-bottom"></i>Created Date: {{ product.date_created }}
                                                 </div>
-                                            </div>
-    
-                                        </div>
-    
+                                            </div>    
+                                        </div>    
                                     </div>
                                     <!-- end card footer -->
                                 </div>
@@ -156,7 +156,7 @@
                             </div>
                             <!-- end col -->
                             {% endif %}
-                            {% empty %}
+                        {% empty %}
                             <div class="text-center py-4">
                                 <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
                                 <h5 class="mt-2">Sorry there isn't any product register in the database</h5>
@@ -211,13 +211,131 @@
                                         </div>
                                         <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
                                             <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
-                                            <button type="button" class="btn w-sm btn-danger" id="remove-project">Yes, Delete It!</button>
+                                            {% if product.id %}
+                                                <button type="button" class="btn w-sm btn-danger delete-product-btn" data-href="{% url 'product:product.delete' product.id %}">Yes, Delete It!</button>
+                                            {% endif %}
                                         </div>
                                     </div>
-
                                 </div><!-- /.modal-content -->
                             </div><!-- /.modal-dialog -->
                         </div><!-- /.modal -->
+                         <!-- Modal -->
+                        <div class="modal fade" id="addVariable" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content border-0">
+                                    <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <input type="hidden" id="variable-id-field" />
+                                            <div class="row g-3">
+                                                <div class="col-lg-12">
+                                                    <div class="px-1 pt-1">
+                                                        <div class="modal-team-cover position-relative mb-0 mt-n4 mx-n4 rounded-top overflow-hidden">
+                                                            <!-- You can add an image related to the variable here -->
+                                                            {% comment %} <img src="{% static 'images/variable_image.jpg' %}" alt="" id="modal-cover-img" class="img-fluid"> {% endcomment %}
+                        
+                                                            <div class="d-flex position-absolute start-0 end-0 top-0 p-3">
+                                                                <div class="flex-grow-1">
+                                                                    <h5 class="modal-title text-white" id="exampleModalLabel">Create New Variable</h5>
+                                                                </div>
+                                                                <div class="flex-shrink-0">
+                                                                    <div class="d-flex gap-3 align-items-center">
+                                                                        <div>
+                                                                            <!-- You can allow the user to select an image for the variable -->
+                                                                            <label for="cover-image-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Select Image">
+                                                                                <div class="avatar-xs">
+                                                                                    <div class="avatar-title bg-light border rounded-circle text-muted cursor-pointer">
+                                                                                        <i class="ri-image-fill"></i>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </label>
+                                                                            <input class="form-control d-none" value="" id="cover-image-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                        </div>
+                                                                        <button type="button" class="btn-close btn-close-white" id="close-variableModal" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-center mb-4 mt-n5 pt-2">
+                                                        <div class="position-relative d-inline-block">
+                                                            <div class="position-absolute bottom-0 end-0">
+                                                                <!-- You can allow the user to select a logo for the variable -->
+                                                                <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                    <div class="avatar-xs cursor-pointer">
+                                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                            <i class="ri-image-fill"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </label>
+                                                                <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png, image/gif, image/jpeg" name='image_src'>
+                                                            </div>
+                                                            <div class="avatar-lg p-1">
+                                                                <div class="avatar-title bg-light rounded-circle">
+                                                                    <!-- You can display the variable's logo here -->
+                                                                    <img src="{% static 'images/variable_logo.jpg' %}" id="variablelogo-img" class="avatar-md rounded-circle object-fit-cover" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <h5 class="fs-13 mt-3">Variable Logo</h5>
+                                                    </div>
+                                                    <div>
+                                                        <label for="name" class="form-label">Variable Name</label>
+                                                        <input type="text" id="name" class="form-control" placeholder="Enter variable name" name="name" required />
+                                                        <div class="invalid-feedback">Please enter a variable name.</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <div>
+                                                        <label for="fk_product" class="form-label">Associated Product</label>
+                                                        <select class="form-select" id="fk_product" name="fk_product" required >
+                                                            {% for product in products %}
+                                                            <option value={{product.id}}>{{product.name}}</option>
+                                                            {% empty %}
+                                                            <option value=".">...</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <div class="invalid-feedback">Please select the associated product for the variable.</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <div>
+                                                        <label for="type" class="form-label">Variable Type</label>
+                                                        <select class="form-select" id="type" name="type" required>
+                                                            <option value="1">Endogenous</option>
+                                                            <option value="2">Exogenous</option>
+                                                        </select>
+                                                        <div class="invalid-feedback">Please select a variable type.</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div>
+                                                        <label for="unit" class="form-label">Unit</label>
+                                                        <select class="form-select" id="unit" name="unit" required>
+                                                            <option value="Lt">Lt</option>
+                                                            <option value="Bs">Bs</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-12">
+                                                    <div>
+                                                        <label for="description" class="form-label">Description</label>
+                                                        <textarea class="form-control" id="description" rows="3" placeholder="Enter description" name="description" required></textarea>
+                                                        <div class="invalid-feedback">Please enter a description for the variable.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <div class="hstack gap-2 justify-content-end">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-success" id="add-variable-btn">Add Variable</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                          <!-- Modal -->
                          <div class="modal fade zoomIn" id="addProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -310,9 +428,79 @@
                         <!--end modal-->
 {% endblock extra_content %}
 {% block extra_js %}
-
     <script>
-        
+        document.addEventListener("DOMContentLoaded", function () {
+            const deleteButtons = document.querySelectorAll(".delete-product-btn");
+    
+            deleteButtons.forEach((button) => {
+                button.addEventListener("click", function () {
+                    const url = button.getAttribute("data-href");
+                    if (url) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+        // Function to show the modal
+        function showAddBusinessModal() {
+            $('#addVariable').modal('show');
+        }
+
+        // Function to hide the modal
+        function hideAddBusinessModal() {
+            $('#addVariable').modal('hide');
+        }
+        // Function to handle form submission
+        $('#variableForm').on('submit', async function (event) {
+            event.preventDefault();
+
+            try {
+                const formData = new FormData(this);
+                const response = await fetch('{% url "variable:variable.create" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                });
+
+                if (response.ok) {
+                    // Business created successfully, you can show a success message here if needed.
+                    hideAddBusinessModal();  // Hide the modal after successful submission
+                } else {
+                    // Handle errors and display them to the user
+                    const responseData = await response.json();
+                    const errorModalContent = document.getElementById('errorModalContent'); // Use the correct ID
+                    if (responseData.errors && responseData.errors.name) {
+                        // Display the specific error message for the "name" field
+                        const errorMessagesDiv = document.getElementById('error-messages');
+                        if (errorModalContent) {
+                            errorModalContent.innerHTML = '';  // Clear previous error messages
+
+                            // Iterate through errors and display them
+                            for (const field in responseData.errors) {
+                                const errorsForField = responseData.errors[field];
+                                errorsForField.forEach((error) => {
+                                    errorMessagesDiv.innerHTML += `<p>${error}</p>`;
+                                });
+                            }
+                        }
+                    }
+                    $('#errorModal').modal('show');
+                }
+            } catch (error) {
+                // Handle network or other errors
+                console.error(error);
+            }
+        });
+
+        // Function to get the CSRF token from cookies (assuming Django uses cookies)
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
         // Function to show the modal
         function showAddBusinessModal() {
             $('#addProduct').modal('show');

@@ -29,21 +29,13 @@ authentication_pass_change_cover= PagesView.as_view(template_name="pages/authent
 authentication_offline= PagesView.as_view(template_name="pages/authentication/auth-offline.html")
 
 # Pages 
-pages_starter= PagesView.as_view(template_name="pages/pages-starter.html")
-pages_profile= PagesView.as_view(template_name="pages/profile.html")
 pages_profile_settings= PagesView.as_view(template_name="pages/profile-settings.html")
 pages_team= PagesView.as_view(template_name="pages/pages-team.html")
 pages_timeline= PagesView.as_view(template_name="pages/pages-timeline.html")
-pages_faqs= PagesView.as_view(template_name="pages/pages-faqs.html")
-pages_pricing= PagesView.as_view(template_name="pages/pages-pricing.html")
-pages_gallery= PagesView.as_view(template_name="pages/pages-gallery.html")
+pages_faqs= PagesView.as_view(template_name="pages/faqs.html")
 pages_maintenance= PagesView.as_view(template_name="pages/maintenance.html")
 pages_coming_soon= PagesView.as_view(template_name="pages/pages-.html")
 pages_sitemap= PagesView.as_view(template_name="pages/pages-sitemap.html")
 pages_search_results= PagesView.as_view(template_name="pages/pages-search-results.html")
 pages_privacy_policy= PagesView.as_view(template_name="pages/privacy-policy.html")
 pages_terms_conditions= PagesView.as_view(template_name="pages/term-conditions.html")
-
-pages_landing= PagesView.as_view(template_name="pages/pages-landing.html")
-pages_nft_landing = PagesView.as_view(template_name="pages/pages-nft-landing.html")
-pages_job_landing = PagesView.as_view(template_name="pages/pages-job-landing.html")

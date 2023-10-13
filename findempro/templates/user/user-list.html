@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Customers{% endblock title %}
+{% block title %}Users{% endblock title %}
 {% block extra_css %}
 <!-- Sweet Alert css-->
 <link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
@@ -15,18 +15,18 @@
                     <div class="container-fluid">
 
                         {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Ecommerce" title="Customers" %}
+                        {% include "partials/page-title.html" with pagetitle="Administrator" title="Users" %}
                         {% endblock pagetitle %}
 
                         <div class="row">
                             <div class="col-lg-12">
-                                <div class="card" id="customerList">
+                                <div class="card" id="userList">
                                     <div class="card-header border-bottom-dashed">
     
                                         <div class="row g-4 align-items-center">
                                             <div class="col-sm">
                                                 <div>
-                                                    <h5 class="card-title mb-0">Customer List</h5>
+                                                    <h5 class="card-title mb-0">User List</h5>
                                                 </div>
                                             </div>
                                             <div class="col-sm-auto">
@@ -35,11 +35,7 @@
                                                     <button type="button" class="btn btn-success add-btn"
                                                         data-bs-toggle="modal" id="create-btn"
                                                         data-bs-target="#showModal"><i
-                                                            class="ri-add-line align-bottom me-1"></i> Add Customer</button>
-                                                    <button type="button" class="btn btn-info"><i
-                                                            class="ri-file-download-line align-bottom me-1"></i>
-                                                        Import</button>
-                                                </div>
+                                                            class="ri-add-line align-bottom me-1"></i> Add User</button>
                                             </div>
                                         </div>
                                     </div>
@@ -49,7 +45,7 @@
                                                 <div class="col-xl-6">
                                                     <div class="search-box">
                                                         <input type="text" class="form-control search"
-                                                            placeholder="Search for customer, email, phone, status or something...">
+                                                            placeholder="Search for user, email, phone, status or something...">
                                                         <i class="ri-search-line search-icon"></i>
                                                     </div>
                                                 </div>
@@ -96,7 +92,7 @@
                                     <div class="card-body">
                                         <div>
                                             <div class="table-responsive table-card mb-1">
-                                                <table class="table align-middle" id="customerTable">
+                                                <table class="table align-middle" id="userTable">
                                                     <thead class="table-light text-muted">
                                                         <tr>
                                                             <th scope="col" style="width: 50px;">
@@ -106,16 +102,15 @@
                                                                 </div>
                                                             </th>
     
-                                                            <th class="sort" data-sort="customer_name">Customer</th>
+                                                            <th class="sort" data-sort="user_name">User</th>
                                                             <th class="sort" data-sort="email">Email</th>
-                                                            <th class="sort" data-sort="phone">Phone</th>
                                                             <th class="sort" data-sort="date">Joining Date</th>
                                                             <th class="sort" data-sort="status">Status</th>
                                                             <th class="sort" data-sort="action">Action</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody class="list form-check-all">
-                                                        {% for customer in customers %}
+                                                        {% for user in users %}
                                                         <tr>
                                                             <th scope="row">
                                                                 <div class="form-check">
@@ -125,16 +120,15 @@
                                                             </th>
                                                             <td class="id" style="display:none;"><a
                                                                     href="javascript:void(0);"
-                                                                    class="fw-medium link-primary">{{ customer.id }}</a></td>
-                                                            <td class="customer_name">{{ customer.name }}</td>
-                                                            <td class="email">{{ customer.email_id }}</td>
-                                                            <td class="phone">{{ customer.phone }}</td>
-                                                            <td class="date">{{ customer.joining_date|date:"d M,Y" }}</td>
+                                                                    class="fw-medium link-primary">{{ user.id }}</a></td>
+                                                            <td class="user_name">{{ user.username }}</td>
+                                                            <td class="email">{{ user.email }}</td>
+                                                            <td class="date">{{ user.date_joined|date:"d M,Y" }}</td>
                                                             <td class="status">
-                                                                {% if customer.status == "Active" %}
+                                                                {% if user.is_active == 1 %}
                                                                 <span class="badge bg-success-subtle text-success text-uppercase">Active</span>
                                                                 {% else %}
-                                                                <span class="badge bg-danger-subtle text-danger text-uppercase">Block</span>
+                                                                <span class="badge bg-danger-subtle text-danger text-uppercase">Deactived</span>
                                                                 {% endif %}
                                                             </td>
                                                             <td>
@@ -169,9 +163,9 @@
                                                             style="width:75px;height:75px">
                                                         </lord-icon>
                                                         <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                        <p class="text-muted mb-0">We've searched more than 150+ customer We
+                                                        <p class="text-muted mb-0">We've searched more than 150+ user We
                                                             did not find any
-                                                            customer for you search.</p>
+                                                            user for you search.</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -195,7 +189,7 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                             aria-label="Close" id="close-modal"></button>
                                                     </div>
-                                                    <form action="{% url 'apps:ecommerce.customers' %}" method="POST" enctype="multipart/form-data">
+                                                    <form action="{% url 'user:user.list' %}" method="POST" enctype="multipart/form-data">
                                                         {% csrf_token %}
                                                         <div class="modal-body">
                                                             <input type="hidden" id="id-field" />
@@ -207,12 +201,12 @@
                                                             </div>
     
                                                             <div class="mb-3">
-                                                                <label for="customername-field" class="form-label">Customer
+                                                                <label for="username-field" class="form-label">User
                                                                     Name</label>
                                                                 <input type="text" name="name"
                                                                     class="form-control" placeholder="Enter name"
                                                                     required />
-                                                                    <div class="invalid-feedback">Please enter a customer name.</div>
+                                                                    <div class="invalid-feedback">Please enter a user name.</div>
                                                             </div>
     
                                                             <div class="mb-3">
@@ -223,7 +217,7 @@
                                                             </div>
     
                                                             <div class="mb-3">
-                                                                <label for="phone-field" class="form-label">Phone</label>
+                                                                <label for="phone-field" class="form-label">Password</label>
                                                                 <input type="text" name="phone" class="form-control"
                                                                     placeholder="Enter phone no." required />
                                                                 <div class="invalid-feedback">Please enter a phone.</div>
@@ -253,7 +247,7 @@
                                                                 <button type="button" class="btn btn-light"
                                                                     data-bs-dismiss="modal">Close</button>
                                                                 <button type="submit" class="btn btn-success"
-                                                                    id="add-btn">Add Customer</button>
+                                                                    id="add-btn">Add User</button>
                                                             </div>
                                                         </div>
                                                     </form>
@@ -261,17 +255,16 @@
                                             </div>
                                         </div>
     
-                                        {% for customer in customers %}
-
+                                        {% for user in users %}
                                         <div class="modal fade" id="showModal-{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered">
                                                 <div class="modal-content">
                                                     <div class="modal-header bg-light p-3">
-                                                        <h5 class="modal-title" id="exampleModalLabel">Edit Customer</h5>
+                                                        <h5 class="modal-title" id="exampleModalLabel">Edit User</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                             aria-label="Close" id="close-modal"></button>
                                                     </div>
-                                                    <form action="{% url 'apps:ecommerce.update_customers' customer.pk %}" method="POST" enctype="multipart/form-data">
+                                                    <form action="{% url 'user:user.edit' user.id %}" method="POST" enctype="multipart/form-data">
                                                         {% csrf_token %}
                                                         <div class="modal-body">
                                                             <input type="hidden" id="id-field" />
@@ -283,24 +276,24 @@
                                                             </div>
     
                                                             <div class="mb-3">
-                                                                <label for="customername-field" class="form-label">Customer
+                                                                <label for="username-field" class="form-label">User
                                                                     Name</label>
-                                                                <input type="text" name="name" value="{{ customer.name }}"
+                                                                <input type="text" name="name" value="{{ user.name }}"
                                                                     class="form-control" placeholder="Enter name"
                                                                     required />
-                                                                    <div class="invalid-feedback">Please enter a customer name.</div>
+                                                                    <div class="invalid-feedback">Please enter a user name.</div>
                                                             </div>
     
                                                             <div class="mb-3">
                                                                 <label for="email-field" class="form-label">Email</label>
-                                                                <input type="email" name="email_id" class="form-control" value="{{ customer.email_id }}"
+                                                                <input type="email" name="email_id" class="form-control" value="{{ user.email_id }}"
                                                                     placeholder="Enter email" required />
                                                                 <div class="invalid-feedback">Please enter an email.</div>
                                                             </div>
     
                                                             <div class="mb-3">
                                                                 <label for="phone-field" class="form-label">Phone</label>
-                                                                <input type="text" name="phone" class="form-control" value="{{ customer.phone }}"
+                                                                <input type="text" name="phone" class="form-control" value="{{ user.phone }}"
                                                                     placeholder="Enter phone no." required />
                                                                 <div class="invalid-feedback">Please enter a phone.</div>
                                                             </div>
@@ -309,7 +302,7 @@
                                                                 <label for="date-field" class="form-label">Joining
                                                                     Date</label>
                                                                 <input type="date" name="joining_date" class="form-control"
-                                                                    data-provider="flatpickr" data-date-format="Y-m-d" value="{{ customer.joining_date|date:"Y-m-d" }}"
+                                                                    data-provider="flatpickr" data-date-format="Y-m-d" value="{{ user.joining_date|date:"Y-m-d" }}"
                                                                     required placeholder="Select date" />
                                                                 <div class="invalid-feedback">Please select a date.</div>
                                                             </div>
@@ -319,12 +312,12 @@
                                                                 <select class="form-control" data-trigger
                                                                     name="status" id="status-field" required>
                                                                     <option value="">Status</option>
-                                                                    {% if customer.status == "Active" %}
+                                                                    {% if user.status == "Active" %}
                                                                     <option value="Active" selected>Active</option>
                                                                     {% else %}
                                                                     <option value="Active">Active</option>
                                                                     {% endif %}
-                                                                    {% if customer.status == "Block" %}
+                                                                    {% if user.status == "Block" %}
                                                                     <option value="Block" selected>Block</option>
                                                                     {% else %}
                                                                     <option value="Block">Block</option>
@@ -370,7 +363,7 @@
                                                             <button type="button" class="btn w-sm btn-light"
                                                                 data-bs-dismiss="modal">Close</button>
                                                             <a type="button" class="btn w-sm btn-danger "
-                                                                id="delete-record" href="{% url 'apps:ecommerce.delete_customers' customer.pk %}">Yes, Delete It!</a>
+                                                                id="delete-record" href="{% url 'user:user.delete' user.id %}">Yes, Delete It!</a>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -402,8 +395,8 @@
     <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
     <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
 
-    <!--ecommerce-customer init js -->
-    <script src="{% static 'js/pages/ecommerce-customer-list.init.js'%}"></script>
+    <!--ecommerce-user init js -->
+    <script src="{% static 'js/pages/ecommerce-user-list.init.js'%}"></script>
     <!-- Sweet Alerts js -->
     <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
     {% for message in messages %}

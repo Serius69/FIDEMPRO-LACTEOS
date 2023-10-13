@@ -97,7 +97,6 @@
                                                             </div>
                                                         </div>
                                                     </div> {% endcomment %}
-
                                                     <div class="card">
                                                         <div class="card-body">
                                                             <h5 class="card-title mb-3">Info</h5>
@@ -112,10 +111,6 @@
                                                                             <th class="ps-0" scope="row">E-mail :</th>
                                                                             <td class="text-muted">{{user.email}}</td>
                                                                         </tr>
-                                                                        {% comment %} <tr>
-                                                                            <th class="ps-0" scope="row">Location :</th>
-                                                                            <td class="text-muted">California, United States</td>
-                                                                        </tr> {% endcomment %}
                                                                         <tr>
                                                                             <th class="ps-0" scope="row">Joining Date</th>
                                                                             <td class="text-muted">{{user.date_joined}}</td>
@@ -151,8 +146,12 @@
                                                                             <div class="card-body p-4">
                                                                                 <div class="d-flex">
                                                                                     <div class="flex-grow-1 text-muted overflow-hidden">
-                                                                                        <h5 class="fs-14 text-truncate mb-1"><a href="#" class="text-body">ABC Project Customization</a></h5>
-                                                                                        <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-body">4 hr Ago</span></p>
+                                                                                        <h5 class="fs-14 text-truncate mb-1">
+                                                                                            <a href="#" class="text-body">{{ product.name }}</a>
+                                                                                        </h5>
+                                                                                        <p class="text-muted text-truncate mb-0">
+                                                                                            Last Update: <span class="fw-semibold text-body">{{ product.last_updated|timesince }} ago</span>
+                                                                                        </p>
                                                                                     </div>
                                                                                     <div class="flex-shrink-0 ms-2">
                                                                                         <div class="badge bg-warning-subtle text-warning fs-10">In progress</div>
@@ -162,31 +161,26 @@
                                                                                     <div class="flex-grow-1">
                                                                                         <div class="d-flex align-items-center gap-2">
                                                                                             <div>
-                                                                                                <h5 class="fs-12 text-muted mb-0">Members :</h5>
+                                                                                                <h5 class="fs-12 text-muted mb-0">Variables :</h5>
                                                                                             </div>
                                                                                             <div class="avatar-group">
+                                                                                                {% for variable in variables %}
                                                                                                 <div class="avatar-group-item">
                                                                                                     <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-4.jpg'%}" alt="" class="rounded-circle img-fluid" />
+                                                                                                        <img src="{% static 'images/users/avatar-4.jpg' %}" alt="" class="rounded-circle img-fluid" />
                                                                                                     </div>
                                                                                                 </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-5.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
+                                                                                                {% empty %}
+                                                                                                <div class="text-center py-12">
+                                                                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                                                    <h5 class="mt-2">Sorry, there isn't any product registered in the database</h5>
+                                                                                                    <p class="text-muted mb-0">You have to go to: </p>
+                                                                                                    <a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                                                        <i class="ri-airplay-fill d-inline-block d-md-none"></i>
+                                                                                                        <span class="d-none d-md-inline-block">List Products</span>
+                                                                                                    </a>
                                                                                                 </div>
-                                                                                                <div class="avatar-group-item">
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <div class="avatar-title rounded-circle bg-light text-primary">
-                                                                                                            A
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                                <div class="avatar-group-item"> 
-                                                                                                    <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-2.jpg'%}" alt="" class="rounded-circle img-fluid" />
-                                                                                                    </div>
-                                                                                                </div>
+                                                                                                {% endfor %}
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
@@ -195,14 +189,16 @@
                                                                             <!-- end card body -->
                                                                         </div>
                                                                         <!-- end card -->
-                                                                    </div>                                                                    
+                                                                    </div>
                                                                     <!-- end slide item -->
                                                                     {% empty %}
                                                                     <div class="text-center py-12">
                                                                         <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                        <h5 class="mt-2">Sorry there isn't any product register in the database</h5>
-                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
-                                                                            <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">List Products</span>
+                                                                        <h5 class="mt-2">Sorry, there isn't any product registered in the database</h5>
+                                                                        <p class="text-muted mb-0">You have to go to: </p>
+                                                                        <a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                            <i class="ri-airplay-fill d-inline-block d-md-none"></i>
+                                                                            <span class="d-none d-md-inline-block">List Products</span>
                                                                         </a>
                                                                     </div>
                                                                     {% endfor %}

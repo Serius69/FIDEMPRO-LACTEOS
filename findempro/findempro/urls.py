@@ -38,6 +38,8 @@ urlpatterns = [
     path('question/',include('question.urls')),
     # Simulate
     path('simulate/',include('simulate.urls')),
+    # User
+    path('user/',include('user.urls')),
     path(
         "account/password/change/",
         login_required(MyPasswordChangeView.as_view()),
