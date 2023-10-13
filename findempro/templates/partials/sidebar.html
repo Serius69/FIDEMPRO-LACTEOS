@@ -37,11 +37,11 @@
 
                 <!-- Dashboard Menu -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'dashboards:index' %}" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false">
+                    <a class="nav-link menu-link" href="{% url 'dashboards:index' %}">
                         <i class="ri-dashboard-2-line"></i> <span data-key="t-home"> Home</span>
                     </a>
                 </li>
+                
 
                 <!-- Dashboards Menu -->
                 <li class="nav-item">
@@ -52,16 +52,7 @@
                     <div class="collapse menu-dropdown" id="sidebarDashboards">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'dashboards:dashboard_admin' %}" class="nav-link" data-key="t-analytics"> Analytics </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'dashboards:dashboard_finance_status' %}" class="nav-link" data-key="t-finance-status"> Finance Status </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'dashboards:dashboard_products' %}" class="nav-link" data-key="t-dash-products"> Products </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'dashboards:dashboard_variables' %}" class="nav-link" data-key="t-dash-variables"> Variables </a>
+                                <a href="{% url 'dashboards:dashboard.tdd' %}" class="nav-link" data-key="t-finance-status"> TDD </a>
                             </li>
                         </ul>
                     </div>
@@ -143,7 +134,12 @@
                                 <a href="{% url 'user:user.list' %}" class="nav-link" data-key="t-user-list">User List</a>
                             </li>                             
                         </ul>
-                    </div>
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'dashboards:dashboard.admin' %}" class="nav-link" data-key="t-dashboard"> Dashboard Admin</a>
+                            </li>                             
+                        </ul>
+                    </div> 
                 </li>
             </ul>
         </div>
