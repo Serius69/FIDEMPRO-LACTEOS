@@ -992,12 +992,12 @@
                         </div>
                         <!--end col-->
                         <div class="col-xxl-9">
-                            <div class="card" id="companyList">
+                            <div class="card" id="businessList">
                                 <div class="card-header">
                                     <div class="row g-2">
                                         <div class="col-md-3">
                                             <div class="search-box">
-                                                <input type="text" class="form-control search" placeholder="Search for company...">
+                                                <input type="text" class="form-control search" placeholder="Search for business...">
                                                 <i class="ri-search-line search-icon"></i>
                                             </div>
                                         </div>
@@ -1034,7 +1034,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody class="list form-check-all">
-                                                    {% for company in companies %}
+                                                    {% for business in companies %}
                                                     <tr>
                                                         <th scope="row">
                                                             <div class="form-check">
@@ -1046,16 +1046,16 @@
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 <div class="flex-shrink-0">
-                                                                    <img src="{{ company.logo.url }}" alt="" class="avatar-xxs rounded-circle image_src object-fit-cover">
+                                                                    <img src="{{ business.logo.url }}" alt="" class="avatar-xxs rounded-circle image_src object-fit-cover">
                                                                 </div>
-                                                                <div class="flex-grow-1 ms-2 name">{{ company.name }}
+                                                                <div class="flex-grow-1 ms-2 name">{{ business.name }}
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="owner">{{ company.owner_name }}</td>
-                                                        <td class="industry_type">{{ company.industry_type }}</td>
-                                                        <td><span class="star_value">{{ company.rating }}</span> <i class="ri-star-fill text-warning align-bottom"></i></td>
-                                                        <td class="location">{{ company.location }}</td>
+                                                        <td class="owner">{{ business.owner_name }}</td>
+                                                        <td class="industry_type">{{ business.industry_type }}</td>
+                                                        <td><span class="star_value">{{ business.rating }}</span> <i class="ri-star-fill text-warning align-bottom"></i></td>
+                                                        <td class="location">{{ business.location }}</td>
                                                         <td>
                                                             <ul class="list-inline hstack gap-2 mb-0">
                                                                 <li class="list-inline-item edit" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Call">
@@ -1118,26 +1118,26 @@
                                                                 <div class="text-center">
                                                                     <div class="position-relative d-inline-block">
                                                                         <div class="position-absolute bottom-0 end-0">
-                                                                            <label for="company-logo-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                            <label for="business-logo-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
                                                                                 <div class="avatar-xs cursor-pointer">
                                                                                     <div class="avatar-title bg-light border rounded-circle text-muted">
                                                                                         <i class="ri-image-fill"></i>
                                                                                     </div>
                                                                                 </div>
                                                                             </label>
-                                                                            <input class="form-control d-none" value="" name="logo" id="company-logo-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                            <input class="form-control d-none" value="" name="logo" id="business-logo-input" type="file" accept="image/png, image/gif, image/jpeg">
                                                                         </div>
                                                                         <div class="avatar-lg p-1">
                                                                             <div class="avatar-title bg-light rounded-circle">
-                                                                                <img src="{% static 'images/users/multi-user.jpg' %}" name="logo" id="companylogo-img" class="avatar-md rounded-circle object-fit-cover" />
+                                                                                <img src="{% static 'images/users/multi-user.jpg' %}" name="logo" id="businesslogo-img" class="avatar-md rounded-circle object-fit-cover" />
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                     <h5 class="fs-13 mt-3">Company Logo</h5>
                                                                 </div>
                                                                 <div>
-                                                                    <label for="companyname-field" class="form-label">Name</label>
-                                                                    <input type="text" name="name" class="form-control" placeholder="Enter company name" required />
+                                                                    <label for="businessname-field" class="form-label">Name</label>
+                                                                    <input type="text" name="name" class="form-control" placeholder="Enter business name" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-6">
@@ -1210,7 +1210,7 @@
                                     </div>
                                     <!--end add modal-->
 
-                                    {% for company in companies %}
+                                    {% for business in companies %}
                                     <div class="modal fade" id="showModal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered modal-lg">
                                             <div class="modal-content border-0">
@@ -1218,7 +1218,7 @@
                                                     <h5 class="modal-title" id="exampleModalLabel">Edit Company</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
                                                 </div>
-                                                <form method="POST" action="{% url 'apps:crm.update_companies' company.pk %}" enctype="multipart/form-data">
+                                                <form method="POST" action="{% url 'apps:crm.update_companies' business.pk %}" enctype="multipart/form-data">
                                                     {% csrf_token %}
                                                     <div class="modal-body">
                                                         <input type="hidden" id="id-field" />
@@ -1227,67 +1227,67 @@
                                                                 <div class="text-center">
                                                                     <div class="position-relative d-inline-block">
                                                                         <div class="position-absolute bottom-0 end-0">
-                                                                            <label for="company-logo-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                                            <label for="business-logo-input" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
                                                                                 <div class="avatar-xs cursor-pointer">
                                                                                     <div class="avatar-title bg-light border rounded-circle text-muted">
                                                                                         <i class="ri-image-fill"></i>
                                                                                     </div>
                                                                                 </div>
                                                                             </label>
-                                                                            <input class="form-control" value="{{ company.logo.url }}" name="logo" id="company-logo-input" type="file" accept="image/png, image/gif, image/jpeg">
+                                                                            <input class="form-control" value="{{ business.logo.url }}" name="logo" id="business-logo-input" type="file" accept="image/png, image/gif, image/jpeg">
                                                                         </div>
                                                                         <div class="avatar-lg p-1">
                                                                             <div class="avatar-title bg-light rounded-circle">
-                                                                                <img src="{{ company.logo.url }}" name="logo" id="companylogo-img" class="avatar-md rounded-circle object-fit-cover" />
+                                                                                <img src="{{ business.logo.url }}" name="logo" id="businesslogo-img" class="avatar-md rounded-circle object-fit-cover" />
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                     <h5 class="fs-13 mt-3">Company Logo</h5>
                                                                 </div>
                                                                 <div>
-                                                                    <label for="companyname-field" class="form-label">Name</label>
-                                                                    <input type="text" name="name" value="{{ company.name }}" class="form-control" placeholder="Enter company name" required />
+                                                                    <label for="businessname-field" class="form-label">Name</label>
+                                                                    <input type="text" name="name" value="{{ business.name }}" class="form-control" placeholder="Enter business name" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-6">
                                                                 <div>
                                                                     <label for="owner-field" class="form-label">Owner Name</label>
-                                                                    <input type="text" name="owner_name" value="{{ company.owner_name }}" class="form-control" placeholder="Enter owner name" required />
+                                                                    <input type="text" name="owner_name" value="{{ business.owner_name }}" class="form-control" placeholder="Enter owner name" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-6">
                                                                 <div>
                                                                     <label for="industry_type-field" class="form-label">Industry Type</label>
                                                                     <select class="form-select" id="industry_type-field" name="industry_type">
-                                                                        {% if company.industry_type == "Computer Industry" %}
+                                                                        {% if business.industry_type == "Computer Industry" %}
                                                                         <option value="Computer Industry" selected>Computer
                                                                             Industry</option>
                                                                         {% else %}
                                                                         <option value="Computer Industry" selected>Computer
                                                                             Industry</option>
                                                                         {% endif %}
-                                                                        {% if company.industry_type == "Chemical Industries" %}
+                                                                        {% if business.industry_type == "Chemical Industries" %}
                                                                         <option value="Chemical Industries" selected>Chemical
                                                                             Industries</option>
                                                                         {% else %}
                                                                         <option value="Chemical Industries">Chemical
                                                                             Industries</option>
                                                                         {% endif %}
-                                                                        {% if company.industry_type == "Health Services" %}
+                                                                        {% if business.industry_type == "Health Services" %}
                                                                         <option value="Health Services" selected>Health Services
                                                                         </option>
                                                                         {% else %}
                                                                         <option value="Health Services">Health Services
                                                                         </option>
                                                                         {% endif %}
-                                                                        {% if company.industry_type == "Telecommunications Services" %}
+                                                                        {% if business.industry_type == "Telecommunications Services" %}
                                                                             <option value="Telecommunications Services" selected>
                                                                             Telecommunications Services</option>
                                                                         {% else %}
                                                                             <option value="Telecommunications Services">
                                                                                 Telecommunications Services</option>
                                                                         {% endif %}
-                                                                        {% if company.industry_type == "Textiles: Clothing, Footwear" %}
+                                                                        {% if business.industry_type == "Textiles: Clothing, Footwear" %}
                                                                         <option value="Textiles: Clothing, Footwear" selected>
                                                                             Textiles: Clothing, Footwear</option>
                                                                         {% else %}
@@ -1300,37 +1300,37 @@
                                                             <div class="col-lg-4">
                                                                 <div>
                                                                     <label for="star_value-field" class="form-label">Rating</label>
-                                                                    <input type="text" name="rating" value="{{ company.rating }}" class="form-control" placeholder="Enter rating" required />
+                                                                    <input type="text" name="rating" value="{{ business.rating }}" class="form-control" placeholder="Enter rating" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-4">
                                                                 <div>
                                                                     <label for="location-field" class="form-label">Location</label>
-                                                                    <input type="text" name="location" value="{{ company.location }}" class="form-control" placeholder="Enter location" required />
+                                                                    <input type="text" name="location" value="{{ business.location }}" class="form-control" placeholder="Enter location" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-4">
                                                                 <div>
                                                                     <label for="employee-field" class="form-label">Employee</label>
-                                                                    <input type="text" name="employee" value="{{ company.employee }}" class="form-control" placeholder="Enter employee" required />
+                                                                    <input type="text" name="employee" value="{{ business.employee }}" class="form-control" placeholder="Enter employee" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-6">
                                                                 <div>
                                                                     <label for="website-field" class="form-label">Website</label>
-                                                                    <input type="text" name="website" value="{{ company.website }}" class="form-control" placeholder="Enter website" required />
+                                                                    <input type="text" name="website" value="{{ business.website }}" class="form-control" placeholder="Enter website" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-6">
                                                                 <div>
                                                                     <label for="contact_email-field" class="form-label">Contact Email</label>
-                                                                    <input type="text" name="contact_email" value="{{ company.contact_email }}" class="form-control" placeholder="Enter contact email" required />
+                                                                    <input type="text" name="contact_email" value="{{ business.contact_email }}" class="form-control" placeholder="Enter contact email" required />
                                                                 </div>
                                                             </div>
                                                             <div class="col-lg-12">
                                                                 <div>
                                                                     <label for="since-field" class="form-label">Since</label>
-                                                                    <input type="text" name="since" value="{{ company.since }}" class="form-control" placeholder="Enter since" required />
+                                                                    <input type="text" name="since" value="{{ business.since }}" class="form-control" placeholder="Enter since" required />
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1357,13 +1357,13 @@
                                                 <div class="modal-body p-5 text-center">
                                                     <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#405189,secondary:#f06548" style="width:90px;height:90px"></lord-icon>
                                                     <div class="mt-4 text-center">
-                                                        <h4 class="fs-semibold">You are about to delete a company ?</h4>
-                                                        <p class="text-muted fs-14 mb-4 pt-1">Deleting your company will remove all of your information from our database.</p>
+                                                        <h4 class="fs-semibold">You are about to delete a business ?</h4>
+                                                        <p class="text-muted fs-14 mb-4 pt-1">Deleting your business will remove all of your information from our database.</p>
                                                         <div class="hstack gap-2 justify-content-center remove">
                                                             <button class="btn btn-link link-success fw-medium text-decoration-none" data-bs-dismiss="modal">
                                                                 <i class="ri-close-line me-1 align-middle"></i> Close
                                                             </button>
-                                                            {% comment %} <a class="btn btn-danger" id="delete-record" href="{% url 'apps:crm.delete_companies' company.pk %}">Yes, Delete It!!</a> {% endcomment %}
+                                                            {% comment %} <a class="btn btn-danger" id="delete-record" href="{% url 'apps:crm.delete_companies' business.pk %}">Yes, Delete It!!</a> {% endcomment %}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1378,19 +1378,19 @@
                             <!--end card-->
                         </div>
                         <!--end col-->
-                        {% if company %}
+                        {% if business %}
                         <div class="col-xxl-3">
-                            <div class="card" id="company-view-detail">
+                            <div class="card" id="business-view-detail">
                                 <div class="card-body text-center">
                                     <div class="position-relative d-inline-block">
                                         <div class="avatar-md">
                                             <div class="avatar-title bg-light rounded-circle">
-                                                <img src="{{ company.logo.url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
+                                                <img src="{{ business.logo.url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
                                             </div>
                                         </div>
                                     </div>
-                                    <h5 class="mt-3 mb-1">{{ company.name }}</h5>
-                                    <p class="text-muted">{{ company.owner_name }}</p>
+                                    <h5 class="mt-3 mb-1">{{ business.name }}</h5>
+                                    <p class="text-muted">{{ business.owner_name }}</p>
 
                                     <ul class="list-inline mb-0">
                                         <li class="list-inline-item avatar-xs">
@@ -1412,39 +1412,39 @@
                                 </div>
                                 <div class="card-body">
                                     <h6 class="text-muted text-uppercase fw-semibold mb-3">Information</h6>
-                                    <p class="text-muted mb-4">A company incurs fixed and variable costs such as the purchase of raw materials, salaries and overhead, as explained by AccountingTools, Inc. Business owners have the discretion to determine the actions.</p>
+                                    <p class="text-muted mb-4">A business incurs fixed and variable costs such as the purchase of raw materials, salaries and overhead, as explained by AccountingTools, Inc. Business owners have the discretion to determine the actions.</p>
                                     <div class="table-responsive table-card">
                                         <table class="table table-borderless mb-0">
                                             <tbody>
                                                 <tr>
                                                     <td class="fw-medium" scope="row">Industry Type</td>
-                                                    <td>{{ company.industry_type }}</td>
+                                                    <td>{{ business.industry_type }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-medium" scope="row">Location</td>
-                                                    <td>{{ company.location }}</td>
+                                                    <td>{{ business.location }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-medium" scope="row">Employee</td>
-                                                    <td>{{ company.employee }}</td>
+                                                    <td>{{ business.employee }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-medium" scope="row">Rating</td>
-                                                    <td>{{ company.rating }} <i class="ri-star-fill text-warning align-bottom"></i></td>
+                                                    <td>{{ business.rating }} <i class="ri-star-fill text-warning align-bottom"></i></td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-medium" scope="row">Website</td>
                                                     <td>
-                                                        <a href="javascript:void(0);" class="link-primary text-decoration-underline">{{ company.website }}</a>
+                                                        <a href="javascript:void(0);" class="link-primary text-decoration-underline">{{ business.website }}</a>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-medium" scope="row">Contact Email</td>
-                                                    <td>{{ company.contact_email }}</td>
+                                                    <td>{{ business.contact_email }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="fw-medium" scope="row">Since</td>
-                                                    <td>{{ company.since }}</td>
+                                                    <td>{{ business.since }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -1455,7 +1455,7 @@
                         </div>
                         {% else %}
                         <div class="col-xxl-3">
-                            <div class="card" id="company-view-detail">
+                            <div class="card" id="business-view-detail">
                                 <div class="card-body text-center">
                                     <div class="position-relative d-inline-block">
                                         <div class="avatar-md">
@@ -1487,7 +1487,7 @@
                                 </div>
                                 <div class="card-body">
                                     <h6 class="text-muted text-uppercase fw-semibold mb-3">Information</h6>
-                                    <p class="text-muted mb-4">A company incurs fixed and variable costs such as the purchase of raw materials, salaries and overhead, as explained by AccountingTools, Inc. Business owners have the discretion to determine the actions.</p>
+                                    <p class="text-muted mb-4">A business incurs fixed and variable costs such as the purchase of raw materials, salaries and overhead, as explained by AccountingTools, Inc. Business owners have the discretion to determine the actions.</p>
                                     <div class="table-responsive table-card">
                                         <table class="table table-borderless mb-0">
                                             <tbody>
@@ -1996,104 +1996,13 @@
                                                                 collection</span></h6>
                                                         <p class="text-muted mb-1">By Nesta Technologies</p>
                                                         <div class="d-inline-flex gap-2 border border-dashed p-2 mb-2">
-
-                                                            <a href="{% url 'product:product.overview' %}"
+                                                            {% comment %} <a href="{% url 'product:product.overview' %}"
                                                                 class="bg-light rounded p-1">
                                                                 <img src="{% static 'images/products/img-8.png'%}" alt=""
                                                                     class="img-fluid d-block" />
-                                                            </a>
-
+                                                            </a> {% endcomment %}
                                                         </div>
                                                         <p class="mb-0 text-muted"><small>9:47 PM Yesterday</small></p>
-                                                    </div>
-                                                </div>
-                                                <div class="acitivity-item py-3 d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <img src="{% static 'images/users/avatar-2.jpg'%}" alt=""
-                                                            class="avatar-xs rounded-circle acitivity-avatar">
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-1 lh-base">Natasha Carey have liked the products</h6>
-                                                        <p class="text-muted mb-1">Allow users to like products in your
-                                                            WooCommerce store.</p>
-                                                        <small class="mb-0 text-muted">25 Dec, 2021</small>
-                                                    </div>
-                                                </div>
-                                                <div class="acitivity-item py-3 d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="avatar-xs acitivity-avatar">
-                                                            <div class="avatar-title rounded-circle bg-secondary">
-                                                                <i class="mdi mdi-sale fs-14"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-1 lh-base">Today offers by <a
-                                                               href="{% url 'business:business.overview' %}"
-                                                                class="link-secondary">Digitech Galaxy</a></h6>
-                                                        <p class="text-muted mb-2">Offer is valid on orders of Rs.500 Or above
-                                                            for selected products only.</p>
-                                                        <small class="mb-0 text-muted">12 Dec, 2021</small>
-                                                    </div>
-                                                </div>
-                                                <div class="acitivity-item py-3 d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="avatar-xs acitivity-avatar">
-                                                            <div class="avatar-title rounded-circle bg-danger-subtle text-danger">
-                                                                <i class="ri-bookmark-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-1 lh-base">Favorite Product</h6>
-                                                        <p class="text-muted mb-2">Esther James have favorited product.</p>
-                                                        <small class="mb-0 text-muted">25 Nov, 2021</small>
-                                                    </div>
-                                                </div>
-                                                <div class="acitivity-item py-3 d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="avatar-xs acitivity-avatar">
-                                                            <div class="avatar-title rounded-circle bg-secondary">
-                                                                <i class="mdi mdi-sale fs-14"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-1 lh-base">Flash sale starting <span
-                                                                class="text-primary">Tomorrow.</span></h6>
-                                                        <p class="text-muted mb-0">Flash sale by <a href="javascript:void(0);"
-                                                                class="link-secondary fw-medium">Name</a></p>
-                                                        <small class="mb-0 text-muted">22 Oct, 2021</small>
-                                                    </div>
-                                                </div>
-                                                <div class="acitivity-item py-3 d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <div class="avatar-xs acitivity-avatar">
-                                                            <div class="avatar-title rounded-circle bg-info-subtle text-info">
-                                                                <i class="ri-line-chart-line"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-1 lh-base">Monthly sales report</h6>
-                                                        <p class="text-muted mb-2"><span class="text-danger">2 days left</span>
-                                                            notification to submit the monthly sales report. <a
-                                                                href="javascript:void(0);"
-                                                                class="link-warning text-decoration-underline">Reports
-                                                                Builder</a></p>
-                                                        <small class="mb-0 text-muted">15 Oct</small>
-                                                    </div>
-                                                </div>
-                                                <div class="acitivity-item d-flex">
-                                                    <div class="flex-shrink-0">
-                                                        <img src="{% static 'images/users/avatar-3.jpg'%}" alt=""
-                                                            class="avatar-xs rounded-circle acitivity-avatar" />
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-1 lh-base">Frank Hook Commented</h6>
-                                                        <p class="text-muted mb-2 fst-italic">" A product that has reviews is
-                                                            more likable to be sold than a product. "</p>
-                                                        <small class="mb-0 text-muted">26 Aug, 2021</small>
                                                     </div>
                                                 </div>
                                             </div>
