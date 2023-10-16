@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Form layout{% endblock title %}
+{% block title %}Simulate Init{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -13,10 +13,9 @@
                     <div class="container-fluid">
 
                         {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Forms" title="Form Layout" %}
+                        {% include "partials/page-title.html" with pagetitle="Simulate" title="Init" %}
                         {% endblock pagetitle %}
     
-
                         <div class="row">
                             <div class="col-xxl-6">
                                 <div class="card">
@@ -101,41 +100,11 @@
                             </div> <!-- end col -->
 
                             <div class="col-xxl-6">
-                                
-                                
+                                <title>Gráfico Lineal</title>
+                                <canvas id="myChart" width="100" height="50"></canvas>                          
                             </div> <!-- end col -->
                         </div><!--end row-->
-                        <div class="row">
-                            <div class="col-xl-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h4 class="card-title mb-0">Basic Candlestick Chart</h4>
-                                    </div><!-- end card header -->
-
-                                    <div class="card-body">
-                                        <div id="basic_candlestick" data-colors='["--vz-success", "--vz-danger"]' class="apex-charts" dir="ltr"></div>
-                                    </div><!-- end card-body -->
-                                </div><!-- end card -->
-                            </div>
-                            <!-- end col -->
-
-                            <div class="col-xl-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h4 class="card-title mb-0">Candlestick Synced with Brush Chart (Combo)</h4>
-                                    </div><!-- end card header -->
-
-                                    <div class="card-body">
-                                        <div>
-                                            <div id="combo_candlestick"  data-colors='["--vz-info", "--vz-danger"]' class="apex-charts" dir="ltr"></div>
-                                            <div id="combo_candlestick_chart" data-colors='["--vz-warning", "--vz-danger"]' class="apex-charts" dir="ltr"></div>
-                                        </div>
-                                    </div><!-- end card-body -->
-                                </div><!-- end card -->
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
+                        
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="card">
@@ -145,25 +114,8 @@
     
                                     <div class="card-body">
                                         <div id="customerList">
-                                            <div class="row g-4 mb-3">
-                                                <div class="col-sm-auto">
-                                                    <div>
-                                                        <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn" data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> Add</button>
-                                                        <button class="btn btn-soft-danger" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
-                                                    </div>
-                                                </div>
-                                                <div class="col-sm">
-                                                    <div class="d-flex justify-content-sm-end">
-                                                        <div class="search-box ms-2">
-                                                            <input type="text" class="form-control search" placeholder="Search...">
-                                                            <i class="ri-search-line search-icon"></i>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
                                             <div class="table-responsive table-card mt-3 mb-1">
-                                                <table class="table align-middle table-nowrap" id="customerTable">
+                                                <table class="table align-middle table-nowrap" id="simulateTable">
                                                     <thead class="table-light">
                                                         <tr>
                                                             <th scope="col" style="width: 50px;">
@@ -171,12 +123,11 @@
                                                                     <input class="form-check-input" type="checkbox" id="checkAll" value="option">
                                                                 </div>
                                                             </th>
-                                                            <th class="sort" data-sort="customer_name">Customer</th>
-                                                            <th class="sort" data-sort="email">Email</th>
-                                                            <th class="sort" data-sort="phone">Phone</th>
+                                                            <th class="sort" data-sort="customer_name">Variable</th>
+                                                            <th class="sort" data-sort="email">Unit</th>
+                                                            <th class="sort" data-sort="phone">Unit of time</th>
                                                             <th class="sort" data-sort="date">Joining Date</th>
                                                             <th class="sort" data-sort="status">Delivery Status</th>
-                                                            <th class="sort" data-sort="action">Action</th>
                                                             </tr>
                                                     </thead>
                                                     <tbody class="list form-check-all">
@@ -190,19 +141,7 @@
                                                             <td class="customer_name">Mary Cousar</td>
                                                             <td class="email">marycousar@findempro.com</td>
                                                             <td class="phone">580-464-4694</td>
-                                                            <td class="date">06 Apr, 2021</td>
-                                                            <td class="status"><span class="badge bg-success-subtle text-success text-uppercase">Active</span></td>
-                                                            <td>
-                                                                <div class="d-flex gap-2">
-                                                                    <div class="edit">
-                                                                        <button class="btn btn-sm btn-success edit-item-btn"
-                                                                        data-bs-toggle="modal" data-bs-target="#showModal">Edit</button>
-                                                                    </div>
-                                                                    <div class="remove">
-                                                                        <button class="btn btn-sm btn-danger remove-item-btn" data-bs-toggle="modal" data-bs-target="#deleteRecordModal">Remove</button>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
+                                                            <td class="date">06 Apr, 2021</td>                                                            
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -250,22 +189,37 @@
             <!-- end main content-->
 {% endblock content %}
 {% block extra_js %}
-        <!-- prismjs plugin -->
-        <script src="{% static 'libs/prismjs/prism.js'%}"></script>
-        <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
-        <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
-    
-        <!-- listjs init -->
-        <script src="{% static 'js/pages/listjs.init.js' %}"></script>
-        <!-- Sweet Alerts js -->
-        <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
-            <!-- apexcharts -->
-        <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>       
+    <script>
+        // Obtén una referencia al elemento canvas
+        var ctx = document.getElementById('myChart').getContext('2d');
 
-        <script src="https://apexcharts.com/samples/assets/ohlc.js"></script>
-        <!-- for Category x-axis chart -->
-        <script src="https://img.Sergio Troche.com/findempro/apexchart-js/dayjs.min.js"></script>
+        // Define los datos para el gráfico
+        var data = {
+            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo'],
+            datasets: [{
+                label: 'Ventas Mensuales',
+                data: [12, 19, 3, 5, 2],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
 
-        <!-- candlestick charts init -->
-        <script src="{% static 'js/pages/apexcharts-candlestick.init.js'%}"></script>
+        // Configura las opciones del gráfico
+        var options = {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        };
+
+        // Crea el gráfico lineal
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: options
+        });
+    </script>
 {% endblock extra_js %}
