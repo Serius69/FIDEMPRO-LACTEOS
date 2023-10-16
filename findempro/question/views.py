@@ -4,7 +4,13 @@ from variable.models import Variable
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.conf import settings
+from django.http import JsonResponse
+from django.contrib import messages
+from django.http import HttpResponse
+from django.utils import timezone
+from django.http import HttpResponseForbidden
 import openai
+import logging
 
 openai.api_key = settings.OPENAI_API_KEY
 # Create question

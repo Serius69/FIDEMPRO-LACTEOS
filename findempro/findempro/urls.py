@@ -23,6 +23,8 @@ urlpatterns = [
     path('question/',include('question.urls')),
     # Simulate
     path('simulate/',include('simulate.urls')),
+    # Report
+    path('report/',include('report.urls')),
     # User
     path('user/',include('user.urls')),
     path(

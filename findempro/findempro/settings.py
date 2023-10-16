@@ -50,6 +50,7 @@ LOCAL_APPS = [
     "finance",
     "simulate",
     "user",
+    "report",
     ]
 THIRDPARTY_APPS = [
     # Crispy Forms
