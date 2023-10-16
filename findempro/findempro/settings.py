@@ -224,7 +224,6 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '328835751262-3trsdta49tep5gkm4h35vs9mb25npojr.apps.googleusercontent.com'
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 
-
 SITE_ID = 2
 
 # Provider Configurations
@@ -240,6 +239,22 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-
 # OpenAI
 OPENAI_API_KEY = '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'
+
+# Redis
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/1",  # Use your Redis server address and port
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
+# }
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# SESSION_CACHE_ALIAS = "default"
+
+# CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+# CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+
