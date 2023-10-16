@@ -1,5 +1,6 @@
 from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
+from .models import Report
 from variable.models import Variable
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
@@ -16,11 +17,11 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
 # Create your views here.
-
+class AppsView(LoginRequiredMixin,TemplateView):
+    pass
 # List
 def report_list(request):
     reports = Report.objects.all().order_by('-id')
-    businesses = Business.objects.all().order_by('-id')
     context = {'reports': reports}
     return render(request, 'report/report-list.html', context)
 
@@ -57,7 +58,6 @@ def generate_pdf_report(request):
 
     return response
 
-
 def create_report(request):
     if request.method == 'POST':
         title = request.POST['title']
@@ -67,11 +67,3 @@ def create_report(request):
         return redirect('report_list')  # Redirect to a list of reports
 
     return render(request, 'create_report.html')
-In this example, when you submit a form with a title and content, a new Report object is created and saved to the database.
-
-You can then create views and templates to list, view, update, and delete reports as needed, based on your application's requirements.
-
-
-
-
-
