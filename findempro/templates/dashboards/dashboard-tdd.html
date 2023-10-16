@@ -269,6 +269,32 @@
                                             </div><!-- end card body -->
                                         </div>
                                     </div><!-- end col -->
+                                    <div class="col-xl-3 col-md-6">
+                                        <div class="card card-animate">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm flex-shrink-0">
+                                                        <span
+                                                            class="avatar-title bg-warning-subtle text-warning rounded-2 fs-2">
+                                                            <i data-feather="award" class="text-warning"></i>
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-uppercase fw-medium text-muted mb-3">New Leads</p>
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <h4 class="fs-4 flex-grow-1 mb-0"><span class="counter-value"
+                                                                    data-target="7522">0</span></h4>
+                                                            <span class="badge bg-success-subtle text-success fs-12"><i
+                                                                    class="ri-arrow-up-s-line fs-13 align-middle me-1"></i>3.58
+                                                                %</span>
+                                                        </div>
+                                                        <p class="text-muted mb-0">Leads this month</p>
+                                                    </div>
+                                                </div>
+                                            </div><!-- end card body -->
+                                        </div>
+                                    </div><!-- end col -->
+                                    
                                 </div> <!-- end row-->
                                 <div class="row">
                                     <div class="col-xl-8">
@@ -337,6 +363,18 @@
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
                                     </div><!-- end col -->
+                                    <div class="col-xl-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h4 class="card-title mb-0">Doughnut Chart</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="chart-doughnut" data-colors='["--vz-primary", "--vz-success", "--vz-warning", "--vz-danger", "--vz-info"]' class="e-charts"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end card -->
+                                    </div>
+                                    <!-- end col -->
                                     <div class="col-xxl-4">
                                         <!-- card -->
                                         <div class="card card-height-100">
@@ -566,6 +604,40 @@
                                             </div>
                                         </div> <!-- .card-->
                                     </div> <!-- .col-->
+                                    <div class="col-xl-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h4 class="card-title mb-0">Line Y Category</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="chart-line-y-category" data-colors='["--vz-success"]' class="e-charts"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end card -->
+                                    </div>
+                                    <!-- end col -->
+                                    <div class="col-xl-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h4 class="card-title mb-0">Area Chart</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="chart-area" data-colors='["--vz-success"]' class="e-charts"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end card -->
+                                    </div>
+                                    <div class="col-xl-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h4 class="card-title mb-0">Line Chart</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="chart-line" data-colors='["--vz-success"]' class="e-charts"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end card -->
+                                    </div>
                                 </div> <!-- end row-->
                                 <div class="row">
                                     <div class="col-xl-6">
@@ -807,7 +879,7 @@
                                 </div><!-- end cardbody -->
                             </div><!-- end card -->
                         </div><!-- end col -->
-                        <div class="col-xl-7">
+                        <div class="col-xxl-4 col-lg-6">
                             <div class="card">
                                 <div class="card-header d-flex align-items-center">
                                     <h4 class="card-title flex-grow-1 mb-0">Active products</h4>
@@ -1628,8 +1700,59 @@
                             </div>
                             <!--end card-->
                         </div>
+                        
                         {% endif %}
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Zoomable Timeseries</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="line_chart_zoomable" data-colors='["--vz-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Line with Data Labels</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="line_chart_datalabel" data-colors='["--vz-primary", "--vz-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
                         <!--end col-->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Brush Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div>
+                                        <div id="brushchart_line2" data-colors='["--vz-danger"]' class="apex-charts" dir="ltr"></div>
+                                        <div id="brushchart_line" data-colors='["--vz-info"]' class="apex-charts" dir="ltr"></div>
+                                    </div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Line with Annotations</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="line_chart_annotations" data-colors='["--vz-primary"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
                     </div>
                     
                 </div>
