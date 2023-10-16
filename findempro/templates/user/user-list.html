@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Users{% endblock title %}
+{% block title %}Users List{% endblock title %}
 {% block extra_css %}
 <!-- Sweet Alert css-->
 <link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
@@ -391,40 +391,5 @@
             <!-- end main content-->
 {% endblock content %}
 {% block extra_js %}
-    <!-- list.js min js -->
-    <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
-    <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
 
-    <!--ecommerce-user init js -->
-    <script src="{% static 'js/pages/ecommerce-user-list.init.js'%}"></script>
-    <!-- Sweet Alerts js -->
-    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
-    {% for message in messages %}
-            {% if message.tags == 'alert-success' %}
-            <!-- sweetalert js -->
-            <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script>
-                var m = "{{ message }}";
-                Swal.fire({
-                    icon: 'success',
-                    iconColor:'#0ab39c',
-                    title: m,
-                    showConfirmButton: false,
-                    timer: 1500,
-                })
-            </script>
-            {% else %}
-                <!-- sweetalert js -->
-                <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-                <script>
-                var m = "{{ message }}";
-                Swal.fire({
-                    icon: 'error',
-                    title: m,
-                    showConfirmButton: false,
-                    timer: 1500,
-                })
-                </script>
-            {% endif %}
-        {% endfor %}
 {% endblock extra_js %}

@@ -10,8 +10,6 @@ from .forms import BusinessForm
 from django.urls import reverse
 from django.http import JsonResponse
 # Create your business views here.
-
-
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 

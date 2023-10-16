@@ -43,11 +43,6 @@
                                                 </div>
                                                 <div class="flex-shrink-0">
                                                     <div class="d-flex gap-1 align-items-center">
-                                                        <button type="button" class="btn avatar-xs mt-n1 p-0 favourite-btn">
-                                                            <span class="avatar-title bg-transparent fs-15">
-                                                                <i class="ri-star-fill"></i>
-                                                            </span>
-                                                        </button>
                                                         <div class="dropdown">
                                                             <button
                                                                 class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
@@ -99,7 +94,8 @@
                                                     </div>
                                                     <div class="flex-shrink-0">
                                                         <div><i class="ri-list-check align-bottom me-1 text-muted"></i>
-                                                            {{ product.variables.count }}</div>
+                                                            {{ product.variables.count|default:"0" }}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="progress progress-sm animated-progress">
@@ -137,10 +133,11 @@
                                                     </a>
                                                     {% endfor %}
                                                     <div class="avatar-xxs">
-                                                        <button class="btn btn-primary btn-rounded btn-icon" data-bs-toggle="modal" data-bs-target="#addVariable">
+                                                        <button class="btn btn-primary btn-rounded btn-icon btn-xs" data-bs-toggle="modal" data-bs-target="#addVariable">
                                                             <i class="ri-add-line"></i>
                                                         </button>
                                                     </div>
+                                                    
                                                 </div>
                                             </div>
                                             <div class="flex-shrink-0">
