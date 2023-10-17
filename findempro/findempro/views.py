@@ -29,3 +29,5 @@ class MyPasswordSetView(PasswordSetView):
         except Exception as e:
             # Handle exceptions here, e.g., log the error or display an error message
             return HttpResponseServerError("An error occurred while setting the password. Please try again later.")
+
+

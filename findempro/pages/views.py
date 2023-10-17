@@ -39,3 +39,8 @@ pages_sitemap= PagesView.as_view(template_name="pages/pages-sitemap.html")
 pages_search_results= PagesView.as_view(template_name="pages/pages-search-results.html")
 pages_privacy_policy= PagesView.as_view(template_name="pages/privacy-policy.html")
 pages_terms_conditions= PagesView.as_view(template_name="pages/term-conditions.html")
+
+
+# Define la vista personalizada para errores 404
+def pagina_error_404(request, exception):
+    return render(request, 'pages/404.html', status=404)
