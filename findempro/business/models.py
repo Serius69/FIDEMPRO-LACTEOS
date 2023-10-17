@@ -12,7 +12,7 @@ class Business(models.Model):
     description = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     last_updated = models.DateTimeField(auto_now=True, blank=True, null=True)
-    status = models.IntegerField(default=1)
+    is_active = models.BooleanField(default=True)  # Add the is_active field
     user = models.ForeignKey(User, on_delete=models.PROTECT, default=1)
     
     def __str__(self):

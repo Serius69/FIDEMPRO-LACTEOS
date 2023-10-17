@@ -84,8 +84,8 @@
                                             <p class="text-muted">Enter your password to unlock the screen!</p>
                                         </div>
                                         <div class="user-thumb text-center">
-                                            <img src="{% static 'images/users/avatar-1.jpg'%}" class="rounded-circle img-thumbnail avatar-lg" alt="thumbnail">
-                                            <h5 class="font-size-15 mt-3">Anna Adame</h5>
+                                            <img src="{{ MEDIA_URL }}{{ user.image.url }}" class="rounded-circle img-thumbnail avatar-lg" alt="thumbnail">
+                                            <h5 class="font-size-15 mt-3">{{user.first_name}} {{user.last_name}}</h5>
                                         </div>
         
                                         <div class="mt-4">

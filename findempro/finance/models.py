@@ -1,18 +1,16 @@
 from django.db import models
 
 # Create your models here.
-class Supporter(models.Model):
-    name = models.CharField(max_length=255)
-    email = models.EmailField()
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+class FinancialDecision(models.Model):
+    simulation = models.ForeignKey(DemandSimulation, on_delete=models.CASCADE)
+    decision_date = models.DateField()
+    quantity_to_produce = models.PositiveIntegerField()
+    revenue = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)  # Add the is_active field
+
+    # Add more fields to capture financial decision details
 
     def __str__(self):
-        return self.name
-
-class Expense(models.Model):
-    title = models.CharField(max_length=255)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)  
-    date = models.DateField()
-
-    def __str__(self):
-        return self.title
+        return f"Decision for {self.simulation.product.name} on {self.decision_date}"

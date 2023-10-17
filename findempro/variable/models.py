@@ -11,7 +11,7 @@ class Variable(models.Model):
     type = models.IntegerField(default=1)
     unit = models.CharField(max_length=20)
     description = models.TextField(default="Descripción predeterminada")
-    status = models.IntegerField(default=1)
+    is_active = models.BooleanField(default=True)  # Add the is_active field
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
     image_src = models.ImageField(upload_to='images/variables', blank=True, null=True)

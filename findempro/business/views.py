@@ -9,6 +9,7 @@ from .models import Business
 from .forms import BusinessForm
 from django.urls import reverse
 from django.http import JsonResponse
+
 # Create your business views here.
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
@@ -26,16 +27,16 @@ def business_list(request):
 
 # Detail
 def business_overview(request, pk):
-    # Configura el registro dentro de la función o vista.
+    # Configure logging within the function or view.
     logger = logging.getLogger(__name__)
     logger.debug("This is a log message.")
     try:
         business = get_object_or_404(Business, pk=pk)
         return render(request, 'business/business-overview.html', {'business': business})
     except Exception as e:
-        # Registra el error completo
+        # Log the complete error.
         logger.exception("An error occurred in the 'business_overview' view")
-        messages.error(request, "An error occurred. Please check the server logs for more information.")
+        messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
         return HttpResponse(status=500)  # Return an HTTP 500 error response
 
 # Create
@@ -43,9 +44,13 @@ def create_business_view(request):
     if request.method == 'POST':
         form = BusinessForm(request.POST, request.FILES)
         if form.is_valid():
-            business = form.save()  # Save the form data to the database
-            messages.success(request, 'Business created successfully')
-            return JsonResponse({'success': True})
+            try:
+                business = form.save()  # Save the form data to the database
+                messages.success(request, 'Business created successfully')
+                return JsonResponse({'success': True})
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+                return JsonResponse({'success': False, 'error': f"An error occurred: {str(e)}"})
         else:
             # Handle form validation errors
             return JsonResponse({'success': False, 'errors': form.errors})

@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable
 from product.models import Product
-from .forms import VariableForm  # Create a Django form for Variable
+from .forms import VariableForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.conf import settings
@@ -12,76 +12,87 @@ from django.http import HttpResponse
 from django.utils import timezone
 
 openai.api_key = settings.OPENAI_API_KEY
-class AppsView(LoginRequiredMixin,TemplateView):
+
+class AppsView(LoginRequiredMixin, TemplateView):
     pass
+
 # List
 def variable_list(request):
-    variables = Variable.objects.all().order_by('-id')
-    products = Product.objects.all().order_by('-id')
-    context = {'variable': variables, 'products': products}
-    return render(request, 'variable/variable-list.html', context)
+    try:
+        variables = Variable.objects.all().order_by('-id')
+        products = Product.objects.all().order_by('-id')
+        context = {'variables': variables, 'products': products}
+        return render(request, 'variable/variable-list.html', context)
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
 
 # Detail
-def variable_overview(request,pk):
-    variables = Variable.objects.all().order_by('-id')
-    if variables:
-        variable = Variable.objects.get(pk=pk)
-    return render(request,"variable/variable-overview.html",{'variable':variable,'variable':variable})
+def variable_overview(request, pk):
+    try:
+        variable = get_object_or_404(Variable, pk=pk)
+        return render(request, "variable/variable-overview.html", {'variable': variable})
+    except Exception as e:
+        messages.error(request, "An error occurred. Please check the server logs for more information.")
+        return HttpResponse(status=500)
+
 # Create
 def create_variable_view(request):
     if request.method == 'POST':
         form = VariableForm(request.POST, request.FILES)
+        try:
+            if form.is_valid():
+                variable_name = form.cleaned_data.get('name')
+                initial_prompt = f"Generate the initials of the variable, but only use 4 characters. Do not include additional advertisements or instructions. Provide the initials for the next variable: {variable_name}"
 
-        if form.is_valid():
-            # Retrieve the variable name from the form's cleaned data
-            variable_name = form.cleaned_data.get('name')
-            initial_prompt = f"Generate the initials of the variable, but only use 4 characters. Do not include additional advertisements or instructions. Provide the initials for the next variable: {variable_name}"
+                response = openai.Completion.create(
+                    engine="text-davinci-002",
+                    prompt=initial_prompt,
+                    max_tokens=5,
+                    stop=None
+                )
+                initials = response.choices[0].text.strip()
 
-            # Call the OpenAI API to generate initials
-            response = openai.Completion.create(
-                engine="text-davinci-002",
-                prompt=initial_prompt,
-                max_tokens=5,  # Adjust the token limit as needed
-                stop=None  # You can set stop words if needed
-            )
-            initials = response.choices[0].text.strip()
+                form.instance.initials = initials
 
-            # Set 'initials' in the form instance
-            form.instance.initials = initials
-
-            try:
-                variable = form.save()  # Save the form data to the database
+                variable = form.save()
                 messages.success(request, 'Variable created successfully')
                 return JsonResponse({'success': True})
-            except Exception as e:
-                # Handle any unexpected errors (e.g., database save errors)
-                print(e)  # Log the error for debugging
-                return JsonResponse({'success': False, 'error': 'An error occurred while saving the variable'})
-        else:
-            # Return form validation errors if the form is not valid
-            return JsonResponse({'success': False, 'errors': form.errors})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors})
+        except Exception as e:
+            print(e)
+            return JsonResponse({'success': False, 'error': 'An error occurred while saving the variable'})
     else:
         form = VariableForm()
-    return render(request, 'variable/variable-list.html', {'form': form})
+    return render(request, 'variable/variable-form.html', {'form': form})
 
 # Update
-def update_variable_view(request,pk):
+def update_variable_view(request, pk):
     variable = Variable.objects.get(pk=pk)
     if request.method == "POST":
-        form = VariableForm(request.POST or None,request.FILES or None,instance=variable)
-        if form.is_valid():
-            form.save()
-            messages.success(request,"Variable updated successfully!")
-            return redirect("variable:variable.overview")
-        else:
-            messages.error(request,"Something went wrong!")
-            return redirect("variable:variable.overview")
-    return render(request,"variable/variable-list.html")
+        form = VariableForm(request.POST or None, request.FILES or None, instance=variable)
+        try:
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Variable updated successfully!")
+                return redirect("variable:variable.overview", pk=pk)
+            else:
+                messages.error(request, "Something went wrong!")
+                return render(request, "variable/variable-form.html", {'form': form})
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            return HttpResponse(status=500)
+
+    return render(request, "variable/variable-form.html", {'form': form})
 
 # Delete
-def delete_variable_view(request,pk):
-    variable = Variable.objects.get(pk=pk)
-    variable.delete()
-    messages.success(request,"Variable deleted successfully!")
-    return redirect("variable:variable.list")
-
+def delete_variable_view(request, pk):
+    try:
+        variable = get_object_or_404(Variable, pk=pk)
+        variable.delete()
+        messages.success(request, "Variable deleted successfully!")
+        return redirect("variable:variable.list")
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
