@@ -11,27 +11,23 @@ class FDP(models.Model):
 
 class NormalFDP(FDP):
     mean = models.FloatField()
-    std_deviation = models.FloatField()
-    is_active = models.BooleanField(default=True)  # Add the is_active field
+    std_deviation = models.FloatField() # Add the is_active field
 
     def __str__(self):
         return f"Normal - {self.name}"
 
-class ExponentialFDP(FDP):
-    is_active = models.BooleanField(default=True)  # Add the is_active field
+class ExponentialFDP(FDP):# Add the is_active field
 
     def __str__(self):
         return f"Exponential - {self.name}"
 
-class LogarithmicFDP(FDP):
-    is_active = models.BooleanField(default=True)  # Add the is_active field
+class LogarithmicFDP(FDP): # Add the is_active field
 
     def __str__(self):
         return f"Logarithmic - {self.name}"
 
 class DataPoint(models.Model):
     is_active = models.BooleanField(default=True)  # Add the is_active field
-
     value = models.FloatField()
 
     def __str__(self):
@@ -44,8 +40,7 @@ class SimulationScenario(models.Model):
     date_simulate = models.DateField()  # Add a DateField for the simulation date
     is_active = models.BooleanField(default=True)  # Add the is_active field
 
-
-class ScenarioPDF(models.Model):
+class ScenarioFDP(models.Model):
     scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
     fdp = models.ForeignKey(FDP, on_delete=models.CASCADE)
     weight = models.FloatField()  # Define the 'weight' field here if it's intended to be part of the model
@@ -56,8 +51,8 @@ class ScenarioPDF(models.Model):
 class DemandSimulation(models.Model):
     
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    fk_simulation_scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
-    fk_questionary = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
+    fk_questionary = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='fk_questionary')
+    fk_simulation_scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE, related_name='fk_simulation_scenario')
     simulation_date = models.DateField()
     demand_mean = models.DecimalField(max_digits=10, decimal_places=2)
     demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2)

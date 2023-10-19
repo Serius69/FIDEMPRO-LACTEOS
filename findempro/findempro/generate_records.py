@@ -385,6 +385,7 @@ variables_data = [
 'type': 'ENDÓGENA',
 'unit': 'BS',
 'description': 'GASTOS TOTALES EN EL TIEMPO DE SIMULACIÓN'}
+
 ]
 
 for data in variables_data:

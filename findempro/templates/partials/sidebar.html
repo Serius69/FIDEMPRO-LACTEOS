@@ -42,7 +42,7 @@
                     </a>
                 </li>
                 
-
+                {% if user.is_authenticated %}
                 <!-- Dashboards Menu -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
@@ -121,7 +121,7 @@
                         </ul>
                     </div>
                 </li>
-
+                {% if user.is_staff %}
                 <!-- Simulate Menu -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarAdmin" data-bs-toggle="collapse" role="button"
@@ -141,7 +141,7 @@
                         </ul>
                     </div> 
                 </li>
-
+                {% endif %}
                 <!-- Reports Menu -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarReport" data-bs-toggle="collapse" role="button"
@@ -156,6 +156,8 @@
                         </ul>
                     </div> 
                 </li>
+
+                {% endif %}
             </ul>
         </div>
         <!-- Sidebar -->

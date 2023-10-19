@@ -51,6 +51,7 @@ LOCAL_APPS = [
     "simulate",
     "user",
     "report",
+    "question"
     ]
 THIRDPARTY_APPS = [
     # Crispy Forms

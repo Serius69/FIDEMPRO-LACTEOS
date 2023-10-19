@@ -18,7 +18,7 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def business_list(request):
     form = BusinessForm()
     try:
-        businesses = Business.objects.all().order_by('-id')
+        businesses = Business.objects.filter(owner=request.user).order_by('-id')
         context = {'businesses': businesses, 'form': form}  # Corrected the context variable name
         return render(request, 'business/business-list.html', context)
     except Exception as e:

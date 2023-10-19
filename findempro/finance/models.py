@@ -1,5 +1,5 @@
 from django.db import models
-
+from simulate.models import DemandSimulation
 # Create your models here.
 
 class FinancialDecision(models.Model):
