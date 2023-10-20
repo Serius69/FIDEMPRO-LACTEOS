@@ -54,3 +54,5 @@ def generate_questions_for_variables(request):
         "questionary/questionary-list.html", 
         {"generated_questions_list": generated_questions_list},
     )
+
+

@@ -62,6 +62,43 @@
                                                     </div><!--end col-->
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
+                                                            <label for="compnayNameinput" class="form-label"><span data-key="t-demandhistory"> Elements that want to show inn the graphic and table</span></label>
+                                                            <label>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
+                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                        Financial Statements
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
+                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                        Key Performance Indicators
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
+                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                        Scenario Analysis Tables
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
+                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                        Sensitivity Analysis
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
+                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                        Comparative Analysis
+                                                                    </label>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                    </div><!--end col-->
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
                                                             <label for="lastNameinput" class="form-label"><span data-key="t-timeunit"> Information of questionary to use</span></label>
 
                                                             <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
@@ -74,22 +111,18 @@
                                                             </select>
                                                         </div>
                                                     </div><!--end col-->
-                                                    {% for variable in variables %}
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ variable.name }}</span></label>
-                                                            <input type="tel" class="form-control" placeholder="+(245) 451 45123" id="phonenumberInput">
-                                                            <p class="text-muted"><span data-key="t-home">{{ variable.unit }}</span></p>
+                                                    <div class="col-md-12">
+                                                        <div id="selectedDetails">
+                                                            <!-- Aquí se mostrarán los detalles del elemento seleccionado -->
                                                         </div>
-                                                    </div><!--end col-->
-                                                    {% empty %}
-                                                    <p class="text-muted">There isnt varaibles save in the database with the product</p>
-                                                    <p class="text-muted">Go to the Variable List to identify the variables and equations:  </p>                                                  
-                                                    {% endfor %}
+                                                    </div>
 
                                                     <div class="col-lg-12">
+                                                        <div class="text-init">
+                                                            <button type="submit" class="btn btn-dark">Clear</button>
+                                                        </div>
                                                         <div class="text-end">
-                                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                                            <button type="submit" class="btn btn-primary">Init</button>
                                                         </div>
                                                     </div><!--end col-->
                                                 </div><!--end row-->
@@ -100,13 +133,29 @@
                             </div> <!-- end col -->
 
                             <div class="col-xxl-6">
-                                <title>Gráfico Lineal</title>
+                                <div class="card">
+                                    <div class="card-header align-items-center d-flex">
+                                        <h4 class="card-title mb-0 flex-grow-1">Gráfico Lineal</h4>
+                                    </div><!-- end card header -->
+                                </div>
                                 <canvas id="myChart" width="100" height="50"></canvas>                          
                             </div> <!-- end col -->
                         </div><!--end row-->
                         
                         <div class="row">
-                            <div class="col-lg-12">
+                            <div class="col-lg-6">
+                                <h1>Equations</h1>
+                                    <ul>
+                                        {% for equation in equations %}
+                                            <li>
+                                                <h2>{{ equation.name }}</h2>
+                                                <p>{{ equation.equation }}</p>
+                                                <p>Variables: {{ equation.variables }}</p>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                            </div>
+                            <div class="col-lg-6">
                                 <div class="card">
                                     <div class="card-header">
                                         <h4 class="card-title mb-0">Simulate Table</h4>
@@ -123,38 +172,33 @@
                                                                     <input class="form-check-input" type="checkbox" id="checkAll" value="option">
                                                                 </div>
                                                             </th>
-                                                            <th class="sort" data-sort="customer_name">Variable</th>
-                                                            <th class="sort" data-sort="email">Unit</th>
-                                                            <th class="sort" data-sort="phone">Unit of time</th>
-                                                            <th class="sort" data-sort="date">Joining Date</th>
-                                                            <th class="sort" data-sort="status">Delivery Status</th>
+                                                            <th class="sort" data-sort="date">Date</th>
+                                                            <th class="sort" data-sort="variable">Variable</th>
+                                                            <th class="sort" data-sort="unit">Unit</th>
+                                                            <th class="sort" data-sort="unit_time">Unit of time</th>
+                                                            <th class="sort" data-sort="result">Result</th>
                                                             </tr>
                                                     </thead>
-                                                    <tbody class="list form-check-all">
+                                                    <tbody class="">
                                                         <tr>
-                                                            <th scope="row">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" name="chk_child" value="option1">
-                                                                </div>
-                                                            </th>
-                                                            <td class="id" style="display:none;"><a href="javascript:void(0);" class="fw-medium link-primary">#VZ2101</a></td>
-                                                            <td class="customer_name">Mary Cousar</td>
-                                                            <td class="email">marycousar@findempro.com</td>
-                                                            <td class="phone">580-464-4694</td>
-                                                            <td class="date">06 Apr, 2021</td>                                                            
+                                                            <td class="date">{{simulate.date}}</td>
+                                                            <td class="variable">{{simulate.variable}}</td>
+                                                            <td class="unit">{{simulate.unit}}</td>
+                                                            <td class="unit_time">{{simulate.unittime}}</td>  
+                                                            <td class="result">{{simulate.result}}</td>                                                            
                                                         </tr>
                                                     </tbody>
                                                 </table>
-                                                <div class="noresult" style="display: none">
-                                                    <div class="text-center">
-                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
-                                                            colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
-                                                        </lord-icon>
-                                                        <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                        <p class="text-muted mb-0">We've searched more than 150+ Orders We did not find any
-                                                            orders for you search.</p>
+
+                                                    <div class="noresult" style="display: none">
+                                                        <div class="text-center">
+                                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                                colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                                                            </lord-icon>
+                                                            <h5 class="mt-2">Sorry! No Result Found</h5>
+                                                            <p class="text-muted mb-0"></p>
+                                                        </div>
                                                     </div>
-                                                </div>
                                             </div>
                                             
                                             <div class="d-flex justify-content-end">
@@ -181,7 +225,6 @@
                 </div>
                 <!-- End Page-content -->
 
-                
             {% block footer %}
             {% include "partials/footer.html" %}
             {% endblock footer %}
@@ -196,12 +239,12 @@
 
         // Define los datos para el gráfico
         var data = {
-            labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo'],
+            labels: [],
             datasets: [{
-                label: 'Ventas Mensuales',
-                data: [12, 19, 3, 5, 2],
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                label: 'En Espera',
+                data: [],
+                backgroundColor: 'rgba(255, 255, 255, 0)',  // Transparent background
+                borderColor: 'rgba(255, 255, 255, 0)',      // Transparent border
                 borderWidth: 1
             }]
         };
@@ -220,6 +263,64 @@
             type: 'line',
             data: data,
             options: options
+        });
+
+        // Function to update the chart with data
+        function updateChart(data) {
+            var ctx = document.getElementById('myChart').getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    
+        // Function to update the table with data
+        function updateTable(data) {
+            var tableBody = document.querySelector("#simulateTable tbody");
+            tableBody.innerHTML = ""; // Clear the existing table rows
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                var newRow = tableBody.insertRow();
+                newRow.innerHTML = "<td>" + row.date + "</td><td>" + row.variable + "</td><td>" + row.unit + "</td><td>" + row.unit_time + "</td><td>" + row.result + "</td>";
+            }
+        }
+    
+        // Add a click event listener to the "Init" button
+        document.getElementById("initButton").addEventListener("click", function () {
+            // Make an AJAX request to your Django view to fetch data
+            $.ajax({
+                type: "GET",
+                url: "{% url 'simulate:simulate.init' %}", // Replace with the actual URL of your Django view
+                success: function (data) {
+                    // Update the chart and table with the retrieved data
+                    updateChart(data.chartData);
+                    updateTable(data.tableData);
+                },
+                error: function () {
+                    alert("Error fetching data from the server.");
+                }
+            });
+        });
+    </script>
+    <script>
+        // Agregar un evento de cambio al elemento select
+        document.getElementById("ForminputState").addEventListener("change", function () {
+            // Obtener el elemento seleccionado
+            var selectedOption = this.options[this.selectedIndex];
+    
+            // Obtener los detalles del elemento seleccionado
+            var details = selectedOption.getAttribute("data-details");
+    
+            // Mostrar los detalles en un área específica
+            var selectedDetails = document.getElementById("selectedDetails");
+            selectedDetails.innerHTML = details;
         });
     </script>
 {% endblock extra_js %}

@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Product List{% endblock title %}
+{% block title %}Questionary{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -13,16 +13,27 @@
                     <div class="container-fluid">
 
                         {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="products" title="Product List" %}
+                        {% include "partials/page-title.html" with pagetitle="products" title="Questionary" %}
                         {% endblock pagetitle %}
 
                         <div class="row g-4 mb-3">
                             <div class="col-sm-auto">
+                                <div class="input-group">
+                                    <label class="input-group-text" for="inputGroupSelect01">Options</label>
+                                    <select class="form-select" id="inputGroupSelect01">
+                                        <option selected>Choose...</option>
+                                        {% for product in products %}
+                                        <option value="{{product.id}}">{{product.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>                                
+                            </div>
+                            <div class="col-sm-auto">
                                 <div>
-                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Check Product</button>
-
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Generate Questionary</button>
                                 </div>
                             </div>
+                            
                             <div class="col-sm">
                                 <div class="d-flex justify-content-sm-end gap-2">
                                     <div class="search-box ms-2">

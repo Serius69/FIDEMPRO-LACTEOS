@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -19,6 +19,22 @@ openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
+# Define a view to extract the demand_historic variable
+def extract_demand_historic(request):
+    try:
+        demand_historic_variable = Variable.objects.get(name="demand_historic")
+        context = {
+            'demand_historic_variable': demand_historic_variable,
+        }
+
+    except Variable.DoesNotExist:
+        context = {
+            'error_message': 'Variable not found.',
+        }
+
+    return context
+
+# Kolmovorov Smirnov test
 def ks_test_view(request, variable_name):
     try:
         # Retrieve the variable by name
@@ -154,20 +170,26 @@ def generate_equation_from_variable(variable):
     except Exception as e:
         return str(e)
 
-# Define a view to extract the demand_historic variable
-def extract_demand_historic(request):
-    try:
-        demand_historic_variable = Variable.objects.get(name="demand_historic")
-        context = {
-            'demand_historic_variable': demand_historic_variable,
-        }
+def questionnaire_info(request, questionnaire_id):
+    # Retrieve the questionnaire based on the provided ID
+    questionnaire = get_object_or_404(Questionnaire, id=questionnaire_id)
 
-    except Variable.DoesNotExist:
-        context = {
-            'error_message': 'Variable not found.',
-        }
+    # Extract the information from the questionnaire (replace with your logic)
+    # For example, if you have fields in your questionnaire model, you can access them like questionnaire.field_name
+    questionnaire_name = questionnaire.name
+    questionnaire_description = questionnaire.description
 
-    return context
+    # You can also extract related information, e.g., questions within the questionnaire
+    questions = questionnaire.question_set.all()
+
+    context = {
+        'questionnaire': questionnaire,
+        'questionnaire_name': questionnaire_name,
+        'questionnaire_description': questionnaire_description,
+        'questions': questions,
+    }
+
+    return render(request, 'questionnaire_info_template.html', context)
 
 # Define a view for initializing simulation
 def simulate_init(request):

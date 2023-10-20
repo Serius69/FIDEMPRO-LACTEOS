@@ -189,15 +189,18 @@ MESSAGE_TAGS = {
 
 # SMTP Configure
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp-relay.brevo.com"
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = "sergio.troche@ucb.edu.bo"
-EMAIL_HOST_PASSWORD = "xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-OnbHEM6D2wCRyJ3Y"
-DEFAULT_FROM_EMAIL = "sergio.troche@ucb.edu.bo"
-# SMTP key
+EMAIL_HOST_USER = "sergio.denis.troche.mayta@gmail.com"
+EMAIL_HOST_PASSWORD = "ymzm jery fokh qrel"
+# DEFAULT_FROM_EMAIL = "sergio.troche@ucb.edu.bo"
+# SMTP key Brevo
 #  xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-OnbHEM6D2wCRyJ3Y
+# gmail
+# ymzm jery fokh qrel
+# 150080139036-c4ne0ak0dli4p6ggr2la6otdj99dacs9.apps.googleusercontent.com
 #  All Auth Configurations
 
 LOGIN_REDIRECT_URL = "/"
