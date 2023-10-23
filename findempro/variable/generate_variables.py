@@ -1,7 +1,7 @@
 import os
 import django
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tu_proyecto.settings")  # Reemplaza 'tu_proyecto' con el nombre de tu proyecto.
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "findempro.settings")  # Reemplaza 'tu_proyecto' con el nombre de tu proyecto.
 django.setup()
 
 from variable.models import Variable  # Reemplaza 'your_app' con el nombre de tu aplicación.
@@ -391,4 +391,4 @@ variables_data = [
 for data in variables_data:
     Variable.objects.create(**data)
 
-# python generate_records.py
+# python generate_variables.py

@@ -12,7 +12,6 @@ class ProductCategory(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    type = models.CharField(max_length=100)
     description = models.TextField()
     is_active = models.BooleanField(default=True)  # Add the is_active field
     date_created = models.DateTimeField(default=timezone.now)

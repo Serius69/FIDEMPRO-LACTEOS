@@ -5,7 +5,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
-
+from datetime import datetime
 # Create your views here.
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass
@@ -61,6 +61,19 @@ def dashboard_user(request) -> str:
     users_last_month_count = users_last_month.count()
     users_change = users_count - users_last_month_count
     users_change_percentage = (users_change / users_last_month_count * 100) if users_last_month_count > 0 else 0
+    current_time = datetime.now().time()
+    
+    if current_time >= datetime(1900, 1, 1, 5, 0).time() and current_time < datetime(1900, 1, 1, 12, 0).time():
+        greeting = "Good Morning"
+    elif current_time >= datetime(1900, 1, 1, 12, 0).time() and current_time < datetime(1900, 1, 1, 18, 0).time():
+        greeting = "Good Afternoon"
+    else:
+        greeting = "Good Evening"
+
+
+
+
+
 
     context: Dict[str, Any] = {
         'users': users,
@@ -69,9 +82,10 @@ def dashboard_user(request) -> str:
         'users_last_month_count': users_last_month_count,
         'users_change': users_change,
         'users_change_percentage': users_change_percentage,
+        'greeting': greeting,
     }
 
-    return render(request, 'dashboards/dashboard-tdd.html', context)
+    return render(request, 'dashboards/dashboard-user.html', context)
 
 
 

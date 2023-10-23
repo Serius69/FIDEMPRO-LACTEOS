@@ -56,3 +56,6 @@ def generate_questions_for_variables(request):
     )
 
 
+
+
+

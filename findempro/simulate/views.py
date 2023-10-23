@@ -13,6 +13,12 @@ from business.models import Business, BusinessProduct
 from sympy import Eq, sympify
 import openai
 
+
+
+# from .simulate import Production, Inventory, Distribution, MArketing, Sales
+ 
+
+
 # Set the OpenAI API key
 openai.api_key = settings.OPENAI_API_KEY
 
@@ -37,6 +43,9 @@ def extract_demand_historic(request):
 # Kolmovorov Smirnov test
 def ks_test_view(request, variable_name):
     try:
+        
+        average_demand = sum(extract_demand_historic()) / len(extract_demand_historic())
+        
         # Retrieve the variable by name
         variable = Variable.objects.get(name=variable_name)
 
@@ -226,3 +235,15 @@ def simulate_show_form(request):
         }
 
     return render(request, 'simulate/simulate-init.html', context)
+
+def simulate_view(request):
+    # Perform simulation and calculate data
+    chart_data = [...]  # Data for the chart
+    table_data = [...]  # Data for the table
+
+    response_data = {
+        'chartData': chart_data,
+        'tableData': table_data,
+    }
+
+    return JsonResponse(response_data)

@@ -16,6 +16,12 @@
                         {% include "partials/page-title.html" with pagetitle="products" title="Questionary" %}
                         {% endblock pagetitle %}
 
+                        <!-- Mode Selection Buttons -->
+                        <div class="btn-group" role="group" aria-label="Mode selection">
+                            <button type="button" class="btn btn-primary" id="advanced-mode">Advanced Mode</button>
+                            <button type="button" class="btn btn-secondary" id="simple-mode">Simple Mode</button>
+                        </div>
+
                         <div class="row g-4 mb-3">
                             <div class="col-sm-auto">
                                 <div class="input-group">
@@ -44,6 +50,57 @@
                             </div>
                         </div>
     
+
+                        <div class="row">
+                            <div class="col-xxl-9">
+                                {% for variable, generated_questions in generated_questions_list %}
+                                <div class="card joblist-card">
+                                    <div class="card-body">
+                                        <div class="d-flex mb-4">
+                                            <div class="ms-3 flex-grow-1">
+                                                <a href="#!"><h5 class="job-title">{{variable.name}}</h5></a>
+                                            </div>
+                                        </div>
+                                        {% for question in generated_questions|linebreaksbr %}
+
+                                        <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ question.question }}</span></label>
+                                        <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
+                                        
+                                        {% endfor %}
+                                        {% comment %} <div>'+ tagHtml + '</div> {% endcomment %}
+                                    </div>
+                                </div>
+                                {% comment %} End card {% endcomment %}
+                                {% empty %}
+                                <div class="text-center py-4">
+                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                    <h5 class="mt-2">Sorry there isn't any variable to create questions register in the database</h5>
+                                    <p class="text-muted mb-0">You have to "Add Product".</p>
+                                </div>    
+                                {% endfor %}
+                                {% comment %} Fin de la lista {% endcomment %}
+    
+                                <div class="row g-0 justify-content-end mb-4" id="pagination-element">
+                                    <!-- end col -->
+                                    <div class="col-sm-6">
+                                        <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
+                                            <div class="page-item">
+                                                <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
+                                            </div>
+                                            <span id="page-num" class="pagination"></span>
+                                            <div class="page-item">
+                                                <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
+                                            </div>
+                                        </div>
+                                    </div><!-- end col -->
+                                </div>
+                                <!-- end row -->
+    
+                            </div><!--end col-->
+                        </div>
+                        <!-- end row -->    
+
+
                         <div class="row">
                             <div class="col-xxl-9">
                                 {% for variable, generated_questions in generated_questions_list %}

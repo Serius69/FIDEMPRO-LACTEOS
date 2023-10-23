@@ -26,12 +26,13 @@
                                     <div class="card-body">
                                         <p class="text-muted">Realize a Simulation with the next params</p>
                                         <div class="live-preview">
-                                            <form action="javascript:void(0);">
+                                            <form action="{% url 'simulate:simulate.init' %}" method="post" id="myForm">
+                                                {% csrf_token %}
                                                 <div class="row">
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="ForminputState" class="form-label"><span data-key="t-product"> Product</span></label>
-                                                            <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
+                                                            <label for="fk_product" class="form-label"><span data-key="t-product"> Product</span></label>
+                                                            <select id="fk_product" class="form-select" data-choices data-choices-sorting="true" >
                                                                 <option selected>Choose...</option>
                                                                 {% for product in products %}
                                                                 <option>{{ product.name }}</option>
@@ -40,20 +41,21 @@
                                                                 {% endfor %}
                                                             </select>
                                                         </div>
+                                                        <div id="error-message" style="color: red;"></div>
                                                     </div><!--end col-->
+
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="compnayNameinput" class="form-label"><span data-key="t-demandhistory"> Historic Demand</span></label>
-
-                                                            <input type="text" class="form-control" placeholder="Enter the historic demand" id="compnayNameinput">
+                                                            <label for="historicdemand" class="form-label"><span data-key="t-demandhistory">Historic Demand</span></label>
+                                                            <input type="file" accept=".xlsx" id="historicdemand">
                                                         </div>
                                                     </div><!--end col-->
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="lastNameinput" class="form-label"><span data-key="t-timeunit"> Unit of time</span></label>
+                                                            <label for="unit_time" class="form-label"><span data-key="t-timeunit"> Unit of time</span></label>
 
-                                                            <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
-                                                                <option selected>Choose...</option>\
+                                                            <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
+                                                                <option selected>Choose...</option>
                                                                 <option value="1">year</option>
                                                                 <option value="2">month</option>
                                                                 <option value="2">day</option>
@@ -62,35 +64,35 @@
                                                     </div><!--end col-->
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="compnayNameinput" class="form-label"><span data-key="t-demandhistory"> Elements that want to show inn the graphic and table</span></label>
+                                                            <label for="elements" class="form-label"><span data-key="t-demandhistory"> Elements that want to show inn the graphic and table</span></label>
                                                             <label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
-                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                    <input class="form-check-input" type="checkbox" id="financial_statements">
+                                                                    <label class="form-check-label" for="financial_statements">
                                                                         Financial Statements
                                                                     </label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
-                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                    <input class="form-check-input" type="checkbox" id="performance_indicators">
+                                                                    <label class="form-check-label" for="performance_indicators">
                                                                         Key Performance Indicators
                                                                     </label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
-                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                    <input class="form-check-input" type="checkbox" id="tables_analysis">
+                                                                    <label class="form-check-label" for="tables_analysis">
                                                                         Scenario Analysis Tables
                                                                     </label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
-                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                    <input class="form-check-input" type="checkbox" id="sensitivity_analysis">
+                                                                    <label class="form-check-label" for="sensitivity_analysis">
                                                                         Sensitivity Analysis
                                                                     </label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" id="autoSizingCheck2">
-                                                                    <label class="form-check-label" for="autoSizingCheck2">
+                                                                    <input class="form-check-input" type="checkbox" id="comparative_analysis">
+                                                                    <label class="form-check-label" for="comparative_analysis">
                                                                         Comparative Analysis
                                                                     </label>
                                                                 </div>
@@ -99,9 +101,9 @@
                                                     </div><!--end col-->
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="lastNameinput" class="form-label"><span data-key="t-timeunit"> Information of questionary to use</span></label>
+                                                            <label for="fk_questionary" class="form-label"><span data-key="t-timeunit"> Information of questionary to use</span></label>
 
-                                                            <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
+                                                            <select id="fk_questionary" class="form-select" data-choices data-choices-sorting="true" >
                                                                 <option selected>Choose...</option>
                                                                 {% for questionary in questionaries %}
                                                                 <option value="1">{{questionary.name}}</option>
@@ -119,10 +121,10 @@
 
                                                     <div class="col-lg-12">
                                                         <div class="text-init">
-                                                            <button type="submit" class="btn btn-dark">Clear</button>
+                                                            <button type="button" class="btn btn-dark" id="clearButton">Clear</button>
                                                         </div>
                                                         <div class="text-end">
-                                                            <button type="submit" class="btn btn-primary">Init</button>
+                                                            <button type="submit" class="btn btn-primary">Start Simulation</button>
                                                         </div>
                                                     </div><!--end col-->
                                                 </div><!--end row-->
@@ -135,7 +137,7 @@
                             <div class="col-xxl-6">
                                 <div class="card">
                                     <div class="card-header align-items-center d-flex">
-                                        <h4 class="card-title mb-0 flex-grow-1">Gráfico Lineal</h4>
+                                        <h4 class="card-title mb-0 flex-grow-1">Lineal Graph</h4>
                                     </div><!-- end card header -->
                                 </div>
                                 <div class="card-body">
@@ -154,6 +156,13 @@
                                                 <p>{{ equation.equation }}</p>
                                                 <p>Variables: {{ equation.variables }}</p>
                                             </li>
+                                        {% empty %}
+                                        <div class="text-center py-4">
+                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                            <h5 class="mt-2">Sorry there isn't any product register in the database</h5>
+                                            <p class="text-muted mb-0">You have to "Add Product".</p>
+                                        </div>
+
                                         {% endfor %}
                                     </ul>
                             </div>
@@ -236,6 +245,22 @@
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>       
     <script>
+
+        document.getElementById('fk_product').addEventListener('change', function () {
+            const select = document.getElementById('fk_product');
+            if (select.value === 'Choose...') {
+                document.getElementById('error-message').textContent = 'Please select a product.';
+            } else {
+                document.getElementById('error-message').textContent = '';
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: "{% url 'simulate:simulate.init' %}", // Replace with the actual URL of your Django view
+            // ...
+        });
+
         // Obtén una referencia al elemento canvas
         var ctx = document.getElementById('myChart').getContext('2d');
 
@@ -310,6 +335,11 @@
                 }
             });
         });
+    </script>
+    <script>
+    document.getElementById('clearButton').addEventListener('click', function() {
+        document.getElementById('myForm').reset();
+    });
     </script>
     <script>
         // Agregar un evento de cambio al elemento select
