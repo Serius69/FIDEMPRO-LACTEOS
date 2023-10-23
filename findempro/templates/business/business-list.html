@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% block title %}Business{% endblock title %}
+{% block title %}Business List{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -14,17 +14,11 @@
         <div class="container-fluid">
 
             {% block pagetitle %}
-            {% include "partials/page-title.html" with pagetitle="Businesses" title="List" %}
+            {% include "partials/page-title.html" with pagetitle="Business" title="Business List" %}
             {% endblock pagetitle %}
             <div class="card">
                 <div class="card-header border-0 rounded">
                     <div class="row g-2">
-                        {% comment %} <div class="col-xl-3">
-                            <div class="search-box">
-                                <input type="text" class="form-control" autocomplete="off" id="searchResultList" placeholder="Search for sellers & owner name or something..."> <i class="ri-search-line search-icon"></i>
-                            </div>
-                        </div> {% endcomment %}
-                        <!--end col-->
                         <div class="col-xxl-3 ms-auto">
                             <div>
                                 <select class="form-control" id="category-select">

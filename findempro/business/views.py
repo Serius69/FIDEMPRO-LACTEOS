@@ -39,7 +39,7 @@ def business_overview(request, pk):
         messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
         return HttpResponse(status=500)  # Return an HTTP 500 error response
 
-# Create
+@login_required
 def create_business_view(request):
     if request.method == 'POST':
         form = BusinessForm(request.POST, request.FILES)

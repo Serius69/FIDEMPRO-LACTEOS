@@ -13,22 +13,40 @@
                         {% block pagetitle %}
                         {% include "partials/page-title.html" with pagetitle="products" title="Product List" %}
                         {% endblock pagetitle %}
-                        <div class="row g-4 mb-3">
-                            <div class="col-sm-auto">
-                                <div>
-                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Add Product</button>
-                                </div>
-                            </div>
-                            <div class="col-sm">
-                                <div class="d-flex justify-content-sm-end gap-2">
-                                    <div class="search-box ms-2">
-                                        <input type="text" class="form-control" placeholder="Search...">
-                                        <i class="ri-search-line search-icon"></i>
+                        <div class="card">
+                            <div class="card-header border-0 rounded">
+                                <div class="row g-2">
+                                    <div class="col-xxl-3 ms-auto">
+                                        <div>
+                                            <select class="form-control" id="category-select">
+                                                <option value="All">Select Categories</option>
+                                                <option value="All">All</option>
+                                                <option value="Dairy">Dairy</option>
+                                            </select>
+                                        </div>
                                     </div>
+                                    <!--end col-->
+                                    <div class="col-sm-auto">
+                                        <div>
+                                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Add Product</button>
+                                            <button type="button" class="btn btn-danger"><i class="ri-equalizer-fill me-1 align-bottom"></i> Filters</button>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-sm">
+                                        <div class="d-flex justify-content-sm-end gap-2">
+                                            <div class="search-box ms-2">
+                                                <input type="text" class="form-control" placeholder="Search...">
+                                                <i class="ri-search-line search-icon"></i>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                    <!--end col-->
                                 </div>
+                                <!--end row-->
                             </div>
                         </div>
-    
                         <div class="row">
                             {% comment %} Inicio de la lista {% endcomment %}
                         {% for product in products %}
