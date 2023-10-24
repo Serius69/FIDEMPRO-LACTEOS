@@ -15,14 +15,18 @@
                     <div class="container-fluid">
                         <div class="profile-foreground position-relative mx-n4 mt-n4">
                             <div class="profile-wid-bg">
-                                <img src="{% static 'images/profile-bg.jpg'%}" alt="" class="profile-wid-img" />
+                                <img src="{% static 'images/cover-pattern.png'%}" alt="" class="profile-wid-img" />
                             </div>
                         </div>
                         <div class="pt-4 mb-4 mb-lg-3 pb-lg-4">
                             <div class="row g-4">
                                 <div class="col-auto">
                                     <div class="avatar-lg">
-                                        <img src="{% static 'images/users/avatar-1.jpg'%}" alt="user-img" class="img-thumbnail rounded-circle" />
+                                        {% if user.image_src == null %}
+                                        <img src="{% static 'images/users/user-dummy-img.jpg'%}" alt="user-img" class="img-thumbnail rounded-circle" />
+                                        {% else %}
+                                        <img src="{{ MEDIA_URL }}{{ user.image_src.url }}" alt="user-img" class="img-thumbnail rounded-circle" />                                        
+                                        {% endif %}
                                     </div>
                                 </div><!--end col-->
                                 <div class="col">
@@ -89,14 +93,14 @@
                                         <div class="tab-pane active" id="overview-tab" role="tabpanel">
                                             <div class="row">
                                                 <div class="col-xxl-3">
-                                                    {% comment %} <div class="card">
+                                                    <div class="card">
                                                         <div class="card-body">
                                                             <h5 class="card-title mb-5">Complete Your Profile</h5>
                                                             <div class="progress animated-progess custom-progress progress-label">
-                                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"><div class="label">30%</div></div>
+                                                                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ completeness_percentage }}%" aria-valuenow="{{ completeness_percentage }}" aria-valuemin="0" aria-valuemax="100"><div class="label">{{ completeness_percentage }}%</div></div>
                                                             </div>
                                                         </div>
-                                                    </div> {% endcomment %}
+                                                    </div>                                                    
                                                     <div class="card">
                                                         <div class="card-body">
                                                             <h5 class="card-title mb-3">Info</h5>
@@ -123,7 +127,9 @@
                                                 </div><!--end col-->
                                                 <div class="col-xxl-9">
                                                     <div class="card">
-                                                        <h5 class="card-title">Products </h5>
+                                                        <div class="card-title">
+                                                            <h5> Products  </h5>
+                                                        </div>
                                                         <div class="card-body">                                                            
                                                             <!-- Swiper -->
                                                             <div class="swiper project-swiper mt-n4">
@@ -167,19 +173,15 @@
                                                                                                 {% for variable in variables %}
                                                                                                 <div class="avatar-group-item">
                                                                                                     <div class="avatar-xs">
-                                                                                                        <img src="{% static 'images/users/avatar-4.jpg' %}" alt="" class="rounded-circle img-fluid" />
+                                                                                                        <img src="{{ MEDIA_URL }}{{ product.image.url }}" alt="" class="rounded-circle img-fluid" />
                                                                                                     </div>
                                                                                                 </div>
                                                                                                 {% empty %}
-                                                                                                <div class="text-center py-12">
-                                                                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                                                    <h5 class="mt-2">Sorry, there isn't any product registered in the database</h5>
-                                                                                                    <p class="text-muted mb-0">You have to go to: </p>
-                                                                                                    <a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
-                                                                                                        <i class="ri-airplay-fill d-inline-block d-md-none"></i>
-                                                                                                        <span class="d-none d-md-inline-block">List Products</span>
-                                                                                                    </a>
-                                                                                                </div>
+                                                                                                <div class="avatar-group-item">
+                                                                                                    <div class="avatar-xs">
+                                                                                                        <img src="{% static 'images\landing.png' %}" alt="" class="rounded-circle img-fluid" />
+                                                                                                    </div>
+                                                                                                </div>                                                                                                
                                                                                                 {% endfor %}
                                                                                             </div>
                                                                                         </div>
@@ -192,15 +194,21 @@
                                                                     </div>
                                                                     <!-- end slide item -->
                                                                     {% empty %}
-                                                                    <div class="text-center py-12">
-                                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                        <h5 class="mt-2">Sorry, there isn't any product registered in the database</h5>
-                                                                        <p class="text-muted mb-0">You have to go to: </p>
-                                                                        <a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                    <div class="text-center py-1">
+                                                                        <lord-icon
+                                                                            src="https://cdn.lordicon.com/msoeawqm.json"
+                                                                            trigger="loop"
+                                                                            colors="primary:#405189,secondary:#0ab39c"
+                                                                            style="width:75px;height:75px"
+                                                                        ></lord-icon>
+                                                                        <h5 class="mt-2">No registered products in the database</h5>
+                                                                        <p class="text-muted mb-0">You can view products here:</p>
+                                                                        <a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'product:product.list' %}" role="tab">
                                                                             <i class="ri-airplay-fill d-inline-block d-md-none"></i>
                                                                             <span class="d-none d-md-inline-block">List Products</span>
                                                                         </a>
                                                                     </div>
+                                                                    
                                                                     {% endfor %}
                                                                 </div>
                                                             </div>
@@ -265,7 +273,7 @@
                                                                     <div class="text-center py-12">
                                                                         <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
                                                                         <h5 class="mt-2">Sorry there isn't any product register in the database</h5>
-                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'product:product.list' %}" role="tab">
                                                                             <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">List Products</span>
                                                                         </a>
                                                                     </div>
@@ -358,7 +366,7 @@
                                                                     <div class="text-center py-12">
                                                                         <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
                                                                         <h5 class="mt-2">Sorry there isn't any variable register in the database</h5>
-                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'dashboards:dashboard_products' %}" role="tab">
+                                                                        <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'variable:variable.list' %}" role="tab">
                                                                             <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">List Products</span>
                                                                         </a>
                                                                     </div>

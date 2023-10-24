@@ -20,7 +20,7 @@
                             <div class="col-xxl-6">
                                 <div class="card">
                                     <div class="card-header align-items-center d-flex">
-                                        <h4 class="card-title mb-0 flex-grow-1"></h4>
+                                        <h4 class="card-title mb-0 flex-grow-1">Params Simulation</h4>
                                     </div><!-- end card header -->
 
                                     <div class="card-body">
@@ -31,8 +31,8 @@
                                                 <div class="row">
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="fk_product" class="form-label"><span data-key="t-product"> Product</span></label>
-                                                            <select id="fk_product" class="form-select" data-choices data-choices-sorting="true" >
+                                                            <label for="fk_product" class="form-label" title="Select the product you want to choose"><span data-key="t-product"> Product</span></label>
+                                                            <select id="fk_product" class="form-select" data-choices data-choices-sorting="true">
                                                                 <option selected>Choose...</option>
                                                                 {% for product in products %}
                                                                 <option>{{ product.name }}</option>
@@ -43,16 +43,17 @@
                                                         </div>
                                                         <div id="error-message" style="color: red;"></div>
                                                     </div><!--end col-->
+                                                    
 
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="historicdemand" class="form-label"><span data-key="t-demandhistory">Historic Demand</span></label>
+                                                            <label for="historicdemand" class="form-label" title="Submit the historic demand you want to use in format .xlsx"><span data-key="t-demandhistory">Historic Demand</span></label>
                                                             <input type="file" accept=".xlsx" id="historicdemand">
                                                         </div>
                                                     </div><!--end col-->
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="unit_time" class="form-label"><span data-key="t-timeunit"> Unit of time</span></label>
+                                                            <label for="unit_time" class="form-label" title="Select the unit of time you want to use"><span data-key="t-timeunit"> Unit of time</span></label>
 
                                                             <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
                                                                 <option selected>Choose...</option>
@@ -64,7 +65,7 @@
                                                     </div><!--end col-->
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="elements" class="form-label"><span data-key="t-demandhistory"> Elements that want to show inn the graphic and table</span></label>
+                                                            <label for="elements" class="form-label" title="Select the options that you want to use in the simulation"> Elements that want to show inn the graphic and table</label>
                                                             <label>
                                                                 <div class="form-check">
                                                                     <input class="form-check-input" type="checkbox" id="financial_statements">
@@ -101,7 +102,7 @@
                                                     </div><!--end col-->
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
-                                                            <label for="fk_questionary" class="form-label"><span data-key="t-timeunit"> Information of questionary to use</span></label>
+                                                            <label for="fk_questionary" class="form-label" title="Select the information to use in the simulation"><span data-key="t-timeunit"> Information of questionary to use</span></label>
 
                                                             <select id="fk_questionary" class="form-select" data-choices data-choices-sorting="true" >
                                                                 <option selected>Choose...</option>
@@ -335,13 +336,9 @@
                 }
             });
         });
-    </script>
-    <script>
     document.getElementById('clearButton').addEventListener('click', function() {
         document.getElementById('myForm').reset();
     });
-    </script>
-    <script>
         // Agregar un evento de cambio al elemento select
         document.getElementById("ForminputState").addEventListener("change", function () {
             // Obtener el elemento seleccionado

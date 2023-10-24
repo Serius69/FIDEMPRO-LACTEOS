@@ -1,6 +1,7 @@
 from django.urls import path
 from product.views import(
-    product_list,product_overview,create_product_view,update_product_view,delete_product_view
+    product_list,product_overview,create_product_view,update_product_view,delete_product_view,
+    generate_products
 )
 app_name = 'product'
 urlpatterns = [
@@ -10,4 +11,7 @@ urlpatterns = [
     path("new/", view=create_product_view, name='product.create'),
     path("edit/", view=update_product_view, name='product.edit'),
     path("delete/", view=delete_product_view, name='product.delete'),
+    path('generate-products/', generate_products, name='product.generate_default'),
+    
+
 ]

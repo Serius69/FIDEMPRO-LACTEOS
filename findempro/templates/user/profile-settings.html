@@ -13,7 +13,7 @@
 
             <div class="position-relative mx-n4 mt-n4">
                 <div class="profile-wid-bg profile-setting-img">
-                    <img src="{% static 'images/profile-bg.jpg' %}" class="profile-wid-img" alt="">
+                    <img src="{% static 'images/cover-pattern.png'%}" class="profile-wid-img" alt="">
                     <div class="overlay-content">
                         <div class="text-end p-3">
                             <div class="p-0 ms-auto rounded-circle profile-photo-edit">
@@ -31,9 +31,15 @@
                         <div class="card-body p-4">
                             <div class="text-center">
                                 <div class="profile-user position-relative d-inline-block mx-auto  mb-4">
-                                    <img src="{% static 'images/users/avatar-1.jpg' %}"
+                                    {% if user.image_src == null %}
+                                    <img src="{% static 'images/users/user-dummy-img.jpg'%}"
                                         class="rounded-circle avatar-xl img-thumbnail user-profile-image"
                                         alt="user-profile-image">
+                                        {% else %}
+                                        <img src="{{ MEDIA_URL }}{{ user.image_src.url }}"
+                                        class="rounded-circle avatar-xl img-thumbnail user-profile-image"
+                                        alt="user-profile-image">
+                                        {% endif %}
                                     <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
                                         <input id="profile-img-file-input" type="file"
                                             class="profile-img-file-input">
@@ -95,7 +101,8 @@
                         <div class="card-body p-4">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="personalDetails" role="tabpanel">
-                                    <form action="javascript:void(0);">
+                                    <form method="POST" class="post-form" id="userForm" enctype="multipart/form-data">
+                                        {% csrf_token %}
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
@@ -143,8 +150,10 @@
                                             <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="hstack gap-2 justify-content-end">
+
                                                     <button type="submit"
                                                         class="btn btn-primary">Update</button>
+
                                                     <button type="button"
                                                         class="btn btn-soft-success">Cancel</button>
                                                 </div>
@@ -156,49 +165,38 @@
                                 </div>
                                 <!--end tab-pane-->
                                 <div class="tab-pane" id="changePassword" role="tabpanel">
-                                    <form action="javascript:void(0);">
+                                    <form id="passwordChangeForm">
                                         <div class="row g-2">
                                             <div class="col-lg-4">
                                                 <div>
-                                                    <label for="oldpasswordInput" class="form-label">Old
-                                                        Password*</label>
-                                                    <input type="password" class="form-control"
-                                                        id="oldpasswordInput"
-                                                        placeholder="Enter current password">
+                                                    <label for="oldpassword" class="form-label">Old Password*</label>
+                                                    <input type="password" class="form-control" id="oldpassword" placeholder="Enter current password" required>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-4">
                                                 <div>
-                                                    <label for="newpasswordInput" class="form-label">New
-                                                        Password*</label>
-                                                    <input type="password" class="form-control"
-                                                        id="newpasswordInput" placeholder="Enter new password">
+                                                    <label for="newpassword" class="form-label">New Password*</label>
+                                                    <input type="password" class="form-control" id="newpassword" placeholder="Enter new password" required>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-4">
                                                 <div>
-                                                    <label for="confirmpasswordInput" class="form-label">Confirm
-                                                        Password*</label>
-                                                    <input type="password" class="form-control"
-                                                        id="confirmpasswordInput"
-                                                        placeholder="Confirm password">
+                                                    <label for="confirmpasswordInput" class="form-label">Confirm Password*</label>
+                                                    <input type="password" class="form-control" id="confirmpasswordInput" placeholder="Confirm password" required>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="mb-3">
-                                                    <a href="javascript:void(0);"
-                                                        class="link-primary text-decoration-underline">Forgot
-                                                        Password ?</a>
+                                                    <a href="{% url 'account_reset_password' %}" class="link-primary text-decoration-underline">Forgot Password ?</a>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="text-end">
-                                                    <button type="submit" class="btn btn-success">Change
-                                                        Password</button>
+                                                    <button type="button" id="changePasswordButton" class="btn btn-success">Change Password</button>
                                                 </div>
                                             </div>
                                             <!--end col-->
@@ -245,7 +243,6 @@
                 <!--end col-->
             </div>
             <!--end row-->
-
         </div>
         <!-- container-fluid -->
     </div><!-- End Page-content -->
@@ -258,5 +255,97 @@
 {% endblock content %}
 {% block extra_js %}
 <!-- profile-setting init js -->
-<script src="{% static 'js/pages/profile-setting.init.js'%}"></script>
+<script>
+    document.getElementById('changePasswordButton').addEventListener('click', async function () {
+        const oldPassword = document.getElementById('oldpassword').value;
+        const newPassword = document.getElementById('newpassword').value;
+        const confirmPassword = document.getElementById('confirmpasswordInput').value;
+        const form = document.getElementById('passwordChangeForm');
+    
+        // Client-side validation
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            return;
+        }
+    
+        if (newPassword !== confirmPassword) {
+            alert("New password and confirm password do not match.");
+            return;
+        }
+    
+        // Assuming you have a function to send the data to the server
+        const response = await changePassword(oldPassword, newPassword);
+    
+        // Handle the response from the server
+        if (response.success) {
+            alert("Password changed successfully.");
+            form.reset(); // Clear the form
+        } else {
+            alert("Password change failed. Please try again.");
+        }
+    });
+    
+    async function changePassword(oldPassword, newPassword) {
+        try {
+            // Make an asynchronous request to your server to change the password
+            const response = await fetch('/change_password_url/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ oldPassword, newPassword }),
+            });
+    
+            if (response.ok) {
+                return { success: true };
+            } else {
+                return { success: false };
+            }
+        } catch (error) {
+            return { success: false };
+        }
+    }
+    
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }    
+</script>
+<script>
+// Function to handle form submission
+$('#userForm').on('submit', async function (event) {
+    event.preventDefault();
+
+    try {
+        const formData = new FormData(this);
+        const response = await fetch('{% url "user:user.edit" user_id=user.id %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+        });
+        
+        
+        if (response.ok) {
+            // Business created successfully, you can show a success message here if needed.
+            hideAddBusinessModal();  // Hide the modal after successful submission
+        } else {
+            // Handle errors and display them to the user
+            const responseData = await response.json();
+            if (responseData.errors && responseData.errors.name) {
+                // Display the specific error message for the "name" field
+                const errorDiv = document.getElementById('error-name'); // Adjust the element ID as needed
+                if (errorDiv) {
+                    errorDiv.textContent = responseData.errors.name[0];
+                }
+            }
+        }
+    } catch (error) {
+        // Handle network or other errors
+        console.error(error);
+    }
+});</script>
 {% endblock extra_js %}

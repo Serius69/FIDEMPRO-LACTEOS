@@ -19,7 +19,7 @@ authentication_signin= PagesView.as_view(template_name="account/login.html")
 # authentication_offline= PagesView.as_view(template_name="pages/authentication/auth-offline.html")
 
 # Pages 
-pages_profile_settings= PagesView.as_view(template_name="pages/profile-settings.html")
+pages_profile_settings= PagesView.as_view(template_name="user/profile-settings.html")
 pages_faqs= PagesView.as_view(template_name="pages/faqs.html")
 pages_maintenance= PagesView.as_view(template_name="pages/maintenance.html")
 pages_coming_soon= PagesView.as_view(template_name="pages/coming-soon.html")

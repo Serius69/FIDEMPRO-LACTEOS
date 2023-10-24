@@ -16,7 +16,23 @@
                         <div class="card">
                             <div class="card-header border-0 rounded">
                                 <div class="row g-2">
-                                    <div class="col-xxl-3 ms-auto">
+                                    <div class="col-xxl-1 ms-auto">
+                                        <div>
+                                            <select class="form-control" id="business-select">
+                                                <option value="All">Select Business</option>
+                                                {% for business in businesses %}
+                                                    {% if business.is_active == 1 %}
+                                                        <option value="All">All</option>
+                                                        <option value="{{ business.id }}">{{ business.name }}</option>
+                                                    {% endif %}
+                                                {% empty %}
+                                                    <option value="All">All</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-xxl-1 ms-auto">
                                         <div>
                                             <select class="form-control" id="category-select">
                                                 <option value="All">Select Categories</option>
@@ -28,18 +44,26 @@
                                     <!--end col-->
                                     <div class="col-sm-auto">
                                         <div>
+                                            <button type="button" class="btn btn-danger" id="apply-filters">
+                                                <i class="ri-equalizer-fill me-1 align-bottom"></i> Filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-sm">
+                                        <div>
                                             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Add Product since 0</button>
-                                            <button type="button" class="btn btn-danger"><i class="ri-equalizer-fill me-1 align-bottom"></i> Filters</button>
-                                            <button class="btn btn-success" data-bs-toggle="modal"  action=""><i class="ri-add-fill me-1 align-bottom"></i> Use default products</button>
+                                            <button class="btn btn-success" data-bs-toggle="modal"  data-bs-target="#addDefaultProduct"><i class="ri-add-fill me-1 align-bottom"></i> Use default products</button>
                                         </div>
                                     </div>
                                     <div class="col-sm">
                                         <div class="d-flex justify-content-sm-end gap-2">
                                             <div class="search-box ms-2">
-                                                <input type="text" class="form-control" placeholder="Search...">
+                                                <input type="text" id="searchInput" class="form-control" placeholder="Search...">
                                                 <i class="ri-search-line search-icon"></i>
                                             </div>
                                         </div>
+                                        
                                         
                                     </div>
                                     <!--end col-->
@@ -50,8 +74,8 @@
                         <div class="row">
                             {% comment %} Inicio de la lista {% endcomment %}
                         {% for product in products %}
-                            {% if product.status == 1 %}
-                            <div class="col-xxl-3 col-sm-6 project-card">
+                            {% if product.is_active == 1 %}
+                            <div class="col-xxl-4 col-sm-7 project-card" data-business="{{ product.business_id }}" data-category="{{ product.category }}">
                                 <div class="card card-height-100">
                                     <div class="card-body">
                                         <div class="d-flex flex-column h-100">
@@ -89,10 +113,10 @@
                                             </div>
                                             <div class="d-flex mb-2">
                                                 <div class="flex-shrink-0 me-3">
-                                                    <div class="avatar-sm">
-                                                        <span class="avatar-title bg-warning-subtle rounded p-2">
-                                                            {% if product.image %}
-                                                                <img src="{{ MEDIA_URL }}{{ product.image.url }}" alt="" class="img-fluid p-1">
+                                                    <div class="avatar-md">
+                                                        <span>
+                                                            {% if product.image_src %}
+                                                                <img src="{{ MEDIA_URL }}{{ product.image_src.url }}" alt="" class="img-fluid p-1">
                                                             {% else %}
                                                                 <img src="{% static 'path_to_dummy_image.jpg' %}" alt="" class="img-fluid p-1">
                                                             {% endif %}
@@ -169,6 +193,7 @@
                                 </div>
                                 <!-- end card -->
                             </div>
+                            
                             <!-- end col -->
                             {% endif %}
                         {% empty %}
@@ -351,8 +376,96 @@
                                 </div>
                             </div>
                         </div>
-                         <!-- Modal -->
-                         <div class="modal fade zoomIn" id="addProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
+                        <!--Add Default products Modal -->
+                        <div class="modal fade zoomIn" id="addDefaultProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="addProductLabel">Add Product</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane active" id="companyDetails" role="tabpanel">
+                                                <form id="productForm">
+                                                    {% csrf_token %}
+                                                    <div class="row">
+                                                        <div class="col-lg-12">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Choose one or more that the next products to add to the business</label>
+
+                                                                <table id="product-table" class="table align-middle table-nowrap table-striped-columns mb-0">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th scope="col" style="width: 46px;">
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="checkbox" value="" id="cardtableCheck">
+                                                                                    <label class="form-check-label" for="cardtableCheck"></label>
+                                                                                </div>
+                                                                            </th>
+                                                                            <th scope="col">Image</th>
+                                                                            <th scope="col">Name</th>
+                                                                            <th scope="col">Status</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="checkbox" value="" id="cardtableCheck01">
+                                                                                    <label class="form-check-label" for="cardtableCheck01"></label>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td><iframe src="https://giphy.com/embed/3oz8xCX30CNCJZigSc" width="50" height="50" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
+                                                                            </td>
+                                                                            <td>Normal Milk</td>
+                                                                            <td><span class="badge bg-success">Ready to simulations</span></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="checkbox" value="" id="cardtableCheck02">
+                                                                                    <label class="form-check-label" for="cardtableCheck02"></label>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td><iframe src="https://giphy.com/embed/3oz8xCX30CNCJZigSc" width="50" height="50" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
+                                                                            <td>Regular cheese</td>
+                                                                            <td><span class="badge bg-success">Ready to simulations</span></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="checkbox" value="" id="cardtableCheck03">
+                                                                                    <label class="form-check-label" for="cardtableCheck03"></label>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td><iframe src="https://giphy.com/embed/3oz8xCX30CNCJZigSc" width="50" height="50" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
+                                                                            <td>Regular Yogurt</td>
+                                                                            <td><span class="badge bg-danger">Ready to simulations</span></td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                                <div class="col-lg-12">
+                                                                    <div class="hstack gap-2 justify-content-end">
+                                                                        <button class="btn btn-link link-success text-decoration-none fw-medium" data-bs-dismiss="modal"><i class="ri-close-line me-1 align-middle"></i> Close</button>
+                                                                        <button id="add-selected-products" class="btn btn-primary"><i class="ri-save-3-line align-bottom me-1"></i> Add selected items</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>                                                            
+                                                        </div>                                                        
+                                                        <!--end col-->
+                                                    </div>
+                                                    <!--end row-->
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>                                 
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Modal -->
+                        <div class="modal fade zoomIn" id="addProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
@@ -410,7 +523,7 @@
                                                         <div class="col-lg-6">
                                                             <div class="mb-3">
                                                                 <label for="image_src" class="form-label">Product Image</label>
-                                                                <input type="file" class="form-control" id="image_src" name="image_src">
+                                                                <input type="file" class="form-control" id="image_src" accept="image/png, image/jpeg" name="image_src">
                                                             </div>
                                                         </div>
                                                         <!--end col-->
@@ -443,6 +556,47 @@
                         <!--end modal-->
 {% endblock extra_content %}
 {% block extra_js %}
+    <script>
+    $(document).ready(function () {
+        $('#apply-filters').on('click', function () {
+            var selectedBusiness = $('#business-select').val();
+            var selectedCategory = $('#category-select').val();
+    
+            // Ocultar todos los productos
+            $('.product').hide();
+    
+            // Mostrar los productos que coinciden con las selecciones
+            if (selectedBusiness === 'All' && selectedCategory === 'All') {
+                $('.product').show();
+            } else {
+                $('.product').each(function () {
+                    var businessId = $(this).data('business');
+                    var category = $(this).data('category');
+    
+                    if ((selectedBusiness === 'All' || selectedBusiness == businessId) &&
+                        (selectedCategory === 'All' || selectedCategory == category)) {
+                        $(this).show();
+                    }
+                });
+            }
+        });
+    });
+    </script>
+    <script>
+    $(document).ready(function () {
+        // Manejar el clic en el botón "Agregar productos seleccionados"
+        $('#add-selected-products').on('click', function () {
+            // Recorrer todas las casillas de verificación en la tabla
+            $('#product-table tbody input[type="checkbox"]').each(function () {
+                if ($(this).prop('checked')) {
+                    // Si la casilla de verificación está marcada, agregar la fila correspondiente a la tabla
+                    const $row = $(this).closest('tr');
+                    $('#product-table').append($row.clone());
+                }
+            });
+        });
+    });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const deleteButtons = document.querySelectorAll(".delete-product-btn");
@@ -566,8 +720,27 @@
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-    </script>
+        // Get references to the input field and the search icon
+        const searchInput = document.getElementById('searchInput');
+        const searchIcon = document.querySelector('.search-icon');
 
-    <!-- project list init -->
-    <script src="{% static 'js/pages/project-list.init.js'%}"></script>
+        // Add an event listener to the search icon
+        searchIcon.addEventListener('click', () => {
+            performSearch();
+        });
+
+        // Add an event listener for the Enter key press in the input field
+        searchInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Function to perform the search (you can replace this with your actual search logic)
+        function performSearch() {
+            const searchTerm = searchInput.value;
+            alert('Performing search for: ' + searchTerm);
+            // Replace the alert with your search logic, e.g., making an API request.
+        }
+    </script>
 {% endblock extra_js %}

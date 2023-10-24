@@ -1,11 +1,13 @@
 from typing import Dict, Any
 from django.contrib.auth.models import User
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
+from product.models import Product
+from business.models import Business
 # Create your views here.
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass
@@ -51,6 +53,9 @@ def dashboard_user(request) -> str:
     Returns:
         str: The rendered HTML template as the response.
     """
+     
+    business = get_object_or_404(Business,fk_user=request.user)
+    
     today = timezone.now()
     last_month = today - relativedelta(months=1)
 
@@ -70,8 +75,11 @@ def dashboard_user(request) -> str:
     else:
         greeting = "Good Evening"
 
+    # Filtra los productos del negocio específico
+    products = Product.objects.filter(fk_business=business.id)
 
-
+    # Calcula el total de ingresos sumando los ingresos de todos los productos
+    total_revenue = sum(product.earnings for product in products)
 
 
 
@@ -83,9 +91,14 @@ def dashboard_user(request) -> str:
         'users_change': users_change,
         'users_change_percentage': users_change_percentage,
         'greeting': greeting,
+        'products': products,
+        'business': business,
+        'total_revenue': total_revenue,
+        
     }
 
     return render(request, 'dashboards/dashboard-user.html', context)
+
 
 
 

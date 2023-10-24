@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.http import HttpResponse
 from .models import Business
+from product.models import Product
 from .forms import BusinessForm
 from django.urls import reverse
 from django.http import JsonResponse
@@ -18,7 +19,7 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def business_list(request):
     form = BusinessForm()
     try:
-        businesses = Business.objects.filter(user=request.user).order_by('-id')
+        businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
         context = {'businesses': businesses, 'form': form}  # Corrected the context variable name
         return render(request, 'business/business-list.html', context)
     except Exception as e:
@@ -31,8 +32,16 @@ def business_overview(request, pk):
     logger = logging.getLogger(__name__)
     logger.debug("This is a log message.")
     try:
+        
         business = get_object_or_404(Business, pk=pk)
-        return render(request, 'business/business-overview.html', {'business': business})
+        # products = Product.objects.order_by('-id')
+        products = Product.objects.filter(fk_business_id=business.id).order_by('-id')
+
+        return render(request, 'business/business-overview.html', 
+                      {'business': business,
+                       'products': products
+                       
+                       })
     except Exception as e:
         # Log the complete error.
         logger.exception("An error occurred in the 'business_overview' view")
@@ -80,7 +89,8 @@ def update_business_view(request, pk):
 def delete_business_view(request, pk):
     try:
         business = get_object_or_404(Business, pk=pk)
-        business.delete()
+        business.is_active=False
+        business.save()
         messages.success(request, "Business deleted successfully!")
         return redirect("business:business_list")  # Corrected the redirect URL name
     except Exception as e:

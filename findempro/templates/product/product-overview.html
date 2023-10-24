@@ -8,10 +8,8 @@
             <!-- Start right Content here -->
             <!-- ============================================================== -->
             <div class="main-content">
-
                 <div class="page-content">
                     <div class="container-fluid">
-
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="card mt-n4 mx-n4">
@@ -21,9 +19,9 @@
                                                 <div class="col-md">
                                                     <div class="row align-items-center g-3">
                                                         <div class="col-md-auto">
-                                                            <div class="avatar-md">
+                                                            <div class="avatar-lg">
                                                                 <div class="avatar-title bg-white rounded-circle">
-                                                                    <img src="{{ MEDIA_URL }}{{ product.image.url }}" alt="" class="avatar-xs">
+                                                                    <img src="{{ MEDIA_URL }}{{ product.image_src.url }}" alt="" class="avatar-md">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -48,16 +46,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-auto">
-                                                    <div class="hstack gap-1 flex-wrap">
-                                                        <button type="button" class="btn py-0 fs-16 text-body">
-                                                            <i class="ri-share-line"></i>
-                                                        </button>
-                                                        <button type="button" class="btn py-0 fs-16 text-body">
-                                                            <i class="ri-flag-line"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
                                             </div>
                                             <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
                                                 <li class="nav-item">
@@ -67,7 +55,7 @@
                                                     </a>
                                                 </li>
                                                 <li class="nav-item">
-                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#project-documents"
+                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#project-simulations"
                                                         role="tab">
                                                         Simulations
                                                     </a>
@@ -221,17 +209,7 @@
                                                 <!-- end card -->
                                             </div>
                                             <!-- ene col -->
-                                            <div class="col-xl-3 col-lg-4">
-                                                <div class="card">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-4">Skills</h5>
-                                                        <div class="d-flex flex-wrap gap-2 fs-16">
-                                                            <div class="badge fw-medium bg-secondary-subtle text-secondary">UI/UX</div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- end card body -->
-                                                </div>
-                                                <!-- end card -->                                            
+                                            <div class="col-xl-3 col-lg-4">                                        
 
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
@@ -294,11 +272,11 @@
                                         <!-- end row -->
                                     </div>
                                     <!-- end tab pane -->
-                                    <div class="tab-pane fade" id="project-documents" role="tabpanel">
+                                    <div class="tab-pane fade" id="project-simulations" role="tabpanel">
                                         <div class="card">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center mb-4">
-                                                    <h5 class="card-title flex-grow-1">Documents</h5>
+                                                    <h5 class="card-title flex-grow-1">Simulations</h5>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-lg-12">
@@ -307,7 +285,6 @@
                                                                 <thead class="table-light">
                                                                     <tr>
                                                                         <th scope="col">Simulation Name</th>
-                                                                        {% comment %} <th scope="col">Size</th> {% endcomment %}
                                                                         <th scope="col">Date Simulation</th>
                                                                         <th scope="col" style="width: 120px;">Action</th>
                                                                     </tr>
@@ -327,7 +304,6 @@
                                                                                 </div>
                                                                             </div>
                                                                         </td>
-                                                                        {% comment %} <td>4.57 MB</td> {% endcomment %}
                                                                         <td>{{simulation.date}}</td>
                                                                         <td>
                                                                             <div class="dropdown">
@@ -346,14 +322,9 @@
                                                                     {% empty %}
                                                                      <tr>
                                                                         <td>
-                                                                        {% comment %} <div class="col text-center py-4"> {% endcomment %}
                                                                             <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
                                                                             <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
                                                                             <p class="text-muted mb-0">You have to "Add Business".</p>
-                                                                        {% comment %} </div> {% endcomment %}
-                                                                        {% comment %} <div class="text-center mt-3">
-                                                                            <a href="javascript:void(0);" class="text-success "><i class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load more </a>
-                                                                        </div> {% endcomment %}
                                                                         </td>
                                                                     </tr>
                                                                     {% endfor %}  

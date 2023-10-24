@@ -29,14 +29,3 @@ class MyPasswordSetView(PasswordSetView):
         except Exception as e:
             # Handle exceptions here, e.g., log the error or display an error message
             return HttpResponseServerError("An error occurred while setting the password. Please try again later.")
-
-
-# from google.oauth2 import service_account
-# from googleapiclient.discovery import build
-
-# SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-
-# credentials = service_account.Credentials.from_service_account_file(
-#     'ruta/a/tu/credenciales.json', scopes=SCOPES)
-
-# service = build('gmail', 'v1', credentials=credentials)

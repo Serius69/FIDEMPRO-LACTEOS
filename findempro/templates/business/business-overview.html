@@ -24,7 +24,7 @@
                             <div>
                                 <div class="flex-shrink-0 avatar-md mx-auto">
                                     <div class="avatar-title bg-light rounded">
-                                        <img src="{{ business.image_src.url }}" alt="" height="50" />
+                                        <img src="{{ business.image_src.url }}" alt="100" height="100" />
                                     </div>
                                 </div>
                                 <div class="mt-4 text-center">
@@ -96,7 +96,7 @@
                                         <table class="table align-middle" id="productTable">
                                             <thead class="table-light text-muted">
                                                 <tr>
-                                                    <th class="sort" data-sort="image">Image</th>
+                                                    <th class="sort">Image</th>
                                                     <th class="sort" data-sort="name">Product</th>
                                                     <th class="sort" data-sort="type">Type</th>
                                                     <th class="sort" data-sort="date">Date Created</th>
@@ -107,10 +107,7 @@
                                             <tbody class="list form-check-all">
                                                 {% for product in products %}
                                                 <tr>
-                                                    <td class="id" style="display:none;">
-                                                        <a href="javascript:void(0);"
-                                                           class="fw-medium link-primary">{{ product.id }}</a>
-                                                    </td>
+                                                    <td class="image"><img src="{{ product.image_src.url }}" alt="40" height="40" /></td>
                                                     <td class="name">{{ product.name }}</td>
                                                     <td class="type">{{ product.type }}</td>
                                                     <td class="date">{{ product.date_created|date:"d M,Y" }}</td>
@@ -184,13 +181,13 @@
                                     </div><!--end col-->
                                     <div class="col-6 col-sm-4">
                                         <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1">$<span class="counter-value" data-target="{{ business.earnings }}">0</span>k</h5>
+                                            <h5 class="mb-1">$<span class="counter-value" data-target="{{ business.product.earnings }}">0</span>k</h5>
                                             <p class="text-muted mb-0">Earnings</p>
                                         </div>
                                     </div><!--end col-->
                                     <div class="col-6 col-sm-4">
                                         <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1"><span class="counter-value" data-target="{{ business.refunds }}">0</span></h5>
+                                            <h5 class="mb-1"><span class="counter-value" data-target="{{ business.product.simulate.count }}">0</span></h5>
                                             <p class="text-muted mb-0">Refunds</p>
                                         </div>
                                     </div><!--end col-->
@@ -213,6 +210,9 @@
             </div>
         </div>
     </div>
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
 </div>
 {% endblock content %}
 

@@ -67,6 +67,7 @@ def create_product_view(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
+            
             product = form.save()
             messages.success(request, 'Product created successfully')
             return JsonResponse({'success': True})
@@ -131,3 +132,18 @@ def generate_and_save_products(request):
             product.save()
 
     return render(request, 'your_template.html')  # Replace 'your_template.html' with your actual template path
+
+
+def generate_products(request):
+    if request.method == 'POST':
+        # Crear tres productos de ejemplo
+        for _ in range(3):
+            product = Product.objects.create(
+                name="Example Product",
+                description="This is an example product.",
+                is_active=True,
+                type="Dairy"
+                # Agrega otros campos según sea necesario
+            )
+        return JsonResponse({'message': 'Productos generados con éxito'})
+    return render(request, 'generate_products.html')
