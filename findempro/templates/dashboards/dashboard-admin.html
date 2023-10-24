@@ -130,20 +130,6 @@
                                 <div class="card">
                                     <div class="card-header border-0 align-items-center d-flex">
                                         <h4 class="card-title mb-0 flex-grow-1">Audiences Metrics</h4>
-                                        <div>
-                                            <button type="button" class="btn btn-soft-secondary btn-sm">
-                                                ALL
-                                            </button>
-                                            <button type="button" class="btn btn-soft-secondary btn-sm">
-                                                1M
-                                            </button>
-                                            <button type="button" class="btn btn-soft-secondary btn-sm">
-                                                6M
-                                            </button>
-                                            <button type="button" class="btn btn-soft-primary btn-sm">
-                                                1Y
-                                            </button>
-                                        </div>
                                     </div><!-- end card header -->
                                     <div class="card-header p-0 border-0 bg-light-subtle">
                                         <div class="row g-0 text-center">
@@ -175,9 +161,9 @@
                                     </div><!-- end card header -->
                                     <div class="card-body p-0 pb-2">
                                         <div>
-                                            <div id="audiences_metrics_charts" data-colors='["--vz-success", "--vz-light"]'  class="apex-charts" dir="ltr"></div>
+                                            <div id="audiences_metrics_charts" data-colors='["--vz-success", "--vz-light"]' class="apex-charts" dir="ltr"></div>
                                         </div>
-                                    </div><!-- end card body -->
+                                    </div>
                                 </div><!-- end card -->
                             </div><!-- end col -->
                         </div> <!-- end row-->
@@ -217,11 +203,6 @@
                                                         <td><p class="text-muted mb-0"><i data-feather="users" class="me-2 icon-sm"></i>105.02k</p></td>
                                                         <td class="text-end"><p class="text-danger fw-medium fs-12 mb-0"><i class="ri-arrow-down-s-fill fs-5 align-middle"></i>10.52%</p></td>
                                                     </tr>
-                                                    <tr>
-                                                        <td><h4 class="text-truncate fs-14 fs-medium mb-0"><i class="ri-stop-fill align-middle fs-18 text-info me-2"></i>Tablet Users</h4></td>
-                                                        <td><p class="text-muted mb-0"><i data-feather="users" class="me-2 icon-sm"></i>42.89k</p></td>
-                                                        <td class="text-end"><p class="text-danger fw-medium fs-12 mb-0"><i class="ri-arrow-down-s-fill fs-5 align-middle"></i>7.36%</p></td>
-                                                    </tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -251,4 +232,50 @@
 
     <!-- Dashboard init -->
     <script  src="{% static 'js/pages/dashboard-analytics.init.js'%}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Datos del gráfico
+            var chartData = {
+                series: [78560, 105020],  // Datos de Desktop Users y Mobile Users
+                labels: ['Desktop Users', 'Mobile Users'],
+            };
+    
+            // Opciones del gráfico
+            var chartOptions = {
+                chart: {
+                    type: 'donut',
+                },
+                colors: ['var(--vz-primary)', 'var(--vz-warning)'],
+            };
+    
+            // Inicializar el gráfico en el div con el id "user_device_pie_charts"
+            var chart = new ApexCharts(document.querySelector("#user_device_pie_charts"), chartOptions);
+            chart.render();
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Datos del gráfico
+            var chartData = {
+                series: [30, 70],  // Datos de la audiencia o métricas
+                labels: ['Success', 'Light'],
+            };
+    
+            // Opciones del gráfico
+            var chartOptions = {
+                chart: {
+                    type: 'donut',
+                },
+                colors: ['var(--vz-success)', 'var(--vz-light)'],
+            };
+    
+            // Inicializar el gráfico en el div con el id "audiences_metrics_charts"
+            var chart = new ApexCharts(document.querySelector("#audiences_metrics_charts"), chartOptions);
+            chart.render();
+        });
+    </script>
 {% endblock extra_js %}

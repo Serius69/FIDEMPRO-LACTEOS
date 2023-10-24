@@ -50,7 +50,6 @@ def dashboard_admin(request):
     return render(request, 'dashboards/dashboard-admin.html', context)
 
 
-
 def dashboard_user(request) -> str:
     """
     Renders a dashboard template for a user, displaying user-related information.
