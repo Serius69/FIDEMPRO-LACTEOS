@@ -17,9 +17,3 @@ class Business(models.Model):
     
     def __str__(self):
         return self.name
-class BusinessProduct(models.Model):
-    business = models.ForeignKey(Business, on_delete=models.CASCADE)
-    product = models.ForeignKey('product.Product', on_delete=models.CASCADE)
-    
-    def __str__(self):
-        return f"{self.business.name} - {self.product.name}"

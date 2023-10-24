@@ -287,8 +287,7 @@
     
     async function changePassword(oldPassword, newPassword) {
         try {
-            // Make an asynchronous request to your server to change the password
-            const response = await fetch('/change_password_url/', {
+            const response = await fetch('{% url "user:password.change" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -306,6 +305,7 @@
             return { success: false };
         }
     }
+    
     
     function getCookie(name) {
         const value = `; ${document.cookie}`;

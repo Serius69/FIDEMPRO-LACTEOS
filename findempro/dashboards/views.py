@@ -8,6 +8,13 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from product.models import Product
 from business.models import Business
+from typing import Dict, Any
+from django.shortcuts import render
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+from django.contrib.auth.models import User
+
 # Create your views here.
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass
@@ -43,6 +50,7 @@ def dashboard_admin(request):
     return render(request, 'dashboards/dashboard-admin.html', context)
 
 
+
 def dashboard_user(request) -> str:
     """
     Renders a dashboard template for a user, displaying user-related information.
@@ -53,8 +61,8 @@ def dashboard_user(request) -> str:
     Returns:
         str: The rendered HTML template as the response.
     """
-     
-    business = get_object_or_404(Business,fk_user=request.user)
+    business = get_object_or_404(Business, fk_user=request.user)
+    businesses = Business.objects.all()
     
     today = timezone.now()
     last_month = today - relativedelta(months=1)
@@ -75,13 +83,26 @@ def dashboard_user(request) -> str:
     else:
         greeting = "Good Evening"
 
+    
+
     # Filtra los productos del negocio específico
     products = Product.objects.filter(fk_business=business.id)
-
+    
+    products_ready = 0
+    products_no_ready = 0
+    # Assuming 'products' is a queryset or a list of products
+    for product in products:
+        if product.is_ready == True:
+            products_ready += 1
+        else:
+            products_no_ready += 1
+    
     # Calcula el total de ingresos sumando los ingresos de todos los productos
-    total_revenue = sum(product.earnings for product in products)
-
-
+    total_revenue = sum(product.earnings or 0 for product in products)
+    total_costs = sum(product.costs or 0 for product in products)
+    total_inventory_levels = sum(product.inventory_levels or 0 for product in products)
+    total_production_output = sum(product.production_output or 0 for product in products)
+    total_profit_margin = sum(product.profit_margin or 0 for product in products)
 
     context: Dict[str, Any] = {
         'users': users,
@@ -93,11 +114,19 @@ def dashboard_user(request) -> str:
         'greeting': greeting,
         'products': products,
         'business': business,
+        'businesses': businesses,
         'total_revenue': total_revenue,
-        
+        'total_costs': total_costs,
+        'total_inventory_levels': total_inventory_levels,
+        'total_production_output': total_production_output,
+        'total_profit_margin': total_profit_margin,
+        'products_ready': products_ready,
+        'products_no_ready': products_no_ready,
+        'total_products': products_ready+products_no_ready,
     }
 
     return render(request, 'dashboards/dashboard-user.html', context)
+
 
 
 

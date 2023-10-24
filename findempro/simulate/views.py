@@ -9,7 +9,7 @@ from scipy import stats  # Import scipy for KS test
 from .models import DataPoint, NormalFDP, ExponentialFDP, LogarithmicFDP
 from variable.models import Variable
 from product.models import Product
-from business.models import Business, BusinessProduct
+from business.models import Business
 from sympy import Eq, sympify
 import openai
 

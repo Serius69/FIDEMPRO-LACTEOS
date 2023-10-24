@@ -85,7 +85,7 @@ def update_user_view(request, pk):
     return render(request, "user/user-update.html", {'form': form, 'user': user})
 
 # Delete
-def delete_user_view(request, pk):
+def delete_user_view_as_admin(request, pk):
     user = get_object_or_404(User, pk=pk)
     try:
         user.is_active = False
@@ -96,7 +96,7 @@ def delete_user_view(request, pk):
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
 
-def change_password(request):
+def  change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
@@ -106,4 +106,15 @@ def change_password(request):
             return redirect('profile')  # Redirect to the user's profile or another appropriate page
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'change_password.html', {'form': form})    
+    return render(request, 'user/profile.html', {'form': form})    
+
+def delete_user_view(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    try:
+        user.is_active = False
+        user.save()
+        messages.success(request, "User deleted successfully!")
+        return redirect("signup_url")
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
