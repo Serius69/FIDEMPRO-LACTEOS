@@ -1,7 +1,7 @@
 Rater Js
 ========
 
-![rater-js Logo](ratings.png)
+![rater-js Logo](ratings.webp)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/folssondev)
 [![NPM version][npm-image]][npm-url]
 [![License][license-image]][license-url]

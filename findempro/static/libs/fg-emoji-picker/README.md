@@ -1,6 +1,6 @@
 # Emoji picker created with vanilla javascript
 
-![](emoji-picker-thumb.jpg)
+![](emoji-picker-thumb.webp)
 
 ## Install with NPM
 ```

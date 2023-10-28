@@ -7309,13 +7309,13 @@ var featureGroup = function (layers, options) {
  *
  * ```js
  * var myIcon = L.icon({
- *     iconUrl: 'my-icon.png',
- *     iconRetinaUrl: 'my-icon@2x.png',
+ *     iconUrl: 'my-icon.webp',
+ *     iconRetinaUrl: 'my-icon@2x.webp',
  *     iconSize: [38, 95],
  *     iconAnchor: [22, 94],
  *     popupAnchor: [-3, -76],
- *     shadowUrl: 'my-icon-shadow.png',
- *     shadowRetinaUrl: 'my-icon-shadow@2x.png',
+ *     shadowUrl: 'my-icon-shadow.webp',
+ *     shadowRetinaUrl: 'my-icon-shadow@2x.webp',
  *     shadowSize: [68, 95],
  *     shadowAnchor: [22, 94]
  * });
@@ -7479,9 +7479,9 @@ function icon(options) {
 var IconDefault = Icon.extend({
 
 	options: {
-		iconUrl:       'marker-icon.png',
-		iconRetinaUrl: 'marker-icon-2x.png',
-		shadowUrl:     'marker-shadow.png',
+		iconUrl:       'marker-icon.webp',
+		iconRetinaUrl: 'marker-icon-2x.webp',
+		shadowUrl:     'marker-shadow.webp',
 		iconSize:    [25, 41],
 		iconAnchor:  [12, 41],
 		popupAnchor: [1, -34],
@@ -7507,7 +7507,7 @@ var IconDefault = Icon.extend({
 			return match && match[idx];
 		};
 		path = strip(path, /^url\((['"])?(.+)\1\)$/, 2);
-		return path && strip(path, /^(.*)marker-icon\.png$/, 1);
+		return path && strip(path, /^(.*)marker-icon\.webp$/, 1);
 	},
 
 	_detectIconPath: function () {
@@ -9349,7 +9349,7 @@ var geoJson = geoJSON;
  * @example
  *
  * ```js
- * var imageUrl = 'https://maps.lib.utexas.edu/maps/historical/newark_nj_1922.jpg',
+ * var imageUrl = 'https://maps.lib.utexas.edu/maps/historical/newark_nj_1922.webp',
  * 	imageBounds = [[40.712216, -74.22655], [40.773941, -74.12544]];
  * L.imageOverlay(imageUrl, imageBounds).addTo(map);
  * ```
@@ -12027,7 +12027,7 @@ function gridLayer(options) {
  * @example
  *
  * ```js
- * L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
+ * L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.webp?{foo}', {foo: 'bar', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
  * ```
  *
  * @section URL template
@@ -12036,7 +12036,7 @@ function gridLayer(options) {
  * A string of the following form:
  *
  * ```
- * 'https://{s}.somedomain.com/blabla/{z}/{x}/{y}{r}.png'
+ * 'https://{s}.somedomain.com/blabla/{z}/{x}/{y}{r}.webp'
  * ```
  *
  * `{s}` means one of the available subdomains (used sequentially to help with browser parallel requests per domain limitation; subdomain values are specified in options; `a`, `b` or `c` by default, can be omitted), `{z}` — zoom level, `{x}` and `{y}` — tile coordinates. `{r}` can be used to add "&commat;2x" to the URL to load retina tiles.
@@ -12044,7 +12044,7 @@ function gridLayer(options) {
  * You can use custom keys in the template, which will be [evaluated](#util-template) from TileLayer options, like this:
  *
  * ```
- * L.tileLayer('https://{s}.somedomain.com/{foo}/{z}/{x}/{y}.png', {foo: 'bar'});
+ * L.tileLayer('https://{s}.somedomain.com/{foo}/{z}/{x}/{y}.webp', {foo: 'bar'});
  * ```
  */
 

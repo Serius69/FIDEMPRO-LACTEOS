@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, default='images/users/user-dummy-img.jpg')
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, default='images/users/user-dummy-img.webp')
     # Agrega otros campos de perfil que desees
 
     def is_profile_complete(self):

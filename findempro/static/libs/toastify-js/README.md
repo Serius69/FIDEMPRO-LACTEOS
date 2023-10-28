@@ -429,11 +429,11 @@ If `gravity` is equals to `bottom`, it will be pushed from bottom.
 
 MIT © [Varun A P](https://github.com/apvarun)
 
-<a href="https://www.buymeacoffee.com/apvarun" target="_blank" rel="noopener"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="40" width="145" alt="Buy Me A Coffee"></a>
+<a href="https://www.buymeacoffee.com/apvarun" target="_blank" rel="noopener"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.webp" height="40" width="145" alt="Buy Me A Coffee"></a>
 
-[ie]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/edge.png
-[firefox]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/firefox.png
-[chrome]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/chrome.png
-[safari]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/safari.png
-[opera]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/opera.png
+[ie]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/edge.webp
+[firefox]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/firefox.webp
+[chrome]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/chrome.webp
+[safari]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/safari.webp
+[opera]: https://raw.githubusercontent.com/godban/browsers-support-badges/master/src/images/opera.webp
 

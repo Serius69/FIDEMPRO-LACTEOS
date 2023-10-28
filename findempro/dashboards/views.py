@@ -82,8 +82,6 @@ def dashboard_user(request) -> str:
     else:
         greeting = "Good Evening"
 
-    
-
     # Filtra los productos del negocio específico
     products = Product.objects.filter(fk_business=business.id)
     

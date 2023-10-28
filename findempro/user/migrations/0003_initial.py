@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('bio', models.TextField(blank=True)),
-                ('profile_picture', models.ImageField(blank=True, default='images/users/user-dummy-img.jpg', upload_to='profile_pictures/')),
+                ('profile_picture', models.ImageField(blank=True, default='images/users/user-dummy-img.webp', upload_to='profile_pictures/')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

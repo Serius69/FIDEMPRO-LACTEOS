@@ -22,7 +22,7 @@ A vanilla, lightweight (~19kb gzipped 🎉), configurable select box/text input 
 ### Sponsored by:
 <p align="center">
   <a href="https://wanderermaps.com/" target="_blank" rel="noopener noreferrer">
-    <img src="https://cdn.shopify.com/s/files/1/0614/3357/7715/files/Logo_BlackWithBackground_200x.png?v=1644802773" alt="Wanderer Maps logo">
+    <img src="https://cdn.shopify.com/s/files/1/0614/3357/7715/files/Logo_BlackWithBackground_200x.webp?v=1644802773" alt="Wanderer Maps logo">
   </a>
 </p>
 

@@ -28,4 +28,4 @@ class Variable(models.Model):
         if self.image_src and hasattr(self.image_src, 'url'):
             return self.image_src.url
         else:
-            return "/images/variable/variable-dummy-img.jpg"
+            return "/images/variable/variable-dummy-img.webp"
