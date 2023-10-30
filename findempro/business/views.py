@@ -10,56 +10,72 @@ from product.models import Product
 from .forms import BusinessForm
 from django.urls import reverse
 from django.http import JsonResponse
-
+from findempro.views import convert_to_webp
+from django.core.files import File
+from django.core.files.base import ContentFile
 # Create your business views here.
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
 # List
 def business_list(request):
+    """
+    Renders a list of businesses based on the logged-in user.
+
+    Args:
+        request (HttpRequest): The HTTP request object containing metadata about the request.
+
+    Returns:
+        HttpResponse: The rendered HTML template with the list of businesses and the form instance.
+    """
     form = BusinessForm()
     try:
         businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
-        context = {'businesses': businesses, 'form': form}  # Corrected the context variable name
+        context = {'businesses': businesses, 'form': form}
         return render(request, 'business/business-list.html', context)
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)  # Return an HTTP 500 error response
+        return HttpResponse(status=500)
+
 
 # Detail
 def business_overview(request, pk):
-    # Configure logging within the function or view.
-    logger = logging.getLogger(__name__)
-    logger.debug("This is a log message.")
     try:
-        
         business = get_object_or_404(Business, pk=pk)
-        # products = Product.objects.order_by('-id')
         products = Product.objects.filter(fk_business_id=business.id).order_by('-id')
-
         return render(request, 'business/business-overview.html', 
                       {'business': business,
                        'products': products
-                       
                        })
     except Exception as e:
-        # Log the complete error.
-        logger.exception("An error occurred in the 'business_overview' view")
         messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
-        return HttpResponse(status=500)  # Return an HTTP 500 error response
+        return HttpResponse(status=500) 
 
 @login_required
 def create_business_view(request):
     if request.method == 'POST':
         form = BusinessForm(request.POST, request.FILES)
         if form.is_valid():
-            try:
-                business = form.save()  # Save the form data to the database
+            # try:
+                business = form.save(commit=False)  # No guardes el formulario aún
+
+                # Obtiene la imagen original del formulario
+                image = form.cleaned_data['image_src']
+                # Convierte la imagen a WebP usando Pillow
+                converted_image = convert_to_webp(image)
+
+                # Crea un archivo temporal para el archivo WebP
+                webp_data = converted_image.tobytes()
+                webp_file = ContentFile(webp_data, name=f"{image.name}.webp")
+
+                # Guarda el archivo WebP en el campo image_src
+                business.image_src.save(f"{image.name}.webp", webp_file, save=False)
+                business.save()  # Ahora sí, guarda el objeto Business en la base de datos
                 messages.success(request, 'Business created successfully')
                 return JsonResponse({'success': True})
-            except Exception as e:
-                messages.error(request, f"An error occurred: {str(e)}")
-                return JsonResponse({'success': False, 'error': f"An error occurred: {str(e)}"})
+            # except Exception as e:
+                # messages.error(request, f"An error occurred: {str(e)}")
+                # return JsonResponse({'success': False, 'error': f"An error occurred: {str(e)}"})
         else:
             # Handle form validation errors
             return JsonResponse({'success': False, 'errors': form.errors})

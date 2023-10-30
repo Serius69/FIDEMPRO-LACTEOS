@@ -44,23 +44,28 @@
             <!-- List of Companies -->
             <div class="row mt-4" id="business-list">
                     {% for business in businesses %}
-                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                            <div class="card">
-                                <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" class="card-img-top" alt="{{ business.name }}">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ business.name }}</h5>
-                                    <p class="card-text">{{ business.description }}</p>
-                                    <a href="{% url 'business:business.overview' business.id %}" class="btn btn-info">View Details</a>
-                                    <a href="#showModal-1" data-bs-toggle="modal" class="text-primary d-inline-block edit-item-btn">
+                    
+                    <div class="col-xl-3 col-lg-4 col-md-4 mb-4">
+                        <div class="card">
+                            <div class="card-img-container position-relative">
+                                <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" class="card-img-top fixed-image" width="50" height="400" alt="{{ business.name }}">
+                                <div class="edit-delete-bar">
+                                    <a href="#showModal-1" data-bs-toggle="modal" class="text-primary edit-item-btn">
                                         <i class="ri-pencil-fill fs-16"></i>
                                     </a>
-                                    <a class="text-danger d-inline-block remove-item-btn" data-bs-toggle="modal" href="#deleteRecordModal-1">
+                                    <a class="text-danger remove-item-btn" data-bs-toggle="modal" href="#deleteRecordModal-1">
                                         <i class="ri-delete-bin-5-fill fs-16"></i>
                                     </a>
-
                                 </div>
                             </div>
-                        </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ business.name }}</h5>
+                                <p class="card-text">{{ business.description }}</p>
+                                <a href="{% url 'business:business.overview' business.id %}" class="btn btn-info">View Details</a>
+                            </div>
+                        </div>                            
+                    </div>
+                    
                     {% empty %}
                         <div class="col text-center py-4">
                             <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
@@ -196,10 +201,22 @@
     function hideAddBusinessModal() {
         $('#addBusiness').modal('hide');
     }
-    // Function to handle form submission
     $('#businessForm').on('submit', async function (event) {
         event.preventDefault();
-
+    
+        const nameInput = $('#name');
+        const nameValue = nameInput.val();
+    
+        if (nameValue.trim() === '') {
+            // El campo "name" está vacío, muestra un mensaje de error
+            const errorDiv = document.getElementById('error-name'); // Asegúrate de que el elemento con ID 'error-name' exista
+            if (errorDiv) {
+                errorDiv.textContent = 'Please enter a business name.';
+            }
+            return; // Detener el envío del formulario
+        }
+    
+        // Si pasa la validación, continúa con el envío de datos al servidor
         try {
             const formData = new FormData(this);
             const response = await fetch('{% url "business:business.create" %}', {
@@ -209,20 +226,14 @@
                     'X-CSRFToken': getCookie('csrftoken'),
                 },
             });
-
+    
             if (response.ok) {
                 // Business created successfully, you can show a success message here if needed.
                 hideAddBusinessModal();  // Hide the modal after successful submission
+                window.location.reload();
             } else {
-                // Handle errors and display them to the user
-                const responseData = await response.json();
-                if (responseData.errors && responseData.errors.name) {
-                    // Display the specific error message for the "name" field
-                    const errorDiv = document.getElementById('error-name'); // Adjust the element ID as needed
-                    if (errorDiv) {
-                        errorDiv.textContent = responseData.errors.name[0];
-                    }
-                }
+                // Handle other errors here, if necessary
+                // ...
             }
         } catch (error) {
             // Handle network or other errors
