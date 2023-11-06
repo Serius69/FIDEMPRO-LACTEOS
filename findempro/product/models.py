@@ -32,4 +32,4 @@ class Product(models.Model):
         if self.image_src and hasattr(self.image_src, 'url'):
             return self.image_src.url
         else:
-            return "/static/images/users/user-dummy-img.webp"
+            return "/static/images/products/user-dummy-img.webp"

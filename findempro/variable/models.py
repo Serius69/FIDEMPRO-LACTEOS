@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse  # Import reverse from django.urls
-from business.models import Business
 from product.models import Product  # Import the Product model
 from multiselectfield import MultiSelectField
 
@@ -11,21 +10,11 @@ class Variable(models.Model):
     type = models.IntegerField(default=1)
     unit = models.CharField(max_length=20)
     description = models.TextField(default="Descripción predeterminada")
-    is_active = models.BooleanField(default=True)  # Add the is_active field
-    date_created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(auto_now=True)
     image_src = models.ImageField(upload_to='images/variables', blank=True, null=True)
     fk_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='fk_product')
+    is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the variable is active or not')
+    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the variable was created')
+    last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the variable was last updated')
 
     def __str__(self):
         return self.name
-
-    def get_absolute_url(self):
-        # Define the absolute URL for the variable detail page
-        return reverse('variable-detail', args=[str(self.id)])
-
-    def get_photo_url(self):
-        if self.image_src and hasattr(self.image_src, 'url'):
-            return self.image_src.url
-        else:
-            return "/images/variable/variable-dummy-img.webp"

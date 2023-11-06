@@ -28,7 +28,7 @@ urlpatterns = [
     # Variables
     path('variable/', include('variable.urls')),
     # Question
-    path('question/', include('question.urls')),
+    path('questionary/', include('questionary.urls')),
     # Simulates
     path('simulate/', include('simulate.urls')),
     # Report

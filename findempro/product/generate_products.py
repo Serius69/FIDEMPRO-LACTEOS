@@ -29,8 +29,6 @@ products_data = [
     },
     ]
 
-
-
 for data in products_data:
     Product.objects.create(**data)
     

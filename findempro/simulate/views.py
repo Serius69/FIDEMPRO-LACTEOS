@@ -6,18 +6,12 @@ from django.conf import settings
 import pkg_resources  # Import pkg_resources
 from .forms import SimulationForm  # Replace with your actual form import
 from scipy import stats  # Import scipy for KS test
-from .models import DataPoint, NormalFDP, ExponentialFDP, LogarithmicFDP
+from .models import DataPoint, FDP
 from variable.models import Variable
 from product.models import Product
 from business.models import Business
 from sympy import Eq, sympify
 import openai
-
-
-
-# from .simulate import Production, Inventory, Distribution, MArketing, Sales
- 
-
 
 # Set the OpenAI API key
 openai.api_key = settings.OPENAI_API_KEY
@@ -42,8 +36,7 @@ def extract_demand_historic(request):
 
 # Kolmovorov Smirnov test
 def ks_test_view(request, variable_name):
-    try:
-        
+    try: 
         average_demand = sum(extract_demand_historic()) / len(extract_demand_historic())
         
         # Retrieve the variable by name
@@ -54,13 +47,13 @@ def ks_test_view(request, variable_name):
         fdp = variable.fdp  # Get the associated FDP from the variable
 
         # Define distribution type based on the FDP subclass
-        if isinstance(fdp, NormalFDP):
+        if isinstance(fdp, FDP):
             distribution_type = 'norm'
             distribution_args = (fdp.mean, fdp.std_deviation)
-        elif isinstance(fdp, ExponentialFDP):
+        elif isinstance(fdp, FDP):
             distribution_type = 'expon'
             distribution_args = (0, 1 / fdp.lambda_param)
-        elif isinstance(fdp, LogarithmicFDP):
+        elif isinstance(fdp, FDP):
             distribution_type = 'lognorm'
             distribution_args = (fdp.mean, fdp.std_deviation)
 

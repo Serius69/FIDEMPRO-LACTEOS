@@ -19,7 +19,10 @@ from django.contrib.auth.models import User
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass
     
-dashboard_view = DashboardView.as_view(template_name="dashboards/index.html")
+def index(request):
+    # Tu lógica para obtener datos o realizar operaciones necesarias
+    # Puedes incluir aquí cualquier lógica específica del panel de control
+    return render(request, 'dashboards/index.html')
 
 def dashboard_admin(request):
     # Obtén la fecha de hoy

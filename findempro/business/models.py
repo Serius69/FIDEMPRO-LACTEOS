@@ -5,15 +5,15 @@ from django.contrib.auth.models import User  # Ensure User is correctly imported
 from django.apps import apps
 
 class Business(models.Model):
-    name = models.CharField(max_length=255)
-    type = models.CharField(max_length=255)
-    location = models.CharField(max_length=255)
-    image_src = models.ImageField(upload_to='images/business', null=True, blank=True)
-    description = models.TextField()
-    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    last_updated = models.DateTimeField(auto_now=True, blank=True, null=True)
-    is_active = models.BooleanField(default=True)  # Add the is_active field
-    fk_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='fk_business', default=1)
+    name = models.CharField(max_length=255, verbose_name='Name', help_text='The name of the business')
+    type = models.CharField(max_length=100, verbose_name='Business Type', help_text='The type of the business')
+    location = models.CharField(max_length=255, verbose_name='Location', help_text='The location of the business')
+    image_src = models.ImageField(upload_to='images/business', null=True, blank=True, verbose_name='Image', help_text='The image of the business')
+    description = models.TextField(verbose_name='Description', help_text='The description of the business')
+    fk_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='fk_user', verbose_name='User', help_text='The user associated with the business')
+    is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the business is active or not')
+    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the business was created')
+    last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the business was last updated')
     
     def __str__(self):
         return self.name

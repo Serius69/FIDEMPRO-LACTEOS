@@ -81,13 +81,13 @@
                                                             </button>
     
                                                             <div class="dropdown-menu dropdown-menu-end">
-                                                                <a class="dropdown-item"
+                                                                    <a class="dropdown-item"
                                                                     href="{% url 'product:product.overview' product.id %}"><i
                                                                         class="ri-eye-fill align-bottom me-2 text-muted"></i>
                                                                     View</a>
-                                                                <a class="dropdown-item" href="{% url 'product:product.edit' %}"><i
-                                                                        class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                                                    Edit</a>
+                                                                    <a class="dropdown-item edit-product" data-bs-toggle="modal" data-bs-target="#editProductModal" data-product-id="{{ product.id }}">
+                                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>Edit
+                                                                    </a>                                                                    
                                                                 <div class="dropdown-divider"></div>
                                                                 <a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                                 data-bs-target="#removeProductModal"><i
@@ -360,6 +360,7 @@
                                 </div>
                             </div>
                         </div>
+                        <
                         <!--Add Default products Modal -->
                         <div class="modal fade zoomIn" id="addDefaultProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -537,10 +538,127 @@
                             </div>
                         </div>
                         <!--end modal-->
+                        <!-- Modal -->
+                        <div class="modal fade zoomIn" id="editProductModal" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="addProductLabel">Edit Product</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-content border-0 mt-3">
+                                        <ul class="nav nav-tabs nav-tabs-custom nav-success p-2 pb-0 bg-light" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-bs-toggle="tab" href="#companyDetails" role="tab" aria-selected="false">
+                                                    Product Details
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane active" id="companyDetails" role="tabpanel">
+                                                <form id="editproductForm">
+                                                    {% csrf_token %}
+                                                    <div class="row">
+                                                        <div class="col-lg-12">
+                                                            <div class="mb-3">
+                                                                <label for="name" class="form-label">Product Name</label>
+                                                                <input type="text" class="form-control" id="name" name="name" placeholder="Enter the product name" required>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="type" class="form-label">Product Type</label>
+                                                                <select class="form-control" id="type" name="type" required>
+                                                                    <option value="">Select type</option>
+                                                                    <option value="Dairy">Dairy</option>
+                                                                    <option value="Cheese">Cheese</option>
+                                                                    <option value="Yogur">Yogur</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="fk_business" class="form-label">Business</label>
+                                                                <select class="form-control" id="fk_business" name="fk_business" required>
+                                                                    <option value="">Select type</option>
+                                                                    {% for business in businesses %}
+                                                                    <option value={{business.id}}>{{business.name}}</option>
+                                                                    {% empty %}
+                                                                    <option value=".">...</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label for="image_src" class="form-label">Product Image</label>
+                                                                <input type="file" class="form-control" id="image_src" accept="image/png, image/jpeg" name="image_src">
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-12">
+                                                            <div>
+                                                                <label for="description" class="form-label">Description</label>
+                                                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description" required></textarea>
+                                                                <div class="invalid-feedback">Please enter a description for the product.</div>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                        <div class="col-lg-12">
+                                                            <div class="hstack gap-2 justify-content-end">
+                                                                <button class="btn btn-link link-success text-decoration-none fw-medium" data-bs-dismiss="modal"><i class="ri-close-line me-1 align-middle"></i> Close</button>
+                                                                <button type="submit" class="btn btn-primary"><i class="ri-save-3-line align-bottom me-1"></i> Save</button>
+                                                            </div>
+                                                        </div>
+                                                        <!--end col-->
+                                                    </div>
+                                                    <!--end row-->
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>                                 
+                                    
+                                </div>
+                            </div>
+                        </div>
                         <!--end modal-->
 {% endblock extra_content %}
 {% block extra_js %}
     <script>
+        $(document).ready(function () {
+            $(".edit-product").click(function () {
+                // Obtener el ID del producto desde los atributos de datos
+                var productId = $(this).data("product-id");
+                
+                // Realizar una solicitud AJAX para obtener los detalles del producto
+                $.ajax({
+                    url: "/product/get_product_details/" + productId + "/",  // Utiliza la URL correcta
+                    method: "GET",
+                    success: function (data) {
+                        // 'data' contiene los detalles del producto recibidos desde el servidor
+                        // Actualiza el modal con los datos del producto
+                        $("#editProductModal #name").val(data.name);
+                        $("#editProductModal #type").val(data.type);
+                        $("#editProductModal #fk_business").val(data.fk_business);
+                        $("#editProductModal #description").val(data.description);
+                        // Actualiza otros campos según la estructura de tu formulario
+                        
+                        // Limpia cualquier validación previa del formulario en caso de ser necesario
+                        var productForm = document.getElementById('editproductForm');
+                        productForm.classList.remove('was-validated');
+                    },
+                    error: function (error) {
+                        console.log("Error al obtener los detalles del producto:", error);
+                    }
+                });
+            });
+        });
+
         $(document).ready(function () {
             $('#apply-filters').on('click', function () {
                 var selectedBusiness = $('#business-select').val();
@@ -560,10 +678,6 @@
                 });
             });
         });
-
-
-    </script>
-    <script>
     $(document).ready(function () {
         // Manejar el clic en el botón "Agregar productos seleccionados"
         $('#add-selected-products').on('click', function () {
@@ -577,8 +691,6 @@
             });
         });
     });
-    </script>
-    <script>
         document.addEventListener("DOMContentLoaded", function () {
             const deleteButtons = document.querySelectorAll(".delete-product-btn");
     
@@ -677,6 +789,7 @@
                 if (response.ok) {
                     // Business created successfully, you can show a success message here if needed.
                     hideAddBusinessModal();  // Hide the modal after successful submission
+                    window.location.reload();
                 } else {
                     // Handle errors and display them to the user
                     const responseData = await response.json();

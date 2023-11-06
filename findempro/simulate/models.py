@@ -1,63 +1,55 @@
 from django.db import models
 from product.models import Product
-from question.models import Question
+from questionary.models import QuestionaryResult
+from django.utils import timezone
+
 class FDP(models.Model):
+    DISTRIBUTION_TYPES = [
+        ('normal', 'Normal'),
+        ('exponential', 'Exponential'),
+        ('logarithmic', 'Logarithmic'),
+    ]
     name = models.CharField(max_length=100)
+    distribution_type = models.CharField(max_length=20, choices=DISTRIBUTION_TYPES, default='normal')
     lambda_param = models.FloatField()
-    is_active = models.BooleanField(default=True)  # Add the is_active field
-
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return self.name
-
-class NormalFDP(FDP):
-    mean = models.FloatField()
-    std_deviation = models.FloatField() # Add the is_active field
-
-    def __str__(self):
-        return f"Normal - {self.name}"
-
-class ExponentialFDP(FDP):# Add the is_active field
-
-    def __str__(self):
-        return f"Exponential - {self.name}"
-
-class LogarithmicFDP(FDP): # Add the is_active field
-
-    def __str__(self):
-        return f"Logarithmic - {self.name}"
-
+        return f"{self.distribution_type()} - {self.name}"
 class DataPoint(models.Model):
-    is_active = models.BooleanField(default=True)  # Add the is_active field
     value = models.FloatField()
-
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f'DataPoint: {self.value}'
-
 class SimulationScenario(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    utime = models.CharField(max_length=100)  # Add max_length for CharField
-    fdps = models.ManyToManyField(FDP)  # Use ManyToManyField to link with PDFs
-    date_simulate = models.DateField()  # Add a DateField for the simulation date
-    is_active = models.BooleanField(default=True)  # Add the is_active field
-
+    utime = models.CharField(max_length=100)
+    date_simulate = models.DateField()
+    fk_fdp = models.ManyToManyField(FDP, related_name='fk_fdp_simulation', default=1)
+    fk_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='fk_product_simulation', null=True)
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(auto_now=True)
 class ScenarioFDP(models.Model):
     scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
     fdp = models.ForeignKey(FDP, on_delete=models.CASCADE)
-    weight = models.FloatField()  # Define the 'weight' field here if it's intended to be part of the model
-
+    weight = models.FloatField()
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return f"{self.scenario.name} - {self.fdp.name}"
-
-class DemandSimulation(models.Model):
-    
+        return f"{self.scenario} - {self.fdp}"
+class ResultSimulation(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    fk_questionary = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='fk_questionary')
-    fk_simulation_scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE, related_name='fk_simulation_scenario')
     simulation_date = models.DateField()
     demand_mean = models.DecimalField(max_digits=10, decimal_places=2)
     demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2)
-    # Add more fields to represent demand simulation parameters
-
+    fk_questionary_result = models.ForeignKey(QuestionaryResult, on_delete=models.CASCADE, null=True, related_name='fk_questionary_result')
+    fk_simulation_scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE, null=True, related_name='result_simulations')
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return f"{self.product.name} - {self.simulation_date}"
-
+        return f"{self.product} - {self.simulation_date}"

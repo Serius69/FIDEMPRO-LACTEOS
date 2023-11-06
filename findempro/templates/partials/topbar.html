@@ -24,7 +24,6 @@
                                 </span>
                             </a>
                         </div>
-
                         <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger" id="topnav-hamburger-icon">
                             <span class="hamburger-icon">
                                 <span></span>
@@ -33,82 +32,34 @@
                             </span>
                         </button>
                     </div>
-
                     <div class="d-flex align-items-center">
-
                         <div class="dropdown d-md-none topbar-head-dropdown header-item">
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="bx bx-search fs-22"></i>
+                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
+                                <i class='bx bx-moon fs-22'></i>
                             </button>
-                            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-search-dropdown">
-                                <form class="p-3">
-                                    <div class="form-group m-0">
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" placeholder="Search ..." aria-label="Recipient's username">
-                                            <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
                         </div>
-
                         <div class="dropdown ms-1 topbar-head-dropdown header-item">
                             <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img id="header-lang-img" src="{% static 'images/flags/us.svg'%}" alt="Header Language" height="20" class="rounded">
                             </button>
                             <div class="dropdown-menu dropdown-menu-end">
-
                                 <!-- item-->
                                 <a href="javascript:void(0);" class="dropdown-item notify-item language py-2" data-lang="en" title="English">
                                     <img src="{% static 'images/flags/us.svg'%}" alt="user-image" class="me-2 rounded" height="18">
                                     <span class="align-middle">English</span>
                                 </a>
-
                                 <!-- item-->
                                 <a href="javascript:void(0);" class="dropdown-item notify-item language" data-lang="sp" title="Spanish">
                                     <img src="{% static 'images/flags/spain.svg'%}" alt="user-image" class="me-2 rounded" height="18">
                                     <span class="align-middle">Española</span>
                                 </a>
-                       
                             </div>
-                        </div>
-
-                        <div class="dropdown topbar-head-dropdown ms-1 header-item">
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class='bx bx-category-alt fs-22'></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-lg p-0 dropdown-menu-end">
-                                <div class="p-3 border-top-0 border-start-0 border-end-0 border-dashed border">
-                                    <div class="row align-items-center">
-                                        <div class="col">
-                                            <h6 class="m-0 fw-semibold fs-15"> Enlaces </h6>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="p-2">
-                                    <div class="row g-0">
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="https://github.com/Serius69/FIDEMPRO-LACTEOS/">
-                                                <img src="{% static 'images/brands/github.webp'%}" alt="Github">
-                                                <span>GitHub</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                        </div>                        
                         <div class="ms-1 header-item d-none d-sm-flex">
                             <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-toggle="fullscreen">
                                 <i class='bx bx-fullscreen fs-22'></i>
                             </button>
-                        </div>
-                        <div class="ms-1 header-item d-none d-sm-flex">
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
-                                <i class='bx bx-moon fs-22'></i>
-                            </button>
-                        </div>                        
+                        </div>                       
                         <div class="dropdown ms-sm-3 header-item topbar-user">
                             {% if user.is_authenticated %}
                             <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -117,7 +68,6 @@
                                     <img class="rounded-circle header-profile-user" src="{% static 'images/users/user-dummy-img.webp'%}" alt="Header Avatar">
                                     {% else %}
                                     <img class="rounded-circle header-profile-user" src="{{ MEDIA_URL }}{{ user.image_src.url }}" alt="Header Avatar">
-                                    
                                     {% endif %}
                                     <span class="text-start ms-xl-2">
                                         <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{user.username}}</span>
@@ -132,17 +82,10 @@
                             {% else %}
                             <button type="button" class="btn" id="page-header-user-dropdown2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="d-flex align-items-center">
-                                    <img class="rounded-circle header-profile-user" src="https://example.com/path-to-your-dummy-image.webp" alt="Header Avatar">
-                                    <span class="text-start ms-xl-2">
-                                        <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{user.username}}</span>
-
-                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">{{user.username}}</span>
-                                        
-                                    </span>
+                                    <img class="rounded-circle header-profile-user" src="{% static 'images/users/user-dummy-img.webp'%}"  alt="Header Avatar">
                                 </span>
                             </button>
                             {% endif %}
-                            
                             <div class="dropdown-menu dropdown-menu-end">
                                 <!-- item-->
                                 {% if user.is_authenticated %}
@@ -151,7 +94,6 @@
                                 <a class="dropdown-item" href="{% url 'pages:pages.faqs' %}"><i class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Help</span></a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="{% url 'pages:pages.profile_settings' %}"><i class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Settings</span></a>
-                                {% comment %} <a class="dropdown-item" href="{% url 'pages:authentication.lockscreen_basic' %}"><i class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Lock screen</span></a> {% endcomment %}
                                 {% if user.is_authenticated %}
                                     {% if user.has_usable_password %}
                                         <a class="dropdown-item" href="{% url 'account_change_password' %}">
@@ -180,30 +122,7 @@
                                     </a>
                                 {% endif %}
                             </div>
-                            
                         </div>
-
-                        
-                        {% if messages %}
-                        {% for message in messages %}
-                        <input type="hidden" id="login-msg" value="{{message}}">
-    
-                        <button type="button" class="btn btn-primary" id="liveToastBtn" hidden></button>
-                        <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
-                            <div class="toast align-items-right text-white bg-primary border-0" id="toast-message" role="alert"
-                                aria-live="assertive" aria-atomic="true">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        {{message}}
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                        aria-label="Close"></button>
-                                </div>
-                            </div>
-                        </div>
-    
-                        {% endfor %}
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -228,7 +147,6 @@
                             <button type="button" class="btn w-sm btn-danger" id="delete-notification">Yes, Delete It!</button>
                         </div>
                     </div>
-
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->

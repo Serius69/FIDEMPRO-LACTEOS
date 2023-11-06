@@ -13,21 +13,13 @@ from django.http import JsonResponse
 from findempro.views import convert_to_webp
 from django.core.files import File
 from django.core.files.base import ContentFile
+from django.core.exceptions import ObjectDoesNotExist
 # Create your business views here.
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
 # List
 def business_list(request):
-    """
-    Renders a list of businesses based on the logged-in user.
-
-    Args:
-        request (HttpRequest): The HTTP request object containing metadata about the request.
-
-    Returns:
-        HttpResponse: The rendered HTML template with the list of businesses and the form instance.
-    """
     form = BusinessForm()
     try:
         businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
@@ -36,7 +28,6 @@ def business_list(request):
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
-
 
 # Detail
 def business_overview(request, pk):
@@ -50,32 +41,18 @@ def business_overview(request, pk):
     except Exception as e:
         messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
         return HttpResponse(status=500) 
-
-@login_required
+    
 def create_business_view(request):
     if request.method == 'POST':
         form = BusinessForm(request.POST, request.FILES)
         if form.is_valid():
-            # try:
-                business = form.save(commit=False)  # No guardes el formulario aún
-
-                # Obtiene la imagen original del formulario
-                image = form.cleaned_data['image_src']
-                # Convierte la imagen a WebP usando Pillow
-                converted_image = convert_to_webp(image)
-
-                # Crea un archivo temporal para el archivo WebP
-                webp_data = converted_image.tobytes()
-                webp_file = ContentFile(webp_data, name=f"{image.name}.webp")
-
-                # Guarda el archivo WebP en el campo image_src
-                business.image_src.save(f"{image.name}.webp", webp_file, save=False)
-                business.save()  # Ahora sí, guarda el objeto Business en la base de datos
+            try:
+                business=form.save()  # Ahora sí, guarda el objeto Business en la base de datos
                 messages.success(request, 'Business created successfully')
                 return JsonResponse({'success': True})
-            # except Exception as e:
-                # messages.error(request, f"An error occurred: {str(e)}")
-                # return JsonResponse({'success': False, 'error': f"An error occurred: {str(e)}"})
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+                return JsonResponse({'success': False, 'error': f"An error occurred: {str(e)}"})
         else:
             # Handle form validation errors
             return JsonResponse({'success': False, 'errors': form.errors})
@@ -112,3 +89,20 @@ def delete_business_view(request, pk):
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)  # Return an HTTP 500 error response
+def get_business_details(request, pk):
+    try:
+        if request.method == 'GET':
+            business = Business.objects.get(id=pk)
+
+            # Convierte los detalles del producto en un diccionario
+            business_details = {
+                "name": business.name,
+                "type": business.type,
+                "fk_business": business.fk_business.name,  # Suponiendo que tienes una relación ForeignKey
+                "description": business.description,
+                # Agrega otros campos según sea necesario
+            }
+            return JsonResponse(business_details)
+    except ObjectDoesNotExist:
+        # Manejo de la excepción si el objeto Business no se encuentra
+        return JsonResponse({"error": "El negocio no existe"}, status=404)
