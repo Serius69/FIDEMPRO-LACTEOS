@@ -60,14 +60,81 @@
     <script src="{% static 'libs/feather-icons/dist/feather.min.js'%}"></script>
     <script src="{% static 'js/pages/plugins/lord-icon-2.1.0.js'%}"></script>
     <script src="{% static 'js/plugins.js'%}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+    <!-- prismjs plugin -->
+    <script src="{% static 'libs/prismjs/prism.js'%}"></script>
+    <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
+    <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
+    <!-- listjs init -->
+    <script src="{% static 'js/pages/listjs.init.js' %}"></script>
+    <!-- Sweet Alerts js -->
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+        <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
+    <script src="https://apexcharts.com/samples/assets/ohlc.js"></script>
+    <!-- candlestick charts init -->
+    <script src="{% static 'js/pages/apexcharts-candlestick.init.js'%}"></script>
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
 
+    <!-- Vector map-->
+    <script src="{% static 'libs/jsvectormap/dist/js/jsvectormap.min.js'%}"></script>
+    <script src="{% static 'libs/jsvectormap/dist/maps/world-merc.js'%}"></script>
+    <!--Swiper slider js-->
+    <script src="{% static 'libs/swiper/swiper-bundle.min.js'%}"></script>
+    <!-- Dashboard init -->
+    <script src="{% static 'js/pages/dashboard-ecommerce.init.js'%}"></script>
+    <!-- echarts js -->
+    <script src="{% static 'libs/echarts/dist/echarts.min.js'%}"></script>
+    <!-- echarts init -->
+    <script src="{% static 'js/pages/echarts.init.js'%}"></script>
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
+    <!-- linecharts init -->
+    {% comment %} <script src="{% static 'js/pages/apexcharts-line.init.js'%}"></script> {% endcomment %}
+    <!-- list.js min js -->
+    <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
+    <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
+    <!-- Sweet Alerts js -->
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+    {% for message in messages %}
+            {% if message.tags == 'alert-success' %}
+            <!-- sweetalert js -->
+            <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                var m = "{{ message }}";
+                Swal.fire({
+                    icon: 'success',
+                    title: m,
+                    showConfirmButton: false,
+                    timer: 3000,
+                })
+            </script>
+            {% else %}
+                <!-- sweetalert js -->
+                <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script>
+                var m = "{{ message }}";
+                Swal.fire({
+                    icon: 'error',
+                    title: m,
+                    showConfirmButton: false,
+                    timer: 3000,
+                })
+                </script>
+            {% endif %}
+        {% endfor %}
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+
+    {% endblock javascript %}
     {% block extra_js %}
     {% endblock extra_js %}
 
     <!-- App js -->
     <script src="{% static 'js/app.js'%}"></script>
-    {% endblock javascript %}
-
+        
 </body>
 
 </html>

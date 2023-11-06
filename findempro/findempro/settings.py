@@ -12,16 +12,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
 
+load_dotenv() # Add this
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j%^*y0krq5^-#3lggoecxw!d7ad_gqkab3t5w17&0w06+qf8+8'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -48,7 +46,10 @@ LOCAL_APPS = [
     "variable",
     "business",
     "finance",
-    "simulate"
+    "simulate",
+    "user",
+    "report",
+    "questionary"
     ]
 THIRDPARTY_APPS = [
     # Crispy Forms
@@ -106,22 +107,19 @@ AUTHENTICATION_BACKENDS = [
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 WSGI_APPLICATION = 'findempro.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'findempro',
-        'USER': 'mysql',
-        'PASSWORD': 'mysql',
-        'HOST': 'localhost',  # Or your MySQL server's host
-        'PORT': '3306',       # MySQL's default port is 3306
+        'NAME': os.getenv("MYSQL_DATABASE"),
+        'USER': os.getenv("MYSQL_USER"),
+        'PASSWORD': os.getenv("MYSQL_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -141,13 +139,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/La_Paz'
 
 USE_I18N = True
 
@@ -166,7 +163,6 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR,"static")]
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -181,21 +177,16 @@ MESSAGE_TAGS = {
     messages.WARNING: "alert-warning",
     messages.ERROR: "alert-danger",
 }
-#  API key has been generated successfully. Please copy this key and save it somewhere safe. For security reasons, we cannot show it to you again.
-# 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
 
 # SMTP Configure
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp-relay.brevo.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = "sergio.troche@ucb.edu.bo"
-EMAIL_HOST_PASSWORD = "xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-OnbHEM6D2wCRyJ3Y"
-DEFAULT_FROM_EMAIL = "sergio.troche@ucb.edu.bo"
-# SMTP key
-#  xsmtpsib-64f74ba38e622429aa60276cf50ffa403e9621976e7827383a623e3a35070c81-OnbHEM6D2wCRyJ3Y
-#  All Auth Configurations
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
 
 LOGIN_REDIRECT_URL = "/"
 LOGIN_URL = "account_login"
@@ -219,9 +210,8 @@ ACCOUNT_FORMS = {
 SOCIALACCOUNT_QUERY_EMAIL = True
 
 #Social auth google key and secret key
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '328835751262-3trsdta49tep5gkm4h35vs9mb25npojr.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
-
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 
 SITE_ID = 2
 
@@ -237,4 +227,23 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+# OpenAI
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Redis
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/1",  # Use your Redis server address and port
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
+# }
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# SESSION_CACHE_ALIAS = "default"
+
+# CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+# CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 

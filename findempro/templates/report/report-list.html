@@ -1,0 +1,57 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Init{% endblock title %}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
+    <!-- Your custom content here -->
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+                {% block pagetitle %}
+                    {% include "partials/page-title.html" with pagetitle="Reports" title="List" %}
+                {% endblock pagetitle %}
+
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header align-items-center d-flex">
+                                <h4 class="card-title mb-0 flex-grow-1">Reports List</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table align-middle table-nowrap mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col">Report Name</th>
+                                                <th scope="col">Date</th>
+                                                <th scope="col">Status</th>
+                                                <th scope="col">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for report in reports %}
+                                                <tr>
+                                                    <td>{{ report.name }}</td>
+                                                    <td>{{ report.date }}</td>
+                                                    <td>{{ report.status }}</td>
+                                                    <td>
+                                                        <a href="{% url 'report.detail' report.pk %}" class="btn btn-primary">View</a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+<!-- prismjs plugin -->
+<script src="{% static 'libs/prismjs/prism.js'%}"></script>
+{% endblock extra_js %}

@@ -1,87 +1,98 @@
-from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable
 from product.models import Product
-from .forms import VariableForm  # Create a Django form for Variable
+from .forms import VariableForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-# Create your variable views here.
-class AppsView(LoginRequiredMixin,TemplateView):
+from django.conf import settings
+import openai
+from django.http import JsonResponse
+from django.contrib import messages
+from django.http import HttpResponse
+from django.utils import timezone
+
+openai.api_key = settings.OPENAI_API_KEY
+
+class AppsView(LoginRequiredMixin, TemplateView):
     pass
+
 # List
 def variable_list(request):
-    variables = Variable.objects.all().order_by('-id')
-    # if variables:
-    #     variable = Variable.objects.get(pk=pk)
-    context = {'variable': variables}
-    return render(request, 'variable/variable-list.html', context)
+    try:
+        variables = Variable.objects.all().order_by('-id')
+        products = Product.objects.all().order_by('-id')
+        context = {'variables': variables, 'products': products}
+        return render(request, 'variable/variable-list.html', context)
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
 
 # Detail
-def variable_overview(request,pk):
-    variables = Variable.objects.all().order_by('-id')
-    if variables:
-        variable = Variable.objects.get(pk=pk)
-    
-    return render(request,"variable/variable-overview.html",{'variable':variable,'variable':variable})
+def variable_overview(request, pk):
+    try:
+        variable = get_object_or_404(Variable, pk=pk)
+        return render(request, "variable/variable-overview.html", {'variable': variable})
+    except Exception as e:
+        messages.error(request, "An error occurred. Please check the server logs for more information.")
+        return HttpResponse(status=500)
 
 # Create
 def create_variable_view(request):
-    products = Product.objects.all().order_by('-id')
-    variable = Variable.objects.all().order_by('-id')
-    context = {'variable': variable, 'product': products}
-    if request.method == "POST":
-        form = VariableForm(request.POST or None,request.FILES or None)
-        if form.is_valid():
-            form.save()
-            messages.success(request,"Variable inserted successfully!")
-            return redirect("apps:crm.variable")
-        else:
-            messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.variable")
-    return render(request,"variable/variable-list.html",context)
+    if request.method == 'POST':
+        form = VariableForm(request.POST, request.FILES)
+        try:
+            if form.is_valid():
+                variable_name = form.cleaned_data.get('name')
+                initial_prompt = f"Generate the initials of the variable, but only use 4 characters. Do not include additional advertisements or instructions. Provide the initials for the next variable: {variable_name}"
+
+                response = openai.Completion.create(
+                    engine="text-davinci-002",
+                    prompt=initial_prompt,
+                    max_tokens=5,
+                    stop=None
+                )
+                initials = response.choices[0].text.strip()
+
+                form.instance.initials = initials
+
+                variable = form.save()
+                messages.success(request, 'Variable created successfully')
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors})
+        except Exception as e:
+            print(e)
+            return JsonResponse({'success': False, 'error': 'An error occurred while saving the variable'})
+    else:
+        form = VariableForm()
+    return render(request, 'variable/variable-form.html', {'form': form})
 
 # Update
-def update_variable_view(request,pk):
+def update_variable_view(request, pk):
     variable = Variable.objects.get(pk=pk)
     if request.method == "POST":
-        form = VariableForm(request.POST or None,request.FILES or None,instance=variable)
-        if form.is_valid():
-            form.save()
-            messages.success(request,"Variable updated successfully!")
-            return redirect("apps:crm.variable")
-        else:
-            messages.error(request,"Something went wrong!")
-            return redirect("apps:crm.variable")
-    return render(request,"variable/variable-list.html")
+        form = VariableForm(request.POST or None, request.FILES or None, instance=variable)
+        try:
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Variable updated successfully!")
+                return redirect("variable:variable.overview", pk=pk)
+            else:
+                messages.error(request, "Something went wrong!")
+                return render(request, "variable/variable-form.html", {'form': form})
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            return HttpResponse(status=500)
+
+    return render(request, "variable/variable-form.html", {'form': form})
 
 # Delete
-def delete_variable_view(request,pk):
-    variable = Variable.objects.get(pk=pk)
-    variable.delete()
-    messages.success(request,"Variable deleted successfully!")
-    return redirect("apps:variable.list")
-
-import openai
-
-# Create questions
-def generate_questions(request):
-    # Define your Django variable
-    django_variable = """
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
-    """
-
-    # Define a prompt to generate questions
-    prompt = f"Generate questions about the following Django variable:\n\n{django_variable}\n\nQuestions:"
-
-    # Generate questions using GPT-3
-    response = openai.Completion.create(
-        engine="text-davinci-002",  # Choose the appropriate engine
-        prompt=prompt,
-        max_tokens=50,  # Adjust the max tokens as needed
-        n=5,  # Number of questions to generate
-        stop=None,  # Stop generating questions at a specific token (e.g., "?")
-    )
-
-    # Extract and return the generated questions
-    questions = [choice['text'].strip() for choice in response.choices]
-    return render(request, 'questions_template.html', {'questions': questions})
+def delete_variable_view(request, pk):
+    try:
+        variable = get_object_or_404(Variable, pk=pk)
+        variable.delete()
+        messages.success(request, "Variable deleted successfully!")
+        return redirect("variable:variable.list")
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)

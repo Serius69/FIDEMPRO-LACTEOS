@@ -1,38 +1,19 @@
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.contrib.auth.models import User
-from product.models import Product
+from django.contrib.auth.models import User  # Ensure User is correctly imported
+from django.apps import apps
 
 class Business(models.Model):
-    id = models.CharField(max_length=10, primary_key=True)
-    image_src = models.CharField(max_length=255)
-    name = models.CharField(max_length=255)
-    date_created = models.DateTimeField(default=timezone.now)
-    type = models.CharField(max_length=20)
-    location = models.CharField(max_length=255)
-    last_updated = models.DateTimeField(auto_now=True)
-    description = models.TextField()  # Add this field
-    STATUS_CHOICES = (
-        (1, 'Active'),
-        (2, 'Inactive'),
-        (3, 'Archived'),
-    )
-    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
-
-    # Add a foreign key for User with PROTECT on_delete behavior
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
-    # Many-to-many relationship with Product
-    products = models.ManyToManyField(Product, blank=True)
-    
-    tags = models.JSONField()
+    name = models.CharField(max_length=255, verbose_name='Name', help_text='The name of the business')
+    type = models.CharField(max_length=100, verbose_name='Business Type', help_text='The type of the business')
+    location = models.CharField(max_length=255, verbose_name='Location', help_text='The location of the business')
+    image_src = models.ImageField(upload_to='images/business', null=True, blank=True, verbose_name='Image', help_text='The image of the business')
+    description = models.TextField(verbose_name='Description', help_text='The description of the business')
+    fk_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='fk_user', verbose_name='User', help_text='The user associated with the business')
+    is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the business is active or not')
+    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the business was created')
+    last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the business was last updated')
     
     def __str__(self):
         return self.name
-
-class BusinessProduct(models.Model):
-    company = models.ForeignKey(Business, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    
-    def __str__(self):
-        return f"{self.company.name} - {self.product.name}"
