@@ -63,9 +63,14 @@ def dashboard_user(request) -> str:
     Returns:
         str: The rendered HTML template as the response.
     """
-    business = get_object_or_404(Business, fk_user=request.user)
-    businesses = Business.objects.all()
     
+    
+    try:
+        business = get_object_or_404(Business, fk_user=request.user)
+    except Business.DoesNotExist:
+        return redirect("business:business_list")
+        
+    businesses = Business.objects.all()
     today = timezone.now()
     last_month = today - relativedelta(months=1)
 

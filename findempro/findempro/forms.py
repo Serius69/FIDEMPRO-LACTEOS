@@ -2,14 +2,19 @@ from crispy_forms.helper import FormHelper
 from allauth.account.forms import LoginForm,SignupForm,ChangePasswordForm,ResetPasswordForm,ResetPasswordKeyForm,SetPasswordForm
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
+from django.contrib import messages
 
 class UserLoginForm(LoginForm):
     def __init__(self, *args, **kwargs):
-        super(UserLoginForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.fields['login'].widget = forms.TextInput(attrs={'class': 'form-control mb-2','placeholder':'Enter Username','id':'username'})
-        self.fields['password'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2 position-relative','placeholder':'Enter Password','id':'password'})
-        self.fields['remember'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        try:
+            super(UserLoginForm, self).__init__(*args, **kwargs)
+            self.helper = FormHelper(self)
+            self.fields['login'].widget = forms.TextInput(attrs={'class': 'form-control mb-2', 'placeholder': 'Enter Username', 'id': 'username'})
+            self.fields['password'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2 position-relative', 'placeholder': 'Enter Password', 'id': 'password'})
+            self.fields['remember'].widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        except Exception as e:
+            # Manejar la excepción, por ejemplo, imprimir un mensaje de error o realizar alguna acción de recuperación.
+            print(f"Se produjo un error, actualiza la pagina")
 class UserRegistrationForm(SignupForm):
     def __init__(self, *args, **kwargs):
         super(UserRegistrationForm, self).__init__(*args, **kwargs)
@@ -20,6 +25,15 @@ class UserRegistrationForm(SignupForm):
         self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter Password','id':'password1'})
         self.fields['password2'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter Confirm Password','id':'password2'})
         self.fields['password2'].label="Confirm Password"
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        if password1 != password2:
+            raise forms.ValidationError("Las contraseñas no coinciden. Por favor, inténtalo de nuevo.")
+
+        return cleaned_data    
 class PasswordChangeForm(ChangePasswordForm):
       def __init__(self, *args, **kwargs):
         super(PasswordChangeForm, self).__init__(*args, **kwargs)
@@ -28,7 +42,7 @@ class PasswordChangeForm(ChangePasswordForm):
         self.fields['oldpassword'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter currunt password','id':'password3'})
         self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter new password','id':'password4'})
         self.fields['password2'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter confirm password','id':'password5'})
-        self.fields['oldpassword'].label="Currunt Password"
+        self.fields['oldpassword'].label="Current Password"
         self.fields['password2'].label="Confirm Password"
 class PasswordResetForm(ResetPasswordForm):
       def __init__(self, *args, **kwargs):

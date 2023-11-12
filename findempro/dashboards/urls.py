@@ -5,12 +5,12 @@ from dashboards.views import (
     dashboard_user,
 )
 
-app_name = 'dashboards'
+app_name = 'dashboard'
 
 urlpatterns = [
     path('',view =index,name="index"),
     path('admin',view =dashboard_admin,name="dashboard.admin"),
-    path('tdd', view =dashboard_user,name="dashboard.tdd"),
+    path('user', view =dashboard_user,name="dashboard.user"),
 ]
 
 

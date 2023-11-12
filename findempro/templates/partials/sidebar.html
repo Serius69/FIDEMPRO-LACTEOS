@@ -6,7 +6,7 @@
     <!-- LOGO -->
     <div class="navbar-brand-box">
         {% with logo_img_static="images/logo-sm.webp" %}
-        <a href="{% url 'dashboards:index' %}" class="logo logo-dark">
+        <a href="{% url 'dashboard:index' %}" class="logo logo-dark">
             <span class="logo-sm">
                 <img src="{% static logo_img_static %}" alt="50" height="50">
             </span>
@@ -14,7 +14,7 @@
                 <img src="{% static 'images/logo-dark.webp' %}" alt="50" height="50">
             </span>
         </a>
-        <a href="{% url 'dashboards:index' %}" class="logo logo-light">
+        <a href="{% url 'dashboard:index' %}" class="logo logo-light">
             <span class="logo-sm">
                 <img src="{% static logo_img_static %}" alt="50" height="50">
             </span>
@@ -37,7 +37,7 @@
 
                 <!-- Dashboard Menu -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'dashboards:index' %}">
+                    <a class="nav-link menu-link" href="{% url 'dashboard:index' %}">
                         <i class="ri-dashboard-2-line"></i> <span data-key="t-home"> Home</span>
                     </a>
                 </li>
@@ -47,12 +47,12 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarDashboards">
-                        <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboards</span>
+                        <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboard</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarDashboards">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'dashboards:dashboard.tdd' %}" class="nav-link" data-key="t-finance-status"> Decision Support </a>
+                                <a href="{% url 'dashboard:dashboard.user' %}" class="nav-link" data-key="t-decision-support"> Decision Support </a>
                             </li>
                         </ul>
                     </div>
@@ -61,12 +61,12 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarBusiness" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarBusiness">
-                        <i class="ri-compasses-2-line"></i> <span data-key="t-companies">Business</span>
+                        <i class="ri-compasses-2-line"></i> <span data-key="t-pymes">PYMEs</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarBusiness">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'business:business.list' %}" class="nav-link" data-key="t-list-companies">List Business</a>
+                                <a href="{% url 'business:business.list' %}" class="nav-link" data-key="t-list">List</a>
                             </li>
                         </ul>
                     </div>
@@ -80,7 +80,7 @@
                     <div class="collapse menu-dropdown" id="sidebarProducts">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'product:product.list'%}" class="nav-link" data-key="t-list-products">List Products</a>
+                                <a href="{% url 'product:product.list'%}" class="nav-link" data-key="t-list">List</a>
                             </li>
                         </ul>
                     </div>
@@ -94,7 +94,7 @@
                     <div class="collapse menu-dropdown" id="sidebarVariables">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'variable:variable.list' %}" class="nav-link" data-key="t-list-variables"> List Variables</a>
+                                <a href="{% url 'variable:variable.list' %}" class="nav-link" data-key="t-list">List</a>
                             </li>
                         </ul>
                     </div>
@@ -108,7 +108,7 @@
                     <div class="collapse menu-dropdown" id="sidebarSimulate">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'question:question.list' %}" class="nav-link" data-key="t-questionary">Questionary</a>
+                                <a href="{% url 'questionary:question.list' %}" class="nav-link" data-key="t-questionary">Questionary</a>
                             </li> 
                             <li class="nav-item">
                                 <a href="{% url 'simulate:simulate.show' %}" class="nav-link" data-key="t-simulate-init">Init</a>
@@ -132,7 +132,7 @@
                         </ul>
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'dashboards:dashboard.admin' %}" class="nav-link" data-key="t-dashboard"> Dashboard Admin</a>
+                                <a href="{% url 'dashboards:dashboard.admin' %}" class="nav-link" data-key="t-dashboard-admin"> Dashboard Admin</a>
                             </li>                             
                         </ul>
                     </div> 
@@ -141,12 +141,12 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarAdmin" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarAdmin">
-                        <i class="ri-layout-grid-line"></i> <span data-key="t-administrator">Financial Decision</span>
+                        <i class="ri-layout-grid-line"></i> <span data-key="t-financial-decision">Financial Decision</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarAdmin">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'finance:finance.list' %}" class="nav-link" data-key="t-user-list">Finance Decision List</a>
+                                <a href="{% url 'finance:finance.list' %}" class="nav-link" data-key="t-list">List</a>
                             </li>                             
                         </ul>
                     </div> 
@@ -156,12 +156,12 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarReport" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarReport">
-                        <i class="ri-layout-grid-line"></i> <span data-key="t-administrator">Report</span>
+                        <i class="ri-layout-grid-line"></i> <span data-key="t-reports">Reports</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarReport">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'report:report.list' %}" class="nav-link" data-key="t-report-list">Report List</a>
+                                <a href="{% url 'report:report.list' %}" class="nav-link" data-key="t-list">List</a>
                             </li>                             
                         </ul>
                     </div> 
