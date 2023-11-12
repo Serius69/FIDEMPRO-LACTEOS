@@ -19,13 +19,12 @@ load_dotenv() # Add this
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = 'django-insecure-j%^*y0krq5^-#3lggoecxw!d7ad_gqkab3t5w17&0w06+qf8+8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 DEFAULT_APPS = [    
@@ -60,6 +59,7 @@ THIRDPARTY_APPS = [
     'allauth.socialaccount',
     # Google Providers
     'multiselectfield',
+    'social_django',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS +LOCAL_APPS +THIRDPARTY_APPS
@@ -179,11 +179,11 @@ MESSAGE_TAGS = {
 }
 
 # SMTP Configure
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = os.getenv("EMAIL_PORT")
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
-EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL")
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 

@@ -10,7 +10,6 @@ from product.models import Product
 from .forms import BusinessForm
 from django.urls import reverse
 from django.http import JsonResponse
-from findempro.views import convert_to_webp
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist

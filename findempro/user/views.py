@@ -15,9 +15,23 @@ from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import login
+from findempro.forms import UserLoginForm
+# def login_view(request):
+#     if request.method == 'POST':
+#         form = UserLoginForm(request, request.POST)
+#         if form.is_valid():
+#             # Handle form submission and authentication here
+#             # Redirect the user or perform the necessary actions
 
-# Create your views here.
-# Profile
+#     else:
+#         form = UserLoginForm()
+
+#     return render(request, 'account/login.html', {'form': form})
+
+# def signup_view(request):
+#     return render(request, 'account/signup.html')
+@login_required
 def profile_product_variable_list_view(request):
     products = Product.objects.all().order_by('-id')
     businesses = Business.objects.all().order_by('-id')
@@ -36,8 +50,7 @@ def profile_product_variable_list_view(request):
     context = {'products': products, 'businesses': businesses, 
                'variables': variables , 'completeness_percentage': completeness_percentage }
     return render(request, 'user/profile.html', context)
-
-# List
+@login_required
 def user_list_view(request):
     try:
         users = User.objects.all().order_by('-id')
@@ -46,8 +59,7 @@ def user_list_view(request):
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
-
-# Create
+@login_required
 def create_user_view(request):
     if request.method == 'POST':
         form = UserForm(request.POST, request.FILES)
@@ -65,8 +77,7 @@ def create_user_view(request):
     else:
         form = UserForm()
     return render(request, 'user/user-list.html', {'form': form})
-
-# Update
+@login_required
 def update_user_view(request, pk):
     user = get_object_or_404(User, pk=pk)
     if request.method == "POST":
@@ -83,8 +94,7 @@ def update_user_view(request, pk):
 
     form = UserForm(instance=user)  # Provide the form instance if it's a GET request
     return render(request, "user/user-update.html", {'form': form, 'user': user})
-
-# Delete
+@login_required
 def delete_user_view_as_admin(request, pk):
     user = get_object_or_404(User, pk=pk)
     try:
@@ -95,7 +105,7 @@ def delete_user_view_as_admin(request, pk):
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
-
+@login_required
 def  change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
@@ -107,7 +117,7 @@ def  change_password(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'user/profile.html', {'form': form})    
-
+@login_required
 def delete_user_view(request, pk):
     user = get_object_or_404(User, pk=pk)
     try:

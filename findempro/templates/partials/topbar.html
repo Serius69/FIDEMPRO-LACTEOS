@@ -6,7 +6,7 @@
                     <div class="d-flex">
                         <!-- LOGO -->
                         <div class="navbar-brand-box horizontal-logo">
-                            <a href="{% url 'dashboards:index'%}" class="logo logo-dark">
+                            <a href="{% url 'dashboard:index'%}" class="logo logo-dark">
                                 <span class="logo-sm">
                                     <img src="{% static 'images/logo-sm.webp'%}" alt="50" height="50">
                                 </span>
@@ -15,7 +15,7 @@
                                 </span>
                             </a>
 
-                            <a href="{% url 'dashboards:index'%}" class="logo logo-light">
+                            <a href="{% url 'dashboard:index'%}" class="logo logo-light">
                                 <span class="logo-sm">
                                     <img src="{% static 'images/logo-sm.webp'%}" alt="50" height="50">
                                 </span>
@@ -33,14 +33,12 @@
                         </button>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="dropdown d-md-none topbar-head-dropdown header-item">
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
-                                <i class='bx bx-moon fs-22'></i>
-                            </button>
-                        </div>
                         <div class="dropdown ms-1 topbar-head-dropdown header-item">
                             <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img id="header-lang-img" src="{% static 'images/flags/us.svg'%}" alt="Header Language" height="20" class="rounded">
+                            </button>
+                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
+                                <i class='bx bx-moon fs-22'></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-end">
                                 <!-- item-->
@@ -112,11 +110,11 @@
                                         </a>
                                 {% endif %}
                                 {% else %}
-                                    <a class="dropdown-item" href="{{ login_url }}">
+                                    <a class="dropdown-item" href="/account/login/?next=">
                                         <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
                                         <span class="align-middle">Login</span>
                                     </a>
-                                    <a class="dropdown-item" href="{{ signup_url }}">
+                                    <a class="dropdown-item" href="/account/signup/?next=">
                                         <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
                                         <span class="align-middle">SignUp</span>
                                     </a>
