@@ -78,26 +78,3 @@
         {% endif %}
     {% endfor %}
 {% endblock messages %}
-
-{% comment %} {% block extra_js %}    
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Selecciona el botón de "Sign Up" y el mensaje de éxito por su ID
-        const signupButton = document.getElementById("signupButton");
-        const successMessage = document.getElementById("success-message");
-    
-        // Agrega un controlador de eventos para el clic en el botón
-        signupButton.addEventListener("click", function (event) {
-            // Evita que el formulario se envíe de forma predeterminada
-            event.preventDefault();
-            
-            // Aquí debes realizar el envío del formulario (POST) utilizando JavaScript o el método que estés usando.
-    
-            // Verifica si hay un mensaje de éxito y muéstralo
-            if (successMessage) {
-                successMessage.style.display = "block";
-            }
-        });
-    });
-</script>
-{% endblock extra_js %} {% endcomment %}

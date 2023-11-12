@@ -11,12 +11,12 @@ class QuestionaryResult(models.Model):
     fk_product = models.ForeignKey(
         Product, 
         on_delete=models.CASCADE, 
-        related_name='questionary_results', 
+        related_name='fk_questionary_result_product', 
+        help_text='The product associated with the questionnaire result',
         null=True)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-
     def __str__(self):
         return self.answer
 class Questionary(models.Model):
@@ -25,6 +25,7 @@ class Questionary(models.Model):
         Business, 
         on_delete=models.CASCADE, 
         related_name='fk_business_questionary', 
+        help_text='The business associated with the questionnaire',
         default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
@@ -32,7 +33,6 @@ class Questionary(models.Model):
 
     def __str__(self):
         return self.questionary
-
 @receiver(post_save, sender=Business)
 def create_questionary(sender, instance, created, **kwargs):
     if created:
@@ -42,18 +42,19 @@ def create_questionary(sender, instance, created, **kwargs):
                 fk_business=instance,
                 is_active=True
             )
-
 @receiver(post_save, sender=Product)
 def save_questionary(sender, instance, **kwargs):
-    Questionary.objects.update_or_create(
-            fk_business=instance,
-            defaults={'is_active': instance.is_active}
-        )
-
-
+    for questionary in instance.fk_business.fk_business_questionary.all():
+        questionary.is_active = instance.is_active
+        questionary.save()
 class Question(models.Model):
     question = models.TextField()
-    fk_questionary = models.ForeignKey(Questionary, on_delete=models.CASCADE, related_name='fk_questionary')
+    fk_questionary = models.ForeignKey(
+        Questionary, 
+        on_delete=models.CASCADE, 
+        related_name='fk_questionary_question',
+        help_text='The questionnaire associated with the question',
+        default=1)
     type = models.IntegerField(default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
@@ -65,17 +66,18 @@ class Question(models.Model):
     def create_question(sender, instance, created, **kwargs):
         if created:
             for data in question_data:
-                if question_data.type == 1:
+                if data['type'] == 1:  # Corrected the variable name
                     Question.objects.create(
                         question=data['question'],
-                        type=data['type'],                
-                        fk_questionary=instance,
+                        type=data['type'],
+                        fk_questionary_id=instance.id,
                         is_active=True
                     )
     @receiver(post_save, sender=Questionary)
     def save_question(sender, instance, **kwargs):
-        instance.fk_questionary.all().update(is_active=instance.is_active)
-
+        for question in instance.fk_questionary_question.all():
+            question.is_active = instance.is_active
+            question.save()
 class Answer(models.Model):
     answer = models.TextField()
     fk_question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='fk_question')

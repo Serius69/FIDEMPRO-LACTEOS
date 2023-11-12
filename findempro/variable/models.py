@@ -11,7 +11,12 @@ class Variable(models.Model):
     unit = models.CharField(max_length=50)
     description = models.TextField(default="Description predetermined")
     image_src = models.ImageField(upload_to='images/variables', blank=True, null=True)
-    fk_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='fk_product')
+    fk_product = models.ForeignKey(
+        Product, 
+        on_delete=models.CASCADE, 
+        related_name='fk_product_variable',
+        help_text='The product associated with the variable',
+        default=1)
     is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the variable is active or not')
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the variable was created')
     last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the variable was last updated')
@@ -35,4 +40,7 @@ def create_variables(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Product)
 def save_variables(sender, instance, **kwargs):
-    instance.fk_product.all().update(is_active=instance.is_active)
+    for variable in instance.fk_product_variable.all():
+        variable.is_active = instance.is_active
+        variable.save()
+

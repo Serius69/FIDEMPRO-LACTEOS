@@ -1,5 +1,4 @@
 import random
-
 class MilkProduction:
     def __init__(self, production_capacity):
         self.production_capacity = production_capacity

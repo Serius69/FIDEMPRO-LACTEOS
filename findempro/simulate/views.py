@@ -38,14 +38,11 @@ def extract_demand_historic(request):
 def ks_test_view(request, variable_name):
     try: 
         average_demand = sum(extract_demand_historic()) / len(extract_demand_historic())
-        
         # Retrieve the variable by name
         variable = Variable.objects.get(name=variable_name)
-
         # Retrieve the dataset and FDP parameters
         data_points = DataPoint.objects.values_list('value', flat=True)
         fdp = variable.fdp  # Get the associated FDP from the variable
-
         # Define distribution type based on the FDP subclass
         if isinstance(fdp, FDP):
             distribution_type = 'norm'

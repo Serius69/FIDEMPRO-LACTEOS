@@ -11,12 +11,12 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
-
     image_src = models.ImageField(upload_to='images/product', blank=True, null=True)
     fk_business = models.ForeignKey(
         Business, 
         on_delete=models.CASCADE, 
-        related_name='fk_business', 
+        related_name='fk_business_product', 
+        help_text='The business associated with the product',
         default=1)
     type = models.CharField(max_length=50, default='Dairy')
     profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -37,28 +37,19 @@ class Product(models.Model):
     @receiver(post_save, sender=Business)
     def create_product(sender, instance, created, **kwargs):
         if created:
+            business = Business.objects.get(pk=instance.pk)
             for data in products_data:
-                product, _ = Product.objects.get_or_create(
-                    name=data['name'],
-                    fk_business=sender,  # Pass the Business instance here
-                    defaults={
-                        'description': data['description'],
-                        'image_src': data['image_src'],
-                        'type': data['type'],
-                        'is_active': True,
-                    }
+                Product.objects.create(
+                    name=data['name'],                    
+                    description=data['description'],
+                    image_src= data['image_src'],
+                    type= data['type'],
+                    is_active= True,
+                    fk_business_id=business.id,
                 )
-                if not _:
-                    # If the product already exists, update the fields
-                    product.description = data['description']
-                    product.image_src = data['image_src']
-                    product.type = data['type']
-                    product.is_active = True
-                    product.save()
 
     @receiver(post_save, sender=Business)
     def save_product(sender, instance, **kwargs):
-        Product.objects.update_or_create(
-            fk_business=sender,
-            defaults={'is_active': instance.is_active}
-        )
+        for product in instance.fk_business_product.all():
+            product.is_active = instance.is_active
+            product.save()

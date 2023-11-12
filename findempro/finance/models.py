@@ -21,7 +21,7 @@ class FinanceRecommendation(models.Model):
     def create_finance_recommendation(sender, instance, created, **kwargs):
         if created:
             for data in finance_data:
-                finance_data.objects.create(
+                FinanceRecommendation.objects.create(
                     name=data['name'],
                     recommendation=data['recommendation'],
                     description=data['description'],
