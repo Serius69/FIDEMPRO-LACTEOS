@@ -76,7 +76,7 @@
                                     <p class="text-muted job-description">{{variable.description}}</p>
                                 </div>
                                 <div class="card-footer border-top-dashed">
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">\
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                                         <div><i class="ri-briefcase-2-line align-bottom me-1"></i> <span class="job-type">{{variable.type}}</span></div>
                                         <div class="d-none"><span class="job-experience">{{variable.type}}</span></div>
                                         <div><i class="ri-map-pin-2-line align-bottom me-1"></i>  <span class="job-location">{{variable.type}}</span></div>
@@ -106,8 +106,8 @@
                                                     Remove</a>
                                             </div>
                                         </div>
-                                    </div>\
-                                </div>\
+                                    </div>
+                                </div>
                             </div>
                             {% comment %} End card {% endcomment %}
                             {% empty %}
@@ -119,23 +119,33 @@
 
                             {% endfor %}
                             {% comment %} Fin de la lista {% endcomment %}
-
-                            <div class="row g-0 justify-content-end mb-4" id="pagination-element">
-                                <!-- end col -->
-                                <div class="col-sm-6">
-                                    <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                                        <div class="page-item">
-                                            <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
-                                        </div>
-                                        <span id="page-num" class="pagination"></span>
-                                        <div class="page-item">
-                                            <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
-                                        </div>
+                            <!-- Pagination -->
+                            <div class="align-items-center mt-2 row text-center text-sm-start">
+                                <div class="col-sm">
+                                    <div class="text-muted">Showing <span class="fw-semibold">{{ variables.number }}</span> of <span class="fw-semibold">{{ variables.paginator.num_pages }}</span> Results
                                     </div>
-                                </div><!-- end col -->
+                                </div>
+                                <div class="col-sm-auto">
+                                    <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                                        {% if variables.has_previous %}
+                                            <li class="page-item">
+                                                <a href="?page={{ variables.previous_page_number }}" class="page-link">←</a>
+                                            </li>
+                                        {% endif %}
+                                        {% for i in variables.paginator.page_range %}
+                                            <li class="page-item {% if i == variables.number %}active{% endif %}">
+                                                <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                                            </li>
+                                        {% endfor %}
+                                        {% if variables.has_next %}
+                                            <li class="page-item">
+                                                <a href="?page={{ variables.next_page_number }}" class="page-link">→</a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
                             </div>
                             <!-- end row -->
-
                         </div><!--end col-->
 
                         <div class="col-xxl-3">

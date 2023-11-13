@@ -7,7 +7,17 @@ from .variables_data import variables_data
 class Variable(models.Model):
     name = models.CharField(max_length=70)
     initials = models.CharField(max_length=7, default="var")
-    type = models.CharField(max_length=20, default='Estado')
+    TYPE_CHOICES = [
+        ('Estado', 'Estado'),
+        ('Exogena', 'Exogena'),
+        ('Endogena', 'Endogena'),
+    ]    
+    PARAMETER_CHOICES = [
+        ('param1', 'Parameter 1'),
+        ('param2', 'Parameter 2'),
+    ]
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='Estado')
+    parameters = models.CharField(max_length=20, choices=PARAMETER_CHOICES, default='param1')
     unit = models.CharField(max_length=50)
     description = models.TextField(default="Description predetermined")
     image_src = models.ImageField(upload_to='images/variables', blank=True, null=True)

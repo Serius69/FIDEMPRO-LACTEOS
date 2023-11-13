@@ -258,7 +258,11 @@
                                                 <div class="position-relative d-inline-block">
                                                     <div class="avatar-md">
                                                         <div class="avatar-title bg-light rounded-circle">
-                                                            <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
+                                                            {% if business.image_src %}
+                                                                <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
+                                                            {% else %}
+                                                                <img src="{% static 'path/to/dummy-image.jpg' %}" alt="Dummy Image" class="avatar-sm rounded-circle object-fit-cover">
+                                                            {% endif %}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -301,7 +305,11 @@
                                                 <div class="position-relative d-inline-block">
                                                     <div class="avatar-md">
                                                         <div class="avatar-title bg-light rounded-circle">
-                                                            <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
+                                                            {% if business.image_src %}
+                                                                <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
+                                                            {% else %}
+                                                                <img src="{% static 'path/to/dummy-image.jpg' %}" alt="Dummy Image" class="avatar-sm rounded-circle object-fit-cover">
+                                                            {% endif %}
                                                         </div>
                                                     </div>
                                                 </div>

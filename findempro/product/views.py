@@ -12,19 +12,32 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
-# List
 def product_list(request):
     try:
         products = Product.objects.order_by('-id')
         businesses = Business.objects.order_by('-id')
+
+        # Paginate the products
+        paginator = Paginator(products, 10)  # Show 10 products per page
+        page = request.GET.get('page')
+
+        try:
+            products = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            products = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            products = paginator.page(paginator.num_pages)
+
         context = {'products': products, 'businesses': businesses}
+        return render(request, 'product/product-list.html', context)
     except Exception as e:
-        error_message = str(e)
-        context = {'error_message': error_message}
-    
-    return render(request, 'product/product-list.html', context)
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
 def product_overview(request, pk):
     current_datetime = timezone.now()
     try:
@@ -71,8 +84,6 @@ def update_product_view(request, pk):
         messages.error(request, f"An error occurred: {error_message}")
 
     return render(request, "product/product-list.html")
-
-# Delete
 def delete_product_view(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
@@ -85,7 +96,6 @@ def delete_product_view(request, pk):
     
     # Si se accede a la vista mediante GET, puedes mostrar un error o redirigir
     return HttpResponseForbidden("GET request not allowed for this view")
-
 def get_product_details(request, pk):
     try:
         if request.method == 'GET':

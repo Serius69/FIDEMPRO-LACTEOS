@@ -29,7 +29,7 @@ class FinanceRecommendation(models.Model):
                 )
     @receiver(post_save, sender=Product)
     def save_finance_recommendation(sender, instance, **kwargs):
-        if instance.type == 1:
+        if instance.is_active == 1:
             instance.question_set.all().update(is_active=instance.is_active)
             
 class FinancialDecision(models.Model):
@@ -40,14 +40,16 @@ class FinancialDecision(models.Model):
     fk_result_simulation = models.ForeignKey(
         ResultSimulation, 
         on_delete=models.CASCADE,  # Added a comma here
-        related_name='fk_result_simulation',
-        default=ResultSimulation.objects.first(),
+        related_name='fk_result_simulation_decision',
+        # default=ResultSimulation.objects.first(),
+        default=1
     )
     fk_finance_recommendation = models.ForeignKey(
         FinanceRecommendation,
         on_delete=models.CASCADE,  # Adjust the on_delete behavior as needed
-        related_name='fk_finance_recommendation',
-        default=FinanceRecommendation.objects.first(),
+        related_name='fk_finance_recommendation_decision',
+        # default=FinanceRecommendation.objects.first(),
+        default=1
     )    
     is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the finance is active or not')
     date_created = models.DateTimeField(default=timezone.now)

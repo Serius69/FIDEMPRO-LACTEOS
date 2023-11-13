@@ -9,10 +9,8 @@
 <!-- Start right Content here -->
 <!-- ============================================================== -->
 <div class="main-content">
-
     <div class="page-content">
         <div class="container-fluid">
-
             {% block pagetitle %}
             {% include "partials/page-title.html" with pagetitle="Business" title="Business List" %}
             {% endblock pagetitle %}
@@ -48,8 +46,12 @@
                     <div class="col-xl-3 col-lg-4 col-md-4 mb-4">
                         <div class="card">
                             <div class="card-img-container position-relative">
+                                {% if business.image_src %}
                                 <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" class="card-img-top fixed-image" width="50" height="400" alt="{{ business.name }}">
-                                <div class="edit-delete-bar">
+                                {% else %}
+                                    <!-- Display a default image or a placeholder -->
+                                    <img src="{% static 'path/to/default-image.jpg' %}" class="card-img-top fixed-image" width="50" height="400" alt="{{ business.name }}">
+                                {% endif %}                                <div class="edit-delete-bar">
                                     <a href="#showModal-1" data-bs-toggle="modal" class="text-primary edit-item-btn">
                                         <i class="ri-pencil-fill fs-16"></i>
                                     </a>
@@ -77,22 +79,33 @@
             <!-- End List of Companies -->
         </div>
         <!--end row-->
-        <div class="row g-0 justify-content-end mb-4" id="pagination-element">
-            <!-- end col -->
-            <div class="col-sm-6">
-                <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                    <div class="page-item">
-                        <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
-                    </div>
-                    <span id="page-num" class="pagination"></span>
-                    <div class="page-item">
-                        <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
-                    </div>
+        <!-- Pagination -->
+        <div class="align-items-center mt-2 row text-center text-sm-start">
+            <div class="col-sm">
+                <div class="text-muted">Showing <span class="fw-semibold">{{ businesses.number }}</span> of <span class="fw-semibold">{{ businesses.paginator.num_pages }}</span> Results
                 </div>
-            </div><!-- end col -->
+            </div>
+            <div class="col-sm-auto">
+                <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                    {% if businesses.has_previous %}
+                        <li class="page-item">
+                            <a href="?page={{ businesses.previous_page_number }}" class="page-link">←</a>
+                        </li>
+                    {% endif %}
+                    {% for i in businesses.paginator.page_range %}
+                        <li class="page-item {% if i == businesses.number %}active{% endif %}">
+                            <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if businesses.has_next %}
+                        <li class="page-item">
+                            <a href="?page={{ businesses.next_page_number }}" class="page-link">→</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
         <!-- end row -->
-
          <!-- Modal -->
         <div class="modal fade zoomIn" id="addBusiness" tabindex="-1" aria-labelledby="addBusinessLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -187,16 +200,12 @@
 </div>
 <!-- end main content-->
 {% endblock content %}
-
 {% block extra_js %}
-
 <script>
-    
     // Function to show the modal
     function showAddBusinessModal() {
         $('#addBusiness').modal('show');
     }
-
     // Function to hide the modal
     function hideAddBusinessModal() {
         $('#addBusiness').modal('hide');
@@ -247,7 +256,5 @@
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
-
 </script>
-
 {% endblock extra_js %}

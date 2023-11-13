@@ -10,24 +10,33 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
 from django.utils import timezone
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 openai.api_key = settings.OPENAI_API_KEY
-
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
-
-# List
 def variable_list(request):
     try:
         variables = Variable.objects.all().order_by('-id')
         products = Product.objects.all().order_by('-id')
+
+        # Paginate the variables
+        paginator = Paginator(variables, 10)  # Show 10 variables per page
+        page = request.GET.get('page')
+
+        try:
+            variables = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            variables = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            variables = paginator.page(paginator.num_pages)
+
         context = {'variables': variables, 'products': products}
         return render(request, 'variable/variable-list.html', context)
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
-
-# Detail
 def variable_overview(request, pk):
     try:
         variable = get_object_or_404(Variable, pk=pk)
@@ -35,8 +44,6 @@ def variable_overview(request, pk):
     except Exception as e:
         messages.error(request, "An error occurred. Please check the server logs for more information.")
         return HttpResponse(status=500)
-
-# Create
 def create_variable_view(request):
     if request.method == 'POST':
         form = VariableForm(request.POST, request.FILES)
@@ -66,8 +73,6 @@ def create_variable_view(request):
     else:
         form = VariableForm()
     return render(request, 'variable/variable-form.html', {'form': form})
-
-# Update
 def update_variable_view(request, pk):
     variable = Variable.objects.get(pk=pk)
     if request.method == "POST":
@@ -85,8 +90,6 @@ def update_variable_view(request, pk):
             return HttpResponse(status=500)
 
     return render(request, "variable/variable-form.html", {'form': form})
-
-# Delete
 def delete_variable_view(request, pk):
     try:
         variable = get_object_or_404(Variable, pk=pk)
