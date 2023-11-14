@@ -1,6 +1,10 @@
-{% extends 'account/base.html' %} {% load static %} {% load i18n %} {% load
-account socialaccount %} {% load crispy_forms_tags %} {% block title %}Sign Up{%
-endblock title %} {% block content %}
+{% extends 'account/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %} 
+{% block title %}Sign Up{% endblock title %} 
+{% block content %}
 <div class="p-lg-5 p-4">
   <div>
     <h5 class="text-primary">Register Account</h5>
@@ -8,27 +12,21 @@ endblock title %} {% block content %}
   </div>
 
   <div class="mt-4">
-    <form
-      class="needs-validation"
-      novalidate
-      method="post"
-      action="{% url 'account_signup' %}"
-    >
+    <form class="needs-validation" novalidate method="post" action="{% url 'account_signup' %}">
       {% for message in messages %}
       <div class="alert {{ message.tags }} mb-4" role="alert">
         <strong>{{ message }}</strong>
       </div>
-      {% endfor %} {% if field.help_text %}
+      {% endfor %} 
+      {% if field.help_text %}
       <div class="alert alert-danger mb-4" role="alert">
         <strong>{{ field.help_text }}</strong>
       </div>
-      {% endif %} {% if redirect_field_value %}
-      <input
-        type="hidden"
-        name="{{ redirect_field_name }}"
-        value="{{ redirect_field_value }}"
-      />
-      {% endif %} {% csrf_token %}
+      {% endif %} 
+      {% if redirect_field_value %}
+      <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+      {% endif %} 
+      {% csrf_token %}
       <div class="mb-3">{{form.email|as_crispy_field }}</div>
       <div class="mb-3">{{form.username|as_crispy_field }}</div>
 
@@ -72,17 +70,14 @@ endblock title %} {% block content %}
   <div class="mt-5 text-center">
     <p class="mb-0">
       Already have an account ?
-      <a
-        href="{{ login_url }}"
-        class="fw-semibold text-primary text-decoration-underline"
-      >
+      <a href="{{ login_url }}" class="fw-semibold text-primary text-decoration-underline">
         Signin
       </a>
     </p>
   </div>
 </div>
-{% endblock content %} {% block messages %} {% for message in messages %} {% if
-message.tags == 'alert-success' %}
+{% endblock content %} {% block messages %} {% for message in messages %} {% if message.tags ==
+'alert-success' %}
 <div id="success-message" class="alert alert-success" role="alert">
   {{ message }}
 </div>

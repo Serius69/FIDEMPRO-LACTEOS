@@ -1,6 +1,9 @@
-{% extends "partials/base.html" %} {% load static %} {% block title %}Product
-Overview{% endblock title %} {% block extra_css %} {% endblock extra_css %} {%
-block content %}
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Product Overview{% endblock title %}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
@@ -59,9 +62,8 @@ block content %}
                             </div>
                             <div class="vr"></div>
                             {% with
-                            days_since_creation=product.date_created|timesince:current_datetime
-                            %} {% if "day" in days_since_creation and
-                            days_since_creation|add:0 <= 5 %}
+                            days_since_creation=product.date_created|timesince:current_datetime %}
+                            {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
                             <div class="badge rounded-pill bg-info fs-12">
                               New
                             </div>
@@ -116,11 +118,7 @@ block content %}
       <div class="row">
         <div class="col-lg-12">
           <div class="tab-content text-muted">
-            <div
-              class="tab-pane fade show active"
-              id="project-overview"
-              role="tabpanel"
-            >
+            <div class="tab-pane fade show active" id="project-overview" role="tabpanel">
               <div class="row">
                 <div class="col-xl-9 col-lg-8">
                   <div class="card">
@@ -193,10 +191,7 @@ block content %}
                                   </div>
                                   <div class="flex-grow-1 overflow-hidden">
                                     <h5 class="fs-13 mb-1">
-                                      <a
-                                        href="#"
-                                        class="text-body text-truncate d-block"
-                                      >
+                                      <a href="#" class="text-body text-truncate d-block">
                                         App pages.zip
                                       </a>
                                     </h5>
@@ -253,8 +248,7 @@ block content %}
                                 style="width: 75px; height: 75px"
                               ></lord-icon>
                               <h5 class="mt-2">
-                                Sorry, there isn't any equition registered in
-                                the database
+                                Sorry, there isn't any equition registered in the database
                               </h5>
                               <p class="text-muted mb-0">
                                 You have to "Add Business".
@@ -271,9 +265,7 @@ block content %}
                   <!-- end card -->
 
                   <div class="card">
-                    <div
-                      class="card-header align-items-center d-flex border-bottom-dashed"
-                    >
+                    <div class="card-header align-items-center d-flex border-bottom-dashed">
                       <h4 class="card-title mb-0 flex-grow-1">Equations</h4>
                       <div class="flex-shrink-0">
                         <button
@@ -289,11 +281,7 @@ block content %}
                     </div>
 
                     <div class="card-body">
-                      <div
-                        data-simplebar
-                        style="height: 235px"
-                        class="mx-n3 px-3"
-                      >
+                      <div data-simplebar style="height: 235px" class="mx-n3 px-3">
                         <div class="vstack gap-3">
                           {% for equation in financial_equations %}
                           <div class="d-flex align-items-center">
@@ -325,8 +313,7 @@ block content %}
                               style="width: 75px; height: 75px"
                             ></lord-icon>
                             <h5 class="mt-2">
-                              Sorry, there isn't any equition registered in the
-                              database
+                              Sorry, there isn't any equition registered in the database
                             </h5>
                             <p class="text-muted mb-0">
                               You have to "Add Business".
@@ -344,16 +331,10 @@ block content %}
                 <!-- ene col -->
                 <div class="col-xl-3 col-lg-4">
                   <div class="card">
-                    <div
-                      class="card-header align-items-center d-flex border-bottom-dashed"
-                    >
+                    <div class="card-header align-items-center d-flex border-bottom-dashed">
                       <h4 class="card-title mb-0 flex-grow-1">Simulations</h4>
                       <div class="flex-shrink-0">
-                        <button
-                          type="button"
-                          class="btn btn-soft-info btn-sm"
-                          href=""
-                        >
+                        <button type="button" class="btn btn-soft-info btn-sm" href="">
                           <i class="ri-upload-2-fill me-1 align-bottom"></i>
                           New Simulation
                         </button>
@@ -366,19 +347,14 @@ block content %}
                           <div class="d-flex align-items-center">
                             <div class="flex-shrink-0 me-3">
                               <div class="avatar-sm">
-                                <div
-                                  class="avatar-title bg-light text-secondary rounded fs-24"
-                                >
+                                <div class="avatar-title bg-light text-secondary rounded fs-24">
                                   <i class="ri-folder-zip-line"></i>
                                 </div>
                               </div>
                             </div>
                             <div class="flex-grow-1 overflow-hidden">
                               <h5 class="fs-13 mb-1">
-                                <a
-                                  href="#"
-                                  class="text-body text-truncate d-block"
-                                >
+                                <a href="#" class="text-body text-truncate d-block">
                                   App-pages.zip
                                 </a>
                               </h5>
@@ -386,10 +362,7 @@ block content %}
                             </div>
                             <div class="flex-shrink-0 ms-2">
                               <div class="d-flex gap-1">
-                                <button
-                                  type="button"
-                                  class="btn btn-icon text-muted btn-sm fs-18"
-                                >
+                                <button type="button" class="btn btn-icon text-muted btn-sm fs-18">
                                   <i class="ri-download-2-line"></i>
                                 </button>
                                 <div class="dropdown">
@@ -404,9 +377,7 @@ block content %}
                                   <ul class="dropdown-menu">
                                     <li>
                                       <a class="dropdown-item" href="#">
-                                        <i
-                                          class="ri-pencil-fill align-bottom me-2 text-muted"
-                                        ></i>
+                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                         Rename
                                       </a>
                                     </li>
@@ -442,8 +413,7 @@ block content %}
                         style="width: 75px; height: 75px"
                       ></lord-icon>
                       <h5 class="mt-2">
-                        Sorry, there isn't any business registered in the
-                        database
+                        Sorry, there isn't any business registered in the database
                       </h5>
                       <p class="text-muted mb-0">You have to "Add Business".</p>
                     </div>
@@ -479,18 +449,13 @@ block content %}
                               <td>
                                 <div class="d-flex align-items-center">
                                   <div class="avatar-sm">
-                                    <div
-                                      class="avatar-title bg-light text-secondary rounded fs-24"
-                                    >
+                                    <div class="avatar-title bg-light text-secondary rounded fs-24">
                                       <i class="ri-folder-zip-line"></i>
                                     </div>
                                   </div>
                                   <div class="ms-3 flex-grow-1">
                                     <h5 class="fs-14 mb-0">
-                                      <a
-                                        href="javascript:void(0)"
-                                        class="text-body"
-                                      >
+                                      <a href="javascript:void(0)" class="text-body">
                                         {{simulation.name}}
                                       </a>
                                     </h5>
@@ -510,21 +475,13 @@ block content %}
                                   </a>
                                   <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                      <a
-                                        class="dropdown-item"
-                                        href="javascript:void(0);"
-                                      >
-                                        <i
-                                          class="ri-eye-fill me-2 align-bottom text-muted"
-                                        ></i>
+                                      <a class="dropdown-item" href="javascript:void(0);">
+                                        <i class="ri-eye-fill me-2 align-bottom text-muted"></i>
                                         View
                                       </a>
                                     </li>
                                     <li>
-                                      <a
-                                        class="dropdown-item"
-                                        href="javascript:void(0);"
-                                      >
+                                      <a class="dropdown-item" href="javascript:void(0);">
                                         <i
                                           class="ri-download-2-fill me-2 align-bottom text-muted"
                                         ></i>
@@ -533,10 +490,7 @@ block content %}
                                     </li>
                                     <li class="dropdown-divider"></li>
                                     <li>
-                                      <a
-                                        class="dropdown-item"
-                                        href="javascript:void(0);"
-                                      >
+                                      <a class="dropdown-item" href="javascript:void(0);">
                                         <i
                                           class="ri-delete-bin-5-fill me-2 align-bottom text-muted"
                                         ></i>
@@ -557,8 +511,7 @@ block content %}
                                   style="width: 75px; height: 75px"
                                 ></lord-icon>
                                 <h5 class="mt-2">
-                                  Sorry, there isn't any business registered in
-                                  the database
+                                  Sorry, there isn't any business registered in the database
                                 </h5>
                                 <p class="text-muted mb-0">
                                   You have to "Add Business".
@@ -580,11 +533,7 @@ block content %}
                 <div class="col-sm">
                   <div class="d-flex">
                     <div class="search-box me-2">
-                      <input
-                        type="text"
-                        class="form-control"
-                        placeholder="Search member..."
-                      />
+                      <input type="text" class="form-control" placeholder="Search member..." />
                       <i class="ri-search-line search-icon"></i>
                     </div>
                   </div>
@@ -614,10 +563,7 @@ block content %}
                         <div class="row align-items-center">
                           <div class="col">
                             <div class="flex-shrink-0 me-2">
-                              <button
-                                type="button"
-                                class="btn fs-16 p-0 favourite-btn"
-                              >
+                              <button type="button" class="btn fs-16 p-0 favourite-btn">
                                 <i class="ri-star-fill"></i>
                               </button>
                             </div>
@@ -632,35 +578,20 @@ block content %}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                               <li>
-                                <a
-                                  class="dropdown-item"
-                                  href="javascript:void(0);"
-                                >
-                                  <i
-                                    class="ri-eye-fill text-muted me-2 align-bottom"
-                                  ></i>
+                                <a class="dropdown-item" href="javascript:void(0);">
+                                  <i class="ri-eye-fill text-muted me-2 align-bottom"></i>
                                   View
                                 </a>
                               </li>
                               <li>
-                                <a
-                                  class="dropdown-item"
-                                  href="javascript:void(0);"
-                                >
-                                  <i
-                                    class="ri-star-fill text-muted me-2 align-bottom"
-                                  ></i>
+                                <a class="dropdown-item" href="javascript:void(0);">
+                                  <i class="ri-star-fill text-muted me-2 align-bottom"></i>
                                   Favourite
                                 </a>
                               </li>
                               <li>
-                                <a
-                                  class="dropdown-item"
-                                  href="javascript:void(0);"
-                                >
-                                  <i
-                                    class="ri-delete-bin-5-fill text-muted me-2 align-bottom"
-                                  ></i>
+                                <a class="dropdown-item" href="javascript:void(0);">
+                                  <i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>
                                   Delete
                                 </a>
                               </li>
@@ -710,10 +641,7 @@ block content %}
                       <div class="col-lg-2 col">
                         <div class="text-end">
                           {% comment %}
-                          <a
-                            href="{% url 'pages:pages.profile' %}"
-                            class="btn btn-light view-btn"
-                          >
+                          <a href="{% url 'pages:pages.profile' %}" class="btn btn-light view-btn">
                             View Profile
                           </a>
                           {% endcomment %}
@@ -739,20 +667,17 @@ block content %}
                   </div>
                   <div class="text-center mt-3">
                     <a href="javascript:void(0);" class="text-success">
-                      <i
-                        class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"
-                      ></i>
+                      <i class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i>
                       Load more
                     </a>
                   </div>
                 </tr>
                 {% endfor %}
               </div>
+
               <!-- end team list -->
 
-              <div
-                class="row g-0 text-center text-sm-start align-items-center mb-3"
-              >
+              <div class="row g-0 text-center text-sm-start align-items-center mb-3">
                 <div class="col-sm-6">
                   <div>
                     <p class="mb-sm-0">Showing 1 to 10 of 12 entries</p>
@@ -812,12 +737,7 @@ block content %}
     <div class="modal-content border-0">
       <div class="modal-header p-3 ps-4 bg-success-subtle">
         <h5 class="modal-title" id="inviteVariablesModalLabel">Variables</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4">
         <div class="search-box mb-3">
@@ -905,11 +825,7 @@ block content %}
         </div>
       </div>
       <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-light w-xs"
-          data-bs-dismiss="modal"
-        >
+        <button type="button" class="btn btn-light w-xs" data-bs-dismiss="modal">
           Cancel
         </button>
         <button type="button" class="btn btn-success w-xs">Invite</button>

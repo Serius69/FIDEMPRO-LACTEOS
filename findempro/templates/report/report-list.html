@@ -1,12 +1,11 @@
-{% extends "partials/base.html" %} {% load static %} {% block title %}Init{%
-endblock title %} {% block extra_css %} {% endblock extra_css %} {% block
-content %}
+{% extends "partials/base.html" %}
+{% load static %} {% block title %}Init{% endblock title %} {% block extra_css %} {% endblock extra_css %} {% block content %}
 <!-- Your custom content here -->
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with
-      pagetitle="Reports" title="List" %} {% endblock pagetitle %}
+      {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="Reports"
+      title="List" %} {% endblock pagetitle %}
 
       <div class="row">
         <div class="col-xl-12">
@@ -32,10 +31,7 @@ content %}
                       <td>{{ report.date }}</td>
                       <td>{{ report.status }}</td>
                       <td>
-                        <a
-                          href="{% url 'report.detail' report.pk %}"
-                          class="btn btn-primary"
-                        >
+                        <a href="{% url 'report.detail' report.pk %}" class="btn btn-primary">
                           View
                         </a>
                       </td>

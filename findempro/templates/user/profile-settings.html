@@ -1,6 +1,9 @@
-{% extends "partials/base.html" %} {% load static %} {% block title %}Profile
-Settings{% endblock title %} {% block extra_css %} {% endblock extra_css %} {%
-block content %}
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Profile Settings{% endblock title %}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
@@ -9,11 +12,7 @@ block content %}
     <div class="container-fluid">
       <div class="position-relative mx-n4 mt-n4">
         <div class="profile-wid-bg profile-setting-img">
-          <img
-            src="{% static 'images/cover-pattern.webp'%}"
-            class="profile-wid-img"
-            alt=""
-          />
+          <img src="{% static 'images/cover-pattern.webp'%}" class="profile-wid-img" alt="" />
           <div class="overlay-content">
             <div class="text-end p-3">
               <div class="p-0 ms-auto rounded-circle profile-photo-edit">
@@ -33,9 +32,7 @@ block content %}
           <div class="card mt-n5">
             <div class="card-body p-4">
               <div class="text-center">
-                <div
-                  class="profile-user position-relative d-inline-block mx-auto mb-4"
-                >
+                <div class="profile-user position-relative d-inline-block mx-auto mb-4">
                   {% if user.image_src == null %}
                   <img
                     src="{% static 'images/users/user-dummy-img.webp'%}"
@@ -50,18 +47,9 @@ block content %}
                   />
                   {% endif %}
                   <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
-                    <input
-                      id="profile-img-file-input"
-                      type="file"
-                      class="profile-img-file-input"
-                    />
-                    <label
-                      for="profile-img-file-input"
-                      class="profile-photo-edit avatar-xs"
-                    >
-                      <span
-                        class="avatar-title rounded-circle bg-light text-body"
-                      >
+                    <input id="profile-img-file-input" type="file" class="profile-img-file-input" />
+                    <label for="profile-img-file-input" class="profile-photo-edit avatar-xs">
+                      <span class="avatar-title rounded-circle bg-light text-body">
                         <i class="ri-camera-fill"></i>
                       </span>
                     </label>
@@ -84,9 +72,7 @@ block content %}
                   <h5 class="card-title mb-0">Complete Your Profile</h5>
                 </div>
               </div>
-              <div
-                class="progress animated-progress custom-progress progress-label"
-              >
+              <div class="progress animated-progress custom-progress progress-label">
                 <div
                   class="progress-bar bg-danger"
                   role="progressbar"
@@ -121,12 +107,7 @@ block content %}
                   </a>
                 </li>
                 <li class="nav-item">
-                  <a
-                    class="nav-link"
-                    data-bs-toggle="tab"
-                    href="#changePassword"
-                    role="tab"
-                  >
+                  <a class="nav-link" data-bs-toggle="tab" href="#changePassword" role="tab">
                     <i class="far fa-user"></i>
                     Security
                   </a>
@@ -135,17 +116,8 @@ block content %}
             </div>
             <div class="card-body p-4">
               <div class="tab-content">
-                <div
-                  class="tab-pane active"
-                  id="personalDetails"
-                  role="tabpanel"
-                >
-                  <form
-                    method="POST"
-                    class="post-form"
-                    id="userForm"
-                    enctype="multipart/form-data"
-                  >
+                <div class="tab-pane active" id="personalDetails" role="tabpanel">
+                  <form method="POST" class="post-form" id="userForm" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="row">
                       <div class="col-lg-6">
@@ -299,11 +271,7 @@ block content %}
                       <!--end col-->
                       <div class="col-lg-12">
                         <div class="text-end">
-                          <button
-                            type="button"
-                            id="changePasswordButton"
-                            class="btn btn-success"
-                          >
+                          <button type="button" id="changePasswordButton" class="btn btn-success">
                             Change Password
                           </button>
                         </div>
@@ -317,9 +285,7 @@ block content %}
                   </div>
                   <div class="d-flex align-items-center mb-3">
                     <div class="flex-shrink-0 avatar-sm">
-                      <div
-                        class="avatar-title bg-light text-primary rounded-3 fs-18"
-                      >
+                      <div class="avatar-title bg-light text-primary rounded-3 fs-18">
                         <i class="ri-smartphone-line"></i>
                       </div>
                     </div>
@@ -333,10 +299,9 @@ block content %}
                       Delete This Account:
                     </h5>
                     <p class="text-muted">
-                      Go to the Data & Privacy section of your profile Account.
-                      Scroll to "Your data & privacy options." Delete your
-                      Profile Account. Follow the instructions to delete your
-                      account :
+                      Go to the Data & Privacy section of your profile Account. Scroll to "Your data
+                      & privacy options." Delete your Profile Account. Follow the instructions to
+                      delete your account :
                     </p>
                     <div>
                       <input
@@ -370,44 +335,42 @@ block content %}
   </div>
   <!-- End Page-content -->
 
-  {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
+  {% block footer %}
+    {% include "partials/footer.html" %}
+  {% endblock footer %}
 </div>
 <!-- end main content-->
 {% endblock content %} {% block extra_js %}
 <!-- profile-setting init js -->
 <script>
-  document
-    .getElementById("changePasswordButton")
-    .addEventListener("click", async function () {
-      const oldPassword = document.getElementById("oldpassword").value;
-      const newPassword = document.getElementById("newpassword").value;
-      const confirmPassword = document.getElementById(
-        "confirmpasswordInput"
-      ).value;
-      const form = document.getElementById("passwordChangeForm");
+  document.getElementById("changePasswordButton").addEventListener("click", async function() {
+    const oldPassword = document.getElementById("oldpassword").value;
+    const newPassword = document.getElementById("newpassword").value;
+    const confirmPassword = document.getElementById("confirmpasswordInput").value;
+    const form = document.getElementById("passwordChangeForm");
 
-      // Client-side validation
-      if (!form.checkValidity()) {
-        form.classList.add("was-validated");
-        return;
-      }
+    // Client-side validation
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
 
-      if (newPassword !== confirmPassword) {
-        alert("New password and confirm password do not match.");
-        return;
-      }
+    if (newPassword !== confirmPassword) {
+      alert("New password and confirm password do not match.");
+      return;
+    }
 
-      // Assuming you have a function to send the data to the server
-      const response = await changePassword(oldPassword, newPassword);
+    // Assuming you have a function to send the data to the server
+    const response = await changePassword(oldPassword, newPassword);
 
-      // Handle the response from the server
-      if (response.success) {
-        alert("Password changed successfully.");
-        form.reset(); // Clear the form
-      } else {
-        alert("Password change failed. Please try again.");
-      }
-    });
+    // Handle the response from the server
+    if (response.success) {
+      alert("Password changed successfully.");
+      form.reset(); // Clear the form
+    } else {
+      alert("Password change failed. Please try again.");
+    }
+  });
 
   async function changePassword(oldPassword, newPassword) {
     try {
@@ -415,9 +378,9 @@ block content %}
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
+          "X-CSRFToken": getCookie("csrftoken")
         },
-        body: JSON.stringify({ oldPassword, newPassword }),
+        body: JSON.stringify({ oldPassword, newPassword })
       });
 
       if (response.ok) {
@@ -433,26 +396,27 @@ block content %}
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
+    if (parts.length === 2)
+      return parts
+        .pop()
+        .split(";")
+        .shift();
   }
 </script>
 <script>
   // Function to handle form submission
-  $("#userForm").on("submit", async function (event) {
+  $("#userForm").on("submit", async function(event) {
     event.preventDefault();
 
     try {
       const formData = new FormData(this);
-      const response = await fetch(
-        '{% url "user:user.edit" user_id=user.id %}',
-        {
-          method: "POST",
-          body: formData,
-          headers: {
-            "X-CSRFToken": getCookie("csrftoken"),
-          },
+      const response = await fetch('{% url "user:user.edit" user_id=user.id %}', {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken")
         }
-      );
+      });
 
       if (response.ok) {
         // Business created successfully, you can show a success message here if needed.

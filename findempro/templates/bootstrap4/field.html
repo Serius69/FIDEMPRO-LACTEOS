@@ -2,22 +2,21 @@
 
 <div class="form-group {% if field.errors %}has-error{% endif %}">
   {% if field.label %}
-  <label
-    for="{{ field.id_for_label }}"
-    class="control-label{% if field.field.required %} requiredField{% endif %}"
-  >
-    {{ field.label|safe }}
-  </label>
+    <label for="{{ field.id_for_label }}" class="control-label{% if field.field.required %} requiredField{% endif %}">
+      {{ field.label|safe }}
+    </label>
   {% endif %}
   <div class="controls">
-    {{ field|safe }} {% if field.help_text %}
-    <p class="help-block">{{ field.help_text|safe }}</p>
-    {% endif %} {% if field.errors %}
-    <ul class="errorlist">
-      {% for error in field.errors %}
-      <li>{{ error|escape }}</li>
-      {% endfor %}
-    </ul>
+    {{ field|safe }}
+    {% if field.help_text %}
+      <p class="help-block">{{ field.help_text|safe }}</p>
+    {% endif %}
+    {% if field.errors %}
+      <ul class="errorlist">
+        {% for error in field.errors %}
+          <li>{{ error|escape }}</li>
+        {% endfor %}
+      </ul>
     {% endif %}
   </div>
 </div>

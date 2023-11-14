@@ -1,20 +1,17 @@
-{% extends "partials/base.html" %} {% load static %} {% block title %}Business
-Details{% endblock title %} {% block extra_css %}
-<link
-  rel="stylesheet"
-  href="{% static 'libs/gridjs/dist/theme/mermaid.min.css' %}"
-/>
-<link
-  href="{% static 'libs/swiper/swiper-bundle.min.css' %}"
-  rel="stylesheet"
-  type="text/css"
-/>
-{% endblock extra_css %} {% block content %}
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Business Details{% endblock title %} 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'libs/gridjs/dist/theme/mermaid.min.css' %}" />
+<link href="{% static 'libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
+{% endblock extra_css %} 
+{% block content %}
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with
-      pagetitle="Business" title="Business Details" %} {% endblock pagetitle %}
+      {% block pagetitle %} 
+        {% include "partials/page-title.html" with pagetitle="Business" title="Business Details" %} 
+      {% endblock pagetitle %}
 
       <div class="row">
         <div class="col-xxl-3">
@@ -24,17 +21,9 @@ Details{% endblock title %} {% block extra_css %}
                 <div class="flex-shrink-0 avatar-md mx-auto">
                   <div class="avatar-title bg-light rounded">
                     {% if product.image_src %}
-                    <img
-                      src="{{ MEDIA_URL }}{{ business.image_src.url }}"
-                      alt="100"
-                      height="100"
-                    />
+                    <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" alt="100" height="100" />
                     {% else %}
-                    <img
-                      src="{% static 'path/to/dummy-image.jpg' %}"
-                      alt="100"
-                      height="100"
-                    />
+                    <img src="{% static 'path/to/dummy-image.jpg' %}" alt="100" height="100" />
                     {% endif %}
                   </div>
                 </div>
@@ -106,10 +95,7 @@ Details{% endblock title %} {% block extra_css %}
               <div class="row g-4 mb-3">
                 <div class="col-sm-auto">
                   <div>
-                    <a
-                      href="{% url 'product:product.create' %}"
-                      class="btn btn-success"
-                    >
+                    <a href="{% url 'product:product.create' %}" class="btn btn-success">
                       <i class="ri-add-line align-bottom me-1"></i>
                       Add Product
                     </a>
@@ -118,11 +104,7 @@ Details{% endblock title %} {% block extra_css %}
                 <div class="col-sm">
                   <div class="d-flex justify-content-sm-end">
                     <div class="search-box ms-2">
-                      <input
-                        type="text"
-                        class="form-control"
-                        placeholder="Search Products..."
-                      />
+                      <input type="text" class="form-control" placeholder="Search Products..." />
                       <i class="ri-search-line search-icon"></i>
                     </div>
                   </div>
@@ -144,11 +126,7 @@ Details{% endblock title %} {% block extra_css %}
                         {% for product in products %}
                         <tr>
                           <td class="image">
-                            <img
-                              src="{{ product.image_src.url }}"
-                              alt="40"
-                              height="40"
-                            />
+                            <img src="{{ product.image_src.url }}" alt="40" height="40" />
                           </td>
                           <td class="name">{{ product.name }}</td>
                           <td class="type">{{ product.type }}</td>
@@ -157,15 +135,11 @@ Details{% endblock title %} {% block extra_css %}
                           </td>
                           <td class="status">
                             {% if product.is_active == 1 %}
-                            <span
-                              class="badge bg-success-subtle text-success text-uppercase"
-                            >
+                            <span class="badge bg-success-subtle text-success text-uppercase">
                               Active
                             </span>
                             {% else %}
-                            <span
-                              class="badge bg-danger-subtle text-danger text-uppercase"
-                            >
+                            <span class="badge bg-danger-subtle text-danger text-uppercase">
                               Deactived
                             </span>
                             {% endif %}
@@ -215,8 +189,7 @@ Details{% endblock title %} {% block extra_css %}
                               style="width: 75px; height: 75px"
                             ></lord-icon>
                             <h5 class="mt-2">
-                              Sorry, there isn't any business registered in the
-                              database
+                              Sorry, there isn't any business registered in the database
                             </h5>
                             <p class="text-muted mb-0">
                               You have to "Add Product".
@@ -251,10 +224,7 @@ Details{% endblock title %} {% block extra_css %}
                   <div class="col-6 col-sm-4">
                     <div class="p-3 border border-dashed border-start-0">
                       <h5 class="mb-1">
-                        <span
-                          class="counter-value"
-                          data-target="{{ products.count }}"
-                        >
+                        <span class="counter-value" data-target="{{ products.count }}">
                           0
                         </span>
                       </h5>
@@ -266,10 +236,7 @@ Details{% endblock title %} {% block extra_css %}
                     <div class="p-3 border border-dashed border-start-0">
                       <h5 class="mb-1">
                         $
-                        <span
-                          class="counter-value"
-                          data-target="{{ business.product.earnings }}"
-                        >
+                        <span class="counter-value" data-target="{{ business.product.earnings }}">
                           0
                         </span>
                         k

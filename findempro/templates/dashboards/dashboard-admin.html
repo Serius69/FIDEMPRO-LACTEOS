@@ -1,20 +1,23 @@
-{% extends "partials/base.html" %} {% load static %} {% block title %}Admin
-Dashboard{% endblock title %} {% block extra_css %}
+{% extends "partials/base.html" %} 
+{% load static %} 
+{% block title %}Admin Dashboard{% endblock title %} 
+{% block extra_css %}
 <!-- plugin css -->
 <link
   href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css'%}"
   rel="stylesheet"
   type="text/css"
 />
-{% endblock extra_css %} {% block content %}
+{% endblock extra_css %} 
+{% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with
-      pagetitle="Dashboards" title="Admin" %} {% endblock pagetitle %}
+      {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="Dashboards"
+      title="Admin" %} {% endblock pagetitle %}
 
       <div class="row">
         <div class="col-xxl-5">
@@ -26,10 +29,7 @@ Dashboard{% endblock title %} {% block extra_css %}
                     <div>
                       <p class="fw-medium text-muted mb-0">Users</p>
                       <h2 class="mt-4 ff-secondary fw-semibold">
-                        <span
-                          class="counter-value"
-                          data-target="{{ users.count }}"
-                        >
+                        <span class="counter-value" data-target="{{ users.count }}">
                           0
                         </span>
                         users
@@ -37,19 +37,21 @@ Dashboard{% endblock title %} {% block extra_css %}
                       <p class="mb-0 text-muted">
                         <span class="badge bg-light text-success mb-0">
                           <i class="ri-arrow-up-line align-middle"></i>
-                          {% if users_change > 0 %} +{{ users_change }} ({{
-                          users_change_percentage|floatformat:2 }}%) {% elif
-                          users_change < 0 %} {{ users_change }} ({{
-                          users_change_percentage|floatformat:2 }}%) {% else %}
-                          0 (0%) {% endif %} vs. previous month
+                          {% if users_change > 0 %}
+                            +{{ users_change }} ({{ users_change_percentage|floatformat:2 }}%)
+                          {% elif users_change < 0 %}
+                            {{ users_change }} ({{ users_change_percentage|floatformat:2 }}%)
+                          {% else %}
+                            0 (0%)
+                          {% endif %}
+                          vs. previous month
                         </span>
                       </p>
+                      
                     </div>
                     <div>
                       <div class="avatar-sm flex-shrink-0">
-                        <span
-                          class="avatar-title bg-info-subtle rounded-circle fs-2"
-                        >
+                        <span class="avatar-title bg-info-subtle rounded-circle fs-2">
                           <i data-feather="users" class="text-info"></i>
                         </span>
                       </div>
@@ -82,9 +84,7 @@ Dashboard{% endblock title %} {% block extra_css %}
                     </div>
                     <div>
                       <div class="avatar-sm flex-shrink-0">
-                        <span
-                          class="avatar-title bg-info-subtle rounded-circle fs-2"
-                        >
+                        <span class="avatar-title bg-info-subtle rounded-circle fs-2">
                           <i data-feather="activity" class="text-info"></i>
                         </span>
                       </div>
@@ -124,9 +124,7 @@ Dashboard{% endblock title %} {% block extra_css %}
                     </div>
                     <div>
                       <div class="avatar-sm flex-shrink-0">
-                        <span
-                          class="avatar-title bg-info-subtle rounded-circle fs-2"
-                        >
+                        <span class="avatar-title bg-info-subtle rounded-circle fs-2">
                           <i data-feather="clock" class="text-info"></i>
                         </span>
                       </div>
@@ -159,9 +157,7 @@ Dashboard{% endblock title %} {% block extra_css %}
                     </div>
                     <div>
                       <div class="avatar-sm flex-shrink-0">
-                        <span
-                          class="avatar-title bg-info-subtle rounded-circle fs-2"
-                        >
+                        <span class="avatar-title bg-info-subtle rounded-circle fs-2">
                           <i data-feather="external-link" class="text-info"></i>
                         </span>
                       </div>
@@ -212,9 +208,7 @@ Dashboard{% endblock title %} {% block extra_css %}
                 </div>
                 <!--end col-->
                 <div class="col-6 col-sm-4">
-                  <div
-                    class="p-3 border border-dashed border-start-0 border-end-0"
-                  >
+                  <div class="p-3 border border-dashed border-start-0 border-end-0">
                     <h5 class="mb-1">
                       <span class="counter-value" data-target="3">0</span>
                       m
@@ -293,9 +287,7 @@ Dashboard{% endblock title %} {% block extra_css %}
                     <tr>
                       <td>
                         <h4 class="text-truncate fs-14 fs-medium mb-0">
-                          <i
-                            class="ri-stop-fill align-middle fs-18 text-primary me-2"
-                          ></i>
+                          <i class="ri-stop-fill align-middle fs-18 text-primary me-2"></i>
                           Desktop Users
                         </h4>
                       </td>
@@ -315,9 +307,7 @@ Dashboard{% endblock title %} {% block extra_css %}
                     <tr>
                       <td>
                         <h4 class="text-truncate fs-14 fs-medium mb-0">
-                          <i
-                            class="ri-stop-fill align-middle fs-18 text-warning me-2"
-                          ></i>
+                          <i class="ri-stop-fill align-middle fs-18 text-warning me-2"></i>
                           Mobile Users
                         </h4>
                       </td>
@@ -367,50 +357,44 @@ Dashboard{% endblock title %} {% block extra_css %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", function() {
     // Datos del gráfico
     var chartData = {
       series: [78560, 105020], // Datos de Desktop Users y Mobile Users
-      labels: ["Desktop Users", "Mobile Users"],
+      labels: ["Desktop Users", "Mobile Users"]
     };
 
     // Opciones del gráfico
     var chartOptions = {
       chart: {
-        type: "donut",
+        type: "donut"
       },
-      colors: ["var(--vz-primary)", "var(--vz-warning)"],
+      colors: ["var(--vz-primary)", "var(--vz-warning)"]
     };
 
     // Inicializar el gráfico en el div con el id "user_device_pie_charts"
-    var chart = new ApexCharts(
-      document.querySelector("#user_device_pie_charts"),
-      chartOptions
-    );
+    var chart = new ApexCharts(document.querySelector("#user_device_pie_charts"), chartOptions);
     chart.render();
   });
 </script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", function() {
     // Datos del gráfico
     var chartData = {
       series: [30, 70], // Datos de la audiencia o métricas
-      labels: ["Success", "Light"],
+      labels: ["Success", "Light"]
     };
 
     // Opciones del gráfico
     var chartOptions = {
       chart: {
-        type: "donut",
+        type: "donut"
       },
-      colors: ["var(--vz-success)", "var(--vz-light)"],
+      colors: ["var(--vz-success)", "var(--vz-light)"]
     };
 
     // Inicializar el gráfico en el div con el id "audiences_metrics_charts"
-    var chart = new ApexCharts(
-      document.querySelector("#audiences_metrics_charts"),
-      chartOptions
-    );
+    var chart = new ApexCharts(document.querySelector("#audiences_metrics_charts"), chartOptions);
     chart.render();
   });
 </script>

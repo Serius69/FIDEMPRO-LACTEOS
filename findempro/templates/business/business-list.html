@@ -1,14 +1,20 @@
-{% extends "partials/base.html" %} {% load static %} {% load crispy_forms_tags
-%} {% block title %}Business List{% endblock title %} {% block extra_css %} {%
-endblock extra_css %} {% block content %}
+{% extends "partials/base.html" %} {% load static %} 
+{% load crispy_forms_tags %}
+{% block title %}
+  Business List
+{% endblock title %}
+{% block extra_css %} 
+{% endblock extra_css %}
+{% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with
-      pagetitle="Business" title="Business List" %} {% endblock pagetitle %}
+      {% block pagetitle %} 
+        {% include "partials/page-title.html" with pagetitle="Business" title="Business List" %} 
+      {% endblock pagetitle %}
 
       <div class="row">
         <div class="col">
@@ -17,92 +23,29 @@ endblock extra_css %} {% block content %}
               <div class="card-header border-0 rounded">
                 <div class="row g-2">
                   <div class="col-xxl-3 ms-auto">
-                    <div>
-                      <form
-                        method="get"
-                        action="{% url 'business:business.list' %}"
-                      >
-                        <select
-                          class="form-control"
-                          id="type-select"
-                          name="type"
-                        >
-                          <option
-                            value="All"
-                            {%
-                            if
-                            request.GET.type=""
-                            ="All"
-                            %}selected{%
-                            endif
-                            %}
-                          >
-                            Select Types
-                          </option>
-                          <option
-                            value="Dairy"
-                            {%
-                            if
-                            request.GET.type=""
-                            ="Dairy"
-                            %}selected{%
-                            endif
-                            %}
-                          >
-                            Dairy
-                          </option>
-                          <option
-                            value="Meat"
-                            {%
-                            if
-                            request.GET.type=""
-                            ="Meat"
-                            %}selected{%
-                            endif
-                            %}
-                          >
-                            Meat
-                          </option>
-                          <option
-                            value="Dairy"
-                            {%
-                            if
-                            request.GET.type=""
-                            ="Dairy"
-                            %}selected{%
-                            endif
-                            %}
-                          >
-                            Dairy
-                          </option>
-                          <option
-                            value="Dairy"
-                            {%
-                            if
-                            request.GET.type=""
-                            ="Dairy"
-                            %}selected{%
-                            endif
-                            %}
-                          >
-                            Dairy
-                          </option>
-                        </select>
-                        <button type="submit" class="btn btn-danger">
-                          <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                          Filters
-                        </button>
-                      </form>
-                    </div>
+                    <form method="get" action="{% url 'business:business.list' %}">
+                      <select class="form-control" id="type-select" name="type">
+                        <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>
+                          Select Types
+                        </option>
+                        <option value="Dairy" {% if request.GET.type == "Dairy" %}selected{% endif %}>
+                          Dairy
+                        </option>
+                        <option value="Meat" {% if request.GET.type == "Meat" %}selected{% endif %}>
+                          Meat
+                        </option>
+                        <!-- Otros elementos options -->
+                      </select>
+                      <button type="submit" class="btn btn-danger">
+                        <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                        Filters
+                      </button>
+                    </form>
                   </div>
                   <!--end col-->
                   <div class="col-lg-auto">
                     <div class="hstack gap-2">
-                      <button
-                        class="btn btn-success"
-                        data-bs-toggle="modal"
-                        data-bs-target="#addBusiness"
-                      >
+                      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness">
                         <i class="ri-add-fill me-1 align-bottom"></i>
                         Add Business
                       </button>
@@ -113,6 +56,7 @@ endblock extra_css %} {% block content %}
                 <!--end row-->
               </div>
             </div>
+            
             <!-- List of Businesess -->
             <div class="row mt-4" id="business-list">
               {% for business in businesses %}
@@ -230,52 +174,50 @@ endblock extra_css %} {% block content %}
               </div>
               <!-- End List of Businesess -->
               <!-- Pagination -->
-              <div
-                class="align-items-center mt-2 row text-center text-sm-start"
-              >
+              <div class="align-items-center mt-2 row text-center text-sm-start">
                 <div class="col-sm">
                   <div class="text-muted">
                     Showing
                     <span class="fw-semibold">{{ businesses.number }}</span>
                     of
-                    <span class="fw-semibold">
-                      {{ businesses.paginator.num_pages }}
-                    </span>
+                    <span class="fw-semibold">{{ businesses.paginator.num_pages }}</span>
                     Results
                   </div>
                 </div>
                 <div class="col-sm-auto">
-                  <ul
-                    class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
-                  >
+                  <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
                     {% if businesses.has_previous %}
-                    <li class="page-item">
-                      <a
-                        href="?page={{ businesses.previous_page_number }}"
-                        class="page-link"
-                      >
-                        ←
-                      </a>
-                    </li>
-                    {% endif %} {% for i in businesses.paginator.page_range %}
-                    <li
-                      class="page-item {% if i == businesses.number %}active{% endif %}"
-                    >
-                      <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                    </li>
-                    {% endfor %} {% if businesses.has_next %}
-                    <li class="page-item">
-                      <a
-                        href="?page={{ businesses.next_page_number }}"
-                        class="page-link"
-                      >
-                        →
-                      </a>
-                    </li>
+                      <li class="page-item">
+                        <a href="?page=1" class="page-link" aria-label="First">
+                          ««
+                        </a>
+                      </li>
+                      <li class="page-item">
+                        <a href="?page={{ businesses.previous_page_number }}" class="page-link" aria-label="Previous">
+                          «
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% for i in businesses.paginator.page_range %}
+                      <li class="page-item {% if i == businesses.number %}active{% endif %}">
+                        <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                      </li>
+                    {% endfor %}
+                    {% if businesses.has_next %}
+                      <li class="page-item">
+                        <a href="?page={{ businesses.next_page_number }}" class="page-link" aria-label="Next">
+                          »
+                        </a>
+                      </li>
+                      <li class="page-item">
+                        <a href="?page={{ businesses.paginator.num_pages }}" class="page-link" aria-label="Last">
+                          »»
+                        </a>
+                      </li>
                     {% endif %}
                   </ul>
                 </div>
-              </div>
+              </div>              
             </div>
           </div>
         </div>

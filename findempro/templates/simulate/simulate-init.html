@@ -1,14 +1,16 @@
-{% extends "partials/base.html" %} {% load static %} {% block title %}Simulate
-Init{% endblock title %} {% block extra_css %} {% endblock extra_css %} {% block
-content %}
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Simulate Init{% endblock title %}
+{% block extra_css %} {% endblock extra_css %}
+{% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with
-      pagetitle="Simulate" title="Init" %} {% endblock pagetitle %}
+      {% block pagetitle %}
+      {% include "partials/page-title.html" with pagetitle="Simulate" title="Init" %} {% endblock pagetitle %}
 
       <div class="row">
         <div class="col-xxl-6">
@@ -23,11 +25,7 @@ content %}
                 Realize a Simulation with the next params
               </p>
               <div class="live-preview">
-                <form
-                  action="{% url 'simulate:simulate.init' %}"
-                  method="post"
-                  id="myForm"
-                >
+                <form action="{% url 'simulate:simulate.init' %}" method="post" id="myForm">
                   {% csrf_token %}
                   <div class="row">
                     <div class="col-md-4">
@@ -112,10 +110,7 @@ content %}
                               type="checkbox"
                               id="financial_statements"
                             />
-                            <label
-                              class="form-check-label"
-                              for="financial_statements"
-                            >
+                            <label class="form-check-label" for="financial_statements">
                               Financial Statements
                             </label>
                           </div>
@@ -125,23 +120,13 @@ content %}
                               type="checkbox"
                               id="performance_indicators"
                             />
-                            <label
-                              class="form-check-label"
-                              for="performance_indicators"
-                            >
+                            <label class="form-check-label" for="performance_indicators">
                               Key Performance Indicators
                             </label>
                           </div>
                           <div class="form-check">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              id="tables_analysis"
-                            />
-                            <label
-                              class="form-check-label"
-                              for="tables_analysis"
-                            >
+                            <input class="form-check-input" type="checkbox" id="tables_analysis" />
+                            <label class="form-check-label" for="tables_analysis">
                               Scenario Analysis Tables
                             </label>
                           </div>
@@ -151,10 +136,7 @@ content %}
                               type="checkbox"
                               id="sensitivity_analysis"
                             />
-                            <label
-                              class="form-check-label"
-                              for="sensitivity_analysis"
-                            >
+                            <label class="form-check-label" for="sensitivity_analysis">
                               Sensitivity Analysis
                             </label>
                           </div>
@@ -164,10 +146,7 @@ content %}
                               type="checkbox"
                               id="comparative_analysis"
                             />
-                            <label
-                              class="form-check-label"
-                              for="comparative_analysis"
-                            >
+                            <label class="form-check-label" for="comparative_analysis">
                               Comparative Analysis
                             </label>
                           </div>
@@ -211,11 +190,7 @@ content %}
 
                     <div class="col-lg-12">
                       <div class="text-init">
-                        <button
-                          type="button"
-                          class="btn btn-dark"
-                          id="clearButton"
-                        >
+                        <button type="button" class="btn btn-dark" id="clearButton">
                           Clear
                         </button>
                       </div>
@@ -287,10 +262,7 @@ content %}
             <div class="card-body">
               <div id="customerList">
                 <div class="table-responsive table-card mt-3 mb-1">
-                  <table
-                    class="table align-middle table-nowrap"
-                    id="simulateTable"
-                  >
+                  <table class="table align-middle table-nowrap" id="simulateTable">
                     <thead class="table-light">
                       <tr>
                         <th scope="col" style="width: 50px">
@@ -337,17 +309,11 @@ content %}
 
                 <div class="d-flex justify-content-end">
                   <div class="pagination-wrap hstack gap-2">
-                    <a
-                      class="page-item pagination-prev disabled"
-                      href="javascript:void(0);"
-                    >
+                    <a class="page-item pagination-prev disabled" href="javascript:void(0);">
                       Previous
                     </a>
                     <ul class="pagination listjs-pagination mb-0"></ul>
-                    <a
-                      class="page-item pagination-next"
-                      href="javascript:void(0);"
-                    >
+                    <a class="page-item pagination-next" href="javascript:void(0);">
                       Next
                     </a>
                   </div>
@@ -372,11 +338,10 @@ content %}
 {% endblock content %} {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  document.getElementById("fk_product").addEventListener("change", function () {
+  document.getElementById("fk_product").addEventListener("change", function() {
     const select = document.getElementById("fk_product");
     if (select.value === "Choose...") {
-      document.getElementById("error-message").textContent =
-        "Please select a product.";
+      document.getElementById("error-message").textContent = "Please select a product.";
     } else {
       document.getElementById("error-message").textContent = "";
     }
@@ -384,7 +349,7 @@ content %}
 
   $.ajax({
     type: "GET",
-    url: "{% url 'simulate:simulate.init' %}", // Replace with the actual URL of your Django view
+    url: "{% url 'simulate:simulate.init' %}" // Replace with the actual URL of your Django view
     // ...
   });
 
@@ -400,25 +365,25 @@ content %}
         data: [],
         backgroundColor: "rgba(255, 255, 255, 0)", // Transparent background
         borderColor: "rgba(255, 255, 255, 0)", // Transparent border
-        borderWidth: 1,
-      },
-    ],
+        borderWidth: 1
+      }
+    ]
   };
 
   // Configura las opciones del gráfico
   var options = {
     scales: {
       y: {
-        beginAtZero: true,
-      },
-    },
+        beginAtZero: true
+      }
+    }
   };
 
   // Crea el gráfico lineal
   var myChart = new Chart(ctx, {
     type: "line",
     data: data,
-    options: options,
+    options: options
   });
 
   // Function to update the chart with data
@@ -430,10 +395,10 @@ content %}
       options: {
         scales: {
           y: {
-            beginAtZero: true,
-          },
-        },
-      },
+            beginAtZero: true
+          }
+        }
+      }
     });
   }
 
@@ -460,37 +425,35 @@ content %}
   }
 
   // Add a click event listener to the "Init" button
-  document.getElementById("initButton").addEventListener("click", function () {
+  document.getElementById("initButton").addEventListener("click", function() {
     // Make an AJAX request to your Django view to fetch data
     $.ajax({
       type: "GET",
       url: "{% url 'simulate:simulate.init' %}", // Replace with the actual URL of your Django view
-      success: function (data) {
+      success: function(data) {
         // Update the chart and table with the retrieved data
         updateChart(data.chartData);
         updateTable(data.tableData);
       },
-      error: function () {
+      error: function() {
         alert("Error fetching data from the server.");
-      },
+      }
     });
   });
-  document.getElementById("clearButton").addEventListener("click", function () {
+  document.getElementById("clearButton").addEventListener("click", function() {
     document.getElementById("myForm").reset();
   });
   // Agregar un evento de cambio al elemento select
-  document
-    .getElementById("ForminputState")
-    .addEventListener("change", function () {
-      // Obtener el elemento seleccionado
-      var selectedOption = this.options[this.selectedIndex];
+  document.getElementById("ForminputState").addEventListener("change", function() {
+    // Obtener el elemento seleccionado
+    var selectedOption = this.options[this.selectedIndex];
 
-      // Obtener los detalles del elemento seleccionado
-      var details = selectedOption.getAttribute("data-details");
+    // Obtener los detalles del elemento seleccionado
+    var details = selectedOption.getAttribute("data-details");
 
-      // Mostrar los detalles en un área específica
-      var selectedDetails = document.getElementById("selectedDetails");
-      selectedDetails.innerHTML = details;
-    });
+    // Mostrar los detalles en un área específica
+    var selectedDetails = document.getElementById("selectedDetails");
+    selectedDetails.innerHTML = details;
+  });
 </script>
 {% endblock extra_js %}

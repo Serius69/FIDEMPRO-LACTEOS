@@ -7,35 +7,19 @@
         <div class="navbar-brand-box horizontal-logo">
           <a href="{% url 'dashboard:index'%}" class="logo logo-dark">
             <span class="logo-sm">
-              <img
-                src="{% static 'images/logo-sm.webp'%}"
-                alt="50"
-                height="50"
-              />
+              <img src="{% static 'images/logo-sm.webp'%}" alt="50" height="50" />
             </span>
             <span class="logo-lg">
-              <img
-                src="{% static 'images/logo-dark.webp'%}"
-                alt="50"
-                height="50"
-              />
+              <img src="{% static 'images/logo-dark.webp'%}" alt="50" height="50" />
             </span>
           </a>
 
           <a href="{% url 'dashboard:index'%}" class="logo logo-light">
             <span class="logo-sm">
-              <img
-                src="{% static 'images/logo-sm.webp'%}"
-                alt="50"
-                height="50"
-              />
+              <img src="{% static 'images/logo-sm.webp'%}" alt="50" height="50" />
             </span>
             <span class="logo-lg">
-              <img
-                src="{% static 'images/logo-light.webp'%}"
-                alt="50"
-                height="50"
-              />
+              <img src="{% static 'images/logo-light.webp'%}" alt="50" height="50" />
             </span>
           </a>
         </div>
@@ -141,9 +125,7 @@
               />
               {% endif %}
               <span class="text-start ms-xl-2">
-                <span
-                  class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"
-                >
+                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
                   {{user.username}}
                 </span>
                 {% if user.is_staff %}
@@ -181,25 +163,16 @@
             {% if user.is_authenticated %}
             <h6 class="dropdown-header">Welcome {{user.username}}</h6>
             <a class="dropdown-item" href="{% url 'user:user.profile' %}">
-              <i
-                class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"
-              ></i>
+              <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
               <span class="align-middle">Profile</span>
             </a>
             <a class="dropdown-item" href="{% url 'pages:pages.faqs' %}">
-              <i
-                class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"
-              ></i>
+              <i class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i>
               <span class="align-middle">Help</span>
             </a>
             <div class="dropdown-divider"></div>
-            <a
-              class="dropdown-item"
-              href="{% url 'pages:pages.profile_settings' %}"
-            >
-              <i
-                class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"
-              ></i>
+            <a class="dropdown-item" href="{% url 'pages:pages.profile_settings' %}">
+              <i class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i>
               <span class="align-middle">Settings</span>
             </a>
             {% if user.is_authenticated %} {% if user.has_usable_password %}
@@ -223,15 +196,11 @@
             </a>
             {% endif %} {% else %}
             <a class="dropdown-item" href="/account/login/?next=">
-              <i
-                class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"
-              ></i>
+              <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
               <span class="align-middle">Login</span>
             </a>
             <a class="dropdown-item" href="/account/signup/?next=">
-              <i
-                class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"
-              ></i>
+              <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
               <span class="align-middle">SignUp</span>
             </a>
             {% endif %}
@@ -242,12 +211,7 @@
   </div>
 </header>
 <!-- removeNotificationModal -->
-<div
-  id="removeNotificationModal"
-  class="modal fade zoomIn"
-  tabindex="-1"
-  aria-hidden="true"
->
+<div id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -275,18 +239,10 @@
           </div>
         </div>
         <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-          <button
-            type="button"
-            class="btn w-sm btn-light"
-            data-bs-dismiss="modal"
-          >
+          <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
             Close
           </button>
-          <button
-            type="button"
-            class="btn w-sm btn-danger"
-            id="delete-notification"
-          >
+          <button type="button" class="btn w-sm btn-danger" id="delete-notification">
             Yes, Delete It!
           </button>
         </div>
@@ -297,7 +253,8 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
-{% endblock header %} {% block extra_js %}
+{% endblock header %}
+{% block extra_js %}
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -309,7 +266,7 @@
   const targetLanguage = "es";
 
   // Event listener for the translate button
-  $("#translate-button").on("click", function () {
+  $("#translate-button").on("click", function() {
     // Get the current page content
     const pageContent = $("body").html();
 
@@ -319,16 +276,16 @@
       method: "POST",
       data: JSON.stringify({
         q: pageContent,
-        target: targetLanguage,
+        target: targetLanguage
       }),
       contentType: "application/json",
-      success: function (response) {
+      success: function(response) {
         // Replace the page content with the translated text
         $("body").html(response.data.translations[0].translatedText);
       },
-      error: function (error) {
+      error: function(error) {
         console.error("Translation error:", error);
-      },
+      }
     });
   });
 </script>

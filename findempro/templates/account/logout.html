@@ -1,5 +1,8 @@
-{% extends "account/base.html" %} {% load static %} {% load i18n %} {% block
-title %}{% trans "Sign Out" %}{% endblock title %} {% block content %}
+{% extends "account/base.html" %} {% load static %} {% load i18n %} 
+{% block title %}
+  {% trans "SignOut" %}
+{% endblock title %}
+{% block content %}
 <div class="p-lg-5 p-4 text-center">
   <lord-icon
     src="https://cdn.lordicon.com/hzomhqxz.json"
@@ -12,12 +15,9 @@ title %}{% trans "Sign Out" %}{% endblock title %} {% block content %}
     <h5>{% trans "Sign Out" %}</h5>
     <p class="text-muted">{% trans 'Are you sure you want to sign out?' %}</p>
     <form method="post" action="{% url 'account_logout' %}">
-      {% csrf_token %} {% if redirect_field_value %}
-      <input
-        type="hidden"
-        name="{{ redirect_field_name }}"
-        value="{{ redirect_field_value }}"
-      />
+      {% csrf_token %} 
+      {% if redirect_field_value %}
+      <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
       {% endif %}
       <button type="submit" class="btn btn-success w-100">
         {% trans 'Sign Out' %}

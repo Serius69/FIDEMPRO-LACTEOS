@@ -1,14 +1,17 @@
-{% extends "partials/base.html" %} {% load static %} {% block title%}Questionary
-{% endblock title %} {% block extra_css %} {% endblock extra_css %} {% block
-content %}
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title%}Questionary {% endblock title%}
+{% block extra_css %}
+{% endblock extra_css %}
+{% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with
-      pagetitle="products" title="Questionary" %} {% endblock pagetitle %}
+      {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="products"
+      title="Questionary" %} {% endblock pagetitle %}
       <div class="row">
         <div class="col">
           <div class="h-100">
@@ -51,11 +54,7 @@ content %}
                   <div class="col-sm">
                     <div class="d-flex justify-content-sm-end gap-2">
                       <div class="search-box ms-2">
-                        <input
-                          type="text"
-                          class="form-control"
-                          placeholder="Search..."
-                        />
+                        <input type="text" class="form-control" placeholder="Search..." />
                         <i class="ri-search-line search-icon"></i>
                       </div>
                     </div>
@@ -66,8 +65,7 @@ content %}
             {% comment %}
             <div class="row">
               <div class="col-xxl-9">
-                {% for variable, generated_questions in generated_questions_list
-                %}
+                {% for variable, generated_questions in generated_questions_list %}
                 <div class="card joblist-card">
                   <div class="card-body">
                     <div class="d-flex mb-4">
@@ -101,38 +99,26 @@ content %}
                     style="width: 75px; height: 75px"
                   ></lord-icon>
                   <h5 class="mt-2">
-                    Sorry there isn't any variable to create questions register
-                    in the database
+                    Sorry there isn't any variable to create questions register in the database
                   </h5>
                   <p class="text-muted mb-0">You have to "Add Product".</p>
                 </div>
                 {% endfor %}
 
-                <div
-                  class="row g-0 justify-content-end mb-4"
-                  id="pagination-element"
-                >
+                <div class="row g-0 justify-content-end mb-4" id="pagination-element">
                   <!-- end col -->
                   <div class="col-sm-6">
                     <div
                       class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0"
                     >
                       <div class="page-item">
-                        <a
-                          href="javascript:void(0);"
-                          class="page-link"
-                          id="page-prev"
-                        >
+                        <a href="javascript:void(0);" class="page-link" id="page-prev">
                           Previous
                         </a>
                       </div>
                       <span id="page-num" class="pagination"></span>
                       <div class="page-item">
-                        <a
-                          href="javascript:void(0);"
-                          class="page-link"
-                          id="page-next"
-                        >
+                        <a href="javascript:void(0);" class="page-link" id="page-next">
                           Next
                         </a>
                       </div>
@@ -185,16 +171,13 @@ content %}
                   style="width: 75px; height: 75px"
                 ></lord-icon>
                 <h5 class="mt-2">
-                  Lo siento, no hay variables registradas en la base de datos
-                  para crear preguntas.
+                  Lo siento, no hay variables registradas en la base de datos para crear preguntas.
                 </h5>
                 <p class="text-muted mb-0">Debes "Agregar Producto".</p>
               </div>
               {% endif %}
               <!-- Pagination -->
-              <div
-                class="align-items-center mt-2 row text-center text-sm-start"
-              >
+              <div class="align-items-center mt-2 row text-center text-sm-start">
                 <div class="col-sm">
                   <div class="text-muted">
                     Showing
@@ -212,25 +195,17 @@ content %}
                   >
                     {% if questions.has_previous %}
                     <li class="page-item">
-                      <a
-                        href="?page={{ questions.previous_page_number }}"
-                        class="page-link"
-                      >
+                      <a href="?page={{ questions.previous_page_number }}" class="page-link">
                         ←
                       </a>
                     </li>
                     {% endif %} {% for i in questions.paginator.page_range %}
-                    <li
-                      class="page-item {% if i == questions.number %}active{% endif %}"
-                    >
+                    <li class="page-item {% if i == questions.number %}active{% endif %}">
                       <a href="?page={{ i }}" class="page-link">{{ i }}</a>
                     </li>
                     {% endfor %} {% if questions.has_next %}
                     <li class="page-item">
-                      <a
-                        href="?page={{ questions.next_page_number }}"
-                        class="page-link"
-                      >
+                      <a href="?page={{ questions.next_page_number }}" class="page-link">
                         →
                       </a>
                     </li>
@@ -258,9 +233,7 @@ content %}
                     {% for instruction in instructions %}
                     <div class="acitivity-item d-flex">
                       <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                        <div
-                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
-                        >
+                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
                           <i class="ri-info-line"></i>
                         </div>
                       </div>

@@ -19,9 +19,8 @@
   <head>
     <meta charset="utf-8" />
     <title>
-      {% block title %}{% endblock title %} | findempro - Financial Decision
-      Support System for Small and Medium-sized Enterprises (SMEs) in the Dairy
-      Secto
+      {% block title %}{% endblock title %} | findempro - Financial Decision Support System for
+      Small and Medium-sized Enterprises (SMEs) in the Dairy Secto
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
@@ -44,49 +43,30 @@
       type="text/css"
     />
     <!-- Icons Css -->
-    <link
-      href="{% static 'css/icons.min.css'%}"
-      rel="stylesheet"
-      type="text/css"
-    />
+    <link href="{% static 'css/icons.min.css'%}" rel="stylesheet" type="text/css" />
     <!-- App Css-->
-    <link
-      href="{% static 'css/app.min.css'%}"
-      id="app-style"
-      rel="stylesheet"
-      type="text/css"
-    />
+    <link href="{% static 'css/app.min.css'%}" id="app-style" rel="stylesheet" type="text/css" />
     <!-- custom Css-->
-    <link
-      href="{% static 'css/custom.min.css'%}"
-      id="app-style"
-      rel="stylesheet"
-      type="text/css"
-    />
+    <link href="{% static 'css/custom.min.css'%}" id="app-style" rel="stylesheet" type="text/css" />
     <!-- custom Css-->
-    <link
-      href="{% static 'css/righbar.css'%}"
-      id="app-style"
-      rel="stylesheet"
-      type="text/css"
-    />
+    <link href="{% static 'css/righbar.css'%}" id="app-style" rel="stylesheet" type="text/css" />
     {% endblock css %}
   </head>
 
   <body>
     <!-- Begin page -->
     <div id="layout-wrapper">
-      {% block header %} {% include "partials/topbar.html" %} {% endblock header
-      %} {% block sidebar %} {% include "partials/sidebar.html" %} {% endblock
-      sidebar %} {% block content %} {% block pagetitle %} {% endblock pagetitle
-      %} {% block footer %} {% endblock footer %} {% endblock content %}
+      {% block header %} {% include "partials/topbar.html" %} {% endblock header %} {% block sidebar
+      %} {% include "partials/sidebar.html" %} {% endblock sidebar %} {% block content %} {% block
+      pagetitle %} {% endblock pagetitle %} {% block footer %} {% endblock footer %} {% endblock
+      content %}
     </div>
 
     {% block extra_content %} {% endblock extra_content %}
 
     <!-- END layout-wrapper -->
-    {% block right_sidebar %} {% include "partials/customizer.html" %} {%
-    endblock right_sidebar %} {% block javascript %}
+    {% block right_sidebar %} {% include "partials/customizer.html" %} {% endblock right_sidebar %}
+    {% block javascript %}
     <!-- JAVASCRIPT -->
     <script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js'%}"></script>
     <script src="{% static 'libs/simplebar/dist/simplebar.min.js'%}"></script>
@@ -144,7 +124,7 @@
         icon: "success",
         title: m,
         showConfirmButton: false,
-        timer: 3000,
+        timer: 3000
       });
     </script>
     {% else %}
@@ -156,10 +136,11 @@
         icon: "error",
         title: m,
         showConfirmButton: false,
-        timer: 3000,
+        timer: 3000
       });
     </script>
-    {% endif %} {% endfor %}
+    {% endif %} 
+    {% endfor %}
     <!-- apexcharts -->
     <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
 

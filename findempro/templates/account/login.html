@@ -1,6 +1,7 @@
-{% extends 'account/base.html' %} {% load static %} {% load i18n %} {% load
-account socialaccount %} {% load crispy_forms_tags %} {% block title %}Sign In{%
-endblock title %} {% block content %}
+{% extends 'account/base.html' %} {% load static %} {% load i18n %} {% load account socialaccount %}
+{% load crispy_forms_tags %} 
+{% block title %}Sign In{% endblock title %} 
+{% block content %}
 <div class="p-lg-5 p-4">
   <div>
     <h5 class="text-primary">Welcome Back !</h5>
@@ -9,21 +10,18 @@ endblock title %} {% block content %}
 
   <div class="mt-4">
     <div class="mt-4">
-      <form
-        class="needs-validation"
-        novalidate
-        method="POST"
-        action="{% url 'account_login' %}"
-      >
+      <form class="needs-validation" novalidate method="POST" action="{% url 'account_login' %}">
         {% for message in messages %}
         <div class="alert {{ message.tags }} mb-4" role="alert">
           <strong>{{ message }}</strong>
         </div>
-        {% endfor %} {% if field.help_text %}
+        {% endfor %} 
+        {% if field.help_text %}
         <div class="alert alert-danger mb-4" role="alert">
           <strong>{{ field.help_text }}</strong>
         </div>
-        {% endif %} {% csrf_token %}
+        {% endif %} 
+        {% csrf_token %}
         <div class="mb-3">{{ form.login|as_crispy_field }}</div>
 
         <div class="mb-3 position-relative">
@@ -67,16 +65,14 @@ endblock title %} {% block content %}
   <div class="mt-5 text-center">
     <p class="mb-0">
       Don't have an account ?
-      <a
-        href="{{ signup_url }}"
-        class="fw-semibold text-primary text-decoration-underline"
-      >
+      <a href="{{ signup_url }}" class="fw-semibold text-primary text-decoration-underline">
         Signup
       </a>
     </p>
   </div>
 </div>
-{% endblock content %} {% block extra_js %}
+{% endblock content %} 
+{% block extra_js %}
 <!-- password-addon init -->
 <script src="{% static 'js/pages/password-addon.init.js'%}"></script>
 {% endblock extra_js %}
