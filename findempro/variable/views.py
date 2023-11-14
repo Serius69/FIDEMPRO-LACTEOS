@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
+from sympy import symbols, Eq, solve
 openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
@@ -45,13 +46,13 @@ def variable_list(request):
     #     messages.error(request, f"An error occurred: {str(e)}")
     #     return HttpResponse(status=500)
 def variable_overview(request, pk):
-    try:
+    # try:
         variable = get_object_or_404(Variable, pk=pk)
         product_id = variable.fk_product.id
         variables_related = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
 
         # Paginate the variables
-        paginator = Paginator(variables_related, 9)  # Show 6 variables per page
+        paginator = Paginator(variables_related, 3)  # Show 6 variables per page
         page = request.GET.get('page')
 
         try:
@@ -64,9 +65,9 @@ def variable_overview(request, pk):
             variables_related = paginator.page(paginator.num_pages)
             
         return render(request, "variable/variable-overview.html", {'variable': variable, 'variables_related': variables_related})
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
 def create_variable_view(request):
     if request.method == 'POST':
         form = VariableForm(request.POST, request.FILES)
@@ -136,3 +137,19 @@ def get_variable_details(request, pk):
             return JsonResponse(variable_details)
     except ObjectDoesNotExist:
         return JsonResponse({"error": "El negocio no existe"}, status=404)
+def solve_equation(request):
+    if request.method == 'POST':
+        equation_str = request.POST.get('equation', '')
+        x = symbols('x')
+        
+        try:
+            equation = Eq(eval(equation_str), 0)
+            solution = solve(equation, x)
+        except Exception as e:
+            # Manejar errores en la entrada de la ecuación
+            error_message = str(e)
+            return render(request, 'error_template.html', {'error_message': error_message})
+
+        return render(request, 'result_template.html', {'solution': solution})
+
+    return render(request, 'input_template.html')
