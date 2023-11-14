@@ -4,6 +4,8 @@ from django.dispatch import receiver
 from product.models import Product
 from .variables_data import variables_data
 from sympy import symbols, Eq, solve
+from .equations_data import equations_data
+from product.models import Area
 class Variable(models.Model):
     name = models.CharField(max_length=70)
     initials = models.CharField(max_length=7, default="var")
@@ -33,7 +35,6 @@ class Variable(models.Model):
 
     def __str__(self):
         return self.name
-
 @receiver(post_save, sender=Product)
 def create_variables(sender, instance, created, **kwargs):
     if created:
@@ -47,14 +48,12 @@ def create_variables(sender, instance, created, **kwargs):
                 fk_product=instance,
                 is_active=True
             )
-
 @receiver(post_save, sender=Product)
 def save_variables(sender, instance, **kwargs):
     for variable in instance.fk_product_variable.all():
         variable.is_active = instance.is_active
         variable.save()
-from .equations_data import equations_data
-from product.models import Area
+
 class Equation(models.Model):
     name = models.CharField(max_length=70)
     expression = models.TextField()

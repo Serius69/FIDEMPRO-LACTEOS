@@ -5,7 +5,7 @@ from business.models import Business
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .products_data import products_data
-from areas_data import areas_data
+from .areas_data import areas_data
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -34,7 +34,7 @@ class Product(models.Model):
         if self.image_src and hasattr(self.image_src, 'url'):
             return self.image_src.url
         else:
-            return "/static/images/products/user-dummy-img.webp"
+            return "/static/images/product/product-dummy-img.webp"
     @receiver(post_save, sender=Business)
     def create_product(sender, instance, created, **kwargs):
         if created:

@@ -36,16 +36,16 @@ def business_list(request):
 
     return render(request, 'business/business-list.html', context)
 def business_overview(request, pk):
-    try:
+    # try:
         business = get_object_or_404(Business, pk=pk)
         products = Product.objects.filter(fk_business_id=business.id).order_by('-id')
         return render(request, 'business/business-overview.html', 
                       {'business': business,
                        'products': products
                        })
-    except Exception as e:
-        messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
-        return HttpResponse(status=500) 
+    # except Exception as e:
+    #     messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
+    #     return HttpResponse(status=500) 
 def create_business_view(request):
     if request.method == 'POST':
         form = BusinessForm(request.POST, request.FILES)

@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Variable
+from .models import Variable, Equation, EquationResult
 from product.models import Product
 from .forms import VariableForm
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -49,7 +49,15 @@ def variable_overview(request, pk):
     # try:
         variable = get_object_or_404(Variable, pk=pk)
         product_id = variable.fk_product.id
-        variables_related = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
+        variable_id = variable.id
+        variables_related = Variable.objects.filter(
+            is_active=True, 
+            fk_product_id=product_id
+            ).order_by('-id')
+        equations = Equation.objects.filter(
+            is_active=True, 
+            fk_variable1_id=variable_id
+            ).order_by('-id')
 
         # Paginate the variables
         paginator = Paginator(variables_related, 3)  # Show 6 variables per page
@@ -64,7 +72,11 @@ def variable_overview(request, pk):
             # If the page is out of range, deliver the last page of results.
             variables_related = paginator.page(paginator.num_pages)
             
-        return render(request, "variable/variable-overview.html", {'variable': variable, 'variables_related': variables_related})
+        return render(request, "variable/variable-overview.html", {
+            'variable': variable, 
+            'variables_related': variables_related,
+            'equations': equations
+            })
     # except Exception as e:
     #     messages.error(request, f"An error occurred: {str(e)}")
     #     return HttpResponse(status=500)

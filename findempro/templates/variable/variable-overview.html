@@ -1,5 +1,5 @@
 {% extends "partials/base.html" %} {% load static %}
-{% block title %}Job Overview{% endblock title%}
+{% block title %}Variable Overview{% endblock title%}
 {% block extra_css %} {% endblock extra_css %}
 {% block content %}
     <!-- ============================================================== -->
@@ -96,6 +96,40 @@
                   </div>
                 </div>
               </div>
+
+              {% if equations %}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Equation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for equation in equations %}
+                    <tr>
+                      <td>{{ equation.name }}</td>
+                      <td>{{ equation.generate_equation }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+            <tr>
+              <td>
+                <lord-icon
+                  src="https://cdn.lordicon.com/msoeawqm.json"
+                  trigger="loop"
+                  colors="primary:#405189,secondary:#0ab39c"
+                  style="width: 75px; height: 75px"
+                ></lord-icon>
+                <h5 class="mt-2">
+                  Sorry, there isn't any equations registered with {{variable.name}}
+                </h5>
+                <p class="text-muted mb-0">You have to "Add Equation".</p>
+              </td>
+            </tr>
+            {% endif %}
               <div class="row">
                 <div class="col-lg-12">
                   <div class="d-flex align-items-center mb-4">
@@ -114,14 +148,7 @@
                 <div class="col-xl-4">
                   <div class="card">
                     <div class="card-body">
-                      <button
-                        type="button"
-                        class="btn btn-icon btn-soft-primary float-end"
-                        data-bs-toggle="button"
-                        aria-pressed="true"
-                      >
-                        <i class="mdi mdi-cards-heart fs-16"></i>
-                      </button>
+                      
                       <div class="avatar-sm mb-4">
                         <div class="avatar-title bg-secondary-subtle rounded">
                           <img
@@ -139,11 +166,11 @@
                       <div class="d-flex gap-4 mb-3">
                         <div>
                           <i class="ri-map-pin-2-line text-primary me-1 align-bottom"></i>
-                          {{variable.unit}}
+                          Units: {{variable.unit}}
                         </div>
                         <div>
                           <i class="ri-time-line text-primary me-1 align-bottom"></i>
-                          {{variable.last_update}}
+                          Last Updated: {{variable.last_update}}
                         </div>
                       </div>
                       <p class="text-muted">{{variable.description}}</p>

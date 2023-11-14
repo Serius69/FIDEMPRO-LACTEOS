@@ -2,6 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product
 from business.models import Business
 from variable.models import Variable
+from report.models import Report
+from simulate.models import ResultSimulation
 from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
@@ -42,19 +44,34 @@ def product_list(request):
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
 def product_overview(request, pk):
-    current_datetime = timezone.now()
-    try:
+        current_datetime = timezone.now()
+    # try:
         product = get_object_or_404(Product, pk=pk)
         variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        simulations = ResultSimulation.objects.filter(fk_simulation_scenario__fk_product_id=product.id, is_active=True).order_by('-id')
+        paginator = Paginator(variables_product, 3)
+        page = request.GET.get('page')
+        try:
+            variables_product = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            variables_product = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            variables_product = paginator.page(paginator.num_pages)
+        
         context = {
-                    'variables_product': variables_product, 
-                   'product': product, 
-                   'current_datetime': current_datetime
+                'variables_product': variables_product, 
+                'product': product, 
+                'current_datetime': current_datetime,
+                'simulations': simulations,
+                'reports': reports
                    } 
         return render(request, 'product/product-overview.html', context)
-    except Exception as e:
-        messages.error(request, "An error occurred. Please check the server logs for more information.")
-        return HttpResponse(status=500)
+    # except Exception as e:
+    #     messages.error(request, "An error occurred. Please check the server logs for more information.")
+    #     return HttpResponse(status=500)
 def create_product_view(request):
     if request.method == 'POST':
         try:
