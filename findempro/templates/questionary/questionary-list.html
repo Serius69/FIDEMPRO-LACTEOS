@@ -1,165 +1,310 @@
-{% extends "partials/base.html" %}
-{% load static %}
-{% block title %}Questionary{% endblock title %}
-{% block extra_css %}
-{% endblock extra_css %}
-{% block content %}
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
-                <div class="page-content">
-                    <div class="container-fluid">
-                        {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="products" title="Questionary" %}
-                        {% endblock pagetitle %}
-                        <div class="card">
-                            <div class="card-header border-0 rounded">
-                                <div class="row g-6 mb-4">
-                                    <div class="col-sm-2">
-                                        <div class="input-group">
-                                            <label class="input-group-text" for="inputGroupSelect01">Options</label>
-                                            <select class="form-select" id="inputGroupSelect01">
-                                                <option selected>Choose...</option>
-                                                {% for questionary in questionnaires %}
-                                                <option value="{{questionary.id}}">{{questionary.questionary}}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>                                
-                                    </div>
-                                    <div class="col-sm-auto">
-                                        <div>
-                                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Generate Questionary</button>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-2">
-                                        <select id="mode-select" class="form-select">
-                                            <option value="advanced">Advanced Mode</option>
-                                            <option value="simple">Simple Mode</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-sm">
-                                        <div class="d-flex justify-content-sm-end gap-2">
-                                            <div class="search-box ms-2">
-                                                <input type="text" class="form-control" placeholder="Search...">
-                                                <i class="ri-search-line search-icon"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% comment %} <div class="row">
-                            <div class="col-xxl-9">
-                                {% for variable, generated_questions in generated_questions_list %}
-                                <div class="card joblist-card">
-                                    <div class="card-body">
-                                        <div class="d-flex mb-4">
-                                            <div class="ms-3 flex-grow-1">
-                                                <a href="#!"><h5 class="job-title">{{variable.name}}</h5></a>
-                                            </div>
-                                        </div>
-                                        {% for question in generated_questions|linebreaksbr %}
-
-                                        <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ question.question }}</span></label>
-                                        <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
-                                        
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                {% empty %}
-                                <div class="text-center py-4">
-                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                    <h5 class="mt-2">Sorry there isn't any variable to create questions register in the database</h5>
-                                    <p class="text-muted mb-0">You have to "Add Product".</p>
-                                </div>    
-                                {% endfor %}
-    
-                                <div class="row g-0 justify-content-end mb-4" id="pagination-element">
-                                    <!-- end col -->
-                                    <div class="col-sm-6">
-                                        <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                                            <div class="page-item">
-                                                <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
-                                            </div>
-                                            <span id="page-num" class="pagination"></span>
-                                            <div class="page-item">
-                                                <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
-                                            </div>
-                                        </div>
-                                    </div><!-- end col -->
-                                </div>
-                                <!-- end row -->    
-                            </div><!--end col-->
-                        </div> {% endcomment %}
-                        <!-- end row -->    
-                        <div class="row">
-                            <div class="col-xxl-9">
-                                {% if questions %}
-                                    {% for question in questions %}
-                                        <div class="card joblist-card">
-                                            <div class="card-body">
-                                                <div class="d-flex mb-4">
-                                                    <div class="ms-3 flex-grow-1">
-                                                        <a href="#!"><h5 class="job-title">{{ variable.name }}</h5></a>
-                                                    </div>
-                                                </div>
-                                                <label for="{{ question.id }}" class="form-label">
-                                                    <span data-key="t-home">{{ question.question }}</span>
-                                                </label>
-                                                <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
-                                            </div>
-                                        </div>
-                                        <!-- end card -->
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="text-center py-4">
-                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                        <h5 class="mt-2">Sorry, there isn't any variable to create questions registered in the database</h5>
-                                        <p class="text-muted mb-0">You have to "Add Product".</p>
-                                    </div>
-                                {% endif %}
-                        
-                                <!-- Pagination -->
-                                <div class="align-items-center mt-2 row text-center text-sm-start">
-                                    <div class="col-sm">
-                                        <div class="text-muted">Showing <span class="fw-semibold">{{ questions.number }}</span> of <span class="fw-semibold">{{ questions.paginator.num_pages }}</span> Results
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-auto">
-                                        <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                            {% if questions.has_previous %}
-                                                <li class="page-item">
-                                                    <a href="?page={{ questions.previous_page_number }}" class="page-link">←</a>
-                                                </li>
-                                            {% endif %}
-                                            {% for i in questions.paginator.page_range %}
-                                                <li class="page-item {% if i == questions.number %}active{% endif %}">
-                                                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                </li>
-                                            {% endfor %}
-                                            {% if questions.has_next %}
-                                                <li class="page-item">
-                                                    <a href="?page={{ questions.next_page_number }}" class="page-link">→</a>
-                                                </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                </div>
-                                <!-- end row -->
-                            </div><!--end col-->
-                        </div>
-                        <!-- end row -->                        
+{% extends "partials/base.html" %} {% load static %} {% block title%}Questionary
+{% endblock title %} {% block extra_css %} {% endblock extra_css %} {% block
+content %}
+<!-- ============================================================== -->
+<!-- Start right Content here -->
+<!-- ============================================================== -->
+<div class="main-content">
+  <div class="page-content">
+    <div class="container-fluid">
+      {% block pagetitle %} {% include "partials/page-title.html" with
+      pagetitle="products" title="Questionary" %} {% endblock pagetitle %}
+      <div class="row">
+        <div class="col">
+          <div class="h-100">
+            <div class="card">
+              <div class="card-header border-0 rounded">
+                <div class="row g-6 mb-4">
+                  <div class="col-sm-2">
+                    <div class="input-group">
+                      <label class="input-group-text" for="inputGroupSelect01">
+                        Options
+                      </label>
+                      <select class="form-select" id="inputGroupSelect01">
+                        <option selected>Choose...</option>
+                        {% for questionary in questionnaires %}
+                        <option value="{{questionary.id}}">
+                          {{questionary.questionary}}
+                        </option>
+                        {% endfor %}
+                      </select>
                     </div>
-                    <!-- container-fluid -->
+                  </div>
+                  <div class="col-sm-auto">
+                    <div>
+                      <button
+                        class="btn btn-success"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addProduct"
+                      >
+                        <i class="ri-add-fill me-1 align-bottom"></i>
+                        Generate Questionary
+                      </button>
+                    </div>
+                  </div>
+                  <div class="col-sm-2">
+                    <select id="mode-select" class="form-select">
+                      <option value="advanced">Advanced Mode</option>
+                      <option value="simple">Simple Mode</option>
+                    </select>
+                  </div>
+                  <div class="col-sm">
+                    <div class="d-flex justify-content-sm-end gap-2">
+                      <div class="search-box ms-2">
+                        <input
+                          type="text"
+                          class="form-control"
+                          placeholder="Search..."
+                        />
+                        <i class="ri-search-line search-icon"></i>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <!-- End Page-content -->
-
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
+              </div>
             </div>
-            <!-- end main content-->
-{% endblock content %}
-{% block extra_js %}
-{% endblock extra_js %}
+            {% comment %}
+            <div class="row">
+              <div class="col-xxl-9">
+                {% for variable, generated_questions in generated_questions_list
+                %}
+                <div class="card joblist-card">
+                  <div class="card-body">
+                    <div class="d-flex mb-4">
+                      <div class="ms-3 flex-grow-1">
+                        <a href="#!">
+                          <h5 class="job-title">{{variable.name}}</h5>
+                        </a>
+                      </div>
+                    </div>
+                    {% for question in generated_questions|linebreaksbr %}
+
+                    <label for="phonenumberInput" class="form-label">
+                      <span data-key="t-home">{{ question.question }}</span>
+                    </label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      placeholder="Answer the question"
+                      id="{{ question.id }}"
+                    />
+
+                    {% endfor %}
+                  </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                  <lord-icon
+                    src="https://cdn.lordicon.com/msoeawqm.json"
+                    trigger="loop"
+                    colors="primary:#405189,secondary:#0ab39c"
+                    style="width: 75px; height: 75px"
+                  ></lord-icon>
+                  <h5 class="mt-2">
+                    Sorry there isn't any variable to create questions register
+                    in the database
+                  </h5>
+                  <p class="text-muted mb-0">You have to "Add Product".</p>
+                </div>
+                {% endfor %}
+
+                <div
+                  class="row g-0 justify-content-end mb-4"
+                  id="pagination-element"
+                >
+                  <!-- end col -->
+                  <div class="col-sm-6">
+                    <div
+                      class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0"
+                    >
+                      <div class="page-item">
+                        <a
+                          href="javascript:void(0);"
+                          class="page-link"
+                          id="page-prev"
+                        >
+                          Previous
+                        </a>
+                      </div>
+                      <span id="page-num" class="pagination"></span>
+                      <div class="page-item">
+                        <a
+                          href="javascript:void(0);"
+                          class="page-link"
+                          id="page-next"
+                        >
+                          Next
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- end col -->
+                </div>
+                <!-- end row -->
+              </div>
+              <!--end col-->
+            </div>
+            {% endcomment %}
+            <!-- end row -->
+
+            <div class="col-xxl-12">
+              {% if questions %} {% for question in questions %}
+              <div class="card joblist-card">
+                <div class="card-body">
+                  <div class="d-flex mb-4">
+                    <div class="ms-3 flex-grow-1">
+                      <a href="#!">
+                        <h5 class="job-title">
+                          {{ question.fk_variable.name }}
+                        </h5>
+                      </a>
+                    </div>
+                  </div>
+                  <label for="{{ question.id }}" class="form-label">
+                    <span data-key="t-home">{{ question.question }}</span>
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Answer the question"
+                    name="{{ question.id }}"
+                  />
+                </div>
+              </div>
+              <!-- end card -->
+              {% endfor %}
+              <button type="submit" class="btn btn-primary">
+                Guardar Respuestas
+              </button>
+              {% else %}
+              <div class="text-center py-4">
+                <lord-icon
+                  src="https://cdn.lordicon.com/msoeawqm.json"
+                  trigger="loop"
+                  colors="primary:#405189,secondary:#0ab39c"
+                  style="width: 75px; height: 75px"
+                ></lord-icon>
+                <h5 class="mt-2">
+                  Lo siento, no hay variables registradas en la base de datos
+                  para crear preguntas.
+                </h5>
+                <p class="text-muted mb-0">Debes "Agregar Producto".</p>
+              </div>
+              {% endif %}
+              <!-- Pagination -->
+              <div
+                class="align-items-center mt-2 row text-center text-sm-start"
+              >
+                <div class="col-sm">
+                  <div class="text-muted">
+                    Showing
+                    <span class="fw-semibold">{{ questions.number }}</span>
+                    of
+                    <span class="fw-semibold">
+                      {{ questions.paginator.num_pages }}
+                    </span>
+                    Results
+                  </div>
+                </div>
+                <div class="col-sm-auto">
+                  <ul
+                    class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
+                  >
+                    {% if questions.has_previous %}
+                    <li class="page-item">
+                      <a
+                        href="?page={{ questions.previous_page_number }}"
+                        class="page-link"
+                      >
+                        ←
+                      </a>
+                    </li>
+                    {% endif %} {% for i in questions.paginator.page_range %}
+                    <li
+                      class="page-item {% if i == questions.number %}active{% endif %}"
+                    >
+                      <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                    </li>
+                    {% endfor %} {% if questions.has_next %}
+                    <li class="page-item">
+                      <a
+                        href="?page={{ questions.next_page_number }}"
+                        class="page-link"
+                      >
+                        →
+                      </a>
+                    </li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </div>
+              <!-- end row -->
+            </div>
+            <!--end col-->
+          </div>
+        </div>
+        <div class="col-auto layout-rightside-col">
+          <div class="overlay"></div>
+          <div class="layout-rightside">
+            <div class="card h-100 rounded-0">
+              <div class="card-body p-0">
+                <div class="p-3">
+                  <h6 class="text-muted mb-0 text-uppercase fw-semibold">
+                    Instructions
+                  </h6>
+                </div>
+                <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
+                  <div class="acitivity-timeline acitivity-main">
+                    {% for instruction in instructions %}
+                    <div class="acitivity-item d-flex">
+                      <div class="flex-shrink-0 avatar-xs acitivity-avatar">
+                        <div
+                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
+                        >
+                          <i class="ri-info-line"></i>
+                        </div>
+                      </div>
+                      <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1 lh-base">{{ instruction.title }}</h6>
+                        <p class="text-muted mb-1">
+                          {{ instruction.description }}
+                        </p>
+                        <small class="mb-0 text-muted">
+                          {{ instruction.date }}
+                        </small>
+                      </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                      <lord-icon
+                        src="https://cdn.lordicon.com/msoeawqm.json"
+                        trigger="loop"
+                        colors="primary:#405189,secondary:#0ab39c"
+                        style="width: 75px; height: 75px"
+                      ></lord-icon>
+                      <h5 class="mt-2">
+                        Sorry, there are no instructions in the database
+                      </h5>
+                      <p class="text-muted mb-0">
+                        Please add instructions to the system.
+                      </p>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- end card-->
+          </div>
+          <!-- end .rightbar-->
+        </div>
+        <!-- end col activity -->
+      </div>
+    </div>
+    <!-- container-fluid -->
+  </div>
+  <!-- End Page-content -->
+  {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
+</div>
+<!-- end main content-->
+{% endblock content %} {% block extra_js %} {% endblock extra_js %}

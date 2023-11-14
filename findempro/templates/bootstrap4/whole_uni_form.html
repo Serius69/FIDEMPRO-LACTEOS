@@ -1,14 +1,13 @@
 {% block form %}
-  <form {{ form_attrs }}>
-    <!-- You can customize the form layout here -->
-    <div class="form-group">
-      <label for="{{ form.id_for_label }}">{{ form.label }}</label>
-      {{ form }}
-      {% if form.help_text %}
-        <small class="form-text text-muted">{{ form.help_text }}</small>
-      {% endif %}
-    </div>
-    <!-- Add more custom form fields or elements as needed -->
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
+<form {{ form_attrs }}>
+  <!-- You can customize the form layout here -->
+  <div class="form-group">
+    <label for="{{ form.id_for_label }}">{{ form.label }}</label>
+    {{ form }} {% if form.help_text %}
+    <small class="form-text text-muted">{{ form.help_text }}</small>
+    {% endif %}
+  </div>
+  <!-- Add more custom form fields or elements as needed -->
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
 {% endblock form %}

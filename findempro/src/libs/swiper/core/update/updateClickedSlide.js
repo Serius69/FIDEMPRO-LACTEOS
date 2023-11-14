@@ -16,7 +16,10 @@ export default function updateClickedSlide(e) {
   if (slide && slideFound) {
     swiper.clickedSlide = slide;
     if (swiper.virtual && swiper.params.virtual.enabled) {
-      swiper.clickedIndex = parseInt(slide.getAttribute('data-swiper-slide-index'), 10);
+      swiper.clickedIndex = parseInt(
+        slide.getAttribute("data-swiper-slide-index"),
+        10,
+      );
     } else {
       swiper.clickedIndex = slideIndex;
     }
@@ -25,7 +28,11 @@ export default function updateClickedSlide(e) {
     swiper.clickedIndex = undefined;
     return;
   }
-  if (params.slideToClickedSlide && swiper.clickedIndex !== undefined && swiper.clickedIndex !== swiper.activeIndex) {
+  if (
+    params.slideToClickedSlide &&
+    swiper.clickedIndex !== undefined &&
+    swiper.clickedIndex !== swiper.activeIndex
+  ) {
     swiper.slideToClickedSlide();
   }
 }

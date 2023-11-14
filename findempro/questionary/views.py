@@ -13,48 +13,30 @@ from django.http import HttpResponseForbidden
 import openai
 import logging
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
 openai.api_key = settings.OPENAI_API_KEY
-# Create question
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 def questionnaire_list(request):
     try:
-        # Get all questions from the database
         questions = Question.objects.order_by('-id')
-
-        # Number of questions to display per page
-        per_page = 10  # You can adjust this based on your preference
-
-        # Paginate the questions
+        per_page = 10 
         paginator = Paginator(questions, per_page)
         page = request.GET.get('page')
-
         try:
             questions = paginator.page(page)
         except PageNotAnInteger:
-            # If the page is not an integer, deliver the first page.
             questions = paginator.page(1)
         except EmptyPage:
-            # If the page is out of range (e.g., 9999), deliver the last page of results.
             questions = paginator.page(paginator.num_pages)
-
         questionnaires = Questionary.objects.order_by('-id')
         context = {'questions': questions, 'questionnaires': questionnaires}
     except Exception as e:
         error_message = str(e)
         context = {'error_message': error_message}
-
     return render(request, 'questionary/questionary-list.html', context)
-
 def generate_variable_questions(request, variable):
-    # Extract relevant information from the Variable object
     django_variable = f"{variable.name} = models.{variable.type}Field({variable.get_type_display()}, {variable.get_parameters_display()})"
-
-    # Define a prompt to generate questions
     prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
-
-    # Generate questions using GPT-3
     response = openai.Completion.create(
         engine="text-davinci-002",  # Choose the appropriate engine
         prompt=prompt,
@@ -62,7 +44,6 @@ def generate_variable_questions(request, variable):
         n=1,  # Number of questions to generate
         stop=None,  # Stop generating questions at a specific token (e.g., "?")
     )
-    # Extract and return the generated questions
     question = [choice['text'].strip() for choice in response.choices]
     return question
 # THe view to show the questions generate for each variable

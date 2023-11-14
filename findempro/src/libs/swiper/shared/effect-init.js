@@ -8,9 +8,9 @@ export default function effectInit(params) {
     overwriteParams,
     perspective,
     recreateShadows,
-    getEffectParams
+    getEffectParams,
   } = params;
-  on('beforeInit', () => {
+  on("beforeInit", () => {
     if (swiper.params.effect !== effect) return;
     swiper.classNames.push(`${swiper.params.containerModifierClass}${effect}`);
     if (perspective && perspective()) {
@@ -20,28 +20,32 @@ export default function effectInit(params) {
     Object.assign(swiper.params, overwriteParamsResult);
     Object.assign(swiper.originalParams, overwriteParamsResult);
   });
-  on('setTranslate', () => {
+  on("setTranslate", () => {
     if (swiper.params.effect !== effect) return;
     setTranslate();
   });
-  on('setTransition', (_s, duration) => {
+  on("setTransition", (_s, duration) => {
     if (swiper.params.effect !== effect) return;
     setTransition(duration);
   });
-  on('transitionEnd', () => {
+  on("transitionEnd", () => {
     if (swiper.params.effect !== effect) return;
     if (recreateShadows) {
       if (!getEffectParams || !getEffectParams().slideShadows) return;
       // remove shadows
-      swiper.slides.forEach(slideEl => {
-        slideEl.querySelectorAll('.swiper-slide-shadow-top, .swiper-slide-shadow-right, .swiper-slide-shadow-bottom, .swiper-slide-shadow-left').forEach(shadowEl => shadowEl.remove());
+      swiper.slides.forEach((slideEl) => {
+        slideEl
+          .querySelectorAll(
+            ".swiper-slide-shadow-top, .swiper-slide-shadow-right, .swiper-slide-shadow-bottom, .swiper-slide-shadow-left",
+          )
+          .forEach((shadowEl) => shadowEl.remove());
       });
       // create new one
       recreateShadows();
     }
   });
   let requireUpdateOnVirtual;
-  on('virtualUpdate', () => {
+  on("virtualUpdate", () => {
     if (swiper.params.effect !== effect) return;
     if (!swiper.slides.length) {
       requireUpdateOnVirtual = true;

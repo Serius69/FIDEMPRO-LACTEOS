@@ -11,13 +11,20 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.exceptions import ObjectDoesNotExist
 openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def variable_list(request):
     try:
-        variables = Variable.objects.all().order_by('-id')
-        products = Product.objects.all().order_by('-id')
+        product_id = request.GET.get('product_id', 'All')
+
+        if product_id == 'All':
+            variables = Variable.objects.filter(is_active=True).order_by('-id')
+            products = Product.objects.filter(is_active=True).order_by('-id')
+        else:
+            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
+            products = Product.objects.filter(is_active=True).order_by('-id')
 
         # Paginate the variables
         paginator = Paginator(variables, 10)  # Show 10 variables per page
@@ -40,9 +47,25 @@ def variable_list(request):
 def variable_overview(request, pk):
     try:
         variable = get_object_or_404(Variable, pk=pk)
-        return render(request, "variable/variable-overview.html", {'variable': variable})
+        product_id = variable.fk_product.id
+        variables_related = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
+
+        # Paginate the variables
+        paginator = Paginator(variables_related, 9)  # Show 6 variables per page
+        page = request.GET.get('page')
+
+        try:
+            variables_related = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            variables_related = paginator.page(1)
+        except EmptyPage:
+            # If the page is out of range, deliver the last page of results.
+            variables_related = paginator.page(paginator.num_pages)
+            
+        return render(request, "variable/variable-overview.html", {'variable': variable, 'variables_related': variables_related})
     except Exception as e:
-        messages.error(request, "An error occurred. Please check the server logs for more information.")
+        messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
 def create_variable_view(request):
     if request.method == 'POST':
@@ -93,9 +116,23 @@ def update_variable_view(request, pk):
 def delete_variable_view(request, pk):
     try:
         variable = get_object_or_404(Variable, pk=pk)
-        variable.delete()
+        variable.is_active=False
+        variable.save()
         messages.success(request, "Variable deleted successfully!")
         return redirect("variable:variable.list")
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
+def get_variable_details(request, pk):
+    try:
+        if request.method == 'GET':
+            variable = Variable.objects.get(id=pk)
+            variable_details = {
+                "name": variable.name,
+                "type": variable.type,
+                "fk_product": variable.fk_product.name,
+                "description": variable.description,
+            }
+            return JsonResponse(variable_details)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "El negocio no existe"}, status=404)

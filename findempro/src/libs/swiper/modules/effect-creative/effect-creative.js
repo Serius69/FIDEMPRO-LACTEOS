@@ -1,13 +1,9 @@
-import createShadow from '../../shared/create-shadow.js';
-import effectInit from '../../shared/effect-init.js';
-import effectTarget from '../../shared/effect-target.js';
-import effectVirtualTransitionEnd from '../../shared/effect-virtual-transition-end.js';
-import { getSlideTransformEl } from '../../shared/utils.js';
-export default function EffectCreative({
-  swiper,
-  extendParams,
-  on
-}) {
+import createShadow from "../../shared/create-shadow.js";
+import effectInit from "../../shared/effect-init.js";
+import effectTarget from "../../shared/effect-target.js";
+import effectVirtualTransitionEnd from "../../shared/effect-virtual-transition-end.js";
+import { getSlideTransformEl } from "../../shared/utils.js";
+export default function EffectCreative({ swiper, extendParams, on }) {
   extendParams({
     creativeEffect: {
       limitProgress: 1,
@@ -18,45 +14,50 @@ export default function EffectCreative({
         translate: [0, 0, 0],
         rotate: [0, 0, 0],
         opacity: 1,
-        scale: 1
+        scale: 1,
       },
       next: {
         translate: [0, 0, 0],
         rotate: [0, 0, 0],
         opacity: 1,
-        scale: 1
-      }
-    }
+        scale: 1,
+      },
+    },
   });
-  const getTranslateValue = value => {
-    if (typeof value === 'string') return value;
+  const getTranslateValue = (value) => {
+    if (typeof value === "string") return value;
     return `${value}px`;
   };
   const setTranslate = () => {
-    const {
-      slides,
-      wrapperEl,
-      slidesSizesGrid
-    } = swiper;
+    const { slides, wrapperEl, slidesSizesGrid } = swiper;
     const params = swiper.params.creativeEffect;
-    const {
-      progressMultiplier: multiplier
-    } = params;
+    const { progressMultiplier: multiplier } = params;
     const isCenteredSlides = swiper.params.centeredSlides;
     if (isCenteredSlides) {
-      const margin = slidesSizesGrid[0] / 2 - swiper.params.slidesOffsetBefore || 0;
+      const margin =
+        slidesSizesGrid[0] / 2 - swiper.params.slidesOffsetBefore || 0;
       wrapperEl.style.transform = `translateX(calc(50% - ${margin}px))`;
     }
     for (let i = 0; i < slides.length; i += 1) {
       const slideEl = slides[i];
       const slideProgress = slideEl.progress;
-      const progress = Math.min(Math.max(slideEl.progress, -params.limitProgress), params.limitProgress);
+      const progress = Math.min(
+        Math.max(slideEl.progress, -params.limitProgress),
+        params.limitProgress,
+      );
       let originalProgress = progress;
       if (!isCenteredSlides) {
-        originalProgress = Math.min(Math.max(slideEl.originalProgress, -params.limitProgress), params.limitProgress);
+        originalProgress = Math.min(
+          Math.max(slideEl.originalProgress, -params.limitProgress),
+          params.limitProgress,
+        );
       }
       const offset = slideEl.swiperSlideOffset;
-      const t = [swiper.params.cssMode ? -offset - swiper.translate : -offset, 0, 0];
+      const t = [
+        swiper.params.cssMode ? -offset - swiper.translate : -offset,
+        0,
+        0,
+      ];
       const r = [0, 0, 0];
       let custom = false;
       if (!swiper.isHorizontal()) {
@@ -67,7 +68,7 @@ export default function EffectCreative({
         translate: [0, 0, 0],
         rotate: [0, 0, 0],
         scale: 1,
-        opacity: 1
+        opacity: 1,
       };
       if (progress < 0) {
         data = params.next;
@@ -78,28 +79,42 @@ export default function EffectCreative({
       }
       // set translate
       t.forEach((value, index) => {
-        t[index] = `calc(${value}px + (${getTranslateValue(data.translate[index])} * ${Math.abs(progress * multiplier)}))`;
+        t[index] = `calc(${value}px + (${getTranslateValue(
+          data.translate[index],
+        )} * ${Math.abs(progress * multiplier)}))`;
       });
       // set rotates
       r.forEach((value, index) => {
         r[index] = data.rotate[index] * Math.abs(progress * multiplier);
       });
-      slideEl.style.zIndex = -Math.abs(Math.round(slideProgress)) + slides.length;
-      const translateString = t.join(', ');
+      slideEl.style.zIndex =
+        -Math.abs(Math.round(slideProgress)) + slides.length;
+      const translateString = t.join(", ");
       const rotateString = `rotateX(${r[0]}deg) rotateY(${r[1]}deg) rotateZ(${r[2]}deg)`;
-      const scaleString = originalProgress < 0 ? `scale(${1 + (1 - data.scale) * originalProgress * multiplier})` : `scale(${1 - (1 - data.scale) * originalProgress * multiplier})`;
-      const opacityString = originalProgress < 0 ? 1 + (1 - data.opacity) * originalProgress * multiplier : 1 - (1 - data.opacity) * originalProgress * multiplier;
+      const scaleString =
+        originalProgress < 0
+          ? `scale(${1 + (1 - data.scale) * originalProgress * multiplier})`
+          : `scale(${1 - (1 - data.scale) * originalProgress * multiplier})`;
+      const opacityString =
+        originalProgress < 0
+          ? 1 + (1 - data.opacity) * originalProgress * multiplier
+          : 1 - (1 - data.opacity) * originalProgress * multiplier;
       const transform = `translate3d(${translateString}) ${rotateString} ${scaleString}`;
 
       // Set shadows
-      if (custom && data.shadow || !custom) {
-        let shadowEl = slideEl.querySelector('.swiper-slide-shadow');
+      if ((custom && data.shadow) || !custom) {
+        let shadowEl = slideEl.querySelector(".swiper-slide-shadow");
         if (!shadowEl && data.shadow) {
           shadowEl = createShadow(params, slideEl);
         }
         if (shadowEl) {
-          const shadowOpacity = params.shadowPerProgress ? progress * (1 / params.limitProgress) : progress;
-          shadowEl.style.opacity = Math.min(Math.max(Math.abs(shadowOpacity), 0), 1);
+          const shadowOpacity = params.shadowPerProgress
+            ? progress * (1 / params.limitProgress)
+            : progress;
+          shadowEl.style.opacity = Math.min(
+            Math.max(Math.abs(shadowOpacity), 0),
+            1,
+          );
         }
       }
       const targetEl = effectTarget(params, slideEl);
@@ -110,11 +125,13 @@ export default function EffectCreative({
       }
     }
   };
-  const setTransition = duration => {
-    const transformElements = swiper.slides.map(slideEl => getSlideTransformEl(slideEl));
-    transformElements.forEach(el => {
+  const setTransition = (duration) => {
+    const transformElements = swiper.slides.map((slideEl) =>
+      getSlideTransformEl(slideEl),
+    );
+    transformElements.forEach((el) => {
       el.style.transitionDuration = `${duration}ms`;
-      el.querySelectorAll('.swiper-slide-shadow').forEach(shadowEl => {
+      el.querySelectorAll(".swiper-slide-shadow").forEach((shadowEl) => {
         shadowEl.style.transitionDuration = `${duration}ms`;
       });
     });
@@ -122,11 +139,11 @@ export default function EffectCreative({
       swiper,
       duration,
       transformElements,
-      allSlides: true
+      allSlides: true,
     });
   };
   effectInit({
-    effect: 'creative',
+    effect: "creative",
     swiper,
     on,
     setTranslate,
@@ -134,7 +151,7 @@ export default function EffectCreative({
     perspective: () => swiper.params.creativeEffect.perspective,
     overwriteParams: () => ({
       watchSlidesProgress: true,
-      virtualTranslate: !swiper.params.cssMode
-    })
+      virtualTranslate: !swiper.params.cssMode,
+    }),
   });
 }

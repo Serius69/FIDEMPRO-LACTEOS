@@ -1,141 +1,242 @@
-{% extends "partials/base.html" %}
-{% load static %}
-{% block title %}FAQs{% endblock title %}
-{% block content %}
+{% extends "partials/base.html" %} {% load static %} {% block title %}FAQs{%
+endblock title %} {% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
 <div class="main-content">
-    <div class="page-content">
-        <div class="container-fluid">
-
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-                        <div class="px-4">
-                            <div class="row">
-                                <div class="col-xxl-5 align-self-center">
-                                    <div class="py-4">
-                                        <h4 class="display-6 -text">Frequently Asked Questions</h4>
-                                        <p class="text-success fs-15 mt-3">If you cannot find the answer to your question in our FAQ, please feel free to contact us. We will provide you with the information you need.</p>
-                                        <div class="hstack flex-wrap gap-2">
-                                            <button type="button" class="btn btn-primary btn-label rounded-pill">
-                                                <i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Contact Us
-                                            </button>
-                                            <button type="button" class="btn btn-info btn-label rounded-pill">
-                                                <i class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> Follow Us on Twitter
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-xxl-3 ms-auto">
-                                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                                        <img src="{% static 'images/faq-img.webp'%}" alt="" class="img-fluid">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+  <div class="page-content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+            <div class="px-4">
+              <div class="row">
+                <div class="col-xxl-5 align-self-center">
+                  <div class="py-4">
+                    <h4 class="display-6 -text">Frequently Asked Questions</h4>
+                    <p class="text-success fs-15 mt-3">
+                      If you cannot find the answer to your question in our FAQ,
+                      please feel free to contact us. We will provide you with
+                      the information you need.
+                    </p>
+                    <div class="hstack flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-label rounded-pill"
+                      >
+                        <i
+                          class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"
+                        ></i>
+                        Contact Us
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-info btn-label rounded-pill"
+                      >
+                        <i
+                          class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"
+                        ></i>
+                        Follow Us on Twitter
+                      </button>
                     </div>
+                  </div>
+                </div>
+                <div class="col-xxl-3 ms-auto">
+                  <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                    <img
+                      src="{% static 'images/faq-img.webp'%}"
+                      alt=""
+                      class="img-fluid"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                    <div class="row justify-content-evenly mb-4">
-                        <!-- Category: Financial Decision Making -->
-                        <div class="col-lg-6">
-                            <div class="mt-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="flex-shrink-0 me-1">
-                                        <i class="ri-calculator-line fs-24 align-middle text-success me-1"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-16 mb-0 fw-semibold">Financial Decision Making</h5>
-                                    </div>
-                                </div>
+          <div class="row justify-content-evenly mb-4">
+            <!-- Category: Financial Decision Making -->
+            <div class="col-lg-6">
+              <div class="mt-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="flex-shrink-0 me-1">
+                    <i
+                      class="ri-calculator-line fs-24 align-middle text-success me-1"
+                    ></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="fs-16 mb-0 fw-semibold">
+                      Financial Decision Making
+                    </h5>
+                  </div>
+                </div>
 
-                                <div class="accordion accordion-border-box" id="financial-decision-accordion">
-                                    <!-- Question 1: How does the system assist with financial decision making? -->
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="financial-decision-headingOne">
-                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#financial-decision-collapseOne" aria-expanded="true" aria-controls="financial-decision-collapseOne">
-                                                How does the system assist with financial decision making for SMEs in the dairy sector?
-                                            </button>
-                                        </h2>
-                                        <div id="financial-decision-collapseOne" class="accordion-collapse collapse show" aria-labelledby="financial-decision-headingOne" data-bs-parent="#financial-decision-accordion">
-                                            <div class="accordion-body">
-                                                The system uses probabilistic density functions and simulation to analyze demand behavior. It helps SMEs in the dairy sector make informed financial decisions by providing insights into demand patterns and forecasts.
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Question 2: What are probabilistic density functions? -->
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="financial-decision-headingTwo">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#financial-decision-collapseTwo" aria-expanded="false" aria-controls="financial-decision-collapseTwo">
-                                                What are probabilistic density functions?
-                                            </button>
-                                        </h2>
-                                        <div id="financial-decision-collapseTwo" class="accordion-collapse collapse" aria-labelledby="financial-decision-headingTwo" data-bs-parent="#financial-decision-accordion">
-                                            <div class="accordion-body">
-                                                Probabilistic density functions are mathematical tools used to model and describe the probability distribution of random variables. In our system, they are applied to analyze and predict demand variations in the dairy sector.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!--end accordion-->
-                            </div>
-                        </div>
-
-                        <!-- Category: Privacy & Security -->
-                        <div class="col-lg-6">
-                            <div class="mt-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="flex-shrink-0 me-1">
-                                        <i class="ri-shield-keyhole-line fs-24 align-middle text-success me-1"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="fs-16 mb-0 fw-semibold">Privacy &amp; Security</h5>
-                                    </div>
-                                </div>
-
-                                <div class="accordion accordion-border-box" id="privacy-accordion">
-                                    <!-- Question 3: How is user data protected? -->
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="privacy-headingOne">
-                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#privacy-collapseOne" aria-expanded="true" aria-controls="privacy-collapseOne">
-                                                How is user data protected in the system?
-                                            </button>
-                                        </h2>
-                                        <div id="privacy-collapseOne" class="accordion-collapse collapse show" aria-labelledby="privacy-headingOne" data-bs-parent="#privacy-accordion">
-                                            <div class="accordion-body">
-                                                We take privacy and security seriously. User data is encrypted, and access is restricted to authorized personnel only. Our system complies with industry standards to safeguard sensitive information.
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Question 4: Is my data used for any other purpose? -->
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="privacy-headingTwo">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#privacy-collapseTwo" aria-expanded="false" aria-controls="privacy-collapseTwo">
-                                                Is my data used for any other purpose?
-                                            </button>
-                                        </h2>
-                                        <div id="privacy-collapseTwo" class="accordion-collapse collapse" aria-labelledby="privacy-headingTwo" data-bs-parent="#privacy-accordion">
-                                            <div class="accordion-body">
-                                                Your data is solely used for the purpose of financial decision-making analysis in the dairy sector. We do not share or use your data for any other purposes without your consent.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!--end accordion-->
-                            </div>
-                        </div>
+                <div
+                  class="accordion accordion-border-box"
+                  id="financial-decision-accordion"
+                >
+                  <!-- Question 1: How does the system assist with financial decision making? -->
+                  <div class="accordion-item">
+                    <h2
+                      class="accordion-header"
+                      id="financial-decision-headingOne"
+                    >
+                      <button
+                        class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#financial-decision-collapseOne"
+                        aria-expanded="true"
+                        aria-controls="financial-decision-collapseOne"
+                      >
+                        How does the system assist with financial decision
+                        making for SMEs in the dairy sector?
+                      </button>
+                    </h2>
+                    <div
+                      id="financial-decision-collapseOne"
+                      class="accordion-collapse collapse show"
+                      aria-labelledby="financial-decision-headingOne"
+                      data-bs-parent="#financial-decision-accordion"
+                    >
+                      <div class="accordion-body">
+                        The system uses probabilistic density functions and
+                        simulation to analyze demand behavior. It helps SMEs in
+                        the dairy sector make informed financial decisions by
+                        providing insights into demand patterns and forecasts.
+                      </div>
                     </div>
-                </div><!--end col-->
-            </div><!--end row-->
+                  </div>
+
+                  <!-- Question 2: What are probabilistic density functions? -->
+                  <div class="accordion-item">
+                    <h2
+                      class="accordion-header"
+                      id="financial-decision-headingTwo"
+                    >
+                      <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#financial-decision-collapseTwo"
+                        aria-expanded="false"
+                        aria-controls="financial-decision-collapseTwo"
+                      >
+                        What are probabilistic density functions?
+                      </button>
+                    </h2>
+                    <div
+                      id="financial-decision-collapseTwo"
+                      class="accordion-collapse collapse"
+                      aria-labelledby="financial-decision-headingTwo"
+                      data-bs-parent="#financial-decision-accordion"
+                    >
+                      <div class="accordion-body">
+                        Probabilistic density functions are mathematical tools
+                        used to model and describe the probability distribution
+                        of random variables. In our system, they are applied to
+                        analyze and predict demand variations in the dairy
+                        sector.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--end accordion-->
+              </div>
+            </div>
+
+            <!-- Category: Privacy & Security -->
+            <div class="col-lg-6">
+              <div class="mt-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="flex-shrink-0 me-1">
+                    <i
+                      class="ri-shield-keyhole-line fs-24 align-middle text-success me-1"
+                    ></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="fs-16 mb-0 fw-semibold">
+                      Privacy &amp; Security
+                    </h5>
+                  </div>
+                </div>
+
+                <div
+                  class="accordion accordion-border-box"
+                  id="privacy-accordion"
+                >
+                  <!-- Question 3: How is user data protected? -->
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="privacy-headingOne">
+                      <button
+                        class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#privacy-collapseOne"
+                        aria-expanded="true"
+                        aria-controls="privacy-collapseOne"
+                      >
+                        How is user data protected in the system?
+                      </button>
+                    </h2>
+                    <div
+                      id="privacy-collapseOne"
+                      class="accordion-collapse collapse show"
+                      aria-labelledby="privacy-headingOne"
+                      data-bs-parent="#privacy-accordion"
+                    >
+                      <div class="accordion-body">
+                        We take privacy and security seriously. User data is
+                        encrypted, and access is restricted to authorized
+                        personnel only. Our system complies with industry
+                        standards to safeguard sensitive information.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Question 4: Is my data used for any other purpose? -->
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="privacy-headingTwo">
+                      <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#privacy-collapseTwo"
+                        aria-expanded="false"
+                        aria-controls="privacy-collapseTwo"
+                      >
+                        Is my data used for any other purpose?
+                      </button>
+                    </h2>
+                    <div
+                      id="privacy-collapseTwo"
+                      class="accordion-collapse collapse"
+                      aria-labelledby="privacy-headingTwo"
+                      data-bs-parent="#privacy-accordion"
+                    >
+                      <div class="accordion-body">
+                        Your data is solely used for the purpose of financial
+                        decision-making analysis in the dairy sector. We do not
+                        share or use your data for any other purposes without
+                        your consent.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--end accordion-->
+              </div>
+            </div>
+          </div>
         </div>
-        <!-- container-fluid -->
+        <!--end col-->
+      </div>
+      <!--end row-->
     </div>
-    <!-- End Page-content -->
+    <!-- container-fluid -->
+  </div>
+  <!-- End Page-content -->
 
-    {% block footer %}
-    {% include "partials/footer.html" %}
-    {% endblock footer %}
+  {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
 </div>
 <!-- end main content-->
 {% endblock content %}

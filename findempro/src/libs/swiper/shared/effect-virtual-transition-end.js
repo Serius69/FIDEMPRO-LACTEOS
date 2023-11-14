@@ -1,17 +1,17 @@
-import { elementTransitionEnd } from './utils.js';
+import { elementTransitionEnd } from "./utils.js";
 export default function effectVirtualTransitionEnd({
   swiper,
   duration,
   transformElements,
-  allSlides
+  allSlides,
 }) {
-  const {
-    activeIndex
-  } = swiper;
-  const getSlide = el => {
+  const { activeIndex } = swiper;
+  const getSlide = (el) => {
     if (!el.parentElement) {
       // assume shadow root
-      const slide = swiper.slides.filter(slideEl => slideEl.shadowEl && slideEl.shadowEl === el.parentNode)[0];
+      const slide = swiper.slides.filter(
+        (slideEl) => slideEl.shadowEl && slideEl.shadowEl === el.parentNode,
+      )[0];
       return slide;
     }
     return el.parentElement;
@@ -22,20 +22,22 @@ export default function effectVirtualTransitionEnd({
     if (allSlides) {
       transitionEndTarget = transformElements;
     } else {
-      transitionEndTarget = transformElements.filter(transformEl => {
-        const el = transformEl.classList.contains('swiper-slide-transform') ? getSlide(transformEl) : transformEl;
+      transitionEndTarget = transformElements.filter((transformEl) => {
+        const el = transformEl.classList.contains("swiper-slide-transform")
+          ? getSlide(transformEl)
+          : transformEl;
         return swiper.getSlideIndex(el) === activeIndex;
       });
     }
-    transitionEndTarget.forEach(el => {
+    transitionEndTarget.forEach((el) => {
       elementTransitionEnd(el, () => {
         if (eventTriggered) return;
         if (!swiper || swiper.destroyed) return;
         eventTriggered = true;
         swiper.animating = false;
-        const evt = new window.CustomEvent('transitionend', {
+        const evt = new window.CustomEvent("transitionend", {
           bubbles: true,
-          cancelable: true
+          cancelable: true,
         });
         swiper.wrapperEl.dispatchEvent(evt);
       });

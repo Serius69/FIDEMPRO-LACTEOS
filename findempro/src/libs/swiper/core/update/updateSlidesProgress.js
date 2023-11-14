@@ -1,26 +1,26 @@
-export default function updateSlidesProgress(translate = this && this.translate || 0) {
+export default function updateSlidesProgress(
+  translate = (this && this.translate) || 0,
+) {
   const swiper = this;
   const params = swiper.params;
-  const {
-    slides,
-    rtlTranslate: rtl,
-    snapGrid
-  } = swiper;
+  const { slides, rtlTranslate: rtl, snapGrid } = swiper;
   if (slides.length === 0) return;
-  if (typeof slides[0].swiperSlideOffset === 'undefined') swiper.updateSlidesOffset();
+  if (typeof slides[0].swiperSlideOffset === "undefined")
+    swiper.updateSlidesOffset();
   let offsetCenter = -translate;
   if (rtl) offsetCenter = translate;
 
   // Visible Slides
-  slides.forEach(slideEl => {
+  slides.forEach((slideEl) => {
     slideEl.classList.remove(params.slideVisibleClass);
   });
   swiper.visibleSlidesIndexes = [];
   swiper.visibleSlides = [];
   let spaceBetween = params.spaceBetween;
-  if (typeof spaceBetween === 'string' && spaceBetween.indexOf('%') >= 0) {
-    spaceBetween = parseFloat(spaceBetween.replace('%', '')) / 100 * swiper.size;
-  } else if (typeof spaceBetween === 'string') {
+  if (typeof spaceBetween === "string" && spaceBetween.indexOf("%") >= 0) {
+    spaceBetween =
+      (parseFloat(spaceBetween.replace("%", "")) / 100) * swiper.size;
+  } else if (typeof spaceBetween === "string") {
     spaceBetween = parseFloat(spaceBetween);
   }
   for (let i = 0; i < slides.length; i += 1) {
@@ -29,17 +29,31 @@ export default function updateSlidesProgress(translate = this && this.translate 
     if (params.cssMode && params.centeredSlides) {
       slideOffset -= slides[0].swiperSlideOffset;
     }
-    const slideProgress = (offsetCenter + (params.centeredSlides ? swiper.minTranslate() : 0) - slideOffset) / (slide.swiperSlideSize + spaceBetween);
-    const originalSlideProgress = (offsetCenter - snapGrid[0] + (params.centeredSlides ? swiper.minTranslate() : 0) - slideOffset) / (slide.swiperSlideSize + spaceBetween);
+    const slideProgress =
+      (offsetCenter +
+        (params.centeredSlides ? swiper.minTranslate() : 0) -
+        slideOffset) /
+      (slide.swiperSlideSize + spaceBetween);
+    const originalSlideProgress =
+      (offsetCenter -
+        snapGrid[0] +
+        (params.centeredSlides ? swiper.minTranslate() : 0) -
+        slideOffset) /
+      (slide.swiperSlideSize + spaceBetween);
     const slideBefore = -(offsetCenter - slideOffset);
     const slideAfter = slideBefore + swiper.slidesSizesGrid[i];
-    const isVisible = slideBefore >= 0 && slideBefore < swiper.size - 1 || slideAfter > 1 && slideAfter <= swiper.size || slideBefore <= 0 && slideAfter >= swiper.size;
+    const isVisible =
+      (slideBefore >= 0 && slideBefore < swiper.size - 1) ||
+      (slideAfter > 1 && slideAfter <= swiper.size) ||
+      (slideBefore <= 0 && slideAfter >= swiper.size);
     if (isVisible) {
       swiper.visibleSlides.push(slide);
       swiper.visibleSlidesIndexes.push(i);
       slides[i].classList.add(params.slideVisibleClass);
     }
     slide.progress = rtl ? -slideProgress : slideProgress;
-    slide.originalProgress = rtl ? -originalSlideProgress : originalSlideProgress;
+    slide.originalProgress = rtl
+      ? -originalSlideProgress
+      : originalSlideProgress;
   }
 }

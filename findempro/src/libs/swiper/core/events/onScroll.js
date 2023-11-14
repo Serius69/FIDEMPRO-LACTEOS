@@ -1,10 +1,6 @@
 export default function onScroll() {
   const swiper = this;
-  const {
-    wrapperEl,
-    rtlTranslate,
-    enabled
-  } = swiper;
+  const { wrapperEl, rtlTranslate, enabled } = swiper;
   if (!enabled) return;
   swiper.previousTranslate = swiper.translate;
   if (swiper.isHorizontal()) {
@@ -26,5 +22,5 @@ export default function onScroll() {
   if (newProgress !== swiper.progress) {
     swiper.updateProgress(rtlTranslate ? -swiper.translate : swiper.translate);
   }
-  swiper.emit('setTranslate', swiper.translate, false);
+  swiper.emit("setTranslate", swiper.translate, false);
 }

@@ -1,7 +1,7 @@
-import { inject } from 'vue';
+import { inject } from "vue";
 export const useSwiperSlide = () => {
-  return inject('swiperSlide');
+  return inject("swiperSlide");
 };
 export const useSwiper = () => {
-  return inject('swiper');
+  return inject("swiper");
 };

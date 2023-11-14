@@ -20,23 +20,15 @@ def business_list(request):
     form = BusinessForm()
     try:
         businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
-
-        # Number of businesses to display per page
-        per_page = 10  # You can adjust this based on your preference
-
-        # Paginate the businesses
+        per_page = 10
         paginator = Paginator(businesses, per_page)
         page = request.GET.get('page')
-
         try:
             businesses = paginator.page(page)
         except PageNotAnInteger:
-            # If the page is not an integer, deliver the first page.
             businesses = paginator.page(1)
         except EmptyPage:
-            # If the page is out of range (e.g., 9999), deliver the last page of results.
             businesses = paginator.page(paginator.num_pages)
-
         context = {'businesses': businesses, 'form': form}
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
@@ -66,8 +58,7 @@ def create_business_view(request):
                 messages.error(request, f"An error occurred: {str(e)}")
                 return JsonResponse({'success': False, 'error': f"An error occurred: {str(e)}"})
         else:
-            # Handle form validation errors
-            return JsonResponse({'success': False, 'errors': form.errors})
+            messages.error(request, "Please check your inputs.")
     else:
         form = BusinessForm()
     return render(request, 'business/business-form.html', {'form': form})
@@ -84,7 +75,6 @@ def update_business_view(request, pk):
                 messages.error(request, "Please check your inputs.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
-
     form = BusinessForm(instance=business)  # Provide the form instance if it's a GET request
     return render(request, "business/business-update.html", {'form': form, 'business': business})
 def delete_business_view(request, pk):

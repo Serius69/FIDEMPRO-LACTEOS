@@ -1,13 +1,13 @@
 function prepareClasses(entries, prefix) {
   const resultClasses = [];
-  entries.forEach(item => {
-    if (typeof item === 'object') {
-      Object.keys(item).forEach(classNames => {
+  entries.forEach((item) => {
+    if (typeof item === "object") {
+      Object.keys(item).forEach((classNames) => {
         if (item[classNames]) {
           resultClasses.push(prefix + classNames);
         }
       });
-    } else if (typeof item === 'string') {
+    } else if (typeof item === "string") {
       resultClasses.push(prefix + item);
     }
   });
@@ -15,13 +15,7 @@ function prepareClasses(entries, prefix) {
 }
 export default function addClasses() {
   const swiper = this;
-  const {
-    classNames,
-    params,
-    rtl,
-    el,
-    device
-  } = swiper;
+  const { classNames, params, rtl, el, device } = swiper;
   // prettier-ignore
   const suffixes = prepareClasses(['initialized', params.direction, {
     'free-mode': swiper.params.freeMode && params.freeMode.enabled

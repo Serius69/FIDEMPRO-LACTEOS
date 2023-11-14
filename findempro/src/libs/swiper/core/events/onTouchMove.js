@@ -1,26 +1,23 @@
-import { getDocument } from 'ssr-window';
-import { now } from '../../shared/utils.js';
+import { getDocument } from "ssr-window";
+import { now } from "../../shared/utils.js";
 export default function onTouchMove(event) {
   const document = getDocument();
   const swiper = this;
   const data = swiper.touchEventsData;
-  const {
-    params,
-    touches,
-    rtlTranslate: rtl,
-    enabled
-  } = swiper;
+  const { params, touches, rtlTranslate: rtl, enabled } = swiper;
   if (!enabled) return;
-  if (!params.simulateTouch && event.pointerType === 'mouse') return;
+  if (!params.simulateTouch && event.pointerType === "mouse") return;
   let e = event;
   if (e.originalEvent) e = e.originalEvent;
   if (!data.isTouched) {
     if (data.startMoving && data.isScrolling) {
-      swiper.emit('touchMoveOpposite', e);
+      swiper.emit("touchMoveOpposite", e);
     }
     return;
   }
-  const pointerIndex = data.evCache.findIndex(cachedEv => cachedEv.pointerId === e.pointerId);
+  const pointerIndex = data.evCache.findIndex(
+    (cachedEv) => cachedEv.pointerId === e.pointerId,
+  );
   if (pointerIndex >= 0) data.evCache[pointerIndex] = e;
   const targetTouch = data.evCache.length > 1 ? data.evCache[0] : e;
   const pageX = targetTouch.pageX;
@@ -41,7 +38,7 @@ export default function onTouchMove(event) {
         prevX: swiper.touches.currentX,
         prevY: swiper.touches.currentY,
         currentX: pageX,
-        currentY: pageY
+        currentY: pageY,
       });
       data.touchStartTime = now();
     }
@@ -50,52 +47,80 @@ export default function onTouchMove(event) {
   if (params.touchReleaseOnEdges && !params.loop) {
     if (swiper.isVertical()) {
       // Vertical
-      if (pageY < touches.startY && swiper.translate <= swiper.maxTranslate() || pageY > touches.startY && swiper.translate >= swiper.minTranslate()) {
+      if (
+        (pageY < touches.startY && swiper.translate <= swiper.maxTranslate()) ||
+        (pageY > touches.startY && swiper.translate >= swiper.minTranslate())
+      ) {
         data.isTouched = false;
         data.isMoved = false;
         return;
       }
-    } else if (pageX < touches.startX && swiper.translate <= swiper.maxTranslate() || pageX > touches.startX && swiper.translate >= swiper.minTranslate()) {
+    } else if (
+      (pageX < touches.startX && swiper.translate <= swiper.maxTranslate()) ||
+      (pageX > touches.startX && swiper.translate >= swiper.minTranslate())
+    ) {
       return;
     }
   }
   if (document.activeElement) {
-    if (e.target === document.activeElement && e.target.matches(data.focusableElements)) {
+    if (
+      e.target === document.activeElement &&
+      e.target.matches(data.focusableElements)
+    ) {
       data.isMoved = true;
       swiper.allowClick = false;
       return;
     }
   }
   if (data.allowTouchCallbacks) {
-    swiper.emit('touchMove', e);
+    swiper.emit("touchMove", e);
   }
   if (e.targetTouches && e.targetTouches.length > 1) return;
   touches.currentX = pageX;
   touches.currentY = pageY;
   const diffX = touches.currentX - touches.startX;
   const diffY = touches.currentY - touches.startY;
-  if (swiper.params.threshold && Math.sqrt(diffX ** 2 + diffY ** 2) < swiper.params.threshold) return;
-  if (typeof data.isScrolling === 'undefined') {
+  if (
+    swiper.params.threshold &&
+    Math.sqrt(diffX ** 2 + diffY ** 2) < swiper.params.threshold
+  )
+    return;
+  if (typeof data.isScrolling === "undefined") {
     let touchAngle;
-    if (swiper.isHorizontal() && touches.currentY === touches.startY || swiper.isVertical() && touches.currentX === touches.startX) {
+    if (
+      (swiper.isHorizontal() && touches.currentY === touches.startY) ||
+      (swiper.isVertical() && touches.currentX === touches.startX)
+    ) {
       data.isScrolling = false;
     } else {
       // eslint-disable-next-line
       if (diffX * diffX + diffY * diffY >= 25) {
-        touchAngle = Math.atan2(Math.abs(diffY), Math.abs(diffX)) * 180 / Math.PI;
-        data.isScrolling = swiper.isHorizontal() ? touchAngle > params.touchAngle : 90 - touchAngle > params.touchAngle;
+        touchAngle =
+          (Math.atan2(Math.abs(diffY), Math.abs(diffX)) * 180) / Math.PI;
+        data.isScrolling = swiper.isHorizontal()
+          ? touchAngle > params.touchAngle
+          : 90 - touchAngle > params.touchAngle;
       }
     }
   }
   if (data.isScrolling) {
-    swiper.emit('touchMoveOpposite', e);
+    swiper.emit("touchMoveOpposite", e);
   }
-  if (typeof data.startMoving === 'undefined') {
-    if (touches.currentX !== touches.startX || touches.currentY !== touches.startY) {
+  if (typeof data.startMoving === "undefined") {
+    if (
+      touches.currentX !== touches.startX ||
+      touches.currentY !== touches.startY
+    ) {
       data.startMoving = true;
     }
   }
-  if (data.isScrolling || swiper.zoom && swiper.params.zoom && swiper.params.zoom.enabled && data.evCache.length > 1) {
+  if (
+    data.isScrolling ||
+    (swiper.zoom &&
+      swiper.params.zoom &&
+      swiper.params.zoom.enabled &&
+      data.evCache.length > 1)
+  ) {
     data.isTouched = false;
     return;
   }
@@ -110,7 +135,9 @@ export default function onTouchMove(event) {
     e.stopPropagation();
   }
   let diff = swiper.isHorizontal() ? diffX : diffY;
-  let touchesDiff = swiper.isHorizontal() ? touches.currentX - touches.previousX : touches.currentY - touches.previousY;
+  let touchesDiff = swiper.isHorizontal()
+    ? touches.currentX - touches.previousX
+    : touches.currentY - touches.previousY;
   if (params.oneWayMovement) {
     diff = Math.abs(diff) * (rtl ? 1 : -1);
     touchesDiff = Math.abs(touchesDiff) * (rtl ? 1 : -1);
@@ -122,41 +149,49 @@ export default function onTouchMove(event) {
     touchesDiff = -touchesDiff;
   }
   const prevTouchesDirection = swiper.touchesDirection;
-  swiper.swipeDirection = diff > 0 ? 'prev' : 'next';
-  swiper.touchesDirection = touchesDiff > 0 ? 'prev' : 'next';
+  swiper.swipeDirection = diff > 0 ? "prev" : "next";
+  swiper.touchesDirection = touchesDiff > 0 ? "prev" : "next";
   const isLoop = swiper.params.loop && !params.cssMode;
   if (!data.isMoved) {
     if (isLoop) {
       swiper.loopFix({
-        direction: swiper.swipeDirection
+        direction: swiper.swipeDirection,
       });
     }
     data.startTranslate = swiper.getTranslate();
     swiper.setTransition(0);
     if (swiper.animating) {
-      const evt = new window.CustomEvent('transitionend', {
+      const evt = new window.CustomEvent("transitionend", {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
       swiper.wrapperEl.dispatchEvent(evt);
     }
     data.allowMomentumBounce = false;
     // Grab Cursor
-    if (params.grabCursor && (swiper.allowSlideNext === true || swiper.allowSlidePrev === true)) {
+    if (
+      params.grabCursor &&
+      (swiper.allowSlideNext === true || swiper.allowSlidePrev === true)
+    ) {
       swiper.setGrabCursor(true);
     }
-    swiper.emit('sliderFirstMove', e);
+    swiper.emit("sliderFirstMove", e);
   }
   let loopFixed;
-  if (data.isMoved && prevTouchesDirection !== swiper.touchesDirection && isLoop && Math.abs(diff) >= 1) {
+  if (
+    data.isMoved &&
+    prevTouchesDirection !== swiper.touchesDirection &&
+    isLoop &&
+    Math.abs(diff) >= 1
+  ) {
     // need another loop fix
     swiper.loopFix({
       direction: swiper.swipeDirection,
-      setTranslate: true
+      setTranslate: true,
     });
     loopFixed = true;
   }
-  swiper.emit('sliderMove', e);
+  swiper.emit("sliderMove", e);
   data.isMoved = true;
   data.currentTranslate = diff + data.startTranslate;
   let disableParentSwiper = true;
@@ -165,31 +200,57 @@ export default function onTouchMove(event) {
     resistanceRatio = 0;
   }
   if (diff > 0) {
-    if (isLoop && !loopFixed && data.currentTranslate > (params.centeredSlides ? swiper.minTranslate() - swiper.size / 2 : swiper.minTranslate())) {
+    if (
+      isLoop &&
+      !loopFixed &&
+      data.currentTranslate >
+        (params.centeredSlides
+          ? swiper.minTranslate() - swiper.size / 2
+          : swiper.minTranslate())
+    ) {
       swiper.loopFix({
-        direction: 'prev',
+        direction: "prev",
         setTranslate: true,
-        activeSlideIndex: 0
+        activeSlideIndex: 0,
       });
     }
     if (data.currentTranslate > swiper.minTranslate()) {
       disableParentSwiper = false;
       if (params.resistance) {
-        data.currentTranslate = swiper.minTranslate() - 1 + (-swiper.minTranslate() + data.startTranslate + diff) ** resistanceRatio;
+        data.currentTranslate =
+          swiper.minTranslate() -
+          1 +
+          (-swiper.minTranslate() + data.startTranslate + diff) **
+            resistanceRatio;
       }
     }
   } else if (diff < 0) {
-    if (isLoop && !loopFixed && data.currentTranslate < (params.centeredSlides ? swiper.maxTranslate() + swiper.size / 2 : swiper.maxTranslate())) {
+    if (
+      isLoop &&
+      !loopFixed &&
+      data.currentTranslate <
+        (params.centeredSlides
+          ? swiper.maxTranslate() + swiper.size / 2
+          : swiper.maxTranslate())
+    ) {
       swiper.loopFix({
-        direction: 'next',
+        direction: "next",
         setTranslate: true,
-        activeSlideIndex: swiper.slides.length - (params.slidesPerView === 'auto' ? swiper.slidesPerViewDynamic() : Math.ceil(parseFloat(params.slidesPerView, 10)))
+        activeSlideIndex:
+          swiper.slides.length -
+          (params.slidesPerView === "auto"
+            ? swiper.slidesPerViewDynamic()
+            : Math.ceil(parseFloat(params.slidesPerView, 10))),
       });
     }
     if (data.currentTranslate < swiper.maxTranslate()) {
       disableParentSwiper = false;
       if (params.resistance) {
-        data.currentTranslate = swiper.maxTranslate() + 1 - (swiper.maxTranslate() - data.startTranslate - diff) ** resistanceRatio;
+        data.currentTranslate =
+          swiper.maxTranslate() +
+          1 -
+          (swiper.maxTranslate() - data.startTranslate - diff) **
+            resistanceRatio;
       }
     }
   }
@@ -198,10 +259,18 @@ export default function onTouchMove(event) {
   }
 
   // Directions locks
-  if (!swiper.allowSlideNext && swiper.swipeDirection === 'next' && data.currentTranslate < data.startTranslate) {
+  if (
+    !swiper.allowSlideNext &&
+    swiper.swipeDirection === "next" &&
+    data.currentTranslate < data.startTranslate
+  ) {
     data.currentTranslate = data.startTranslate;
   }
-  if (!swiper.allowSlidePrev && swiper.swipeDirection === 'prev' && data.currentTranslate > data.startTranslate) {
+  if (
+    !swiper.allowSlidePrev &&
+    swiper.swipeDirection === "prev" &&
+    data.currentTranslate > data.startTranslate
+  ) {
     data.currentTranslate = data.startTranslate;
   }
   if (!swiper.allowSlidePrev && !swiper.allowSlideNext) {
@@ -216,7 +285,9 @@ export default function onTouchMove(event) {
         touches.startX = touches.currentX;
         touches.startY = touches.currentY;
         data.currentTranslate = data.startTranslate;
-        touches.diff = swiper.isHorizontal() ? touches.currentX - touches.startX : touches.currentY - touches.startY;
+        touches.diff = swiper.isHorizontal()
+          ? touches.currentX - touches.startX
+          : touches.currentY - touches.startY;
         return;
       }
     } else {
@@ -227,7 +298,10 @@ export default function onTouchMove(event) {
   if (!params.followFinger || params.cssMode) return;
 
   // Update active index in free mode
-  if (params.freeMode && params.freeMode.enabled && swiper.freeMode || params.watchSlidesProgress) {
+  if (
+    (params.freeMode && params.freeMode.enabled && swiper.freeMode) ||
+    params.watchSlidesProgress
+  ) {
     swiper.updateActiveIndex();
     swiper.updateSlidesClasses();
   }

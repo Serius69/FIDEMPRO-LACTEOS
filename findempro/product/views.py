@@ -1,7 +1,7 @@
-
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product
 from business.models import Business
+from variable.models import Variable
 from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
@@ -17,10 +17,13 @@ class AppsView(LoginRequiredMixin,TemplateView):
     pass
 def product_list(request):
     try:
-        products = Product.objects.order_by('-id')
-        businesses = Business.objects.order_by('-id')
-
-        # Paginate the products
+        business_id = request.GET.get('business_id', 'All')
+        if business_id == 'All':
+            products = Product.objects.filter(is_active=True).order_by('-id')
+            businesses = Business.objects.filter(is_active=True).order_by('-id')
+        else:
+            products = Product.objects.filter(fk_business_id=business_id, is_active=True).order_by('-id')
+            businesses = Business.objects.filter(is_active=True).order_by('-id')
         paginator = Paginator(products, 10)  # Show 10 products per page
         page = request.GET.get('page')
 
@@ -42,8 +45,12 @@ def product_overview(request, pk):
     current_datetime = timezone.now()
     try:
         product = get_object_or_404(Product, pk=pk)
-        businesses = Business.objects.all().order_by('-id')
-        context = {'businesses': businesses, 'product': product, 'current_datetime': current_datetime}  # Corrected the context variable name
+        variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        context = {
+                    'variables_product': variables_product, 
+                   'product': product, 
+                   'current_datetime': current_datetime
+                   } 
         return render(request, 'product/product-overview.html', context)
     except Exception as e:
         messages.error(request, "An error occurred. Please check the server logs for more information.")

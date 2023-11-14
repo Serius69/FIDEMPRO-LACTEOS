@@ -1,1 +1,1 @@
-export * from './swiper-react.js';
+export * from "./swiper-react.js";

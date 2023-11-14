@@ -1,40 +1,40 @@
-import { attrToProp, extend } from '../components-shared/utils.js';
-import { paramsList } from '../components-shared/params-list.js';
-import defaults from '../core/defaults.js';
+import { attrToProp, extend } from "../components-shared/utils.js";
+import { paramsList } from "../components-shared/params-list.js";
+import defaults from "../core/defaults.js";
 
 const formatValue = (val) => {
   if (parseFloat(val) === Number(val)) return Number(val);
-  if (val === 'true') return true;
-  if (val === '') return true;
-  if (val === 'false') return false;
-  if (val === 'null') return null;
-  if (val === 'undefined') return undefined;
+  if (val === "true") return true;
+  if (val === "") return true;
+  if (val === "false") return false;
+  if (val === "null") return null;
+  if (val === "undefined") return undefined;
   return val;
 };
 
 const modulesParamsList = [
-  'a11y',
-  'autoplay',
-  'controller',
-  'cards-effect',
-  'coverflow-effect',
-  'creative-effect',
-  'cube-effect',
-  'fade-effect',
-  'flip-effect',
-  'free-mode',
-  'grid',
-  'hash-navigation',
-  'history',
-  'keyboard',
-  'mousewheel',
-  'navigation',
-  'pagination',
-  'parallax',
-  'scrollbar',
-  'thumbs',
-  'virtual',
-  'zoom',
+  "a11y",
+  "autoplay",
+  "controller",
+  "cards-effect",
+  "coverflow-effect",
+  "creative-effect",
+  "cube-effect",
+  "fade-effect",
+  "flip-effect",
+  "free-mode",
+  "grid",
+  "hash-navigation",
+  "history",
+  "keyboard",
+  "mousewheel",
+  "navigation",
+  "pagination",
+  "parallax",
+  "scrollbar",
+  "thumbs",
+  "virtual",
+  "zoom",
 ];
 
 function getParams(element, propName, propValue) {
@@ -42,21 +42,21 @@ function getParams(element, propName, propValue) {
   const passedParams = {};
   extend(params, defaults);
 
-  const localParamsList = [...paramsList, 'on'];
+  const localParamsList = [...paramsList, "on"];
 
-  const allowedParams = localParamsList.map((key) => key.replace(/_/, ''));
+  const allowedParams = localParamsList.map((key) => key.replace(/_/, ""));
 
   // First check props
   localParamsList.forEach((paramName) => {
-    paramName = paramName.replace('_', '');
-    if (typeof element[paramName] !== 'undefined') {
+    paramName = paramName.replace("_", "");
+    if (typeof element[paramName] !== "undefined") {
       passedParams[paramName] = element[paramName];
     }
   });
 
   // Attributes
   const attrsList = [...element.attributes];
-  if (typeof propName === 'string' && typeof propValue !== 'undefined') {
+  if (typeof propName === "string" && typeof propValue !== "undefined") {
     attrsList.push({ name: propName, value: propValue });
   }
   attrsList.forEach((attr) => {
@@ -66,7 +66,8 @@ function getParams(element, propName, propValue) {
     if (moduleParam) {
       const parentObjName = attrToProp(moduleParam);
       const subObjName = attrToProp(attr.name.split(`${moduleParam}-`)[1]);
-      if (typeof passedParams[parentObjName] === 'undefined') passedParams[parentObjName] = {};
+      if (typeof passedParams[parentObjName] === "undefined")
+        passedParams[parentObjName] = {};
       if (passedParams[parentObjName] === true) {
         passedParams[parentObjName] = { enabled: true };
       }
@@ -90,8 +91,8 @@ function getParams(element, propName, propValue) {
 
   if (params.navigation) {
     params.navigation = {
-      prevEl: '.swiper-button-prev',
-      nextEl: '.swiper-button-next',
+      prevEl: ".swiper-button-prev",
+      nextEl: ".swiper-button-next",
       ...(params.navigation !== true ? params.navigation : {}),
     };
   } else if (params.navigation === false) {
@@ -100,7 +101,7 @@ function getParams(element, propName, propValue) {
 
   if (params.scrollbar) {
     params.scrollbar = {
-      el: '.swiper-scrollbar',
+      el: ".swiper-scrollbar",
       ...(params.scrollbar !== true ? params.scrollbar : {}),
     };
   } else if (params.scrollbar === false) {
@@ -109,7 +110,7 @@ function getParams(element, propName, propValue) {
 
   if (params.pagination) {
     params.pagination = {
-      el: '.swiper-pagination',
+      el: ".swiper-pagination",
       ...(params.pagination !== true ? params.pagination : {}),
     };
   } else if (params.pagination === false) {

@@ -1,12 +1,9 @@
-import { getTranslate } from '../../shared/utils.js';
-export default function getSwiperTranslate(axis = this.isHorizontal() ? 'x' : 'y') {
+import { getTranslate } from "../../shared/utils.js";
+export default function getSwiperTranslate(
+  axis = this.isHorizontal() ? "x" : "y",
+) {
   const swiper = this;
-  const {
-    params,
-    rtlTranslate: rtl,
-    translate,
-    wrapperEl
-  } = swiper;
+  const { params, rtlTranslate: rtl, translate, wrapperEl } = swiper;
   if (params.virtualTranslate) {
     return rtl ? -translate : translate;
   }

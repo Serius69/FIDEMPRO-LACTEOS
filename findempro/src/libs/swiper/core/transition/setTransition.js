@@ -3,5 +3,5 @@ export default function setTransition(duration, byController) {
   if (!swiper.params.cssMode) {
     swiper.wrapperEl.style.transitionDuration = `${duration}ms`;
   }
-  swiper.emit('setTransition', duration, byController);
+  swiper.emit("setTransition", duration, byController);
 }

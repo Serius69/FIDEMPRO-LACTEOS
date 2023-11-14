@@ -1,5 +1,10 @@
-export default function slideToLoop(index = 0, speed = this.params.speed, runCallbacks = true, internal) {
-  if (typeof index === 'string') {
+export default function slideToLoop(
+  index = 0,
+  speed = this.params.speed,
+  runCallbacks = true,
+  internal,
+) {
+  if (typeof index === "string") {
     const indexAsNumber = parseInt(index, 10);
     index = indexAsNumber;
   }

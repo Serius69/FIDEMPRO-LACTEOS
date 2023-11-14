@@ -1,18 +1,14 @@
 export default function updateProgress(translate) {
   const swiper = this;
-  if (typeof translate === 'undefined') {
+  if (typeof translate === "undefined") {
     const multiplier = swiper.rtlTranslate ? -1 : 1;
     // eslint-disable-next-line
-    translate = swiper && swiper.translate && swiper.translate * multiplier || 0;
+    translate =
+      (swiper && swiper.translate && swiper.translate * multiplier) || 0;
   }
   const params = swiper.params;
   const translatesDiff = swiper.maxTranslate() - swiper.minTranslate();
-  let {
-    progress,
-    isBeginning,
-    isEnd,
-    progressLoop
-  } = swiper;
+  let { progress, isBeginning, isEnd, progressLoop } = swiper;
   const wasBeginning = isBeginning;
   const wasEnd = isEnd;
   if (translatesDiff === 0) {
@@ -38,7 +34,8 @@ export default function updateProgress(translate) {
     if (translateAbs >= firstSlideTranslate) {
       progressLoop = (translateAbs - firstSlideTranslate) / translateMax;
     } else {
-      progressLoop = (translateAbs + translateMax - lastSlideTranslate) / translateMax;
+      progressLoop =
+        (translateAbs + translateMax - lastSlideTranslate) / translateMax;
     }
     if (progressLoop > 1) progressLoop -= 1;
   }
@@ -46,17 +43,21 @@ export default function updateProgress(translate) {
     progress,
     progressLoop,
     isBeginning,
-    isEnd
+    isEnd,
   });
-  if (params.watchSlidesProgress || params.centeredSlides && params.autoHeight) swiper.updateSlidesProgress(translate);
+  if (
+    params.watchSlidesProgress ||
+    (params.centeredSlides && params.autoHeight)
+  )
+    swiper.updateSlidesProgress(translate);
   if (isBeginning && !wasBeginning) {
-    swiper.emit('reachBeginning toEdge');
+    swiper.emit("reachBeginning toEdge");
   }
   if (isEnd && !wasEnd) {
-    swiper.emit('reachEnd toEdge');
+    swiper.emit("reachEnd toEdge");
   }
-  if (wasBeginning && !isBeginning || wasEnd && !isEnd) {
-    swiper.emit('fromEdge');
+  if ((wasBeginning && !isBeginning) || (wasEnd && !isEnd)) {
+    swiper.emit("fromEdge");
   }
-  swiper.emit('progress', progress);
+  swiper.emit("progress", progress);
 }

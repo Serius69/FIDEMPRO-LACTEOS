@@ -1,9 +1,6 @@
 export default function onResize() {
   const swiper = this;
-  const {
-    params,
-    el
-  } = swiper;
+  const { params, el } = swiper;
   if (el && el.offsetWidth === 0) return;
 
   // Breakpoints
@@ -12,11 +9,7 @@ export default function onResize() {
   }
 
   // Save locks
-  const {
-    allowSlideNext,
-    allowSlidePrev,
-    snapGrid
-  } = swiper;
+  const { allowSlideNext, allowSlidePrev, snapGrid } = swiper;
   const isVirtual = swiper.virtual && swiper.params.virtual.enabled;
 
   // Disable locks on resize
@@ -26,7 +19,13 @@ export default function onResize() {
   swiper.updateSlides();
   swiper.updateSlidesClasses();
   const isVirtualLoop = isVirtual && params.loop;
-  if ((params.slidesPerView === 'auto' || params.slidesPerView > 1) && swiper.isEnd && !swiper.isBeginning && !swiper.params.centeredSlides && !isVirtualLoop) {
+  if (
+    (params.slidesPerView === "auto" || params.slidesPerView > 1) &&
+    swiper.isEnd &&
+    !swiper.isBeginning &&
+    !swiper.params.centeredSlides &&
+    !isVirtualLoop
+  ) {
     swiper.slideTo(swiper.slides.length - 1, 0, false, true);
   } else {
     if (swiper.params.loop && !isVirtual) {
@@ -38,7 +37,11 @@ export default function onResize() {
   if (swiper.autoplay && swiper.autoplay.running && swiper.autoplay.paused) {
     clearTimeout(swiper.autoplay.resizeTimeout);
     swiper.autoplay.resizeTimeout = setTimeout(() => {
-      if (swiper.autoplay && swiper.autoplay.running && swiper.autoplay.paused) {
+      if (
+        swiper.autoplay &&
+        swiper.autoplay.running &&
+        swiper.autoplay.paused
+      ) {
         swiper.autoplay.resume();
       }
     }, 500);

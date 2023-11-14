@@ -1,11 +1,6 @@
 export default function setTranslate(translate, byController) {
   const swiper = this;
-  const {
-    rtlTranslate: rtl,
-    params,
-    wrapperEl,
-    progress
-  } = swiper;
+  const { rtlTranslate: rtl, params, wrapperEl, progress } = swiper;
   let x = 0;
   let y = 0;
   const z = 0;
@@ -21,7 +16,8 @@ export default function setTranslate(translate, byController) {
   swiper.previousTranslate = swiper.translate;
   swiper.translate = swiper.isHorizontal() ? x : y;
   if (params.cssMode) {
-    wrapperEl[swiper.isHorizontal() ? 'scrollLeft' : 'scrollTop'] = swiper.isHorizontal() ? -x : -y;
+    wrapperEl[swiper.isHorizontal() ? "scrollLeft" : "scrollTop"] =
+      swiper.isHorizontal() ? -x : -y;
   } else if (!params.virtualTranslate) {
     if (swiper.isHorizontal()) {
       x -= swiper.cssOverflowAdjustment();
@@ -42,5 +38,5 @@ export default function setTranslate(translate, byController) {
   if (newProgress !== progress) {
     swiper.updateProgress(translate);
   }
-  swiper.emit('setTranslate', swiper.translate, byController);
+  swiper.emit("setTranslate", swiper.translate, byController);
 }

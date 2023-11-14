@@ -1,5 +1,5 @@
-import { getWindow, getDocument } from 'ssr-window';
-import { now } from '../../shared/utils.js';
+import { getWindow, getDocument } from "ssr-window";
+import { now } from "../../shared/utils.js";
 
 // Modified from https://stackoverflow.com/questions/54520554/custom-element-getrootnode-closest-function-crossing-multiple-parent-shadowd
 function closestElement(selector, base = this) {
@@ -20,13 +20,9 @@ export default function onTouchStart(event) {
   const window = getWindow();
   const data = swiper.touchEventsData;
   data.evCache.push(event);
-  const {
-    params,
-    touches,
-    enabled
-  } = swiper;
+  const { params, touches, enabled } = swiper;
   if (!enabled) return;
-  if (!params.simulateTouch && event.pointerType === 'mouse') return;
+  if (!params.simulateTouch && event.pointerType === "mouse") return;
   if (swiper.animating && params.preventInteractionOnTransition) {
     return;
   }
@@ -36,25 +32,33 @@ export default function onTouchStart(event) {
   let e = event;
   if (e.originalEvent) e = e.originalEvent;
   let targetEl = e.target;
-  if (params.touchEventsTarget === 'wrapper') {
+  if (params.touchEventsTarget === "wrapper") {
     if (!swiper.wrapperEl.contains(targetEl)) return;
   }
-  if ('which' in e && e.which === 3) return;
-  if ('button' in e && e.button > 0) return;
+  if ("which" in e && e.which === 3) return;
+  if ("button" in e && e.button > 0) return;
   if (data.isTouched && data.isMoved) return;
 
   // change target el for shadow root component
-  const swipingClassHasValue = !!params.noSwipingClass && params.noSwipingClass !== '';
+  const swipingClassHasValue =
+    !!params.noSwipingClass && params.noSwipingClass !== "";
   // eslint-disable-next-line
   const eventPath = event.composedPath ? event.composedPath() : event.path;
   if (swipingClassHasValue && e.target && e.target.shadowRoot && eventPath) {
     targetEl = eventPath[0];
   }
-  const noSwipingSelector = params.noSwipingSelector ? params.noSwipingSelector : `.${params.noSwipingClass}`;
+  const noSwipingSelector = params.noSwipingSelector
+    ? params.noSwipingSelector
+    : `.${params.noSwipingClass}`;
   const isTargetShadow = !!(e.target && e.target.shadowRoot);
 
   // use closestElement for shadow root element to get the actual closest for nested shadow root element
-  if (params.noSwiping && (isTargetShadow ? closestElement(noSwipingSelector, targetEl) : targetEl.closest(noSwipingSelector))) {
+  if (
+    params.noSwiping &&
+    (isTargetShadow
+      ? closestElement(noSwipingSelector, targetEl)
+      : targetEl.closest(noSwipingSelector))
+  ) {
     swiper.allowClick = true;
     return;
   }
@@ -68,10 +72,16 @@ export default function onTouchStart(event) {
 
   // Do NOT start if iOS edge swipe is detected. Otherwise iOS app cannot swipe-to-go-back anymore
 
-  const edgeSwipeDetection = params.edgeSwipeDetection || params.iOSEdgeSwipeDetection;
-  const edgeSwipeThreshold = params.edgeSwipeThreshold || params.iOSEdgeSwipeThreshold;
-  if (edgeSwipeDetection && (startX <= edgeSwipeThreshold || startX >= window.innerWidth - edgeSwipeThreshold)) {
-    if (edgeSwipeDetection === 'prevent') {
+  const edgeSwipeDetection =
+    params.edgeSwipeDetection || params.iOSEdgeSwipeDetection;
+  const edgeSwipeThreshold =
+    params.edgeSwipeThreshold || params.iOSEdgeSwipeThreshold;
+  if (
+    edgeSwipeDetection &&
+    (startX <= edgeSwipeThreshold ||
+      startX >= window.innerWidth - edgeSwipeThreshold)
+  ) {
+    if (edgeSwipeDetection === "prevent") {
       event.preventDefault();
     } else {
       return;
@@ -82,7 +92,7 @@ export default function onTouchStart(event) {
     isMoved: false,
     allowTouchCallbacks: true,
     isScrolling: undefined,
-    startMoving: undefined
+    startMoving: undefined,
   });
   touches.startX = startX;
   touches.startY = startY;
@@ -94,19 +104,33 @@ export default function onTouchStart(event) {
   let preventDefault = true;
   if (targetEl.matches(data.focusableElements)) {
     preventDefault = false;
-    if (targetEl.nodeName === 'SELECT') {
+    if (targetEl.nodeName === "SELECT") {
       data.isTouched = false;
     }
   }
-  if (document.activeElement && document.activeElement.matches(data.focusableElements) && document.activeElement !== targetEl) {
+  if (
+    document.activeElement &&
+    document.activeElement.matches(data.focusableElements) &&
+    document.activeElement !== targetEl
+  ) {
     document.activeElement.blur();
   }
-  const shouldPreventDefault = preventDefault && swiper.allowTouchMove && params.touchStartPreventDefault;
-  if ((params.touchStartForcePreventDefault || shouldPreventDefault) && !targetEl.isContentEditable) {
+  const shouldPreventDefault =
+    preventDefault && swiper.allowTouchMove && params.touchStartPreventDefault;
+  if (
+    (params.touchStartForcePreventDefault || shouldPreventDefault) &&
+    !targetEl.isContentEditable
+  ) {
     e.preventDefault();
   }
-  if (params.freeMode && params.freeMode.enabled && swiper.freeMode && swiper.animating && !params.cssMode) {
+  if (
+    params.freeMode &&
+    params.freeMode.enabled &&
+    swiper.freeMode &&
+    swiper.animating &&
+    !params.cssMode
+  ) {
     swiper.freeMode.onTouchStart();
   }
-  swiper.emit('touchStart', e);
+  swiper.emit("touchStart", e);
 }

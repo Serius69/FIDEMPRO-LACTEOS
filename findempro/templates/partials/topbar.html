@@ -1,189 +1,336 @@
-{% load static %}
-{% block header %}
-        <header id="page-topbar">
-            <div class="layout-width">
-                <div class="navbar-header">
-                    <div class="d-flex">
-                        <!-- LOGO -->
-                        <div class="navbar-brand-box horizontal-logo">
-                            <a href="{% url 'dashboard:index'%}" class="logo logo-dark">
-                                <span class="logo-sm">
-                                    <img src="{% static 'images/logo-sm.webp'%}" alt="50" height="50">
-                                </span>
-                                <span class="logo-lg">
-                                    <img src="{% static 'images/logo-dark.webp'%}" alt="50" height="50">
-                                </span>
-                            </a>
+{% load static %} {% block header %}
+<header id="page-topbar">
+  <div class="layout-width">
+    <div class="navbar-header">
+      <div class="d-flex">
+        <!-- LOGO -->
+        <div class="navbar-brand-box horizontal-logo">
+          <a href="{% url 'dashboard:index'%}" class="logo logo-dark">
+            <span class="logo-sm">
+              <img
+                src="{% static 'images/logo-sm.webp'%}"
+                alt="50"
+                height="50"
+              />
+            </span>
+            <span class="logo-lg">
+              <img
+                src="{% static 'images/logo-dark.webp'%}"
+                alt="50"
+                height="50"
+              />
+            </span>
+          </a>
 
-                            <a href="{% url 'dashboard:index'%}" class="logo logo-light">
-                                <span class="logo-sm">
-                                    <img src="{% static 'images/logo-sm.webp'%}" alt="50" height="50">
-                                </span>
-                                <span class="logo-lg">
-                                    <img src="{% static 'images/logo-light.webp'%}" alt="50" height="50">
-                                </span>
-                            </a>
-                        </div>
-                        <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger" id="topnav-hamburger-icon">
-                            <span class="hamburger-icon">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </span>
-                        </button>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="dropdown ms-1 topbar-head-dropdown header-item">
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <img id="header-lang-img" src="{% static 'images/flags/us.svg'%}" alt="Header Language" height="20" class="rounded">
-                            </button>
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
-                                <i class='bx bx-moon fs-22'></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item language py-2" data-lang="en" title="English">
-                                    <img src="{% static 'images/flags/us.svg'%}" alt="user-image" class="me-2 rounded" height="18">
-                                    <span class="align-middle">English</span>
-                                </a>
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item language" data-lang="sp" title="Spanish">
-                                    <img src="{% static 'images/flags/spain.svg'%}" alt="user-image" class="me-2 rounded" height="18">
-                                    <span class="align-middle">Española</span>
-                                </a>
-                            </div>
-                        </div>                        
-                        <div class="ms-1 header-item d-none d-sm-flex">
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-toggle="fullscreen">
-                                <i class='bx bx-fullscreen fs-22'></i>
-                            </button>
-                        </div>                       
-                        <div class="dropdown ms-sm-3 header-item topbar-user">
-                            {% if user.is_authenticated %}
-                            <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="d-flex align-items-center">
-                                    {% if user.image_src == null %}
-                                    <img class="rounded-circle header-profile-user" src="{% static 'images/users/user-dummy-img.webp'%}" alt="Header Avatar">
-                                    {% else %}
-                                    <img class="rounded-circle header-profile-user" src="{{ MEDIA_URL }}{{ user.image_src.url }}" alt="Header Avatar">
-                                    {% endif %}
-                                    <span class="text-start ms-xl-2">
-                                        <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{user.username}}</span>
-                                        {% if user.is_staff %}
-                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Administrator</span>
-                                        {% else %}
-                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">User</span>
-                                        {% endif %}
-                                    </span>
-                                </span>
-                            </button>
-                            {% else %}
-                            <button type="button" class="btn" id="page-header-user-dropdown2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="d-flex align-items-center">
-                                    <img class="rounded-circle header-profile-user" src="{% static 'images/users/user-dummy-img.webp'%}"  alt="Header Avatar">
-                                </span>
-                            </button>
-                            {% endif %}
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <!-- item-->
-                                {% if user.is_authenticated %}
-                                <h6 class="dropdown-header">Welcome {{user.username}}</h6>
-                                <a class="dropdown-item" href="{% url 'user:user.profile' %}"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profile</span></a>
-                                <a class="dropdown-item" href="{% url 'pages:pages.faqs' %}"><i class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Help</span></a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'pages:pages.profile_settings' %}"><i class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Settings</span></a>
-                                {% if user.is_authenticated %}
-                                    {% if user.has_usable_password %}
-                                        <a class="dropdown-item" href="{% url 'account_change_password' %}">
-                                            <i class="mdi mdi-key text-muted fs-16 align-middle me-1"></i> 
-                                            <span class="align-middle" data-key="t-change-password">Change Password</span>
-                                        </a>
-                                    {% else %}
-                                        <a class="dropdown-item" href="{% url 'account_set_password' %}">
-                                            <i class="mdi mdi-key text-muted fs-16 align-middle me-1"></i> 
-                                            <span class="align-middle" data-key="t-set-password">Set Password</span>
-                                        </a>
-                                    {% endif %}
-                                        <a class="dropdown-item" href="{% url 'account_logout' %}">
-                                            <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> 
-                                            <span class="align-middle" data-key="t-logout">Logout</span>
-                                        </a>
-                                {% endif %}
-                                {% else %}
-                                    <a class="dropdown-item" href="/account/login/?next=">
-                                        <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
-                                        <span class="align-middle">Login</span>
-                                    </a>
-                                    <a class="dropdown-item" href="/account/signup/?next=">
-                                        <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
-                                        <span class="align-middle">SignUp</span>
-                                    </a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-        <!-- removeNotificationModal -->
-        <div id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="NotificationModalbtn-close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mt-2 text-center">
-                            <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
-                            <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                                <h4>Are you sure ?</h4>
-                                <p class="text-muted mx-4 mb-0">Are you sure you want to remove this Notification ?</p>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                            <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn w-sm btn-danger" id="delete-notification">Yes, Delete It!</button>
-                        </div>
-                    </div>
-                </div><!-- /.modal-content -->
-            </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->
-{% endblock header %}
-
-{% block extra_js %}
+          <a href="{% url 'dashboard:index'%}" class="logo logo-light">
+            <span class="logo-sm">
+              <img
+                src="{% static 'images/logo-sm.webp'%}"
+                alt="50"
+                height="50"
+              />
+            </span>
+            <span class="logo-lg">
+              <img
+                src="{% static 'images/logo-light.webp'%}"
+                alt="50"
+                height="50"
+              />
+            </span>
+          </a>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
+          id="topnav-hamburger-icon"
+        >
+          <span class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+      </div>
+      <div class="d-flex align-items-center">
+        <div class="dropdown ms-1 topbar-head-dropdown header-item">
+          <button
+            type="button"
+            class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <img
+              id="header-lang-img"
+              src="{% static 'images/flags/us.svg'%}"
+              alt="Header Language"
+              height="20"
+              class="rounded"
+            />
+          </button>
+          <button
+            type="button"
+            class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode"
+          >
+            <i class="bx bx-moon fs-22"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end">
+            <!-- item-->
+            <a
+              href="javascript:void(0);"
+              class="dropdown-item notify-item language py-2"
+              data-lang="en"
+              title="English"
+            >
+              <img
+                src="{% static 'images/flags/us.svg'%}"
+                alt="user-image"
+                class="me-2 rounded"
+                height="18"
+              />
+              <span class="align-middle">English</span>
+            </a>
+            <!-- item-->
+            <a
+              href="javascript:void(0);"
+              class="dropdown-item notify-item language"
+              data-lang="sp"
+              title="Spanish"
+            >
+              <img
+                src="{% static 'images/flags/spain.svg'%}"
+                alt="user-image"
+                class="me-2 rounded"
+                height="18"
+              />
+              <span class="align-middle">Española</span>
+            </a>
+          </div>
+        </div>
+        <div class="ms-1 header-item d-none d-sm-flex">
+          <button
+            type="button"
+            class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
+            data-toggle="fullscreen"
+          >
+            <i class="bx bx-fullscreen fs-22"></i>
+          </button>
+        </div>
+        <div class="dropdown ms-sm-3 header-item topbar-user">
+          {% if user.is_authenticated %}
+          <button
+            type="button"
+            class="btn"
+            id="page-header-user-dropdown"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span class="d-flex align-items-center">
+              {% if user.image_src == null %}
+              <img
+                class="rounded-circle header-profile-user"
+                src="{% static 'images/users/user-dummy-img.webp'%}"
+                alt="Header Avatar"
+              />
+              {% else %}
+              <img
+                class="rounded-circle header-profile-user"
+                src="{{ MEDIA_URL }}{{ user.image_src.url }}"
+                alt="Header Avatar"
+              />
+              {% endif %}
+              <span class="text-start ms-xl-2">
+                <span
+                  class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"
+                >
+                  {{user.username}}
+                </span>
+                {% if user.is_staff %}
+                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">
+                  Administrator
+                </span>
+                {% else %}
+                <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">
+                  User
+                </span>
+                {% endif %}
+              </span>
+            </span>
+          </button>
+          {% else %}
+          <button
+            type="button"
+            class="btn"
+            id="page-header-user-dropdown2"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span class="d-flex align-items-center">
+              <img
+                class="rounded-circle header-profile-user"
+                src="{% static 'images/users/user-dummy-img.webp'%}"
+                alt="Header Avatar"
+              />
+            </span>
+          </button>
+          {% endif %}
+          <div class="dropdown-menu dropdown-menu-end">
+            <!-- item-->
+            {% if user.is_authenticated %}
+            <h6 class="dropdown-header">Welcome {{user.username}}</h6>
+            <a class="dropdown-item" href="{% url 'user:user.profile' %}">
+              <i
+                class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"
+              ></i>
+              <span class="align-middle">Profile</span>
+            </a>
+            <a class="dropdown-item" href="{% url 'pages:pages.faqs' %}">
+              <i
+                class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"
+              ></i>
+              <span class="align-middle">Help</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a
+              class="dropdown-item"
+              href="{% url 'pages:pages.profile_settings' %}"
+            >
+              <i
+                class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"
+              ></i>
+              <span class="align-middle">Settings</span>
+            </a>
+            {% if user.is_authenticated %} {% if user.has_usable_password %}
+            <a class="dropdown-item" href="{% url 'account_change_password' %}">
+              <i class="mdi mdi-key text-muted fs-16 align-middle me-1"></i>
+              <span class="align-middle" data-key="t-change-password">
+                Change Password
+              </span>
+            </a>
+            {% else %}
+            <a class="dropdown-item" href="{% url 'account_set_password' %}">
+              <i class="mdi mdi-key text-muted fs-16 align-middle me-1"></i>
+              <span class="align-middle" data-key="t-set-password">
+                Set Password
+              </span>
+            </a>
+            {% endif %}
+            <a class="dropdown-item" href="{% url 'account_logout' %}">
+              <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
+              <span class="align-middle" data-key="t-logout">Logout</span>
+            </a>
+            {% endif %} {% else %}
+            <a class="dropdown-item" href="/account/login/?next=">
+              <i
+                class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"
+              ></i>
+              <span class="align-middle">Login</span>
+            </a>
+            <a class="dropdown-item" href="/account/signup/?next=">
+              <i
+                class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"
+              ></i>
+              <span class="align-middle">SignUp</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<!-- removeNotificationModal -->
+<div
+  id="removeNotificationModal"
+  class="modal fade zoomIn"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          id="NotificationModalbtn-close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="mt-2 text-center">
+          <lord-icon
+            src="https://cdn.lordicon.com/gsqxdxog.json"
+            trigger="loop"
+            colors="primary:#f7b84b,secondary:#f06548"
+            style="width: 100px; height: 100px"
+          ></lord-icon>
+          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+            <h4>Are you sure ?</h4>
+            <p class="text-muted mx-4 mb-0">
+              Are you sure you want to remove this Notification ?
+            </p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+          <button
+            type="button"
+            class="btn w-sm btn-light"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            class="btn w-sm btn-danger"
+            id="delete-notification"
+          >
+            Yes, Delete It!
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+{% endblock header %} {% block extra_js %}
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script>
-        // API key for Google Translate (replace with your own)
-        const apiKey = 'YOUR_GOOGLE_TRANSLATE_API_KEY';
+<script>
+  // API key for Google Translate (replace with your own)
+  const apiKey = "YOUR_GOOGLE_TRANSLATE_API_KEY";
 
-        // Language code for translation (e.g., 'es' for Spanish)
-        const targetLanguage = 'es';
+  // Language code for translation (e.g., 'es' for Spanish)
+  const targetLanguage = "es";
 
-        // Event listener for the translate button
-        $('#translate-button').on('click', function () {
-            // Get the current page content
-            const pageContent = $('body').html();
+  // Event listener for the translate button
+  $("#translate-button").on("click", function () {
+    // Get the current page content
+    const pageContent = $("body").html();
 
-            // Make an AJAX request to Google Translate API
-            $.ajax({
-                url: `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
-                method: 'POST',
-                data: JSON.stringify({
-                    q: pageContent,
-                    target: targetLanguage,
-                }),
-                contentType: 'application/json',
-                success: function (response) {
-                    // Replace the page content with the translated text
-                    $('body').html(response.data.translations[0].translatedText);
-                },
-                error: function (error) {
-                    console.error('Translation error:', error);
-                },
-            });
-        });
-    </script>
-    
+    // Make an AJAX request to Google Translate API
+    $.ajax({
+      url: `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+      method: "POST",
+      data: JSON.stringify({
+        q: pageContent,
+        target: targetLanguage,
+      }),
+      contentType: "application/json",
+      success: function (response) {
+        // Replace the page content with the translated text
+        $("body").html(response.data.translations[0].translatedText);
+      },
+      error: function (error) {
+        console.error("Translation error:", error);
+      },
+    });
+  });
+</script>
+
 {% endblock extra_js %}

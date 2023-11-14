@@ -1,9 +1,7 @@
-import transitionEmit from './transitionEmit.js';
+import transitionEmit from "./transitionEmit.js";
 export default function transitionStart(runCallbacks = true, direction) {
   const swiper = this;
-  const {
-    params
-  } = swiper;
+  const { params } = swiper;
   if (params.cssMode) return;
   if (params.autoHeight) {
     swiper.updateAutoHeight();
@@ -12,6 +10,6 @@ export default function transitionStart(runCallbacks = true, direction) {
     swiper,
     runCallbacks,
     direction,
-    step: 'Start'
+    step: "Start",
   });
 }

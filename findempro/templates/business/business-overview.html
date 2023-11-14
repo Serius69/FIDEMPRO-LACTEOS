@@ -1,224 +1,321 @@
-{% extends "partials/base.html" %}
-{% load static %}
-
-{% block title %}Business Details{% endblock title %}
-
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'libs/gridjs/dist/theme/mermaid.min.css' %}">
-    <link href="{% static 'libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
-{% endblock extra_css %}
-
-{% block content %}
+{% extends "partials/base.html" %} {% load static %} {% block title %}Business
+Details{% endblock title %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{% static 'libs/gridjs/dist/theme/mermaid.min.css' %}"
+/>
+<link
+  href="{% static 'libs/swiper/swiper-bundle.min.css' %}"
+  rel="stylesheet"
+  type="text/css"
+/>
+{% endblock extra_css %} {% block content %}
 <div class="main-content">
-    <div class="page-content">
-        <div class="container-fluid">
+  <div class="page-content">
+    <div class="container-fluid">
+      {% block pagetitle %} {% include "partials/page-title.html" with
+      pagetitle="Business" title="Business Details" %} {% endblock pagetitle %}
 
-            {% block pagetitle %}
-            {% include "partials/page-title.html" with pagetitle="Business" title="Business Details" %}
-            {% endblock pagetitle %}
-
-            <div class="row">
-                <div class="col-xxl-3">
-                    <div class="card">
-                        <div class="card-body p-4">
-                            <div>
-                                <div class="flex-shrink-0 avatar-md mx-auto">
-                                    <div class="avatar-title bg-light rounded">
-                                        <img src="{{ business.image_src.url }}" alt="100" height="100" />
-                                    </div>
-                                </div>
-                                <div class="mt-4 text-center">
-                                    <h5 class="mb-1">{{ business.name }}</h5>
-                                    <p class="text-muted">Since {{ business.date_created }}</p>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table mb-0 table-borderless">
-                                        <tbody>
-                                            <tr>
-                                                <th><span class="fw-medium">Owner Name</span></th>
-                                                <td>{{ business.user.name }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th><span class="fw-medium">Business Type</span></th>
-                                                <td>{{ business.type }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th><span class="fw-medium">Description</span></th>
-                                                <td>{{ business.description }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th><span class="fw-medium">Location</span></th>
-                                                <td>{{ business.location }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="mode-selection">Select Mode:</label>
-                                    <select id="mode-selection" class="form-control">
-                                        <option value="simple">Simple Mode</option>
-                                        <option value="advanced">Advanced Mode</option>
-                                    </select>
-                                </div>                       
-                        
-
-                            </div>
-                        </div><!--end card-body-->
-                    </div><!--end card-->
-                    
-                </div><!--end col-->
-
-                <div class="col-xxl-9">
-                    <div class="card">
-                        <div class="card-header border-0 align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Products</h4>
-                        </div><!-- end card header -->
-                        <div class="card-body p-4">
-                            <div class="row g-4 mb-3">
-                                <div class="col-sm-auto">
-                                    <div>
-                                        <a href="{% url 'product:product.create' %}" class="btn btn-success">
-                                            <i class="ri-add-line align-bottom me-1"></i> Add Product
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="col-sm">
-                                    <div class="d-flex justify-content-sm-end">
-                                        <div class="search-box ms-2">
-                                            <input type="text" class="form-control" placeholder="Search Products...">
-                                            <i class="ri-search-line search-icon"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="table-responsive table-card mb-1">
-                                        <table class="table align-middle" id="productTable">
-                                            <thead class="table-light text-muted">
-                                                <tr>
-                                                    <th class="sort">Image</th>
-                                                    <th class="sort" data-sort="name">Product</th>
-                                                    <th class="sort" data-sort="type">Type</th>
-                                                    <th class="sort" data-sort="date">Date Created</th>
-                                                    <th class="sort" data-sort="status">Status</th>
-                                                    <th data-sort="action">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="list form-check-all">
-                                                {% for product in products %}
-                                                <tr>
-                                                    <td class="image"><img src="{{ product.image_src.url }}" alt="40" height="40" /></td>
-                                                    <td class="name">{{ product.name }}</td>
-                                                    <td class="type">{{ product.type }}</td>
-                                                    <td class="date">{{ product.date_created|date:"d M,Y" }}</td>
-                                                    <td class="status">
-                                                        {% if product.is_active == 1 %}
-                                                        <span class="badge bg-success-subtle text-success text-uppercase">Active</span>
-                                                        {% else %}
-                                                        <span class="badge bg-danger-subtle text-danger text-uppercase">Deactived</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <ul class="list-inline hstack gap-2 mb-0">
-                                                            <li class="list-inline-item edit" data-bs-toggle="tooltip"
-                                                                data-bs-trigger="hover" data-bs-placement="top" title="Edit">
-                                                                <a href="#showModal-{{ forloop.counter }}" data-bs-toggle="modal"
-                                                                    class="text-primary d-inline-block edit-item-btn">
-                                                                    <i class="ri-pencil-fill fs-16"></i>
-                                                                </a>
-                                                            </li>
-                                                            <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                                data-bs-trigger="hover" data-bs-placement="top" title="Remove">
-                                                                <a class="text-danger d-inline-block remove-item-btn"
-                                                                   data-bs-toggle="modal"
-                                                                   href="#deleteRecordModal-{{ forloop.counter }}">
-                                                                    <i class="ri-delete-bin-5-fill fs-16"></i>
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </td>
-                                                </tr>
-                                                {% empty %}
-                                                <tr>
-                                                    <td>
-                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
-                                                                colors="primary:#405189,secondary:#0ab39c"
-                                                                style="width:75px;height:75px">
-                                                        </lord-icon>
-                                                        <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
-                                                        <p class="text-muted mb-0">You have to "Add Product".</p>
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header border-0 align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Revenue</h4>
-                            <div>
-                                <button type="button" class="btn btn-soft-secondary btn-sm">
-                                    ALL
-                                </button>
-                                <button type="button" class="btn btn-soft-secondary btn-sm">
-                                    1M
-                                </button>
-                            </div>
-                        </div><!-- end card header -->
-                        <div class="card-body">
-                            <div class="card-header p-0 border-0 bg-light-subtle">
-                                <div class="row g-0 text-center">
-                                    <div class="col-6 col-sm-4">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1"><span class="counter-value" data-target="{{ products.count }}">0</span></h5>
-                                            <p class="text-muted mb-0">Products</p>
-                                        </div>
-                                    </div><!--end col-->
-                                    <div class="col-6 col-sm-4">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1">$<span class="counter-value" data-target="{{ business.product.earnings }}">0</span>k</h5>
-                                            <p class="text-muted mb-0">Earnings</p>
-                                        </div>
-                                    </div><!--end col-->
-                                    <div class="col-6 col-sm-4">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1"><span class="counter-value" data-target="{{ business.product.simulate.count }}">0</span></h5>
-                                            <p class="text-muted mb-0">Refunds</p>
-                                        </div>
-                                    </div><!--end col-->
-                                </div>
-                            </div><!-- end card header -->
-                            <div>
-                                {% if business and business.dashboard %}
-                                    <!-- Mostrar el dashboard aquí -->
-                                    {{ business.dashboard }}
-                                {% else %}
-                                    <!-- Mostrar un mensaje de falta de información -->
-                                    <p>Falta información del dashboard.</p>
-                                {% endif %}
-
-                            </div>
-                        </div><!-- end card body -->
-                    </div><!-- end card -->
-
+      <div class="row">
+        <div class="col-xxl-3">
+          <div class="card">
+            <div class="card-body p-4">
+              <div>
+                <div class="flex-shrink-0 avatar-md mx-auto">
+                  <div class="avatar-title bg-light rounded">
+                    {% if product.image_src %}
+                    <img
+                      src="{{ MEDIA_URL }}{{ business.image_src.url }}"
+                      alt="100"
+                      height="100"
+                    />
+                    {% else %}
+                    <img
+                      src="{% static 'path/to/dummy-image.jpg' %}"
+                      alt="100"
+                      height="100"
+                    />
+                    {% endif %}
+                  </div>
                 </div>
+                <div class="mt-4 text-center">
+                  <h5 class="mb-1">{{ business.name }}</h5>
+                  <p class="text-muted">Since {{ business.date_created }}</p>
+                </div>
+                <div class="table-responsive">
+                  <table class="table mb-0 table-borderless">
+                    <tbody>
+                      <tr>
+                        <th><span class="fw-medium">Owner Name</span></th>
+                        <td>{{ business.fk_user.name }}</td>
+                      </tr>
+                      <tr>
+                        <th><span class="fw-medium">Business Type</span></th>
+                        <td>{{ business.type }}</td>
+                      </tr>
+                      <tr>
+                        <th><span class="fw-medium">Description</span></th>
+                        <td>{{ business.description }}</td>
+                      </tr>
+                      <tr>
+                        <th><span class="fw-medium">Location</span></th>
+                        <td>{{ business.location }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="form-group">
+                  <label for="mode-selection">Select Mode:</label>
+                  <select id="mode-selection" class="form-control">
+                    <option value="simple">Simple Mode</option>
+                    <option value="advanced">Advanced Mode</option>
+                  </select>
+                </div>
+              </div>
             </div>
+            <!--end card-body-->
+          </div>
+          <!--end card-->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">Business Location</h5>
+            </div>
+            <div class="card-body">
+              <div class="ratio ratio-4x3">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1861227.8137337372!2d51.654904288504646!3d24.33915646928631!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5e48dfb1ab12bd%3A0x33d32f56c0080aa7!2sUnited%20Arab%20Emirates!5e0!3m2!1sen!2sin!4v1664257145153!5m2!1sen!2sin"
+                  height="450"
+                  style="border: 0"
+                  allowfullscreen=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+            </div>
+          </div>
+          <!--end card-->
         </div>
-    </div>
-    {% block footer %}
-    {% include "partials/footer.html" %}
-    {% endblock footer %}
-</div>
-{% endblock content %}
+        <!--end col-->
+        <div class="col-xxl-9">
+          <div class="card">
+            <div class="card-header border-0 align-items-center d-flex">
+              <h4 class="card-title mb-0 flex-grow-1">Products</h4>
+            </div>
+            <!-- end card header -->
+            <div class="card-body p-4">
+              <div class="row g-4 mb-3">
+                <div class="col-sm-auto">
+                  <div>
+                    <a
+                      href="{% url 'product:product.create' %}"
+                      class="btn btn-success"
+                    >
+                      <i class="ri-add-line align-bottom me-1"></i>
+                      Add Product
+                    </a>
+                  </div>
+                </div>
+                <div class="col-sm">
+                  <div class="d-flex justify-content-sm-end">
+                    <div class="search-box ms-2">
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Search Products..."
+                      />
+                      <i class="ri-search-line search-icon"></i>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="table-responsive table-card mb-1">
+                    <table class="table align-middle" id="productTable">
+                      <thead class="table-light text-muted">
+                        <tr>
+                          <th class="sort">Image</th>
+                          <th class="sort" data-sort="name">Product</th>
+                          <th class="sort" data-sort="type">Type</th>
+                          <th class="sort" data-sort="date">Date Created</th>
+                          <th class="sort" data-sort="status">Status</th>
+                          <th data-sort="action">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody class="list form-check-all">
+                        {% for product in products %}
+                        <tr>
+                          <td class="image">
+                            <img
+                              src="{{ product.image_src.url }}"
+                              alt="40"
+                              height="40"
+                            />
+                          </td>
+                          <td class="name">{{ product.name }}</td>
+                          <td class="type">{{ product.type }}</td>
+                          <td class="date">
+                            {{ product.date_created|date:"d M,Y" }}
+                          </td>
+                          <td class="status">
+                            {% if product.is_active == 1 %}
+                            <span
+                              class="badge bg-success-subtle text-success text-uppercase"
+                            >
+                              Active
+                            </span>
+                            {% else %}
+                            <span
+                              class="badge bg-danger-subtle text-danger text-uppercase"
+                            >
+                              Deactived
+                            </span>
+                            {% endif %}
+                          </td>
+                          <td>
+                            <ul class="list-inline hstack gap-2 mb-0">
+                              <li
+                                class="list-inline-item edit"
+                                data-bs-toggle="tooltip"
+                                data-bs-trigger="hover"
+                                data-bs-placement="top"
+                                title="Edit"
+                              >
+                                <a
+                                  href="#showModal-{{ forloop.counter }}"
+                                  data-bs-toggle="modal"
+                                  class="text-primary d-inline-block edit-item-btn"
+                                >
+                                  <i class="ri-pencil-fill fs-16"></i>
+                                </a>
+                              </li>
+                              <li
+                                class="list-inline-item"
+                                data-bs-toggle="tooltip"
+                                data-bs-trigger="hover"
+                                data-bs-placement="top"
+                                title="Remove"
+                              >
+                                <a
+                                  class="text-danger d-inline-block remove-item-btn"
+                                  data-bs-toggle="modal"
+                                  href="#deleteRecordModal-{{ forloop.counter }}"
+                                >
+                                  <i class="ri-delete-bin-5-fill fs-16"></i>
+                                </a>
+                              </li>
+                            </ul>
+                          </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                          <td>
+                            <lord-icon
+                              src="https://cdn.lordicon.com/msoeawqm.json"
+                              trigger="loop"
+                              colors="primary:#405189,secondary:#0ab39c"
+                              style="width: 75px; height: 75px"
+                            ></lord-icon>
+                            <h5 class="mt-2">
+                              Sorry, there isn't any business registered in the
+                              database
+                            </h5>
+                            <p class="text-muted mb-0">
+                              You have to "Add Product".
+                            </p>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-{% block extra_js %}
-    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
-    <script src="{% static 'libs/gridjs/dist/gridjs.umd.js' %}"></script>
-    <script src="https://unpkg.com/gridjs/plugins/selection/dist/selection.umd.js"></script>
-    <script src="{% static 'libs/swiper/swiper-bundle.min.js' %}"></script>
+          <div class="card">
+            <div class="card-header border-0 align-items-center d-flex">
+              <h4 class="card-title mb-0 flex-grow-1">Revenue</h4>
+              <div>
+                <button type="button" class="btn btn-soft-secondary btn-sm">
+                  ALL
+                </button>
+                <button type="button" class="btn btn-soft-secondary btn-sm">
+                  1M
+                </button>
+              </div>
+            </div>
+            <!-- end card header -->
+            <div class="card-body">
+              <div class="card-header p-0 border-0 bg-light-subtle">
+                <div class="row g-0 text-center">
+                  <div class="col-6 col-sm-4">
+                    <div class="p-3 border border-dashed border-start-0">
+                      <h5 class="mb-1">
+                        <span
+                          class="counter-value"
+                          data-target="{{ products.count }}"
+                        >
+                          0
+                        </span>
+                      </h5>
+                      <p class="text-muted mb-0">Products</p>
+                    </div>
+                  </div>
+                  <!--end col-->
+                  <div class="col-6 col-sm-4">
+                    <div class="p-3 border border-dashed border-start-0">
+                      <h5 class="mb-1">
+                        $
+                        <span
+                          class="counter-value"
+                          data-target="{{ business.product.earnings }}"
+                        >
+                          0
+                        </span>
+                        k
+                      </h5>
+                      <p class="text-muted mb-0">Earnings</p>
+                    </div>
+                  </div>
+                  <!--end col-->
+                  <div class="col-6 col-sm-4">
+                    <div class="p-3 border border-dashed border-start-0">
+                      <h5 class="mb-1">
+                        <span
+                          class="counter-value"
+                          data-target="{{ business.product.simulate.count }}"
+                        >
+                          0
+                        </span>
+                      </h5>
+                      <p class="text-muted mb-0">Refunds</p>
+                    </div>
+                  </div>
+                  <!--end col-->
+                </div>
+              </div>
+              <!-- end card header -->
+              <div>
+                {% if business and business.dashboard %}
+                <!-- Mostrar el dashboard aquí -->
+                {{ business.dashboard }} {% else %}
+                <!-- Mostrar un mensaje de falta de información -->
+                <p>Falta información del dashboard.</p>
+                {% endif %}
+              </div>
+            </div>
+            <!-- end card body -->
+          </div>
+          <!-- end card -->
+        </div>
+      </div>
+    </div>
+  </div>
+  {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
+</div>
+{% endblock content %} {% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'libs/gridjs/dist/gridjs.umd.js' %}"></script>
+<script src="https://unpkg.com/gridjs/plugins/selection/dist/selection.umd.js"></script>
+<script src="{% static 'libs/swiper/swiper-bundle.min.js' %}"></script>
 {% endblock extra_js %}

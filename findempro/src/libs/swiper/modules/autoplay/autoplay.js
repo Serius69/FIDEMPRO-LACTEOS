@@ -1,17 +1,11 @@
 /* eslint no-underscore-dangle: "off" */
 /* eslint no-use-before-define: "off" */
-import { getDocument } from 'ssr-window';
-export default function Autoplay({
-  swiper,
-  extendParams,
-  on,
-  emit,
-  params
-}) {
+import { getDocument } from "ssr-window";
+export default function Autoplay({ swiper, extendParams, on, emit, params }) {
   swiper.autoplay = {
     running: false,
     paused: false,
-    timeLeft: 0
+    timeLeft: 0,
   };
   extendParams({
     autoplay: {
@@ -21,13 +15,15 @@ export default function Autoplay({
       disableOnInteraction: true,
       stopOnLastSlide: false,
       reverseDirection: false,
-      pauseOnMouseEnter: false
-    }
+      pauseOnMouseEnter: false,
+    },
   });
   let timeout;
   let raf;
-  let autoplayDelayTotal = params && params.autoplay ? params.autoplay.delay : 3000;
-  let autoplayDelayCurrent = params && params.autoplay ? params.autoplay.delay : 3000;
+  let autoplayDelayTotal =
+    params && params.autoplay ? params.autoplay.delay : 3000;
+  let autoplayDelayCurrent =
+    params && params.autoplay ? params.autoplay.delay : 3000;
   let autoplayTimeLeft;
   let autoplayStartTime = new Date().getTime;
   let wasPaused;
@@ -39,7 +35,7 @@ export default function Autoplay({
   function onTransitionEnd(e) {
     if (!swiper || swiper.destroyed || !swiper.wrapperEl) return;
     if (e.target !== swiper.wrapperEl) return;
-    swiper.wrapperEl.removeEventListener('transitionend', onTransitionEnd);
+    swiper.wrapperEl.removeEventListener("transitionend", onTransitionEnd);
     resume();
   }
   const calcTimeLeft = () => {
@@ -50,9 +46,11 @@ export default function Autoplay({
       autoplayDelayCurrent = autoplayTimeLeft;
       wasPaused = false;
     }
-    const timeLeft = swiper.autoplay.paused ? autoplayTimeLeft : autoplayStartTime + autoplayDelayCurrent - new Date().getTime();
+    const timeLeft = swiper.autoplay.paused
+      ? autoplayTimeLeft
+      : autoplayStartTime + autoplayDelayCurrent - new Date().getTime();
     swiper.autoplay.timeLeft = timeLeft;
-    emit('autoplayTimeLeft', timeLeft, timeLeft / autoplayDelayTotal);
+    emit("autoplayTimeLeft", timeLeft, timeLeft / autoplayDelayTotal);
     raf = requestAnimationFrame(() => {
       calcTimeLeft();
     });
@@ -60,23 +58,35 @@ export default function Autoplay({
   const getSlideDelay = () => {
     let activeSlideEl;
     if (swiper.virtual && swiper.params.virtual.enabled) {
-      activeSlideEl = swiper.slides.filter(slideEl => slideEl.classList.contains('swiper-slide-active'))[0];
+      activeSlideEl = swiper.slides.filter((slideEl) =>
+        slideEl.classList.contains("swiper-slide-active"),
+      )[0];
     } else {
       activeSlideEl = swiper.slides[swiper.activeIndex];
     }
     if (!activeSlideEl) return undefined;
-    const currentSlideDelay = parseInt(activeSlideEl.getAttribute('data-swiper-autoplay'), 10);
+    const currentSlideDelay = parseInt(
+      activeSlideEl.getAttribute("data-swiper-autoplay"),
+      10,
+    );
     return currentSlideDelay;
   };
-  const run = delayForce => {
+  const run = (delayForce) => {
     if (swiper.destroyed || !swiper.autoplay.running) return;
     cancelAnimationFrame(raf);
     calcTimeLeft();
-    let delay = typeof delayForce === 'undefined' ? swiper.params.autoplay.delay : delayForce;
+    let delay =
+      typeof delayForce === "undefined"
+        ? swiper.params.autoplay.delay
+        : delayForce;
     autoplayDelayTotal = swiper.params.autoplay.delay;
     autoplayDelayCurrent = swiper.params.autoplay.delay;
     const currentSlideDelay = getSlideDelay();
-    if (!Number.isNaN(currentSlideDelay) && currentSlideDelay > 0 && typeof delayForce === 'undefined') {
+    if (
+      !Number.isNaN(currentSlideDelay) &&
+      currentSlideDelay > 0 &&
+      typeof delayForce === "undefined"
+    ) {
       delay = currentSlideDelay;
       autoplayDelayTotal = currentSlideDelay;
       autoplayDelayCurrent = currentSlideDelay;
@@ -88,18 +98,18 @@ export default function Autoplay({
       if (swiper.params.autoplay.reverseDirection) {
         if (!swiper.isBeginning || swiper.params.loop || swiper.params.rewind) {
           swiper.slidePrev(speed, true, true);
-          emit('autoplay');
+          emit("autoplay");
         } else if (!swiper.params.autoplay.stopOnLastSlide) {
           swiper.slideTo(swiper.slides.length - 1, speed, true, true);
-          emit('autoplay');
+          emit("autoplay");
         }
       } else {
         if (!swiper.isEnd || swiper.params.loop || swiper.params.rewind) {
           swiper.slideNext(speed, true, true);
-          emit('autoplay');
+          emit("autoplay");
         } else if (!swiper.params.autoplay.stopOnLastSlide) {
           swiper.slideTo(0, speed, true, true);
-          emit('autoplay');
+          emit("autoplay");
         }
       }
       if (swiper.params.cssMode) {
@@ -126,13 +136,13 @@ export default function Autoplay({
   const start = () => {
     swiper.autoplay.running = true;
     run();
-    emit('autoplayStart');
+    emit("autoplayStart");
   };
   const stop = () => {
     swiper.autoplay.running = false;
     clearTimeout(timeout);
     cancelAnimationFrame(raf);
-    emit('autoplayStop');
+    emit("autoplayStop");
   };
   const pause = (internal, reset) => {
     if (swiper.destroyed || !swiper.autoplay.running) return;
@@ -141,9 +151,9 @@ export default function Autoplay({
       pausedByInteraction = true;
     }
     const proceed = () => {
-      emit('autoplayPause');
+      emit("autoplayPause");
       if (swiper.params.autoplay.waitForTransition) {
-        swiper.wrapperEl.addEventListener('transitionend', onTransitionEnd);
+        swiper.wrapperEl.addEventListener("transitionend", onTransitionEnd);
       } else {
         resume();
       }
@@ -164,7 +174,12 @@ export default function Autoplay({
     proceed();
   };
   const resume = () => {
-    if (swiper.isEnd && autoplayTimeLeft < 0 && !swiper.params.loop || swiper.destroyed || !swiper.autoplay.running) return;
+    if (
+      (swiper.isEnd && autoplayTimeLeft < 0 && !swiper.params.loop) ||
+      swiper.destroyed ||
+      !swiper.autoplay.running
+    )
+      return;
     autoplayStartTime = new Date().getTime();
     if (pausedByInteraction) {
       pausedByInteraction = false;
@@ -173,49 +188,49 @@ export default function Autoplay({
       run();
     }
     swiper.autoplay.paused = false;
-    emit('autoplayResume');
+    emit("autoplayResume");
   };
   const onVisibilityChange = () => {
     if (swiper.destroyed || !swiper.autoplay.running) return;
     const document = getDocument();
-    if (document.visibilityState === 'hidden') {
+    if (document.visibilityState === "hidden") {
       pausedByInteraction = true;
       pause(true);
     }
-    if (document.visibilityState === 'visible') {
+    if (document.visibilityState === "visible") {
       resume();
     }
   };
-  const onPointerEnter = e => {
-    if (e.pointerType !== 'mouse') return;
+  const onPointerEnter = (e) => {
+    if (e.pointerType !== "mouse") return;
     pausedByInteraction = true;
     pause(true);
   };
-  const onPointerLeave = e => {
-    if (e.pointerType !== 'mouse') return;
+  const onPointerLeave = (e) => {
+    if (e.pointerType !== "mouse") return;
     if (swiper.autoplay.paused) {
       resume();
     }
   };
   const attachMouseEvents = () => {
     if (swiper.params.autoplay.pauseOnMouseEnter) {
-      swiper.el.addEventListener('pointerenter', onPointerEnter);
-      swiper.el.addEventListener('pointerleave', onPointerLeave);
+      swiper.el.addEventListener("pointerenter", onPointerEnter);
+      swiper.el.addEventListener("pointerleave", onPointerLeave);
     }
   };
   const detachMouseEvents = () => {
-    swiper.el.removeEventListener('pointerenter', onPointerEnter);
-    swiper.el.removeEventListener('pointerleave', onPointerLeave);
+    swiper.el.removeEventListener("pointerenter", onPointerEnter);
+    swiper.el.removeEventListener("pointerleave", onPointerLeave);
   };
   const attachDocumentEvents = () => {
     const document = getDocument();
-    document.addEventListener('visibilitychange', onVisibilityChange);
+    document.addEventListener("visibilitychange", onVisibilityChange);
   };
   const detachDocumentEvents = () => {
     const document = getDocument();
-    document.removeEventListener('visibilitychange', onVisibilityChange);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
   };
-  on('init', () => {
+  on("init", () => {
     if (swiper.params.autoplay.enabled) {
       attachMouseEvents();
       attachDocumentEvents();
@@ -223,14 +238,14 @@ export default function Autoplay({
       start();
     }
   });
-  on('destroy', () => {
+  on("destroy", () => {
     detachMouseEvents();
     detachDocumentEvents();
     if (swiper.autoplay.running) {
       stop();
     }
   });
-  on('beforeTransitionStart', (_s, speed, internal) => {
+  on("beforeTransitionStart", (_s, speed, internal) => {
     if (swiper.destroyed || !swiper.autoplay.running) return;
     if (internal || !swiper.params.autoplay.disableOnInteraction) {
       pause(true, true);
@@ -238,7 +253,7 @@ export default function Autoplay({
       stop();
     }
   });
-  on('sliderFirstMove', () => {
+  on("sliderFirstMove", () => {
     if (swiper.destroyed || !swiper.autoplay.running) return;
     if (swiper.params.autoplay.disableOnInteraction) {
       stop();
@@ -253,7 +268,7 @@ export default function Autoplay({
       pause(true);
     }, 200);
   });
-  on('touchEnd', () => {
+  on("touchEnd", () => {
     if (swiper.destroyed || !swiper.autoplay.running || !isTouched) return;
     clearTimeout(touchStartTimeout);
     clearTimeout(timeout);
@@ -266,7 +281,7 @@ export default function Autoplay({
     pausedByTouch = false;
     isTouched = false;
   });
-  on('slideChange', () => {
+  on("slideChange", () => {
     if (swiper.destroyed || !swiper.autoplay.running) return;
     slideChanged = true;
   });
@@ -274,6 +289,6 @@ export default function Autoplay({
     start,
     stop,
     pause,
-    resume
+    resume,
   });
 }

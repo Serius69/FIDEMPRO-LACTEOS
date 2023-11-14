@@ -51,15 +51,13 @@ LOCAL_APPS = [
     "questionary"
     ]
 THIRDPARTY_APPS = [
-    # Crispy Forms
     "crispy_forms",
-    # All Auth
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    # Google Providers
     'multiselectfield',
     'social_django',
+    'simple_history',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS +LOCAL_APPS +THIRDPARTY_APPS

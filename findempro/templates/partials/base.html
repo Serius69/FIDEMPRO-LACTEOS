@@ -1,58 +1,92 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" {% block html %}data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" {% endblock html %}>
-<head>
+<html
+  lang="en"
+  {%
+  block
+  html
+  %}data-layout="vertical"
+  data-topbar="light"
+  data-sidebar="dark"
+  data-sidebar-size="lg"
+  data-sidebar-image="none"
+  data-preloader="disable"
+  {%
+  endblock
+  html
+  %}
+>
+  <head>
     <meta charset="utf-8" />
-    <title>{% block title %}{% endblock title %} | findempro - Financial Decision Support System for Small and Medium-sized Enterprises (SMEs) in the Dairy Secto</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="Premium Multipurpose Financial Decision Support System for Small and Medium-sized Enterprises (SMEs) in the Dairy Secto" name="description" />
+    <title>
+      {% block title %}{% endblock title %} | findempro - Financial Decision
+      Support System for Small and Medium-sized Enterprises (SMEs) in the Dairy
+      Secto
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      content="Premium Multipurpose Financial Decision Support System for Small and Medium-sized Enterprises (SMEs) in the Dairy Secto"
+      name="description"
+    />
     <meta content="Sergio Troche" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico'%}">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico'%}" />
 
-    {% block css %}
-    {% block extra_css %}
-    {% endblock extra_css %}
+    {% block css %} {% block extra_css %} {% endblock extra_css %}
 
     <!-- Layout config Js -->
     <script src="{% static 'js/layout.js'%}"></script>
     <!-- Bootstrap Css -->
-    <link href="{% static 'css/bootstrap.min.css'%}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <link
+      href="{% static 'css/bootstrap.min.css'%}"
+      id="bootstrap-style"
+      rel="stylesheet"
+      type="text/css"
+    />
     <!-- Icons Css -->
-    <link href="{% static 'css/icons.min.css'%}" rel="stylesheet" type="text/css" />
+    <link
+      href="{% static 'css/icons.min.css'%}"
+      rel="stylesheet"
+      type="text/css"
+    />
     <!-- App Css-->
-    <link href="{% static 'css/app.min.css'%}" id="app-style" rel="stylesheet" type="text/css" />
+    <link
+      href="{% static 'css/app.min.css'%}"
+      id="app-style"
+      rel="stylesheet"
+      type="text/css"
+    />
     <!-- custom Css-->
-    <link href="{% static 'css/custom.min.css'%}" id="app-style" rel="stylesheet" type="text/css" />
+    <link
+      href="{% static 'css/custom.min.css'%}"
+      id="app-style"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <!-- custom Css-->
+    <link
+      href="{% static 'css/righbar.css'%}"
+      id="app-style"
+      rel="stylesheet"
+      type="text/css"
+    />
     {% endblock css %}
-</head>
+  </head>
 
-<body>
+  <body>
     <!-- Begin page -->
     <div id="layout-wrapper">
-        {% block header %}
-        {% include "partials/topbar.html" %}
-        {% endblock header %}
-        {% block sidebar %}
-        {% include "partials/sidebar.html" %}
-        {% endblock sidebar %}
-        {% block content %}
-        {% block pagetitle %}
-        {% endblock pagetitle %}
-        {% block footer %}
-        {% endblock footer %}
-        {% endblock content %}
+      {% block header %} {% include "partials/topbar.html" %} {% endblock header
+      %} {% block sidebar %} {% include "partials/sidebar.html" %} {% endblock
+      sidebar %} {% block content %} {% block pagetitle %} {% endblock pagetitle
+      %} {% block footer %} {% endblock footer %} {% endblock content %}
     </div>
-    
-    {% block extra_content %}        
-    {% endblock extra_content %}
-        
-    <!-- END layout-wrapper -->
-    {% block right_sidebar %}
-    {% include "partials/customizer.html" %}
-    {% endblock right_sidebar %}
 
-    {% block javascript %}
+    {% block extra_content %} {% endblock extra_content %}
+
+    <!-- END layout-wrapper -->
+    {% block right_sidebar %} {% include "partials/customizer.html" %} {%
+    endblock right_sidebar %} {% block javascript %}
     <!-- JAVASCRIPT -->
     <script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js'%}"></script>
     <script src="{% static 'libs/simplebar/dist/simplebar.min.js'%}"></script>
@@ -70,7 +104,7 @@
     <script src="{% static 'js/pages/listjs.init.js' %}"></script>
     <!-- Sweet Alerts js -->
     <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
-        <!-- apexcharts -->
+    <!-- apexcharts -->
     <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
     <script src="https://apexcharts.com/samples/assets/ohlc.js"></script>
     <!-- candlestick charts init -->
@@ -92,48 +126,45 @@
     <!-- apexcharts -->
     <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
     <!-- linecharts init -->
-    {% comment %} <script src="{% static 'js/pages/apexcharts-line.init.js'%}"></script> {% endcomment %}
+    {% comment %}
+    <script src="{% static 'js/pages/apexcharts-line.init.js'%}"></script>
+    {% endcomment %}
     <!-- list.js min js -->
     <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
     <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
     <!-- Sweet Alerts js -->
     <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
 
-
-    {% for message in messages %}
-            {% if message.tags == 'alert-success' %}
-            <!-- sweetalert js -->
-            <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script>
-                var m = "{{ message|safe }}";
-                Swal.fire({
-                    icon: 'success',
-                    title: m,
-                    showConfirmButton: false,
-                    timer: 3000,
-                })
-            </script>
-            {% else %}
-                <!-- sweetalert js -->
-                <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-                <script>
-                var m = "{{ message|safe }}";
-                Swal.fire({
-                    icon: 'error',
-                    title: m,
-                    showConfirmButton: false,
-                    timer: 3000,
-                })
-                </script>
-            {% endif %}
-    {% endfor %}
+    {% for message in messages %} {% if message.tags == 'alert-success' %}
+    <!-- sweetalert js -->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      var m = "{{ message|safe }}";
+      Swal.fire({
+        icon: "success",
+        title: m,
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    </script>
+    {% else %}
+    <!-- sweetalert js -->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      var m = "{{ message|safe }}";
+      Swal.fire({
+        icon: "error",
+        title: m,
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    </script>
+    {% endif %} {% endfor %}
     <!-- apexcharts -->
     <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
 
     {% endblock javascript %}
     <!-- App js -->
     <script src="{% static 'js/app.js'%}"></script>
-        
-</body>
-
+  </body>
 </html>

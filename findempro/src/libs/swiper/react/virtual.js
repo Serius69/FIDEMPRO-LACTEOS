@@ -1,7 +1,7 @@
-import React from 'react';
+import React from "react";
 function renderVirtual(swiper, slides, virtualData) {
   if (!virtualData) return null;
-  const getSlideIndex = index => {
+  const getSlideIndex = (index) => {
     let slideIndex = index;
     if (index < 0) {
       slideIndex = slides.length + index;
@@ -11,15 +11,14 @@ function renderVirtual(swiper, slides, virtualData) {
     }
     return slideIndex;
   };
-  const style = swiper.isHorizontal() ? {
-    [swiper.rtlTranslate ? 'right' : 'left']: `${virtualData.offset}px`
-  } : {
-    top: `${virtualData.offset}px`
-  };
-  const {
-    from,
-    to
-  } = virtualData;
+  const style = swiper.isHorizontal()
+    ? {
+        [swiper.rtlTranslate ? "right" : "left"]: `${virtualData.offset}px`,
+      }
+    : {
+        top: `${virtualData.offset}px`,
+      };
+  const { from, to } = virtualData;
   const loopFrom = swiper.params.loop ? -slides.length : 0;
   const loopTo = swiper.params.loop ? slides.length * 2 : slides.length;
   const slidesToRender = [];
@@ -29,10 +28,10 @@ function renderVirtual(swiper, slides, virtualData) {
     }
   }
   return slidesToRender.map((child, index) => {
-    return /*#__PURE__*/React.cloneElement(child, {
+    return /*#__PURE__*/ React.cloneElement(child, {
       swiper,
       style,
-      key: `slide-${index}`
+      key: `slide-${index}`,
     });
   });
 }

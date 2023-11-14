@@ -1,9 +1,15 @@
 /* eslint no-unused-vars: "off" */
-export default function slideToClosest(speed = this.params.speed, runCallbacks = true, internal, threshold = 0.5) {
+export default function slideToClosest(
+  speed = this.params.speed,
+  runCallbacks = true,
+  internal,
+  threshold = 0.5,
+) {
   const swiper = this;
   let index = swiper.activeIndex;
   const skip = Math.min(swiper.params.slidesPerGroupSkip, index);
-  const snapIndex = skip + Math.floor((index - skip) / swiper.params.slidesPerGroup);
+  const snapIndex =
+    skip + Math.floor((index - skip) / swiper.params.slidesPerGroup);
   const translate = swiper.rtlTranslate ? swiper.translate : -swiper.translate;
   if (translate >= swiper.snapGrid[snapIndex]) {
     // The current translate is on or after the current snap index, so the choice
