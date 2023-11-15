@@ -14,7 +14,7 @@
         {% include "partials/page-title.html" with pagetitle="Product" title="Product List" %}
       {% endblock pagetitle %}
       <div class="row">
-        <div class="col">
+        <div class="col lg-12">
           <div class="card">
             <div class="card-title">
               <div class="d-flex align-items-center">
@@ -22,340 +22,336 @@
               </div>
             </div>
             <div class="card-body">
-              <div class="row g-3">
-                <form method="get" action="{% url 'product:product.list' %}">
-                  <div class="col-xxl-12">
-                    <div>
-                      <select class="form-control" id="business-select" name="business_id">
-                        <option value="All">Select Business</option>
-                        {% for business in businesses %}
-                        <option value="{{ business.id }}">
-                          {{ business.name }}
-                        </option>
-                        {% empty %}
-                        <option value="All">All</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                    <div>
-                      <select class="form-control" id="category-select">
-                        <option value="All">Select Categories</option>
-                        <option value="All">All</option>
-                        <option value="Dairy">Dairy</option>
-                      </select>
-                    </div>
-                    <div>
-                      <button type="submit" class="btn btn-danger" id="apply-filters">
-                        <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                        Filters
-                      </button>
-                    </div>
+              <div class="row g-12">
+                  <form method="GET" action="{% url 'product:product.list' %}">
+                      <div class="col-lg-auto">
+                          <div class="row g-3">
+                              <div class="col-md-6">
+                                  <select class="form-control" id="business-select" name="business_id">
+                                      <option value="All">Select Business</option>
+                                      {% for business in businesses %}
+                                      <option value="{{ business.id }}" {% if request.GET.type == "{{ business.id }}" %}selected{% endif %}>
+                                          {{ business.name }}
+                                      </option>
+                                      {% empty %}
+                                      <option value="All">All</option>
+                                      {% endfor %}
+                                  </select>
+                              </div>
+                              <div class="col-md-6">
+                                  <select class="form-control" id="category-select">
+                                    <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>
+                                      Select Type of product
+                                    </option>
+                                    <option value="Dairy" {% if request.GET.type == "Dairy" %}selected{% endif %}>
+                                      Dairy
+                                    </option>
+                                    <option value="Meat" {% if request.GET.type == "Meat" %}selected{% endif %}>
+                                      Meat
+                                    </option>
+                                  </select>
+                              </div>
+                              <div class="col-lg-12 text-end">
+                                <button type="submit" class="btn btn-danger" id="apply-filters">
+                                  <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                                  Filters
+                                </button>
+                              </div>
+                          </div>
+                      </div>
+                  </form>
+                  <div class="col-lg-3">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct">
+                      <i class="ri-add-fill me-1 align-bottom"></i>
+                      Create New
+                    </button>
                   </div>
-                </form>
-                <!--end form-->
-                <div>
-                  <button
-                    class="btn btn-success"
-                    data-bs-toggle="modal"
-                    data-bs-target="#addProduct"
-                  >
-                    <i class="ri-add-fill me-1 align-bottom"></i>
-                    Create New
-                  </button>
-                </div>
               </div>
-            </div>
-            <!--end row-->
           </div>
-        </div>
-        <div class="row mt-4" id="product-list">
-          {% for product in products %}
-          {% if product.is_active == 1 %}
-          <div
-            class="col-xxl-4 col-sm-7 project-card"
-            data-business="{{ product.business_id }}"
-            data-category="{{ product.category }}"
-          >
-            <div class="card card-height-100">
-              <div class="card-body">
-                <div class="d-flex flex-column h-100">
-                  <div class="d-flex">
-                    <div class="flex-grow-1">
-                      <p class="text-muted mb-4">
-                        Last updated: {{product.last_updated}}
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <div class="d-flex gap-1 align-items-center">
-                        <div class="dropdown">
-                          <button
-                            class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
-                            data-bs-toggle="dropdown"
-                            aria-haspopup="true"
-                            aria-expanded="true"
-                          >
-                            <i data-feather="more-horizontal" class="icon-sm"></i>
-                          </button>
-
-                          <div class="dropdown-menu dropdown-menu-end">
-                            <a
-                              class="dropdown-item"
-                              href="{% url 'product:product.overview' product.id %}"
+          
+            <!--end car body-->
+          </div>
+            {% for product in products %}
+            <div
+              class="col-xxl-auto col-sm-auto project-card"
+              data-business="{{ product.business_id }}"
+              data-category="{{ product.category }}"
+            >
+              <div class="card card-height-100">
+                <div class="card-body">
+                  <div class="d-flex flex-column h-100">
+                    <div class="d-flex">
+                      <div class="flex-grow-1">
+                        <p class="text-muted mb-4">
+                          Last updated: {{product.last_updated}}
+                        </p>
+                      </div>
+                      <div class="flex-shrink-0">
+                        <div class="d-flex gap-1 align-items-center">
+                          <div class="dropdown">
+                            <button
+                              class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
+                              data-bs-toggle="dropdown"
+                              aria-haspopup="true"
+                              aria-expanded="true"
                             >
-                              <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                              View
-                            </a>
-                            <a
-                              class="dropdown-item edit-product"
-                              data-bs-toggle="modal"
-                              data-bs-target="#editProductModal"
-                              data-product-id="{{ product.id }}"
-                            >
-                              <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                              Edit
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a
-                              class="dropdown-item delete-product"
-                              data-bs-toggle="modal"
-                              data-bs-target="#removeProductModal"
-                              data-variable-id="{{ product.id }}"
-                            >
-                              <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                              Remove
-                            </a>
+                              <i data-feather="more-horizontal" class="icon-sm"></i>
+                            </button>
+  
+                            <div class="dropdown-menu dropdown-menu-end">
+                              <a
+                                class="dropdown-item"
+                                href="{% url 'product:product.overview' product.id %}"
+                              >
+                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                View
+                              </a>
+                              <a
+                                class="dropdown-item edit-product"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editProductModal"
+                                data-product-id="{{ product.id }}"
+                              >
+                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                Edit
+                              </a>
+                              <div class="dropdown-divider"></div>
+                              <a
+                                class="dropdown-item delete-product"
+                                data-bs-toggle="modal"
+                                data-bs-target="#removeProductModal"
+                                data-variable-id="{{ product.id }}"
+                              >
+                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                Remove
+                              </a>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="d-flex mb-2">
-                    <div class="flex-shrink-0 me-3">
-                      <div class="avatar-md">
-                        <span>
-                          {% if product.image_src %}
-                          <img
-                            src="{{ MEDIA_URL }}{{ product.image_src.url }}"
-                            alt=""
-                            class="img-fluid p-1"
-                          />
-                          {% else %}
-                          <img
-                            src="{% static 'path_to_dummy_image.webp' %}"
-                            alt=""
-                            class="img-fluid p-1"
-                          />
-                          {% endif %}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1">
-                      <h5 class="mb-1 fs-15">
-                        <a href="{% url 'product:product.overview' product.id %}" class="text-body">
-                          {{ product.name }}
-                        </a>
-                      </h5>
-                      <p class="text-muted text-truncate-two-lines mb-3">
-                        {{ product.description }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="mt-auto">
                     <div class="d-flex mb-2">
+                      <div class="flex-shrink-0 me-3">
+                        <div class="avatar-md">
+                          <span>
+                            <img
+                              src="{{ product.get_photo_url }}"
+                              alt=""
+                              class="img-fluid p-1"
+                            />
+                          </span>
+                        </div>
+                      </div>
                       <div class="flex-grow-1">
-                        <div>Number of variables</div>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <div>
-                          <i class="ri-list-check align-bottom me-1 text-muted"></i>
-                          {{ product.variables.count|default:"0" }}
-                        </div>
+                        <h5 class="mb-1 fs-15">
+                          <a href="{% url 'product:product.overview' product.id %}" class="text-body">
+                            {{ product.name }}
+                          </a>
+                        </h5>
+                        <p class="text-muted text-truncate-two-lines mb-3">
+                          {{ product.description }}
+                        </p>
                       </div>
                     </div>
-                    <div class="progress progress-sm animated-progress">
-                      <div
-                        id="progress-bar"
-                        class="progress-bar bg-success"
-                        role="progressbar"
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                      ></div>
+                    <div class="mt-auto">
+                      <div class="d-flex mb-2">
+                        <div class="flex-grow-1">
+                          <div>Number of variables</div>
+                        </div>
+                        <div class="flex-shrink-0">
+                          <div>
+                            <i class="ri-list-check align-bottom me-1 text-muted"></i>
+                            {{ product.variables.count|default:"0" }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="progress progress-sm animated-progress">
+                        <div
+                          id="progress-bar"
+                          class="progress-bar bg-success"
+                          role="progressbar"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <!-- end card body -->
-              <div class="card-footer bg-transparent border-top-dashed py-2">
-                <div class="d-flex align-items-center">
-                  <div class="flex-grow-1">
-                    <div class="avatar-group">
-                      {% for variable in variables %}
-                      <a
-                        href=""
-                        class="avatar-group-item"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="hover"
-                        data-bs-placement="top"
-                        title="{{ business.name }}"
-                      >
-                        <div class="avatar-xxs">
-                          <img
-                            src="{{ MEDIA_URL }}{{ product.image_src.url }}"
-                            alt=""
-                            class="rounded-circle img-fluid"
-                          />
-                        </div>
-                      </a>
-                      {% empty %}
-                      <a
-                        href=""
-                        class="avatar-group-item"
-                        data-bs-toggle="tooltip"
-                        data-bs-trigger="hover"
-                        data-bs-placement="top"
-                        title="No variables"
-                      >
-                        <div class="avatar-xxs">
-                          <img src="." alt="" class="rounded-circle img-fluid" />
-                        </div>
-                      </a>
-                      {% endfor %}
-                      <div class="avatar-xxs">
-                        <button
-                          class="btn btn-primary btn-rounded btn-icon btn-xs"
-                          data-bs-toggle="modal"
-                          data-bs-target="#addVariable"
+                <!-- end card body -->
+                <div class="card-footer bg-transparent border-top-dashed py-2">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                      <div class="avatar-group">
+                        {% for variable in variables %}
+                        <a
+                          href=""
+                          class="avatar-group-item"
+                          data-bs-toggle="tooltip"
+                          data-bs-trigger="hover"
+                          data-bs-placement="top"
+                          title="{{ business.name }}"
                         >
-                          <i class="ri-add-line"></i>
-                        </button>
+                          <div class="avatar-xxs">
+                            <img
+                              src="{{ MEDIA_URL }}{{ product.image_src.url }}"
+                              alt=""
+                              class="rounded-circle img-fluid"
+                            />
+                          </div>
+                        </a>
+                        {% empty %}
+                        <a
+                          href=""
+                          class="avatar-group-item"
+                          data-bs-toggle="tooltip"
+                          data-bs-trigger="hover"
+                          data-bs-placement="top"
+                          title="No variables"
+                        >
+                          <div class="avatar-xxs">
+                            <img src="." alt="" class="rounded-circle img-fluid" />
+                          </div>
+                        </a>
+                        {% endfor %}
+                        <div class="avatar-xxs">
+                          <button
+                            class="btn btn-primary btn-rounded btn-icon btn-xs"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addVariable"
+                          >
+                            <i class="ri-add-line"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                      <div class="text-muted">
+                        <i class="ri-calendar-event-fill me-1 align-bottom"></i>
+                        Created Date: {{ product.date_created }}
                       </div>
                     </div>
                   </div>
-                  <div class="flex-shrink-0">
-                    <div class="text-muted">
-                      <i class="ri-calendar-event-fill me-1 align-bottom"></i>
-                      Created Date: {{ product.date_created }}
-                    </div>
-                  </div>
+                </div>
+                <!-- end card footer -->
+              </div>
+              <!-- end card -->
+            </div>
+            <!-- end col -->
+             {% empty %}
+            <div class="text-center py-4">
+              <lord-icon
+                src="https://cdn.lordicon.com/msoeawqm.json"
+                trigger="loop"
+                colors="primary:#405189,secondary:#0ab39c"
+                style="width: 75px; height: 75px"
+              ></lord-icon>
+              <h5 class="mt-2">
+                Sorry there isn't any product register in the database
+              </h5>
+              <p class="text-muted mb-0">
+                You have to select a "Product" and select "Information of questionary to use".
+              </p>
+            </div>
+            {% endfor %} {% comment %} Fin de la lista {% endcomment %}
+            <!-- Pagination -->
+            <div class="align-items-center mt-2 row text-center text-sm-start">
+              <div class="col-sm">
+                <div class="text-muted">
+                  Showing
+                  <span class="fw-semibold">{{ products.number }}</span>
+                  of
+                  <span class="fw-semibold">
+                    {{ products.paginator.num_pages }}
+                  </span>
+                  Results
                 </div>
               </div>
-              <!-- end card footer -->
-            </div>
-            <!-- end card -->
-          </div>
-          <!-- end col -->
-          {% endif %} {% empty %}
-          <div class="text-center py-4">
-            <lord-icon
-              src="https://cdn.lordicon.com/msoeawqm.json"
-              trigger="loop"
-              colors="primary:#405189,secondary:#0ab39c"
-              style="width: 75px; height: 75px"
-            ></lord-icon>
-            <h5 class="mt-2">
-              Sorry there isn't any product register in the database
-            </h5>
-            <p class="text-muted mb-0">
-              You have to select a "Product" and select "Information of questionary to use".
-            </p>
-          </div>
-          {% endfor %} {% comment %} Fin de la lista {% endcomment %}
-          <!-- Pagination -->
-          <div class="align-items-center mt-2 row text-center text-sm-start">
-            <div class="col-sm">
-              <div class="text-muted">
-                Showing
-                <span class="fw-semibold">{{ products.number }}</span>
-                of
-                <span class="fw-semibold">
-                  {{ products.paginator.num_pages }}
-                </span>
-                Results
+              <div class="col-sm-auto">
+                <ul
+                  class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
+                >
+                  {% if products.has_previous %}
+                  <li class="page-item">
+                    <a href="?page={{ products.previous_page_number }}" class="page-link">
+                      ←
+                    </a>
+                  </li>
+                  {% endif %} 
+                  {% for i in products.paginator.page_range %}
+                  <li class="page-item {% if i == products.number %}active{% endif %}">
+                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                  </li>
+                  {% endfor %} 
+                  {% if products.has_next %}
+                  <li class="page-item">
+                    <a href="?page={{ products.next_page_number }}" class="page-link">
+                      →
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
               </div>
             </div>
-            <div class="col-sm-auto">
-              <ul
-                class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
-              >
-                {% if products.has_previous %}
-                <li class="page-item">
-                  <a href="?page={{ products.previous_page_number }}" class="page-link">
-                    ←
-                  </a>
-                </li>
-                {% endif %} 
-                {% for i in products.paginator.page_range %}
-                <li class="page-item {% if i == products.number %}active{% endif %}">
-                  <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                </li>
-                {% endfor %} {% if products.has_next %}
-                <li class="page-item">
-                  <a href="?page={{ products.next_page_number }}" class="page-link">
-                    →
-                  </a>
-                </li>
-                {% endif %}
-              </ul>
-            </div>
-          </div>
-          <!-- end row -->
+            <!-- end row -->
         </div>
+        
         <!-- end row -->
-      </div>
-      <div class="col-auto layout-rightside-col">
-        <div class="overlay"></div>
-        <div class="layout-rightside">
-          <div class="card h-100 rounded-0">
-            <div class="card-body p-0">
-              <div class="p-3">
-                <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                  Instructions
-                </h6>
-              </div>
-              <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
-                <div class="acitivity-timeline acitivity-main">
-                  {% for instruction in instructions %}
-                  <div class="acitivity-item d-flex">
-                    <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                      <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
-                        <i class="ri-info-line"></i>
+        <div class="col-auto layout-rightside-col">
+          <div class="overlay"></div>
+          <div class="layout-rightside">
+            <div class="card h-100 rounded-0">
+              <div class="card-body p-0">
+                <div class="p-3">
+                  <h6 class="text-muted mb-0 text-uppercase fw-semibold">
+                    Instructions
+                  </h6>
+                </div>
+                <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
+                  <div class="acitivity-timeline acitivity-main">
+                    {% for instruction in instructions %}
+                    <div class="acitivity-item d-flex">
+                      <div class="flex-shrink-0 avatar-xs acitivity-avatar">
+                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                          <i class="ri-info-line"></i>
+                        </div>
+                      </div>
+                      <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1 lh-base">{{ instruction.title }}</h6>
+                        <p class="text-muted mb-1">
+                          {{ instruction.description }}
+                        </p>
+                        <small class="mb-0 text-muted">
+                          {{ instruction.date }}
+                        </small>
                       </div>
                     </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">{{ instruction.title }}</h6>
-                      <p class="text-muted mb-1">
-                        {{ instruction.description }}
+                    {% empty %}
+                    <div class="text-center py-4">
+                      <lord-icon
+                        src="https://cdn.lordicon.com/msoeawqm.json"
+                        trigger="loop"
+                        colors="primary:#405189,secondary:#0ab39c"
+                        style="width: 75px; height: 75px"
+                      ></lord-icon>
+                      <h5 class="mt-2">
+                        Sorry, there are no instructions in the database
+                      </h5>
+                      <p class="text-muted mb-0">
+                        Please add instructions to the system.
                       </p>
-                      <small class="mb-0 text-muted">
-                        {{ instruction.date }}
-                      </small>
                     </div>
+                    {% endfor %}
                   </div>
-                  {% empty %}
-                  <div class="text-center py-4">
-                    <lord-icon
-                      src="https://cdn.lordicon.com/msoeawqm.json"
-                      trigger="loop"
-                      colors="primary:#405189,secondary:#0ab39c"
-                      style="width: 75px; height: 75px"
-                    ></lord-icon>
-                    <h5 class="mt-2">
-                      Sorry, there are no instructions in the database
-                    </h5>
-                    <p class="text-muted mb-0">
-                      Please add instructions to the system.
-                    </p>
-                  </div>
-                  {% endfor %}
                 </div>
               </div>
             </div>
+            <!-- end card-->
           </div>
-          <!-- end card-->
+          <!-- end .rightbar-->
         </div>
-        <!-- end .rightbar-->
+        <!-- end col activity -->
       </div>
-      <!-- end col activity -->
+      
     </div>
     <!-- container-fluid -->
   </div>
@@ -433,16 +429,6 @@
                 <div
                   class="modal-team-cover position-relative mb-0 mt-n4 mx-n4 rounded-top overflow-hidden"
                 >
-                  <!-- You can add an image related to the variable here -->
-                  {% comment %}
-                  <img
-                    src="{% static 'images/variable_image.webp' %}"
-                    alt=""
-                    id="modal-cover-img"
-                    class="img-fluid"
-                  />
-                  {% endcomment %}
-
                   <div class="d-flex position-absolute start-0 end-0 top-0 p-3">
                     <div class="flex-grow-1">
                       <h5 class="modal-title text-white" id="exampleModalLabel">
@@ -784,8 +770,7 @@
   id="addProduct"
   tabindex="-1"
   aria-labelledby="addProductLabel"
-  aria-hidden="true"
->
+  aria-hidden="true" >
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -1049,6 +1034,7 @@
 </div>
 <!--end modal-->
 {% endblock extra_content %} {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-wysiwyg8xwV+eObI8jzkzA64mIaaq65CNCCEAV9EjjAdFhU6bH2t3ovxW/dAiS6jX" crossorigin="anonymous"></script>
 <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
 <script src="{% static 'js/crud.js' %}"></script>
 {% endblock extra_js %}

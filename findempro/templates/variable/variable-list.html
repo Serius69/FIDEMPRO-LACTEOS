@@ -12,7 +12,7 @@
     <div class="container-fluid">
       {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="Variable" title="Variable List" %} {% endblock pagetitle %}
       <div class="row">
-        <div class="col-lg-9">
+        <div class="col-lg-10 col-sm-auto ">
           <div class="card">
             <div class="card-title">
               <div class="d-flex align-items-center">
@@ -22,47 +22,44 @@
             <div class="card-body">
               <div class="row g-2">
                 <form method="get" action="{% url 'variable:variable.list' %}">
-                  <div class="col-xxl-12">
-                    <div>
-                      <select
-                        class="form-control"
-                        id="product-select"
-                        name="product_id"
-                      >
-                        <option value="All">Select Product</option>
-                        {% for product in products %}
-                        <option value="{{ product.id }}"
-                          >{{ product.name }}</option
-                        >
-                        {% empty %}
-                        <option value="All">All</option>
-                        {% endfor %}
-                      </select>
-                      <select
-                        class="form-control"
-                        id="category-select"
-                        name="category_id"
-                      >
-                        <option value="All">Select Categories</option>
-                        <option value="All">All</option>
-                        <option value="Dairy">Dairy</option>
-                      </select>
-                      <button type="submit" class="btn btn-danger"
-                        ><i class="ri-equalizer-fill me-1 align-bottom"></i>
-                        Filters</button
-                      >
-                    </div>
+                  <div class="col-lg-auto">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                          <select class="form-control" id="business-select" name="business_id">
+                              <option value="All">Select Product</option>
+                              {% for product in products %}
+                              <option value="{{ product.id }}">
+                                  {{ product.name }}
+                              </option>
+                              {% empty %}
+                              <option value="All">All</option>
+                              {% endfor %}
+                          </select>
+                      </div>
+                      <div class="col-md-6">
+                          <select class="form-control" id="type-select">
+                              <option value="All">Select Type</option>
+                              <option value="All">All</option>
+                              <option value="Endogena">Endogena</option>
+                              <option value="Exogena">Exogena</option>
+                              <option value="Estado">Estado</option>
+                          </select>
+                      </div>
+                      <div class="col-lg-12 text-end">
+                        <button type="submit" class="btn btn-danger" id="apply-filters">
+                          <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                          Filters
+                        </button>
+                      </div>
+                  </div>
                   </div>
                   <!--end col-->
                 </form>
-                <div class="col-lg-auto">
-                  <button
-                    class="btn btn-success"
-                    data-bs-toggle="modal"
-                    data-bs-target="#addVariable"
-                    ><i class="ri-add-line align-bottom me-1"></i> Add
-                    Variable</button
-                  >
+                <div class="col-lg-3">
+                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariable">
+                    <i class="ri-add-fill me-1 align-bottom"></i>
+                    Create New
+                  </button>
                 </div>
               </div>
               <!--end row-->
@@ -75,7 +72,7 @@
                 <div class="avatar-sm">
                   <div class="avatar-title bg-light rounded">
                     <img
-                      src="{{variable.image.url}}"
+                    src="{{ variable.get_photo_url }}"
                       alt=""
                       class="avatar-xxs companyLogo-img"
                     />
@@ -83,7 +80,7 @@
                 </div>
                 <div class="ms-3 flex-grow-1">
                   <img
-                    src="{{ MEDIA_URL }}{{ product.image.url }}"
+                  src="{{ variable.get_photo_url }}"
                     alt=""
                     class="d-none cover-img"
                   />
@@ -100,9 +97,6 @@
                     class="btn btn-ghost-primary btn-icon custom-toggle"
                     data-bs-toggle="button"
                   >
-                    <span class="icon-on"
-                      ><i class="ri-bookmark-line"></i
-                    ></span>
                     <span class="icon-off"
                       ><i class="ri-bookmark-fill"></i
                     ></span>
@@ -228,95 +222,8 @@
             </div>            
           </div>
           <!-- end row -->
-
-          <div class="col-xxl-3">
-            <div
-              class="card job-list-view-card overflow-hidden"
-              id="job-overview"
-            >
-              <img
-                src="{{ MEDIA_URL }}{{ product.image.url }}"
-                alt=""
-                id="cover-img"
-                class="img-fluid background object-fit-cover"
-              />
-              <div class="card-body">
-                <div class="mt-3">
-                  <h5 class="view-title">{{variable.name}}</h5>
-                  <div class="hstack gap-3 mb-3">
-                    <span class="text-muted"
-                      ><i class="ri-building-line me-1 align-bottom"></i>
-                      <span class="view-companyname"
-                        >{{variable.name}}</span
-                      ></span
-                    >
-                    <span class="text-muted"
-                      ><i class="ri-map-pin-2-line me-1 align-bottom"></i>
-                      <span class="view-location">{{variable.name}}</span></span
-                    >
-                  </div>
-                  <p class="text-muted view-desc">{{variable.description}}</p>
-                  <div
-                    class="py-3 border border-dashed border-start-0 border-end-0 mt-4"
-                  >
-                    <div class="row">
-                      <div class="col-lg-4 col-sm-6">
-                        <div>
-                          <p
-                            class="mb-2 text-uppercase fw-medium fs-12 text-muted"
-                            >Variable Type</p
-                          >
-                          <h5 class="fs-14 mb-0 view-type">{{variable.name}}</h5>
-                        </div>
-                      </div>
-                      <div class="col-lg-4 col-sm-6">
-                        <div>
-                          <p
-                            class="mb-2 text-uppercase fw-medium fs-12 text-muted"
-                            >Created Date</p
-                          >
-                          <h5 class="fs-14 mb-0 view-postdate"
-                            >{{variable.date_created}}</h5
-                          >
-                        </div>
-                      </div>
-                      <div class="col-lg-4 col-sm-6">
-                        <div>
-                          <p
-                            class="mb-2 text-uppercase fw-medium fs-12 text-muted"
-                            >Experience</p
-                          >
-                          <h5 class="fs-14 mb-0 view-experience"
-                            >{{variable.name}}</h5
-                          >
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-  
-                <div class="mt-4">
-                  <h5 class="mb-3">Equations summmary</h5>
-  
-                  <div>
-                    <div
-                      id="simple_dount_chart"
-                      data-colors='["--vz-info", "--vz-primary", "--vz-danger", "--vz-danger", "--vz-info"]'
-                      class="apex-charts"
-                      dir="ltr"
-                    ></div>
-                  </div>
-                </div>
-                <div class="mt-4">
-                  <button type="button" class="btn btn-success w-100"
-                    >Show More</button
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-        <div class="col-auto layout-rightside-col">
+        <div class="col-lg-2 layout-rightside-col">
             <div class="overlay"></div>
             <div class="layout-rightside">
               <div class="card h-100 rounded-0">
@@ -372,12 +279,8 @@
             <!-- end .rightbar-->
           </div>
           <!-- end col activity -->
-
-      </div>
-    </div>
-        
-        
-        
+        </div>
+      </div> 
     </div>
     <!-- container-fluid -->
   </div>
@@ -486,7 +389,7 @@
                       <div class="avatar-title bg-light rounded-circle">
                         <!-- You can display the variable's logo here -->
                         <img
-                          src="{% static 'images/variable/variable_logo.webp' %}"
+                          src="{{ product.get_photo_url }}"
                           id="variablelogo-img"
                           class="avatar-md rounded-circle object-fit-cover"
                         />

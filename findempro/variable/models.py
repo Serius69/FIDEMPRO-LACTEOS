@@ -35,11 +35,13 @@ class Variable(models.Model):
 
     def __str__(self):
         return self.name
-    def get_photo_url(self) -> str:
+
+    def get_image_url(self):
         if self.image_src and hasattr(self.image_src, 'url'):
             return self.image_src.url
         else:
             return "/media/images/variable/variable-dummy-img.jpg"
+
 @receiver(post_save, sender=Product)
 def create_variables(sender, instance, created, **kwargs):
     if created:

@@ -21,9 +21,9 @@
           <div class="h-100">
             <div class="card">
               <div class="card-header border-0 rounded">
-                <div class="row g-2">
-                  <div class="col-xxl-3 ms-auto">
-                    <form method="get" action="{% url 'business:business.list' %}">
+                <div class="row g-3">
+                  <div class="col-md-6 ">
+                    <form method="GET" action="{% url 'business:business.list' %}">
                       <select class="form-control" id="type-select" name="type">
                         <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>
                           Select Types
@@ -36,50 +36,40 @@
                         </option>
                         <!-- Otros elementos options -->
                       </select>
-                      <button type="submit" class="btn btn-danger">
-                        <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                        Filters
-                      </button>
+                      <div class="col-lg-12 text-end">
+                        <button type="submit" class="btn btn-danger">
+                          <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                          Filters
+                        </button>
+                      </div>
                     </form>
                   </div>
                   <!--end col-->
-                  <div class="col-lg-auto">
-                    <div class="hstack gap-2">
-                      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness">
-                        <i class="ri-add-fill me-1 align-bottom"></i>
-                        Add Business
-                      </button>
-                    </div>
+                </div>
+                <div class="col-lg-3">
+                  <div class="hstack gap-2">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness">
+                      <i class="ri-add-fill me-1 align-bottom"></i>
+                      Create New
+                    </button>
                   </div>
-                  <!--end col-->
                 </div>
                 <!--end row-->
               </div>
             </div>
-            
             <!-- List of Businesess -->
             <div class="row mt-4" id="business-list">
               {% for business in businesses %}
-              <div class="col-xl-3 col-lg-4 col-md-4 mb-4">
+              <div class="col-xl-12 col-lg-12 col-md-auto mb-6">
                 <div class="card">
                   <div class="card-img-container position-relative">
-                    {% if business.image_src %}
                     <img
-                      src="{{ MEDIA_URL }}{{ business.image_src.url }}"
+                      src="{{ business.get_photo_url }}"
                       class="card-img-top fixed-image"
                       width="50"
                       height="400"
                       alt="{{ business.name }}"
                     />
-                    {% else %}
-                    <img
-                      src="{% static 'images/business/default-image.jpg' %}"
-                      class="card-img-top fixed-image"
-                      width="50"
-                      height="400"
-                      alt="{{ business.name }}"
-                    />
-                    {% endif %}
                   </div>
                   <div class="card-body">
                     <h5 class="card-title">{{ business.name }}</h5>
