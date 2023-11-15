@@ -19,19 +19,11 @@
                           <div class="col-md-auto">
                             <div class="avatar-md">
                               <div class="avatar-title bg-white rounded-circle">
-                                {% if variable.image_src %}
                                 <img
-                                  src="{{ MEDIA_URL }}{{ variable.image_src.url }}"
+                                  src="{{ variable.get_photo_url }}"
                                   alt=""
                                   class="avatar-xs"
                                 />
-                                {% else %}
-                                <img
-                                  src="{% static 'path/to/dummy-image.jpg' %}"
-                                  alt=""
-                                  class="avatar-xs"
-                                />
-                                {% endif %}
                               </div>
                             </div>
                           </div>
@@ -152,7 +144,7 @@
                       <div class="avatar-sm mb-4">
                         <div class="avatar-title bg-secondary-subtle rounded">
                           <img
-                            src="{{ MEDIA_URL }}{{ variable.image.url }}"
+                            src="{{ variable.get_photo_url }}"
                             alt=""
                             class="avatar-xxs"
                           />

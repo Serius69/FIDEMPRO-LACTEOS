@@ -16,7 +16,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
-def questionnaire_list(request):
+def questionnaire_list_view(request):
     try:
         questions = Question.objects.order_by('-id')
         per_page = 10 
@@ -34,6 +34,24 @@ def questionnaire_list(request):
         error_message = str(e)
         context = {'error_message': error_message}
     return render(request, 'questionary/questionary-list.html', context)
+def questionnaire_save_view(request):
+    try:
+        questions = Question.objects.order_by('-id')
+        per_page = 10 
+        paginator = Paginator(questions, per_page)
+        page = request.GET.get('page')
+        try:
+            questions = paginator.page(page)
+        except PageNotAnInteger:
+            questions = paginator.page(1)
+        except EmptyPage:
+            questions = paginator.page(paginator.num_pages)
+        questionnaires = Questionary.objects.order_by('-id')
+        context = {'questions': questions, 'questionnaires': questionnaires}
+    except Exception as e:
+        error_message = str(e)
+        context = {'error_message': error_message}
+    return render(request, 'questionary/questionary-result.html', context)
 def generate_variable_questions(request, variable):
     django_variable = f"{variable.name} = models.{variable.type}Field({variable.get_type_display()}, {variable.get_parameters_display()})"
     prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"

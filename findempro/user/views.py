@@ -15,30 +15,26 @@ from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth import login
 from findempro.forms import UserLoginForm
-# def login_view(request):
-#     if request.method == 'POST':
-#         form = UserLoginForm(request, request.POST)
-#         if form.is_valid():
-#             # Handle form submission and authentication here
-#             # Redirect the user or perform the necessary actions
-
-#     else:
-#         form = UserLoginForm()
-
-#     return render(request, 'account/login.html', {'form': form})
-
-# def signup_view(request):
-#     return render(request, 'account/signup.html')
 @login_required
 def profile_product_variable_list_view(request):
-    products = Product.objects.all().order_by('-id')
-    businesses = Business.objects.all().order_by('-id')
-    variables = Variable.objects.all().order_by('-id')
     user = request.user
-    profile = UserProfile.objects.get(user=user)
+    products = Product.objects.filter(fk_business__fk_user=user).order_by('-id')
+    businesses = Business.objects.filter(fk_user=user).order_by('-id')
+    variables = Variable.objects.filter(fk_product__fk_business__fk_user=user).order_by('-id')
     
+    profile = UserProfile.objects.get(user=user)
+    paginator_variables = Paginator(variables, 10)  # Show 10 variables per page
+
+    paginator_products = Paginator(variables, 10)  # Show 10 variables per page
+    page = request.GET.get('page')
+    
+    business_count = Business.objects.filter(fk_user=user).count()
+    product_count = Product.objects.filter(fk_business__fk_user=user).count()
+    variable_count = Variable.objects.filter(fk_product__fk_business__fk_user=user).count()
+
     if profile.is_profile_complete():
         completeness_percentage = 100
     else:
@@ -47,8 +43,25 @@ def profile_product_variable_list_view(request):
 
         completeness_percentage = (completed_fields / total_fields) * 100
         
-    context = {'products': products, 'businesses': businesses, 
-               'variables': variables , 'completeness_percentage': completeness_percentage }
+    try:
+        variables = paginator_variables.page(page)
+        products = paginator_products.page(page)
+    except PageNotAnInteger:
+        variables = paginator_variables.page(1)
+        products = paginator_products.page(1)
+    except EmptyPage:
+        variables = paginator_variables.page(paginator_variables.num_pages)
+        products = paginator_products.page(paginator_products.num_pages)
+        
+    context = {'products': products, 
+               'businesses': businesses, 
+               'variables': variables , 
+               'completeness_percentage': completeness_percentage,
+               'business_count': business_count,
+               'product_count': product_count,
+               'variable_count': variable_count
+                
+               }
     return render(request, 'user/profile.html', context)
 @login_required
 def user_list_view(request):
@@ -128,3 +141,25 @@ def delete_user_view(request, pk):
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
+@login_required
+def deactivate_account(request):
+    if request.method == 'POST':
+        password = request.POST.get('password')
+
+        # Verificar la contraseña del usuario actual
+        if request.user.check_password(password):
+            # Desactivar la cuenta
+            request.user.is_active = False
+            request.user.save()
+
+            # Cerrar la sesión del usuario
+            messages.success(request, 'Your account has been deactivated.')
+            return redirect('login')  # Cambia 'login' por la URL a la que deseas redirigir después de desactivar la cuenta
+        else:
+            messages.error(request, 'Incorrect password. Please try again.')
+
+    return render(request, 'deactivate_account.html')  # Cambia 'deactivate_account.html' al nombre de tu plantilla
+@login_required
+def cancel_deactivation(request):
+    # Implementar la lógica para cancelar la desactivación si es necesario
+    return render(request, 'accounts/cancel_deactivation.html')

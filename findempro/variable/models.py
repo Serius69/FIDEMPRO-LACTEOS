@@ -22,7 +22,7 @@ class Variable(models.Model):
     parameters = models.CharField(max_length=20, choices=PARAMETER_CHOICES, default='param1')
     unit = models.CharField(max_length=50)
     description = models.TextField(default="Description predetermined")
-    image_src = models.ImageField(upload_to='images/variables', blank=True, null=True)
+    image_src = models.ImageField(upload_to='images/variable', blank=True, null=True)
     fk_product = models.ForeignKey(
         Product, 
         on_delete=models.CASCADE, 
@@ -35,6 +35,11 @@ class Variable(models.Model):
 
     def __str__(self):
         return self.name
+    def get_photo_url(self) -> str:
+        if self.image_src and hasattr(self.image_src, 'url'):
+            return self.image_src.url
+        else:
+            return "/media/images/variable/variable-dummy-img.jpg"
 @receiver(post_save, sender=Product)
 def create_variables(sender, instance, created, **kwargs):
     if created:

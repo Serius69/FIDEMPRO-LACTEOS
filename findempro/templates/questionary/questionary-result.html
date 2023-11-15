@@ -50,16 +50,16 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-xxl-6">
-                                <form method="post" action="{% url 'questionary:questionary.save' %}">
+                            <div class="col-xxl-9">
+                                <form method="post" action="{% url 'questionary:question.save ' %}">
                                     {% csrf_token %}
                                     {% if questions %}
                                         {% for question in questions %}
-                                            <div class="card questionlist-card">
+                                            <div class="card joblist-card">
                                                 <div class="card-body">
                                                     <div class="d-flex mb-4">
                                                         <div class="ms-3 flex-grow-1">
-                                                            <a href="#!"><h5 class="question-title"> Relationate Variable {{ question.fk_variable.name }}</h5></a>
+                                                            <a href="#!"><h5 class="job-title">{{ variable.name }}</h5></a>
                                                         </div>
                                                     </div>
                                                     <label for="{{ question.id }}" class="form-label">

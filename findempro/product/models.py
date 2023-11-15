@@ -48,7 +48,6 @@ class Product(models.Model):
                     is_active= True,
                     fk_business_id=business.id,
                 )
-
     @receiver(post_save, sender=Business)
     def save_product(sender, instance, **kwargs):
         for product in instance.fk_business_product.all():
