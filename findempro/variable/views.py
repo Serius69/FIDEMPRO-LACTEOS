@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Variable
+from .models import Variable, Equation, EquationResult
 from product.models import Product
 from .forms import VariableForm
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,33 +10,76 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
 from django.utils import timezone
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.exceptions import ObjectDoesNotExist
+from sympy import symbols, Eq, solve
 openai.api_key = settings.OPENAI_API_KEY
-
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
-
-# List
 def variable_list(request):
-    try:
-        variables = Variable.objects.all().order_by('-id')
-        products = Product.objects.all().order_by('-id')
+    # try:
+        product_id = request.GET.get('product_id', 'All')
+
+        if product_id == 'All':
+            variables = Variable.objects.filter(is_active=True).order_by('-id')
+            products = Product.objects.filter(is_active=True).order_by('-id')
+        else:
+            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
+            products = Product.objects.filter(is_active=True).order_by('-id')
+
+        # Paginate the variables
+        paginator = Paginator(variables, 10)  # Show 10 variables per page
+        page = request.GET.get('page')
+
+        try:
+            variables = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            variables = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            variables = paginator.page(paginator.num_pages)
+
         context = {'variables': variables, 'products': products}
         return render(request, 'variable/variable-list.html', context)
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)
-
-# Detail
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
 def variable_overview(request, pk):
-    try:
+    # try:
         variable = get_object_or_404(Variable, pk=pk)
-        return render(request, "variable/variable-overview.html", {'variable': variable})
-    except Exception as e:
-        messages.error(request, "An error occurred. Please check the server logs for more information.")
-        return HttpResponse(status=500)
+        product_id = variable.fk_product.id
+        variable_id = variable.id
+        variables_related = Variable.objects.filter(
+            is_active=True, 
+            fk_product_id=product_id
+            ).order_by('-id')
+        equations = Equation.objects.filter(
+            is_active=True, 
+            fk_variable1_id=variable_id
+            ).order_by('-id')
 
-# Create
+        # Paginate the variables
+        paginator = Paginator(variables_related, 3)  # Show 6 variables per page
+        page = request.GET.get('page')
+
+        try:
+            variables_related = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            variables_related = paginator.page(1)
+        except EmptyPage:
+            # If the page is out of range, deliver the last page of results.
+            variables_related = paginator.page(paginator.num_pages)
+            
+        return render(request, "variable/variable-overview.html", {
+            'variable': variable, 
+            'variables_related': variables_related,
+            'equations': equations
+            })
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
 def create_variable_view(request):
     if request.method == 'POST':
         form = VariableForm(request.POST, request.FILES)
@@ -66,8 +109,6 @@ def create_variable_view(request):
     else:
         form = VariableForm()
     return render(request, 'variable/variable-form.html', {'form': form})
-
-# Update
 def update_variable_view(request, pk):
     variable = Variable.objects.get(pk=pk)
     if request.method == "POST":
@@ -85,14 +126,42 @@ def update_variable_view(request, pk):
             return HttpResponse(status=500)
 
     return render(request, "variable/variable-form.html", {'form': form})
-
-# Delete
 def delete_variable_view(request, pk):
     try:
         variable = get_object_or_404(Variable, pk=pk)
-        variable.delete()
+        variable.is_active=False
+        variable.save()
         messages.success(request, "Variable deleted successfully!")
         return redirect("variable:variable.list")
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
+def get_variable_details(request, pk):
+    try:
+        if request.method == 'GET':
+            variable = Variable.objects.get(id=pk)
+            variable_details = {
+                "name": variable.name,
+                "type": variable.type,
+                "fk_product": variable.fk_product.name,
+                "description": variable.description,
+            }
+            return JsonResponse(variable_details)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "El negocio no existe"}, status=404)
+def solve_equation(request):
+    if request.method == 'POST':
+        equation_str = request.POST.get('equation', '')
+        x = symbols('x')
+        
+        try:
+            equation = Eq(eval(equation_str), 0)
+            solution = solve(equation, x)
+        except Exception as e:
+            # Manejar errores en la entrada de la ecuación
+            error_message = str(e)
+            return render(request, 'error_template.html', {'error_message': error_message})
+
+        return render(request, 'result_template.html', {'solution': solution})
+
+    return render(request, 'input_template.html')

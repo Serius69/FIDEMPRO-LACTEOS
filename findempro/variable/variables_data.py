@@ -174,7 +174,7 @@ variables_data = [
 'description': 'NIVEL DE EFICIENCIA EN LA CADENA DE SUMINISTRO'},
 
 {'name': 'NIVEL EFICIENCIA GESTIÓN DE COMPRA INSUMOS',
-'initials': 'NEGOCIO',
+'initials': 'NEGCI',
 'type': 'EXÓGENA',
 'unit': '[0.1,0.2,0.3,0.4,0.5]',
 'description': 'NIVEL DE EFICIENCIA EN LA GESTIÓN DE COMPRA DE INSUMOS'},
@@ -232,6 +232,12 @@ variables_data = [
 'type': 'EXÓGENA',
 'unit': 'LITROS',
 'description': 'CANTIDAD QUE LA EMPRESA UTILIZA PAR LA PRODUCCIÓN DE UN INSUMO'},
+
+{'name': 'CAPACIDAD MÁXIMA INVENTARIO PRODUCTO FINAL',
+'initials': 'CMIPF',
+'type': 'EXÓGENA',
+'unit': 'LITROS',
+'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
 
 {'name': 'TOTAL PRODUCTOS VENDIDOS',
 'initials': 'TPV',

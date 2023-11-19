@@ -1,6 +1,6 @@
 from django.urls import path
 from pages.views import (
-pages_profile_settings,
+
 pages_faqs,
 pages_maintenance,
 pages_coming_soon,
@@ -9,7 +9,6 @@ pages_terms_conditions
 )
 app_name = "pages"
 urlpatterns = [       
-    path("profile-settings",view =pages_profile_settings,name="pages.profile_settings"),
     path("faqs",view =pages_faqs,name="pages.faqs"),
     path("maintenance",view =pages_maintenance,name="pages.maintenance"),
     path("coming_soon",view =pages_coming_soon,name="pages.coming_soon"),

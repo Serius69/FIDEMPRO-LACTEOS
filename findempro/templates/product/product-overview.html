@@ -21,7 +21,7 @@
                                                         <div class="col-md-auto">
                                                             <div class="avatar-lg">
                                                                 <div class="avatar-title bg-white rounded-circle">
-                                                                    <img src="{{ MEDIA_URL }}{{ product.image_src.url }}" alt="" class="avatar-md">
+                                                                    <img src="{{ product.get_photo_url  }}" alt="" class="avatar-md">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -182,9 +182,9 @@
                                                             <div class="vstack gap-3">
                                                                 {% for equation in financial_equations %}
                                                                 <div class="d-flex align-items-center">
-                                                                    <div class="avatar-xs flex-shrink-0 me-3">
+                                                                    {% comment %} <div class="avatar-xs flex-shrink-0 me-3">
                                                                         <img src="{% static 'images/users/avatar-2.webp' %}" alt="" class="img-fluid rounded-circle">
-                                                                    </div>
+                                                                    </div> {% endcomment %}
                                                                     <div class="flex-grow-1">
                                                                         <h5 class="fs-13 mb-0"><a href="#" class="text-body d-block">{{ equation.name }}</a></h5>
                                                                     </div>
@@ -376,7 +376,6 @@
                                                                     </a>
                                                                     <ul class="dropdown-menu dropdown-menu-end">
                                                                         <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-star-fill text-muted me-2 align-bottom"></i>Favourite</a></li>
                                                                         <li><a class="dropdown-item" href="javascript:void(0);"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Delete</a></li>
                                                                     </ul>
                                                                 </div>
@@ -384,12 +383,9 @@
                                                         </div>
                                                         <div class="col-lg-4 col">
                                                             <div class="team-profile-img">
-                                                                <div class="avatar-lg img-thumbnail rounded-circle">
-                                                                    <img src="{% static 'images/users/avatar-2.webp'%}" alt="" class="img-fluid d-block rounded-circle" />
-                                                                </div>
                                                                 <div class="team-content">
-                                                                    <a href="#" class="d-block"><h5 class="fs-16 mb-1">Nancy Martino</h5></a>
-                                                                    <p class="text-muted mb-0">Team Leader & HR</p>
+                                                                    <a href="#" class="d-block"><h5 class="fs-16 mb-1">{{simulation.name}}</h5></a>
+                                                                    <p class="text-muted mb-0">{{simulation.name}}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -428,21 +424,40 @@
                                         </div>
                                         <!-- end team list -->
 
-                                        <div class="row g-0 text-center text-sm-start align-items-center mb-3">
-                                            <div class="col-sm-6">
-                                                <div>
-                                                    <p class="mb-sm-0">Showing 1 to 10 of 12 entries</p>
-                                                </div>
-                                            </div> <!-- end col -->
-                                            <div class="col-sm-6">
-                                                <ul class="pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                                                    <li class="page-item disabled"> <a href="#" class="page-link"><i class="mdi mdi-chevron-left"></i></a> </li>
-                                                    <li class="page-item"> <a href="#" class="page-link">1</a> </li>
-                                                    <li class="page-item active"> <a href="#" class="page-link">2</a> </li>
-                                                    <li class="page-item"> <a href="#" class="page-link"><i class="mdi mdi-chevron-right"></i></a> </li>
-                                                </ul>
-                                            </div><!-- end col -->
-                                        </div><!-- end row -->
+                                        <div class="align-items-center mt-2 row text-center text-sm-start">
+                                            <div class="col-sm">
+                                              <div class="text-muted"
+                                                >Showing
+                                                <span class="fw-semibold">{{ simulations.number }}</span> of
+                                                <span class="fw-semibold"
+                                                  >{{ simulations.paginator.num_pages }}</span
+                                                >
+                                                Results
+                                              </div>
+                                            </div>
+                                            <div class="col-sm-auto">
+                                              <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                                                {% if simulations.has_previous %}
+                                                  <li class="page-item">
+                                                    <a href="?page={{ simulations.previous_page_number }}" class="page-link">←</a>
+                                                  </li>
+                                                {% endif %}
+                                            
+                                                {% for i in simulations.paginator.page_range %}
+                                                  <li class="page-item {% if i == simulations.number %}active{% endif %}">
+                                                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                                                  </li>
+                                                {% endfor %}
+                                            
+                                                {% if simulations.has_next %}
+                                                  <li class="page-item">
+                                                    <a href="?page={{ simulations.next_page_number }}" class="page-link">→</a>
+                                                  </li>
+                                                {% endif %}
+                                              </ul>
+                                            </div>            
+                                          </div>
+                                          <!-- end row -->
                                     </div>
                                     <!-- end tab pane -->
                                 </div>
@@ -484,19 +499,7 @@
                         <div class="avatar-group justify-content-center">
                             <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Brent Gonzalez">
                                 <div class="avatar-xs">
-                                    <img src="{% static 'images/users/avatar-3.webp'%}" alt="" class="rounded-circle img-fluid">
-                                </div>
-                            </a>
-                            <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Sylvia Wright">
-                                <div class="avatar-xs">
-                                    <div class="avatar-title rounded-circle bg-secondary">
-                                        S
-                                    </div>
-                                </div>
-                            </a>
-                            <a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Ellen Smith">
-                                <div class="avatar-xs">
-                                    <img src="{% static 'images/users/avatar-4.webp'%}" alt="" class="rounded-circle img-fluid">
+                                    <img src="{{ variable.get_photo_url  }}" alt="" class="rounded-circle img-fluid">
                                 </div>
                             </a>
                         </div>

@@ -1,7 +1,9 @@
-
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product
 from business.models import Business
+from variable.models import Variable
+from report.models import Report
+from simulate.models import ResultSimulation
 from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
@@ -12,29 +14,64 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.http import HttpResponseForbidden
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
-# List
 def product_list(request):
     try:
-        products = Product.objects.order_by('-id')
-        businesses = Business.objects.order_by('-id')
+        business_id = request.GET.get('business_id', 'All')
+        if business_id == 'All':
+            products = Product.objects.filter(is_active=True).order_by('-id')
+            businesses = Business.objects.filter(is_active=True).order_by('-id')
+        else:
+            products = Product.objects.filter(fk_business_id=business_id, is_active=True).order_by('-id')
+            businesses = Business.objects.filter(is_active=True).order_by('-id')
+        paginator = Paginator(products, 10)  # Show 10 products per page
+        page = request.GET.get('page')
+
+        try:
+            products = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            products = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            products = paginator.page(paginator.num_pages)
+
         context = {'products': products, 'businesses': businesses}
+        return render(request, 'product/product-list.html', context)
     except Exception as e:
-        error_message = str(e)
-        context = {'error_message': error_message}
-    
-    return render(request, 'product/product-list.html', context)
-def product_overview(request, pk):
-    current_datetime = timezone.now()
-    try:
-        product = get_object_or_404(Product, pk=pk)
-        businesses = Business.objects.all().order_by('-id')
-        context = {'businesses': businesses, 'product': product, 'current_datetime': current_datetime}  # Corrected the context variable name
-        return render(request, 'product/product-overview.html', context)
-    except Exception as e:
-        messages.error(request, "An error occurred. Please check the server logs for more information.")
+        messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
+def product_overview(request, pk):
+        current_datetime = timezone.now()
+    # try:
+        product = get_object_or_404(Product, pk=pk)
+        variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        simulations = ResultSimulation.objects.filter(fk_simulation_scenario__fk_product_id=product.id, is_active=True).order_by('-id')
+        paginator = Paginator(variables_product, 3)
+        page = request.GET.get('page')
+        try:
+            variables_product = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            variables_product = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            variables_product = paginator.page(paginator.num_pages)
+        
+        context = {
+                'variables_product': variables_product, 
+                'product': product, 
+                'current_datetime': current_datetime,
+                'simulations': simulations,
+                'reports': reports
+                   } 
+        return render(request, 'product/product-overview.html', context)
+    # except Exception as e:
+    #     messages.error(request, "An error occurred. Please check the server logs for more information.")
+    #     return HttpResponse(status=500)
 def create_product_view(request):
     if request.method == 'POST':
         try:
@@ -71,8 +108,6 @@ def update_product_view(request, pk):
         messages.error(request, f"An error occurred: {error_message}")
 
     return render(request, "product/product-list.html")
-
-# Delete
 def delete_product_view(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
@@ -85,7 +120,6 @@ def delete_product_view(request, pk):
     
     # Si se accede a la vista mediante GET, puedes mostrar un error o redirigir
     return HttpResponseForbidden("GET request not allowed for this view")
-
 def get_product_details(request, pk):
     try:
         if request.method == 'GET':

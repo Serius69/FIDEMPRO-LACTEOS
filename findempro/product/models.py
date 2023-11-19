@@ -5,6 +5,7 @@ from business.models import Business
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .products_data import products_data
+from .areas_data import areas_data
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -33,7 +34,7 @@ class Product(models.Model):
         if self.image_src and hasattr(self.image_src, 'url'):
             return self.image_src.url
         else:
-            return "/static/images/products/user-dummy-img.webp"
+            return "/static/images/product/product-dummy-img.webp"
     @receiver(post_save, sender=Business)
     def create_product(sender, instance, created, **kwargs):
         if created:
@@ -47,9 +48,41 @@ class Product(models.Model):
                     is_active= True,
                     fk_business_id=business.id,
                 )
-
     @receiver(post_save, sender=Business)
     def save_product(sender, instance, **kwargs):
         for product in instance.fk_business_product.all():
             product.is_active = instance.is_active
             product.save()
+class Area(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now)
+    last_updated = models.DateTimeField(default=timezone.now)
+    fk_product = models.ForeignKey(
+        Product, 
+        on_delete=models.CASCADE, 
+        related_name='fk_product_area', 
+        help_text='The product associated with the area',
+        default=1)
+    is_checked_for_simulation = models.BooleanField(default=False)
+    params = models.JSONField(null=True, blank=True)  # Use JSONField for a list of values
+    def __str__(self) -> str:
+        return self.name
+    @receiver(post_save, sender=Product)
+    def create_area(sender, instance, created, **kwargs):
+        if created:
+            product = Product.objects.get(pk=instance.pk)
+            for data in areas_data:
+                Area.objects.create(
+                    name=data['name'],                    
+                    description=data['description'],
+                    params= data['params'],
+                    is_active= True,
+                    fk_product_id=product.id,
+                )
+    @receiver(post_save, sender=Product)
+    def save_area(sender, instance, **kwargs):
+        for area in instance.fk_product_area.all():
+            area.is_active = instance.is_active
+            area.save()

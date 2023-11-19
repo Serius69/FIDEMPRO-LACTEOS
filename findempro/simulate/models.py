@@ -2,7 +2,8 @@ from django.db import models
 from product.models import Product
 from questionary.models import QuestionaryResult
 from django.utils import timezone
-
+from django.core.validators import MinValueValidator
+from django.urls import reverse
 class FDP(models.Model):
     DISTRIBUTION_TYPES = [
         (1, 'Normal'),
@@ -26,6 +27,33 @@ class DataPoint(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f'DataPoint: {self.value}'
+class Simulation(models.Model):
+    class Meta:
+        verbose_name = "Simulation"
+        ordering = ['-date'] 
+    date = models.DateField()
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='simulations'  
+    )
+    distributions = models.ManyToManyField(
+        FDP,
+        related_name='simulations'
+    )
+    demand_mean = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+    )
+    questionary_result = models.ForeignKey(
+        QuestionaryResult,
+        on_delete=models.CASCADE,
+        related_name='simulations',
+        null=True
+    )
+    def get_absolute_url(self):
+        return reverse('simulation_detail', args=[self.id])
 class SimulationScenario(models.Model):
     utime = models.CharField(max_length=100)
     date_simulate = models.DateField()

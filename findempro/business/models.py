@@ -24,7 +24,11 @@ class Business(models.Model):
 
     def __str__(self):
         return self.name
-
+    def get_photo_url(self) -> str:
+        if self.image_src and hasattr(self.image_src, 'url'):
+            return self.image_src.url
+        else:
+            return "/static/images/business/business-dummy-img.webp"
 @receiver(post_save, sender=User)
 def create_business(sender, instance, created, **kwargs):
     if created:

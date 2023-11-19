@@ -2,9 +2,9 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 class PagesView(TemplateView):
     pass
-# Pages 
-pages_profile_settings= PagesView.as_view(template_name="user/profile-settings.html")
-pages_faqs= PagesView.as_view(template_name="pages/faqs.html")
+def pages_faqs(request):
+    template_name = "pages/faqs.html"
+    return render(request, template_name)
 pages_maintenance= PagesView.as_view(template_name="pages/maintenance.html")
 pages_coming_soon= PagesView.as_view(template_name="pages/coming-soon.html")
 pages_privacy_policy= PagesView.as_view(template_name="pages/privacy-policy.html")

@@ -10,40 +10,28 @@ from .models import DataPoint, FDP
 from variable.models import Variable
 from product.models import Product
 from business.models import Business
+from questionary.models import QuestionaryResult
 from sympy import Eq, sympify
 import openai
-
-# Set the OpenAI API key
 openai.api_key = settings.OPENAI_API_KEY
 
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
-
-# Define a view to extract the demand_historic variable
-def extract_demand_historic(request):
+def extract_demand_historic():
     try:
         demand_historic_variable = Variable.objects.get(name="demand_historic")
-        context = {
-            'demand_historic_variable': demand_historic_variable,
-        }
-
+        return demand_historic_variable.values_list('value', flat=True)
     except Variable.DoesNotExist:
-        context = {
-            'error_message': 'Variable not found.',
-        }
+        return []
 
-    return context
-
-# Kolmovorov Smirnov test
 def ks_test_view(request, variable_name):
     try: 
-        average_demand = sum(extract_demand_historic()) / len(extract_demand_historic())
-        # Retrieve the variable by name
+        demand_historic = extract_demand_historic()
+        if not demand_historic:
+            raise Variable.DoesNotExist('Variable not found.')
         variable = Variable.objects.get(name=variable_name)
-        # Retrieve the dataset and FDP parameters
         data_points = DataPoint.objects.values_list('value', flat=True)
-        fdp = variable.fdp  # Get the associated FDP from the variable
-        # Define distribution type based on the FDP subclass
+        fdp = variable.fdp
         if isinstance(fdp, FDP):
             distribution_type = 'norm'
             distribution_args = (fdp.mean, fdp.std_deviation)
@@ -53,11 +41,7 @@ def ks_test_view(request, variable_name):
         elif isinstance(fdp, FDP):
             distribution_type = 'lognorm'
             distribution_args = (fdp.mean, fdp.std_deviation)
-
-        # Calculate the KS statistic and p-value
-        ks_statistic, p_value = stats.kstest(data_points, distribution_type, args=distribution_args)
-
-        # Interpret the results
+        _, p_value = stats.kstest(data_points, distribution_type, args=distribution_args)
         if p_value < 0.05:
             result = "Reject null hypothesis: Data does not fit the FDP."
         else:
@@ -112,8 +96,6 @@ def equation_analysis_view(request):
         "equation_analysis.html",  # Replace with the actual template name
         context,
     )
-
-# Define a view to create equations
 def create_simulation_equations(request):
     try:
         # Retrieve all Variable objects from the database
@@ -147,7 +129,6 @@ def create_simulation_equations(request):
         context,
     )
 
-# Define a function to generate equations for variables using OpenAI
 def generate_equation_from_variable(variable):
     try:
         # Define a prompt for OpenAI to generate an equation
@@ -171,7 +152,7 @@ def generate_equation_from_variable(variable):
 
 def questionnaire_info(request, questionnaire_id):
     # Retrieve the questionnaire based on the provided ID
-    questionnaire = get_object_or_404(Questionnaire, id=questionnaire_id)
+    questionnaire = get_object_or_404(QuestionaryResult, id=questionnaire_id)
 
     # Extract the information from the questionnaire (replace with your logic)
     # For example, if you have fields in your questionnaire model, you can access them like questionnaire.field_name
@@ -217,7 +198,12 @@ def simulate_show_form(request):
     try:
         businesses = Business.objects.all().order_by('-id')
         products = Product.objects.all().order_by('-id')
-        context = {'product': products, 'business': businesses}
+        questionaries = QuestionaryResult.objects.all().order_by('-id')
+        context = {
+            'products': products, 
+            'businesses': businesses,
+            'questionaries': questionaries
+            }
 
     except Business.DoesNotExist:
         context = {

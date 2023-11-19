@@ -8,151 +8,111 @@
             <!-- Start right Content here -->
             <!-- ============================================================== -->
             <div class="main-content">
-
                 <div class="page-content">
                     <div class="container-fluid">
-
                         {% block pagetitle %}
                         {% include "partials/page-title.html" with pagetitle="products" title="Questionary" %}
                         {% endblock pagetitle %}
-
-                        <!-- Mode Selection Buttons -->
-                        
-
-                        <div class="row g-6 mb-4">
-                            <div class="col-sm-2">
-                                <div class="input-group">
-                                    <label class="input-group-text" for="inputGroupSelect01">Options</label>
-                                    <select class="form-select" id="inputGroupSelect01">
-                                        <option selected>Choose...</option>
-                                        {% for product in products %}
-                                        <option value="{{product.id}}">{{product.name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>                                
-                            </div>
-                            <div class="col-sm-auto">
-                                <div>
-                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct"><i class="ri-add-fill me-1 align-bottom"></i> Generate Questionary</button>
-
-                                </div>
-                                
-                            </div>
-                            <div class="col-sm-2">
-                                <select id="mode-select" class="form-select">
-                                    <option value="advanced">Advanced Mode</option>
-                                    <option value="simple">Simple Mode</option>
-                                </select>
-                            </div>
-                            <div class="col-sm">
-                                <div class="d-flex justify-content-sm-end gap-2">
-                                    <div class="search-box ms-2">
-                                        <input type="text" class="form-control" placeholder="Search...">
-                                        <i class="ri-search-line search-icon"></i>
+                        <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+                            <div class="px-4">
+                                <div class="row">
+                                    <div class="col-xxl-9 align-self-center">
+                                        <div class="py-4">
+                                            <h4 class="display-6 -text">QUESTIONARY</h4>
+                                            <div class="container">                      
+                                              <p>Explore our comprehensive product list featuring a diverse range of items sourced from our extensive database. This user-friendly platform empowers you to take control of your product inventory effortlessly. Whether you're a business owner, a stock manager, or just someone passionate about organization, this page is designed with you in mind.</p>
+                                          
+                                              <h2>Key Features:</h2>
+                                          
+                                              <ul>
+                                                <li><span class="text-success">Edit:</span> Easily update product details such as name, description, price, and quantity. Our intuitive interface ensures a seamless editing experience, allowing you to keep your product information up-to-date with just a few clicks.</li>
+                                          
+                                                <li><span class="text-danger">Delete:</span> Need to remove a product from your inventory? The delete function lets you swiftly and securely eliminate items that are no longer relevant. Say goodbye to unnecessary clutter in your database.</li>
+                                          
+                                                <li><span class="text-primary">View:</span> Dive deep into each product's details with the view option. Gain insights into specifications, historical data, and more. This feature is perfect for analyzing product performance and making informed decisions.</li>
+                                              </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 ms-auto">
+                                        <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                                            <img src="{% static 'images/product-img.webp'%}" alt="" class="img-fluid">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-    
-
-                        <div class="row">
-                            <div class="col-xxl-9">
-                                {% for variable, generated_questions in generated_questions_list %}
-                                <div class="card joblist-card">
-                                    <div class="card-body">
-                                        <div class="d-flex mb-4">
-                                            <div class="ms-3 flex-grow-1">
-                                                <a href="#!"><h5 class="job-title">{{variable.name}}</h5></a>
+                          </div>
+                        <div class="card">
+                            <div class="card-header border-0 rounded">
+                                <div class="row g-6 mb-4">
+                                    <div class="col-sm-4">
+                                        <form method="POST" action="/submit-form">
+                                            {% csrf_token %}
+                                            <div class="input-group">
+                                                <label class="input-group-text" for="inputGroupSelect01">Options</label>
+                                                <select class="form-select" id="inputGroupSelect01">
+                                                    <option selected>Choose...</option>
+                                                    {% for questionary in questionnaires %}
+                                                        <option value="{{questionary.id}}">{{questionary.questionary}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button type="submit" name="start" class="btn btn-primary waves-effect waves-light">Start Questionary</button>
                                             </div>
-                                        </div>
-                                        {% for question in generated_questions|linebreaksbr %}
-
-                                        <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ question.question }}</span></label>
-                                        <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
-                                        
-                                        {% endfor %}
-                                        {% comment %} <div>'+ tagHtml + '</div> {% endcomment %}
+                                        </form>                                
                                     </div>
-                                </div>
-                                {% comment %} End card {% endcomment %}
-                                {% empty %}
-                                <div class="text-center py-4">
-                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                    <h5 class="mt-2">Sorry there isn't any variable to create questions register in the database</h5>
-                                    <p class="text-muted mb-0">You have to "Add Product".</p>
-                                </div>    
-                                {% endfor %}
-                                {% comment %} Fin de la lista {% endcomment %}
-    
-                                <div class="row g-0 justify-content-end mb-4" id="pagination-element">
-                                    <!-- end col -->
-                                    <div class="col-sm-6">
-                                        <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                                            <div class="page-item">
-                                                <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
-                                            </div>
-                                            <span id="page-num" class="pagination"></span>
-                                            <div class="page-item">
-                                                <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
-                                            </div>
+                                    {% if not started %}
+                                    
+                                    <div class="row">
+                                        <div class="col-xxl-6">
+                                                {% if questions %}
+                                                    {% for question in questions %}
+                                                        <div class="card questionlist-card">
+                                                            <div class="card-body">
+                                                                <div class="d-flex mb-4">
+                                                                    <div class="ms-3 flex-grow-1">
+                                                                        <a><h5 class="question-title"> Relationate Variable {{ question.fk_variable.name }}</h5></a>
+                                                                    </div>
+                                                                </div>
+                                                                <label for="{{ question.id }}" class="form-label">
+                                                                    <span data-key="t-home">{{ question.question }}</span>
+                                                                </label>
+                                                                <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}" name="{{ question.id }}">
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <div class="text-center py-4">
+                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                        <h5 class="mt-2">Sorry, there isn't any variable to create questions registered in the database</h5>
+                                                        <p class="text-muted mb-0">You have to "Add Product".</p>
+                                                    </div>
+                                                {% endif %}
+                                    
+                                                <!-- Pagination -->
+                                                <div class="align-items-center mt-2 row text-center text-sm-start">
+                                                    <div class="col-sm">
+                                                        <div class="text-muted">Showing <span class="fw-semibold">{{ questions.number }}</span> of <span class="fw-semibold">{{ questions.paginator.num_pages }}</span> Results
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-auto">
+                                                        {{ questions }}
+                                                    </div>
+                                                </div>
                                         </div>
-                                    </div><!-- end col -->
-                                </div>
-                                <!-- end row -->
-    
-                            </div><!--end col-->
-                        </div>
-                        <!-- end row -->    
-
-
-                        <div class="row">
-                            <div class="col-xxl-9">
-                                {% for variable, generated_questions in generated_questions_list %}
-                                <div class="card joblist-card">
-                                    <div class="card-body">
-                                        <div class="d-flex mb-4">
-                                            <div class="ms-3 flex-grow-1">
-                                                <a href="#!"><h5 class="job-title">{{variable.name}}</h5></a>
-                                            </div>
-                                        </div>
-                                        {% for question in generated_questions|linebreaksbr %}
-
-                                        <label for="phonenumberInput" class="form-label"><span data-key="t-home">{{ question.question }}</span></label>
-                                        <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}">
-                                        
-                                        {% endfor %}
-                                        {% comment %} <div>'+ tagHtml + '</div> {% endcomment %}
+                                        <!--end row-->
                                     </div>
+                                    <!-- end row --> 
+                                    {% endif %}
                                 </div>
-                                {% comment %} End card {% endcomment %}
-                                {% empty %}
-                                <div class="text-center py-4">
-                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                    <h5 class="mt-2">Sorry there isn't any variable to create questions register in the database</h5>
-                                    <p class="text-muted mb-0">You have to "Add Product".</p>
-                                </div>    
-                                {% endfor %}
-                                {% comment %} Fin de la lista {% endcomment %}
-    
-                                <div class="row g-0 justify-content-end mb-4" id="pagination-element">
-                                    <!-- end col -->
-                                    <div class="col-sm-6">
-                                        <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                                            <div class="page-item">
-                                                <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
-                                            </div>
-                                            <span id="page-num" class="pagination"></span>
-                                            <div class="page-item">
-                                                <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
-                                            </div>
-                                        </div>
-                                    </div><!-- end col -->
-                                </div>
-                                <!-- end row -->
-    
-                            </div><!--end col-->
+                            </div>
                         </div>
-                        <!-- end row -->    
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {% widthratio current_page total_pages 100 %}%;" >
+                        </div>
+
+                        {% if started %}
+                                 
+                        {% endif %}                  
                     </div>
                     <!-- container-fluid -->
                 </div>

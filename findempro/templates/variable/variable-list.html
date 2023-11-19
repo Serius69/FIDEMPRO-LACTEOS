@@ -1,399 +1,565 @@
-{% extends "partials/base.html" %}
-{% load static %}
+{% extends "partials/base.html" %} 
+{% load static %} 
 {% block title %}Variable List{% endblock title %}
-
 {% block extra_css %}
-{% endblock extra_css %}
+{% endblock extra_css %} 
 {% block content %}
-        <!-- ============================================================== --> 
-        <!-- Start right Content here -->
-        <!-- ============================================================== -->
-        <div class="main-content">
-
-            <div class="page-content">
-                <div class="container-fluid">
-                    {% block pagetitle %}
-                    {% include "partials/page-title.html" with pagetitle="Variable" title="Variable List" %}
-                    {% endblock pagetitle %}
-
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-title">
-                                    <div class="d-flex align-items-center">
-                                        <h6 class="card-title mb-0 flex-grow-1">Filter results</h6>
-                                    </div>  
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-2">
-                                        <div class="col-xxl-3">
-                                            <div>
-                                                <select class="form-control" id="category-select">
-                                                    <option value="All">Select Categories</option>
-                                                    <option value="All">All</option>
-                                                    <option value="Dairy">Dairy</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <!--end col-->
-                                        <div class="col-lg-auto">
-                                            <div class="hstack gap-2">
-                                                <button type="button" class="btn btn-danger"><i class="ri-equalizer-fill me-1 align-bottom"></i> Filters</button>
-                                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariable"><i class="ri-add-line align-bottom me-1"></i> Add Variable</button>
-                                                
-                                            </div>
-                                        </div>
-                                        <!--end col-->
-                                    </div>
-                                    <!--end row-->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xxl-9">
-                            {% for variable in variables %}
-                            <div class="card joblist-card">
-                                <div class="card-body">
-                                    <div class="d-flex mb-4">
-                                        <div class="avatar-sm">
-                                            <div class="avatar-title bg-light rounded">
-                                                <img src="{{variable.image.url}}" alt="" class="avatar-xxs companyLogo-img">
-                                            </div>
-                                        </div>
-                                        <div class="ms-3 flex-grow-1">
-                                            <img src="{{ MEDIA_URL }}{{ product.image.url }}" alt="" class="d-none cover-img">
-                                            <a href="{% url 'variable:variable.overview' variable.id %}"><h5 class="job-title">{{variable.name}}</h5></a>
-                                            <p class="company-name text-muted mb-0">{{variable.product.name}}</p>
-                                        </div>
-                                        <div>
-                                            <button type="button" class="btn btn-ghost-primary btn-icon custom-toggle" data-bs-toggle="button">
-                                                <span class="icon-on"><i class="ri-bookmark-line"></i></span>
-                                                <span class="icon-off"><i class="ri-bookmark-fill"></i></span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <p class="text-muted job-description">{{variable.description}}</p>
-                                </div>
-                                <div class="card-footer border-top-dashed">
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">\
-                                        <div><i class="ri-briefcase-2-line align-bottom me-1"></i> <span class="job-type">{{variable.type}}</span></div>
-                                        <div class="d-none"><span class="job-experience">{{variable.type}}</span></div>
-                                        <div><i class="ri-map-pin-2-line align-bottom me-1"></i>  <span class="job-location">{{variable.type}}</span></div>
-                                        <div><i class="ri-user-3-line align-bottom me-1"></i> {{variable.type}}</div>
-                                        <div><i class="ri-time-line align-bottom me-1"></i> <span class="job-postdate">{{variable.date_created}}</span></div>
-                                        
-                                        <div class="dropdown">
-                                            <button
-                                                class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
-                                                data-bs-toggle="dropdown" aria-haspopup="true"
-                                                aria-expanded="true">
-                                                <i data-feather="more-horizontal" class="icon-sm"></i>
-                                            </button>
-
-                                            <div class="dropdown-menu dropdown-menu-end">
-                                                <a class="dropdown-item"
-                                                    href="{% url 'variable:variable.overview' variable.id %}"><i
-                                                        class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                                    View</a>
-                                                <a class="dropdown-item" href="{% url 'variable:variable.edit' %}"><i
-                                                        class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                                    Edit</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                                    data-bs-target="#removeProductModal"><i
-                                                        class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                                    Remove</a>
-                                            </div>
-                                        </div>
-                                    </div>\
-                                </div>\
-                            </div>
-                            {% comment %} End card {% endcomment %}
-                            {% empty %}
-                            <div class="text-center py-4">
-                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                <h5 class="mt-2">Sorry there isn't any variable register in the database</h5>
-                                <p class="text-muted mb-0">You have to "Add Product".</p>
-                            </div>
-
-                            {% endfor %}
-                            {% comment %} Fin de la lista {% endcomment %}
-
-                            <div class="row g-0 justify-content-end mb-4" id="pagination-element">
-                                <!-- end col -->
-                                <div class="col-sm-6">
-                                    <div class="pagination-block pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
-                                        <div class="page-item">
-                                            <a href="javascript:void(0);" class="page-link" id="page-prev">Previous</a>
-                                        </div>
-                                        <span id="page-num" class="pagination"></span>
-                                        <div class="page-item">
-                                            <a href="javascript:void(0);" class="page-link" id="page-next">Next</a>
-                                        </div>
-                                    </div>
-                                </div><!-- end col -->
-                            </div>
-                            <!-- end row -->
-
-                        </div><!--end col-->
-
-                        <div class="col-xxl-3">
-                            <div class="card job-list-view-card overflow-hidden" id="job-overview">
-                                <img src="{{ MEDIA_URL }}{{ product.image.url }}" alt="" id="cover-img" class="img-fluid background object-fit-cover">
-                                <div class="card-body">
-                                    <div class="mt-3">
-                                        <h5 class="view-title">{{variable.name}}</h5>
-                                        <div class="hstack gap-3 mb-3">
-                                            <span class="text-muted"><i class="ri-building-line me-1 align-bottom"></i> <span class="view-companyname">{{variable.name}}</span></span>
-                                            <span class="text-muted"><i class="ri-map-pin-2-line me-1 align-bottom"></i> <span class="view-location">{{variable.name}}</span></span>
-                                        </div>
-                                        <p class="text-muted view-desc">{{variable.description}}</p>
-                                        <div class="py-3 border border-dashed border-start-0 border-end-0 mt-4">
-                                            <div class="row">
-                                                <div class="col-lg-4 col-sm-6">
-                                                    <div>
-                                                        <p class="mb-2 text-uppercase fw-medium fs-12 text-muted">Variable Type</p>
-                                                        <h5 class="fs-14 mb-0 view-type">{{variable.name}}</h5>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-4 col-sm-6">
-                                                    <div>
-                                                        <p class="mb-2 text-uppercase fw-medium fs-12 text-muted">Created Date</p>
-                                                        <h5 class="fs-14 mb-0 view-postdate">{{variable.date_created}}</h5>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-4 col-sm-6">
-                                                    <div>
-                                                        <p class="mb-2 text-uppercase fw-medium fs-12 text-muted">Experience</p>
-                                                        <h5 class="fs-14 mb-0 view-experience">{{variable.name}}</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <h5 class="mb-3">Equations summmary</h5>
-
-                                        <div>
-                                            <div id="simple_dount_chart" data-colors='["--vz-info", "--vz-primary", "--vz-danger", "--vz-danger", "--vz-info"]' class="apex-charts" dir="ltr"></div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4">
-                                        <button type="button" class="btn btn-success w-100">Show More</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-                <!-- container-fluid -->
-            </div>
-            <!-- End Page-content -->
-
-            <!-- removeVariableModal -->
-            <div id="removeVariableModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mt-2 text-center">
-                                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
-                                <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                                    <h4>Are you Sure ?</h4> 
-                                    <p class="text-muted mx-4 mb-0">Are you Sure You want to Remove this Product ?</p>
-                                </div>
-                            </div>
-                            <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                                <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
-                                <button type="button" class="btn w-sm btn-danger" id="remove-variable">Yes, Delete It!</button>
-                            </div>
-                        </div>
-                    </div><!-- /.modal-content -->
-                </div><!-- /.modal-dialog -->
-            </div><!-- /.modal -->
-            <div class="modal fade" id="addVariable" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content border-0">
-                        <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
-                            {% csrf_token %}
-                            <div class="modal-body">
-                                <input type="hidden" id="variable-id-field" />
-                                <div class="row g-3">
-                                    <div class="col-lg-12">
-                                        
-                                        <div class="text-center mb-4 mt-n5 pt-2">
-                                            <div class="position-relative d-inline-block">
-                                                <div class="position-absolute bottom-0 end-0">
-                                                    <!-- You can allow the user to select a logo for the variable -->
-                                                    <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
-                                                        <div class="avatar-xs cursor-pointer">
-                                                            <div class="avatar-title bg-light border rounded-circle text-muted">
-                                                                <i class="ri-image-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                    <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png,  image/jpeg" name='image_src'>
-                                                </div>
-                                                <div class="avatar-lg p-1">
-                                                    <div class="avatar-title bg-light rounded-circle">
-                                                        <!-- You can display the variable's logo here -->
-                                                        <img src="{% static 'images/variable/variable_logo.webp' %}" id="variablelogo-img" class="avatar-md rounded-circle object-fit-cover" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <h5 class="fs-13 mt-3">Variable Logo</h5>
-                                        </div>
-                                        <div>
-                                            <label for="name" class="form-label">Variable Name</label>
-                                            <input type="text" id="name" class="form-control" placeholder="Enter variable name" name="name" required />
-                                            <div class="invalid-feedback">Please enter a variable name.</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div>
-                                            <label for="fk_product" class="form-label">Associated Product</label>
-                                            <select class="form-select" id="fk_product" name="fk_product" required >
-                                                {% for product in products %}
-                                                <option value={{product.id}}>{{product.name}}</option>
-                                                {% empty %}
-                                                <option value=".">...</option>
-                                                {% endfor %}
-                                            </select>
-                                            <div class="invalid-feedback">Please select the associated product for the variable.</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div>
-                                            <label for="type" class="form-label">Variable Type</label>
-                                            <select class="form-select" id="type" name="type" required>
-                                                <option value="1">Endogenous</option>
-                                                <option value="2">Exogenous</option>
-                                            </select>
-                                            <div class="invalid-feedback">Please select a variable type.</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <div>
-                                            <label for="unit" class="form-label">Unit</label>
-                                            <select class="form-select" id="unit" name="unit" required>
-                                                <option value="Lt">Lt</option>
-                                                <option value="Bs">Bs</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-12">
-                                        <div>
-                                            <label for="description" class="form-label">Description</label>
-                                            <textarea class="form-control" id="description" rows="3" placeholder="Enter description" name="description" required></textarea>
-                                            <div class="invalid-feedback">Please enter a description for the variable.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <div class="hstack gap-2 justify-content-end">
-                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                                    <button type="submit" class="btn btn-success" id="add-variable-btn">Add Variable</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <!-- End of Add Variable Modal -->
-            <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorLabel" aria-hidden="true" style="display: none;">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="errorLabel">Form Submission Error</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body" id="errorModalContent">
-                            <!-- Display form validation errors here -->
+<!-- ============================================================== -->
+<!-- Start right Content here -->
+<!-- ============================================================== -->
+<div class="main-content">
+  <div class="page-content">
+    <div class="container-fluid">
+      {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="Variable" title="Variable List" %} {% endblock pagetitle %}
+      <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+        <div class="px-4">
+            <div class="row">
+                <div class="col-xxl-9 align-self-center">
+                    <div class="py-4">
+                        <h4 class="display-6 -text">VARIABLE LIST</h4>
+                        <div class="container">                      
+                            <p>Welcome to our Simulation List page, featuring a dynamic collection of variable scenarios sourced from our comprehensive database. Whether you're an enthusiast, a researcher, or someone exploring the world of simulations, this page is designed to cater to your interests.</p>
+                        
+                            <h2>Key Features:</h2>
+                        
+                            <ul>
+                                <li><span class="text-success">Edit:</span> Easily update variable details, modify parameters, and refine scenarios. Our intuitive interface ensures a seamless editing experience, allowing you to fine-tune simulations with just a few clicks.</li>
+                        
+                                <li><span class="text-danger">Delete:</span> Need to remove a variable? The delete function lets you swiftly and securely eliminate scenarios that are no longer needed. Streamline your simulation library effortlessly.</li>
+                        
+                                <li><span class="text-primary">View:</span> Dive deep into each variable's details with the view option. Explore parameters, outcomes, and more. This feature is perfect for analyzing simulation results and making informed decisions.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
+                <div class="col-xxl-3 ms-auto">
+                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                        <img src="{% static 'images/variable-img.webp'%}" alt="" class="img-fluid">
+                    </div>
+                </div>
             </div>
-
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
         </div>
-        <!-- end main content-->
-                   
+    </div>
+      <div class="row">
+        <div class="col-lg-10 col-sm-auto ">
+          <div class="card">
+            <div class="card-title">
+              <div class="d-flex align-items-center">
+                <h6 class="card-title mb-0 flex-grow-1">Filter results</h6>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row g-2">
+                <form method="get" action="{% url 'variable:variable.list' %}">
+                  <div class="col-lg-auto">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                          <select class="form-control" id="business-select" name="business_id">
+                              <option value="All">Select Product</option>
+                              {% for product in products %}
+                              <option value="{{ product.id }}">
+                                  {{ product.name }}
+                              </option>
+                              {% empty %}
+                              <option value="All">All</option>
+                              {% endfor %}
+                          </select>
+                      </div>
+                      <div class="col-md-6">
+                          <select class="form-control" id="type-select">
+                              <option value="All">Select Type</option>
+                              <option value="All">All</option>
+                              <option value="Endogena">Endogena</option>
+                              <option value="Exogena">Exogena</option>
+                              <option value="Estado">Estado</option>
+                          </select>
+                      </div>
+                      <div class="col-lg-12 text-end">
+                        <button type="submit" class="btn btn-danger" id="apply-filters">
+                          <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                          Filters
+                        </button>
+                      </div>
+                  </div>
+                  </div>
+                  <!--end col-->
+                </form>
+                <div class="col-lg-3">
+                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariable">
+                    <i class="ri-add-fill me-1 align-bottom"></i>
+                    Create New
+                  </button>
+                </div>
+              </div>
+              <!--end row-->
+            </div>
+          </div>
+          {% for variable in variables %}
+          <div class="card joblist-card">
+            <div class="card-body">
+              <div class="d-flex mb-4">
+                <div class="avatar-sm">
+                  <div class="avatar-title bg-light rounded">
+                    <img
+                    src="{{ variable.get_photo_url }}"
+                      alt=""
+                      class="avatar-xxs companyLogo-img"
+                    />
+                  </div>
+                </div>
+                <div class="ms-3 flex-grow-1">
+                  <img
+                  src="{{ variable.get_photo_url }}"
+                    alt=""
+                    class="d-none cover-img"
+                  />
+                  <a href="{% url 'variable:variable.overview' variable.id %}"
+                    ><h5 class="job-title">{{variable.name}}</h5></a
+                  >
+                  <p class="company-name text-muted mb-0"
+                    >{{variable.fk_product.name}}</p
+                  >
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    class="btn btn-ghost-primary btn-icon custom-toggle"
+                    data-bs-toggle="button"
+                  >
+                    <span class="icon-off"
+                      ><i class="ri-bookmark-fill"></i
+                    ></span>
+                  </button>
+                </div>
+              </div>
+              <p class="text-muted job-description">{{variable.description}}</p>
+            </div>
+            <div class="card-footer border-top-dashed">
+              <div
+                class="d-flex justify-content-between align-items-center flex-wrap gap-3"
+              >
+                <div
+                  ><i class="ri-briefcase-2-line align-bottom me-1"></i>
+                  <span class="job-type"
+                    >{{variable.fk_product.name}}</span
+                  ></div
+                >
+                <div
+                  ><i class="ri-map-pin-2-line align-bottom me-1"></i>
+                  <span class="job-location">{{variable.unit}}</span></div
+                >
+                <div
+                  ><i class="ri-user-3-line align-bottom me-1"></i>
+                  {{variable.type}}</div
+                >
+                <div
+                  ><i class="ri-time-line align-bottom me-1"></i>
+                  <span class="job-postdate"
+                    >{{variable.date_created}}</span
+                  ></div
+                >
 
-                  
-{% endblock content %}
+                <div class="dropdown">
+                  <button
+                    class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                  >
+                    <i data-feather="more-horizontal" class="icon-sm"></i>
+                  </button>
 
+                  <div class="dropdown-menu dropdown-menu-end">
+                    <a
+                      class="dropdown-item"
+                      href="{% url 'variable:variable.overview' variable.id %}"
+                      ><i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                      View</a
+                    >
+                    <a
+                      class="dropdown-item edit-variable"
+                      data-bs-target="#editVariableModal"
+                      data-variable-id="{{ variable.id }}"
+                      ><i
+                        class="ri-pencil-fill align-bottom me-2 text-muted"
+                      ></i>
+                      Edit</a
+                    >
+                    <div class="dropdown-divider"></div>
+                    <a
+                      class="dropdown-item delete-variable"
+                      data-bs-toggle="modal"
+                      data-bs-target="#removeVariableModal"
+                      data-variable-id="{{ variable.id }}"
+                      ><i
+                        class="ri-delete-bin-fill align-bottom me-2 text-muted"
+                      ></i>
+                      Remove</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% comment %} End card {% endcomment %} {% empty %}
+          <div class="text-center py-4">
+            <lord-icon
+              src="https://cdn.lordicon.com/msoeawqm.json"
+              trigger="loop"
+              colors="primary:#405189,secondary:#0ab39c"
+              style="width: 75px; height: 75px"
+            ></lord-icon>
+            <h5 class="mt-2"
+              >Sorry there isn't any variable register in the database</h5
+            >
+            <p class="text-muted mb-0">You have to "Add Product".</p>
+          </div>
+
+          {% endfor %} {% comment %} Fin de la lista {% endcomment %}
+          <!-- Pagination -->
+          <div class="align-items-center mt-2 row text-center text-sm-start">
+            <div class="col-sm">
+              <div class="text-muted"
+                >Showing
+                <span class="fw-semibold">{{ variables.number }}</span> of
+                <span class="fw-semibold"
+                  >{{ variables.paginator.num_pages }}</span
+                >
+                Results
+              </div>
+            </div>
+            <div class="col-sm-auto">
+              <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                {% if variables.has_previous %}
+                  <li class="page-item">
+                    <a href="?page={{ variables.previous_page_number }}" class="page-link">←</a>
+                  </li>
+                {% endif %}
+            
+                {% for i in variables.paginator.page_range %}
+                  <li class="page-item {% if i == variables.number %}active{% endif %}">
+                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                  </li>
+                {% endfor %}
+            
+                {% if variables.has_next %}
+                  <li class="page-item">
+                    <a href="?page={{ variables.next_page_number }}" class="page-link">→</a>
+                  </li>
+                {% endif %}
+              </ul>
+            </div>            
+          </div>
+          <!-- end row -->
+        </div>
+        <div class="col-lg-2 layout-rightside-col">
+            <div class="overlay"></div>
+            <div class="layout-rightside">
+              <div class="card h-100 rounded-0">
+                <div class="card-body p-0">
+                  <div class="p-3">
+                    <h6 class="text-muted mb-0 text-uppercase fw-semibold"
+                      >Instructions</h6
+                    >
+                  </div>
+                  <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
+                    <div class="acitivity-timeline acitivity-main">
+                      {% for instruction in instructions %}
+                      <div class="acitivity-item d-flex">
+                        <div class="flex-shrink-0 avatar-xs acitivity-avatar">
+                          <div
+                            class="avatar-title bg-primary-subtle text-primary rounded-circle"
+                          >
+                            <i class="ri-info-line"></i>
+                          </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                          <h6 class="mb-1 lh-base">{{ instruction.title }}</h6>
+                          <p class="text-muted mb-1"
+                            >{{ instruction.description }}
+                          </p>
+                          <small class="mb-0 text-muted"
+                            >{{ instruction.date }}</small
+                          >
+                        </div>
+                      </div>
+                      {% empty %}
+                      <div class="text-center py-4">
+                        <lord-icon
+                          src="https://cdn.lordicon.com/msoeawqm.json"
+                          trigger="loop"
+                          colors="primary:#405189,secondary:#0ab39c"
+                          style="width: 75px; height: 75px"
+                        ></lord-icon>
+                        <h5 class="mt-2"
+                          >Sorry, there are no instructions in the database</h5
+                        >
+                        <p class="text-muted mb-0"
+                          >Please add instructions to the system.</p
+                        >
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- end card-->
+            </div>
+            <!-- end .rightbar-->
+          </div>
+          <!-- end col activity -->
+        </div>
+      </div> 
+    </div>
+    <!-- container-fluid -->
+  </div>
+  <!-- End Page-content -->
+
+  <!-- removeVariableModal -->
+  <div
+    id="removeVariableModal"
+    class="modal fade zoomIn"
+    tabindex="-1"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+            id="close-modal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="mt-2 text-center">
+            <lord-icon
+              src="https://cdn.lordicon.com/gsqxdxog.json"
+              trigger="loop"
+              colors="primary:#f7b84b,secondary:#f06548"
+              style="width: 100px; height: 100px"
+            ></lord-icon>
+            <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+              <h4>Are you Sure ?</h4>
+              <p class="text-muted mx-4 mb-0"
+                >Are you Sure You want to Remove this Product ?</p
+              >
+            </div>
+          </div>
+          <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+            <button
+              type="button"
+              class="btn w-sm btn-light"
+              data-bs-dismiss="modal"
+              >Close</button
+            >
+            <button
+              type="button"
+              class="btn w-sm btn-danger"
+              id="remove-variable"
+              >Yes, Delete It!</button
+            >
+          </div>
+        </div> </div
+      ><!-- /.modal-content --> </div
+    ><!-- /.modal-dialog --> </div
+  ><!-- /.modal -->
+  <div
+    class="modal fade"
+    id="addVariable"
+    tabindex="-1"
+    aria-labelledby="exampleModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0">
+        <form
+          id="variableForm"
+          autocomplete="off"
+          class="needs-validation"
+          novalidate
+        >
+          {% csrf_token %}
+          <div class="modal-body">
+            <input type="hidden" id="variable-id-field" />
+            <div class="row g-3">
+              <div class="col-lg-12">
+                <div class="text-center mb-4 mt-n5 pt-2">
+                  <div class="position-relative d-inline-block">
+                    <div class="position-absolute bottom-0 end-0">
+                      <!-- You can allow the user to select a logo for the variable -->
+                      <label
+                        for="image_src"
+                        class="mb-0"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Select Image"
+                      >
+                        <div class="avatar-xs cursor-pointer">
+                          <div
+                            class="avatar-title bg-light border rounded-circle text-muted"
+                          >
+                            <i class="ri-image-fill"></i>
+                          </div>
+                        </div>
+                      </label>
+                      <input
+                        class="form-control d-none"
+                        value=""
+                        id="image_src"
+                        type="file"
+                        accept="image/png,  image/jpeg"
+                        name="image_src"
+                      />
+                    </div>
+                    <div class="avatar-lg p-1">
+                      <div class="avatar-title bg-light rounded-circle">
+                        <!-- You can display the variable's logo here -->
+                        <img
+                          src="{{ product.get_photo_url }}"
+                          id="variablelogo-img"
+                          class="avatar-md rounded-circle object-fit-cover"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <h5 class="fs-13 mt-3">Variable Logo</h5>
+                </div>
+                <div>
+                  <label for="name" class="form-label">Variable Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    class="form-control"
+                    placeholder="Enter variable name"
+                    name="name"
+                    required
+                  />
+                  <div class="invalid-feedback"
+                    >Please enter a variable name.</div
+                  >
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div>
+                  <label for="fk_product" class="form-label"
+                    >Associated Product</label
+                  >
+                  <select
+                    class="form-select"
+                    id="fk_product"
+                    name="fk_product"
+                    required
+                  >
+                    {% for product in products %}
+                    <option value="{{product.id}}">{{product.name}}</option>
+                    {% empty %}
+                    <option value=".">...</option>
+                    {% endfor %}
+                  </select>
+                  <div class="invalid-feedback"
+                    >Please select the associated product for the variable.</div
+                  >
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div>
+                  <label for="type" class="form-label">Variable Type</label>
+                  <select class="form-select" id="type" name="type" required>
+                    <option value="1">Endogenous</option>
+                    <option value="2">Exogenous</option>
+                    <option value="2">Estado</option>
+                  </select>
+                  <div class="invalid-feedback"
+                    >Please select a variable type.</div
+                  >
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div>
+                  <label for="unit" class="form-label">Unit</label>
+                  <select class="form-select" id="unit" name="unit" required>
+                    <option value="Lt">Lt</option>
+                    <option value="Bs">Bs</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-lg-12">
+                <div>
+                  <label for="description" class="form-label"
+                    >Description</label
+                  >
+                  <textarea
+                    class="form-control"
+                    id="description"
+                    rows="3"
+                    placeholder="Enter description"
+                    name="description"
+                    required
+                  ></textarea>
+                  <div class="invalid-feedback"
+                    >Please enter a description for the variable.</div
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="hstack gap-2 justify-content-end">
+              <button
+                type="button"
+                class="btn btn-light"
+                data-bs-dismiss="modal"
+                >Close</button
+              >
+              <button
+                type="submit"
+                class="btn btn-success"
+                id="add-variable-btn"
+                >Add Variable</button
+              >
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- End of Add Variable Modal -->
+  <div
+    class="modal fade"
+    id="errorModal"
+    tabindex="-1"
+    aria-labelledby="errorLabel"
+    aria-hidden="true"
+    style="display: none"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorLabel">Form Submission Error</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body" id="errorModalContent">
+          <!-- Display form validation errors here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% block footer %}
+    {% include "partials/footer.html" %} 
+  {% endblock footer %}
+</div>
+<!-- end main content-->
+{% endblock content %} 
 {% block extra_js %}
-<script>
-        
-    // Function to show the modal
-    function showAddBusinessModal() {
-        $('#addVariable').modal('show');
-    }
-
-    // Function to hide the modal
-    function hideAddBusinessModal() {
-        $('#addVariable').modal('hide');
-    }
-    // Function to handle form submission
-    $('#variableForm').on('submit', async function (event) {
-        event.preventDefault();
-
-        try {
-            const formData = new FormData(this);
-            const response = await fetch('{% url "variable:variable.create" %}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-            });
-
-            if (response.ok) {
-                // Business created successfully, you can show a success message here if needed.
-                hideAddBusinessModal();  // Hide the modal after successful submission
-            } else {
-                // Handle errors and display them to the user
-                const responseData = await response.json();
-                const errorModalContent = document.getElementById('errorModalContent'); // Use the correct ID
-                if (responseData.errors && responseData.errors.name) {
-                    // Display the specific error message for the "name" field
-                    const errorMessagesDiv = document.getElementById('error-messages');
-                    if (errorModalContent) {
-                        errorModalContent.innerHTML = '';  // Clear previous error messages
-
-                        // Iterate through errors and display them
-                        for (const field in responseData.errors) {
-                            const errorsForField = responseData.errors[field];
-                            errorsForField.forEach((error) => {
-                                errorMessagesDiv.innerHTML += `<p>${error}</p>`;
-                            });
-                        }
-                    }
-                }
-                $('#errorModal').modal('show');
-            }
-        } catch (error) {
-            // Handle network or other errors
-            console.error(error);
-        }
-    });
-
-    // Function to get the CSRF token from cookies (assuming Django uses cookies)
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
-
-</script>
-        <!-- apexcharts -->
-        <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'js/crud.js' %}"></script>
 {% endblock extra_js %}

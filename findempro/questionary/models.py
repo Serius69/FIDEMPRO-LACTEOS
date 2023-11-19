@@ -53,8 +53,14 @@ class Question(models.Model):
         Questionary, 
         on_delete=models.CASCADE, 
         related_name='fk_questionary_question',
-        help_text='The questionnaire associated with the question',
-        default=1)
+        help_text='The questionnaire associated with the question'
+        )
+    fk_variable = models.ForeignKey(
+        Variable, 
+        on_delete=models.CASCADE, 
+        related_name='fk_variable_question',
+        help_text='The variable associated with the question'
+        )
     type = models.IntegerField(default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
@@ -67,10 +73,13 @@ class Question(models.Model):
         if created:
             for data in question_data:
                 if data['type'] == 1:  # Corrected the variable name
+                    initials_variable = data['initials_variable']
+                    variable = Variable.objects.get(initials=initials_variable)
                     Question.objects.create(
                         question=data['question'],
                         type=data['type'],
                         fk_questionary_id=instance.id,
+                        fk_variable_id=variable.id,
                         is_active=True
                     )
     @receiver(post_save, sender=Questionary)
