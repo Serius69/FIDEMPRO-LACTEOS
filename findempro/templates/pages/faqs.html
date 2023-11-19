@@ -19,10 +19,10 @@
                                         <h4 class="display-6 -text">Frequently Asked Questions</h4>
                                         <p class="text-success fs-15 mt-3">If you cannot find the answer to your question in our FAQ, please feel free to contact us. We will provide you with the information you need.</p>
                                         <div class="hstack flex-wrap gap-2">
-                                            <button type="button" class="btn btn-primary btn-label rounded-pill">
+                                            <button type="button" class="btn btn-primary btn-label rounded-pill" onclick="openMailTo()">
                                                 <i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Contact Us
-                                            </button>
-                                            <button type="button" class="btn btn-info btn-label rounded-pill">
+                                            </button>                                            
+                                            <button type="button" class="btn btn-info btn-label rounded-pill" onclick="openTwitterFollow()">
                                                 <i class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> Follow Us on Twitter
                                             </button>
                                         </div>
@@ -139,3 +139,30 @@
 </div>
 <!-- end main content-->
 {% endblock content %}
+{% block extra_js %}
+<!-- Agrega el script JavaScript para abrir la ventana de correo electrónico -->
+<script>
+    function openMailTo() {
+        // Cambia 'developer@example.com' con la dirección de correo electrónico del desarrollador
+        var email = 'developer@example.com';
+        var subject = 'Consulta sobre el sistema';
+        var body = 'Hola, me gustaría hacer una consulta sobre el sistema.';
+
+        var mailtoLink = 'mailto:' + email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+        // Abre la ventana de correo electrónico
+        window.location.href = mailtoLink;
+    }
+</script>
+    <!-- Agrega el script JavaScript para abrir la ventana de Twitter -->
+<script>
+    function openTwitterFollow() {
+        // Cambia 'nombredeusuario' con el nombre de usuario real de Twitter
+        var twitterUsername = 'nombredeusuario';
+        var twitterFollowLink = 'https://twitter.com/intent/follow?screen_name=' + encodeURIComponent(twitterUsername);
+
+        // Abre la ventana de Twitter
+        window.open(twitterFollowLink, '_blank');
+    }
+</script>
+{% endblock extra_js %}

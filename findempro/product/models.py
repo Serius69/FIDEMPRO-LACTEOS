@@ -78,7 +78,6 @@ class Area(models.Model):
                     name=data['name'],                    
                     description=data['description'],
                     params= data['params'],
-                    type= data['type'],
                     is_active= True,
                     fk_product_id=product.id,
                 )

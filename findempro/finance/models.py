@@ -29,9 +29,9 @@ class FinanceRecommendation(models.Model):
                 )
     @receiver(post_save, sender=Product)
     def save_finance_recommendation(sender, instance, **kwargs):
-        if instance.is_active == 1:
-            instance.question_set.all().update(is_active=instance.is_active)
-            
+        for finance_recommendation in instance.fk_equations_variable1.all():
+            finance_recommendation.is_active = instance.is_active
+            finance_recommendation.save()
 class FinancialDecision(models.Model):
     decision_date = models.DateField()
     quantity_to_produce = models.PositiveIntegerField()

@@ -7,33 +7,86 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.http import JsonResponse
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse,Http404
 from django.utils import timezone
 from django.http import HttpResponseForbidden
 import openai
 import logging
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 def questionnaire_list_view(request):
-    try:
-        questions = Question.objects.order_by('-id')
-        per_page = 10 
-        paginator = Paginator(questions, per_page)
-        page = request.GET.get('page')
+    """
+    View function for displaying the questionnaire list.
+    """
+    if not request.session.get('started', False):
+        # Show start button
+        if request.method == 'POST' and 'start' in request.POST:
+            request.session['started'] = True
+            return redirect('first_question')
+        else:
+            return render(request, 'questionary/questionary-list.html')
+    else:
         try:
-            questions = paginator.page(page)
-        except PageNotAnInteger:
-            questions = paginator.page(1)
-        except EmptyPage:
-            questions = paginator.page(paginator.num_pages)
-        questionnaires = Questionary.objects.order_by('-id')
-        context = {'questions': questions, 'questionnaires': questionnaires}
-    except Exception as e:
-        error_message = str(e)
-        context = {'error_message': error_message}
-    return render(request, 'questionary/questionary-list.html', context)
+            questions = Question.objects.order_by('-created_at')
+            paginator = Paginator(questions, settings.QUESTIONS_PER_PAGE)
+            page = request.GET.get('page')
+            questions = paginator.get_page(page)
+
+            context = {
+                'started': request.session.get('started', False),
+                'questions': questions
+            }
+        except Exception as e:
+            context = {'error': str(e)}
+
+        return render(request, 'questionary/questionary-list.html', context)
+
+# def questionnaire_list_view(request):
+#     try:
+#         if request.method == 'POST' and 'start' in request.POST:
+#             # Redirigir a primera pregunta
+#             return redirect('first_question') 
+#         elif not request.session.get('started', False):
+#             # Mostrar botón de comenzar
+#             request.session['started'] = True
+#             return render(request, 'questions.html')
+#         else:
+#             # Mostrar preguntas
+#             questions = Question.objects.order_by('-id')
+#             per_page = 10 
+#             paginator = Paginator(questions, per_page)
+#             page = request.GET.get('page')
+#             try:
+#                 questions = paginator.page(page)
+#             except PageNotAnInteger:
+#                 questions = paginator.page(1)
+#             except EmptyPage:
+#                 questions = paginator.page(paginator.num_pages)
+#             questionnaires = Questionary.objects.order_by('-id')
+#             context = {'questions': questions, 'questionnaires': questionnaires}
+#     except Exception as e:
+#         error_message = str(e)
+#         context = {'error_message': error_message}
+#     return render(request, 'questionary/questionary-list.html', context)
+
+
+def show_question(request, pk):
+  try:
+    question = Question.objects.get(pk=pk)
+  except Question.DoesNotExist:
+    raise Http404("Pregunta no encontrada")
+  context = {
+    'question': question
+  }
+
+  if request.method == 'POST':
+    # Aquí puedes guardar la respuesta
+    # Y luego redirigir a la siguiente pregunta
+     return render(request, 'question.html', context)
+
 def questionnaire_save_view(request):
     try:
         questions = Question.objects.order_by('-id')

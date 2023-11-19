@@ -6,41 +6,24 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
-from product.models import Product
+from product.models import Product,Area
 from business.models import Business
-from typing import Dict, Any
-from django.shortcuts import render
-from django.utils import timezone
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
-from django.contrib.auth.models import User
 
 # Create your views here.
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass
     
 def index(request):
-    # Tu lógica para obtener datos o realizar operaciones necesarias
-    # Puedes incluir aquí cualquier lógica específica del panel de control
     return render(request, 'dashboards/index.html')
-
 def dashboard_admin(request):
-    # Obtén la fecha de hoy
     today = timezone.now()
-    
-    # Calcula la fecha del mes anterior
     last_month = today - relativedelta(months=1)
-    
-    # Obtén la cantidad de usuarios del mes actual y del mes anterior
     users = User.objects.all()
     users_last_month = User.objects.filter(date_joined__month=last_month.month, date_joined__year=last_month.year)
-    
-    # Calcula la diferencia y el porcentaje de cambio
     users_count = users.count()
     users_last_month_count = users_last_month.count()
     users_change = users_count - users_last_month_count
     users_change_percentage = (users_change / users_last_month_count * 100) if users_last_month_count > 0 else 0
-    
     context = {
         'users': users,
         'users_last_month': users_last_month,
@@ -49,22 +32,8 @@ def dashboard_admin(request):
         'users_change': users_change,
         'users_change_percentage': users_change_percentage,
     }
-    
     return render(request, 'dashboards/dashboard-admin.html', context)
-
-
 def dashboard_user(request) -> str:
-    """
-    Renders a dashboard template for a user, displaying user-related information.
-
-    Args:
-        request (object): The HTTP request object.
-
-    Returns:
-        str: The rendered HTML template as the response.
-    """
-    
-    
     try:
         business = get_object_or_404(Business, fk_user=request.user)
     except Business.DoesNotExist:
@@ -73,36 +42,28 @@ def dashboard_user(request) -> str:
     businesses = Business.objects.all()
     today = timezone.now()
     last_month = today - relativedelta(months=1)
-
     users = User.objects.all()
     users_last_month = User.objects.filter(date_joined__month=last_month.month, date_joined__year=last_month.year)
-
     users_count = users.count()
     users_last_month_count = users_last_month.count()
     users_change = users_count - users_last_month_count
     users_change_percentage = (users_change / users_last_month_count * 100) if users_last_month_count > 0 else 0
     current_time = datetime.now().time()
-    
     if current_time >= datetime(1900, 1, 1, 5, 0).time() and current_time < datetime(1900, 1, 1, 12, 0).time():
         greeting = "Good Morning"
     elif current_time >= datetime(1900, 1, 1, 12, 0).time() and current_time < datetime(1900, 1, 1, 18, 0).time():
         greeting = "Good Afternoon"
     else:
         greeting = "Good Evening"
-
-    # Filtra los productos del negocio específico
     products = Product.objects.filter(fk_business=business.id)
-    
+    areas = Area.objects.filter(fk_product__fk_business=business.id)
     products_ready = 0
     products_no_ready = 0
-    # Assuming 'products' is a queryset or a list of products
     for product in products:
         if product.is_ready == True:
             products_ready += 1
         else:
             products_no_ready += 1
-    
-    # Calcula el total de ingresos sumando los ingresos de todos los productos
     total_revenue = sum(product.earnings or 0 for product in products)
     total_costs = sum(product.costs or 0 for product in products)
     total_inventory_levels = sum(product.inventory_levels or 0 for product in products)
@@ -118,6 +79,7 @@ def dashboard_user(request) -> str:
         'users_change_percentage': users_change_percentage,
         'greeting': greeting,
         'products': products,
+        'areas': areas,
         'business': business,
         'businesses': businesses,
         'total_revenue': total_revenue,

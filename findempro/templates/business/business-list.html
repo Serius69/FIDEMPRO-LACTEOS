@@ -15,14 +15,30 @@
       {% block pagetitle %} 
         {% include "partials/page-title.html" with pagetitle="Business" title="Business List" %} 
       {% endblock pagetitle %}
-
+      <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+        <div class="px-4">
+            <div class="row">
+                <div class="col-xxl-5 align-self-center">
+                    <div class="py-4">
+                        <h4 class="display-6 -text">BUSINESS LIST</h4>
+                        <p class="text-success fs-15 mt-3">Welcome to our comprehensive Business Directory, your go-to resource for discovering and connecting with a diverse array of businesses across various industries. Whether you're a consumer seeking services or a business owner looking to expand your network, our Business List Page is designed to simplify your search and foster meaningful connections.</p>
+                    </div>
+                </div>
+                <div class="col-xxl-3 ms-auto">
+                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                        <img src="{% static 'images/business-img.webp'%}" alt="" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
       <div class="row">
         <div class="col">
           <div class="h-100">
             <div class="card">
               <div class="card-header border-0 rounded">
                 <div class="row g-3">
-                  <div class="col-md-6 ">
+                  <div class="col-md-12 ">
                     <form method="GET" action="{% url 'business:business.list' %}">
                       <select class="form-control" id="type-select" name="type">
                         <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>
@@ -211,7 +227,7 @@
             </div>
           </div>
         </div>
-        <div class="col-auto layout-rightside-col">
+        <div class="col-auto layout-rightside-col ">
           <div class="overlay"></div>
           <div class="layout-rightside">
             <div class="card h-100 rounded-0">

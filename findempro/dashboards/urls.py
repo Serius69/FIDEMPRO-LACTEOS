@@ -4,9 +4,7 @@ from dashboards.views import (
     dashboard_admin,
     dashboard_user,
 )
-
 app_name = 'dashboard'
-
 urlpatterns = [
     path('',view =index,name="index"),
     path('admin',view =dashboard_admin,name="dashboard.admin"),

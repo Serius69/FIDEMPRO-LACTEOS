@@ -18,6 +18,25 @@ from django.contrib.auth import update_session_auth_hash
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth import login
 from findempro.forms import UserLoginForm
+
+@login_required
+def pages_profile_settings(request):
+    user = request.user
+    profile = UserProfile.objects.get(user=user)
+    if profile.is_profile_complete():
+        completeness_percentage = 100
+    else:
+        total_fields = len([field for field in profile._meta.get_fields() if field.name != 'id' and field.name != 'user'])
+        completed_fields = len([field for field in profile._meta.get_fields() if field.name != 'id' and field.name != 'user' and getattr(profile, field.name)])
+
+        completeness_percentage = (completed_fields / total_fields) * 100
+    context = {'completeness_percentage': completeness_percentage, 
+               'user': user, 
+               'profile': profile,
+               'selected_state': profile.state,  # Add this line
+                'selected_country': profile.country,  # Add this line
+               }
+    return render(request, 'user/profile-settings.html', context)
 @login_required
 def profile_product_variable_list_view(request):
     user = request.user
@@ -93,6 +112,7 @@ def create_user_view(request):
 @login_required
 def update_user_view(request, pk):
     user = get_object_or_404(User, pk=pk)
+    
     if request.method == "POST":
         form = UserForm(request.POST or None, request.FILES or None, instance=user)
         try:
@@ -145,19 +165,13 @@ def delete_user_view(request, pk):
 def deactivate_account(request):
     if request.method == 'POST':
         password = request.POST.get('password')
-
-        # Verificar la contraseña del usuario actual
         if request.user.check_password(password):
-            # Desactivar la cuenta
             request.user.is_active = False
             request.user.save()
-
-            # Cerrar la sesión del usuario
             messages.success(request, 'Your account has been deactivated.')
             return redirect('login')  # Cambia 'login' por la URL a la que deseas redirigir después de desactivar la cuenta
         else:
             messages.error(request, 'Incorrect password. Please try again.')
-
     return render(request, 'deactivate_account.html')  # Cambia 'deactivate_account.html' al nombre de tu plantilla
 @login_required
 def cancel_deactivation(request):
