@@ -20,16 +20,16 @@ class UserProfile(models.Model):
                 for field_value in [getattr(self, field.name) for field in self._meta.get_fields() if field.name != 'id' and field.name != 'user']
             )
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.userprofile.save()
-@receiver(post_save, sender=UserSocialAuth)
-def save_profile_picture(sender, instance, **kwargs):
-    if instance.provider == 'google-oauth2':
-        user_profile = instance.user.userprofile
-        user_profile.profile_picture = instance.extra_data.get('picture', '')
-        user_profile.save()
+    @receiver(post_save, sender=User)
+    def create_user_profile(sender, instance, created, **kwargs):
+        if created:
+            UserProfile.objects.create(user=instance)
+    @receiver(post_save, sender=User)
+    def save_user_profile(sender, instance, **kwargs):
+        instance.userprofile.save()
+    @receiver(post_save, sender=UserSocialAuth)
+    def save_profile_picture(sender, instance, **kwargs):
+        if instance.provider == 'google-oauth2':
+            user_profile = instance.user.userprofile
+            user_profile.profile_picture = instance.extra_data.get('picture', '')
+            user_profile.save()

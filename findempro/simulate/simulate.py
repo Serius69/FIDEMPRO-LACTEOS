@@ -62,8 +62,6 @@ class MilkCompetence:
         # Simulate competition analysis
         competitors = ["Competitor A", "Competitor B", "Competitor C"]
         return random.choice(competitors)
-
-# Simulation parameters
 production_capacity = 100
 price_per_unit = 2.5
 

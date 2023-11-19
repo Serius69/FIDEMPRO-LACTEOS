@@ -14,7 +14,7 @@ from questionary.models import QuestionaryResult
 from sympy import Eq, sympify
 import openai
 openai.api_key = settings.OPENAI_API_KEY
-
+from django.http import JsonResponse
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def extract_demand_historic():
@@ -46,32 +46,19 @@ def ks_test_view(request, variable_name):
             result = "Reject null hypothesis: Data does not fit the FDP."
         else:
             result = "Fail to reject null hypothesis: Data fits the FDP."
-
         context = {
             'result': result,
         }
-
     except Variable.DoesNotExist:
         context = {
             'error_message': 'Variable not found.',
         }
-
-    return render(request, 'ks_test_template.html', context)
-
-# Define a view for equation analysis
+    return JsonResponse(context)
 def equation_analysis_view(request):
     try:
-        # Sample equation (you can replace this with your input)
         equation_str = "x + y = 10"
         equation = Eq(sympify(equation_str), 10)
-
-        # Extract variable names
         variables = list(equation.free_symbols)
-
-        # Create a dependency graph (you may need to implement this)
-        # It seems like you're missing the 'create_dependency_graph' function
-
-        # Resolve dependencies and query the database
         variable_data = []
         for variable in variables:
             # Replace 'query_database_for_variable_values' and 'evaluate_expression' with your actual logic
@@ -79,8 +66,6 @@ def equation_analysis_view(request):
             values = query_database_for_variable_values(dependencies)
             variable_value = evaluate_expression(equation, values)
             variable_data.append({"name": variable, "value": variable_value})
-
-        # Render a template with the variable data
         context = {
             "equation_str": equation_str,
             "variable_data": variable_data,
@@ -98,43 +83,26 @@ def equation_analysis_view(request):
     )
 def create_simulation_equations(request):
     try:
-        # Retrieve all Variable objects from the database
         variables = Variable.objects.all()
-
-        # Initialize an empty list to store equations
         equations = []
-
-        # Loop through each variable and create equations
         for variable in variables:
-            # You can define your equation creation logic here
-            # For example, create equations based on variable properties like type, name, parameters, etc.
             equation = generate_equation_from_variable(variable)
-
-            # Append the equation to the list
             equations.append(equation)
-
-        # Render a template with the list of equations
         context = {
             "equations": equations,
         }
-
     except Exception as e:
         context = {
             'error_message': str(e),
         }
-
     return render(
         request,
-        "simulation/equations.html",  # Replace with your actual template file
+        "simulation/equations.html", 
         context,
     )
-
 def generate_equation_from_variable(variable):
     try:
-        # Define a prompt for OpenAI to generate an equation
         prompt = f"Generate an equation for the variable {variable.name} with type {variable.get_type_display()} and parameters {variable.parameters}."
-
-        # Generate the equation using GPT-3 from OpenAI
         response = openai.Completion.create(
             engine="text-davinci-002",  # Choose the appropriate engine
             prompt=prompt,
@@ -142,36 +110,25 @@ def generate_equation_from_variable(variable):
             n=1,  # Number of equations to generate
             stop=None,  # Stop generating equations at a specific token (e.g., "?")
         )
-
-        # Extract and return the generated equation
         equation = response.choices[0].text.strip()
         return equation
-
     except Exception as e:
         return str(e)
 
 def questionnaire_info(request, questionnaire_id):
-    # Retrieve the questionnaire based on the provided ID
     questionnaire = get_object_or_404(QuestionaryResult, id=questionnaire_id)
-
-    # Extract the information from the questionnaire (replace with your logic)
-    # For example, if you have fields in your questionnaire model, you can access them like questionnaire.field_name
     questionnaire_name = questionnaire.name
     questionnaire_description = questionnaire.description
-
-    # You can also extract related information, e.g., questions within the questionnaire
     questions = questionnaire.question_set.all()
-
+    
     context = {
         'questionnaire': questionnaire,
         'questionnaire_name': questionnaire_name,
         'questionnaire_description': questionnaire_description,
         'questions': questions,
+        
     }
-
     return render(request, 'questionnaire_info_template.html', context)
-
-# Define a view for initializing simulation
 def simulate_init(request):
     try:
         businesses = Business.objects.all().order_by('-id')
@@ -190,36 +147,27 @@ def simulate_init(request):
         context = {
             'error_message': 'Error with the simulation.',
         }
-
     return render(request, 'simulate/simulate-init.html', context)
-
-
 def simulate_show_form(request):
     try:
         businesses = Business.objects.all().order_by('-id')
         products = Product.objects.all().order_by('-id')
         questionaries = QuestionaryResult.objects.all().order_by('-id')
+        chart_data = [...]
+        table_data = [...] 
+        response_data = {
+            'chartData': chart_data,
+            'tableData': table_data,
+        }
         context = {
             'products': products, 
             'businesses': businesses,
-            'questionaries': questionaries
+            'questionaries': questionaries,
+            'response_data': response_data,
             }
-
     except Business.DoesNotExist:
         context = {
             'error_message': 'No business found.',
         }
 
     return render(request, 'simulate/simulate-init.html', context)
-
-def simulate_view(request):
-    # Perform simulation and calculate data
-    chart_data = [...]  # Data for the chart
-    table_data = [...]  # Data for the table
-
-    response_data = {
-        'chartData': chart_data,
-        'tableData': table_data,
-    }
-
-    return JsonResponse(response_data)

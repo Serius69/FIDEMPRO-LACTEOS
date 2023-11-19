@@ -19,7 +19,12 @@ class Product(models.Model):
         related_name='fk_business_product', 
         help_text='The business associated with the product',
         default=1)
-    type = models.CharField(max_length=50, default='Dairy')
+    TYPE_CHOICES = [
+        (1, 'Exogena'),
+        (2, 'Estado'),
+        (3, 'Endogena'),
+    ]    
+    type = models.IntegerField(choices=TYPE_CHOICES, default=1)
     profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     earnings = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     inventory_levels = models.PositiveIntegerField(null=True, blank=True)

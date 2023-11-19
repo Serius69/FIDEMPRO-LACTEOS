@@ -6,6 +6,7 @@ from variable.models import Variable
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .questionary_data import questionary_data,question_data
+from django.core.exceptions import MultipleObjectsReturned
 class QuestionaryResult(models.Model):
     answer = models.TextField()
     fk_product = models.ForeignKey(
@@ -61,10 +62,10 @@ class Question(models.Model):
         related_name='fk_variable_question',
         help_text='The variable associated with the question'
         )
-    type = models.IntegerField(default=1)
-    is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(default=timezone.now)
+    type = models.IntegerField(default=1, help_text='The type of question')
+    is_active = models.BooleanField(default=True, help_text='The status of the question')
+    date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
+    last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
 
     def __str__(self):
         return self.question
@@ -73,8 +74,12 @@ class Question(models.Model):
         if created:
             for data in question_data:
                 if data['type'] == 1:  # Corrected the variable name
-                    initials_variable = data['initials_variable']
-                    variable = Variable.objects.get(initials=initials_variable)
+                    # initials_variable = data['initials_variable']
+                    try:
+                        variable = Variable.objects.get(initials=data['initials_variable'])
+                    except MultipleObjectsReturned:
+                        variable = Variable.objects.filter(initials=data['initials_variable']).first()
+                    # variable = Variable.objects.get(initials=initials_variable)
                     Question.objects.create(
                         question=data['question'],
                         type=data['type'],
