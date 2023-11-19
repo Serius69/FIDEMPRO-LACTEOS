@@ -17,9 +17,11 @@ class FinanceRecommendation(models.Model):
 
     def __str__(self):
         return self.name
+
     @receiver(post_save, sender=Product)
     def create_finance_recommendation(sender, instance, created, **kwargs):
         if created:
+            finance_data = kwargs.get('finance_data', [])  # Assuming finance_data is passed in kwargs
             for data in finance_data:
                 FinanceRecommendation.objects.create(
                     name=data['name'],
@@ -29,9 +31,8 @@ class FinanceRecommendation(models.Model):
                 )
     @receiver(post_save, sender=Product)
     def save_finance_recommendation(sender, instance, **kwargs):
-        for finance_recommendation in instance.fk_equations_variable1.all():
-            finance_recommendation.is_active = instance.is_active
-            finance_recommendation.save()
+        if instance.type == 1:
+            instance.question_set.all().update(is_active=instance.is_active)
 class FinancialDecision(models.Model):
     decision_date = models.DateField()
     quantity_to_produce = models.PositiveIntegerField()

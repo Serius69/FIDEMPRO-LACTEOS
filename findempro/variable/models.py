@@ -8,7 +8,7 @@ from .equations_data import equations_data
 from product.models import Area
 class Variable(models.Model):
     name = models.CharField(max_length=70)
-    initials = models.CharField(max_length=7, default="var")
+    initials = models.CharField(max_length=50, unique=True, default='var1')
     TYPE_CHOICES = [
         ('Estado', 'Estado'),
         ('Exogena', 'Exogena'),
@@ -42,15 +42,16 @@ class Variable(models.Model):
         else:
             return "/media/images/variable/variable-dummy-img.jpg"
     @receiver(post_save, sender=Product)
-    def create_variables(sender, instance, created, **kwargs):
+    def create_variables(sender, instance, created):
         if created:
             product = Product.objects.get(pk=instance.pk)
             for data in variables_data:
                 Variable.objects.create(
                     name=data.get('name'),
-                    initials=data.get('initials'),
+                    initials=f"{data.get('initials')}_{product.id}",
                     type=data.get('type'),
                     unit=data.get('unit'),
+                    image_src=f"/media/images/variable/{data.get('initials')}.jpg",
                     description=data.get('description'),
                     fk_product_id=product.id,
                     is_active=True
@@ -60,7 +61,6 @@ class Variable(models.Model):
         for variable in instance.fk_product_variable.all():
             variable.is_active = instance.is_active
             variable.save()
-
 class Equation(models.Model):
     name = models.CharField(max_length=70)
     expression = models.TextField()
@@ -124,18 +124,37 @@ class Equation(models.Model):
             equations_data = kwargs.get('equations_data', [])
             for data in equations_data:
                 # try:
+                    # Variable.objects.create(
+                    #     name=data['name'],
+                    #     expression=data['expression'],
+                    #     fk_variable1 = Variable.get_or404(initials=data['variable1']),
+                    #     fk_variable2 = Variable.get_or404(initials=data['variable2']),
+                    #     fk_variable3 = Variable.get_or404(initials=data['variable3']),
+                    #     fk_variable4 = Variable.get_or404(initials=data['variable4']),
+                    #     fk_variable5 = Variable.get_or404(initials=data['variable5']),
+                    #     fk_area = Area.get_or404(initials=data['area']),
+                    #     fk_product=instance,
+                    #     is_active=True
+                    # ) 
+                    variable1, created1 = Variable.objects.get_or_create(initials=data['variable1'])
+                    variable2, created2 = Variable.objects.get_or_create(initials=data['variable2'])
+                    variable3, created3 = Variable.objects.get_or_create(initials=data['variable3'])
+                    variable4, created4 = Variable.objects.get_or_create(initials=data['variable4'])
+                    variable5, created5 = Variable.objects.get_or_create(initials=data['variable5'])
+                    area, created_area = Area.objects.get_or_create(initials=data['area'])
+
                     Variable.objects.create(
                         name=data['name'],
                         expression=data['expression'],
-                        fk_variable1 = Variable.get_or404(initials=data['variable1']),
-                        fk_variable2 = Variable.get_or404(initials=data['variable2']),
-                        fk_variable3 = Variable.get_or404(initials=data['variable3']),
-                        fk_variable4 = Variable.get_or404(initials=data['variable4']),
-                        fk_variable5 = Variable.get_or404(initials=data['variable5']),
-                        fk_area = Area.get_or404(initials=data['area']),
+                        fk_variable1=variable1,
+                        fk_variable2=variable2,
+                        fk_variable3=variable3,
+                        fk_variable4=variable4,
+                        fk_variable5=variable5,
+                        fk_area=area,
                         fk_product=instance,
                         is_active=True
-                    )                   
+                    )                  
                 # except Exception as e:
                 #     print(f"Error evaluating equation {data['name']}: {str(e)}")
 
