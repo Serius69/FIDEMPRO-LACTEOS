@@ -18,16 +18,30 @@ class AppsView(LoginRequiredMixin,TemplateView):
     pass
 def questionnaire_list_view(request):
     started = request.session.get('started', False)
-
+    selected_questionary_id = request.GET.get('questionary_id')
+    
+    if request.method == 'GET' and 'select' in request.GET:
+        selected_questionary_id = request.GET.get('selected_questionary', 0)
+        context = {
+            'selected_questionary_id':selected_questionary_id,
+        }
+        return render(request,'questionary/questionary-list.html',context)
+    
+    if request.method == 'POST' and 'start' in request.POST:
+        request.session['started'] = True
+        return redirect('questionary:questionary.list')
+    
+    if request.method == 'POST' and 'cancel' in request.POST:
+        request.session['started'] = False
+        return redirect('questionary:questionary.list')
+    
     if not started:
-        selected_questionary_id = request.GET.get('questionary_id', 'All')
-        if selected_questionary_id == 'All': 
-            questions = Question.objects.order_by('-id').filter(is_active=True)
-            questionnaires = Questionary.objects.order_by('-id').filter(is_active=True)   
+        if selected_questionary_id == 0: 
+            questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)   
         else:
-            # request.session['started'] = True
-            questions = Question.objects.order_by('-id').filter(is_active=True, fk_questionary_id=selected_questionary_id)
-            questionnaires = Questionary.objects.order_by('-id').filter(is_active=True)
+            questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)
         paginator = Paginator(questions, 10) 
         page = request.GET.get('page')
         try:
@@ -37,29 +51,30 @@ def questionnaire_list_view(request):
         except EmptyPage:
             questions = paginator.page(paginator.num_pages)
         context = {
+            'selected_questionary_id':selected_questionary_id,
             'started': started,
             'questions': questions,
             'questionnaires': questionnaires,
         }
-        return render(request,'questionary/questionary-list.html',context)  # Redirect to refresh the page and show questions for the selected questionnaire
-
+        return render(request,'questionary/questionary-list.html',context)
     else:
-        questions = Question.objects.order_by('-id').filter(is_active=True)
-        questionnaires = Questionary.objects.order_by('-id').filter(is_active=True)
-        paginator = Paginator(questions, 5) 
+        questions_to_answer = Question.objects.order_by('-id').filter(is_active=True,fk_questionary_id=selected_questionary_id)
+        questionnaires = Questionary.objects.order_by('-id').filter(is_active=True, fk_business__fk_user=request.user)
+        paginator = Paginator(questions_to_answer, 5) 
         page = request.GET.get('page')
         try:
-            questions = paginator.page(page)
+            questions_to_answer = paginator.page(page)
         except PageNotAnInteger:
             # If page is not an integer, deliver first page.
-            questions = paginator.page(1)
+            questions_to_answer = paginator.page(1)
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
-            questions = paginator.page(paginator.num_pages)
+            questions_to_answer = paginator.page(paginator.num_pages)
 
         context = {
+            'selected_questionary_id':selected_questionary_id,
             'started': started,
-            'questions': questions,
+            'questions_to_answer': questions_to_answer,
             'questionnaires': questionnaires,
         }
 

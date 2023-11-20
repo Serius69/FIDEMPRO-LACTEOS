@@ -48,9 +48,10 @@
                                             <div class="input-group mb-2">
                                                 <label class="input-group-text" for="inputGroupSelect01">Questionary Options</label>
                                                 <select class="form-select" id="inputGroupSelect01" name="selected_questionary">
-                                                    <option selected>Choose...</option>
                                                     {% for questionary in questionnaires %}
-                                                        <option value="{{ questionary.id }}">{{ questionary.questionary }}</option>
+                                                        <option value="{{ questionary.id }}" {% if questionary.id == selected_questionary_id %}selected{% endif %}>
+                                                            {{ questionary.questionary }}
+                                                        </option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -60,9 +61,11 @@
                                             </div>
                                         </form>
                                         <div class="d-grid gap-1">
-                                        <button href="" name="start" class="btn btn-primary">Start Questionary</button>
-                                    </div>
-
+                                            <form method="POST" action="{% url 'questionary:questionary.list' %}">
+                                                {% csrf_token %}
+                                                <button type="submit" name="start" class="btn btn-primary">Start Questionary</button>
+                                            </form>
+                                        </div>
                                     </div>
                                     <div class="col-md-8">
                                         {% if not started %}
@@ -82,10 +85,8 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    
+                                                    </div>                                                    
                                                 {% endfor %}
-
                                             {% else %}
                                                 <div class="text-center py-4">
                                                     <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
@@ -133,21 +134,70 @@
                                                     </div>
                                                     <!-- end row -->
                                         {% endif %}
+                                        {{ started }} 
+                                        {{ selected_questionary_id }} 
                                         {% if started %}
-                                            <div class="progress">
-                                                <div class="progress-bar" style="width: {% widthratio current_page total_pages 100 %}%;" >
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="d-flex mb-4">
-                                                    <div class="ms-3 flex-grow-1">
-                                                        <a><h5 class="question-title">Relationate Variable {{ question.fk_variable.name }}</h5></a>
+                                            <div class="card mb-3">
+                                                <div class="card-header">
+                                                    <div class="progress">
+                                                        <div class="progress-bar" style="width: {% widthratio current_page total_pages 100 %}%;"></div>
                                                     </div>
                                                 </div>
-                                                <label for="{{ question.id }}" class="form-label">
-                                                    <span data-key="t-home">{{ question.question }}</span>
-                                                </label>
-                                                <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}" name="{{ question.id }}">
+                                                <div class="card-body">
+                                                    {% for question in questions_to_answer %}
+                                                        <h5 class="card-title">Relationate Variable {{ question.fk_variable.name }}</h5>
+                                                        <p class="card-text">{{ question.question }}</p>
+                                                        <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}" name="{{ question.id }}">
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="card-footer">
+                                                    <form method="POST" action="{% url 'questionary:questionary.list' %}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" name="cancel" class="btn btn-primary">Cancel Questionary</button>
+                                                    </form>
+                                                </div>
                                             </div>
+
+                                            <!-- Pagination -->
+                                            <div class="align-items-center mt-2 row text-center text-sm-start">
+                                                <div class="col-sm">
+                                                <div class="text-muted">
+                                                    Showing
+                                                    <span class="fw-semibold">{{ questions.number }}</span>
+                                                    of
+                                                    <span class="fw-semibold">
+                                                    {{ questions.paginator.num_pages }}
+                                                    </span>
+                                                    Results
+                                                </div>
+                                                </div>
+                                                <div class="col-sm-auto">
+                                                <ul
+                                                    class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
+                                                >
+                                                    {% if questions.has_previous %}
+                                                        <li class="page-item">
+                                                        <a href="?page={{ questions.previous_page_number }}" class="page-link">
+                                                            ←
+                                                        </a>
+                                                        </li>
+                                                    {% endif %} 
+                                                    {% for i in questions.paginator.page_range %}
+                                                        <li class="page-item {% if i == questions.number %}active{% endif %}">
+                                                        <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                                                        </li>
+                                                    {% endfor %} 
+                                                    {% if questions.has_next %}
+                                                        <li class="page-item">
+                                                        <a href="?page={{ questions.next_page_number }}" class="page-link">
+                                                            →
+                                                        </a>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+                                                </div>
+                                            </div>
+                                            <!-- end row -->
                                         {% endif %} 
                                     </div>
                                 </div>
