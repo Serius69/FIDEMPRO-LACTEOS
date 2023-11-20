@@ -1,7 +1,7 @@
 from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from variable.models import Variable
-from questionary.models import Questionary,Question
+from questionary.models import Questionary,Question,Answer,QuestionaryResult
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.conf import settings
@@ -26,6 +26,7 @@ def questionnaire_list_view(request):
         questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)
         context = {
             'selected_questionary_id':selected_questionary_id,
+            'questionary_result_id':questionary_result_id,
             'started': started,
             'questions': questions,
             'questionnaires': questionnaires,
@@ -34,10 +35,26 @@ def questionnaire_list_view(request):
     
     if request.method == 'POST' and 'start' in request.POST:
         request.session['started'] = True
-        return redirect('questionary:questionary.list')
+        question_result = QuestionaryResult.objects.create(fk_business=request.user.fk_business)
+        return redirect('questionary:questionary.list', question_result_id=question_result.id)
     
     if request.method == 'POST' and 'cancel' in request.POST:
         request.session['started'] = False
+        return redirect('questionary:questionary.list')
+    
+    if request.method == 'POST' and 'next' in request.POST:
+        question_id = request.POST.get('question_id')
+        questionary_result_id = request.GET.get('question_result_id')
+        answer = request.POST.get('answer')
+        # Check if the selected_answer is valid (you might want to add more validation)
+        if answer is not None:
+            answer_instance = Answer.objects.create(answer=answer, fk_question_id=question_id, fk_questionary_result=questionary_result_id)
+            # You might want to associate the answer with the user or session here
+            answer_instance .save()
+            messages.success(request, 'Response for the question saved successfully!')
+        else:
+            messages.error(request, 'Ocurred an error!')
+            
         return redirect('questionary:questionary.list')
     
     if not started:
@@ -87,37 +104,22 @@ def questionnaire_list_view(request):
 
         return render(request, 'questionary/questionary-list.html', context)
 
-def show_question(request, pk):
-  try:
-    question = Question.objects.get(pk=pk)
-  except Question.DoesNotExist:
-    raise Http404("Pregunta no encontrada")
-  context = {
-    'question': question
-  }
-  if request.method == 'POST':
-    # Aquí puedes guardar la respuesta
-    # Y luego redirigir a la siguiente pregunta
-     return render(request, 'question.html', context)
+
 
 def questionnaire_save_view(request):
-    try:
-        questions = Question.objects.order_by('-id')
-        per_page = 10 
-        paginator = Paginator(questions, per_page)
-        page = request.GET.get('page')
-        try:
-            questions = paginator.page(page)
-        except PageNotAnInteger:
-            questions = paginator.page(1)
-        except EmptyPage:
-            questions = paginator.page(paginator.num_pages)
-        questionnaires = Questionary.objects.order_by('-id')
-        context = {'questions': questions, 'questionnaires': questionnaires}
-    except Exception as e:
-        error_message = str(e)
-        context = {'error_message': error_message}
-    return render(request, 'questionary/questionary-result.html', context)
+    if request.method == 'POST':
+        # Extract answers from the form
+        for key, value in request.POST.items():
+            if key.startswith('question_'):
+                question_id = key.replace('question_', '')
+                question = Question.objects.get(pk=question_id)
+                answer = Answer.objects.create(question=question, selected_answer=value)
+                # You might want to associate the answer with the user or session here
+
+        messages.success(request, 'Questionnaire results saved successfully!')
+        return redirect('home')  # Redirect to the home page or another appropriate page after saving results
+
+    return render(request, 'questionary/questionary-result.html')
 
 
 

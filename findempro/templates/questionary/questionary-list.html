@@ -43,7 +43,7 @@
                             <div class="card-header border-0 rounded">
                                 <div class="row g-6 mb-4">
                                     <div class="col-md-4">
-                                        <form method="GET" action="{% url 'questionary:questionary.list' %}">
+                                        <form method="GET" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm()">
                                             {% csrf_token %}
                                             <div class="input-group mb-2">
                                                 <label class="input-group-text" for="inputGroupSelect01">Questionary Options</label>
@@ -90,7 +90,6 @@
                                                         ←
                                                     </a>
                                                 </li>
-
                                                 {% if questions_to_answer.has_next %}
                                                     <li class="page-item">
                                                         <a href="?page={{ questions_to_answer.next_page_number }}" class="page-link">
@@ -101,9 +100,7 @@
                                             {% endif %}
                                             </ul>
                                         </div>
-                                        
                                         {% endif %}
-
                                     </div>
                                     <div class="col-md-6">
                                         {% if not started %}
@@ -185,27 +182,38 @@
                                                 <div class="card-body">
                                                     {% if questions_to_answer %}
                                                         {% for question in questions_to_answer %}
-                                                            <h5 class="card-title">
-                                                                {% if question.fk_variable %}
-                                                                    Relationate Variable {{ question.fk_variable.name }}
-                                                                {% else %}
-                                                                    Relationate Variable not found
-                                                                {% endif %}
-                                                            </h5>
-                                                            <p class="card-text">{{ question.question }}</p>
-                                                            {% if question.type == 2 %}
-                                                                <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}" name="{{ question.id }}">
-                                                            {% else %}
-                                                            <div class="form-group">
-                                                                <label for="answer">Select an option:</label>
-                                                                <select class="form-control" id="answer" name="answer">
-                                                                    <option value="option1">Option 1</option>
-                                                                    <option value="option2">Option 2</option>
-                                                                    <option value="option3">Option 3</option>
-                                                                </select>
-                                                            </div>
-                                                            {% endif %}
+                                                            <form method="POST" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm2()">
+                                                                {% csrf_token %}
+                                                                <h5 class="card-title">
+                                                                    {% if question.fk_variable %}
+                                                                        Relationate Variable {{ question.fk_variable.name }}
+                                                                    {% else %}
+                                                                        Relationate Variable not found
+                                                                    {% endif %}
+                                                                </h5>
+                                                                <p class="card-text">{{ question.question }}</p>
+                                                                {% if question.type == 1 %}
+                                                                    <div class="input-group">
+                                                                        <input type="number" value="{{ question.fk_answer.answer }}"
+                                                                        class="form-control" name="question_id"
+                                                                        id="question_id"
+                                                                        placeholder="Answer the question only with numbers"
+                                                                        required minlength="2" maxlength="10">
 
+                                                                        <span class="input-group-text">{{ question.fk_variable.unit }}</span>
+                                                                    </div>
+                                                                {% elif  question.type == 2 %}
+                                                                <div class="form-group">
+                                                                    <label for="answer">Select an option:</label>
+                                                                    <select class="form-control" id="answer" name="answer">
+                                                                        {% for option in question.posible_answers %}
+                                                                            <option value="{{option}}">{{option}}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                {% endif %}             
+                                                                <button type="submit" name="next" class="btn btn-secondary">Next Question</button>
+                                                            </form>
                                                         {% endfor %}
                                                     {% else %}
                                                         <p>No questions to answer.</p>
@@ -216,21 +224,36 @@
                                                         {% csrf_token %}
                                                         <button type="submit" name="cancel" class="btn btn-primary">Cancel Questionary</button>
                                                     </form>
+                                                    {% if questions_to_answer.last %}
+                                                        <li class="page-item">
+                                                            <form method="POST" action="{% url 'questionary:question.save' %}">
+                                                                {% csrf_token %}
+                                                                <button type="submit" name="next" class="btn btn-primary">Finish Questionary</button>
+                                                            </form>
+                                                        </li>
+                                                    {% endif %}
                                                 </div>
                                             </div>
 
                                             <!-- Pagination -->
                                             <div class="align-items-center mt-2 row text-center text-sm-start">
                                                 <div class="col-sm">
-                                                <div class="text-muted">
-                                                    Showing
-                                                    <span class="fw-semibold"> Question Number: {{ questions_to_answer.number }}</span>
-                                                    of
-                                                    <span class="fw-semibold">
-                                                    {{ questions_to_answer.paginator.num_pages }} questions
-                                                    </span>
+                                                    <div class="text-muted">
+                                                        Showing
+                                                        <span class="fw-semibold"> Question Number: {{ questions_to_answer.number }}</span>
+                                                        of
+                                                        <span class="fw-semibold">
+                                                        {{ questions_to_answer.paginator.num_pages }} questions
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                </div>
+                                                <div class="col-sm-auto">
+                                                    <ul
+                                                        class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
+                                                    >
+                                                        
+                                                        
+                                                    </ul>
                                                 
                                             </div>
                                             <!-- end row -->
@@ -251,4 +274,45 @@
             <!-- end main content-->
 {% endblock content %}
 {% block extra_js %}
+<script>
+    function validateForm() {
+        var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
+
+        // Validate if a questionary is selected
+        if (selectedQuestionary === 'Choose...') {
+            alert('Please select a questionary.');
+            return false;
+        }
+
+        // Add more validations if needed
+
+        return true; // Submit the form if all validations pass
+    }
+</script>
+<script>
+    function validateForm2() {
+        var questionType = {{ question.type }};
+        var answerInput = document.getElementById('question_id');
+
+        if (questionType == 1) {
+            // Numeric question validation
+            var numericValue = answerInput.value.trim();
+            if (!numericValue.match(/^\d+$/)) {
+                alert('Please enter a valid numeric answer.');
+                return false;
+            }
+        } else if (questionType == 2) {
+            // Multiple-choice question validation (optional)
+            var selectedOption = document.getElementById('answer').value;
+            if (selectedOption === 'Choose...') {
+                alert('Please select an option.');
+                return false;
+            }
+        }
+
+        // Add more validations if needed
+
+        return true; // Submit the form if all validations pass
+    }
+</script>
 {% endblock extra_js %}

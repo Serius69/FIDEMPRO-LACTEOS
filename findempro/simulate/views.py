@@ -10,6 +10,7 @@ from .models import DataPoint, FDP
 from variable.models import Variable
 from product.models import Product
 from business.models import Business
+from simulate.models import Simulation,SimulationScenario,ResultSimulation
 from questionary.models import QuestionaryResult
 from sympy import Eq, sympify
 import openai
@@ -54,120 +55,80 @@ def ks_test_view(request, variable_name):
             'error_message': 'Variable not found.',
         }
     return JsonResponse(context)
-def equation_analysis_view(request):
-    try:
-        equation_str = "x + y = 10"
-        equation = Eq(sympify(equation_str), 10)
-        variables = list(equation.free_symbols)
-        variable_data = []
-        for variable in variables:
-            # Replace 'query_database_for_variable_values' and 'evaluate_expression' with your actual logic
-            dependencies = []  # You need to define the dependencies
-            values = query_database_for_variable_values(dependencies)
-            variable_value = evaluate_expression(equation, values)
-            variable_data.append({"name": variable, "value": variable_value})
-        context = {
-            "equation_str": equation_str,
-            "variable_data": variable_data,
-        }
-
-    except Exception as e:
-        context = {
-            'error_message': str(e),
-        }
-
-    return render(
-        request,
-        "equation_analysis.html",  # Replace with the actual template name
-        context,
-    )
-def create_simulation_equations(request):
-    try:
-        variables = Variable.objects.all()
-        equations = []
-        for variable in variables:
-            equation = generate_equation_from_variable(variable)
-            equations.append(equation)
-        context = {
-            "equations": equations,
-        }
-    except Exception as e:
-        context = {
-            'error_message': str(e),
-        }
-    return render(
-        request,
-        "simulation/equations.html", 
-        context,
-    )
-def generate_equation_from_variable(variable):
-    try:
-        prompt = f"Generate an equation for the variable {variable.name} with type {variable.get_type_display()} and parameters {variable.parameters}."
-        response = openai.Completion.create(
-            engine="text-davinci-002",  # Choose the appropriate engine
-            prompt=prompt,
-            max_tokens=50,  # Adjust the max tokens as needed
-            n=1,  # Number of equations to generate
-            stop=None,  # Stop generating equations at a specific token (e.g., "?")
-        )
-        equation = response.choices[0].text.strip()
-        return equation
-    except Exception as e:
-        return str(e)
-
-def questionnaire_info(request, questionnaire_id):
-    questionnaire = get_object_or_404(QuestionaryResult, id=questionnaire_id)
-    questionnaire_name = questionnaire.name
-    questionnaire_description = questionnaire.description
-    questions = questionnaire.question_set.all()
-    
-    context = {
-        'questionnaire': questionnaire,
-        'questionnaire_name': questionnaire_name,
-        'questionnaire_description': questionnaire_description,
-        'questions': questions,
-        
-    }
-    return render(request, 'questionnaire_info_template.html', context)
 def simulate_init(request):
-    try:
-        businesses = Business.objects.all().order_by('-id')
-        products = Product.objects.all().order_by('-id')
-        context = {'product': products, 'business': businesses}
+    simulation_started = request.session.get('simulation_started', False)
+
+    if not simulation_started:
+        businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
+        selected_simulation_id = request.GET.get('simulation_id')
+
+        products = Product.objects.filter(
+            is_active=True,
+            fk_business__fk_user=request.user,
+            simulation_id=selected_simulation_id
+        ).order_by('-id')
+
+        questionnaires_result = QuestionaryResult.objects.filter(
+            is_active=True,
+            fk_business__fk_user=request.user,
+            simulation_id=selected_simulation_id
+        ).order_by('-id')
+
         if request.method == "POST":
-            form = SimulationForm (request.POST or None,request.FILES or None)
+            form = SimulationForm(request.POST, request.FILES)
             if form.is_valid():
-                form.save()
-                messages.success(request,"Company inserted successfully!")
-                return redirect("product:product.overview")
+                simulation_instance = form.save(commit=False)
+                simulation_instance.save()
+                request.session['simulation_started'] = True
+                request.session['simulation_id'] = simulation_instance.id
+
+                chart_data = [...]  # Replace with actual chart data
+                table_data = [...]  # Replace with actual table data 
+                response_data = {
+                    'chartData': chart_data,
+                    'tableData': table_data,
+                }
+                context = {
+                    'products': products,
+                    'businesses': businesses,
+                    'questionnaires_result': questionnaires_result,
+                    'response_data': response_data,
+                }
+                return redirect('simulate:simulate.init')  # Redirect to the next step in the simulation
             else:
-                messages.error(request,"Something went wrong!")
-                return redirect("product:product.overview")
-    except Business.DoesNotExist:
+                messages.error(request, "Form validation failed. Please check your inputs.")
+        else:
+            form = SimulationForm()
+
         context = {
-            'error_message': 'Error with the simulation.',
+            'products': products,
+            'businesses': businesses,
+            'questionnaires_result': questionnaires_result,
+            'form': form,
         }
-    return render(request, 'simulate/simulate-init.html', context)
-def simulate_show_form(request):
-    try:
-        businesses = Business.objects.all().order_by('-id')
-        products = Product.objects.all().order_by('-id')
-        questionaries = QuestionaryResult.objects.all().order_by('-id')
-        chart_data = [...]
-        table_data = [...] 
+
+        return render(request, 'simulate/simulate-init.html', context)
+    else:
+        simulation_id = request.session.get('simulation_id')
+        simulation_instance = SimulationScenario.objects.get(pk=simulation_id)
+
+        chart_data = [...]  # Replace with actual chart data
+        table_data = [...]  # Replace with actual table data 
         response_data = {
             'chartData': chart_data,
             'tableData': table_data,
         }
+
+        # Logic to fetch data for the current step of the simulation
+        # ...
+
         context = {
-            'products': products, 
+            'products': products,
             'businesses': businesses,
-            'questionaries': questionaries,
+            'questionnaires_result': questionnaires_result,
             'response_data': response_data,
-            }
-    except Business.DoesNotExist:
-        context = {
-            'error_message': 'No business found.',
+            'simulation_instance': simulation_instance,
+            'started': simulation_started,
         }
 
-    return render(request, 'simulate/simulate-init.html', context)
+        return render(request, 'simulate/simulate-init.html', context)

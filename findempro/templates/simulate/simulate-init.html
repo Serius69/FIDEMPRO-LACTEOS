@@ -73,7 +73,7 @@
                                             <div class="card-body">
                                                 <p class="text-muted">Realize a Simulation with the next params</p>
                                                 <div class="live-preview">
-                                                    <form action="{% url 'simulate:simulate.init' %}" method="post" id="simulateForm">
+                                                    <form action="{% url 'simulate:simulate.init' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
                                                         {% csrf_token %}
                                                         <div class="row">                                                          
                                                             <div class="col-md-4">
@@ -99,7 +99,7 @@
                                                                     <label for="historicdemand" class="form-label" title="Submit the historic demand you want to use in format .xlsx"><span data-key="t-demandhistory">Historic Demand</span></label>
                                                                     <div class="dropzone" id="myDropzone">
                                                                         <div class="fallback">
-                                                                            <input name="file" type="file" multiple="multiple" accept=".xlsx, .txt">
+                                                                            <input name="demandhistory" type="file" multiple="multiple" accept=".xlsx, .txt">
                                                                         </div>
                                                                         <div class="dz-message needsclick">
                                                                             <div class="mb-3">
@@ -164,10 +164,12 @@
                                                                     <label for="elements" class="form-label" title="Select the options that you want to use in the simulation"> Areas that you want to simulate</label>
                                                                     <label>
                                                                         <div class="form-check">
+                                                                            
                                                                             <input class="form-check-input" type="checkbox" id="financial_statements">
                                                                             <label class="form-check-label" for="financial_statements">
                                                                                 Financial Statements
                                                                             </label>
+                                                                        
                                                                         </div>
                                                                     </label>
                                                                 </div>
@@ -188,6 +190,13 @@
                                                             </div><!--end col-->
                                                         </div><!--end row-->
                                                     </form>
+
+                                                    {% if simulation_started %}
+                                                        <!-- Display simulation results or next step content here -->
+                                                        <p>Simulation started!</p>
+                                                        <p>Current Step: {{ simulation_instance.current_step }}</p>
+                                                        <!-- Display simulation data for the current step -->
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
@@ -235,10 +244,11 @@
                                             <div class="card-header">
                                                 <h4 class="card-title mb-0">Simulate Table</h4>
                                             </div><!-- end card header -->
-            
+                                    
                                             <div class="card-body">
                                                 <div id="customerList">
                                                     <div class="table-responsive table-card mt-3 mb-1">
+                                                        {% if simulation_started %}
                                                         <table class="table align-middle table-nowrap" id="simulateTable">
                                                             <thead class="table-light">
                                                                 <tr>
@@ -252,30 +262,52 @@
                                                                     <th class="sort" data-sort="unit">Unit</th>
                                                                     <th class="sort" data-sort="unit_time">Unit of time</th>
                                                                     <th class="sort" data-sort="result">Result</th>
-                                                                    </tr>
+                                                                </tr>
                                                             </thead>
                                                             <tbody class="">
                                                                 <tr>
                                                                     <td class="date">{{simulate.date}}</td>
                                                                     <td class="variable">{{simulate.variable}}</td>
                                                                     <td class="unit">{{simulate.unit}}</td>
-                                                                    <td class="unit_time">{{simulate.unittime}}</td>  
-                                                                    <td class="result">{{simulate.result}}</td>                                                            
+                                                                    <td class="unit_time">{{simulate.unittime}}</td>
+                                                                    <td class="result">{{simulate.result}}</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
-        
-                                                            <div class="noresult" style="display: none">
-                                                                <div class="text-center">
-                                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
-                                                                        colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
-                                                                    </lord-icon>
-                                                                    <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                                    <p class="text-muted mb-0"></p>
-                                                                </div>
-                                                            </div>
+                                                        {% else %}
+                                                        <table class="table align-middle table-nowrap" id="simulateTable">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th scope="col" style="width: 50px;">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="checkbox" id="checkAll" value="option">
+                                                                        </div>
+                                                                    </th>
+                                                                    <th class="sort" data-sort="date">Date</th>
+                                                                    <th class="sort" data-sort="variable">Variable</th>
+                                                                    <th class="sort" data-sort="unit">Unit</th>
+                                                                    <th class="sort" data-sort="unit_time">Unit of time</th>
+                                                                    <th class="sort" data-sort="result">Result</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="">
+                                                                <tr>
+                                                                    <td colspan="100%"> <!-- Adjust the colspan value as needed -->
+                                                                        <div class="noresult" style="display: none">
+                                                                            <div class="text-center">
+                                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                                                    colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                                                                                </lord-icon>
+                                                                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                                                                <p class="text-muted mb-0"></p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                        {% endif %}
                                                     </div>
-                                                    
                                                     <div class="d-flex justify-content-end">
                                                         <div class="pagination-wrap hstack gap-2">
                                                             <a class="page-item pagination-prev disabled" href="javascript:void(0);">
@@ -358,7 +390,6 @@
                         </div> <!-- container-fluid -->
                 </div>
                 <!-- End Page-content -->
-
             {% block footer %}
             {% include "partials/footer.html" %}
             {% endblock footer %}
@@ -371,6 +402,36 @@
     <!-- dropzone min -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" integrity="sha512-vjeXE7PyNKQmUtsaO+t4fT80y8AGCPiHdM2AUxP2dG9KqDYZSfGAF4RqXUsXgD9PwtGZe5Jr9Ok6mbT7FpQlgg==" crossorigin="anonymous"></script>
     <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
+
+    <script>
+        function validateForm() {
+            // Validate the selected questionary
+            var questionarySelect = document.getElementById('fk_questionary');
+            if (questionarySelect.value == 'Choose...') {
+                alert('Please select a questionary.');
+                return false;
+            }
+    
+            // Validate the uploaded historic demand file
+            var historicDemandInput = document.querySelector('input[name="demandhistory"]');
+            if (historicDemandInput.files.length === 0) {
+                alert('Please upload a historic demand file.');
+                return false;
+            }
+    
+            // Validate the selected unit of time
+            var unitTimeSelect = document.getElementById('unit_time');
+            if (unitTimeSelect.value == 'Choose...') {
+                alert('Please select a unit of time.');
+                return false;
+            }
+    
+            // Add more validations for other fields if needed
+    
+            return true; // Submit the form if all validations pass
+        }
+    </script>
+
     <script>
         // Dropzone initialization
         Dropzone.options.myDropzone = {

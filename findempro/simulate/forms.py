@@ -1,5 +1,5 @@
 from django import forms
-from .models import SimulationScenario
+from .models import Simulation
 
 class SimulationForm(forms.ModelForm):
     class Meta:
