@@ -22,8 +22,13 @@ def questionnaire_list_view(request):
     
     if request.method == 'GET' and 'select' in request.GET:
         selected_questionary_id = request.GET.get('selected_questionary', 0)
+        questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+        questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)
         context = {
             'selected_questionary_id':selected_questionary_id,
+            'started': started,
+            'questions': questions,
+            'questionnaires': questionnaires,
         }
         return render(request,'questionary/questionary-list.html',context)
     
@@ -36,7 +41,7 @@ def questionnaire_list_view(request):
         return redirect('questionary:questionary.list')
     
     if not started:
-        if selected_questionary_id == 0: 
+        if selected_questionary_id == None: 
             questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user)
             questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)   
         else:
@@ -58,17 +63,19 @@ def questionnaire_list_view(request):
         }
         return render(request,'questionary/questionary-list.html',context)
     else:
-        questions_to_answer = Question.objects.order_by('-id').filter(is_active=True,fk_questionary_id=selected_questionary_id)
-        questionnaires = Questionary.objects.order_by('-id').filter(is_active=True, fk_business__fk_user=request.user)
-        paginator = Paginator(questions_to_answer, 5) 
+        if selected_questionary_id == None: 
+            questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)   
+        else:
+            questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)
+        paginator = Paginator(questions_to_answer, 1) 
         page = request.GET.get('page')
         try:
             questions_to_answer = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
             questions_to_answer = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
             questions_to_answer = paginator.page(paginator.num_pages)
 
         context = {

@@ -54,20 +54,58 @@
                                                         </option>
                                                     {% endfor %}
                                                 </select>
-                                            </div>
-                                            <div class="d-grid gap-1">
-                                                <button type="submit" name="select" class="btn btn-primary">Select</button>
-                                                
-                                            </div>
+                                            </div> 
+                                            {% if not started %}
+                                                <div class="d-grid gap-1">
+                                                    <button type="submit" name="select" class="btn btn-primary">Select</button>
+                                                </div>
+                                            {% else %}                                          
+                                            {% endif %}
                                         </form>
-                                        <div class="d-grid gap-1">
-                                            <form method="POST" action="{% url 'questionary:questionary.list' %}">
-                                                {% csrf_token %}
-                                                <button type="submit" name="start" class="btn btn-primary">Start Questionary</button>
-                                            </form>
+
+                                        {% if not started %}
+                                            <div class="d-grid gap-1">
+                                                <form method="POST" action="{% url 'questionary:questionary.list' %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" name="start" class="btn btn-primary">Start Questionary</button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+                                        {% if started %}
+                                        <div class="col-sm-auto">
+                                            <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                                                {% for i in questions_to_answer.paginator.page_range %}
+                                                    {% if forloop.counter0|divisibleby:5 %}<div class="row">{% endif %}
+                                                    <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
+                                                        <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                                                    </li>
+                                                    {% if forloop.counter|divisibleby:5 or forloop.last %}</div>{% endif %}
+                                                {% endfor %}                                        
+                                            </ul>
+
+                                            <ul>
+                                                {% if questions_to_answer.has_previous %}
+                                                <li class="page-item">
+                                                    <a href="?page={{ questions_to_answer.previous_page_number }}" class="page-link">
+                                                        ←
+                                                    </a>
+                                                </li>
+
+                                                {% if questions_to_answer.has_next %}
+                                                    <li class="page-item">
+                                                        <a href="?page={{ questions_to_answer.next_page_number }}" class="page-link">
+                                                            →
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endif %}
+                                            </ul>
                                         </div>
+                                        
+                                        {% endif %}
+
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-md-6">
                                         {% if not started %}
                                             {% if questions %}
                                                 {% for question in questions %}
@@ -136,6 +174,7 @@
                                         {% endif %}
                                         {{ started }} 
                                         {{ selected_questionary_id }} 
+                                        {{ questions_to_answer }} 
                                         {% if started %}
                                             <div class="card mb-3">
                                                 <div class="card-header">
@@ -144,11 +183,33 @@
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
-                                                    {% for question in questions_to_answer %}
-                                                        <h5 class="card-title">Relationate Variable {{ question.fk_variable.name }}</h5>
-                                                        <p class="card-text">{{ question.question }}</p>
-                                                        <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}" name="{{ question.id }}">
-                                                    {% endfor %}
+                                                    {% if questions_to_answer %}
+                                                        {% for question in questions_to_answer %}
+                                                            <h5 class="card-title">
+                                                                {% if question.fk_variable %}
+                                                                    Relationate Variable {{ question.fk_variable.name }}
+                                                                {% else %}
+                                                                    Relationate Variable not found
+                                                                {% endif %}
+                                                            </h5>
+                                                            <p class="card-text">{{ question.question }}</p>
+                                                            {% if question.type == 2 %}
+                                                                <input type="number" class="form-control" placeholder="Answer the question" id="{{ question.id }}" name="{{ question.id }}">
+                                                            {% else %}
+                                                            <div class="form-group">
+                                                                <label for="answer">Select an option:</label>
+                                                                <select class="form-control" id="answer" name="answer">
+                                                                    <option value="option1">Option 1</option>
+                                                                    <option value="option2">Option 2</option>
+                                                                    <option value="option3">Option 3</option>
+                                                                </select>
+                                                            </div>
+                                                            {% endif %}
+
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <p>No questions to answer.</p>
+                                                    {% endif %}
                                                 </div>
                                                 <div class="card-footer">
                                                     <form method="POST" action="{% url 'questionary:questionary.list' %}">
@@ -163,39 +224,14 @@
                                                 <div class="col-sm">
                                                 <div class="text-muted">
                                                     Showing
-                                                    <span class="fw-semibold">{{ questions.number }}</span>
+                                                    <span class="fw-semibold"> Question Number: {{ questions_to_answer.number }}</span>
                                                     of
                                                     <span class="fw-semibold">
-                                                    {{ questions.paginator.num_pages }}
+                                                    {{ questions_to_answer.paginator.num_pages }} questions
                                                     </span>
-                                                    Results
                                                 </div>
                                                 </div>
-                                                <div class="col-sm-auto">
-                                                <ul
-                                                    class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
-                                                >
-                                                    {% if questions.has_previous %}
-                                                        <li class="page-item">
-                                                        <a href="?page={{ questions.previous_page_number }}" class="page-link">
-                                                            ←
-                                                        </a>
-                                                        </li>
-                                                    {% endif %} 
-                                                    {% for i in questions.paginator.page_range %}
-                                                        <li class="page-item {% if i == questions.number %}active{% endif %}">
-                                                        <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                        </li>
-                                                    {% endfor %} 
-                                                    {% if questions.has_next %}
-                                                        <li class="page-item">
-                                                        <a href="?page={{ questions.next_page_number }}" class="page-link">
-                                                            →
-                                                        </a>
-                                                        </li>
-                                                    {% endif %}
-                                                </ul>
-                                                </div>
+                                                
                                             </div>
                                             <!-- end row -->
                                         {% endif %} 
