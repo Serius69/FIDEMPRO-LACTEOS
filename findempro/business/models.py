@@ -7,6 +7,11 @@ from django.dispatch import receiver
 
 class Business(models.Model):
     name = models.CharField(max_length=255, verbose_name='Name', help_text='The name of the business')
+    TYPE_CHOICES = [
+        (1, 'Dairy'),
+        (2, 'Agriculture '),
+        (3, 'Consumer Goods'),
+    ] 
     type = models.IntegerField(default=1, verbose_name='Type', help_text='The type of the business')
     location = models.CharField(max_length=255, verbose_name='Location', help_text='The location of the business')
     image_src = models.ImageField(upload_to='images/business', null=True, blank=True, verbose_name='Image', help_text='The image of the business')
@@ -39,16 +44,12 @@ class Business(models.Model):
                 type= 1,  
                 location="La Paz",
                 fk_user_id=user.id,
-            )
-
+                )
     @receiver(post_save, sender=User)
     def save_business(sender, instance, **kwargs):
-        for business in instance.fk_user_business.all():
+        business = instance.fk_user_business.first() 
+        if business:
             business.is_active = instance.is_active
             business.save()
-            
-    # TYPE_CHOICES = [
-    #     (1, 'Dairy'),
-    #     (2, 'Agriculture '),
-    #     (3, 'Consumer Goods'),
-    # ] 
+                
+    

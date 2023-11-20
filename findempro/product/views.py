@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product
+from .models import Product, Area
 from business.models import Business
 from variable.models import Variable
 from report.models import Report
@@ -49,16 +49,15 @@ def product_overview(request, pk):
         product = get_object_or_404(Product, pk=pk)
         variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        areas = Area.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         simulations = ResultSimulation.objects.filter(fk_simulation_scenario__fk_product_id=product.id, is_active=True).order_by('-id')
-        paginator = Paginator(variables_product, 3)
+        paginator = Paginator(variables_product, 10)
         page = request.GET.get('page')
         try:
             variables_product = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
             variables_product = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
             variables_product = paginator.page(paginator.num_pages)
         
         context = {
@@ -66,7 +65,8 @@ def product_overview(request, pk):
                 'product': product, 
                 'current_datetime': current_datetime,
                 'simulations': simulations,
-                'reports': reports
+                'reports': reports,
+                'areas': areas
                    } 
         return render(request, 'product/product-overview.html', context)
     # except Exception as e:
@@ -138,40 +138,3 @@ def get_product_details(request, pk):
     except Exception as e:
         # Manejo de otras excepciones inesperadas
         return JsonResponse({"error": str(e)}, status=500)
-
-# def generate_default_products(request, fk_business):
-#     try:
-#         if request.method == 'POST':
-#             # Datos de los productos
-#             products_data = [
-#                 {'name': 'Milk',
-#                 'description': 'La leche es un alimento básico completo y equilibrado, proporcionando un elevado contenido de nutrientes (Proteínas, Hidratos de Carbono, Vitaminas, Minerales y Lípidos) en relación al contenido calórico. 2. Su valor como bebida nutritiva es incomparable al resto de las bebidas existentes en el mercado.',
-#                 'image_src': 'images/product/soles.webp',
-#                 'fk_business': fk_business,
-#                 'type': 'Dairy',
-#                 },
-#                 {'name': 'Cheese',
-#                 'description': 'El queso es un alimento elaborado a partir de la leche cuajada de vaca, cabra, oveja u otros mamíferos. Sus diferentes estilos y sabores son el resultado del uso de distintas especies de bacterias y mohos, niveles de nata en la leche, curación, tratamientos en su proceso, etc.',
-#                 'image_src': 'images/product/soles.webp',
-#                 'fk_business': fk_business,
-#                 'type': 'Dairy',
-#                 },
-#                 {'name': 'Yogurt',
-#                 'description': 'El yogur es uno de los alimentos que se ha normalizado como postre diario en muchas sociedades. Además de su valor nutritivo, ¡está muy rico! Un yogur natural es un producto lácteo obtenido por la fermentación de microorganismos específicos de la leche.',
-#                 'image_src': 'images/product/soles.webp',
-#                 'fk_business': fk_business,
-#                 'type': 'Dairy',
-#                 },
-#                 ]
-#             # Crear los productos con diferentes datos
-#             for data in products_data:
-#                 product = Product.objects.create(**data)
-
-#             return JsonResponse({'message': 'Productos generados con éxito'})
-    
-#     except Exception as e:
-#         # Manejo de excepción. Puedes imprimir un mensaje de error o realizar otras acciones necesarias.
-#         error_message = str(e)
-#         return JsonResponse({'error': error_message}, status=500)
-
-#     return render(request, 'product/product_list.html')

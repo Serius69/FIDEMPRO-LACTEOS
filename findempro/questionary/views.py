@@ -13,65 +13,57 @@ from django.http import HttpResponseForbidden
 import openai
 import logging
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
 openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 def questionnaire_list_view(request):
-    """
-    View function for displaying the questionnaire list.
-    """
-    if not request.session.get('started', False):
-        # Show start button
-        if request.method == 'POST' and 'start' in request.POST:
-            request.session['started'] = True
-            return redirect('first_question')
-        else:
-            return render(request, 'questionary/questionary-list.html')
-    else:
-        try:
-            questions = Question.objects.order_by('-created_at')
-            paginator = Paginator(questions, settings.QUESTIONS_PER_PAGE)
-            page = request.GET.get('page')
-            questions = paginator.get_page(page)
+    started = request.session.get('started', False)
 
-            context = {
-                'started': request.session.get('started', False),
-                'questions': questions
-            }
-        except Exception as e:
-            context = {'error': str(e)}
+    if not started:
+        selected_questionary_id = request.GET.get('questionary_id', 'All')
+        if selected_questionary_id == 'All': 
+            questions = Question.objects.order_by('-id').filter(is_active=True)
+            questionnaires = Questionary.objects.order_by('-id').filter(is_active=True)   
+        else:
+            # request.session['started'] = True
+            questions = Question.objects.order_by('-id').filter(is_active=True, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('-id').filter(is_active=True)
+        paginator = Paginator(questions, 10) 
+        page = request.GET.get('page')
+        try:
+            questions = paginator.page(page)
+        except PageNotAnInteger:
+            questions = paginator.page(1)
+        except EmptyPage:
+            questions = paginator.page(paginator.num_pages)
+        context = {
+            'started': started,
+            'questions': questions,
+            'questionnaires': questionnaires,
+        }
+        return render(request,'questionary/questionary-list.html',context)  # Redirect to refresh the page and show questions for the selected questionnaire
+
+    else:
+        questions = Question.objects.order_by('-id').filter(is_active=True)
+        questionnaires = Questionary.objects.order_by('-id').filter(is_active=True)
+        paginator = Paginator(questions, 5) 
+        page = request.GET.get('page')
+        try:
+            questions = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            questions = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            questions = paginator.page(paginator.num_pages)
+
+        context = {
+            'started': started,
+            'questions': questions,
+            'questionnaires': questionnaires,
+        }
 
         return render(request, 'questionary/questionary-list.html', context)
-
-# def questionnaire_list_view(request):
-#     try:
-#         if request.method == 'POST' and 'start' in request.POST:
-#             # Redirigir a primera pregunta
-#             return redirect('first_question') 
-#         elif not request.session.get('started', False):
-#             # Mostrar botón de comenzar
-#             request.session['started'] = True
-#             return render(request, 'questions.html')
-#         else:
-#             # Mostrar preguntas
-#             questions = Question.objects.order_by('-id')
-#             per_page = 10 
-#             paginator = Paginator(questions, per_page)
-#             page = request.GET.get('page')
-#             try:
-#                 questions = paginator.page(page)
-#             except PageNotAnInteger:
-#                 questions = paginator.page(1)
-#             except EmptyPage:
-#                 questions = paginator.page(paginator.num_pages)
-#             questionnaires = Questionary.objects.order_by('-id')
-#             context = {'questions': questions, 'questionnaires': questionnaires}
-#     except Exception as e:
-#         error_message = str(e)
-#         context = {'error_message': error_message}
-#     return render(request, 'questionary/questionary-list.html', context)
-
 
 def show_question(request, pk):
   try:
@@ -81,7 +73,6 @@ def show_question(request, pk):
   context = {
     'question': question
   }
-
   if request.method == 'POST':
     # Aquí puedes guardar la respuesta
     # Y luego redirigir a la siguiente pregunta
@@ -105,37 +96,6 @@ def questionnaire_save_view(request):
         error_message = str(e)
         context = {'error_message': error_message}
     return render(request, 'questionary/questionary-result.html', context)
-def generate_variable_questions(request, variable):
-    django_variable = f"{variable.name} = models.{variable.type}Field({variable.get_type_display()}, {variable.get_parameters_display()})"
-    prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
-    response = openai.Completion.create(
-        engine="text-davinci-002",  # Choose the appropriate engine
-        prompt=prompt,
-        max_tokens=100,  # Adjust the max tokens as needed
-        n=1,  # Number of questions to generate
-        stop=None,  # Stop generating questions at a specific token (e.g., "?")
-    )
-    question = [choice['text'].strip() for choice in response.choices]
-    return question
-# THe view to show the questions generate for each variable
-# def generate_questions_for_variables(request):
-#     # Retrieve all Variable objects from the database
-#     variables = Variable.objects.all()
-
-#     # Initialize an empty list to store generated questions for each variable
-#     generated_questions_list = []
-
-#     # Generate questions for each variable
-#     for variable in variables:
-#         generated_questions = generate_variable_questions(request, variable)
-#         generated_questions_list.append((variable, generated_questions))
-
-#     # Render a template with the generated questions
-#     return render(
-#         request,
-#         "questionary/questionary-list.html", 
-#         {"generated_questions_list": generated_questions_list},
-#     )
 
 
 

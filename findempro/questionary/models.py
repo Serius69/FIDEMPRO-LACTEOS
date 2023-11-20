@@ -34,20 +34,20 @@ class Questionary(models.Model):
 
     def __str__(self):
         return self.questionary
-@receiver(post_save, sender=Business)
-def create_questionary(sender, instance, created, **kwargs):
-    if created:
-        for data in questionary_data:  # Assuming products_data is defined somewhere
-            Questionary.objects.create(
-                questionary=data['questionary'],
-                fk_business=instance,
-                is_active=True
-            )
-@receiver(post_save, sender=Product)
-def save_questionary(sender, instance, **kwargs):
-    for questionary in instance.fk_business.fk_business_questionary.all():
-        questionary.is_active = instance.is_active
-        questionary.save()
+    @receiver(post_save, sender=Business)
+    def create_questionary(sender, instance, created, **kwargs):
+        if created:
+            for data in questionary_data:  # Assuming products_data is defined somewhere
+                Questionary.objects.create(
+                    questionary=data['questionary'],
+                    fk_business=instance,
+                    is_active=True
+                )
+    @receiver(post_save, sender=Product)
+    def save_questionary(sender, instance, **kwargs):
+        for questionary in instance.fk_business.fk_business_questionary.all():
+            questionary.is_active = instance.is_active
+            questionary.save()
 class Question(models.Model):
     question = models.TextField()
     fk_questionary = models.ForeignKey(
@@ -73,13 +73,12 @@ class Question(models.Model):
     def create_question(sender, instance, created, **kwargs):
         if created:
             for data in question_data:
-                if data['type'] == 1:  # Corrected the variable name
-                    # initials_variable = data['initials_variable']
+                if data['type'] == 1: 
                     try:
                         variable = Variable.objects.get(initials=data['initials_variable'])
                     except MultipleObjectsReturned:
                         variable = Variable.objects.filter(initials=data['initials_variable']).first()
-                    # variable = Variable.objects.get(initials=initials_variable)
+                    
                     Question.objects.create(
                         question=data['question'],
                         type=data['type'],

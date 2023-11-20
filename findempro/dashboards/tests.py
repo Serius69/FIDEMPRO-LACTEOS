@@ -1,54 +1,41 @@
 # FILEPATH: /c:/Users/serio/FIDEMPRO-LACTEOS/findempro/dashboards/tests.py
 from django.test import TestCase
-from dashboards.models import Dashboard
-from .models import Product  # Assuming you have a Product model
+from dashboards.models import DemandBehavior, Demand
+from products.models import Product
 
-class DashboardModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        # Set up non-modified objects used by all test methods
-        Product.objects.create(name='Test Product')
-        Dashboard.objects.create(
-            title='Test Dashboard',
-            chart_type='bar',
-            chart_data={"data": [1, 2, 3]},
-            fk_product=Product.objects.get(name='Test Product'),
-            widget_config={"config": "test"},
-            layout_config={"layout": "test"}
+class DemandBehaviorModelTest(TestCase):
+    def setUp(self):
+        self.product = Product.objects.create(name='Test Product')
+        self.current_demand = Demand.objects.create(product=self.product, quantity=100)
+        self.predicted_demand = Demand.objects.create(product=self.product, quantity=120)
+        self.demand_behavior = DemandBehavior.objects.create(
+            current_demand=self.current_demand,
+            predicted_demand=self.predicted_demand
         )
 
-    def test_dashboard_creation(self):
-        dashboard = Dashboard.objects.get(id=1)
-        self.assertTrue(isinstance(dashboard, Dashboard))
-        self.assertEqual(dashboard.__str__(), 'Dashboard for Test Product')
+    def test_demand_behavior_creation(self):
+        self.assertEqual(self.demand_behavior.current_demand, self.current_demand)
+        self.assertEqual(self.demand_behavior.predicted_demand, self.predicted_demand)
+        self.assertTrue(self.demand_behavior.is_active)
 
-    def test_title_label(self):
-        dashboard = Dashboard.objects.get(id=1)
-        field_label = dashboard._meta.get_field('title').verbose_name
-        self.assertEqual(field_label, 'title')
+    def test_calculate_elasticity_method(self):
+        elasticity_type, percentage_change = self.demand_behavior.calculate_elasticity()
+        self.assertEqual(elasticity_type, 'Elastica')
+        self.assertEqual(percentage_change, 20.0)
 
-    def test_chart_type_label(self):
-        dashboard = Dashboard.objects.get(id=1)
-        field_label = dashboard._meta.get_field('chart_type').verbose_name
-        self.assertEqual(field_label, 'chart type')
+    def test_create_demand_behavior_function(self):
+        new_product = Product.objects.create(name='New Product')
+        new_demand = Demand.objects.create(product=new_product, quantity=150, is_predicted=True)
+        DemandBehavior.create_demand_behavior(Demand, new_demand, True)
+        demand_behavior = DemandBehavior.objects.get(predicted_demand=new_demand)
+        self.assertIsNotNone(demand_behavior)
 
-    def test_chart_data_default(self):
-        dashboard = Dashboard.objects.get(id=1)
-        self.assertEqual(dashboard.chart_data, {"data": [1, 2, 3]})
+    def test_update_demand_behavior_method(self):
+        new_demand = Demand.objects.create(product=self.product, quantity=130)
+        self.demand_behavior.update_demand_behavior(new_demand)
+        self.assertEqual(self.demand_behavior.predicted_demand, new_demand)
+        self.assertEqual(self.demand_behavior.quantity, new_demand)
 
-    def test_widget_config_default(self):
-        dashboard = Dashboard.objects.get(id=1)
-        self.assertEqual(dashboard.widget_config, {"config": "test"})
-
-    def test_layout_config_default(self):
-        dashboard = Dashboard.objects.get(id=1)
-        self.assertEqual(dashboard.layout_config, {"layout": "test"})
-
-    def test_is_active_default(self):
-        dashboard = Dashboard.objects.get(id=1)
-        self.assertTrue(dashboard.is_active)
-
-    def test_fk_product_label(self):
-        dashboard = Dashboard.objects.get(id=1)
-        field_label = dashboard._meta.get_field('fk_product').verbose_name
-        self.assertEqual(field_label, 'fk product')
+    def test_predict_demand_behavior_method(self):
+        predicted_demand = self.demand_behavior.predict_demand_behavior(None)
+        self.assertEqual(predicted_demand, 110)

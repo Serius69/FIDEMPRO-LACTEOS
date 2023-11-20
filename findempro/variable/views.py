@@ -165,3 +165,27 @@ def solve_equation(request):
         return render(request, 'result_template.html', {'solution': solution})
 
     return render(request, 'input_template.html')
+def generate_variable_questions(request, variable):
+    django_variable = f"{variable.name} = models.{variable.type}Field({variable.get_type_display()}, {variable.get_parameters_display()})"
+    prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
+    response = openai.Completion.create(
+        engine="text-davinci-002",  # Choose the appropriate engine
+        prompt=prompt,
+        max_tokens=100,  # Adjust the max tokens as needed
+        n=1,  # Number of questions to generate
+        stop=None,  # Stop generating questions at a specific token (e.g., "?")
+    )
+    question = [choice['text'].strip() for choice in response.choices]
+    return question
+# THe view to show the questions generate for each variable
+def generate_questions_for_variables(request):
+    variables = Variable.objects.all()
+    generated_questions_list = []
+    for variable in variables:
+        generated_questions = generate_variable_questions(request, variable)
+        generated_questions_list.append((variable, generated_questions))
+    return render(
+        request,
+        "questionary/questionary-list.html", 
+        {"generated_questions_list": generated_questions_list},
+    )

@@ -73,18 +73,16 @@ class Demand(models.Model):
     )
     def __str__(self):
         return f"Demand of {self.fk_product.name}"
-    # @receiver(post_save, sender=Product)
-    # def create_demand(sender, instance, created, **kwargs):
-    #     if created:
-    #         product = Product.objects.get(pk=instance.pk)
-    #         Demand.objects.create(
-    #             fk_product_id = product.id
-    #         )
-    # @receiver(post_save, sender=Product)
-    # def save_demand(sender, instance, **kwargs):
-    #     for business in instance.fk_product_demand.all():
-    #         business.is_active = instance.is_active
-    #         business.save()
+    def create_demand(sender, instance, created, **kwargs):
+        if created:
+            product = Product.objects.get(pk=instance.pk)
+            Demand.objects.create(
+                fk_product_id = product.id
+            )
+    def save_demand(sender, instance, **kwargs):
+        for business in instance.fk_product_demand.all():
+            business.is_active = instance.is_active
+            business.save()
 
 class DemandBehavior(models.Model):
     current_demand = models.OneToOneField(
@@ -122,20 +120,18 @@ class DemandBehavior(models.Model):
             else:
                 # Devolver valores por defecto o manejar el caso donde no hay datos disponibles
                 return None, None
-    # @receiver(post_save, sender=Demand)
-    # def create_demand_behavior(sender, instance, created, **kwargs):
-    #     if created:
-    #         demand = Product.objects.get(pk=instance.pk)
-    #         if demand.is_predicted:
-    #             DemandBehavior.objects.create(
-    #                 predicted_demand_id = demand.id
-    #             )
-    # @receiver(post_save, sender=Demand)
-    # def update_demand_behavior(self, new_demand):
-    #     if new_demand < 0:
-    #         raise ValueError("New demand cannot be negative")
-    #     self.predicted_demand = new_demand
-    #     self.quantity = new_demand
+    def create_demand_behavior(sender, instance, created, **kwargs):
+        if created:
+            demand = Product.objects.get(pk=instance.pk)
+            if demand.is_predicted:
+                DemandBehavior.objects.create(
+                    predicted_demand_id = demand.id
+                )
+    def update_demand_behavior(self, new_demand):
+        if new_demand < 0:
+            raise ValueError("New demand cannot be negative")
+        self.predicted_demand = new_demand
+        self.quantity = new_demand
     def predict_demand_behavior(self, prediction_model):
         predicted_demand = self.quantity + 10
         return predicted_demand

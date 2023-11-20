@@ -29,7 +29,7 @@ class Instructions(models.Model):
                 Instructions.objects.create(
                     instruction=data.get('instruction'),
                     content=data.get('content'),
-                    type=data.get('type'),  # Use get method to avoid KeyError
+                    type=data.get('type', 1),
                     fk_user_id=user.id,
                     is_active=True
                 )

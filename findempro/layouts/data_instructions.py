@@ -2,15 +2,18 @@ data_instructions= [
   {
     "instruction": "Registrarse en el sistema", 
     "content": "Ir a la página de registro e ingresar un nombre de usuario y contraseña para crear una cuenta en el sistema."
-  ,"type": 1},
+    ,"type": 1
+  },
   {  
     "instruction": "Ingresar ventas mensuales",
     "content": "En la sección de 'Datos financieros', ingresar las ventas realizadas cada mes. Este dato es clave para las predicciones."
-  ,"type": 1},
+    ,"type": 1
+  },
   {
     "instruction": "Cargar costos de producción", 
     "content": "Indicar los costos de producción por litro o unidad de producto lácteo. Esto permite calcular márgenes de ganancia."
-  ,"type": 1},
+    ,"type": 1
+    },
   {
     "instruction": "Ingresar precios históricos",
     "content": "Proveer los precios de venta por litro o unidad para los últimos 2-3 años. El sistema utiliza esta data para detectar estacionalidades."

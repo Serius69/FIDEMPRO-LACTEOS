@@ -20,11 +20,10 @@ class Product(models.Model):
         help_text='The business associated with the product',
         default=1)
     TYPE_CHOICES = [
-        (1, 'Exogena'),
-        (2, 'Estado'),
-        (3, 'Endogena'),
+        (1, 'Product'),
+        (2, 'Service'),
     ]    
-    type = models.IntegerField(choices=TYPE_CHOICES, default=1)
+    type = models.IntegerField(default=1, choices=TYPE_CHOICES)
     profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     earnings = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     inventory_levels = models.PositiveIntegerField(null=True, blank=True)
@@ -58,6 +57,7 @@ class Product(models.Model):
         for product in instance.fk_business_product.all():
             product.is_active = instance.is_active
             product.save()
+
 class Area(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()

@@ -45,7 +45,6 @@ class Variable(models.Model):
                 Variable.objects.create(
                     name=data.get('name'),
                     initials=data.get('initials'),
-                    # initials=f"{data.get('initials')}_{product.id}",
                     type=data.get('type'),
                     unit=data.get('unit'),
                     image_src=f"/media/images/variable/{data.get('initials')}.jpg",
@@ -189,7 +188,6 @@ class EquationResult(models.Model):
 
     def __str__(self) -> str:
         return f"Result for Equation {self.fk_equation.name}"
-
     class Meta:
         verbose_name = 'Equation Result'
         verbose_name_plural = 'Equation Results'
