@@ -3,5 +3,12 @@ from .models import Simulation
 
 class SimulationForm(forms.ModelForm):
     class Meta:
-        model = SimulationScenario
-        fields = []
+        model = Simulation
+        fields = ['unit_time', 
+                  'fk_fdp', 
+                  'weight', 
+                  'fk_questionary', 
+                  'distributions', 
+                  'demand_mean', 
+                  'questionary_result', 
+                  'is_active']

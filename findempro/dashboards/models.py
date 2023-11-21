@@ -53,11 +53,16 @@ class Dashboard(models.Model):
             dashboard.is_active = instance.is_active
             dashboard.save()
 class Demand(models.Model):
-    quantity = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the business is active or not')
-    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the business was created')
-    last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the business was last updated')
-    is_predicted = models.BooleanField(default=False, verbose_name='Predicted', help_text='Whether the demand is predicted or not')
+    quantity = models.IntegerField(default=0, help_text='The quantity of the demand')
+    is_active = models.BooleanField(
+        default=True, verbose_name='Active', help_text='Whether the business is active or not')
+    date_created = models.DateTimeField(
+        auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the business was created')
+    last_updated = models.DateTimeField(
+        auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the business was last updated')
+    is_predicted = models.BooleanField(
+        default=False, verbose_name='Predicted', 
+        help_text='Whether the demand is predicted or not')
     fk_result_simulation = models.ForeignKey(
         ResultSimulation, 
         default=1, 

@@ -5,7 +5,6 @@ from decimal import Decimal
 from simulate.models import ResultSimulation
 from product.models import Product
 from questionary.models import QuestionaryResult
-from scenario.models import SimulationScenario
 
 class ResultSimulationModelTest(TestCase):
     def setUp(self):

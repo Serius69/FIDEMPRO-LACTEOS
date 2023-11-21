@@ -59,7 +59,7 @@ class Variable(models.Model):
             variable.save()
 class Equation(models.Model):
     name = models.CharField(max_length=70)
-    expression = models.TextField()
+    expression = models.TextField(help_text='The expression of the equation',default='var1=var2+var3')
     fk_variable1 = models.ForeignKey(
         Variable,
         on_delete=models.CASCADE,

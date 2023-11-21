@@ -48,13 +48,13 @@ def questionnaire_list_view(request):
         answer = request.POST.get('answer')
         # Check if the selected_answer is valid (you might want to add more validation)
         if answer is not None:
-            answer_instance = Answer.objects.create(answer=answer, fk_question_id=question_id, fk_questionary_result=questionary_result_id)
+            answer_instance = Answer.objects.create(
+                answer=answer, fk_question_id=question_id, fk_questionary_result=questionary_result_id)
             # You might want to associate the answer with the user or session here
-            answer_instance .save()
+            answer_instance.save()
             messages.success(request, 'Response for the question saved successfully!')
         else:
             messages.error(request, 'Ocurred an error!')
-            
         return redirect('questionary:questionary.list')
     
     if not started:

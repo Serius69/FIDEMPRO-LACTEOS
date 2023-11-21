@@ -14,7 +14,7 @@ class QuestionaryResult(models.Model):
         on_delete=models.CASCADE, 
         related_name='fk_questionary_result_product', 
         help_text='The product associated with the questionnaire result',
-        null=True)
+        default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
@@ -94,7 +94,9 @@ class Question(models.Model):
 class Answer(models.Model):
     answer = models.TextField()
     fk_question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='fk_question_answer', help_text='The question associated with the answer')
-    fk_questionary_result = models.ForeignKey(QuestionaryResult, on_delete=models.CASCADE, related_name='fk_question_result_answer', help_text='The questionary result associated with the answer')
+    fk_questionary_result = models.ForeignKey(
+        QuestionaryResult, on_delete=models.CASCADE, related_name='fk_question_result_answer', 
+        help_text='The questionary result associated with the answer', default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)

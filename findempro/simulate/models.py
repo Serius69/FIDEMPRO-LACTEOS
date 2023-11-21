@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-class FDP(models.Model):
+class ProbabilisticDensityFunction(models.Model):
     DISTRIBUTION_TYPES = [
         (1, 'Normal'),
         (2, 'Exponential'),
@@ -47,21 +47,28 @@ class DataPoint(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-    def __str__(self):
-        return f'DataPoint: {self.value}'
+    def __str__(self):        return f'DataPoint: {self.value}'
+
+class HistoricalDemand(models.Model):
+    unit_time = models.IntegerField()
+    demand = models.IntegerField()
 class Simulation(models.Model):
-    class Meta:
-        verbose_name = "Simulation"
-        ordering = ['-date'] 
-    date = models.DateField()
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name='simulations'  
-    )
+    unit_time = models.CharField(max_length=100, default='day', help_text='The unit of time for the simulation')
+    
+    fk_fdp = models.ManyToManyField(ProbabilisticDensityFunction, related_name='fk_fdp_simulation', default=1)
+    
+    demand_history = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    weight = models.FloatField(default=1, help_text='The weight of the simulation')
+    
+    fk_questionary = models.ForeignKey(
+        Questionary, 
+        on_delete=models.CASCADE, 
+        related_name='fk_product_simulation', null=True)
     distributions = models.ManyToManyField(
-        FDP,
-        related_name='simulations'
+        ProbabilisticDensityFunction,
+        related_name='simulations',
+        help_text='The ProbabilisticDensityFunctions associated with the simulation',
     )
     demand_mean = models.DecimalField(
         max_digits=10,
@@ -72,44 +79,48 @@ class Simulation(models.Model):
         QuestionaryResult,
         on_delete=models.CASCADE,
         related_name='simulations',
-        null=True
+        null=True,
+        help_text='The questionary result associated with the simulation',
     )
-    utime = models.CharField(max_length=100)
-    date_simulate = models.DateField()
-    fk_fdp = models.ManyToManyField(FDP, related_name='fk_fdp_simulation', default=1)
-    weight = models.FloatField()
-    fk_questionary = models.ForeignKey(
-        Questionary, 
-        on_delete=models.CASCADE, 
-        related_name='fk_product_simulation', null=True)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
     def get_absolute_url(self):
         return reverse('simulation_detail', args=[self.id])
+    def calculate_cdf(self, x):
+        """
+        Calculate the cumulative distribution function (CDF) for the given x value.
+        """
+        # This is just a placeholder. Replace with your actual implementation.
+        return x / self.demand_mean
+
+    def calculate_demand_mean(self):
+        """
+        Calculate the mean demand.
+        """
+        # This is just a placeholder. Replace with your actual implementation.
+        return self.demand_mean
+
 class ResultSimulation(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    simulation_date = models.DateField()
-    demand_mean = models.DecimalField(max_digits=10, decimal_places=2)
-    demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, help_text='The product associated with the result')
+    demand_mean = models.DecimalField(max_digits=10, decimal_places=2,help_text='The mean of the demand')
+    demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2,help_text='The standard deviation of the demand')
+    
+    date = models.JSONField(null=True, blank=True)
+    variables = models.JSONField(null=True, blank=True)
+    unit = models.JSONField(null=True, blank=True)
+    unit_time = models.JSONField(null=True, blank=True)
+    results = models.JSONField(null=True, blank=True)
+    
+    
     fk_simulation = models.ForeignKey(
         Simulation, 
         on_delete=models.CASCADE, 
         null=True, 
-        related_name='fk_simulation__result_simulation')
+        related_name='fk_simulation_result_simulation')
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f"{self.product} - {self.simulation_date}"
-    @receiver(post_save, sender=Simulation)
-    def create_result_simulation(sender, instance, created, **kwargs):
-        if created:
-            ResultSimulation.objects.create(
-                product=instance.product,
-                simulation_date=instance.simulation_date,
-                # Add other fields as needed
-                fk_simulation_scenario=instance
-        )
-    
     
