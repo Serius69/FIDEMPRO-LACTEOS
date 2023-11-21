@@ -29,40 +29,30 @@
                                 </div>
                                 <div class="mt-4 text-center">
                                     <h5 class="mb-1">{{ business.name }}</h5>
-                                    <p class="text-muted">Since {{ business.date_created }}</p>
+                                    <p class="text-muted">Desde {{ business.date_created }}</p>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table mb-0 table-borderless">
                                         <tbody>
                                             <tr>
-                                                <th><span class="fw-medium">Owner Name</span></th>
+                                                <th><span class="fw-medium">Nombre del dueño</span></th>
                                                 <td>{{ business.user.name }}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium">Business Type</span></th>
+                                                <th><span class="fw-medium"> Tipo de negocio </span></th>
                                                 <td>{{ business.type }}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium">Description</span></th>
+                                                <th><span class="fw-medium">Descripción </span></th>
                                                 <td>{{ business.description }}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium">Location</span></th>
+                                                <th><span class="fw-medium">Ubicación </span></th>
                                                 <td>{{ business.location }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="mode-selection">Select Mode:</label>
-                                    <select id="mode-selection" class="form-control">
-                                        <option value="simple">Simple Mode</option>
-                                        <option value="advanced">Advanced Mode</option>
-                                    </select>
-                                </div>                       
-                        
-
+                                </div>                  
                             </div>
                         </div><!--end card-body-->
                     </div><!--end card-->
@@ -72,14 +62,14 @@
                 <div class="col-xxl-9">
                     <div class="card">
                         <div class="card-header border-0 align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Products</h4>
+                            <h4 class="card-title mb-0 flex-grow-1">Productos </h4>
                         </div><!-- end card header -->
                         <div class="card-body p-4">
                             <div class="row g-4 mb-3">
                                 <div class="col-sm-auto">
                                     <div>
                                         <a href="{% url 'product:product.create' %}" class="btn btn-success">
-                                            <i class="ri-add-line align-bottom me-1"></i> Add Product
+                                            <i class="ri-add-line align-bottom me-1"></i> Agregar producto
                                         </a>
                                     </div>
                                 </div>
@@ -96,12 +86,12 @@
                                         <table class="table align-middle" id="productTable">
                                             <thead class="table-light text-muted">
                                                 <tr>
-                                                    <th class="sort">Image</th>
-                                                    <th class="sort" data-sort="name">Product</th>
-                                                    <th class="sort" data-sort="type">Type</th>
-                                                    <th class="sort" data-sort="date">Date Created</th>
-                                                    <th class="sort" data-sort="status">Status</th>
-                                                    <th data-sort="action">Action</th>
+                                                    <th class="sort">Imagen </th>
+                                                    <th class="sort" data-sort="name"> Producto </th>
+                                                    <th class="sort" data-sort="type">Tipo </th>
+                                                    <th class="sort" data-sort="date"> Fecha creada </th>
+                                                    <th class="sort" data-sort="status">Estado </th>
+                                                    <th data-sort="action"> Acción </th>
                                                 </tr>
                                             </thead>
                                             <tbody class="list form-check-all">
@@ -113,9 +103,9 @@
                                                     <td class="date">{{ product.date_created|date:"d M,Y" }}</td>
                                                     <td class="status">
                                                         {% if product.is_active == 1 %}
-                                                        <span class="badge bg-success-subtle text-success text-uppercase">Active</span>
+                                                        <span class="badge bg-success-subtle text-success text-uppercase">Activo </span>
                                                         {% else %}
-                                                        <span class="badge bg-danger-subtle text-danger text-uppercase">Deactived</span>
+                                                        <span class="badge bg-danger-subtle text-danger text-uppercase"> Desactivado </span>
                                                         {% endif %}
                                                     </td>
                                                     <td>
@@ -145,8 +135,8 @@
                                                                 colors="primary:#405189,secondary:#0ab39c"
                                                                 style="width:75px;height:75px">
                                                         </lord-icon>
-                                                        <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
-                                                        <p class="text-muted mb-0">You have to "Add Product".</p>
+                                                        <h5 class="mt-2">Lo siento, no hay ningún negocio registrado en la base de datos</h5>
+                                                        <p class="text-muted mb-0"> Tienes que "agregar producto". </p>
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
@@ -160,15 +150,7 @@
 
                     <div class="card">
                         <div class="card-header border-0 align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Revenue</h4>
-                            <div>
-                                <button type="button" class="btn btn-soft-secondary btn-sm">
-                                    ALL
-                                </button>
-                                <button type="button" class="btn btn-soft-secondary btn-sm">
-                                    1M
-                                </button>
-                            </div>
+                            <h4 class="card-title mb-0 flex-grow-1"> Ingresos </h4>
                         </div><!-- end card header -->
                         <div class="card-body">
                             <div class="card-header p-0 border-0 bg-light-subtle">
@@ -176,19 +158,19 @@
                                     <div class="col-6 col-sm-4">
                                         <div class="p-3 border border-dashed border-start-0">
                                             <h5 class="mb-1"><span class="counter-value" data-target="{{ products.count }}">0</span></h5>
-                                            <p class="text-muted mb-0">Products</p>
+                                            <p class="text-muted mb-0">Productos </p>
                                         </div>
                                     </div><!--end col-->
                                     <div class="col-6 col-sm-4">
                                         <div class="p-3 border border-dashed border-start-0">
                                             <h5 class="mb-1">$<span class="counter-value" data-target="{{ business.product.earnings }}">0</span>k</h5>
-                                            <p class="text-muted mb-0">Earnings</p>
+                                            <p class="text-muted mb-0">Ganancias </p>
                                         </div>
                                     </div><!--end col-->
                                     <div class="col-6 col-sm-4">
                                         <div class="p-3 border border-dashed border-start-0">
                                             <h5 class="mb-1"><span class="counter-value" data-target="{{ business.product.simulate.count }}">0</span></h5>
-                                            <p class="text-muted mb-0">Refunds</p>
+                                            <p class="text-muted mb-0"> Reembolsos </p>
                                         </div>
                                     </div><!--end col-->
                                 </div>

@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %} {% load static %} 
 {% load crispy_forms_tags %}
 {% block title %}
-  Business List
+  Lista de negocios
 {% endblock title %}
 {% block extra_css %} 
 {% endblock extra_css %}
@@ -20,8 +20,9 @@
             <div class="row">
                 <div class="col-xxl-5 align-self-center">
                     <div class="py-4">
-                        <h4 class="display-6 -text">BUSINESS LIST</h4>
-                        <p class="text-success fs-15 mt-3">Welcome to our comprehensive Business Directory, your go-to resource for discovering and connecting with a diverse array of businesses across various industries. Whether you're a consumer seeking services or a business owner looking to expand your network, our Business List Page is designed to simplify your search and foster meaningful connections.</p>
+                        <h4 class="display-6 -text">Lista de negocios</h4>
+                        <p class="text-success fs-15 mt-3">Bienvenido a nuestro directorio comercial integral, su recurso de referencia para descubrir y conectarse con una amplia gama de empresas en varias 
+                          industrias.Ya sea que sea un consumidor que busca servicios o un propietario de un negocio que busque expandir su red, nuestra página de lista de negocios está diseñada para simplificar su búsqueda y fomentar conexiones significativas.</p>
                     </div>
                 </div>
                 <div class="col-xxl-3 ms-auto">
@@ -42,20 +43,20 @@
                     <form method="GET" action="{% url 'business:business.list' %}">
                       <select class="form-control" id="type-select" name="type">
                         <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>
-                          Select Types
+                          Seleccionar tipos
                         </option>
                         <option value="Dairy" {% if request.GET.type == "Dairy" %}selected{% endif %}>
-                          Dairy
+                          Lácteos
                         </option>
                         <option value="Meat" {% if request.GET.type == "Meat" %}selected{% endif %}>
-                          Meat
+                          Carne
                         </option>
                         <!-- Otros elementos options -->
                       </select>
                       <div class="col-lg-12 text-end">
                         <button type="submit" class="btn btn-danger">
                           <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                          Filters
+                          Filtros
                         </button>
                       </div>
                     </form>
@@ -66,7 +67,7 @@
                   <div class="hstack gap-2">
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness">
                       <i class="ri-add-fill me-1 align-bottom"></i>
-                      Create New
+                      Crear nuevo
                     </button>
                   </div>
                 </div>
@@ -134,7 +135,7 @@
                             <i
                               class="ri-eye-fill align-bottom me-2 text-muted"
                             ></i>
-                            View
+                            Vista
                           </a>
                           <a
                             class="dropdown-item"
@@ -144,7 +145,7 @@
                             <i
                               class="ri-pencil-fill align-bottom me-2 text-muted"
                             ></i>
-                            Edit
+                            Editar
                           </a>
                           <div class="dropdown-divider"></div>
                           <a
@@ -156,7 +157,7 @@
                             <i
                               class="ri-delete-bin-fill align-bottom me-2 text-muted"
                             ></i>
-                            Remove
+                            Eliminar
                           </a>
                         </div>
                       </div>
@@ -172,9 +173,9 @@
                     style="width: 75px; height: 75px"
                   ></lord-icon>
                   <h5 class="mt-2">
-                    Sorry, there isn't any business registered in the database
+                    Lo siento, no hay ningún negocio registrado en la base de datos
                   </h5>
-                  <p class="text-muted mb-0">You have to "Add Business".</p>
+                  <p class="text-muted mb-0">Tienes que "agregar negocios".</p>
                 </div>
                 {% endfor %}
               </div>
@@ -183,23 +184,23 @@
               <div class="align-items-center mt-2 row text-center text-sm-start">
                 <div class="col-sm">
                   <div class="text-muted">
-                    Showing
+                    Demostración
                     <span class="fw-semibold">{{ businesses.number }}</span>
-                    of
+                    de
                     <span class="fw-semibold">{{ businesses.paginator.num_pages }}</span>
-                    Results
+                    Resultados
                   </div>
                 </div>
                 <div class="col-sm-auto">
                   <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                    {% if businesses.has_previous %}
+                    {% if businesses.has_Anterior %}
                       <li class="page-item">
                         <a href="?page=1" class="page-link" aria-label="First">
                           ««
                         </a>
                       </li>
                       <li class="page-item">
-                        <a href="?page={{ businesses.previous_page_number }}" class="page-link" aria-label="Previous">
+                        <a href="?page={{ businesses.Anterior_page_number }}" class="page-link" aria-label="Anterior">
                           «
                         </a>
                       </li>
@@ -234,7 +235,7 @@
               <div class="card-body p-0">
                 <div class="p-3">
                   <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                    Instructions
+                    Instrucciones
                   </h6>
                 </div>
                 <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
@@ -267,10 +268,10 @@
                         style="width: 75px; height: 75px"
                       ></lord-icon>
                       <h5 class="mt-2">
-                        Sorry, there are no instructions in the database
+                        Lo siento, no hay instrucciones en la base de datos
                       </h5>
                       <p class="text-muted mb-0">
-                        Please add instructions to the system.
+                        Agregue instrucciones al sistema.
                       </p>
                     </div>
                     {% endfor %}
