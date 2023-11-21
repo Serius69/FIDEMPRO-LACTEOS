@@ -9,6 +9,5 @@ class SimulationForm(forms.ModelForm):
                   'weight', 
                   'fk_questionary', 
                   'distributions', 
-                  'demand_mean', 
                   'questionary_result', 
                   'is_active']

@@ -49,15 +49,15 @@ class DataPoint(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
     def __str__(self):        return f'DataPoint: {self.value}'
 
-class HistoricalDemand(models.Model):
+class DemandHistorical(models.Model):
     unit_time = models.IntegerField()
     demand = models.IntegerField()
 class Simulation(models.Model):
     unit_time = models.CharField(max_length=100, default='day', help_text='The unit of time for the simulation')
     
     fk_fdp = models.ManyToManyField(ProbabilisticDensityFunction, related_name='fk_fdp_simulation', default=1)
-    
-    demand_history = models.DecimalField(max_digits=10, decimal_places=2)
+    # se guardara un archivo JSON con los 30 datos de la demanda historica
+    demand_history = models.JSONField(null=True, blank=True)
     
     weight = models.FloatField(default=1, help_text='The weight of the simulation')
     
@@ -70,11 +70,7 @@ class Simulation(models.Model):
         related_name='simulations',
         help_text='The ProbabilisticDensityFunctions associated with the simulation',
     )
-    demand_mean = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(0)]
-    )
+    
     questionary_result = models.ForeignKey(
         QuestionaryResult,
         on_delete=models.CASCADE,
@@ -85,21 +81,6 @@ class Simulation(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-    def get_absolute_url(self):
-        return reverse('simulation_detail', args=[self.id])
-    def calculate_cdf(self, x):
-        """
-        Calculate the cumulative distribution function (CDF) for the given x value.
-        """
-        # This is just a placeholder. Replace with your actual implementation.
-        return x / self.demand_mean
-
-    def calculate_demand_mean(self):
-        """
-        Calculate the mean demand.
-        """
-        # This is just a placeholder. Replace with your actual implementation.
-        return self.demand_mean
 
 class ResultSimulation(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, help_text='The product associated with the result')

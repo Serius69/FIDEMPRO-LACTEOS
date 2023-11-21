@@ -11,7 +11,7 @@ from .models import DataPoint, ProbabilisticDensityFunction
 from variable.models import Variable, Equation, EquationResult
 from product.models import Product, Area
 from business.models import Business
-from simulate.models import Simulation,ResultSimulation,HistoricalDemand
+from simulate.models import Simulation,ResultSimulation,DemandHistorical
 from questionary.models import QuestionaryResult,Questionary,Answer
 from sympy import Eq, sympify
 import openai
@@ -78,7 +78,7 @@ def simulate_init(request):
 
                 # Puedes guardar la información en el modelo si es necesario
                 for month, demand in historical_demand_data:
-                    HistoricalDemand.objects.create(month=month, demand=demand)
+                    DemandHistorical.objects.create(month=month, demand=demand)
 
                 # Almacenar la información en una variable si es necesario
                 data_demand_historic = historical_demand_data

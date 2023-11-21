@@ -100,7 +100,7 @@ equations_data = [
     "variable1": "UII", 
     "variable2": "CIP",
     "variable3": "PP",
-    "area": "Contabilidad"
+    "area": "Inventario Insumos"
   },
   {
     "name": "Inventario Insumos",
@@ -108,7 +108,7 @@ equations_data = [
     "variable1": "II",
     "variable2": "PI",
     "variable3": "UII",
-    "area": "Contabilidad" 
+    "area": "Inventario Insumos"
   },
   {
     "name": "Inventario Productos Finales",
@@ -116,7 +116,7 @@ equations_data = [
     "variable1": "IPF",
     "variable2": "PP",
     "variable3": "VPC",
-    "area": "Contabilidad"
+    "area": "Inventario Productos Finales"
   },
   {
     "name": "Nivel de Rentabilidad",
@@ -132,7 +132,7 @@ equations_data = [
     "variable1": "TCA",
     "variable2": "TCAE",
     "variable3": "NMD",
-    "area": "Contabilidad"
+    "area": "Ventas"
   },
   {
     "name": "Costo Unitario Inventario",
@@ -156,7 +156,7 @@ equations_data = [
     "variable1": "CTT",
     "variable2": "CUP",
     "variable3": "TPV",
-    "area": "Contabilidad"
+    "area": "Distribución"
   },
   {
     "name": "Costo Unitario Transporte",
@@ -164,7 +164,7 @@ equations_data = [
     "variable1": "CUT",
     "variable2": "CTT",
     "variable3": "TPV",
-    "area": "Contabilidad"
+    "area": "Distribución"
   },
   {
     "name": "Costo Promedio Producción",
@@ -213,7 +213,7 @@ equations_data = [
     "variable1": "PVR",
     "variable2": "CUP", 
     "variable3": "NR",
-    "area": "Contabilidad"
+    "area": "Ventas"
   },
   {
     "name": "Capacidad Producción",
@@ -222,7 +222,7 @@ equations_data = [
     "variable2": "NMD",
     "variable3": "TPP",
     "variable4": "NEPP",
-    "area": "Contabilidad"
+    "area": "Producción"
   },  
   {
     "name": "Factor Utilización",
@@ -230,7 +230,7 @@ equations_data = [
     "variable1": "FU",
     "variable2": "TPP",
     "variable3": "CP",
-    "area": "Contabilidad"
+    "area": "Producción"
   },
   {
     "name": "Productos Producidos",
@@ -238,7 +238,7 @@ equations_data = [
     "variable1": "PP",
     "variable2": "CP", 
     "variable3": "ALEP",
-    "area": "Contabilidad"
+    "area": "Producción"
   },
   {
     "name": "Total Gastos",
@@ -279,7 +279,7 @@ equations_data = [
     "variable1": "RTI",
     "variable2": "CP",
     "variable3": "IPF",
-    "area": "Contabilidad" 
+    "area": "Inventario Productos Finales" 
   },
   {
     "name": "Rotación Clientes",
@@ -287,7 +287,7 @@ equations_data = [
     "variable1": "RTC",
     "variable2": "TPV",
     "variable3": "TCA",
-    "area": "Contabilidad"
+    "area": "Realimentacion"
   },
   {
     "name": "Participación Mercado",
@@ -295,7 +295,7 @@ equations_data = [
     "variable1": "PM",
     "variable2": "TPV",
     "variable3": "DH",
-    "area": "Contabilidad"
+    "area": "Competencia"
   },
   {
     "name": "Productividad Empleados",
@@ -303,7 +303,7 @@ equations_data = [
     "variable1": "PE",
     "variable2": "TPV",
     "variable3": "SE",
-    "area": "Contabilidad"
+    "area": "Recursos Humanos"
   },
   {
     "name": "Horas Ociosas",
@@ -312,7 +312,7 @@ equations_data = [
     "variable2": "NMD",
     "variable3": "TPP",
     "variable4": "TE",
-    "area": "Contabilidad"
+    "area": "Recursos Humanos"
   },
   {
     "name": "Costo Horas Ociosas",
@@ -328,6 +328,6 @@ equations_data = [
     "variable1": "CA",
     "variable2": "IPF",
     "variable3": "CUI",
-    "area": "Contabilidad"
+    "area": "Inventario Productos Finales"
   }
 ]

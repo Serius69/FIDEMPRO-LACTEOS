@@ -1,6 +1,7 @@
 from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from variable.models import Variable
+from product.models import Product
 from questionary.models import Questionary,Question,Answer,QuestionaryResult
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
@@ -35,7 +36,10 @@ def questionnaire_list_view(request):
     
     if request.method == 'POST' and 'start' in request.POST:
         request.session['started'] = True
-        question_result = QuestionaryResult.objects.create(fk_business=request.user.fk_business)
+        # question_result = QuestionaryResult.objects.create(fk_product__fk_business__fk_user=request.user)
+        questionary_selected = get_object_or_404(Questionary, id=selected_questionary_id)
+        product_selected = get_object_or_404(Product, id=questionary_selected.fk_product.id)
+        question_result = QuestionaryResult.objects.create(fk_product=product_selected)
         return redirect('questionary:questionary.list', question_result_id=question_result.id)
     
     if request.method == 'POST' and 'cancel' in request.POST:
@@ -120,7 +124,3 @@ def questionnaire_save_view(request):
         return redirect('home')  # Redirect to the home page or another appropriate page after saving results
 
     return render(request, 'questionary/questionary-result.html')
-
-
-
-
