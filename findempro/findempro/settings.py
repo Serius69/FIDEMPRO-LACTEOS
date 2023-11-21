@@ -60,6 +60,9 @@ THIRDPARTY_APPS = [
     # Google Providers
     'multiselectfield',
     'social_django',
+    'django_extensions',
+    'rest_framework',
+    'drf_yasg',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS +LOCAL_APPS +THIRDPARTY_APPS
@@ -230,6 +233,11 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# 
+GRAPH_MODELS = {
+    "path": r"C:\Users\serio\Graphviz\bin\dot.exe"
+}
 
 # Redis
 # CACHES = {
