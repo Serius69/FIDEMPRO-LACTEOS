@@ -6,8 +6,5 @@ class SimulationForm(forms.ModelForm):
         model = Simulation
         fields = ['unit_time', 
                   'fk_fdp', 
-                  'weight', 
-                  'fk_questionary', 
-                  'distributions', 
-                  'questionary_result', 
-                  'is_active']
+                  'fk_questionary_result', 
+                  'demand_history']

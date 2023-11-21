@@ -103,21 +103,9 @@ class Equation(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the equation is active or not')
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the equation was created')
     last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the equation was last updated')
-    def calculate(self):
-        x, y, z = symbols('x y z')
-        equation_str = self.expression.replace('variable1', str(self.fk_variable1.initials)).replace('variable2', str(self.fk_variable2.initials)).replace('variable3', str(self.fk_variable3.initials))
-        
-        try:
-            equation = Eq(eval(equation_str), 0)
-            solution = solve(equation, x, y, z)
-            return solution
-        except Exception as e:
-            # Handle errors in equation evaluation
-            return f"Error evaluating equation: {str(e)}"
     @receiver(post_save, sender=Variable)
     def create_equations(instance, created, **kwargs):
         if created:
-            equations_data = kwargs.get('equations_data', [])
             for data in equations_data:
                 try:
                     variable1 = Variable.objects.get(initials=data['variable1'])
