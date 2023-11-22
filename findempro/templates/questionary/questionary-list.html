@@ -46,10 +46,12 @@
                                         <form method="GET" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm()">
                                             {% csrf_token %}
                                             <div class="input-group mb-2">
-                                                <label class="input-group-text" for="inputGroupSelect01">Opciones cuestionadoras</label>
-                                                <select class="form-select" id="inputGroupSelect01" name="selected_questionary">
+                                                <label class="input-group-text" for="inputGroupSelect01">Cuestionarios disponibles</label>
+                                                <select class="form-select" id="inputGroupSelect01" name="selected_questionary_id">
+                                                    <option value="" selected>Escoja su opción</option>
                                                     {% for questionary in questionnaires %}
-                                                        <option value="{{ questionary.id }}" {% if questionary.id == selected_questionary_id %}selected{% endif %}>
+                                                        <option for="selected_questionary_id" value="{{ questionary.id }}" 
+                                                        {% if questionary.id == selected_questionary_id %} selected {% endif %}>
                                                             {{ questionary.questionary }}
                                                         </option>
                                                     {% endfor %}
@@ -62,7 +64,6 @@
                                             {% else %}                                          
                                             {% endif %}
                                         </form>
-
                                         {% if not started %}
                                             <div class="d-grid gap-1">
                                                 <form method="POST" action="{% url 'questionary:questionary.list' %}">
@@ -72,34 +73,34 @@
                                             </div>
                                         {% endif %}
                                         {% if started %}
-                                        <div class="col-sm-auto">
-                                            <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                                {% for i in questions_to_answer.paginator.page_range %}
-                                                    {% if forloop.counter0|divisibleby:5 %}<div class="row">{% endif %}
-                                                    <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
-                                                        <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                    </li>
-                                                    {% if forloop.counter|divisibleby:5 or forloop.last %}</div>{% endif %}
-                                                {% endfor %}                                        
-                                            </ul>
+                                            <div class="col-sm-auto">
+                                                <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                                                    {% for i in questions_to_answer.paginator.page_range %}
+                                                        {% if forloop.counter0|divisibleby:5 %}<div class="row">{% endif %}
+                                                        <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
+                                                            <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                                                        </li>
+                                                        {% if forloop.counter|divisibleby:5 or forloop.last %}</div>{% endif %}
+                                                    {% endfor %}                                        
+                                                </ul>
 
-                                            <ul>
-                                                {% if questions_to_answer.has_Anterior %}
-                                                <li class="page-item">
-                                                    <a href="?page={{ questions_to_answer.Anterior_page_number }}" class="page-link">
-                                                        ←
-                                                    </a>
-                                                </li>
-                                                {% if questions_to_answer.has_next %}
+                                                <ul>
+                                                    {% if questions_to_answer.has_Anterior %}
                                                     <li class="page-item">
-                                                        <a href="?page={{ questions_to_answer.next_page_number }}" class="page-link">
-                                                            →
+                                                        <a href="?page={{ questions_to_answer.Anterior_page_number }}" class="page-link">
+                                                            ←
                                                         </a>
                                                     </li>
+                                                    {% if questions_to_answer.has_next %}
+                                                        <li class="page-item">
+                                                            <a href="?page={{ questions_to_answer.next_page_number }}" class="page-link">
+                                                                →
+                                                            </a>
+                                                        </li>
+                                                    {% endif %}
                                                 {% endif %}
-                                            {% endif %}
-                                            </ul>
-                                        </div>
+                                                </ul>
+                                            </div>
                                         {% endif %}
                                     </div>
                                     <div class="col-md-6">
@@ -169,14 +170,15 @@
                                                     </div>
                                                     <!-- end row -->
                                         {% endif %}
-                                        {{ started }} 
-                                        {{ selected_questionary_id }} 
-                                        {{ questions_to_answer }} 
                                         {% if started %}
                                             <div class="card mb-3">
                                                 <div class="card-header">
                                                     <div class="progress">
-                                                        <div class="progress-bar" style="width: {% widthratio current_page total_pages 100 %}%;"></div>
+                                                        <div class="progress">
+                                                            <div class="progress-bar" style="width: {{ current_page|floatformat:"0"|div:total_pages|mul:100 }}%;">
+                                                                {{ current_page }} / {{ total_pages }}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
@@ -186,17 +188,19 @@
                                                                 {% csrf_token %}
                                                                 <h5 class="card-title">
                                                                     {% if question.fk_variable %}
-                                                                        Relación variable {{ question.fk_variable.name }}
+                                                                        Pregunta para llenar la informacion para la variable: {{ question.fk_variable.name }}
                                                                     {% else %}
-                                                                        Variable de relación no encontrada
+                                                                        No se encontro una relacion con alguna variable
                                                                     {% endif %}
                                                                 </h5>
-                                                                <p class="card-text">{{ question.question }}</p>
+                                                                {% comment %} aqui muestra la pregunta {% endcomment %}
+                                                                <input type="hidden" name="question_id" value="{{ question.id }}">
+                                                                <p class="card-text" name="question_id" id="question_id" value="{{ question.id }}"><i class="fa fa-id-badge" aria-hidden="true"></i> {{ question.question }}</p>
                                                                 {% if question.type == 1 %}
                                                                     <div class="input-group">
                                                                         <input type="number" value="{{ question.fk_answer.answer }}"
-                                                                        class="form-control" name="question_id"
-                                                                        id="question_id"
+                                                                        class="form-control" name="answer"
+                                                                        id="answer"
                                                                         placeholder="Answer the question only with numbers"
                                                                         required minlength="2" maxlength="10">
 
@@ -234,7 +238,6 @@
                                                     {% endif %}
                                                 </div>
                                             </div>
-
                                             <!-- Pagination -->
                                             <div class="align-items-center mt-2 row text-center text-sm-start">
                                                 <div class="col-sm">
@@ -249,12 +252,8 @@
                                                 </div>
                                                 <div class="col-sm-auto">
                                                     <ul
-                                                        class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
-                                                    >
-                                                        
-                                                        
+                                                        class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"  >   
                                                     </ul>
-                                                
                                             </div>
                                             <!-- end row -->
                                         {% endif %} 
@@ -277,7 +276,6 @@
 <script>
     function validateForm() {
         var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
-
         // Validate if a questionary is selected
         if (selectedQuestionary === 'Choose...') {
             alert('Please select a questionary.');
@@ -309,9 +307,6 @@
                 return false;
             }
         }
-
-        // Add more validations if needed
-
         return true; // Submit the form if all validations pass
     }
 </script>

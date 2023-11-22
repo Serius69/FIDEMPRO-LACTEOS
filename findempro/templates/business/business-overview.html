@@ -197,7 +197,9 @@
     {% endblock footer %}
 </div>
 {% endblock content %}
-
+{% block extra_content %}
+{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+{% endblock extra_content %}
 {% block extra_js %}
     <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
     <script src="{% static 'libs/gridjs/dist/gridjs.umd.js' %}"></script>

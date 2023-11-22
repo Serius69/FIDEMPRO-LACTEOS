@@ -53,9 +53,10 @@ def simulate_init(request):
 
         questionnaires_result = QuestionaryResult.objects.filter(
             is_active=True,
-            fk_product__fk_business__fk_user=request.user,
+            # fk_questionary__fk_product__fk_business__fk_user=request.user,
         ).order_by('-id')
-
+        print(type(request.user))
+        
         if request.method == "POST":
             # Aqui se hara lo que no se vera por pantalla mandando los datos a la clase AreaManager, EquationManager, ProbabilisticDensityFunctionmanager
             form = SimulationForm(request.POST, request.FILES)

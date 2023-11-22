@@ -18,7 +18,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 def product_list(request):
-    try:
+    # try:
         business_id = request.GET.get('business_id', 'All')
         if business_id == 'All':
             products = Product.objects.filter(is_active=True).order_by('-id')
@@ -40,9 +40,9 @@ def product_list(request):
 
         context = {'products': products, 'businesses': businesses}
         return render(request, 'product/product-list.html', context)
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
 def product_overview(request, pk):
         current_datetime = timezone.now()
     # try:

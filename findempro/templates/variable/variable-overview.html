@@ -284,4 +284,8 @@
     </div>
     <!-- end main content-->
     
-    {% endblock content %} {% block extra_js %} {% endblock extra_js %}
+    {% endblock content %} 
+    {% block extra_content %}
+    {% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+    {% endblock extra_content %}
+    {% block extra_js %} {% endblock extra_js %}
