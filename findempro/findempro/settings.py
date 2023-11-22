@@ -39,7 +39,6 @@ DEFAULT_APPS = [
     ]
 LOCAL_APPS = [
     "dashboards",
-    "layouts",
     "pages",
     "product",
     "variable",

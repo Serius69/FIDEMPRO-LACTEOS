@@ -36,7 +36,7 @@ variables_data = [
 'description': 'DATOS HISTÓRICOS DE DEMANDA DE LOS ÚLTIMOS UNIDADES DE TIEMPO'},
 
 {'name': 'CANTIDAD DE PRODUCCIÓN',
-'initials': 'CP',
+'initials': 'CPRO',
 'type': 1,
 'unit': 'LITROS',
 'description': 'CANTIDAD DE PRODUCTOS ESPERADOS A VENDER EN UN PERIODO DE TIEMPO'},
@@ -138,7 +138,7 @@ variables_data = [
 'description': 'NIVEL DE EFICIENCIA EN EL PROCESO DE PRODUCCIÓN DE LOS PRODUCTOS'},
 
 {'name': 'CALIDAD DEL PRODUCTO',
-'initials': 'CP',
+'initials': 'CALPRO',
 'type': 1,
 'unit': '[0-1]',
 'description': 'NIVEL DE CALIDAD DEL PRODUCTO FINAL'},
@@ -288,7 +288,7 @@ variables_data = [
 'description': 'NIVEL DE RENTABILIDAD DE LA EMPRESA'},
 
 {'name': 'GASTOS ORGANIZACIONALES',
-'initials': 'GO',
+'initials': 'GOR',
 'type': 3,
 'unit': 'BS',
 'description': 'GASTOS TOTALES EN OPERACIONES Y ADMINISTRACIÓN DE LAS PYMES DEL SECTOR LÁCTEO, UTILIZADOS EN EL SISTEMA WEB PARA LA TOMA DE DECISIONES FINANCIERAS.'},

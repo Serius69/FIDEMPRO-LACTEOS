@@ -19,14 +19,12 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def variable_list(request):
     # try:
         product_id = request.GET.get('product_id', 'All')
-
         if product_id == 'All':
             variables = Variable.objects.filter(is_active=True).order_by('-id')
             products = Product.objects.filter(is_active=True).order_by('-id')
         else:
             variables = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
             products = Product.objects.filter(is_active=True).order_by('-id')
-
         # Paginate the variables
         paginator = Paginator(variables, 10)  # Show 10 variables per page
         page = request.GET.get('page')

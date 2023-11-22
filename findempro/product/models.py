@@ -47,7 +47,7 @@ class Product(models.Model):
                 Product.objects.create(
                     name=data['name'],                    
                     description=data['description'],
-                    image_src= data['image_src'],
+                    image_src=f"/media/images/product/{data.get('name')}.jpg",
                     type= data['type'],
                     is_active= True,
                     fk_business_id=business.id,
@@ -61,6 +61,7 @@ class Product(models.Model):
 class Area(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    image_src = models.ImageField(upload_to='images/area', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
@@ -83,6 +84,7 @@ class Area(models.Model):
                     name=data['name'],                    
                     description=data['description'],
                     params= data['params'],
+                    image_src=f"/media/images/variable/{data.get('name')}.jpg",
                     is_active= True,
                     fk_product_id=product.id,
                 )

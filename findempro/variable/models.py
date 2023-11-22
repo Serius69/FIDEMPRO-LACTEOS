@@ -10,11 +10,11 @@ from django.core.exceptions import MultipleObjectsReturned
 class Variable(models.Model):
     name = models.CharField(max_length=70)
     initials = models.CharField(max_length=50, default='var1')
-    # TYPE_CHOICES = [
-    #     (1, 'Exogena'),
-    #     (2, 'Estado'),
-    #     (3, 'Endogena'),
-    # ]    
+    TYPE_CHOICES = [
+        (1, 'Exogena'),
+        (2, 'Estado'),
+        (3, 'Endogena'),
+    ]    
     type = models.IntegerField(default=1, help_text='The type of the variable')
     unit = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(default="Description predetermined")
@@ -47,7 +47,7 @@ class Variable(models.Model):
                     initials=data.get('initials'),
                     type=data.get('type'),
                     unit=data.get('unit'),
-                    image_src=f"/media/images/variable/{data.get('initials')}.jpg",
+                    image_src=f"/media/images/variable/{data.get('name')}.jpg",
                     description=data.get('description'),
                     fk_product_id=product.id,
                     is_active=True
