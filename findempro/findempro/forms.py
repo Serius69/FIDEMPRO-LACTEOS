@@ -19,12 +19,12 @@ class UserRegistrationForm(SignupForm):
     def __init__(self, *args, **kwargs):
         super(UserRegistrationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.fields['email'].widget = forms.EmailInput(attrs={'class': 'form-control mb-2','placeholder':'Enter Email','id':'email'})
+        self.fields['email'].widget = forms.EmailInput(attrs={'class': 'form-control mb-2','placeholder':'Ingrese correo electrónico','id':'email'})
         self.fields['email'].label="Email"
-        self.fields['username'].widget = forms.TextInput(attrs={'class': 'form-control mb-2','placeholder':'Enter Username','id':'username1'})
-        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter Password','id':'password1'})
-        self.fields['password2'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter Confirm Password','id':'password2'})
-        self.fields['password2'].label="Confirm Password"
+        self.fields['username'].widget = forms.TextInput(attrs={'class': 'form-control mb-2','placeholder':'Introduzca su nombre de usuario','id':'username1'})
+        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Introducir la contraseña','id':'password1'})
+        self.fields['password2'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Ingrese Confirmar contraseña','id':'password2'})
+        self.fields['password2'].label="confirmar Contraseña"
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
@@ -39,11 +39,11 @@ class PasswordChangeForm(ChangePasswordForm):
         super(PasswordChangeForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
 
-        self.fields['oldpassword'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter currunt password','id':'password3'})
-        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter new password','id':'password4'})
+        self.fields['oldpassword'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter ejecutar contraseña','id':'password3'})
+        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Ingrese nueva Contraseña','id':'password4'})
         self.fields['password2'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter confirm password','id':'password5'})
-        self.fields['oldpassword'].label="Current Password"
-        self.fields['password2'].label="Confirm Password"
+        self.fields['oldpassword'].label="Contraseña actual"
+        self.fields['password2'].label="confirmar Contraseña"
 class PasswordResetForm(ResetPasswordForm):
       def __init__(self, *args, **kwargs):
         super(PasswordResetForm, self).__init__(*args, **kwargs)
@@ -55,13 +55,13 @@ class PasswordResetKeyForm(ResetPasswordKeyForm):
       def __init__(self, *args, **kwargs):
         super(PasswordResetKeyForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter new password','id':'password6'})
+        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Ingrese nueva clave','id':'password6'})
         self.fields['password2'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter confirm password','id':'password7'})
         self.fields['password2'].label="Confirm Password"
 class PasswordSetForm(SetPasswordForm):
       def __init__(self, *args, **kwargs):
         super(PasswordSetForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Enter new password','id':'password8'})
+        self.fields['password1'].widget = forms.PasswordInput(attrs={'class': 'form-control mb-2','placeholder':'Ingrese nueva clave','id':'password8'})
         self.fields['password2'].widget = forms.PasswordInput(attrs={'class': 'form-control','placeholder':'Enter confirm password','id':'password9'})
         self.fields['password2'].label="Confirm Password"
