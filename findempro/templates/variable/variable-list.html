@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %} 
 {% load static %} 
-{% block title %}Variable List{% endblock title %}
+{% block title %}Lista de variables{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %} 
 {% block content %}
@@ -18,16 +18,16 @@
                     <div class="py-4">
                         <h4 class="display-6 -text">VARIABLE LIST</h4>
                         <div class="container">                      
-                            <p>Welcome to our Simulation List page, featuring a dynamic collection of variable scenarios sourced from our comprehensive database. Whether you're an enthusiast, a researcher, or someone exploring the world of simulations, this page is designed to cater to your interests.</p>
+                            <p>Bienvenido a nuestra página de la lista de simulación, con una colección dinámica de escenarios variables procedentes de nuestra base de datos integral.Ya sea que sea un entusiasta, un investigador o alguien que explore el mundo de las simulaciones, esta página está diseñada para atender sus intereses.</p>
                         
-                            <h2>Key Features:</h2>
+                            <h2>Características clave:</h2>
                         
                             <ul>
-                                <li><span class="text-success">Edit:</span> Easily update variable details, modify parameters, and refine scenarios. Our intuitive interface ensures a seamless editing experience, allowing you to fine-tune simulations with just a few clicks.</li>
+                                <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles de las variables, modifique los parámetros y refine los escenarios.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite ajustar simulaciones con solo unos pocos clics.</li>
                         
-                                <li><span class="text-danger">Delete:</span> Need to remove a variable? The delete function lets you swiftly and securely eliminate scenarios that are no longer needed. Streamline your simulation library effortlessly.</li>
+                                <li><span class="text-danger">Eliminar: </span> ¿Necesita eliminar una variable?La función Eliminar le permite eliminar de manera rápida y segura escenarios que ya no son necesarios.Agilice su biblioteca de simulación sin esfuerzo.</li>
                         
-                                <li><span class="text-primary">View:</span> Dive deep into each variable's details with the view option. Explore parameters, outcomes, and more. This feature is perfect for analyzing simulation results and making informed decisions.</li>
+                                <li><span class="text-primary">Ver: </span>Sumérgete profundamente en los detalles de cada variable con la opción Vista.Explore los parámetros, resultados y más.Esta característica es perfecta para analizar los resultados de la simulación y tomar decisiones informadas.</li>
                             </ul>
                         </div>
                     </div>
@@ -55,21 +55,21 @@
                     <div class="row g-3">
                       <div class="col-md-6">
                           <select class="form-control" id="business-select" name="business_id">
-                              <option value="All">Select Product</option>
+                              <option value="All">Seleccionar producto</option>
                               {% for product in products %}
                               <option value="{{ product.id }}">
                                   {{ product.name }}
                               </option>
                               {% empty %}
-                              <option value="All">All</option>
+                              <option value="All">Toda</option>
                               {% endfor %}
                           </select>
                       </div>
                       <div class="col-md-6">
                           <select class="form-control" id="type-select">
-                              <option value="All">Select Type</option>
-                              <option value="All">All</option>
-                              <option value="Endogena">Endogena</option>
+                              <option value="All">Seleccione tipo</option>
+                              <option value="All">Toda</option>
+                              <option value="Endogena">Endógena</option>
                               <option value="Exogena">Exogena</option>
                               <option value="Estado">Estado</option>
                           </select>
@@ -77,7 +77,7 @@
                       <div class="col-lg-12 text-end">
                         <button type="submit" class="btn btn-danger" id="apply-filters">
                           <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                          Filters
+                          Filtros
                         </button>
                       </div>
                   </div>
@@ -87,7 +87,7 @@
                 <div class="col-lg-3">
                   <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariable">
                     <i class="ri-add-fill me-1 align-bottom"></i>
-                    Create New
+                    Crear nuevo
                   </button>
                 </div>
               </div>
@@ -174,7 +174,7 @@
                       class="dropdown-item"
                       href="{% url 'variable:variable.overview' variable.id %}"
                       ><i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                      View</a
+                      Vista</a
                     >
                     <a
                       class="dropdown-item edit-variable"
@@ -183,7 +183,7 @@
                       ><i
                         class="ri-pencil-fill align-bottom me-2 text-muted"
                       ></i>
-                      Edit</a
+                      Editar</a
                     >
                     <div class="dropdown-divider"></div>
                     <a
@@ -194,7 +194,7 @@
                       ><i
                         class="ri-delete-bin-fill align-bottom me-2 text-muted"
                       ></i>
-                      Remove</a
+                      Eliminar</a
                     >
                   </div>
                 </div>
@@ -210,9 +210,9 @@
               style="width: 75px; height: 75px"
             ></lord-icon>
             <h5 class="mt-2"
-              >Sorry there isn't any variable register in the database</h5
+              >Lo siento, no hay ningún registro variable en la base de datos</h5
             >
-            <p class="text-muted mb-0">You have to "Add Product".</p>
+            <p class="text-muted mb-0">Tienes que "agregar producto".</p>
           </div>
 
           {% endfor %} {% comment %} Fin de la lista {% endcomment %}
@@ -225,7 +225,7 @@
                 <span class="fw-semibold"
                   >{{ variables.paginator.num_pages }}</span
                 >
-                Results
+                Resultados
               </div>
             </div>
             <div class="col-sm-auto">
@@ -259,7 +259,7 @@
                 <div class="card-body p-0">
                   <div class="p-3">
                     <h6 class="text-muted mb-0 text-uppercase fw-semibold"
-                      >Instructions</h6
+                      >Instrucciones</h6
                     >
                   </div>
                   <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
@@ -292,10 +292,10 @@
                           style="width: 75px; height: 75px"
                         ></lord-icon>
                         <h5 class="mt-2"
-                          >Sorry, there are no instructions in the database</h5
+                          >Lo siento, no hay instrucciones en la base de datos.</h5
                         >
                         <p class="text-muted mb-0"
-                          >Please add instructions to the system.</p
+                          >Agregue instrucciones al sistema.</p
                         >
                       </div>
                       {% endfor %}

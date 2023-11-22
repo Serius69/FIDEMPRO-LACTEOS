@@ -20,6 +20,7 @@ class AppsView(LoginRequiredMixin,TemplateView):
 def questionnaire_list_view(request):
     started = request.session.get('started', False)
     selected_questionary_id = request.GET.get('questionary_id')
+    questionary_result_id = None
     
     if request.method == 'GET' and 'select' in request.GET:
         selected_questionary_id = request.GET.get('selected_questionary', 0)

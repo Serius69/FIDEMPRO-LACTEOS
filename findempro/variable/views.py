@@ -14,6 +14,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
 from sympy import symbols, Eq, solve
 openai.api_key = settings.OPENAI_API_KEY
+from django.db.models import Q
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def variable_list(request):
@@ -52,11 +53,26 @@ def variable_overview(request, pk):
             is_active=True, 
             fk_product_id=product_id
             ).order_by('-id')
-        equations = Equation.objects.filter(
-            is_active=True, 
-            fk_variable1_id=variable_id
-            ).order_by('-id')
+        
+        equation_conditions = Q(
+            is_active=True,
+        ) | Q(
+            fk_variable1_id=variable_id,
+            fk_variable1__fk_product_id=product_id
+        ) | Q(
+            fk_variable2_id=variable_id,
+            fk_variable1__fk_product_id=product_id
+        ) | Q(
+            fk_variable3_id=variable_id,
+            fk_variable1__fk_product_id=product_id
+        ) | Q(
+            fk_variable4_id=variable_id,
+            fk_variable1__fk_product_id=product_id
+        )
 
+        
+        equations = Equation.objects.filter(equation_conditions,).order_by('-id')
+        
         # Paginate the variables
         paginator = Paginator(variables_related, 3)  # Show 6 variables per page
         page = request.GET.get('page')

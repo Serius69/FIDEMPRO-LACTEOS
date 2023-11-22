@@ -55,9 +55,9 @@
                                     <span class="text-start ms-xl-2">
                                         <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{user.username}}</span>
                                         {% if user.is_staff %}
-                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Administrator</span>
+                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Administradora</span>
                                         {% else %}
-                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">User</span>
+                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Usuario</span>
                                         {% endif %}
                                     </span>
                                 </span>
@@ -72,36 +72,36 @@
                             <div class="dropdown-menu dropdown-menu-end">
                                 <!-- item-->
                                 {% if user.is_authenticated %}
-                                <h6 class="dropdown-header">Welcome {{user.username}}</h6>
-                                <a class="dropdown-item" href="{% url 'user:user.profile' %}"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profile</span></a>
-                                <a class="dropdown-item" href="{% url 'pages:pages.faqs' %}"><i class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Help</span></a>
+                                <h6 class="dropdown-header">Bienvenido {{user.username}}</h6>
+                                <a class="dropdown-item" href="{% url 'user:user.profile' %}"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Perfil</span></a>
+                                <a class="dropdown-item" href="{% url 'pages:pages.faqs' %}"><i class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Ayuda</span></a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'user:user.profile_settings' %}"><i class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Settings</span></a>
+                                <a class="dropdown-item" href="{% url 'user:user.profile_settings' %}"><i class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Ajustes</span></a>
                                 {% if user.is_authenticated %}
                                     {% if user.has_usable_password %}
                                         <a class="dropdown-item" href="{% url 'account_change_password' %}">
                                             <i class="mdi mdi-key text-muted fs-16 align-middle me-1"></i> 
-                                            <span class="align-middle" data-key="t-change-password">Change Password</span>
+                                            <span class="align-middle" data-key="t-change-password">Cambiar la contraseña</span>
                                         </a>
                                     {% else %}
                                         <a class="dropdown-item" href="{% url 'account_set_password' %}">
                                             <i class="mdi mdi-key text-muted fs-16 align-middle me-1"></i> 
-                                            <span class="align-middle" data-key="t-set-password">Set Password</span>
+                                            <span class="align-middle" data-key="t-set-password">Configurar la clave</span>
                                         </a>
                                     {% endif %}
                                         <a class="dropdown-item" href="{% url 'account_logout' %}">
                                             <i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> 
-                                            <span class="align-middle" data-key="t-logout">Logout</span>
+                                            <span class="align-middle" data-key="t-logout">Cerrar sesión</span>
                                         </a>
                                 {% endif %}
                                 {% else %}
                                     <a class="dropdown-item" href="/account/login/?next=">
                                         <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
-                                        <span class="align-middle">Login</span>
+                                        <span class="align-middle">Iniciar Sesion</span>
                                     </a>
                                     <a class="dropdown-item" href="/account/signup/?next=">
                                         <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
-                                        <span class="align-middle">SignUp</span>
+                                        <span class="align-middle">Registrarse</span>
                                     </a>
                                 {% endif %}
                             </div>

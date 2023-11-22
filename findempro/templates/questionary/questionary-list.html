@@ -18,15 +18,15 @@
                                 <div class="row">
                                     <div class="col-xxl-9 align-self-center">
                                         <div class="py-4">
-                                            <h4 class="display-6 -text">QUESTIONARY</h4>
+                                            <h4 class="display-6 -text">CUESTIONARIO</h4>
                                             <div class="container">
                                                 <p>
-                                                    Choose the questionary of the Product that you want to add information to. With this information, we provide you the possibility to make simulations and understand the state of your business.
+                                                    Elija el cuestionario del producto al que desea agregar información.Con esta información, le brindamos la posibilidad de hacer simulaciones y comprender el estado de su negocio.
                                                 </p>
-                                                <h2>Key Features:</h2>
+                                                <h2>Características clave:</h2>
                                                 <ul>
-                                                    <li><span class="text-success">Start Questionary:</span> Begin answering questions about your product.</li>
-                                                    <li><span class="text-info">Questionary Options:</span> Choose the questionary that you want to respond to.</li>
+                                                    <li><span class="text-success">Iniciar cuestionario:</span> Comience a responder preguntas sobre su producto.</li>
+                                                    <li><span class="text-info">Opciones cuestionadoras:</span> Elija el cuestionario al que desee responder.</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -46,7 +46,7 @@
                                         <form method="GET" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm()">
                                             {% csrf_token %}
                                             <div class="input-group mb-2">
-                                                <label class="input-group-text" for="inputGroupSelect01">Questionary Options</label>
+                                                <label class="input-group-text" for="inputGroupSelect01">Opciones cuestionadoras</label>
                                                 <select class="form-select" id="inputGroupSelect01" name="selected_questionary">
                                                     {% for questionary in questionnaires %}
                                                         <option value="{{ questionary.id }}" {% if questionary.id == selected_questionary_id %}selected{% endif %}>
@@ -57,7 +57,7 @@
                                             </div> 
                                             {% if not started %}
                                                 <div class="d-grid gap-1">
-                                                    <button type="submit" name="select" class="btn btn-primary">Select</button>
+                                                    <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
                                                 </div>
                                             {% else %}                                          
                                             {% endif %}
@@ -67,7 +67,7 @@
                                             <div class="d-grid gap-1">
                                                 <form method="POST" action="{% url 'questionary:questionary.list' %}">
                                                     {% csrf_token %}
-                                                    <button type="submit" name="start" class="btn btn-primary">Start Questionary</button>
+                                                    <button type="submit" name="start" class="btn btn-primary">Iniciar cuestionario</button>
                                                 </form>
                                             </div>
                                         {% endif %}
@@ -110,8 +110,8 @@
                                                         <div class="card-body">
                                                             <div class="row">
                                                                 <div class="col-md-6">
-                                                                    <h5 class="question">Relationate Variable {{ question.fk_variable.name }}</h5>
-                                                                    <p class="text-muted">Unit: {{ question.fk_variable.unit }}</p>
+                                                                    <h5 class="question">Relación variable {{ question.fk_variable.name }}</h5>
+                                                                    <p class="text-muted">Unidad:{{ question.fk_variable.unit }}</p>
                                                                 </div>
                                                                 <div class="col-md-6">
                                                                     <label for="{{ question.id }}" class="form-label">
@@ -125,7 +125,7 @@
                                             {% else %}
                                                 <div class="text-center py-4">
                                                     <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                    <h5 class="mt-2">Sorry, there isn't any question in the questionary selected</h5>
+                                                    <h5 class="mt-2">Lo sentimos, no hay ninguna pregunta en el cuestionario seleccionado</h5>
                                                 </div>
                                             {% endif %}
                                             <!-- Pagination -->
@@ -186,9 +186,9 @@
                                                                 {% csrf_token %}
                                                                 <h5 class="card-title">
                                                                     {% if question.fk_variable %}
-                                                                        Relationate Variable {{ question.fk_variable.name }}
+                                                                        Relación variable {{ question.fk_variable.name }}
                                                                     {% else %}
-                                                                        Relationate Variable not found
+                                                                        Variable de relación no encontrada
                                                                     {% endif %}
                                                                 </h5>
                                                                 <p class="card-text">{{ question.question }}</p>
@@ -204,7 +204,7 @@
                                                                     </div>
                                                                 {% elif  question.type == 2 %}
                                                                 <div class="form-group">
-                                                                    <label for="answer">Select an option:</label>
+                                                                    <label for="answer">Seleccione una opción:</label>
                                                                     <select class="form-control" id="answer" name="answer">
                                                                         {% for option in question.posible_answers %}
                                                                             <option value="{{option}}">{{option}}</option>
@@ -212,23 +212,23 @@
                                                                     </select>
                                                                 </div>
                                                                 {% endif %}             
-                                                                <button type="submit" name="next" class="btn btn-secondary">Next Question</button>
+                                                                <button type="submit" name="next" class="btn btn-secondary">Próxima pregunta</button>
                                                             </form>
                                                         {% endfor %}
                                                     {% else %}
-                                                        <p>No questions to answer.</p>
+                                                        <p>No hay preguntas que responder.</p>
                                                     {% endif %}
                                                 </div>
                                                 <div class="card-footer">
                                                     <form method="POST" action="{% url 'questionary:questionary.list' %}">
                                                         {% csrf_token %}
-                                                        <button type="submit" name="cancel" class="btn btn-primary">Cancel Questionary</button>
+                                                        <button type="submit" name="cancel" class="btn btn-primary">Cancelar cuestionario</button>
                                                     </form>
                                                     {% if questions_to_answer.last %}
                                                         <li class="page-item">
                                                             <form method="POST" action="{% url 'questionary:question.save' %}">
                                                                 {% csrf_token %}
-                                                                <button type="submit" name="next" class="btn btn-primary">Finish Questionary</button>
+                                                                <button type="submit" name="next" class="btn btn-primary">Cuestionario de finalización</button>
                                                             </form>
                                                         </li>
                                                     {% endif %}
