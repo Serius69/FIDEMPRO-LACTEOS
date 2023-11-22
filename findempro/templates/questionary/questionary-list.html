@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Questionary{% endblock title %}
+{% block title %}Cuestionario{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -11,7 +11,7 @@
                 <div class="page-content">
                     <div class="container-fluid">
                         {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="questions" title="Questionary" %}
+                        {% include "partials/page-title.html" with pagetitle="Cuestionario" title="Cuestionario" %}
                         {% endblock pagetitle %}
                         <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
                             <div class="px-4">
@@ -174,17 +174,17 @@
                                             <div class="card mb-3">
                                                 <div class="card-header">
                                                     <div class="progress">
-                                                        <div class="progress">
+                                                        {% comment %} <div class="progress">
                                                             <div class="progress-bar" style="width: {{ current_page|floatformat:"0"|div:total_pages|mul:100 }}%;">
                                                                 {{ current_page }} / {{ total_pages }}
                                                             </div>
-                                                        </div>
+                                                        </div> {% endcomment %}
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
                                                     {% if questions_to_answer %}
                                                         {% for question in questions_to_answer %}
-                                                            <form method="POST" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm2()">
+                                                            <form method="POST" action="{% url 'questionary:questionary.list' %}?page={{ questions.next_page_number }}" onsubmit="return validateForm2()">
                                                                 {% csrf_token %}
                                                                 <h5 class="card-title">
                                                                     {% if question.fk_variable %}
@@ -195,6 +195,7 @@
                                                                 </h5>
                                                                 {% comment %} aqui muestra la pregunta {% endcomment %}
                                                                 <input type="hidden" name="question_id" value="{{ question.id }}">
+                                                                <input type="hidden" name="next_question_id" value="{{ next_question_id }}">
                                                                 <p class="card-text" name="question_id" id="question_id" value="{{ question.id }}"><i class="fa fa-id-badge" aria-hidden="true"></i> {{ question.question }}</p>
                                                                 {% if question.type == 1 %}
                                                                     <div class="input-group">
@@ -215,8 +216,14 @@
                                                                         {% endfor %}
                                                                     </select>
                                                                 </div>
-                                                                {% endif %}             
-                                                                <button type="submit" name="next" class="btn btn-secondary">Próxima pregunta</button>
+                                                                {% endif %}      
+                                                                {% if questions_to_answer.has_next %}
+                                                                <li class="page-item">
+                                                                    <a href="" class="page-link">
+                                                                        <button type="submit" name="next" class="btn btn-secondary">Próxima pregunta</button>
+                                                                    </a>
+                                                                </li>
+                                                                {% endif %}      
                                                             </form>
                                                         {% endfor %}
                                                     {% else %}

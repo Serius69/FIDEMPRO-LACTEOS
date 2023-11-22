@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Product Overview{% endblock title %}
+{% block title %}Descripción del producto{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -10,38 +10,32 @@
             <div class="main-content">
                 <div class="page-content">
                     <div class="container-fluid">
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Producto" title=product.name %}
+                        {% endblock pagetitle %}
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="card mt-n4 mx-n4">
                                     <div class="bg-warning-subtle">
                                         <div class="card-body pb-0 px-4">
                                             <div class="row mb-3">
-                                                <div class="col-md">
-                                                    <div class="row align-items-center g-3">
-                                                        <div class="col-md-auto">
-                                                            <div class="avatar-lg">
-                                                                <div class="avatar-title bg-white rounded-circle">
-                                                                    <img src="{{ product.get_photo_url  }}" alt="" class="avatar-md">
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md">
-                                                            <div>
-                                                                <h4 class="fw-bold">{{product.name}}</h4>
-                                                                <div class="hstack gap-3 flex-wrap">
-                                                                    <div><i class="ri-building-line align-bottom me-1"></i> {{product.fk_business.name}}</div>
-                                                                    <div class="vr"></div>
-                                                                    <div>Create Date : <span class="fw-medium">{{product.date_created}}</span></div>
-                                                                    <div class="vr"></div>
-                                                                    <div>Updated Date : <span class="fw-medium">{{product.last_updated}}</span></div>
-                                                                    <div class="vr"></div>
-                                                                    {% with days_since_creation=product.date_created|timesince:current_datetime %}
-                                                                        {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
-                                                                            <div class="badge rounded-pill bg-info fs-12">New</div>
-                                                                        {% endif %}
-                                                                    {% endwith %}
-                                                                </div>
-                                                            </div>
+                                                <div class="col-md-3">
+                                                    <img src="{{ product.get_photo_url }}" alt="{{ product.name }}" class="img-fluid rounded" style="object-fit: contain; max-width: 100%; max-height: 100%;">
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <h4 class="card-title fw-bold">{{product.name}}</h4>
+                                                            <ul class="list-group list-group-flush">
+                                                                <li class="list-group-item"><i class="ri-building-line align-bottom me-1"></i> {{product.fk_business.name}}</li>
+                                                                <li class="list-group-item">Fecha de Creación: <span class="fw-medium">{{product.date_created}}</span></li>
+                                                                <li class="list-group-item">Fecha actualizada: <span class="fw-medium">{{product.last_updated}}</span></li>
+                                                                {% with days_since_creation=product.date_created|timesince:current_datetime %}
+                                                                    {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
+                                                                        <li class="list-group-item"><span class="badge rounded-pill bg-info">Nuevo</span></li>
+                                                                    {% endif %}
+                                                                {% endwith %}
+                                                            </ul>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -50,13 +44,13 @@
                                                 <li class="nav-item">
                                                     <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview"
                                                         role="tab">
-                                                        Overview
+                                                        Descripción general
                                                     </a>
                                                 </li>
                                                 <li class="nav-item">
                                                     <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable"
                                                         role="tab">
-                                                        Variables
+                                                        variables
                                                     </a>
                                                 </li>
                                             </ul>
@@ -78,7 +72,7 @@
                                                 <div class="card">
                                                     <div class="card-body">
                                                         <div class="text-muted">
-                                                            <h6 class="mb-3 fw-semibold text-uppercase">Description</h6>
+                                                            <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
                                                             <p>{{product.description}}</p>    
                 
                                                             <div class="pt-3 border-top border-top-dashed mt-4">
@@ -86,32 +80,40 @@
                                                                     
                                                                     <div class="col-lg-3 col-sm-6">
                                                                         <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Create Date :</p>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Fecha de Creación:</p>
                                                                             <h5 class="fs-15 mb-0">{{product.date_created}}</h5>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-lg-3 col-sm-6">
                                                                         <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Due Date :</p>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Fecha de vencimiento: </p>
                                                                             <h5 class="fs-15 mb-0">{{product.last_updated}}</h5>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-lg-3 col-sm-6">
                                                                         <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Ready for simulate :</p>
-                                                                            <div class="badge bg-danger fs-12">{{product.is_ready}}</div>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Listo para simular:</p>
+                                                                            {% if product.is_ready %}
+                                                                                <div class="badge bg-success fs-12">Listo</div>
+                                                                            {% else %}
+                                                                                <div class="badge bg-danger fs-12">No Listo</div>
+                                                                            {% endif %}
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-lg-3 col-sm-6">
                                                                         <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Type :</p>
-                                                                            <div class="badge bg-warning fs-12">{{product.type}}</div>
+                                                                            <p class="mb-2 text-uppercase fw-medium">Tipo de producto:</p>
+                                                                            {% if product.type == 1 %}
+                                                                                <div class="badge bg-warning fs-12">Lacteos</div>
+                                                                            {% else %}
+                                                                                <div class="badge bg-warning fs-12">Otros</div>
+                                                                            {% endif %}
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                             <div class="pt-3 border-top border-top-dashed mt-4">
-                                                                <h6 class="mb-3 fw-semibold text-uppercase">Reports</h6>
+                                                                <h6 class="mb-3 fw-semibold text-uppercase">Informes</h6>
                                                                 <div class="row g-3">
                                                                     {% for report in reports %}
                                                                     <div class="col-xxl-4 col-lg-6">
@@ -136,8 +138,8 @@
                                                                                                 <i class="ri-more-fill"></i>
                                                                                             </button>
                                                                                             <ul class="dropdown-menu">
-                                                                                                <li><a class="dropdown-item" href="#"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
-                                                                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
+                                                                                                <li><a class="dropdown-item" href="#"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rebautizar</a></li>
+                                                                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Borrar</a></li>
                                                                                             </ul>
                                                                                         </div>
                                                                                     </div>
@@ -149,8 +151,8 @@
                                                                     {% empty %}
                                                                         <div class="col text-center py-4">
                                                                             <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                            <h5 class="mt-2">Sorry, there isn't any equition registered in the database</h5>
-                                                                            <p class="text-muted mb-0">You have to "Add Business".</p>
+                                                                            <h5 class="mt-2">Lo siento, no hay ninguna ecuación registrada en la base de datos</h5>
+                                                                            <p class="text-muted mb-0">Tienes que "agregar negocios".</p>
                                                                         </div>
                                                                     {% endfor %}
                                                                 </div>
@@ -166,7 +168,7 @@
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
                                                         <h4 class="card-title mb-0 flex-grow-1">Areas</h4>
                                                         <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-share-line me-1 align-bottom"></i> Add Area</button>
+                                                            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
                                                         </div>
                                                     </div>
 
@@ -174,20 +176,22 @@
                                                         {% for area in areas %}
                                                             <div class="col-md-4">
                                                                 <div class="card">
+                                                                    <img src="{ area.get_image_url }" class="card-img-top" alt="Area Image">
                                                                     <div class="card-body">
                                                                         <h5 class="card-title">{{ area.name }}</h5>
                                                                         <p class="card-text">{{ area.description }}</p>
-                                                                        <a href="#" class="btn btn-primary">Go somewhere</a>
+                                                                        <a href="#" class="btn btn-primary">Ver</a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         {% empty %}
                                                             <div class="col text-center py-4">
                                                                 <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                <h5 class="mt-2">Sorry, there isn't any equition registered in the database</h5>
-                                                                <p class="text-muted mb-0">You have to "Add Area".</p>
+                                                                <h5 class="mt-2">Lo sentimos, no hay ningún área registrada en la base de datos</h5>
+                                                                <p class="text-muted mb-0">Ytienes que "agregar área".</p>
                                                             </div>
                                                         {% endfor %}
+
                                                     </div>
                                                 </div>
                                                 <!-- end card -->
@@ -197,57 +201,49 @@
 
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1">Simulations</h4>
+                                                        <h4 class="card-title mb-0 flex-grow-1">Simulaciones</h4>
                                                         <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-info btn-sm" href=""><i class="ri-upload-2-fill me-1 align-bottom"></i> New Simulation</button>
+                                                            <button type="button" class="btn btn-soft-info btn-sm" href=""><i class="ri-upload-2-fill me-1 align-bottom"></i> Nueva simulación</button>
                                                         </div>
                                                     </div>
                                                     {% for simulation in simulations %}
-                                                    <div class="card-body">                                                        
-                                                        <div class="vstack gap-2">
-                                                            <div class="border rounded border-dashed p-2">
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="flex-shrink-0 me-3">
-                                                                        <div class="avatar-sm">
-                                                                            <div class="avatar-title bg-light text-secondary rounded fs-24">
-                                                                                <i class="ri-folder-zip-line"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="flex-grow-1 overflow-hidden">
-                                                                        <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">App-pages.zip</a></h5>
-                                                                        <div>2.2MB</div>
-                                                                    </div>
-                                                                    <div class="flex-shrink-0 ms-2">
-                                                                        <div class="d-flex gap-1">
-                                                                            <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                    <i class="ri-more-fill"></i>
-                                                                                </button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <li><a class="dropdown-item" href="#"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Rename</a></li>
-                                                                                    <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
-                                                                                </ul>
-                                                                            </div>
+                                                        <div class="card mb-3">
+                                                            <div class="card-body">
+                                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                                    <h5 class="mb-0">{{simulation.date}}</h5>
+                                                                    <div class="d-flex gap-2">
+                                                                        <button type="button" href="" class="btn btn-sm btn-outline-secondary">
+                                                                            <i class="ri-download-2-line"></i> Generar Reporte
+                                                                        </button>
+                                                                        <div class="dropdown">
+                                                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                                <i class="ri-more-fill"></i> Más
+                                                                            </button>
+                                                                            <ul class="dropdown-menu">
+                                                                                <li><a class="dropdown-item" href="#"><i class="ri-pencil-fill align-bottom me-2"></i> Renombrar</a></li>
+                                                                                <li><a class="dropdown-item" href="#"><i class="ri-delete-bin-fill align-bottom me-2"></i> Eliminar</a></li>
+                                                                            </ul>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-
-                                                            <div class="mt-2 text-center">
-                                                                <button type="button" class="btn btn-success">View more</button>
+                                                                <ul class="list-group list-group-flush">
+                                                                    <li class="list-group-item">Media de la demanda: {{simulation.demand_mean}}</li>
+                                                                    <li class="list-group-item">Desviación estándar de la demanda: {{simulation.demand_std_deviation}}</li>
+                                                                    <li class="list-group-item">Unidad de tiempo: {{simulation.unit_time}}</li>
+                                                                    <li class="list-group-item">Fecha de creación: {{simulation.date_created}}</li>
+                                                                </ul>
+                                                                <div class="mt-3 text-center">
+                                                                    <a href="#" class="btn btn-success">Ver más</a>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <!-- end card body -->
                                                     {% empty %}
-                                                        <div class="col text-center py-4">
+                                                        <div class="text-center py-4">
                                                             <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                            <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
-                                                            <p class="text-muted mb-0">You have to "Add Business".</p>
+                                                            <h5 class="mt-2">Lo sentimos, no hay ningún negocio registrado en la base de datos</h5>
+                                                            <p class="text-muted mb-0">Tienes que "Agregar Negocio".</p>
                                                         </div>
-                                                    {% endfor %}  
+                                                    {% endfor %}
                                                 </div>
                                                 <!-- end card -->
                                             </div>
@@ -258,17 +254,9 @@
                                     <!-- end tab pane -->
                                     <div class="tab-pane fade" id="product-variable" role="tabpanel">
                                         <div class="row g-4 mb-3">
-                                            <div class="col-sm">
-                                                <div class="d-flex">
-                                                    <div class="search-box me-2">
-                                                        <input type="text" class="form-control" placeholder="Search variable...">
-                                                        <i class="ri-search-line search-icon"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
                                             <div class="col-sm-auto">
                                                 <div>
-                                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-add-line me-1 align-bottom"></i> Add a Variable</button>
+                                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-add-line me-1 align-bottom"></i> Agregar una variable</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -303,12 +291,12 @@
                                                         <div class="col-lg-4 col">
                                                             <div class="row text-muted text-center">
                                                                 <div class="col-6 border-end border-end-dashed">
-                                                                    <h5 class="mb-1">{{variable.total_equations}}</h5>
-                                                                    <p class="text-muted mb-0">equations</p>
+                                                                    <h5 class="mb-1">{{variable.fk_variable_equation.all}}</h5>
+                                                                    <p class="text-muted mb-0">ecuaciones</p>
                                                                 </div>
                                                                 <div class="col-6">
-                                                                    <h5 class="mb-1">{{variable.total_questions}}</h5>
-                                                                    <p class="text-muted mb-0">questions</p>
+                                                                    <h5 class="mb-1">{{variable.fk_variable_question.all}}</h5>
+                                                                    <p class="text-muted mb-0">preguntas</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -317,14 +305,9 @@
                                             </div><!--end card-->
                                             {% empty %}
                                             <tr>
-                                               {% comment %} <div class="col text-center py-4"> {% endcomment %}
                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                   <h5 class="mt-2">Sorry, there isn't any business registered in the database</h5>
-                                                   <p class="text-muted mb-0">You have to "Add Business".</p>
-                                               {% comment %} </div> {% endcomment %}
-                                               {% comment %} <div class="text-center mt-3">
-                                                   <a href="javascript:void(0);" class="text-success "><i class="mdi mdi-loading mdi-spin fs-20 align-middle me-2"></i> Load more </a>
-                                               </div> {% endcomment %}
+                                                   <h5 class="mt-2">Lo siento, no hay ningún negocio registrado en la base de datos</h5>
+                                                   <p class="text-muted mb-0">Tienes que "agregar negocios".</p>
                                            </tr>
                                            {% endfor %} 
                                         </div>

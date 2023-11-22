@@ -47,7 +47,7 @@ class Product(models.Model):
                 Product.objects.create(
                     name=data['name'],                    
                     description=data['description'],
-                    image_src=f"/media/images/product/{data.get('name')}.jpg",
+                    image_src=f"/images/product/{data.get('name')}.jpg",
                     type= data['type'],
                     is_active= True,
                     fk_business_id=business.id,
@@ -75,6 +75,11 @@ class Area(models.Model):
     params = models.JSONField(null=True, blank=True)  # Use JSONField for a list of values
     def __str__(self) -> str:
         return self.name
+    def get_photo_url(self) -> str:
+        if self.image_src and hasattr(self.image_src, 'url'):
+            return self.image_src.url
+        else:
+            return "/static/images/product/product-dummy-img.webp"
     @receiver(post_save, sender=Product)
     def create_area(sender, instance, created, **kwargs):
         if created:
@@ -84,7 +89,7 @@ class Area(models.Model):
                     name=data['name'],                    
                     description=data['description'],
                     params= data['params'],
-                    image_src=f"/media/images/variable/{data.get('name')}.jpg",
+                    image_src=f"/images/area/{data.get('name')}.jpg",
                     is_active= True,
                     fk_product_id=product.id,
                 )

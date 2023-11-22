@@ -43,6 +43,7 @@ class Business(models.Model):
                 name="Pyme Lactea",
                 type= 1,  
                 location="La Paz",
+                image_src = f"/images/business/Pyme Lactea.jpg",
                 fk_user_id=user.id,
                 )
     @receiver(post_save, sender=User)

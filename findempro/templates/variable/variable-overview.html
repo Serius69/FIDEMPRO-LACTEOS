@@ -10,46 +10,46 @@
         <div class="container-fluid">
           <div class="row">
             <div class="col-lg-12">
-              <div class="card mt-n4 mx-n4">
+              <div class="card m-4">
                 <div class="bg-warning-subtle">
-                  <div class="card-body px-4 pb-4">
+                  <div class="card-body p-4">
                     <div class="row mb-3">
                       <div class="col-md">
                         <div class="row align-items-center g-3">
                           <div class="col-md-auto">
-                            <div class="avatar-md">
-                              <div class="avatar-title bg-white rounded-circle">
-                                <img
-                                  src="{{ variable.get_photo_url }}"
-                                  alt=""
-                                  class="avatar-xs"
-                                />
-                              </div>
-                            </div>
+                            <figure class="avatar-lg">
+                              <img src="{{ variable.get_photo_url }}" alt="{{ variable.name }}" class="avatar-lg rectangular">
+                            </figure>
                           </div>
                           <div class="col-md">
                             <div>
                               <h4 class="fw-bold">{{variable.name}}</h4>
-                              <div class="hstack gap-3 flex-wrap">
+                              <div class="d-flex flex-wrap gap-3">
                                 <div>
                                   <i class="ri-building-line align-bottom me-1"></i>
-                                  {{variable.fk_product.name}}
+                                  <span class="fw-medium">Producto: </span>{{variable.fk_product.name}}
                                 </div>
                                 <div class="vr"></div>
                                 <div>
                                   <i class="ri-map-pin-2-line align-bottom me-1"></i>
-                                  {{variable.is_active}}
-                                </div>
+                                  <span class="fw-medium">Estado: </span>
+                                  {% if variable.is_active %}
+                                      Activo
+                                  {% else %}
+                                      Inactivo
+                                  {% endif %}
+                              </div>
+                              
                                 <div class="vr"></div>
                                 <div>
-                                Fecha de creación :
+                                  Fecha de creación :
                                   <span class="fw-medium">
                                     {{variable.date_created}}
                                   </span>
                                 </div>
                                 <div class="vr"></div>
                                 <div class="badge rounded-pill bg-success fs-12">
-                                  {{variable.type}}
+                                  Tipo: {{variable.type}}
                                 </div>
                               </div>
                             </div>
@@ -77,43 +77,40 @@
                   <div>
                     <h5 class="mb-3">Ecuaciones</h5>
                     <p class="text-muted">
-                      A continuación se proporcionan las responsabilidades de un nombre de variable:
+                      Estas son las ecuaciones en las que la varialbe forma parte
                     </p>
-                    <ul class="text-muted vstack gap-2">
-                      <li>
-                       Para visualizar y crear dibujos y conceptos de diseño para determinar lo mejor
-                        variable.
-                      </li>
-                    </ul>
                   </div>
                 </div>
               </div>
-
               
               {% if equations %}
-              <div class="table-responsive">
+                <div class="table-responsive">
                   <table class="table table-striped table-hover">
-                      <thead>
-                          <tr>
-                              <th>Nombre</th>
-                              <th>Expresión</th>
-                              <th>Descripción</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {% for equation in equations %}
-                              <tr>
-                                  <td>{{ equation.name }}</td>
-                                  <td>{{ equation.expression }}</td>
-                                  <td>{{ equation.description }}</td>
-                              </tr>
-                          {% endfor %}
-                      </tbody>
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Expresión</th>
+                        <th>Descripción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for equation in equations|slice:":10" %}
+                        <tr>
+                          <td>{{ equation.name }}</td>
+                          <td>{{ equation.expression }}</td>
+                          <td>{{ equation.description }}</td>
+                        </tr>
+                      {% empty %}
+                        <tr>
+                          <td colspan="3" class="text-center">No hay ecuaciones disponibles.</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
                   </table>
-              </div>
-          {% else %}
-              <p> No hay ecuaciones disponibles.</p>
-          {% endif %}
+                </div>
+              {% else %}
+                <p>No hay ecuaciones disponibles.</p>
+              {% endif %}
               <div class="row">
                 <div class="col-lg-12">
                   <div class="d-flex align-items-center mb-4">
@@ -206,10 +203,6 @@
                           <td>{{variable.fk_product.name}}</td>
                         </tr>
                         <tr>
-                          <td class="fw-medium">Negocio Vinculado</td>
-                          <td>{{variable.fk_product__fk_business.name}}</td>
-                        </tr>
-                        <tr>
                           <td class="fw-medium">Tipo de variable</td>
                           <td>
                             <span class="badge bg-success-subtle text-success">
@@ -225,10 +218,6 @@
                           <td class="fw-medium">Fecha de creación</td>
     
                           <td>{{variable.date_created}}</td>
-                        </tr>
-                        <tr>
-                          <td class="fw-medium">Number of Equations</td>
-                          <td>{{variable.fk_variable_equation.count}}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -274,6 +263,7 @@
               </div>
               <!--end card-->
             </div>
+          
           </div>
         </div>
         <!-- container-fluid -->

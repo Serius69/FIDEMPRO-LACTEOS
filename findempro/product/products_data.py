@@ -1,7 +1,7 @@
 products_data = [
     
     {
-    'name': 'Leche Entera',
+    'name': 'Leche',
     'description': 'La leche es un alimento básico completo y equilibrado, proporcionando un elevado contenido de nutrientes (Proteínas, Hidratos de Carbono, Vitaminas, Minerales y Lípidos) en relación al contenido calórico. 2. Su valor como bebida nutritiva es incomparable al resto de las bebidas existentes en el mercado.',
     'type': 1
     },

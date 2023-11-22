@@ -95,7 +95,7 @@
             </div>
           </div>
           {% for variable in variables %}
-          <div class="card joblist-card">
+          <div class="card variablelist-card">
             <div class="card-body">
               <div class="d-flex mb-4">
                 <div class="avatar-sm">
@@ -109,7 +109,7 @@
                 </div>
                 <div class="ms-3 flex-grow-1">
                   <img
-                  src="{{ variable.get_photo_url }}"
+                  src="{{ variable.fk_product.get_photo_url }}"
                     alt=""
                     class="d-none cover-img"
                   />
@@ -119,17 +119,6 @@
                   <p class="company-name text-muted mb-0"
                     >{{variable.fk_product.name}}</p
                   >
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    class="btn btn-ghost-primary btn-icon custom-toggle"
-                    data-bs-toggle="button"
-                  >
-                    <span class="icon-off"
-                      ><i class="ri-bookmark-fill"></i
-                    ></span>
-                  </button>
                 </div>
               </div>
               <p class="text-muted job-description">{{variable.description}}</p>
@@ -201,7 +190,7 @@
               </div>
             </div>
           </div>
-          {% comment %} End card {% endcomment %} {% empty %}
+          {% empty %}
           <div class="text-center py-4">
             <lord-icon
               src="https://cdn.lordicon.com/msoeawqm.json"
@@ -214,8 +203,7 @@
             >
             <p class="text-muted mb-0">Tienes que "agregar producto".</p>
           </div>
-
-          {% endfor %} {% comment %} Fin de la lista {% endcomment %}
+          {% endfor %}
           <!-- Pagination -->
           <div class="align-items-center mt-2 row text-center text-sm-start">
             <div class="col-sm">

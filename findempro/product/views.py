@@ -50,7 +50,8 @@ def product_overview(request, pk):
         variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         areas = Area.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
-        simulations = ResultSimulation.objects.filter(fk_simulation_scenario__fk_product_id=product.id, is_active=True).order_by('-id')
+        simulations = ResultSimulation.objects.filter(
+            fk_simulation__fk_questionary_result__fk_questionary__fk_business_id=product.fk_business.id, is_active=True).order_by('-id')
         paginator = Paginator(variables_product, 10)
         page = request.GET.get('page')
         try:
