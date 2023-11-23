@@ -15,14 +15,16 @@
                         {% endblock pagetitle %}
                         <div class="row">
                             <div class="col-lg-12">
-                                <div class="card mt-n4 mx-n4">
+                                <div class="card mt-n2 mx-n2">
                                     <div class="bg-warning-subtle">
-                                        <div class="card-body pb-0 px-4">
-                                            <div class="row mb-3">
-                                                <div class="col-md-3">
-                                                    <img src="{{ product.get_photo_url }}" alt="{{ product.name }}" class="img-fluid rounded" style="object-fit: contain; max-width: 100%; max-height: 100%;">
+                                        <div class="card-body pb-0 px-2">
+                                            <div class="row mb-1">
+                                                <!-- Product Image -->
+                                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                                    <img src="{{ product.get_photo_url }}" alt="{{ product.name }}" class="img-fluid rounded" style="object-fit: cover; width: 100%; height: auto;">
                                                 </div>
-                                                <div class="col-md-9">
+                                                <!-- Product Details -->
+                                                <div class="col-lg-9 col-md-8 col-sm-6">
                                                     <div class="card">
                                                         <div class="card-body">
                                                             <h4 class="card-title fw-bold">{{product.name}}</h4>
@@ -38,29 +40,65 @@
                                                             </ul>
                                                         </div>
                                                     </div>
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                        <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
+                                                                <p>{{product.description}}</p>    
+                    
+                                                                <div class="pt-3 border-top border-top-dashed mt-4">
+                                                                    <div class="row">
+                                                                        
+                                                                        <div class="col-lg-3 col-sm-6">
+                                                                            <div>
+                                                                                <p class="mb-2 text-uppercase fw-medium">Fecha de Creación:</p>
+                                                                                <h5 class="fs-15 mb-0">{{ product.date_created|date:"F j, Y, P" }}</h5>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-lg-3 col-sm-6">
+                                                                            <div>
+                                                                                <p class="mb-2 text-uppercase fw-medium">Fecha de actualizacion: </p>
+                                                                                <h5 class="fs-15 mb-0">{{ product.last_updated|date:"F j, Y, P" }}</h5>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-lg-3 col-sm-6">
+                                                                            <div>
+                                                                                <p class="mb-2 text-uppercase fw-medium">Listo para simular:</p>
+                                                                                {% if product.is_ready %}
+                                                                                    <div class="badge bg-success fs-12">Listo</div>
+                                                                                {% else %}
+                                                                                    <div class="badge bg-danger fs-12">No Listo</div>
+                                                                                {% endif %}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-lg-3 col-sm-6">
+                                                                            <div>
+                                                                                <p class="mb-2 text-uppercase fw-medium">Tipo de producto:</p>
+                                                                                {% if product.type == 1 %}
+                                                                                    <div class="badge bg-warning fs-12">Lacteos</div>
+                                                                                {% else %}
+                                                                                    <div class="badge bg-warning fs-12">Otros</div>
+                                                                                {% endif %}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <!-- Product Tabs -->
                                             <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
                                                 <li class="nav-item">
-                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview"
-                                                        role="tab">
-                                                        Descripción general
-                                                    </a>
+                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview" role="tab">Descripción general</a>
                                                 </li>
                                                 <li class="nav-item">
-                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable"
-                                                        role="tab">
-                                                        variables
-                                                    </a>
+                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable" role="tab">variables</a>
                                                 </li>
                                             </ul>
                                         </div>
-                                        <!-- end card body -->
                                     </div>
                                 </div>
-                                <!-- end card -->
                             </div>
-                            <!-- end col -->
                         </div>
                         <!-- end row -->
                         <div class="row">
@@ -69,49 +107,42 @@
                                     <div class="tab-pane fade show active" id="product-overview" role="tabpanel">
                                         <div class="row">
                                             <div class="col-xl-9 col-lg-8">
-                                                <div class="card">
-                                                    <div class="card-body">
-                                                        <div class="text-muted">
-                                                            <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
-                                                            <p>{{product.description}}</p>    
-                
-                                                            <div class="pt-3 border-top border-top-dashed mt-4">
-                                                                <div class="row">
-                                                                    
-                                                                    <div class="col-lg-3 col-sm-6">
-                                                                        <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Fecha de Creación:</p>
-                                                                            <h5 class="fs-15 mb-0">{{product.date_created}}</h5>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-lg-3 col-sm-6">
-                                                                        <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Fecha de vencimiento: </p>
-                                                                            <h5 class="fs-15 mb-0">{{product.last_updated}}</h5>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-lg-3 col-sm-6">
-                                                                        <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Listo para simular:</p>
-                                                                            {% if product.is_ready %}
-                                                                                <div class="badge bg-success fs-12">Listo</div>
-                                                                            {% else %}
-                                                                                <div class="badge bg-danger fs-12">No Listo</div>
-                                                                            {% endif %}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-lg-3 col-sm-6">
-                                                                        <div>
-                                                                            <p class="mb-2 text-uppercase fw-medium">Tipo de producto:</p>
-                                                                            {% if product.type == 1 %}
-                                                                                <div class="badge bg-warning fs-12">Lacteos</div>
-                                                                            {% else %}
-                                                                                <div class="badge bg-warning fs-12">Otros</div>
-                                                                            {% endif %}
-                                                                        </div>
+                                                   <div class="card">
+                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
+                                                        <h4 class="card-title mb-0 flex-grow-1">Areas</h4>
+                                                        <div class="flex-shrink-0">
+                                                            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        {% for area in areas %}
+                                                            <div class="col-md-2">
+                                                                <div class="card">
+                                                                    <img src="{{ area.get_photo_url }}" class="card-img-top img-fluid" alt="Area Image">
+                                                                    <div class="card-body">
+                                                                        <h5 class="card-title">{{ area.name }}</h5>
+                                                                        <p class="card-text">{{ area.description }}</p>
+                                                                        <a href="#" class="btn btn-primary">Ver</a>
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                        {% empty %}
+                                                            <div class="col text-center py-4">
+                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                <h5 class="mt-2">Lo sentimos, no hay ningún área registrada en la base de datos</h5>
+                                                                <p class="text-muted mb-0">Ytienes que "agregar área".</p>
+                                                            </div>
+                                                        {% endfor %}
+
+                                                    </div>
+                                                </div>
+                                                <!-- end card -->
+                                            </div>
+                                            <!-- ene col -->
+                                            <div class="col-xl-3 col-lg-6">  
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <div class="text-muted">
                                                             <div class="pt-3 border-top border-top-dashed mt-4">
                                                                 <h6 class="mb-3 fw-semibold text-uppercase">Informes</h6>
                                                                 <div class="row g-3">
@@ -163,42 +194,6 @@
                                                     <!-- end card body -->
                                                 </div>
                                                 <!-- end card -->
-
-                                                   <div class="card">
-                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1">Areas</h4>
-                                                        <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row">
-                                                        {% for area in areas %}
-                                                            <div class="col-md-4">
-                                                                <div class="card">
-                                                                    <img src="{ area.get_image_url }" class="card-img-top" alt="Area Image">
-                                                                    <div class="card-body">
-                                                                        <h5 class="card-title">{{ area.name }}</h5>
-                                                                        <p class="card-text">{{ area.description }}</p>
-                                                                        <a href="#" class="btn btn-primary">Ver</a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        {% empty %}
-                                                            <div class="col text-center py-4">
-                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                <h5 class="mt-2">Lo sentimos, no hay ningún área registrada en la base de datos</h5>
-                                                                <p class="text-muted mb-0">Ytienes que "agregar área".</p>
-                                                            </div>
-                                                        {% endfor %}
-
-                                                    </div>
-                                                </div>
-                                                <!-- end card -->
-                                            </div>
-                                            <!-- ene col -->
-                                            <div class="col-xl-3 col-lg-4">                                        
-
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
                                                         <h4 class="card-title mb-0 flex-grow-1">Simulaciones</h4>
@@ -246,6 +241,7 @@
                                                     {% endfor %}
                                                 </div>
                                                 <!-- end card -->
+
                                             </div>
                                             <!-- end col -->
                                         </div>

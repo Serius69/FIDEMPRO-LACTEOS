@@ -10,13 +10,13 @@
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="Variable" title="Variable List" %} {% endblock pagetitle %}
+      {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="Variable" title="Lista de variables" %} {% endblock pagetitle %}
       <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
         <div class="px-4">
             <div class="row">
                 <div class="col-xxl-9 align-self-center">
                     <div class="py-4">
-                        <h4 class="display-6 -text">VARIABLE LIST</h4>
+                        <h4 class="display-6 -text">Lista de variables</h4>
                         <div class="container">                      
                             <p>Bienvenido a nuestra página de la lista de simulación, con una colección dinámica de escenarios variables procedentes de nuestra base de datos integral.Ya sea que sea un entusiasta, un investigador o alguien que explore el mundo de las simulaciones, esta página está diseñada para atender sus intereses.</p>
                         
@@ -97,98 +97,94 @@
           {% for variable in variables %}
           <div class="card variablelist-card">
             <div class="card-body">
-              <div class="d-flex mb-4">
-                <div class="avatar-sm">
-                  <div class="avatar-title bg-light rounded">
-                    <img
-                    src="{{ variable.get_photo_url }}"
-                      alt=""
-                      class="avatar-xxs companyLogo-img"
-                    />
-                  </div>
+                <div class="row">
+                    <div class="col-md-3">
+                      <div class="avatar-lg">
+                        <div class="avatar-title bg-light rounded">
+                          <img
+                            src="{{ variable.get_image_url }}"
+                            alt=""
+                            class="avatar-md companyLogo-img"
+                            style="object-fit: cover; width: 100%; height: 100%;"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="d-flex mb-4">
+                            <div class="ms-3 flex-grow-1">
+                                <img
+                                    src="{{ variable.fk_product.get_photo_url }}"
+                                    alt=""
+                                    class="d-none cover-img"
+                                />
+                                <a href="{% url 'variable:variable.overview' variable.id %}">
+                                    <h5 class="job-title">{{variable.name}}</h5>
+                                </a>
+                                <p class="company-name text-muted mb-0">{{variable.fk_product.name}}</p>
+                            </div>
+                        </div>
+                        <p class="text-muted job-description">{{variable.description}}</p>
+                    </div>
                 </div>
-                <div class="ms-3 flex-grow-1">
-                  <img
-                  src="{{ variable.fk_product.get_photo_url }}"
-                    alt=""
-                    class="d-none cover-img"
-                  />
-                  <a href="{% url 'variable:variable.overview' variable.id %}"
-                    ><h5 class="job-title">{{variable.name}}</h5></a
-                  >
-                  <p class="company-name text-muted mb-0"
-                    >{{variable.fk_product.name}}</p
-                  >
-                </div>
-              </div>
-              <p class="text-muted job-description">{{variable.description}}</p>
             </div>
             <div class="card-footer border-top-dashed">
-              <div
-                class="d-flex justify-content-between align-items-center flex-wrap gap-3"
-              >
-                <div
-                  ><i class="ri-briefcase-2-line align-bottom me-1"></i>
-                  <span class="job-type"
-                    >{{variable.fk_product.name}}</span
-                  ></div
-                >
-                <div
-                  ><i class="ri-map-pin-2-line align-bottom me-1"></i>
-                  <span class="job-location">{{variable.unit}}</span></div
-                >
-                <div
-                  ><i class="ri-user-3-line align-bottom me-1"></i>
-                  {{variable.type}}</div
-                >
-                <div
-                  ><i class="ri-time-line align-bottom me-1"></i>
-                  <span class="job-postdate"
-                    >{{variable.date_created}}</span
-                  ></div
-                >
-
-                <div class="dropdown">
-                  <button
-                    class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="true"
-                  >
-                    <i data-feather="more-horizontal" class="icon-sm"></i>
-                  </button>
-
-                  <div class="dropdown-menu dropdown-menu-end">
-                    <a
-                      class="dropdown-item"
-                      href="{% url 'variable:variable.overview' variable.id %}"
-                      ><i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                      Vista</a
-                    >
-                    <a
-                      class="dropdown-item edit-variable"
-                      data-bs-target="#editVariableModal"
-                      data-variable-id="{{ variable.id }}"
-                      ><i
-                        class="ri-pencil-fill align-bottom me-2 text-muted"
-                      ></i>
-                      Editar</a
-                    >
-                    <div class="dropdown-divider"></div>
-                    <a
-                      class="dropdown-item delete-variable"
-                      data-bs-toggle="modal"
-                      data-bs-target="#removeVariableModal"
-                      data-variable-id="{{ variable.id }}"
-                      ><i
-                        class="ri-delete-bin-fill align-bottom me-2 text-muted"
-                      ></i>
-                      Eliminar</a
-                    >
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <i class="ri-briefcase-2-line align-bottom me-1"></i>
+                        <span class="job-type">{{variable.fk_product.name}}</span>
+                    </div>
+                    <div>
+                        <i class="ri-map-pin-2-line align-bottom me-1"></i>
+                        <span class="job-location">{{variable.unit}}</span>
+                    </div>
+                    <div>
+                        <i class="ri-user-3-line align-bottom me-1"></i>
+                        {{variable.type}}
+                    </div>
+                    <div>
+                        <i class="ri-time-line align-bottom me-1"></i>
+                        <span class="job-postdate">{{variable.date_created}}</span>
+                    </div>
+                    <div class="dropdown">
+                        <button
+                            class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
+                            data-bs-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="true"
+                        >
+                            <i data-feather="more-horizontal" class="icon-sm"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a
+                                class="dropdown-item"
+                                href="{% url 'variable:variable.overview' variable.id %}"
+                            >
+                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                Vista
+                            </a>
+                            <a
+                                class="dropdown-item edit-variable"
+                                data-bs-target="#editVariableModal"
+                                data-variable-id="{{ variable.id }}"
+                            >
+                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                Editar
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a
+                                class="dropdown-item delete-variable"
+                                data-bs-toggle="modal"
+                                data-bs-target="#removeVariableModal"
+                                data-variable-id="{{ variable.id }}"
+                            >
+                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i                    >
+                                  Eliminar
+                              </a>
+                          </div>
+                    </div>
                   </div>
-                </div>
               </div>
-            </div>
           </div>
           {% empty %}
           <div class="text-center py-4">
@@ -218,18 +214,38 @@
             </div>
             <div class="col-sm-auto">
               <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                {% if variables.has_Anterior %}
+                {% if variables.has_previous %}
                   <li class="page-item">
-                    <a href="?page={{ variables.Anterior_page_number }}" class="page-link">←</a>
+                    <a href="?page={{ variables.previous_page_number }}" class="page-link">←</a>
                   </li>
                 {% endif %}
-            
-                {% for i in variables.paginator.page_range %}
-                  <li class="page-item {% if i == variables.number %}active{% endif %}">
-                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+
+                {% if variables.number|add:"-3" > 1 %}
+                  <li class="page-item">
+                    <a href="?page=1" class="page-link">1</a>
                   </li>
+                  <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                {% endif %}
+
+                {% for i in variables.paginator.page_range %}
+                  {% if variables.number|add:"-3" <= i <= variables.number|add:"3" %}
+                    <li class="page-item {% if i == variables.number %}active{% endif %}">
+                      <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                    </li>
+                  {% endif %}
                 {% endfor %}
-            
+
+                {% if variables.number|add:"3" < variables.paginator.num_pages %}
+                  <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                  <li class="page-item">
+                    <a href="?page={{ variables.paginator.num_pages }}" class="page-link">{{ variables.paginator.num_pages }}</a>
+                  </li>
+                {% endif %}
+
                 {% if variables.has_next %}
                   <li class="page-item">
                     <a href="?page={{ variables.next_page_number }}" class="page-link">→</a>
@@ -240,63 +256,62 @@
           </div>
           <!-- end row -->
         </div>
-        <div class="col-lg-2 layout-rightside-col">
-            <div class="overlay"></div>
-            <div class="layout-rightside">
-              <div class="card h-100 rounded-0">
-                <div class="card-body p-0">
-                  <div class="p-3">
-                    <h6 class="text-muted mb-0 text-uppercase fw-semibold"
-                      >Instrucciones</h6
-                    >
-                  </div>
-                  <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
-                    <div class="acitivity-timeline acitivity-main">
-                      {% for instruction in instructions %}
-                      <div class="acitivity-item d-flex">
-                        <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                          <div
-                            class="avatar-title bg-primary-subtle text-primary rounded-circle"
-                          >
-                            <i class="ri-info-line"></i>
-                          </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                          <h6 class="mb-1 lh-base">{{ instruction.title }}</h6>
-                          <p class="text-muted mb-1"
-                            >{{ instruction.description }}
-                          </p>
-                          <small class="mb-0 text-muted"
-                            >{{ instruction.date }}</small
-                          >
+        <div class="col-auto layout-rightside-col ">
+          <div class="overlay"></div>
+          <div class="layout-rightside">
+            <div class="card h-100 rounded-0">
+              <div class="card-body p-0">
+                <div class="p-3">
+                  <h6 class="text-muted mb-0 text-uppercase fw-semibold">
+                    Instrucciones
+                  </h6>
+                </div>
+                <div data-simplebar style="max-height: 700px" class="p-3 pt-0">
+                  <div class="instruction-timeline instruction-main">
+                    {% for instruction in instructions %}
+                    <div class="instruction-item d-flex">
+                      <div class="flex-shrink-0 avatar-xs instruction-avatar">
+                        <div
+                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
+                        >
+                          <i class="ri-info-line"></i>
                         </div>
                       </div>
-                      {% empty %}
-                      <div class="text-center py-4">
-                        <lord-icon
-                          src="https://cdn.lordicon.com/msoeawqm.json"
-                          trigger="loop"
-                          colors="primary:#405189,secondary:#0ab39c"
-                          style="width: 75px; height: 75px"
-                        ></lord-icon>
-                        <h5 class="mt-2"
-                          >Lo siento, no hay instrucciones en la base de datos.</h5
-                        >
-                        <p class="text-muted mb-0"
-                          >Agregue instrucciones al sistema.</p
-                        >
+                      <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1 lh-base">{{ instruction.instruction }}</h6>
+                        <p class="text-muted mb-1">
+                          {{ instruction.content }}
+                        </p>
+                        <small class="mb-0 text-muted">
+                          {{ instruction.date_created }}
+                        </small>
                       </div>
-                      {% endfor %}
                     </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                      <lord-icon
+                        src="https://cdn.lordicon.com/msoeawqm.json"
+                        trigger="loop"
+                        colors="primary:#405189,secondary:#0ab39c"
+                        style="width: 75px; height: 75px"
+                      ></lord-icon>
+                      <h5 class="mt-2">
+                        Lo siento, no hay instrucciones en la base de datos
+                      </h5>
+                      <p class="text-muted mb-0">
+                        Agregue instrucciones al sistema.
+                      </p>
+                    </div>
+                    {% endfor %}
                   </div>
                 </div>
               </div>
-              <!-- end card-->
             </div>
-            <!-- end .rightbar-->
+            <!-- end card-->
           </div>
-          <!-- end col activity -->
+          <!-- end .rightbar-->
         </div>
+        <!-- end col activity -->
       </div> 
     </div>
     <!-- container-fluid -->

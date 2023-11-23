@@ -66,6 +66,16 @@ def questionnaire_list_view(request):
     if not started:
         if selected_questionary_id == None: 
             questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)   
+            questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)
+            paginator = Paginator(questions, 10) 
+            page = request.GET.get('page')
+            try:
+                questions = paginator.page(page)
+            except PageNotAnInteger:
+                questions = paginator.page(1)
+            except EmptyPage:
+                questions = paginator.page(paginator.num_pages)
         else:
             questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
             questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)

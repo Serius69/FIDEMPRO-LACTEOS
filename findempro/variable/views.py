@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
 from .forms import VariableForm
+from pages.models import Instructions
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.conf import settings
@@ -21,25 +22,25 @@ def variable_list(request):
     # try:
         product_id = request.GET.get('product_id', 'All')
         if product_id == 'All':
-            variables = Variable.objects.filter(is_active=True).order_by('-id')
-            products = Product.objects.filter(is_active=True).order_by('-id')
+            variables = Variable.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user).order_by('-id')
+            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
         else:
-            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
-            products = Product.objects.filter(is_active=True).order_by('-id')
-        # Paginate the variables
-        paginator = Paginator(variables, 10)  # Show 10 variables per page
+            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id, fk_product__fk_business__fk_user=request.user).order_by('-id')
+            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
+        paginator = Paginator(variables, 10)
         page = request.GET.get('page')
 
         try:
             variables = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
             variables = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
             variables = paginator.page(paginator.num_pages)
 
-        context = {'variables': variables, 'products': products}
+        context = {
+            'variables': variables, 
+            'products': products,
+            'instructions': Instructions.objects.filter(is_active=True).order_by('-id')}
         return render(request, 'variable/variable-list.html', context)
     # except Exception as e:
     #     messages.error(request, f"An error occurred: {str(e)}")

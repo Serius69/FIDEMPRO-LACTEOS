@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %}
 {% load static %}
 
-{% block title %}Business Details{% endblock title %}
+{% block title %}Detalles de negocios{% endblock title %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'libs/gridjs/dist/theme/mermaid.min.css' %}">
@@ -14,7 +14,8 @@
         <div class="container-fluid">
 
             {% block pagetitle %}
-            {% include "partials/page-title.html" with pagetitle="Business" title="Business Details" %}
+            {% include "partials/page-title.html" with pagetitle="Negocio" title=business.name %}
+
             {% endblock pagetitle %}
 
             <div class="row">
@@ -22,40 +23,40 @@
                     <div class="card">
                         <div class="card-body p-4">
                             <div>
-                                <div class="flex-shrink-0 avatar-md mx-auto">
-                                    <div class="avatar-title bg-light rounded">
-                                        <img src="{{ business.get_photo_url  }}" alt="100" height="100" />
-                                    </div>
-                                </div>
+                                <!-- Business Avatar -->
+                                    <img src="{{ business.get_photo_url }}" alt="100" style="width: 100%; height: 100%;" />
+                                <!-- Business Info -->
                                 <div class="mt-4 text-center">
                                     <h5 class="mb-1">{{ business.name }}</h5>
                                     <p class="text-muted">Desde {{ business.date_created }}</p>
                                 </div>
+                                
+                                <!-- Business Details Table -->
                                 <div class="table-responsive">
                                     <table class="table mb-0 table-borderless">
                                         <tbody>
                                             <tr>
-                                                <th><span class="fw-medium">Nombre del dueño</span></th>
-                                                <td>{{ business.user.name }}</td>
+                                                <th><span class="fw-medium" style="font-size: larger;">Nombre del Usuario</span></th>
+                                                <td>{{ business.fk_user.username }}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium"> Tipo de negocio </span></th>
-                                                <td>{{ business.type }}</td>
+                                                <th><span class="fw-medium" style="font-size: larger;">Tipo de negocio</span></th>
+                                                <td>{% if business.type == 1 %}Lacteos{% else %}{{ business.type }}{% endif %}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium">Descripción </span></th>
-                                                <td>{{ business.description }}</td>
+                                                <th><span class="fw-medium" style="font-size: larger;">Descripción</span></th>
+                                                <td>{% if business.description %}{{ business.description }}{% else %}Descripción no disponible{% endif %}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium">Ubicación </span></th>
+                                                <th><span class="fw-medium" style="font-size: larger;">Ubicación</span></th>
                                                 <td>{{ business.location }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
-                                </div>                  
+                                </div>
                             </div>
-                        </div><!--end card-body-->
-                    </div><!--end card-->
+                        </div> <!-- end card-body -->
+                    </div> <!-- end card -->
                     
                 </div><!--end col-->
 
@@ -71,14 +72,6 @@
                                         <a href="{% url 'product:product.create' %}" class="btn btn-success">
                                             <i class="ri-add-line align-bottom me-1"></i> Agregar producto
                                         </a>
-                                    </div>
-                                </div>
-                                <div class="col-sm">
-                                    <div class="d-flex justify-content-sm-end">
-                                        <div class="search-box ms-2">
-                                            <input type="text" class="form-control" placeholder="Search Products...">
-                                            <i class="ri-search-line search-icon"></i>
-                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -97,7 +90,9 @@
                                             <tbody class="list form-check-all">
                                                 {% for product in products %}
                                                 <tr>
-                                                    <td class="image"><img src="{{ product.image_src.url }}" alt="40" height="40" /></td>
+                                                    <td class="image">
+                                                        <img src="{{ product.image_src.url }}" alt="Product Image" style="width: 100%; height: 100px; object-fit: cover;" />
+                                                    </td>
                                                     <td class="name">{{ product.name }}</td>
                                                     <td class="type">{{ product.type }}</td>
                                                     <td class="date">{{ product.date_created|date:"d M,Y" }}</td>

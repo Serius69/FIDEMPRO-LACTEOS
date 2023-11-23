@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Area
 from business.models import Business
 from variable.models import Variable
+from pages.models import Instructions
 from report.models import Report
 from simulate.models import ResultSimulation
 from .forms import ProductForm
@@ -21,24 +22,24 @@ def product_list(request):
     # try:
         business_id = request.GET.get('business_id', 'All')
         if business_id == 'All':
-            products = Product.objects.filter(is_active=True).order_by('-id')
-            businesses = Business.objects.filter(is_active=True).order_by('-id')
+            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
+            businesses = Business.objects.filter(is_active=True, fk_user=request.user).order_by('-id')
         else:
-            products = Product.objects.filter(fk_business_id=business_id, is_active=True).order_by('-id')
-            businesses = Business.objects.filter(is_active=True).order_by('-id')
+            products = Product.objects.filter(fk_business_id=business_id, is_active=True, fk_business__fk_user=request.user).order_by('-id')
+            businesses = Business.objects.filter(is_active=True, fk_user=request.user).order_by('-id')
         paginator = Paginator(products, 10)  # Show 10 products per page
         page = request.GET.get('page')
-
+        instructions = Instructions.objects.filter(fk_user=request.user, is_active=True).order_by('-id')
         try:
             products = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
             products = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
             products = paginator.page(paginator.num_pages)
-
-        context = {'products': products, 'businesses': businesses}
+        context = {'products': products, 
+                   'businesses': businesses,
+                   'instructions': instructions
+                   }
         return render(request, 'product/product-list.html', context)
     # except Exception as e:
     #     messages.error(request, f"An error occurred: {str(e)}")

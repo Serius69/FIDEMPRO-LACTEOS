@@ -94,6 +94,7 @@
               </div>
           </div>
             <!--end car body-->
+          
           </div>
             {% for product in products %}
             <div
@@ -249,7 +250,9 @@
                     <div class="flex-shrink-0">
                       <div class="text-muted">
                         <i class="ri-calendar-event-fill me-1 align-bottom"></i>
-                        Fecha de creación: {{ product.date_created }}
+                        <span class="text-muted">
+                          Fecha de creación: <span class="font-weight-bold">{{ product.date_created|date:"F d, Y" }}</span>
+                      </span>
                       </div>
                     </div>
                   </div>
@@ -315,9 +318,10 @@
               </div>
             </div>
             <!-- end row -->
-        </div>
+          </div>
+
         <!-- end row -->
-        <div class="col-auto layout-rightside-col">
+        <div class="col-auto layout-rightside-col ">
           <div class="overlay"></div>
           <div class="layout-rightside">
             <div class="card h-100 rounded-0">
@@ -327,22 +331,24 @@
                     Instrucciones
                   </h6>
                 </div>
-                <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
-                  <div class="acitivity-timeline acitivity-main">
+                <div data-simplebar style="max-height: 700px" class="p-3 pt-0">
+                  <div class="instruction-timeline instruction-main">
                     {% for instruction in instructions %}
-                    <div class="acitivity-item d-flex">
-                      <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                    <div class="instruction-item d-flex">
+                      <div class="flex-shrink-0 avatar-xs instruction-avatar">
+                        <div
+                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
+                        >
                           <i class="ri-info-line"></i>
                         </div>
                       </div>
                       <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1 lh-base">{{ instruction.title }}</h6>
+                        <h6 class="mb-1 lh-base">{{ instruction.instruction }}</h6>
                         <p class="text-muted mb-1">
-                          {{ instruction.description }}
+                          {{ instruction.content }}
                         </p>
                         <small class="mb-0 text-muted">
-                          {{ instruction.date }}
+                          {{ instruction.date_created }}
                         </small>
                       </div>
                     </div>
@@ -357,6 +363,9 @@
                       <h5 class="mt-2">
                         Lo siento, no hay instrucciones en la base de datos
                       </h5>
+                      <p class="text-muted mb-0">
+                        Agregue instrucciones al sistema.
+                      </p>
                     </div>
                     {% endfor %}
                   </div>
