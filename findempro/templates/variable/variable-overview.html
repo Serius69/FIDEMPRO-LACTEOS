@@ -16,12 +16,12 @@
                     <div class="row mb-3">
                       <div class="col-md">
                         <div class="row align-items-center g-3">
-                          <div class="col-md-auto">
-                            <figure class="avatar-lg">
-                              <img src="{{ variable.get_photo_url }}" alt="{{ variable.name }}" class="avatar-lg rectangular">
+                          <div class="col-md-2">
+                            <figure class="avatar-xl">
+                              <img src="{{ variable.get_image_url }}" alt="{{ variable.name }}" class="avatar-xl rectangular" style="width: 150px; height: 150px;">
                             </figure>
                           </div>
-                          <div class="col-md">
+                          <div class="col-md-10">
                             <div>
                               <h4 class="fw-bold">{{variable.name}}</h4>
                               <div class="d-flex flex-wrap gap-3">
@@ -48,9 +48,19 @@
                                   </span>
                                 </div>
                                 <div class="vr"></div>
-                                <div class="badge rounded-pill bg-success fs-12">
-                                  Tipo: {{variable.type}}
-                                </div>
+                                <div class="badge rounded-pill {% if variable.type == 1 %}bg-success{% elif variable.type == 2 %}bg-info{% elif variable.type == 3 %}bg-warning{% else %}bg-primary{% endif %} fs-12">
+                                  Tipo:
+                                  {% if variable.type == 1 %}
+                                      Exógena
+                                  {% elif variable.type == 2 %}
+                                      Estado
+                                  {% elif variable.type == 3 %}
+                                      Endógena
+                                  {% else %}
+                                      {{ variable.type }}
+                                  {% endif %}
+                              </div>
+                              
                               </div>
                             </div>
                           </div>
@@ -77,7 +87,7 @@
                   <div>
                     <h5 class="mb-3">Ecuaciones</h5>
                     <p class="text-muted">
-                      Estas son las ecuaciones en las que la varialbe forma parte
+                      Estas ecuaciones incluyen a la variable como un componente fundamental
                     </p>
                   </div>
                 </div>
@@ -112,7 +122,7 @@
                 <p>No hay ecuaciones disponibles.</p>
               {% endif %}
               <div class="row">
-                <div class="col-lg-12">
+                <div class="col-lg-12 col-md-12 col-sm-12">
                   <div class="d-flex align-items-center mb-4">
                     <div class="flex-grow-1">
                       <h5 class="mb-0">Variables relacionadas </h5>
@@ -126,37 +136,35 @@
                   </div>
                 </div>
                 {% for variable in variables_related %}
-                <div class="col-xl-4">
-                  <div class="card">
+                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                  <div class="card shadow-sm">
                     <div class="card-body">
-                      
-                      <div class="avatar-sm mb-4">
-                        <div class="avatar-title bg-secondary-subtle rounded">
-                          <img
-                            src="{{ variable.get_photo_url }}"
-                            alt=""
-                            class="avatar-xxs"
-                          />
-                        </div>
+                      <div class="d-flex justify-content-center mb-3">
+                        <img
+                          src="{{ variable.get_image_url }}"
+                          alt=""
+                          class="rounded-circle"
+                          style="object-fit: cover; width: 60%; height: 60%;"
+                        />
                       </div>
                       <a href="{% url 'variable:variable.overview' variable.id %}">
-                        <h5>{{variable.name}}</h5>
+                        <h5 class="text-center">{{variable.name}}</h5>
                       </a>
-                      <p class="text-muted">{{variable.product.name}}</p>
-    
-                      <div class="d-flex gap-4 mb-3">
+                      <p class="text-muted text-center">{{variable.product.name}}</p>
+
+                      <div class="d-flex gap-4 mb-3 justify-content-center">
                         <div>
                           <i class="ri-map-pin-2-line text-primary me-1 align-bottom"></i>
                           Unidades: {{variable.unit}}
                         </div>
                         <div>
                           <i class="ri-time-line text-primary me-1 align-bottom"></i>
-                         Última actualización: {{variable.last_update}}
+                          Última actualización: {{variable.last_update}}
                         </div>
                       </div>
                       <p class="text-muted">{{variable.description}}</p>
-    
-                      <div class="mt-4 hstack gap-2">
+
+                      <div class="mt-4 hstack gap-2 justify-content-center">
                         <a
                           href="{% url 'variable:variable.overview' variable.id %}"
                           class="btn btn-soft-success w-100"
@@ -205,9 +213,22 @@
                         <tr>
                           <td class="fw-medium">Tipo de variable</td>
                           <td>
-                            <span class="badge bg-success-subtle text-success">
-                              {{variable.type}}
-                            </span>
+                              {% if variable.type == 1 %}
+                                  <span class="badge bg-success-subtle text-success">Exógena</span>
+                              {% elif variable.type == 2 %}
+                                  <span class="badge bg-info-subtle text-info">Estado</span>
+                              {% elif variable.type == 3 %}
+                                  <span class="badge bg-warning-subtle text-warning">Endógena</span>
+                              {% else %}
+                                  {{ variable.type }}
+                              {% endif %}
+                          </td>
+                      </tr>
+                      
+                        <tr>
+                          <td class="fw-medium">Iniciales</td>
+                          <td>
+                              {{variable.initials}}
                           </td>
                         </tr>
                         <tr>
@@ -228,11 +249,9 @@
               <!--end card-->
               <div class="card">
                 <div class="card-body">
-                  <div class="avatar-sm mx-auto">
-                    <div class="avatar-title bg-warning-subtle rounded">
-                      <img src="{% static 'images/companies/img-3.webp' %}" alt="" class="avatar-xxs" />
-                    </div>
-                  </div>
+                  
+                      <img src="{{variable.fk_product.fk_business.get_photo_url}}" alt="" class="avatar-xxs" style="object-fit: cover; width: 100%; height: 100%;" />
+                    
                   <div class="text-center">
                     <a href="#!">
                       <h5 class="mt-3">{{variable.fk_product.fk_business.name}}</h5>
@@ -245,8 +264,15 @@
                       <tbody>
                         <tr>
                           <td class="fw-medium">Tipo de industria</td>
-                          <td>{{variable.fk_product.fk_business.type}}</td>
-                        </tr>
+                          <td>
+                              {% if variable.fk_product.fk_business.type == 1 %}
+                                  Lacteos
+                              {% else %}
+                                  {{ variable.fk_product.fk_business.type }}
+                              {% endif %}
+                          </td>
+                      </tr>
+                      
                         <tr>
                           <td class="fw-medium">Agregado el:</td>
                           <td>{{variable.fk_product.fk_business.date_created}}</td>

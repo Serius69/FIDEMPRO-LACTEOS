@@ -41,165 +41,146 @@
         </div>
     </div>
       <div class="row">
-        <div class="col-lg-10 col-sm-auto ">
-          <div class="card">
-            <div class="card-title">
-              <div class="d-flex align-items-center">
-                <h6 class="card-title mb-0 flex-grow-1">Filter results</h6>
-              </div>
+        <div class="col-lg-10 col-md-9 col-sm-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">Filtrar Resultados</h6>
             </div>
             <div class="card-body">
-              <div class="row g-2">
-                <form method="get" action="{% url 'variable:variable.list' %}">
-                  <div class="col-lg-auto">
-                    <div class="row g-3">
-                      <div class="col-md-6">
-                          <select class="form-control" id="business-select" name="business_id">
-                              <option value="All">Seleccionar producto</option>
-                              {% for product in products %}
-                              <option value="{{ product.id }}">
-                                  {{ product.name }}
-                              </option>
-                              {% empty %}
-                              <option value="All">Toda</option>
-                              {% endfor %}
-                          </select>
-                      </div>
-                      <div class="col-md-6">
-                          <select class="form-control" id="type-select">
-                              <option value="All">Seleccione tipo</option>
-                              <option value="All">Toda</option>
-                              <option value="Endogena">Endógena</option>
-                              <option value="Exogena">Exogena</option>
-                              <option value="Estado">Estado</option>
-                          </select>
-                      </div>
-                      <div class="col-lg-12 text-end">
-                        <button type="submit" class="btn btn-danger" id="apply-filters">
-                          <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                          Filtros
-                        </button>
-                      </div>
+              <form method="get" action="{% url 'variable:variable.list' %}">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="business-select" class="form-label">Seleccionar producto</label>
+                    <select class="form-select" id="business-select" name="business_id">
+                      <option value="All">Todos los productos</option>
+                      {% for product in products %}
+                      <option value="{{ product.id }}">
+                        {{ product.name }}
+                      </option>
+                      {% empty %}
+                      <option value="All">Todos</option>
+                      {% endfor %}
+                    </select>
                   </div>
+                  <div class="col-md-6">
+                    <label for="type-select" class="form-label">Seleccione tipo</label>
+                    <select class="form-select" id="type-select">
+                      <option value="All">Todos los tipos</option>
+                      <option value="Endogena">Endógena</option>
+                      <option value="Exogena">Exogena</option>
+                      <option value="Estado">Estado</option>
+                    </select>
                   </div>
-                  <!--end col-->
-                </form>
-                <div class="col-lg-3">
-                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariable">
-                    <i class="ri-add-fill me-1 align-bottom"></i>
-                    Crear nuevo
-                  </button>
+                  <div class="col-12 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-danger mt-3" id="apply-filters">
+                      <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                      Aplicar Filtros
+                    </button>
+                  </div>
                 </div>
+              </form>
+              <div class="d-flex justify-content-end mt-3">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariable">
+                  <i class="ri-add-fill me-1 align-bottom"></i>
+                  Crear nuevo
+                </button>
               </div>
-              <!--end row-->
             </div>
           </div>
-          {% for variable in variables %}
-          <div class="card variablelist-card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                      <div class="avatar-lg">
-                        <div class="avatar-title bg-light rounded">
-                          <img
-                            src="{{ variable.get_image_url }}"
-                            alt=""
-                            class="avatar-md companyLogo-img"
-                            style="object-fit: cover; width: 100%; height: 100%;"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-9">
-                        <div class="d-flex mb-4">
-                            <div class="ms-3 flex-grow-1">
-                                <img
-                                    src="{{ variable.fk_product.get_photo_url }}"
-                                    alt=""
-                                    class="d-none cover-img"
-                                />
-                                <a href="{% url 'variable:variable.overview' variable.id %}">
-                                    <h5 class="job-title">{{variable.name}}</h5>
-                                </a>
-                                <p class="company-name text-muted mb-0">{{variable.fk_product.name}}</p>
+          <div class="row">
+            {% for variable in variables %}
+                <div class="col-md-3 mb-4">
+                    <div class="card variablelist-card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-4 col-md-3">
+                                    <div class="avatar-lg">
+                                        <div class="avatar-title bg-light rounded">
+                                            <img src="{{ variable.get_image_url }}" alt="" class="avatar-md companyLogo-img" style="object-fit: cover; width: 100%; height: 100%;" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-8 col-md-9">
+                                    <div class="d-flex mb-4">
+                                        <div class="ms-3 flex-grow-1">
+                                            <img src="{{ variable.fk_product.get_photo_url }}" alt="" class="d-none cover-img" />
+                                            <a href="{% url 'variable:variable.overview' variable.id %}">
+                                                <h5 class="job-title">{{variable.name}}</h5>
+                                            </a>
+                                            <p class="company-name text-muted mb-0">{{variable.fk_product.name}}</p>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted job-description">{{variable.description}}</p>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-muted job-description">{{variable.description}}</p>
+                        <div class="card-footer border-top-dashed">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                        <div>
+                                            <i class="ri-briefcase-2-line align-bottom me-1"></i>
+                                            <span class="job-type">{{variable.fk_product.name}}</span>
+                                        </div>
+                                        <div>
+                                            <i class="ri-function-line align-bottom me-1"></i>
+                                            <span class="job-location">{{variable.unit}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                        <div>
+                                            <i class="ri-battery-fill align-bottom me-1"></i>
+                                            {{variable.type}}
+                                        </div>
+                                        <div>
+                                            <i class="ri-time-line align-bottom me-1"></i>
+                                            <span class="job-postdate">{{ variable.date_created|date:"F j, Y" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                            <i data-feather="more-horizontal" class="icon-sm"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}">
+                                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                Vista
+                                            </a>
+                                            <a class="dropdown-item edit-variable" data-bs-target="#editVariableModal" data-variable-id="{{ variable.id }}">
+                                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                Editar
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item delete-variable" data-bs-toggle="modal" data-bs-target="#removeVariableModal" data-variable-id="{{ variable.id }}">
+                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                Eliminar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="card-footer border-top-dashed">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div>
-                        <i class="ri-briefcase-2-line align-bottom me-1"></i>
-                        <span class="job-type">{{variable.fk_product.name}}</span>
-                    </div>
-                    <div>
-                        <i class="ri-map-pin-2-line align-bottom me-1"></i>
-                        <span class="job-location">{{variable.unit}}</span>
-                    </div>
-                    <div>
-                        <i class="ri-user-3-line align-bottom me-1"></i>
-                        {{variable.type}}
-                    </div>
-                    <div>
-                        <i class="ri-time-line align-bottom me-1"></i>
-                        <span class="job-postdate">{{variable.date_created}}</span>
-                    </div>
-                    <div class="dropdown">
-                        <button
-                            class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
-                            data-bs-toggle="dropdown"
-                            aria-haspopup="true"
-                            aria-expanded="true"
-                        >
-                            <i data-feather="more-horizontal" class="icon-sm"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <a
-                                class="dropdown-item"
-                                href="{% url 'variable:variable.overview' variable.id %}"
-                            >
-                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                Vista
-                            </a>
-                            <a
-                                class="dropdown-item edit-variable"
-                                data-bs-target="#editVariableModal"
-                                data-variable-id="{{ variable.id }}"
-                            >
-                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                Editar
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a
-                                class="dropdown-item delete-variable"
-                                data-bs-toggle="modal"
-                                data-bs-target="#removeVariableModal"
-                                data-variable-id="{{ variable.id }}"
-                            >
-                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i                    >
-                                  Eliminar
-                              </a>
-                          </div>
-                    </div>
-                  </div>
+                {% empty %}
+              <div class="text-center py-4">
+                <lord-icon
+                  src="https://cdn.lordicon.com/msoeawqm.json"
+                  trigger="loop"
+                  colors="primary:#405189,secondary:#0ab39c"
+                  style="width: 75px; height: 75px"
+                ></lord-icon>
+                <h5 class="mt-2"
+                  >Lo siento, no hay ningún registro variable en la base de datos</h5
+                >
+                <p class="text-muted mb-0">Tienes que "agregar producto".</p>
               </div>
-          </div>
-          {% empty %}
-          <div class="text-center py-4">
-            <lord-icon
-              src="https://cdn.lordicon.com/msoeawqm.json"
-              trigger="loop"
-              colors="primary:#405189,secondary:#0ab39c"
-              style="width: 75px; height: 75px"
-            ></lord-icon>
-            <h5 class="mt-2"
-              >Lo siento, no hay ningún registro variable en la base de datos</h5
-            >
-            <p class="text-muted mb-0">Tienes que "agregar producto".</p>
-          </div>
-          {% endfor %}
+            {% endfor %}
+        </div>
           <!-- Pagination -->
           <div class="align-items-center mt-2 row text-center text-sm-start">
             <div class="col-sm">
@@ -256,7 +237,7 @@
           </div>
           <!-- end row -->
         </div>
-        <div class="col-auto layout-rightside-col ">
+        <div class="col-lg-2 col-md-3 col-sm-12 layout-rightside-col">
           <div class="overlay"></div>
           <div class="layout-rightside">
             <div class="card h-100 rounded-0">
@@ -282,9 +263,6 @@
                         <p class="text-muted mb-1">
                           {{ instruction.content }}
                         </p>
-                        <small class="mb-0 text-muted">
-                          {{ instruction.date_created }}
-                        </small>
                       </div>
                     </div>
                     {% empty %}

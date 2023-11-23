@@ -54,28 +54,33 @@ def variable_overview(request, pk):
             is_active=True, 
             fk_product_id=product_id
             ).order_by('-id')
+        variable_initials = Variable.objects.get(id=variable_id).initials
         
         equation_conditions = Q(
             is_active=True,
-        ) | Q(
-            fk_variable1_id=variable_id,
-            fk_variable1__fk_product_id=product_id
-        ) | Q(
-            fk_variable2_id=variable_id,
-            fk_variable1__fk_product_id=product_id
-        ) | Q(
-            fk_variable3_id=variable_id,
-            fk_variable1__fk_product_id=product_id
-        ) | Q(
-            fk_variable4_id=variable_id,
-            fk_variable1__fk_product_id=product_id
-        )
+            # expression__contains=variable_initials,
+            fk_variable1__fk_product_id=product_id,
+            fk_variable1_id=variable_id
+        ) 
+        # | Q(
+        #     expression__contains=variable_initials,
+        #     fk_variable2__fk_product_id=product_id,
+        #     fk_variable2_id=variable_id
+        # ) | Q(
+        #     expression__contains=variable_initials,
+        #     fk_variable3__fk_product_id=product_id,
+        #     fk_variable3_id=variable_id
+        # ) | Q(
+        #     expression__contains=variable_initials,
+        #     fk_variable4__fk_product_id=product_id,
+        #     fk_variable4_id=variable_id
+        # )
 
         
         equations = Equation.objects.filter(equation_conditions,).order_by('-id')
         
         # Paginate the variables
-        paginator = Paginator(variables_related, 3)  # Show 6 variables per page
+        paginator = Paginator(variables_related, 4)  # Show 6 variables per page
         page = request.GET.get('page')
 
         try:
