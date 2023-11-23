@@ -144,3 +144,33 @@ def questionnaire_save_view(request):
         return render(request, 'questionary/questionnaire_form.html', context)
                # Add your code here to render the form
         pass
+def questionnaire_result_view(request, pk):
+    # try:
+        questionary_result = get_object_or_404(QuestionaryResult, pk=pk)
+        print(questionary_result)
+        answers = Answer.objects.filter(
+            fk_questionary_result=questionary_result, 
+            # fk_questionary_result__fk_questionary__fk__product__fk_business__fk_user=request.user).order_by('-id'
+            )
+        # questions = Question.objects.filter(
+        #     fk_questionary__fk_questionary_result_id=questionary_result.id, 
+        #     # fk_questionary__fk_product__fk_business__fk_user=request.user
+        #     ).order_by('-id')
+        paginator = Paginator(answers, 100)
+        page = request.GET.get('page')
+        try:
+            answers = paginator.page(page)
+        except PageNotAnInteger:
+            answers = paginator.page(1)
+        except EmptyPage:
+            answers = paginator.page(paginator.num_pages)
+        context = {'questionary_result': questionary_result, 
+                   'answers': answers,
+                #    'questions': questions,
+                #    'instructions': Instructions.objects.filter(is_active=True).order_by('-id')
+                   }
+        
+        return render(request, 'questionary/questionary-result.html', context)
+    # except Exception as e:
+    #     messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
+    #     return HttpResponse(status=500) 

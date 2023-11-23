@@ -40,9 +40,6 @@
                                                     <span class="text-success">Información del cuestionario a utilizar para la simulación:</span> <p>Seleccione el cuestionario que desea utilizar para la simulación.</p>
                                                 </li>
                                                 <li>
-                                                    <span class="text-danger">Historic Demand:</span> <p>Suba el archivo de demanda histórica que desea utilizar para la simulación.</p>
-                                                </li>
-                                                <li>
                                                     <span class="text-primary">Unit of time:</span> <p>Seleccione la unidad de tiempo que desea utilizar para la simulación.</p>
                                                 </li>
                                               </ul>
@@ -105,22 +102,6 @@
                                                             <form action="{% url 'simulate:simulate.init' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
                                                                 {% csrf_token %}
                                                                 <input type="hidden" name="question_id" value="{{ selected_questionary_result_id }}">
-                                                                <div class="col-md-12">
-                                                                    <div class="mb-3">
-                                                                        <label for="historicdemand" class="form-label" title="Submit the historic demand you want to use in format .xlsx"><span data-key="t-demandhistory">Historic Demand</span></label>
-                                                                        <div class="dropzone" id="myDropzone">
-                                                                            <div class="fallback">
-                                                                                <input name="demandhistory" type="file" multiple="multiple" accept=".xlsx, .txt">
-                                                                            </div>
-                                                                            <div class="dz-message needsclick">
-                                                                                <div class="mb-3">
-                                                                                    <i class="display-2 text-muted ri-upload-cloud-2-fill"></i>
-                                                                                </div>
-                                                                                <h4>Deje caer archivos aquí o haga clic para cargar.</h4>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div><!--end col-->
                                                                 <div class="col-md-12">
                                                                     <div class="mb-3">
                                                                         <label for="unit_time" class="form-label" title="Select the unit of time you want to use"><span data-key="t-timeunit"> Unit of time</span></label>
@@ -193,18 +174,10 @@
                                         </div>
                                     </div> 
                                 </div><!--end row-->
-                                <div class="row">      
-                                    <div class="card">
-                                        <div class="card-header">
-                                            Diagrama de simulación
-                                        </div>
-                                        <div class="card-body">
-                                            <!-- Add your diagram visualization code here -->
-                                            <!-- For example, you can use a canvas element to draw the diagram -->
-                                            <canvas id="simulationDiagram"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
+                                
+                                
+                                
+
                             <div>
                         </div> <!-- container-fluid -->
                 </div>
@@ -237,22 +210,17 @@
     </script>
     <script>
         function validateForm() {
+            var unitTime = document.getElementById("unit_time").value;
 
-            // Validate the uploaded historic demand file
-            var historicDemandInput = document.querySelector('input[name="demandhistory"]');
-            if (historicDemandInput.files.length === 0) {
-                alert('Please upload a historic demand file.');
-                return false;
+            // Verifica si se ha seleccionado una unidad de tiempo
+            if (unitTime === "Elegir...") {
+                alert("Por favor, selecciona una unidad de tiempo.");
+                return false; // Evita que el formulario se envíe
             }
-    
-            // Validate the selected unit of time
-            var unitTimeSelect = document.getElementById('unit_time');
-            if (unitTimeSelect.value == 'Choose...') {
-                alert('Please select a unit of time.');
-                return false;
-            }
-            // Add more validations for other fields if needed
-            return true; // Submit the form if all validations pass
+
+            // Puedes agregar más validaciones según tus necesidades
+
+            return true; // Permite que el formulario se envíe
         }
     </script>
     <script>

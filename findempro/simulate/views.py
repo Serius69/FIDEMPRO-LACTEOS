@@ -39,7 +39,7 @@ def simulate_init_view(request):
             fk_product__fk_business__fk_user=request.user,
         )
         answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
-        questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)
+        questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
         questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
         
         equations_to_use = Equation.objects.order_by('id').filter(
@@ -61,7 +61,6 @@ def simulate_init_view(request):
         request.session['selected'] = False 
         selected_questionary_result_id = request.POST.get(None)
         print("Se cancelo el cuestionario")
-        
         return redirect('simulate:simulate.init')
 
     if request.method == "POST" and form.is_valid() and 'start' in request.POST:
@@ -69,14 +68,34 @@ def simulate_init_view(request):
         simulation_instance = form.save(commit=False)
         answers = Answer.objects.order_by('id').filter(fk_questionary_result_id=simulation_instance.fk_questionary_result_id)
         areas = Area.objects.order_by('id').filter(fk_product_id=simulation_instance.fk_product_id)
-        uploaded_file = request.FILES['file']
-        historical_demand_data = [(int(month), int(demand)) for month, demand in (line.strip().split(',') for line in uploaded_file)]
-        for month, demand in historical_demand_data:
-            DemandHistorical.objects.create(month=month, demand=demand)
-            ProbabilisticDensityFunctionmanager.kolmovorov_smirnov_test(historical_demand_data)
-            EquationManager.associate_answers_with_equation(answers)
-            AreaManager.associate_areas_with_equation(areas)
-            Simulatemanager.simulate(form, [], areas, answers, [])
+        
+        # primero buscar la demanda historica guardada en el resultado del cuestionario
+        demanda_historica = get_object_or_404(
+            Answer, 
+            fk_question_question='Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
+            fk_questionary_result_id=simulation_instance.fk_questionary_result_id
+            )
+        DemandHistorical.objects.create(demand=demanda_historica.answer)
+        # segundo mandar esa demanda a la prueba de kolmogorov smirnov
+        ProbabilisticDensityFunctionmanager.kolmovorov_smirnov_test(demanda_historica.answer)
+        print(demanda_historica.answer)
+                                                             
+        # tercero tomar que tipo de distribucion toma
+        fk_fdp = ProbabilisticDensityFunctionmanager.get_fdp(demanda_historica.fk_question.fk_variable.fk_fdp_id)
+        
+        # 
+        equations_to_use = EquationManager.associate_answers_with_equation(answers)
+        
+        #cuarto hacer la simulacion
+        
+
+        ProbabilisticDensityFunctionmanager.kolmovorov_smirnov_test(historical_demand_data)
+        EquationManager.associate_answers_with_equation(answers)
+        AreaManager.associate_areas_with_equation(areas)
+        Simulatemanager.simulate(form, [], areas, answers, [])
+        
+        
+        
         context = {
             'simulation_instance': simulation_instance,
             'data_demand_historic': historical_demand_data,
@@ -86,6 +105,8 @@ def simulate_init_view(request):
             'selected': selected,
             'questionnaires_result': questionnaires_result,
         }
+        
+        # aqui solamente hacermos el guardado de la simulacion
         return redirect('simulate:simulate.init')  # Redirect to the next step in the simulation
 
     if form.errors:
@@ -110,13 +131,12 @@ class Simulatemanager:
 class Simulatemanager:
     @classmethod
     def simulate(cls, form, equations, areas, answers, equation_results):
-        # Logic to perform the simulation using the provided data
-        # ...
-
-        # Here, you can access the form data using `form.cleaned_data`
-        # You can access the equations, areas, answers, and equation_results as parameters
-
-        # Example simulation logic:
+        
+        
+        # primero 
+        
+        
+        
         simulation_data = {
             'form_data': form.cleaned_data,
             'equations': equations,
@@ -199,12 +219,16 @@ class EquationManager:
     def associate_answers_with_equation(cls, answers):
         for answer in answers:
             cls.associate_answer_with_equation(answer)
+        
+        equations_with_answers    
+        
+        return equations_with_answers
     @classmethod
     def associate_answer_with_equation(cls, answer, area):
         # Obtener la ecuación asociada a la pregunta de la respuesta
         question = answer.fk_question
         # se toma su ecuacion y de ahi se saca la expresion
-         # # Obtener la ecuación asociada a la pregunta de la respuesta
+        # Obtener la ecuación asociada a la pregunta de la respuesta
         equation = Equation.objects.get(
             fk_area=question.fk_area)
 

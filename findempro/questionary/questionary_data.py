@@ -15,8 +15,8 @@ question_data = [
     },
     {
         'question': 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
-        'type': 1,
-        'initials_variable': 'CPVD',
+        'type': 3,
+        'initials_variable': 'DH',
     },
     {
         'question': '¿Cuántos productos están siendo producidos actualmente?',
