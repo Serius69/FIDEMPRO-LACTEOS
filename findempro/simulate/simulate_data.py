@@ -17,7 +17,6 @@ pdf_data= [
     }
 ]
 
-
 simulation_data = {
     "unit_time": "day",
     "fk_fdp": 1,  # You may replace this with the actual foreign key value
@@ -29,41 +28,51 @@ simulation_data = {
 result_simulation_data = {
     "demand_mean": 100.0,
     "demand_std_deviation": 10.0,
-    "date": ["2023-11-24", "2023-11-25"],  # Replace with your actual date data
+    "date": ["2023-11-24", "2023-11-25", "2023-11-26", "2023-11-27", "2023-11-28", "2023-11-29", "2023-11-30", "2023-12-01", "2023-12-02", "2023-12-03", "2023-12-04", "2023-12-05", "2023-12-06", "2023-12-07", "2023-12-08", "2023-12-09", "2023-12-10", "2023-12-11", "2023-12-12", "2023-12-13", "2023-12-14", "2023-12-15", "2023-12-16", "2023-12-17", "2023-12-18", "2023-12-19", "2023-12-20", "2023-12-21", "2023-12-22", "2023-12-23"],  # Added more dates
     "variables": 
         {
-        "CPVD": 455, 
-        "PVP": 1.59,
-        "CPVD": 234, 
-        "PVP": 639,
-        "CPVD": 2.62, 
-        "PVP": 240,
-        "CPVD": "No", 
-        "PVP": 1.16,
-        "CPVD": "Medianamente competitivo", 
-        "PVP": 9,
-        "CPVD": "Mensual", 
-        "PVP": 0.59,
-        "CPVD": 50, 
-        "PVP": 75,
-        "CPVD": 50, 
-        "PVP": 75,
-        "CPVD": 50, 
-        "PVP": 75,
-        "CPVD": 50, 
-        "PVP": 75,
-        "CPVD": 50, 
-        "PVP": 75,
-        "CPVD": 50, 
-        "PVP": 75,
-        "CPVD": 50, 
-        "PVP": 75,
-        "CPVD": 50, 
-        "PVP": 75,
-         
-         },  # Replace with your actual variables data
+        "TPV": [],
+        "TCAE": [],  
+        "VPC": [],
+        "TPP": [],
+        "CP": [],
+        "NEPP": [],
+        "DI": [],
+        "DE": [],
+        "IT": [], 
+        "GT": [],
+        "GO": [],
+        "CFD": [],
+        "SE": [],
+        "CTAI": [],
+        "GG": [],
+        "GMM": [],
+        "CUP": [],
+        "PI": [],
+        "UII": [],
+        "II": [],
+        "IPF": [],
+        "NR": [],
+        "TCA": [],
+        "NMD": [],
+        "CUI": [], 
+        "FU": [],
+        "ALEP": [],
+        "TG": [],
+        "IB": [],
+        "MB": [],
+        "RI": [],
+        "RTI": [],
+        "RTC": [],
+        "DH": [],
+        "SE": [],
+        "HO": [],
+        "CPMO": [],
+        "CA": [],
+        "CUI": []  
+        } ,
     "unit": {"measurement": "kg", "value": 2},
     "unit_time": {"time_unit": "day", "value": 1},
-    "results": {"result1": 30, "result2": 40},  # Replace with your actual results data
+    "results": {"result1": 30, "result2": 40, "result3": 50, "result4": 60},  # Added more results data
     "fk_simulation": 1, 
 }

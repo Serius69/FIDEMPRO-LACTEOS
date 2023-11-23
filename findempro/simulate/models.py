@@ -2,13 +2,16 @@ import math
 from django.db import models
 from product.models import Product, Area
 from variable.models import Variable,EquationResult,Equation
-from questionary.models import QuestionaryResult,Questionary,Answer
+from questionary.models import QuestionaryResult,Questionary,Answer,Question
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.urls import reverse
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+import random
+from django.shortcuts import render, redirect, get_object_or_404
+from datetime import datetime, timedelta
 class ProbabilisticDensityFunction(models.Model):
     DISTRIBUTION_TYPES = [
         (1, 'Normal'),
@@ -26,24 +29,23 @@ class ProbabilisticDensityFunction(models.Model):
     last_updated = models.DateTimeField(auto_now=True, help_text='The date the distribution was last updated')
     def __str__(self):
         return f"{self.distribution_type()} - {self.name}"
-    def calculate_cumulative_distribution_function(self, x):
-        """
-        Calculate the cumulative distribution function (CDF) for the given x value.
-        """
-        if self.distribution_type == 1:  # Normal distribution
-            # Implement CDF calculation for normal distribution
-            cdf = 0.5 * (1 + math.erf((x) / (math.sqrt(2))))
-        elif self.distribution_type == 2:  # Exponential distribution
-            # Implement CDF calculation for exponential distribution
-            cdf = 1 - math.exp(-self.lambda_param * x)
-        elif self.distribution_type == 3:  # Logarithmic distribution
-            # Implement CDF calculation for logarithmic distribution
-            cdf = math.log(1 + x)
-        else:
-            raise ValueError("Invalid distribution type")
+    @receiver(post_save, sender=Product)
+    def create_probabilistic_density_functions(sender, instance, created, **kwargs):
+        distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic
+        names = ['Normal Distribution', 'Exponential Distribution', 'Logarithmic Distribution']
 
-        return cdf
+        for distribution_type, name in zip(distribution_types, names):
+            pdf = ProbabilisticDensityFunction(
+                name=name,
+                distribution_type=distribution_type,
+                lambda_param=None,
+                cumulative_distribution_function=None,
+                is_active=True
+            )
 
+            pdf.save()
+
+        return "Three ProbabilisticDensityFunction objects created successfully."
 class DataPoint(models.Model):
     value = models.FloatField()
     is_active = models.BooleanField(default=True)
@@ -60,7 +62,8 @@ class Simulation(models.Model):
         ProbabilisticDensityFunction, 
         on_delete=models.CASCADE,
         related_name='fk_fdp_simulation', 
-        default=1, help_text='The probabilistic density function associated with the simulation')
+        default=ProbabilisticDensityFunction.objects.first(), null=True, blank=True,     
+        help_text='The probabilistic density function associated with the simulation')
     # se guardara un archivo JSON con los 30 datos de la demanda historica
     demand_history = models.JSONField(null=True, blank=True, help_text='The demand history for the simulation')
     fk_questionary_result = models.ForeignKey(
@@ -73,6 +76,33 @@ class Simulation(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
+    
+    @receiver(post_save, sender=QuestionaryResult)
+    def create_simulation(sender, instance, created, **kwargs):
+        # Get the related Questionary
+        # fk_questionary = instance.fk_questionary
+
+        # Get the Question object based on the question text
+        # question_text = 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).'
+        # fk_question_object = get_object_or_404(Question, question=question_text, fk_questionary=fk_questionary)
+
+        # Get the related Answer
+        # demand = get_object_or_404(Answer, fk_question=fk_question_object, fk_questionary_result=instance)
+        demand =[513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]
+        # Create the Simulation
+        simulation = Simulation(
+            unit_time='day',
+            # fk_fdp_id=1,
+            demand_history=demand,
+            fk_questionary_result=instance,
+            is_active=True
+        )
+        simulation.save()
+    @receiver(post_save, sender=QuestionaryResult)
+    def save_question(sender, instance, **kwargs):
+        for simulate in instance.simulations.all():
+            simulate.is_active = instance.is_active
+            simulate.save()
 
 class ResultSimulation(models.Model):
     demand_mean = models.DecimalField(max_digits=10, decimal_places=2,help_text='The mean of the demand')
@@ -91,4 +121,29 @@ class ResultSimulation(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
+    @receiver(post_save, sender=Simulation)
+    def create_random_result_simulations(sender, instance, created, **kwargs):
+        fk_simulation = Simulation.objects.get(id=instance.id)
+        for _ in range(30):
+            demand_mean = random.uniform(50, 150)
+            demand_std_deviation = random.uniform(5, 20)
+            date = [str(datetime.now() + timedelta(days=i)) for i in range(10)]
+            variables = {"CPVD": [random.randint(100, 500) for _ in range(10)], "PVP": [random.uniform(1, 2) for _ in range(10)]}
+            unit = {"measurement": "kg", "value": random.randint(1, 10)}
+            unit_time = {"time_unit": "day", "value": random.randint(1, 30)}
+            results = {"result" + str(i): random.randint(20, 60) for i in range(1, 5)}
+
+            result_simulation = ResultSimulation(
+                demand_mean=demand_mean,
+                demand_std_deviation=demand_std_deviation,
+                date=date,
+                variables=variables,
+                unit=unit,
+                unit_time=unit_time,
+                results=results,
+                fk_simulation=fk_simulation,
+                is_active=True
+            )
+            result_simulation.save()
+    
 
