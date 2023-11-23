@@ -9,7 +9,7 @@ app_name = 'questionary'
 urlpatterns = [
     # Questions
     path('list/', view=questionnaire_list_view, name='questionary.list'),
-    path('question/', view=questionnaire_save_view, name='question.save'),
+    path('question/', view=questionnaire_save_view, name='questionary.save'),
     # path('report/overview', view=generate_questions_for_variables, name='report.overview'),
 
 ]

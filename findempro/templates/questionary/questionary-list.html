@@ -43,28 +43,29 @@
                             <div class="card-header border-0 rounded">
                                 <div class="row g-6 mb-4">
                                     <div class="col-md-4">
-                                        <form method="GET" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm()">
-                                            {% csrf_token %}
-                                            <div class="input-group mb-2">
-                                                <label class="input-group-text" for="inputGroupSelect01">Cuestionarios disponibles</label>
-                                                <select class="form-select" id="inputGroupSelect01" name="selected_questionary_id">
-                                                    <option value="" selected>Escoja su opción</option>
-                                                    {% for questionary in questionnaires %}
-                                                        <option for="selected_questionary_id" value="{{ questionary.id }}" 
-                                                        {% if questionary.id == selected_questionary_id %} selected {% endif %}>
-                                                            {{ questionary.questionary }}
-                                                        </option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div> 
-                                            {% if not started %}
-                                                <div class="d-grid gap-1">
-                                                    <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
-                                                </div>
-                                            {% else %}                                          
-                                            {% endif %}
-                                        </form>
+                                        
                                         {% if not started %}
+                                            <form method="GET" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm()">
+                                                {% csrf_token %}
+                                                <div class="input-group mb-2">
+                                                    <label class="input-group-text" for="inputGroupSelect01">Cuestionarios disponibles</label>
+                                                    <select class="form-select" id="inputGroupSelect01" name="selected_questionary_id">
+                                                        <option value="" selected>Escoja su opción</option>
+                                                        {% for questionary in questionnaires %}
+                                                            <option for="selected_questionary_id" value="{{ questionary.id }}" 
+                                                            {% if questionary.id == selected_questionary_id %} selected {% endif %}>
+                                                                {{ questionary.questionary }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div> 
+                                                {% if not started %}
+                                                    <div class="d-grid gap-1">
+                                                        <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
+                                                    </div>
+                                                {% else %}                                          
+                                                {% endif %}
+                                            </form>
                                             <div class="d-grid gap-1">
                                                 <form method="POST" action="{% url 'questionary:questionary.list' %}">
                                                     {% csrf_token %}
@@ -73,33 +74,23 @@
                                             </div>
                                         {% endif %}
                                         {% if started %}
-                                            <div class="col-sm-auto">
-                                                <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                                    {% for i in questions_to_answer.paginator.page_range %}
-                                                        {% if forloop.counter0|divisibleby:5 %}<div class="row">{% endif %}
-                                                        <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
-                                                            <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                        </li>
-                                                        {% if forloop.counter|divisibleby:5 or forloop.last %}</div>{% endif %}
-                                                    {% endfor %}                                        
-                                                </ul>
-
-                                                <ul>
-                                                    {% if questions_to_answer.has_Anterior %}
-                                                    <li class="page-item">
-                                                        <a href="?page={{ questions_to_answer.Anterior_page_number }}" class="page-link">
-                                                            ←
-                                                        </a>
-                                                    </li>
-                                                    {% if questions_to_answer.has_next %}
-                                                        <li class="page-item">
-                                                            <a href="?page={{ questions_to_answer.next_page_number }}" class="page-link">
-                                                                →
-                                                            </a>
-                                                        </li>
-                                                    {% endif %}
-                                                {% endif %}
-                                                </ul>
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h3 class="card-title">Información del cuestionario seleccionado:</h3>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p><strong>Nombre del cuestionario:</strong> {{ show_questionary.questionary }}</p>
+                                                    <p><strong>Empresa que abarcara las respuestas para la simulacion:</strong> {{ show_questionary.fk_business }}</p>
+                                                    <hr>
+                                                    <h5>Instrucciones:</h5>
+                                                    <ol>
+                                                        <li>Lea cada pregunta cuidadosamente.</li>
+                                                        <li>Seleccione la respuesta que mejor se ajuste a su situación.</li>
+                                                        <li>Haga clic en "Próxima pregunta" para continuar con el cuestionario.</li>
+                                                        <li>Si desea cambiar su respuesta a una pregunta, puede navegar hacia atrás usando el botón "Pregunta anterior".</li>
+                                                        <li>Una vez que haya respondido todas las preguntas, haga clic en "Finalizar cuestionario" para ver sus resultados.</li>
+                                                    </ol>
+                                                </div>
                                             </div>
                                         {% endif %}
                                     </div>
@@ -134,10 +125,10 @@
                                                         <div class="col-sm">
                                                         <div class="text-muted">
                                                             Mostrar
-                                                            <span class="fw-semibold">{{ questions.number }}</span>
+                                                            <span class="fw-semibold">{{ questions_to_answer.number }}</span>
                                                             of
                                                             <span class="fw-semibold">
-                                                            {{ questions.paginator.num_pages }}
+                                                            {{ questions_to_answer.paginator.num_pages }}
                                                             </span>
                                                             Results
                                                         </div>
@@ -146,21 +137,21 @@
                                                         <ul
                                                             class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
                                                         >
-                                                            {% if questions.has_Anterior %}
+                                                            {% if questions_to_answer.has_Anterior %}
                                                             <li class="page-item">
-                                                            <a href="?page={{ questions.Anterior_page_number }}" class="page-link">
+                                                            <a href="?page={{ questions_to_answer.Anterior_page_number }}" class="page-link">
                                                                 ←
                                                             </a>
                                                             </li>
                                                             {% endif %} 
-                                                            {% for i in questions.paginator.page_range %}
-                                                            <li class="page-item {% if i == questions.number %}active{% endif %}">
+                                                            {% for i in questions_to_answer.paginator.page_range %}
+                                                            <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
                                                             <a href="?page={{ i }}" class="page-link">{{ i }}</a>
                                                             </li>
                                                             {% endfor %} 
-                                                            {% if questions.has_next %}
+                                                            {% if questions_to_answer.has_next %}
                                                             <li class="page-item">
-                                                            <a href="?page={{ questions.next_page_number }}" class="page-link">
+                                                            <a href="?page={{ questions_to_answer.next_page_number }}" class="page-link">
                                                                 →
                                                             </a>
                                                             </li>
@@ -172,20 +163,11 @@
                                         {% endif %}
                                         {% if started %}
                                             <div class="card mb-3">
-                                                <div class="card-header">
-                                                    <div class="progress">
-                                                        {% comment %} <div class="progress">
-                                                            <div class="progress-bar" style="width: {{ current_page|floatformat:"0"|div:total_pages|mul:100 }}%;">
-                                                                {{ current_page }} / {{ total_pages }}
-                                                            </div>
-                                                        </div> {% endcomment %}
-                                                    </div>
-                                                </div>
                                                 <div class="card-body">
                                                     {% if questions_to_answer %}
-                                                        {% for question in questions_to_answer %}
-                                                            <form method="POST" action="{% url 'questionary:questionary.list' %}?page={{ questions.next_page_number }}" onsubmit="return validateForm2()">
-                                                                {% csrf_token %}
+                                                        <form method="POST" action="{% url 'questionary:questionary.save' %}" onsubmit="return validateForm2()">
+                                                            {% csrf_token %}
+                                                            {% for question in questions_to_answer %}
                                                                 <h5 class="card-title">
                                                                     {% if question.fk_variable %}
                                                                         Pregunta para llenar la informacion para la variable: {{ question.fk_variable.name }}
@@ -193,7 +175,6 @@
                                                                         No se encontro una relacion con alguna variable
                                                                     {% endif %}
                                                                 </h5>
-                                                                {% comment %} aqui muestra la pregunta {% endcomment %}
                                                                 <input type="hidden" name="question_id" value="{{ question.id }}">
                                                                 <input type="hidden" name="next_question_id" value="{{ next_question_id }}">
                                                                 <p class="card-text" name="question_id" id="question_id" value="{{ question.id }}"><i class="fa fa-id-badge" aria-hidden="true"></i> {{ question.question }}</p>
@@ -202,30 +183,25 @@
                                                                         <input type="number" value="{{ question.fk_answer.answer }}"
                                                                         class="form-control" name="answer"
                                                                         id="answer"
-                                                                        placeholder="Answer the question only with numbers"
-                                                                        required minlength="2" maxlength="10">
+                                                                        placeholder="Responda la pregunta solo con números"
+                                                                        required min="0" max="10000">
 
                                                                         <span class="input-group-text">{{ question.fk_variable.unit }}</span>
                                                                     </div>
                                                                 {% elif  question.type == 2 %}
-                                                                <div class="form-group">
-                                                                    <label for="answer">Seleccione una opción:</label>
-                                                                    <select class="form-control" id="answer" name="answer">
-                                                                        {% for option in question.posible_answers %}
-                                                                            <option value="{{option}}">{{option}}</option>
-                                                                        {% endfor %}
-                                                                    </select>
-                                                                </div>
-                                                                {% endif %}      
-                                                                {% if questions_to_answer.has_next %}
-                                                                <li class="page-item">
-                                                                    <a href="" class="page-link">
-                                                                        <button type="submit" name="next" class="btn btn-secondary">Próxima pregunta</button>
-                                                                    </a>
-                                                                </li>
-                                                                {% endif %}      
-                                                            </form>
-                                                        {% endfor %}
+                                                                    <div class="form-group">
+                                                                        <label for="answer">Seleccione una opción:</label>
+                                                                        <select class="form-control" id="answer" name="answer" required>
+                                                                            <option value="">Seleccione una opción</option>
+                                                                            {% for option in question.posible_answers %}
+                                                                                <option value="{{option}}">{{option}}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            <button type="submit" name="save" class="btn btn-dark">Guardar Respuestas</button>
+                                                        </form>
                                                     {% else %}
                                                         <p>No hay preguntas que responder.</p>
                                                     {% endif %}
@@ -233,7 +209,7 @@
                                                 <div class="card-footer">
                                                     <form method="POST" action="{% url 'questionary:questionary.list' %}">
                                                         {% csrf_token %}
-                                                        <button type="submit" name="cancel" class="btn btn-primary">Cancelar cuestionario</button>
+                                                        <button type="submit" name="cancel" class="btn btn-danger">Cancelar cuestionario</button>
                                                     </form>
                                                     {% if questions_to_answer.last %}
                                                         <li class="page-item">
@@ -250,10 +226,10 @@
                                                 <div class="col-sm">
                                                     <div class="text-muted">
                                                         Mostrar
-                                                        <span class="fw-semibold"> Question Number: {{ questions_to_answer.number }}</span>
-                                                        of
+                                                        <span class="fw-semibold"> Pagina: {{ questions_to_answer.number }}</span>
+                                                        de
                                                         <span class="fw-semibold">
-                                                        {{ questions_to_answer.paginator.num_pages }} questions
+                                                        {{ questions_to_answer.paginator.num_pages }} paginas
                                                         </span>
                                                     </div>
                                                 </div>
@@ -296,25 +272,42 @@
 </script>
 <script>
     function validateForm2() {
-        var questionType = {{ question.type }};
-        var answerInput = document.getElementById('question_id');
+        var answer = document.getElementById('answer').value;
 
-        if (questionType == 1) {
-            // Numeric question validation
-            var numericValue = answerInput.value.trim();
-            if (!numericValue.match(/^\d+$/)) {
-                alert('Please enter a valid numeric answer.');
-                return false;
-            }
-        } else if (questionType == 2) {
-            // Multiple-choice question validation (optional)
-            var selectedOption = document.getElementById('answer').value;
-            if (selectedOption === 'Choose...') {
-                alert('Please select an option.');
-                return false;
-            }
+        // Verificar si la respuesta no está vacía
+        if (answer.trim() === "") {
+            alert('Por favor, proporciona una respuesta.');
+            return false; // Prevenir el envío del formulario
         }
-        return true; // Submit the form if all validations pass
+
+        // Agregar más validaciones según sea necesario
+
+        // Ejemplo: Verificar si la respuesta es un número válido
+        if (isNaN(answer)) {
+            alert('Por favor, introduce un número válido para la respuesta.');
+            return false;
+        }
+
+        // Ejemplo: Verificar si la respuesta está dentro de un rango específico
+        var min = 0;
+        var max = 100;
+        if (answer < min || answer > max) {
+            alert('Por favor, introduce un número entre ' + min + ' y ' + max + ' para la respuesta.');
+            return false;
+        }
+
+        // Ejemplo: Verificar si la respuesta es una opción válida del menú desplegable
+        var selectAnswer = document.getElementById('answer');
+        if (selectAnswer.selectedIndex === 0) {
+            alert('Por favor, selecciona una opción.');
+            return false;
+        }
+
+        // Agregar más validaciones para otros campos según sea necesario
+
+        // Si todas las validaciones pasan, devolver true para permitir el envío del formulario
+        return true;
     }
 </script>
+
 {% endblock extra_js %}

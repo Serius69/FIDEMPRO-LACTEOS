@@ -46,8 +46,6 @@ class QuestionaryResult(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
     last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
-    def __str__(self):
-        return self.answer
 
 class Question(models.Model):
     question = models.TextField()

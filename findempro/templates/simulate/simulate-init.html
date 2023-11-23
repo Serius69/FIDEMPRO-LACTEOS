@@ -30,24 +30,20 @@
                                         <div class="py-4">
                                             <h4 class="display-6 -text">SIMULAR</h4>
                                             <div class="container">                      
-                                              <p>Explore nuestra lista completa de productos que presenta una amplia gama de artículos obtenidos de nuestra extensa base de datos. Esta plataforma fácil de usar le permite tomar el control de su inventario de productos sin esfuerzo. Si usted es propietario de un negocio, administrador de existencias o simplemente alguien apasionado por la organización, esta página está diseñada pensando en usted.</p>
-                                          
+                                              <p>Explore nuestra lista completa de productos que presenta una amplia gama de artículos obtenidos de 
+                                                nuestra extensa base de datos. Esta plataforma fácil de usar le permite tomar el control de su inventario
+                                                 de productos sin esfuerzo. Si usted es propietario de un negocio, administrador de existencias o 
+                                                 simplemente alguien apasionado por la organización, esta página está diseñada pensando en usted.</p>
                                               <h2>Características clave:</h2>
-                                          
                                               <ul>
                                                 <li>
-                                                    <span class="text-success">Información del cuestionario a utilizar para la simulación:</span> 
-                                                
+                                                    <span class="text-success">Información del cuestionario a utilizar para la simulación:</span> <p>Seleccione el cuestionario que desea utilizar para la simulación.</p>
                                                 </li>
-                                          
                                                 <li>
-                                                    <span class="text-danger">Historic Demand:</span> 
-                                                
+                                                    <span class="text-danger">Historic Demand:</span> <p>Suba el archivo de demanda histórica que desea utilizar para la simulación.</p>
                                                 </li>
-                                          
                                                 <li>
-                                                    <span class="text-primary">Unit of time:</span> 
-                                                
+                                                    <span class="text-primary">Unit of time:</span> <p>Seleccione la unidad de tiempo que desea utilizar para la simulación.</p>
                                                 </li>
                                               </ul>
                                             </div>
@@ -64,111 +60,100 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="row">
-                                    <div class="col-xxl-6">
+                                    <div class="col-xxl-4">
                                         <div class="card">
                                             <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Params Simulation</h4>
-                                            </div><!-- end card header -->
-        
+                                                <h4 class="card-title mb-0 flex-grow-1">Simulación de parámetros</h4>
+                                            </div><!-- end card header -->                                        
                                             <div class="card-body">
-                                                <p class="text-muted">Realize a Simulation with the next params</p>
+                                                <p class="text-muted">Realice una simulación con los siguientes parámetros</p>
                                                 <div class="live-preview">
-                                                    <form action="{% url 'simulate:simulate.init' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
-                                                        {% csrf_token %}
-                                                        <div class="row">                                                          
-                                                            <div class="col-md-4">
-                                                                <div class="mb-3">
-                                                                    <form action="{% url 'simulate:simulate.init' %}" method="GET" id="questionaryResultForm" onsubmit="return validateForm()">
-                                                                        <label for="selected_questionary_result" class="form-label" title="Select the information to use in the simulation">
-                                                                            <span data-key="t-timeunit"> Information of questionary to use for the simulation</span>
-                                                                        </label>
-                                                                        <select id="selected_questionary_result" class="form-select" data-choices data-choices-sorting="true">
-                                                                            <option selected>Choose...</option>
-                                                                            {% for questionary in questionaries %}
-                                                                                <option value="{{ questionary.id }}">{{ questionary.name }}</option>
-                                                                            {% empty %}
-                                                                                <option>...</option>
-                                                                            {% endfor %}
-                                                                        </select>
-                                                                        <div class="text-end">
-                                                                            <button type="submit" name="select" class="btn btn-info">Select</button>
+                                                    Selected: {{selected}}
+                                                    Started: {{simulation_started}}
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                {% if not selected%}
+                                                                    <form method="GET" action="{% url 'simulate:simulate.init' %}" onsubmit=validateForm3()>
+                                                                        {% csrf_token %}
+                                                                        <div class="mb-4">
+                                                                            <label for="selected_questionary_result" class="form-label" title="Select the information to use in the simulation">
+                                                                                <span data-key="t-timeunit"> Información del cuestionario para usar para la simulación</span>
+                                                                            </label>
+                                                                            <select id="selected_questionary_result" name="selected_questionary_result" class="form-select" data-choices data-choices-sorting="true">
+                                                                                <option selected>Elegir...</option>
+                                                                                {% for questionary_result in questionnaires_result %}
+                                                                                    <option value="{{ questionary_result.id }}">Resultado de cuestionario: {{ questionary_result.id }}</option>
+                                                                                {% empty %}
+                                                                                    <option>...</option>
+                                                                                {% endfor %}
+                                                                            </select>
+                                                                            <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
                                                                         </div>
                                                                     </form>
-                                                                </div>
-                                                            </div><!--end col-->
-                                                            <div class="col-md-4">
-                                                                <div class="mb-3">
-                                                                    <label for="historicdemand" class="form-label" title="Submit the historic demand you want to use in format .xlsx"><span data-key="t-demandhistory">Historic Demand</span></label>
-                                                                    <div class="dropzone" id="myDropzone">
-                                                                        <div class="fallback">
-                                                                            <input name="demandhistory" type="file" multiple="multiple" accept=".xlsx, .txt">
+                                                                {% else %}
+                                                                    <form method="POST" action="{% url 'simulate:simulate.init' %}">
+                                                                        {% csrf_token %}
+                                                                        <div class="mb-3">
+                                                                            <span data-key="t-result"> Resultados que se eligió: {{ selected_questionary_result }} </span>
                                                                         </div>
-                                                                        <div class="dz-message needsclick">
-                                                                            <div class="mb-3">
-                                                                                <i class="display-2 text-muted ri-upload-cloud-2-fill"></i>
+                                                                        <div class="mb-3">
+                                                                            <button type="submit" name="cancel" class="btn btn-danger">Cancelar selección</button>
+                                                                        </div>
+                                                                    </form>
+                                                                {% endif %}
+                                                            </div><!--end col-->
+                                                            <form action="{% url 'simulate:simulate.init' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="question_id" value="{{ selected_questionary_result_id }}">
+                                                                <div class="col-md-12">
+                                                                    <div class="mb-3">
+                                                                        <label for="historicdemand" class="form-label" title="Submit the historic demand you want to use in format .xlsx"><span data-key="t-demandhistory">Historic Demand</span></label>
+                                                                        <div class="dropzone" id="myDropzone">
+                                                                            <div class="fallback">
+                                                                                <input name="demandhistory" type="file" multiple="multiple" accept=".xlsx, .txt">
                                                                             </div>
-                                                                            <h4>Drop files here or click to upload.</h4>
+                                                                            <div class="dz-message needsclick">
+                                                                                <div class="mb-3">
+                                                                                    <i class="display-2 text-muted ri-upload-cloud-2-fill"></i>
+                                                                                </div>
+                                                                                <h4>Deje caer archivos aquí o haga clic para cargar.</h4>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            </div><!--end col-->                                                            
-                                                            <div class="col-md-4">
-                                                                <div class="mb-3">
-                                                                    <label for="unit_time" class="form-label" title="Select the unit of time you want to use"><span data-key="t-timeunit"> Unit of time</span></label>
-        
-                                                                    <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
-                                                                        <option selected>Choose...</option>
-                                                                        <option value="1">year</option>
-                                                                        <option value="2">month</option>
-                                                                        <option value="2">day</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div><!--end col-->        
-                                                            <div class="col-lg-12">
-                                                                <div class="text-init">
-                                                                    <button type="button" class="btn btn-dark" id="clearButton">Clear</button>
-                                                                </div>
-                                                                <div class="text-end">
-                                                                    <button type="submit" class="btn btn-primary">Start Simulation</button>
-                                                                </div>
-                                                            </div><!--end col-->
+                                                                </div><!--end col-->
+                                                                <div class="col-md-12">
+                                                                    <div class="mb-3">
+                                                                        <label for="unit_time" class="form-label" title="Select the unit of time you want to use"><span data-key="t-timeunit"> Unit of time</span></label>
+                                            
+                                                                        <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
+                                                                            <option selected>Elegir...</option>
+                                                                            <option value="1">año</option>
+                                                                            <option value="2">mes</option>
+                                                                            <option value="2">día</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div><!--end col-->
+                                                                <div class="col-lg-12">
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <button type="submit" name="start" class="btn btn-primary">Iniciar simulación</button>
+                                                                        </div>
+                                                                    </div><!--end col-->
+                                                                </div><!--end row-->
+                                                            </form>
                                                         </div><!--end row-->
-                                                    </form>
-
-                                                    {% if simulation_started %}
-                                                        <!-- Display simulation results or next step content here -->
-                                                        <p>Simulation started!</p>
-                                                        <p>Current Step: {{ simulation_instance.current_step }}</p>
-                                                        <!-- Display simulation data for the current step -->
-                                                    {% endif %}
-                                                </div>
-                                            </div>
+                                                </div><!--end live-preview-->
+                                            </div> <!-- end col -->
                                         </div>
-                                    </div> <!-- end col -->
-        
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Lineal Graph</h4>
-                                            </div><!-- end card header -->
-                                            <div class="card-body">
-                                                <canvas id="myChart" width="100" height="50"></canvas>                          
-                                            </div>
-                                        </div>
-                                        
-                                    </div> <!-- end col -->
-                                </div><!--end row-->
-                                
-                                <div class="row">
-                                    <div class="col-lg-6">
+                                    {% comment %} </div> {% endcomment %}
+                                    <div class="col-lg-8">
                                         <div class="card">
                                             <div class="card-header">
-                                                <h4 class="card-title">Preview Information</h4>
+                                                <h4 class="card-title">Información previa</h4>
                                             </div>
                                             <div class="card-body">
                                                 <div class="row">
-                                                    <div class="col-md-6">
-                                                        <h5>Equations</h5>
+                                                    <div class="col-md-4">
+                                                        <h5>Ecuaciones que se utilizaran para la simulacion</h5>
                                                         <ul>
                                                             {% for equation in equations_to_use %}
                                                                 <li>
@@ -177,100 +162,53 @@
                                                                     <p>Variables: {{ equation.variables }}</p>
                                                                 </li>
                                                             {% empty %}
-                                                                <p>No equations available.</p>
+                                                                <p>No hay ecuaciones disponibles.</p>
                                                             {% endfor %}
                                                         </ul>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <h5>Simulation Details</h5>
+                                                    <div class="col-md-4">
+                                                        <h5>Ecuaciones con sus respectivos datos</h5>
+                                                        <ul>
+                                                            {% for equation in equations_with_values %}
+                                                                <li>
+                                                                    <h6>{{ equation.name }}</h6>
+                                                                </li>
+                                                            {% empty %}
+                                                                <p>No hay ecuaciones con valores.</p>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <h5>Detalles de simulación</h5>
                                                         {% if simulation_started %}
-                                                            <p>Simulation started!</p>
-                                                            <p>Current Step: {{ simulation_instance.current_step }}</p>
+                                                            <p>¡Comenzó la simulación!</p>
+                                                            <p>Paso actual: {{ simulation_instance.current_step }}</p>
                                                             <!-- Display simulation data for the current step -->
                                                         {% else %}
-                                                            <p>No simulation started.</p>
+                                                            <p>No se inició una simulación.</p>
                                                         {% endif %}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>                                    
-                                    <div class="col-lg-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title mb-0">Simulate Table</h4>
-                                            </div><!-- end card header -->
-
-                                            <div class="card-body">
-                                                <div id="customerList">
-                                                    <div class="table-responsive table-card mt-3 mb-1">
-                                                        <table class="table align-middle table-nowrap" id="simulateTable">
-                                                            <thead class="table-light">
-                                                                <tr>
-                                                                    <th class="sort" data-sort="date">Date</th>
-                                                                    <th class="sort" data-sort="variable">Variable</th>
-                                                                    <th class="sort" data-sort="unit">Unit</th>
-                                                                    <th class="sort" data-sort="unit_time">Unit of time</th>
-                                                                    <th class="sort" data-sort="result">Result</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody class="">
-                                                                {% if simulation_started %}
-                                                                    <tr>
-                                                                        <td class="date">{{ simulate.date }}</td>
-                                                                        <td class="variable">{{ simulate.variable }}</td>
-                                                                        <td class="unit">{{ simulate.unit }}</td>
-                                                                        <td class="unit_time">{{ simulate.unittime }}</td>
-                                                                        <td class="result">{{ simulate.result }}</td>
-                                                                    </tr>
-                                                                {% else %}
-                                                                    <tr>
-                                                                        <td colspan="6"> <!-- Adjust the colspan value as needed -->
-                                                                            <div class="noresult" style="display: none">
-                                                                                <div class="text-center">
-                                                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
-                                                                                        colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
-                                                                                    </lord-icon>
-                                                                                    <h5 class="mt-2">Sorry! No Result Found</h5>
-                                                                                    <p class="text-muted mb-0"></p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                {% endif %}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                    <div class="d-flex justify-content-end">
-                                                        <div class="pagination-wrap hstack gap-2">
-                                                            <a class="page-item pagination-prev disabled" href="javascript:void(0);">
-                                                                Anterior
-                                                            </a>
-                                                            <ul class="pagination listjs-pagination mb-0"></ul>
-                                                            <a class="page-item pagination-next" href="javascript:void(0);">
-                                                                Next
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card -->
-                                        </div><!-- end col -->
-                                    </div><!-- end col -->
-                                </div>
-                                <!-- end row -->
-                                <div class="card">
-                                    <div class="card-header">
-                                        Simulation Diagram
-                                    </div>
-                                    <div class="card-body">
-                                        <!-- Add your diagram visualization code here -->
-                                        <!-- For example, you can use a canvas element to draw the diagram -->
-                                        <canvas id="simulationDiagram"></canvas>
+                                    </div> 
+                                </div><!--end row-->
+                                <div class="row">      
+                                    <div class="card">
+                                        <div class="card-header">
+                                            Diagrama de simulación
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Add your diagram visualization code here -->
+                                            <!-- For example, you can use a canvas element to draw the diagram -->
+                                            <canvas id="simulationDiagram"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             <div>
                         </div> <!-- container-fluid -->
                 </div>
+            </div>
                 <!-- End Page-content -->
             {% block footer %}
             {% include "partials/footer.html" %}
@@ -286,14 +224,20 @@
     <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
 
     <script>
-        function validateForm() {
-            // Validate the selected questionary
-            var questionarySelect = document.getElementById('fk_questionary');
-            if (questionarySelect.value == 'Choose...') {
+        function validateForm3() {
+            var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
+            // Validate if a questionary is selected
+            if (selectedQuestionary === 'Choose...') {
                 alert('Please select a questionary.');
                 return false;
             }
-    
+            // Add more validations if needed
+            return true; // Submit the form if all validations pass
+        }
+    </script>
+    <script>
+        function validateForm() {
+
             // Validate the uploaded historic demand file
             var historicDemandInput = document.querySelector('input[name="demandhistory"]');
             if (historicDemandInput.files.length === 0) {
@@ -307,137 +251,35 @@
                 alert('Please select a unit of time.');
                 return false;
             }
-    
             // Add more validations for other fields if needed
-    
             return true; // Submit the form if all validations pass
         }
     </script>
-
     <script>
-        // Dropzone initialization
         Dropzone.options.myDropzone = {
             paramName: "file", // The name that will be used to transfer the file
             maxFilesize: 5, // MB
             previewsContainer: ".dropzone",
             clickable: true,
-            acceptedFiles: ".xlsx, .txt"
-        };
-        $(document).ready(function() {
-    
-          var graph = new joint.dia.Graph;
-          
-          var paper = new joint.dia.Paper({
-            el: $('#diagram'),
-            model: graph,
-            width: 600,
-            height: 200
-          });
-          
-          var rect = new joint.shapes.basic.Rect({
-            position: {x: 100, y: 30},
-            size: {width: 100, height: 30}
-          });
-          
-          graph.addCell(rect);
-          
-        });
-        
-
-        $.ajax({
-            type: "GET",
-            url: "{% url 'simulate:simulate.init' %}", // Replace with the actual URL of your Django view
-            // ...
-        });
-
-        // Obtén una referencia al elemento canvas
-        var ctx = document.getElementById('myChart').getContext('2d');
-
-        // Define los datos para el gráfico
-        var data = {
-            labels: [],
-            datasets: [{
-                label: 'En Espera',
-                data: [],
-                backgroundColor: 'rgba(255, 255, 255, 0)',  // Transparent background
-                borderColor: 'rgba(255, 255, 255, 0)',      // Transparent border
-                borderWidth: 1
-            }]
-        };
-
-        // Configura las opciones del gráfico
-        var options = {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        };
-
-        // Crea el gráfico lineal
-        var myChart = new Chart(ctx, {
-            type: 'line',
-            data: data,
-            options: options
-        });
-
-        // Function to update the chart with data
-        function updateChart(data) {
-            var ctx = document.getElementById('myChart').getContext('2d');
-            var myChart = new Chart(ctx, {
-                type: 'line',
-                data: data,
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+            acceptedFiles: ".txt",
+            maxFiles: 1, // Only one file
+            init: function() {
+                this.on("addedfile", function(file) {
+                    if (this.files.length > 1) {
+                        this.removeFile(this.files[0]);
                     }
-                }
-            });
-        }
-    
-        // Function to update the table with data
-        function updateTable(data) {
-            var tableBody = document.querySelector("#simulateTable tbody");
-            tableBody.innerHTML = ""; // Clear the existing table rows
-            for (var i = 0; i < data.length; i++) {
-                var row = data[i];
-                var newRow = tableBody.insertRow();
-                newRow.innerHTML = "<td>" + row.date + "</td><td>" + row.variable + "</td><td>" + row.unit + "</td><td>" + row.unit_time + "</td><td>" + row.result + "</td>";
+                });
+                this.on("success", function(file, responseText) {
+                    // Check if the file has at least 30 data points
+                    var dataPoints = responseText.split('\n');
+                    if (dataPoints.length < 30) {
+                        alert("The file must contain at least 30 data points.");
+                        this.removeFile(file);
+                    }
+                });
             }
-        }
-    
-        // Add a click event listener to the "Init" button
-        document.getElementById("initButton").addEventListener("click", function () {
-            // Make an AJAX request to your Django view to fetch data
-            $.ajax({
-                type: "GET",
-                url: "{% url 'simulate:simulate.init' %}", // Replace with the actual URL of your Django view
-                success: function (data) {
-                    // Update the chart and table with the retrieved data
-                    updateChart(data.chartData);
-                    updateTable(data.tableData);
-                },
-                error: function () {
-                    alert("Error fetching data from the server.");
-                }
-            });
-        });
-        document.getElementById('clearButton').addEventListener('click', function() {
-            document.getElementById('simulateForm').reset();
-        });
-        // Agregar un evento de cambio al elemento select
-        document.getElementById("ForminputState").addEventListener("change", function () {
-            // Obtener el elemento seleccionado
-            var selectedOption = this.options[this.selectedIndex];
-    
-            // Obtener los detalles del elemento seleccionado
-            var details = selectedOption.getAttribute("data-details");
-    
-            // Mostrar los detalles en un área específica
-            var selectedDetails = document.getElementById("selectedDetails");
-            selectedDetails.innerHTML = details;
-        });
+        };
     </script>
+
+
 {% endblock extra_js %}

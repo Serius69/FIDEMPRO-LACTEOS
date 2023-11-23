@@ -20,144 +20,87 @@ from django.http import JsonResponse
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
-def simulate_init(request):
-    simulation_started = request.session.get('simulation_started', False)
-
-    if request.method == 'GET' and 'selected_questionary_result' in request.GET:
-        selected_questionary_id = request.GET.get('selected_questionary_result', 0)
+def simulate_init_view(request):
+    businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
+    products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
+    questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
+    simulation_instance = None
+    form = SimulationForm(request.POST or None, request.FILES or None)
+    started = request.session.get('started', False)
+    selected = request.session.get('started', False)
+    selected_questionary_result_id = None
+    if request.method == 'GET' and 'select' in request.GET:
+        request.session['selected'] = True 
+        selected_questionary_result_id = request.GET.get('selected_questionary_result', 0)
+        request.session['selected_questionary_result_id'] = selected_questionary_result_id
+        print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
         areas = Area.objects.order_by('id').filter(
-            is_active=True, fk_product__fk_business__fk_user=request.user, 
-            fk_questionary_id=selected_questionary_id)
-
-        answers = Answer.objects.order_by('id').filter(
-            is_ready=True, fk_questionary_result_id=selected_questionary_id)
+            is_active=True, 
+            fk_product__fk_business__fk_user=request.user,
+        )
+        answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
+        questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_business__fk_user=request.user)
+        questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
         
-        questionnaires = Questionary.objects.order_by('id').filter(
-            is_active=True, fk_business__fk_user=request.user)
-        
+        equations_to_use = Equation.objects.order_by('id').filter(
+            is_active=True, 
+            fk_area__fk_product__fk_business__fk_user=request.user,
+            # fk_variable=answers.fk_questionary.fk_variable,
+            )
         context = {
             'areas': areas,
             'answers': answers,
             'questionnaires': questionnaires,
-        }
-        
-        return render(request, 'simulate/simulate-init.html', context)
-
-    if not simulation_started:
-        # Si la simulacion no está iniciada
-        businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
-        products = Product.objects.filter(
-            is_active=True,
-            fk_business__fk_user=request.user,
-        ).order_by('-id')
-
-        questionnaires_result = QuestionaryResult.objects.filter(
-            is_active=True,
-            # fk_questionary__fk_product__fk_business__fk_user=request.user,
-        ).order_by('-id')
-        print(type(request.user))
-        
-        if request.method == "POST":
-            # Aqui se hara lo que no se vera por pantalla mandando los datos a la clase AreaManager, EquationManager, ProbabilisticDensityFunctionmanager
-            form = SimulationForm(request.POST, request.FILES)
-            if form.is_valid():
-                simulation_instance = form.save(commit=False)
-                # simulation_instance.save()
-                request.session['simulation_started'] = True
-                # Aqui se hacen los querys para tomar datos necesarios para mandar y generar la simulacion
-                answers = Answer.objects.order_by('id').filter(
-                    fk_questionary_result_id=simulation_instance.fk_questionary_result_id)
-                areas = Area.objects.order_by('id').filter(fk_product_id=simulation_instance.fk_product_id)
-                #Aqui se mandara el valor de la demanda historica a ProbabilisticDensityFunctionManager para hacer el test KS y con eso saber que distribucion sigue
-                uploaded_file = request.FILES['file']
-                
-                # Procesar el archivo y extraer la información
-                historical_demand_data = []
-                for line in uploaded_file:
-                    month, demand = map(int, line.strip().split(','))
-                    historical_demand_data.append((month, demand))
-
-                # Puedes guardar la información en el modelo si es necesario
-                for month, demand in historical_demand_data:
-                    DemandHistorical.objects.create(month=month, demand=demand)
-
-                # Almacenar la información en una variable si es necesario
-                data_demand_historic = historical_demand_data
-                
-                # Aqui se analizara que distribucion sigue la demanda historica
-                ProbabilisticDensityFunctionmanager.kolmovorov_smirnov_test(data_demand_historic)
-                
-                #aqui se mandara los datos a la clase para armar las ecuaciones
-                EquationManager.associate_answers_with_equation(answers)
-
-                # aqui se recogeran los resultados de las ecuaciones por area
-                AreaManager.associate_areas_with_equation(areas)
-
-                equations = []  # Define equations here
-
-                equation_results = []  # Define equation_results here
-
-                Simulatemanager.simulate(form, equations, areas, answers, equation_results)
-
-                # aqui se cargaran los datos
-                chart_data = [...]  # Replace with actual chart data
-                table_data = [...]  # Replace with actual table data 
-                response_data = {
-                    'chartData': chart_data,
-                    'tableData': table_data,
-                }
-
-                
-                context = {
-                    'simulation_instance': simulation_instance,
-                    'started': simulation_started,
-                    'data_demand_historic': data_demand_historic,
-                    'products': products,
-                    'businesses': businesses,
-                    'questionnaires_result': questionnaires_result,
-                    'response_data': response_data,
-                }
-
-                return redirect('simulate:simulate.init')  # Redirect to the next step in the simulation
-            else:
-                messages.error(request, "Form validation failed. Please check your inputs.")
-        else:
-            form = SimulationForm()
-
-        context = {
-            'products': products,
-            'businesses': businesses,
+            'started': started,
+            'selected': selected,
+            'equations_to_use': equations_to_use,
             'questionnaires_result': questionnaires_result,
-            'form': form,
         }
-
         return render(request, 'simulate/simulate-init.html', context)
-    else:
-        # Aqui solo se armara lo que se vera en pantalla
-        # Si la simulación está iniciada
-        simulation_id = request.session.get('simulation_id')
-        simulation_instance = Simulation.objects.get(pk=simulation_id)
+    if request.method == 'POST' and 'cancel' in request.POST:
+        request.session['selected'] = False 
+        selected_questionary_result_id = request.POST.get(None)
+        print("Se cancelo el cuestionario")
+        
+        return redirect('simulate:simulate.init')
 
-        chart_data = [...]  # Replace with actual chart data
-        table_data = [...]  # Replace with actual table data 
-        response_data = {
-            'chartData': chart_data,
-            'tableData': table_data,
-        }
-
-        # Logic to fetch data for the current step of the simulation
-        # ...
-
+    if request.method == "POST" and form.is_valid() and 'start' in request.POST:
+        request.session['started'] = True 
+        simulation_instance = form.save(commit=False)
+        answers = Answer.objects.order_by('id').filter(fk_questionary_result_id=simulation_instance.fk_questionary_result_id)
+        areas = Area.objects.order_by('id').filter(fk_product_id=simulation_instance.fk_product_id)
+        uploaded_file = request.FILES['file']
+        historical_demand_data = [(int(month), int(demand)) for month, demand in (line.strip().split(',') for line in uploaded_file)]
+        for month, demand in historical_demand_data:
+            DemandHistorical.objects.create(month=month, demand=demand)
+            ProbabilisticDensityFunctionmanager.kolmovorov_smirnov_test(historical_demand_data)
+            EquationManager.associate_answers_with_equation(answers)
+            AreaManager.associate_areas_with_equation(areas)
+            Simulatemanager.simulate(form, [], areas, answers, [])
         context = {
-            'products': products,
-            'businesses': businesses,
-            'questionnaires_result': questionnaires_result,
-            'response_data': response_data,
             'simulation_instance': simulation_instance,
-            'started': simulation_started,
+            'data_demand_historic': historical_demand_data,
+            'products': products,
+            'businesses': businesses,
+            'started': started,
+            'selected': selected,
+            'questionnaires_result': questionnaires_result,
         }
+        return redirect('simulate:simulate.init')  # Redirect to the next step in the simulation
 
-        return render(request, 'simulate/simulate-init.html', context)
+    if form.errors:
+        messages.error(request, "Form validation failed. Please check your inputs.")
+
+    context = {
+        'simulation_instance': simulation_instance,
+        'products': products,
+        'started': started,
+        'selected': selected,
+        'questionnaires_result': questionnaires_result,
+        'form': form,
+    }
+    return render(request, 'simulate/simulate-init.html', context)
+    
 
 class Simulatemanager:
     @classmethod
@@ -289,3 +232,39 @@ class EquationManager:
                 expression = expression.replace(var, str(getattr(answer, var)))
 
         return expression
+
+def simulate_result_simulation_view(request):
+    # Logic to fetch data for the current step of the simulation
+    products = [...]  # Replace with actual data
+    businesses = [...]  # Replace with actual data
+    questionnaires_result = [...]  # Replace with actual data
+
+    simulation_id = request.session.get('simulation_id')
+    simulation_instance = Simulation.objects.get(pk=simulation_id)
+    simulation_started = True  # Replace with actual logic to check if simulation is started
+
+    response_data = {
+            'chartData': self.get_chart_data(),
+            'tableData': self.get_table_data(),
+        }
+
+    context = {
+        'products': products,
+        'businesses': businesses,
+        'questionnaires_result': questionnaires_result,
+        'response_data': response_data,
+        'simulation_instance': simulation_instance,
+        'started': simulation_started,
+    }
+    def get_chart_data(self):
+            # Replace with actual chart data
+            chart_data = [...]  
+            return chart_data
+
+    def get_table_data(self):
+            # Replace with actual table data
+            table_data = [...]  
+            return table_data
+    return render(request, 'simulate/simulate-init.html', context)
+
+    
