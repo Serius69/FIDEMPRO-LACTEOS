@@ -8,8 +8,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from product.models import Product,Area
 from business.models import Business
-
-# Create your views here.
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass
     
@@ -50,15 +49,34 @@ def dashboard_user(request) -> str:
     users_change_percentage = (users_change / users_last_month_count * 100) if users_last_month_count > 0 else 0
     current_time = datetime.now().time()
     if current_time >= datetime(1900, 1, 1, 5, 0).time() and current_time < datetime(1900, 1, 1, 12, 0).time():
-        greeting = "Good Morning"
+        greeting = "Buenos Dias"
     elif current_time >= datetime(1900, 1, 1, 12, 0).time() and current_time < datetime(1900, 1, 1, 18, 0).time():
-        greeting = "Good Afternoon"
+        greeting = "Buenas Tardes"
     else:
-        greeting = "Good Evening"
+        greeting = "Buenas Noches"
     products = Product.objects.filter(fk_business=business.id)
     areas = Area.objects.filter(fk_product__fk_business=business.id)
     products_ready = 0
     products_no_ready = 0
+    
+    paginator = Paginator(products, 10)  # Show 10 products per page
+    page = request.GET.get('page')
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
+            
+    paginator = Paginator(areas, 10)  # Show 10 products per page
+    page = request.GET.get('page')
+    try:
+        areas = paginator.page(page)
+    except PageNotAnInteger:
+        areas = paginator.page(1)
+    except EmptyPage:
+        areas = paginator.page(paginator.num_pages)        
+    
     for product in products:
         if product.is_ready == True:
             products_ready += 1

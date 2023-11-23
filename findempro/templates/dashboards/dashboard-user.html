@@ -96,7 +96,7 @@
                                                     <div>
                                                         <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
                                                                 class="counter-value" data-target="{{total_revenue}}">0</span>k</h4>
-                                                        <a href="" class="text-decoration-underline"> Ver ganancias netas</a>
+                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
                                                         <span class="avatar-title bg-success-subtle rounded fs-3">
@@ -127,7 +127,7 @@
                                                                     class="ri-arrow-down-s-line fs-13 align-middle me-1"></i>{{total_costs_percentage}}
                                                                 </span>
                                                         </div>
-                                                        <p class="text-muted text-truncate mb-0"> Productos este mes </p>
+                                                        {% comment %} <p class="text-muted text-truncate mb-0"> Productos este mes </p> {% endcomment %}
                                                     </div>
                                                 </div>
                                             </div><!-- end card body -->
@@ -151,7 +151,7 @@
                                                     <div>
                                                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
                                                                 class="counter-value" data-target="{{total_profit_margin}}">0</span></h4>
-                                                        <a href="" class="text-decoration-underline"> Ver todos los pedidos </a>
+                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver todos los pedidos </a> {% endcomment %}
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
                                                         <span class="avatar-title bg-info-subtle rounded fs-3">
@@ -181,7 +181,7 @@
                                                     <div>
                                                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
                                                                 class="counter-value" data-target="{{demand_forecast}}">0</span>M</h4>
-                                                        <a href="" class="text-decoration-underline">Ver detalles </a>
+                                                        {% comment %} <a href="" class="text-decoration-underline">Ver detalles </a> {% endcomment %}
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
                                                         <span class="avatar-title bg-warning-subtle rounded fs-3">
@@ -211,7 +211,7 @@
                                                     <div>
                                                         <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
                                                         class="counter-value" data-target="{{total_inventory_levels}}">0</span>k</h4>
-                                                        <a href="" class="text-decoration-underline">Retirar dinero </a>
+                                                        {% comment %} <a href="" class="text-decoration-underline">Retirar dinero </a> {% endcomment %}
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
                                                         <span class="avatar-title bg-primary-subtle rounded fs-3">
@@ -241,7 +241,7 @@
                                                                     class="ri-arrow-up-s-line fs-13 align-middle me-1"></i> {{total_production_output_percentage}}
                                                                 </span>
                                                         </div>
-                                                        <p class="text-muted mb-0"> Líderes este mes</p>
+                                                        {% comment %} <p class="text-muted mb-0"> Líderes este mes</p> {% endcomment %}
                                                     </div>
                                                 </div>
                                             </div><!-- end card body -->
@@ -251,15 +251,10 @@
                                 <div class="row">
                                     {% if business %}
                                     <div class="col-xxl-4 col-md-6">
-                                        <div class="card" id="business-view-detail">
+                                        <div class="card shadow-sm" id="business-view-detail">
                                             <div class="card-body text-center">
                                                 <div class="position-relative d-inline-block">
-                                                    <div class="avatar-md">
-                                                        <div class="avatar-title bg-light rounded-circle">
-                                                            <img src="{{ business.get_photo_url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
-
-                                                        </div>
-                                                    </div>
+                                                    <img src="{{ business.get_photo_url }}" alt="" class="rounded-rectangule img-fluid">
                                                 </div>
                                                 <h5 class="mt-3 mb-1">{{ business.name }}</h5>
                                                 <p class="text-muted">{{ business.fk_user_id.name }}</p>
@@ -294,69 +289,8 @@
                                         <!--end card-->
                                     </div>
                                     {% else %}
-                                    <div class="col-xxl-4">
-                                        <div class="card" id="business-view-detail">
-                                            <div class="card-body text-center">
-                                                <div class="position-relative d-inline-block">
-                                                    <div class="avatar-md">
-                                                        <div class="avatar-title bg-light rounded-circle">
-                                                            {% if business.image_src %}
-                                                                <img src="{{ MEDIA_URL }}{{ business.image_src.url }}" alt="" class="avatar-sm rounded-circle object-fit-cover">
-                                                            {% else %}
-                                                                <img src="{% static 'path/to/dummy-image.jpg' %}" alt="Dummy Image" class="avatar-sm rounded-circle object-fit-cover">
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <h5 class="mt-3 mb-1">{{business.name}}</h5>
-                                                <p class="text-muted">{{ business.fk_user_id.name }}</p>
-
-                                                <ul class="list-inline mb-0">
-                                                    <li class="list-inline-item avatar-xs">
-                                                        <a href="javascript:void(0);" class="avatar-title bg-success-subtle text-success fs-15 rounded">
-                                                            <i class="ri-global-line"></i>
-                                                        </a>
-                                                    </li>
-                                                    <li class="list-inline-item avatar-xs">
-                                                        <a href="javascript:void(0);" class="avatar-title bg-danger-subtle text-danger fs-15 rounded">
-                                                            <i class="ri-mail-line"></i>
-                                                        </a>
-                                                    </li>
-                                                    <li class="list-inline-item avatar-xs">
-                                                        <a href="javascript:void(0);" class="avatar-title bg-primary-subtle text-primary fs-15 rounded">
-                                                            <i class="ri-question-answer-line"></i>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <div class="card-body">
-                                                <h6 class="text-muted text-uppercase fw-semibold mb-3">Información</h6>
-                                                <p class="text-muted mb-4">{{business.description}}</p>
-                                                <div class="table-responsive table-card">
-                                                    <table class="table table-borderless mb-0">
-                                                        <tbody>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row"> Tipo de industria </td>
-                                                                <td>{{business.type}}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row"> Ubicación </td>
-                                                                <td>{{business.location}}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row">Póngase en contacto con el correo electrónico </td>
-                                                                <td>{{business.fk_user_id.email}}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row">Desde</td>
-                                                                <td>{{business.date_created}}</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--end card-->
+                                    <div class="col-12 text-center mt-4">
+                                        <p class="text-muted">No hay datos de negocio en la base de datos.</p>
                                     </div>
                                     {% endif %}
                                     <div class="col-xxl-4">
@@ -393,7 +327,7 @@
                                                     <div class="col-6 col-sm-3">
                                                         <div class="p-3 border border-dashed border-start-0 border-end-0">
                                                             <h5 class="mb-1 text-success"><span class="counter-value"
-                                                                    data-target="18.92">0</span>%</h5>
+                                                                    data-target="{{conversion_rate}}">0</span>%</h5>
                                                             <p class="text-muted mb-0">Relación de conversación</p>
                                                         </div>
                                                     </div>
@@ -416,12 +350,99 @@
                                             </div><!-- end card header -->
 
                                             <div class="card-body">
-                                                <div id="prjects-status"
+                                                <div id="products-status"
                                                     data-colors='["--vz-success", "--vz-primary", "--vz-warning", "--vz-danger"]'
                                                     class="apex-charts" dir="ltr"></div>
                                                 <div class="mt-3">
                                                     <div class="d-flex justify-content-center align-items-center mb-4">
                                                         <h2 class="me-3 ff-secondary mb-0">{{total_products}}</h2>
+                                                        <div>
+                                                            <p class="text-muted mb-0">Productos totales </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
+                                                        <p class="fw-medium mb-0"><i
+                                                                class="ri-checkbox-blank-circle-fill text-success align-middle me-2"></i>
+                                                            Listo para simular</p>
+                                                        <div>
+                                                            <span class="text-muted pe-5">{{products_ready}}</span>
+                                                        </div>
+                                                    </div><!-- end -->
+                                                    <div
+                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
+                                                        <p class="fw-medium mb-0"><i
+                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
+                                                           No listo para simular </p>
+                                                        <div>
+                                                            <span class="text-muted pe-5">{{products_no_ready}}</span>
+                                                        </div>
+                                                    </div><!-- end -->
+                                                    <div
+                                                    class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
+                                                    <p class="fw-medium mb-0"><i
+                                                            class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
+                                                       No listo para simular </p>
+                                                    <div>
+                                                        <span class="text-muted pe-5">{{products_no_ready}}</span>
+                                                    </div>
+                                                        </div><!-- end -->
+                                                        <div
+                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
+                                                        <p class="fw-medium mb-0"><i
+                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
+                                                        No listo para simular </p>
+                                                        <div>
+                                                            <span class="text-muted pe-5">{{products_no_ready}}</span>
+                                                        </div>
+                                                    </div><!-- end -->
+                                                </div>
+                                                <div id="variables-status"
+                                                    data-colors='["--vz-success", "--vz-primary", "--vz-warning", "--vz-danger"]'
+                                                    class="apex-charts" dir="ltr"></div>
+                                                <div class="mt-3">
+                                                    <div class="d-flex justify-content-center align-items-center mb-4">
+                                                        <h2 class="me-3 ff-secondary mb-0">{{total_variables}}</h2>
+                                                        <div>
+                                                            <p class="text-muted mb-0">Variables totales </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
+                                                        <p class="fw-medium mb-0"><i
+                                                                class="ri-checkbox-blank-circle-fill text-success align-middle me-2"></i>
+                                                            Endogenas</p>
+                                                        <div>
+                                                            <span class="text-muted pe-5">{{total_variables_endogen}}</span>
+                                                        </div>
+                                                    </div><!-- end -->
+                                                    <div
+                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
+                                                        <p class="fw-medium mb-0"><i
+                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
+                                                           Exogenas </p>
+                                                        <div>
+                                                            <span class="text-muted pe-5">{{total_variables_exogen}}</span>
+                                                        </div>
+                                                    </div><!-- end -->
+                                                    <div
+                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
+                                                        <p class="fw-medium mb-0"><i
+                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
+                                                           Estado </p>
+                                                        <div>
+                                                            <span class="text-muted pe-5">{{total_variables_state}}</span>
+                                                        </div>
+                                                    </div><!-- end -->
+                                                </div>
+                                                <div id="products-status"
+                                                    data-colors='["--vz-success", "--vz-primary", "--vz-warning", "--vz-danger"]'
+                                                    class="apex-charts" dir="ltr"></div>
+                                                <div class="mt-3">
+                                                    <div class="d-flex justify-content-center align-items-center mb-4">
+                                                        <h2 class="me-3 ff-secondary mb-0">{{total_equations}}</h2>
                                                         <div>
                                                             <p class="text-muted mb-0">Productos totales </p>
                                                         </div>
@@ -541,31 +562,31 @@
                                                 <div class="table-responsive table-card">
                                                     <table class="table table-centered table-hover align-middle table-nowrap mb-0">
                                                         <tbody>
-                                                            {% for variable in variables %}
+                                                            {% for area in areas %}
                                                             <tr>
                                                                 <td>
                                                                     <div class="d-flex align-items-center">
                                                                         <div class="flex-shrink-0 me-2">
-                                                                            <img src="{% static 'images/businesses/img-1.webp'%}" alt=""
+                                                                            <img src="{{ area.get_photo_url }}" alt=""
                                                                                 class="avatar-sm p-2" />
                                                                         </div>
                                                                         <div>
                                                                             <h5 class="fs-14 my-1 fw-medium"><a
-                                                                                   href="{% url 'business:business.overview' pk=variable.id %}"
-                                                                                    class="text-reset">{{variable.name}}</a></h5>
-                                                                            <span class="text-muted">{{variable.fk_product.name}}</span>
+                                                                                   href="{% url 'business:business.overview' business.id %}"
+                                                                                    class="text-reset">{{area.name}}</a></h5>
+                                                                            <span class="text-muted">{{area.fk_product.name}}</span>
                                                                         </div>
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <p class="mb-0">{{variable.fk_product.name}}</p>
+                                                                    <p class="mb-0">{{area.area_equation.count}}</p>
                                                                     <span class="text-muted">Ecuaciones</span>
                                                                 </td>
                                                                 <td>
-                                                                    <span class="text-muted">{{variable.fk_product.name}}</span>
+                                                                    <span class="text-muted">{{area.fk_product.name}}</span>
                                                                 </td>
                                                                 <td>
-                                                                    <h5 class="fs-14 mb-0">{{variable.fk_product.name}}<i
+                                                                    <h5 class="fs-14 mb-0">{{area.fk_product.name}}<i
                                                                             class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
                                                                     </h5>
                                                                 </td>
@@ -576,33 +597,57 @@
                                                                 <h5 class="mt-2">Lo siento, no hay ningún registro de productos en la base de datos</h5>
                                                                 <p class="text-muted mb-0">Debe ir a la lista de "producto" y luego crear una nueva área en el producto que desee</p>
                                                             </div>
-
                                                             {% endfor %}
 
                                                         </tbody>
                                                     </table><!-- end table -->
                                                 </div>
 
-                                                <div class="align-items-center mt-4 pt-2 justify-content-between row text-center text-sm-start">
+                                                <div class="align-items-center mt-2 row text-center text-sm-start">
                                                     <div class="col-sm">
-                                                        <div class="text-muted">Mostrar <span class="fw-semibold">Número</span> de
-                                                            <span class="fw-semibold">{{variables.count}}</span> Resultados
-                                                        </div>
+                                                      <div class="text-muted">
+                                                        Demostración
+                                                        <span class="fw-semibold">{{ areas.number }}</span>
+                                                        de
+                                                        <span class="fw-semibold">{{ areas.paginator.num_pages }}</span>
+                                                        Resultados
+                                                      </div>
                                                     </div>
-                                                    <div class="col-sm-auto  mt-3 mt-sm-0">
-                                                        <ul class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                                                            <li class="page-item disabled">
-                                                                <a href="#" class="page-link">←</a>
-                                                            </li>
-                                                            <li class="page-item">
-                                                                <a href="#" class="page-link">1</a>
-                                                            </li>
-                                                            <li class="page-item">
-                                                                <a href="#" class="page-link">→</a>
-                                                            </li>
-                                                        </ul>
+                                                    <div class="col-sm-auto">
+                                                      <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                                                        {% if areas.has_previous %}
+                                                          <li class="page-item">
+                                                            <a href="?page=1" class="page-link" aria-label="First">
+                                                              ««
+                                                            </a>
+                                                          </li>
+                                                          <li class="page-item">
+                                                            <a href="?page={{ areas.previous_page_number }}" class="page-link" aria-label="Previous">
+                                                              «
+                                                            </a>
+                                                          </li>
+                                                        {% endif %}
+                                                        {% for i in areas.paginator.page_range %}
+                                                          <li class="page-item {% if i == areas.number %}active{% endif %}">
+                                                            <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                                                          </li>
+                                                        {% endfor %}
+                                                        {% if areas.has_next %}
+                                                          <li class="page-item">
+                                                            <a href="?page={{ areas.next_page_number }}" class="page-link" aria-label="Next">
+                                                              »
+                                                            </a>
+                                                          </li>
+                                                          <li class="page-item">
+                                                            <a href="?page={{ areas.paginator.num_pages }}" class="page-link" aria-label="Last">
+                                                              »»
+                                                            </a>
+                                                          </li>
+                                                        </li>
+                                                        {% endif %}
+                                                      </ul>
                                                     </div>
-                                                </div>
+                                                  </div> 
 
                                             </div> <!-- .card-body-->
                                         </div> <!-- .card-->
@@ -753,7 +798,7 @@
     var revenueData = {
         series: [{
             name: 'Total Revenue',
-            data: [300, 450, 600, 800, 700, 900, 1200, 1000, 1300]
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0]
         }],
         categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep']
     };
@@ -779,10 +824,10 @@
     var ctx = document.getElementById('chart-line').getContext('2d');
 
     var data = {
-        labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo'],
+        labels: ['1', '2', '3', '4', '5'],
         datasets: [{
             label: 'Demanda',
-            data: [12, 19, 3, 5, 2],
+            data: [0, 0, 0, 0, 0],
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2
         }]
@@ -808,13 +853,13 @@
         series: [{
             data: [{
                 x: new Date(2023, 1, 1),
-                y: [60, 80, 50, 70]
+                y: [0, 0, 0, 0]
             }, {
                 x: new Date(2023, 2, 1),
-                y: [70, 90, 60, 80]
+                y: [0, 0, 0, 0]
             }, {
                 x: new Date(2023, 3, 1),
-                y: [80, 100, 70, 90]
+                y: [0, 0, 0, 0]
             }]
         }],
         chart: {
@@ -824,9 +869,6 @@
         xaxis: {
             type: 'datetime'
         },
-        title: {
-            text: 'Candlestick Chart'
-        }
     };
 
     var chart = new ApexCharts(document.querySelector("#basic_candlestick"), options);
@@ -836,11 +878,11 @@
         series: [{
             name: "Revenue",
             type: "line",
-            data: [30, 45, 55, 60, 70],
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
         }, {
             name: "Expenses",
             type: "bar",
-            data: [25, 40, 50, 55, 65],
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
         }],
         chart: {
             height: 350,
@@ -858,11 +900,11 @@
         series: [{
             name: "Profit",
             type: "column",
-            data: [10, 15, 5, 20, 12],
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
         }, {
             name: "Loss",
             type: "line",
-            data: [5, 10, 2, 12, 8],
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
         }],
         chart: {
             height: 350,
@@ -881,7 +923,7 @@
     var chartData = {
         series: [{
             name: "Inventory",
-            data: [100, 150, 200, 180, 250, 220, 300, 270, 350, 330, 400]
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0]
         }],
         chart: {
             height: 350,
@@ -919,7 +961,7 @@
     var chartData = {
         series: [{
             name: "Production",
-            data: [40, 50, 35, 60, 55, 70, 80, 90, 100, 85]
+            data: [0, 0, 0, 0, 0, 0, 0, 0, 0]
         }],
         chart: {
             height: 350,
