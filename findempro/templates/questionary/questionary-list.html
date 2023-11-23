@@ -11,7 +11,7 @@
                 <div class="page-content">
                     <div class="container-fluid">
                         {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Cuestionario" title="Cuestionario" %}
+                        {% include "partials/page-title.html" with pagetitle="Cuestionario" title="Resolver Cuestionario" %}
                         {% endblock pagetitle %}
                         <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
                             <div class="px-4">
@@ -31,7 +31,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-xxl-3 ms-auto">
+                                    <div class="col-xxl-3 col-xl-4 col-lg-6 col-md-12 ms-auto">
                                         <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
                                             <img src="{% static 'images/questionary-img.webp'%}" alt="Product Image" class="img-fluid" style="width: 200%; height: 150%;">
                                         </div>
@@ -39,11 +39,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card">
+                        <div class="card w-100 h-100">
                             <div class="card-header border-0 rounded">
                                 <div class="row g-6 mb-4">
-                                    <div class="col-md-4">
-                                        
+                                    <div class="col-md-4">                                        
                                         {% if not started %}
                                             <form method="GET" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm()">
                                                 {% csrf_token %}
@@ -66,7 +65,8 @@
                                                 {% else %}                                          
                                                 {% endif %}
                                             </form>
-                                            <div class="d-grid gap-1">
+                                            
+                                            <div class="d-grid gap-1 mt-auto">
                                                 <form method="POST" action="{% url 'questionary:questionary.list' %}">
                                                     {% csrf_token %}
                                                     <button type="submit" name="start" class="btn btn-primary">Iniciar cuestionario</button>
@@ -126,11 +126,11 @@
                                                         <div class="text-muted">
                                                             Mostrar
                                                             <span class="fw-semibold">{{ questions_to_answer.number }}</span>
-                                                            of
+                                                            de
                                                             <span class="fw-semibold">
                                                             {{ questions_to_answer.paginator.num_pages }}
                                                             </span>
-                                                            Results
+                                                            Resultados
                                                         </div>
                                                         </div>
                                                         <div class="col-sm-auto">

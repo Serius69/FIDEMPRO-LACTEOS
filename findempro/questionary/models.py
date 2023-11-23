@@ -9,11 +9,11 @@ from .questionary_data import questionary_data,question_data
 from django.core.exceptions import MultipleObjectsReturned
 class Questionary(models.Model):
     questionary = models.CharField(max_length=255)
-    fk_business = models.ForeignKey(
-        Business, 
+    fk_product = models.ForeignKey(
+        Product, 
         on_delete=models.CASCADE, 
-        related_name='fk_business_questionary', 
-        help_text='The business associated with the questionnaire',
+        related_name='fk_product_questionary', 
+        help_text='The product associated with the questionnaire',
         default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
@@ -21,18 +21,18 @@ class Questionary(models.Model):
 
     def __str__(self):
         return self.questionary
-    @receiver(post_save, sender=Business)
+    @receiver(post_save, sender=Product)
     def create_questionary(sender, instance, created, **kwargs):
         if created:
             for data in questionary_data:  # Assuming products_data is defined somewhere
                 Questionary.objects.create(
-                    questionary=data['questionary'],
-                    fk_business=instance,
+                    questionary=f"{data['questionary']} {instance.name}",
+                    fk_product=instance,
                     is_active=True
                 )
     @receiver(post_save, sender=Product)
     def save_questionary(sender, instance, **kwargs):
-        for questionary in instance.fk_business.fk_business_questionary.all():
+        for questionary in instance.fk_product.fk_product_questionary.all():
             questionary.is_active = instance.is_active
             questionary.save()
 class QuestionaryResult(models.Model):
@@ -62,6 +62,7 @@ class Question(models.Model):
         help_text='The variable associated with the question'
         )
     type = models.IntegerField(default=1, help_text='The type of question')
+    posible_answers = models.JSONField(null=True, blank=True)
     is_active = models.BooleanField(default=True, help_text='The status of the question')
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
     last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
@@ -92,7 +93,9 @@ class Question(models.Model):
             question.save()
 class Answer(models.Model):
     answer = models.TextField()
-    fk_question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='fk_question_answer', help_text='The question associated with the answer')
+    fk_question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, 
+        related_name='fk_question_answer', help_text='The question associated with the answer', default=1)
     fk_questionary_result = models.ForeignKey(
         QuestionaryResult, on_delete=models.CASCADE, related_name='fk_question_result_answer', 
         help_text='The questionary result associated with the answer', default=1)

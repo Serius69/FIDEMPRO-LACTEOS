@@ -1,5 +1,5 @@
 questionary_data = [
-    {'questionary': 'Milk Questionary',
+    {'questionary': 'Cuestionario para registro de informacion de: ',
     },
         ]
 question_data = [
@@ -52,6 +52,7 @@ question_data = [
         'question': '¿Cuál es el nivel de competitividad en el mercado de su empresa?',
         'type': 2,
         'initials_variable': 'NCM',
+        'possible_answers': ['Muy competitivo', 'Medianamente competitivo', 'Poco competitivo'] 
     },
     {
         'question': '¿Cómo se posiciona su empresa en el mercado?',
@@ -60,8 +61,9 @@ question_data = [
     },
     {
         'question': '¿Con qué frecuencia compran los clientes?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'FC',
+        'possible_answers': ['Diaria','Semanal','Quincenal','Mensual']
     },
     {
         'question': '¿Cuál es la tasa de retención de clientes de su empresa?',
@@ -95,8 +97,9 @@ question_data = [
     },
     {
         'question': '¿Cuál es el nivel de automatización del proceso de producción?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'NAPP',
+        'possible_answers': ['Totalmente automatizado','Parcialmente automatizado','Manual']
     },
     {
         'question': '¿Cuál es el nivel de eficiencia del proceso de producción?',
@@ -105,8 +108,9 @@ question_data = [
     },
     {
         'question': '¿La empresa cuenta con certificaciones de calidad?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'CP',
+        'possible_answers': ['ISO 9001', 'HACCP', 'Ninguna', 'Otras (especificar)']
     },
     {
         'question': '¿Cuánto tiempo tarda en producir un producto?',
@@ -175,8 +179,9 @@ question_data = [
     },
     {
         'question': '¿Cada cuánto tiempo se reabastece de insumos?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'TR',
+        'possible_answers': ['Semanalmente','Quincenalmente','Mensualmente','Bimensualmente']
     },
     {
         'question': '¿Cuántos insumos se utilizan para fabricar un producto lácteo?',
@@ -188,4 +193,24 @@ question_data = [
         'type': 1,
         'initials_variable': 'CMIPF',
     },
+    {
+        'question': '¿Cuántos artículos produce en cada lote de producción?',
+        'type': 1,
+        'initials_variable': 'ALEP'
+    },
+    {
+        'question': '¿Cuánto tiempo tarda cada empleado en producir una unidad de producto?', 
+        'type': 1,
+        'initials_variable': 'TE'  
+    },
+    {
+        'question': '¿Cómo calificaría la calidad del producto final en una escala de 1 a 10?',
+        'type': 1,
+        'initials_variable': 'CALPRO'
+    },
+    {
+        'question': '¿Cuál es el costo por unidad de transportar el producto de la fábrica a la tienda?',
+        'type': 1, 
+        'initials_variable': 'CUTRANS'
+    }
 ]
