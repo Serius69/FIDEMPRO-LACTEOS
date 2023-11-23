@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
 from .forms import VariableForm
+from pages.models import Instructions
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.conf import settings
@@ -14,33 +15,32 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
 from sympy import symbols, Eq, solve
 openai.api_key = settings.OPENAI_API_KEY
+from django.db.models import Q
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def variable_list(request):
     # try:
         product_id = request.GET.get('product_id', 'All')
-
         if product_id == 'All':
-            variables = Variable.objects.filter(is_active=True).order_by('-id')
-            products = Product.objects.filter(is_active=True).order_by('-id')
+            variables = Variable.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user).order_by('-id')
+            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
         else:
-            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id).order_by('-id')
-            products = Product.objects.filter(is_active=True).order_by('-id')
-
-        # Paginate the variables
-        paginator = Paginator(variables, 10)  # Show 10 variables per page
+            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id, fk_product__fk_business__fk_user=request.user).order_by('-id')
+            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
+        paginator = Paginator(variables, 10)
         page = request.GET.get('page')
 
         try:
             variables = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
             variables = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
             variables = paginator.page(paginator.num_pages)
 
-        context = {'variables': variables, 'products': products}
+        context = {
+            'variables': variables, 
+            'products': products,
+            'instructions': Instructions.objects.filter(is_active=True).order_by('-id')}
         return render(request, 'variable/variable-list.html', context)
     # except Exception as e:
     #     messages.error(request, f"An error occurred: {str(e)}")
@@ -54,13 +54,33 @@ def variable_overview(request, pk):
             is_active=True, 
             fk_product_id=product_id
             ).order_by('-id')
-        equations = Equation.objects.filter(
-            is_active=True, 
+        variable_initials = Variable.objects.get(id=variable_id).initials
+        
+        equation_conditions = Q(
+            is_active=True,
+            # expression__contains=variable_initials,
+            fk_variable1__fk_product_id=product_id,
             fk_variable1_id=variable_id
-            ).order_by('-id')
+        ) 
+        # | Q(
+        #     expression__contains=variable_initials,
+        #     fk_variable2__fk_product_id=product_id,
+        #     fk_variable2_id=variable_id
+        # ) | Q(
+        #     expression__contains=variable_initials,
+        #     fk_variable3__fk_product_id=product_id,
+        #     fk_variable3_id=variable_id
+        # ) | Q(
+        #     expression__contains=variable_initials,
+        #     fk_variable4__fk_product_id=product_id,
+        #     fk_variable4_id=variable_id
+        # )
 
+        
+        equations = Equation.objects.filter(equation_conditions,).order_by('-id')
+        
         # Paginate the variables
-        paginator = Paginator(variables_related, 3)  # Show 6 variables per page
+        paginator = Paginator(variables_related, 4)  # Show 6 variables per page
         page = request.GET.get('page')
 
         try:
@@ -165,3 +185,27 @@ def solve_equation(request):
         return render(request, 'result_template.html', {'solution': solution})
 
     return render(request, 'input_template.html')
+def generate_variable_questions(request, variable):
+    django_variable = f"{variable.name} = models.{variable.type}Field({variable.get_type_display()}, {variable.get_parameters_display()})"
+    prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
+    response = openai.Completion.create(
+        engine="text-davinci-002",  # Choose the appropriate engine
+        prompt=prompt,
+        max_tokens=100,  # Adjust the max tokens as needed
+        n=1,  # Number of questions to generate
+        stop=None,  # Stop generating questions at a specific token (e.g., "?")
+    )
+    question = [choice['text'].strip() for choice in response.choices]
+    return question
+# THe view to show the questions generate for each variable
+def generate_questions_for_variables(request):
+    variables = Variable.objects.all()
+    generated_questions_list = []
+    for variable in variables:
+        generated_questions = generate_variable_questions(request, variable)
+        generated_questions_list.append((variable, generated_questions))
+    return render(
+        request,
+        "questionary/questionary-list.html", 
+        {"generated_questions_list": generated_questions_list},
+    )

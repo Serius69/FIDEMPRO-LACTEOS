@@ -1,98 +1,149 @@
+import math
 from django.db import models
-from product.models import Product
-from questionary.models import QuestionaryResult
+from product.models import Product, Area
+from variable.models import Variable,EquationResult,Equation
+from questionary.models import QuestionaryResult,Questionary,Answer,Question
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.urls import reverse
-class FDP(models.Model):
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+import random
+from django.shortcuts import render, redirect, get_object_or_404
+from datetime import datetime, timedelta
+class ProbabilisticDensityFunction(models.Model):
     DISTRIBUTION_TYPES = [
         (1, 'Normal'),
         (2, 'Exponential'),
         (3, 'Logarithmic'),
     ]
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, help_text='The name of the distribution', default='Distribution', blank=True, null=True)
     distribution_type = models.IntegerField( 
         choices=DISTRIBUTION_TYPES, 
-        default=1)
-    lambda_param = models.FloatField()
-    is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(auto_now=True)
+        default=1, help_text='The type of the distribution')
+    lambda_param = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0)], help_text='The lambda parameter for the exponential distribution')
+    cumulative_distribution_function = models.FloatField(null=True, blank=True )  # CDF field
+    is_active = models.BooleanField(default=True, help_text='Whether the distribution is active or not')
+    date_created = models.DateTimeField(default=timezone.now, help_text='The date the distribution was created')
+    last_updated = models.DateTimeField(auto_now=True, help_text='The date the distribution was last updated')
     def __str__(self):
         return f"{self.distribution_type()} - {self.name}"
+    @receiver(post_save, sender=Product)
+    def create_probabilistic_density_functions(sender, instance, created, **kwargs):
+        distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic
+        names = ['Normal Distribution', 'Exponential Distribution', 'Logarithmic Distribution']
+
+        for distribution_type, name in zip(distribution_types, names):
+            pdf = ProbabilisticDensityFunction(
+                name=name,
+                distribution_type=distribution_type,
+                lambda_param=None,
+                cumulative_distribution_function=None,
+                is_active=True
+            )
+
+            pdf.save()
+
+        return "Three ProbabilisticDensityFunction objects created successfully."
 class DataPoint(models.Model):
     value = models.FloatField()
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-    def __str__(self):
-        return f'DataPoint: {self.value}'
+    def __str__(self):        return f'DataPoint: {self.value}'
+
+class DemandHistorical(models.Model):
+    unit_time = models.IntegerField()
+    demand = models.IntegerField()
 class Simulation(models.Model):
-    class Meta:
-        verbose_name = "Simulation"
-        ordering = ['-date'] 
-    date = models.DateField()
-    product = models.ForeignKey(
-        Product,
+    unit_time = models.CharField(max_length=100, default='day', help_text='The unit of time for the simulation')
+    fk_fdp = models.ForeignKey(
+        ProbabilisticDensityFunction, 
         on_delete=models.CASCADE,
-        related_name='simulations'  
-    )
-    distributions = models.ManyToManyField(
-        FDP,
-        related_name='simulations'
-    )
-    demand_mean = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(0)]
-    )
-    questionary_result = models.ForeignKey(
+        related_name='fk_fdp_simulation', 
+        default=ProbabilisticDensityFunction.objects.first(), null=True, blank=True,     
+        help_text='The probabilistic density function associated with the simulation')
+    # se guardara un archivo JSON con los 30 datos de la demanda historica
+    demand_history = models.JSONField(null=True, blank=True, help_text='The demand history for the simulation')
+    fk_questionary_result = models.ForeignKey(
         QuestionaryResult,
         on_delete=models.CASCADE,
         related_name='simulations',
-        null=True
+        null=True,
+        help_text='The questionary result associated with the simulation',
     )
-    def get_absolute_url(self):
-        return reverse('simulation_detail', args=[self.id])
-class SimulationScenario(models.Model):
-    utime = models.CharField(max_length=100)
-    date_simulate = models.DateField()
-    fk_fdp = models.ManyToManyField(FDP, related_name='fk_fdp_simulation', default=1)
-    fk_product = models.ForeignKey(
-        Product, 
-        on_delete=models.CASCADE, 
-        related_name='fk_product_simulation', null=True)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-class ScenarioFDP(models.Model):
-    scenario = models.ForeignKey(SimulationScenario, on_delete=models.CASCADE)
-    fdp = models.ForeignKey(
-        FDP, 
-        on_delete=models.CASCADE)
-    weight = models.FloatField()
-    is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(auto_now=True)
-    def __str__(self):
-        return f"{self.scenario} - {self.fdp}"
+    
+    @receiver(post_save, sender=QuestionaryResult)
+    def create_simulation(sender, instance, created, **kwargs):
+        # Get the related Questionary
+        # fk_questionary = instance.fk_questionary
+
+        # Get the Question object based on the question text
+        # question_text = 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).'
+        # fk_question_object = get_object_or_404(Question, question=question_text, fk_questionary=fk_questionary)
+
+        # Get the related Answer
+        # demand = get_object_or_404(Answer, fk_question=fk_question_object, fk_questionary_result=instance)
+        demand =[513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]
+        # Create the Simulation
+        simulation = Simulation(
+            unit_time='day',
+            # fk_fdp_id=1,
+            demand_history=demand,
+            fk_questionary_result=instance,
+            is_active=True
+        )
+        simulation.save()
+    @receiver(post_save, sender=QuestionaryResult)
+    def save_question(sender, instance, **kwargs):
+        for simulate in instance.simulations.all():
+            simulate.is_active = instance.is_active
+            simulate.save()
+
 class ResultSimulation(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    simulation_date = models.DateField()
-    demand_mean = models.DecimalField(max_digits=10, decimal_places=2)
-    demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2)
-    fk_questionary_result = models.ForeignKey(
-        QuestionaryResult, 
+    demand_mean = models.DecimalField(max_digits=10, decimal_places=2,help_text='The mean of the demand')
+    demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2,help_text='The standard deviation of the demand')
+    date = models.JSONField(null=True, blank=True, help_text='The date of the simulation')
+    variables = models.JSONField(null=True, blank=True, help_text='The variables of the simulation')
+    unit = models.JSONField(null=True, blank=True, help_text='The unit of the simulation')
+    unit_time = models.JSONField(null=True, blank=True ,help_text='The unit of time for the simulation')
+    results = models.JSONField(null=True, blank=True, help_text='The results of the simulation')
+    fk_simulation = models.ForeignKey(
+        Simulation, 
         on_delete=models.CASCADE, 
-        null=True, 
-        related_name='fk_questionary_result')
-    fk_simulation_scenario = models.ForeignKey(
-        SimulationScenario, 
-        on_delete=models.CASCADE, 
-        null=True, 
-        related_name='fk_simulation_scenario_result_simulation')
+        default=1, 
+        related_name='fk_simulation_result_simulation',
+        help_text='The simulation associated with the result')
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-    def __str__(self):
-        return f"{self.product} - {self.simulation_date}"
+    @receiver(post_save, sender=Simulation)
+    def create_random_result_simulations(sender, instance, created, **kwargs):
+        fk_simulation = Simulation.objects.get(id=instance.id)
+        for _ in range(30):
+            demand_mean = random.uniform(50, 150)
+            demand_std_deviation = random.uniform(5, 20)
+            date = [str(datetime.now() + timedelta(days=i)) for i in range(10)]
+            variables = {"CPVD": [random.randint(100, 500) for _ in range(10)], "PVP": [random.uniform(1, 2) for _ in range(10)]}
+            unit = {"measurement": "kg", "value": random.randint(1, 10)}
+            unit_time = {"time_unit": "day", "value": random.randint(1, 30)}
+            results = {"result" + str(i): random.randint(20, 60) for i in range(1, 5)}
+
+            result_simulation = ResultSimulation(
+                demand_mean=demand_mean,
+                demand_std_deviation=demand_std_deviation,
+                date=date,
+                variables=variables,
+                unit=unit,
+                unit_time=unit_time,
+                results=results,
+                fk_simulation=fk_simulation,
+                is_active=True
+            )
+            result_simulation.save()
+    
+

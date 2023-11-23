@@ -6,26 +6,16 @@ from variable.models import Variable
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .questionary_data import questionary_data,question_data
-class QuestionaryResult(models.Model):
-    answer = models.TextField()
+from .questionary_result_data import questionary_result_data, answer_data
+from django.core.exceptions import MultipleObjectsReturned
+from django.http import Http404
+class Questionary(models.Model):
+    questionary = models.CharField(max_length=255)
     fk_product = models.ForeignKey(
         Product, 
         on_delete=models.CASCADE, 
-        related_name='fk_questionary_result_product', 
-        help_text='The product associated with the questionnaire result',
-        null=True)
-    is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(default=timezone.now)
-    def __str__(self):
-        return self.answer
-class Questionary(models.Model):
-    questionary = models.CharField(max_length=255)
-    fk_business = models.ForeignKey(
-        Business, 
-        on_delete=models.CASCADE, 
-        related_name='fk_business_questionary', 
-        help_text='The business associated with the questionnaire',
+        related_name='fk_product_questionary', 
+        help_text='The product associated with the questionnaire',
         default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
@@ -33,20 +23,44 @@ class Questionary(models.Model):
 
     def __str__(self):
         return self.questionary
-@receiver(post_save, sender=Business)
-def create_questionary(sender, instance, created, **kwargs):
-    if created:
-        for data in questionary_data:  # Assuming products_data is defined somewhere
-            Questionary.objects.create(
-                questionary=data['questionary'],
-                fk_business=instance,
-                is_active=True
-            )
-@receiver(post_save, sender=Product)
-def save_questionary(sender, instance, **kwargs):
-    for questionary in instance.fk_business.fk_business_questionary.all():
-        questionary.is_active = instance.is_active
-        questionary.save()
+    @receiver(post_save, sender=Product)
+    def create_questionary(sender, instance, created, **kwargs):
+        if created:
+            for data in questionary_data:  # Assuming products_data is defined somewhere
+                Questionary.objects.create(
+                    questionary=f"{data['questionary']} {instance.name}",
+                    fk_product=instance,
+                    is_active=True
+                )
+    @receiver(post_save, sender=Product)
+    def save_questionary(sender, instance, **kwargs):
+        for questionary in instance.fk_product_questionary.all():
+            questionary.is_active = instance.is_active
+            questionary.save()
+class QuestionaryResult(models.Model):
+    fk_questionary = models.ForeignKey(
+        Questionary, 
+        on_delete=models.CASCADE, 
+        related_name='fk_questionary_questionary_result',
+        help_text='The questionnaire associated with the question',
+        default=1
+        )
+    is_active = models.BooleanField(default=True)
+    date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
+    last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
+    @receiver(post_save, sender=Questionary)
+    def create_questionary_result(sender, instance, created, **kwargs):
+        if created:
+            for data in questionary_data:  # Assuming products_data is defined somewhere
+                QuestionaryResult.objects.create(
+                    fk_questionary=instance,
+                    is_active=True
+                )
+    @receiver(post_save, sender=Questionary)
+    def save_questionary_result(sender, instance, **kwargs):
+        for questionary in instance.fk_questionary_questionary_result.all():
+            questionary.is_active = instance.is_active
+            questionary.save()
 class Question(models.Model):
     question = models.TextField()
     fk_questionary = models.ForeignKey(
@@ -61,20 +75,25 @@ class Question(models.Model):
         related_name='fk_variable_question',
         help_text='The variable associated with the question'
         )
-    type = models.IntegerField(default=1)
-    is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(default=timezone.now)
+    type = models.IntegerField(default=1, help_text='The type of question')
+    posible_answers = models.JSONField(null=True, blank=True)
+    is_active = models.BooleanField(default=True, help_text='The status of the question')
+    date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
+    last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
 
     def __str__(self):
         return self.question
     @receiver(post_save, sender=Questionary)
     def create_question(sender, instance, created, **kwargs):
+        questionary = Questionary.objects.get(pk=instance.pk)
         if created:
             for data in question_data:
-                if data['type'] == 1:  # Corrected the variable name
-                    initials_variable = data['initials_variable']
-                    variable = Variable.objects.get(initials=initials_variable)
+                if data['type'] == 1: 
+                    try:
+                        variable = Variable.objects.get(initials=data['initials_variable'])
+                    except MultipleObjectsReturned:
+                        variable = Variable.objects.filter(initials=data['initials_variable']).first()
+                    
                     Question.objects.create(
                         question=data['question'],
                         type=data['type'],
@@ -82,6 +101,53 @@ class Question(models.Model):
                         fk_variable_id=variable.id,
                         is_active=True
                     )
+                else:
+                    try:
+                        variable = Variable.objects.get(initials=data['initials_variable'])
+                    except MultipleObjectsReturned:
+                        variable = Variable.objects.filter(initials=data['initials_variable']).first()
+                    
+                    Question.objects.create(
+                        question=data['question'],
+                        type=data['type'],
+                        fk_questionary_id=instance.id,
+                        posible_answers=data['possible_answers'],
+                        fk_variable_id=variable.id,
+                        is_active=True
+                    )
+            # hay que hacer que tambien se creen las preguntas de tipo 2
+            def create_answer(instance):
+                questionary_result = QuestionaryResult.objects.create(
+                    fk_questionary=instance,
+                    is_active=True
+                )
+                for data in answer_data:
+                    def get_question(question):
+                            try:
+                                if question == None:
+                                    return None
+                                return Question.objects.get(question=question)
+                            except Question.DoesNotExist:
+                                raise Http404(f"question with question '{question}' does not exist.")
+                            except Question.MultipleObjectsReturned:
+                                return Question.objects.filter(question=question).first()
+                        
+                    question = get_question(data['question'])
+                    Answer.objects.create(
+                        answer=data['answer'],
+                        fk_question=question,
+                        fk_questionary_result=questionary_result,
+                            is_active=True
+                        )
+            questions_created = Question.objects.filter(fk_questionary_id=questionary.id).count()
+            total_questions_expected = len(question_data)
+            print(questions_created)
+            print(total_questions_expected)
+            if questions_created == total_questions_expected:
+                print(f"Todas las preguntas se han creado correctamente para el producto {questionary.id}.")
+                create_answer(instance)
+            else:
+                print(f"No se han creado todas las preguntas para el cuestionario {questionary.id}.")
     @receiver(post_save, sender=Questionary)
     def save_question(sender, instance, **kwargs):
         for question in instance.fk_questionary_question.all():
@@ -89,10 +155,42 @@ class Question(models.Model):
             question.save()
 class Answer(models.Model):
     answer = models.TextField()
-    fk_question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='fk_question')
+    fk_question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, 
+        related_name='fk_question_answer', help_text='The question associated with the answer', default=1)
+    fk_questionary_result = models.ForeignKey(
+        QuestionaryResult, on_delete=models.CASCADE, related_name='fk_question_result_answer', 
+        help_text='The questionary result associated with the answer', default=1)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.answer
+    # @receiver(post_save, sender=QuestionaryResult)
+    # def create_answer(sender, instance, created, **kwargs):
+    #     if created:
+    #         for data in answer_data:
+    #             def get_variable(question):
+    #                         try:
+    #                             if question == None:
+    #                                 return None
+    #                             return Question.objects.get(question=question)
+    #                         except Question.DoesNotExist:
+    #                             raise Http404(f"question with question '{question}' does not exist.")
+    #                         except Question.MultipleObjectsReturned:
+    #                             return Question.objects.filter(question=question).first()
+                
+    #             question = get_variable(data['question'])
+    #             Answer.objects.create(
+    #                     answer=data['answer'],
+    #                     fk_question=question,
+    #                     fk_questionary_result=instance,
+    #                     is_active=True
+    #                 )
+                               
+    # @receiver(post_save, sender=QuestionaryResult)
+    def save_answer(instance, **kwargs):
+        for answer in instance.fk_question_answer.all():
+            answer.is_active = instance.is_active
+            answer.save()

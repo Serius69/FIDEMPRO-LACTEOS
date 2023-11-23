@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Report List{% endblock title %}
+{% block title %}Lista de Informes{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -8,35 +8,16 @@
         <div class="page-content">
             <div class="container-fluid">
                 {% block pagetitle %}
-                    {% include "partials/page-title.html" with pagetitle="Reports" title="List" %}
+                    {% include "partials/page-title.html" with pagetitle="Informes" title="Lista" %}
                 {% endblock pagetitle %}
                 <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
                     <div class="px-4">
                         <div class="row">
                             <div class="col-xxl-9 align-self-center">
                                 <div class="py-4">
-                                    <h4 class="display-6 -text">REPORT LIST</h4>
+                                    <h4 class="display-6 -text">Lista de informes</h4>
                                     <div class="container">                      
-                                      <p>Explore our comprehensive product list featuring a diverse range of items sourced from our extensive database. This user-friendly platform empowers you to take control of your product inventory effortlessly. Whether you're a business owner, a stock manager, or just someone passionate about organization, this page is designed with you in mind.</p>
-                                  
-                                      <h2>Key Features:</h2>
-                                  
-                                      <ul>
-                                        <li>
-                                            <span class="text-success">Information of questionary to use for the simulation:</span> 
-                                        
-                                        </li>
-                                  
-                                        <li>
-                                            <span class="text-danger">Historic Demand:</span> 
-                                        
-                                        </li>
-                                  
-                                        <li>
-                                            <span class="text-primary">Unit of time:</span> 
-                                        
-                                        </li>
-                                      </ul>
+                                        <p>Esta es la página de lista de informes. Aquí puedes ver todos los informes registrados en la base de datos.</p>
                                     </div>
                                 </div>
                             </div>
@@ -52,17 +33,21 @@
                     <div class="col-xl-12">
                         <div class="card">
                             <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Reports List</h4>
+                                <h4 class="card-title mb-0 flex-grow-1">Lista de Informes</h4>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="Buscar informe">
+                                    <button class="btn btn-outline-secondary" type="button">Buscar</button>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table align-middle table-nowrap mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th scope="col">Report Name</th>
-                                                <th scope="col">Date</th>
-                                                <th scope="col">Status</th>
-                                                <th scope="col">Actions</th>
+                                                <th scope="col">Nombre del Informe</th>
+                                                <th scope="col">Fecha</th>
+                                                <th scope="col">Estado</th>
+                                                <th scope="col">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -72,15 +57,17 @@
                                                     <td>{{ report.date }}</td>
                                                     <td>{{ report.status }}</td>
                                                     <td>
-                                                        <a href="{% url 'report.detail' report.pk %}" class="btn btn-primary">View</a>
+                                                        <a href="{% url 'report.detail' report.pk %}" class="btn btn-primary">Ver</a>
+                                                        <a href="{% url 'report.edit' report.pk %}" class="btn btn-secondary">Editar</a>
+                                                        <a href="{% url 'report.delete' report.pk %}" class="btn btn-danger">Eliminar</a>
                                                     </td>
                                                 </tr>
                                             {% empty %}
                                                 <tr>
                                                     <td colspan="4" class="text-center py-4">
                                                         <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                        <h5 class="mt-2">Sorry there isn't any report register in the database</h5>
-                                                        <p class="text-muted mb-0">You have to "Add Product".</p>
+                                                        <h5 class="mt-2">Lo sentimos, no hay ningún informe registrado en la base de datos</h5>
+                                                        <p class="text-muted mb-0">Tienes que "Agregar Producto".</p>
                                                     </td>
                                                 </tr>                                                
                                             {% endfor %}
@@ -91,14 +78,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        {% block footer %}
-            {% include "partials/footer.html" %}
-        {% endblock footer %}
-    </div>
-{% endblock content %}
+{% endblock %}
 {% block extra_js %}
-<!-- prismjs plugin -->
-<script src="{% static 'libs/prismjs/prism.js'%}"></script>
 {% endblock extra_js %}

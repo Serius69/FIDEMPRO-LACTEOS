@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-j%^*y0krq5^-#3lggoecxw!d7ad_gqkab3t5w17&0w06+qf8+8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 DEFAULT_APPS = [    
@@ -39,7 +39,6 @@ DEFAULT_APPS = [
     ]
 LOCAL_APPS = [
     "dashboards",
-    "layouts",
     "pages",
     "product",
     "variable",
@@ -60,6 +59,10 @@ THIRDPARTY_APPS = [
     # Google Providers
     'multiselectfield',
     'social_django',
+    'django_extensions',
+    'rest_framework',
+    'drf_yasg',
+    'corsheaders',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS +LOCAL_APPS +THIRDPARTY_APPS
@@ -74,6 +77,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://gifer.com", 
 ]
 
 ROOT_URLCONF = 'findempro.urls'
@@ -230,6 +238,11 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# 
+GRAPH_MODELS = {
+    "path": r"C:\Users\serio\Graphviz\bin\dot.exe"
+}
 
 # Redis
 # CACHES = {

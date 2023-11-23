@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from .models import Business
 from product.models import Product
 from .forms import BusinessForm
+from pages.models import Instructions
 from django.urls import reverse
 from django.http import JsonResponse
 from django.core.files import File
@@ -20,8 +21,7 @@ def business_list(request):
     form = BusinessForm()
     try:
         businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
-        per_page = 10
-        paginator = Paginator(businesses, per_page)
+        paginator = Paginator(businesses, 10)
         page = request.GET.get('page')
         try:
             businesses = paginator.page(page)
@@ -29,7 +29,12 @@ def business_list(request):
             businesses = paginator.page(1)
         except EmptyPage:
             businesses = paginator.page(paginator.num_pages)
-        context = {'businesses': businesses, 'form': form}
+        instructions = Instructions.objects.filter(fk_user=request.user, is_active=True).order_by('id')
+        context = {
+            'businesses': businesses, 
+            'form': form,
+            'instructions': instructions
+            }
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
@@ -38,11 +43,20 @@ def business_list(request):
 def business_overview(request, pk):
     # try:
         business = get_object_or_404(Business, pk=pk)
-        products = Product.objects.filter(fk_business_id=business.id).order_by('-id')
-        return render(request, 'business/business-overview.html', 
-                      {'business': business,
-                       'products': products
-                       })
+        products = Product.objects.filter(fk_business_id=business.id, fk_business__fk_user=request.user).order_by('-id')
+        paginator = Paginator(products, 10)
+        page = request.GET.get('page')
+        try:
+            products = paginator.page(page)
+        except PageNotAnInteger:
+            products = paginator.page(1)
+        except EmptyPage:
+            products = paginator.page(paginator.num_pages)
+        context = {'business': business, 
+                   'products': products,
+                   'instructions': Instructions.objects.filter(is_active=True).order_by('-id')}
+        
+        return render(request, 'business/business-overview.html', context)
     # except Exception as e:
     #     messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
     #     return HttpResponse(status=500) 
@@ -51,7 +65,7 @@ def create_business_view(request):
         form = BusinessForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                business=form.save()  # Ahora sí, guarda el objeto Business en la base de datos
+                business=form.save()
                 messages.success(request, 'Business created successfully')
                 return JsonResponse({'success': True})
             except Exception as e:
@@ -70,12 +84,12 @@ def update_business_view(request, pk):
             if form.is_valid():
                 form.save()
                 messages.success(request, "Business updated successfully!")
-                return redirect("business:business_list")  # Corrected the redirect URL name
+                return redirect("business:business_list")
             else:
                 messages.error(request, "Please check your inputs.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
-    form = BusinessForm(instance=business)  # Provide the form instance if it's a GET request
+    form = BusinessForm(instance=business)
     return render(request, "business/business-update.html", {'form': form, 'business': business})
 def delete_business_view(request, pk):
     try:
@@ -94,9 +108,11 @@ def get_business_details(request, pk):
             business_details = {
                 "name": business.name,
                 "type": business.type,
-                "fk_business": business.fk_business.name,
+                "fk_user": business.fk_user.name,
                 "description": business.description,
             }
             return JsonResponse(business_details)
     except ObjectDoesNotExist:
         return JsonResponse({"error": "El negocio no existe"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

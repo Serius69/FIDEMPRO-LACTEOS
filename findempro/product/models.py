@@ -19,7 +19,11 @@ class Product(models.Model):
         related_name='fk_business_product', 
         help_text='The business associated with the product',
         default=1)
-    type = models.CharField(max_length=50, default='Dairy')
+    TYPE_CHOICES = [
+        (1, 'Product'),
+        (2, 'Service'),
+    ]    
+    type = models.IntegerField(default=1, choices=TYPE_CHOICES)
     profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     earnings = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     inventory_levels = models.PositiveIntegerField(null=True, blank=True)
@@ -43,7 +47,7 @@ class Product(models.Model):
                 Product.objects.create(
                     name=data['name'],                    
                     description=data['description'],
-                    image_src= data['image_src'],
+                    image_src=f"/images/product/{data.get('name')}.jpg",
                     type= data['type'],
                     is_active= True,
                     fk_business_id=business.id,
@@ -53,9 +57,11 @@ class Product(models.Model):
         for product in instance.fk_business_product.all():
             product.is_active = instance.is_active
             product.save()
+
 class Area(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    image_src = models.ImageField(upload_to='images/area', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
@@ -69,6 +75,11 @@ class Area(models.Model):
     params = models.JSONField(null=True, blank=True)  # Use JSONField for a list of values
     def __str__(self) -> str:
         return self.name
+    def get_photo_url(self) -> str:
+        if self.image_src and hasattr(self.image_src, 'url'):
+            return self.image_src.url
+        else:
+            return "/static/images/product/product-dummy-img.webp"
     @receiver(post_save, sender=Product)
     def create_area(sender, instance, created, **kwargs):
         if created:
@@ -78,6 +89,7 @@ class Area(models.Model):
                     name=data['name'],                    
                     description=data['description'],
                     params= data['params'],
+                    image_src=f"/images/area/{data.get('name')}.jpg",
                     is_active= True,
                     fk_product_id=product.id,
                 )

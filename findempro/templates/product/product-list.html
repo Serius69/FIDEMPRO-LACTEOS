@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %} 
 {% load static %} 
-{% block title %}Product List{% endblock title %}
+{% block title %}Lista de productos{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -11,25 +11,21 @@
   <div class="page-content">
     <div class="container-fluid">
       {% block pagetitle %}
-        {% include "partials/page-title.html" with pagetitle="Product" title="Product List" %}
+        {% include "partials/page-title.html" with pagetitle="Producto" title="Lista de productos" %}
       {% endblock pagetitle %}
       <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
         <div class="px-4">
             <div class="row">
                 <div class="col-xxl-9 align-self-center">
                     <div class="py-4">
-                        <h4 class="display-6 -text">PRODUCT LIST</h4>
+                        <h4 class="display-6 -text">LISTA DE PRODUCTOS</h4>
                         <div class="container">                      
-                          <p>Explore our comprehensive product list featuring a diverse range of items sourced from our extensive database. This user-friendly platform empowers you to take control of your product inventory effortlessly. Whether you're a business owner, a stock manager, or just someone passionate about organization, this page is designed with you in mind.</p>
-                      
-                          <h2>Key Features:</h2>
-                      
+                          <p>Explore nuestra lista completa de productos con una amplia gama de artículos procedentes de nuestra extensa base de datos.Esta plataforma fácil de usar le permite tomar el control de su inventario de productos sin esfuerzo.Ya sea que sea propietario de un negocio, gerente de valores o simplemente alguien apasionado por la organización, esta página está diseñada con usted en mente.</p>
+                          <h2>Características clave:</h2>
                           <ul>
-                            <li><span class="text-success">Edit:</span> Easily update product details such as name, description, price, and quantity. Our intuitive interface ensures a seamless editing experience, allowing you to keep your product information up-to-date with just a few clicks.</li>
-                      
-                            <li><span class="text-danger">Delete:</span> Need to remove a product from your inventory? The delete function lets you swiftly and securely eliminate items that are no longer relevant. Say goodbye to unnecessary clutter in your database.</li>
-                      
-                            <li><span class="text-primary">View:</span> Dive deep into each product's details with the view option. Gain insights into specifications, historical data, and more. This feature is perfect for analyzing product performance and making informed decisions.</li>
+                            <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles del producto como nombre, descripción, precio y cantidad.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite mantener actualizado la información de su producto con solo unos pocos clics.</li>
+                            <li><span class="text-danger">Borrar:</span> ¿Necesita eliminar un producto de su inventario?La función Eliminar le permite eliminar de forma rápida y segura los elementos que ya no son relevantes.Diga adiós al desorden innecesario en su base de datos.</li>
+                            <li><span class="text-primary"> Ver: </span> Sumérgete profundamente en los detalles de cada producto con la opción Vista.Obtenga información sobre las especificaciones, datos históricos y más.Esta característica es perfecta para analizar el rendimiento del producto y tomar decisiones informadas.</li>
                           </ul>
                         </div>
                     </div>
@@ -47,7 +43,7 @@
           <div class="card">
             <div class="card-title">
               <div class="d-flex align-items-center">
-                <h6 class="card-title mb-0 flex-grow-1">Filter results</h6>
+                <h6 class="card-title mb-0 flex-grow-1">Filtrar Resultados</h6>
               </div>
             </div>
             <div class="card-body">
@@ -57,7 +53,7 @@
                           <div class="row g-3">
                               <div class="col-md-6">
                                   <select class="form-control" id="business-select" name="business_id">
-                                      <option value="All">Select Business</option>
+                                      <option value="All">Seleccione el negocio </option>
                                       {% for business in businesses %}
                                       <option value="{{ business.id }}" {% if request.GET.type == "{{ business.id }}" %}selected{% endif %}>
                                           {{ business.name }}
@@ -70,20 +66,20 @@
                               <div class="col-md-6">
                                   <select class="form-control" id="category-select">
                                     <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>
-                                      Select Type of product
+                                      Seleccionar tipo de producto
                                     </option>
                                     <option value="Dairy" {% if request.GET.type == "Dairy" %}selected{% endif %}>
-                                      Dairy
+                                      Lácteos
                                     </option>
                                     <option value="Meat" {% if request.GET.type == "Meat" %}selected{% endif %}>
-                                      Meat
+                                      Carne
                                     </option>
                                   </select>
                               </div>
                               <div class="col-lg-12 text-end">
                                 <button type="submit" class="btn btn-danger" id="apply-filters">
                                   <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                                  Filters
+                                  Filtros
                                 </button>
                               </div>
                           </div>
@@ -92,13 +88,13 @@
                   <div class="col-lg-3">
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct">
                       <i class="ri-add-fill me-1 align-bottom"></i>
-                      Create New
+                      Crear nuevo
                     </button>
                   </div>
               </div>
           </div>
-          
             <!--end car body-->
+          
           </div>
             {% for product in products %}
             <div
@@ -112,8 +108,8 @@
                     <div class="d-flex">
                       <div class="flex-grow-1">
                         <p class="text-muted mb-4">
-                          Last updated: {{product.last_updated}}
-                        </p>
+                          Última actualización: {{ product.last_updated|timesince }} atrás
+                         </p>
                       </div>
                       <div class="flex-shrink-0">
                         <div class="d-flex gap-1 align-items-center">
@@ -133,7 +129,7 @@
                                 href="{% url 'product:product.overview' product.id %}"
                               >
                                 <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                View
+                                Vista
                               </a>
                               <a
                                 class="dropdown-item edit-product"
@@ -142,7 +138,7 @@
                                 data-product-id="{{ product.id }}"
                               >
                                 <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                Edit
+                                Editar
                               </a>
                               <div class="dropdown-divider"></div>
                               <a
@@ -152,7 +148,7 @@
                                 data-variable-id="{{ product.id }}"
                               >
                                 <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                Remove
+                                Eliminar
                               </a>
                             </div>
                           </div>
@@ -184,13 +180,11 @@
                     </div>
                     <div class="mt-auto">
                       <div class="d-flex mb-2">
-                        <div class="flex-grow-1">
-                          <div>Number of variables</div>
-                        </div>
                         <div class="flex-shrink-0">
                           <div>
                             <i class="ri-list-check align-bottom me-1 text-muted"></i>
-                            {{ product.variables.count|default:"0" }}
+                            Cantidad de variables: 
+                            {{ product.fk_product_variable.count|default:"0" }}
                           </div>
                         </div>
                       </div>
@@ -211,37 +205,37 @@
                   <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                       <div class="avatar-group">
-                        {% for variable in variables %}
-                        <a
-                          href=""
-                          class="avatar-group-item"
-                          data-bs-toggle="tooltip"
-                          data-bs-trigger="hover"
-                          data-bs-placement="top"
-                          title="{{ business.name }}"
-                        >
-                          <div class="avatar-xxs">
-                            <img
-                              src="{{ MEDIA_URL }}{{ product.image_src.url }}"
-                              alt=""
-                              class="rounded-circle img-fluid"
-                            />
-                          </div>
-                        </a>
-                        {% empty %}
-                        <a
-                          href=""
-                          class="avatar-group-item"
-                          data-bs-toggle="tooltip"
-                          data-bs-trigger="hover"
-                          data-bs-placement="top"
-                          title="No variables"
-                        >
-                          <div class="avatar-xxs">
-                            <img src="." alt="" class="rounded-circle img-fluid" />
-                          </div>
-                        </a>
-                        {% endfor %}
+                        {% for variable in product.fk_product_variable.all|slice:":10" %}
+                                <a
+                                    href=""
+                                    class="avatar-group-item"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-trigger="hover"
+                                    data-bs-placement="top"
+                                    title="{{ variable.name }}"
+                                >
+                                    <div class="avatar-xxs">
+                                        <img
+                                            src="{{ variable.get_image_url }}"
+                                            alt=""
+                                            class="rounded-circle img-fluid"
+                                        />
+                                    </div>
+                                </a>
+                            {% empty %}
+                                <a
+                                    href=""
+                                    class="avatar-group-item"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-trigger="hover"
+                                    data-bs-placement="top"
+                                    title="No variables"
+                                >
+                                    <div class="avatar-xxs">
+                                        <img src="." alt="" class="rounded-circle img-fluid" />
+                                    </div>
+                                </a>
+                            {% endfor %}
                         <div class="avatar-xxs">
                           <button
                             class="btn btn-primary btn-rounded btn-icon btn-xs"
@@ -256,7 +250,9 @@
                     <div class="flex-shrink-0">
                       <div class="text-muted">
                         <i class="ri-calendar-event-fill me-1 align-bottom"></i>
-                        Created Date: {{ product.date_created }}
+                        <span class="text-muted">
+                          Fecha de creación: <span class="font-weight-bold">{{ product.date_created|date:"F d, Y" }}</span>
+                      </span>
                       </div>
                     </div>
                   </div>
@@ -275,10 +271,10 @@
                 style="width: 75px; height: 75px"
               ></lord-icon>
               <h5 class="mt-2">
-                Sorry there isn't any product register in the database
+                Lo siento, no hay ningún registro de productos en la base de datos
               </h5>
               <p class="text-muted mb-0">
-                You have to select a "Product" and select "Information of questionary to use".
+                Debe seleccionar un "producto" y seleccionar "información del cuestionario para usar".
               </p>
             </div>
             {% endfor %} {% comment %} Fin de la lista {% endcomment %}
@@ -286,22 +282,22 @@
             <div class="align-items-center mt-2 row text-center text-sm-start">
               <div class="col-sm">
                 <div class="text-muted">
-                  Showing
+                  Mostrar
                   <span class="fw-semibold">{{ products.number }}</span>
                   of
                   <span class="fw-semibold">
                     {{ products.paginator.num_pages }}
                   </span>
-                  Results
+                  Resultados
                 </div>
               </div>
               <div class="col-sm-auto">
                 <ul
                   class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
                 >
-                  {% if products.has_previous %}
+                  {% if products.has_Anterior %}
                   <li class="page-item">
-                    <a href="?page={{ products.previous_page_number }}" class="page-link">
+                    <a href="?page={{ products.Anterior_page_number }}" class="page-link">
                       ←
                     </a>
                   </li>
@@ -322,35 +318,37 @@
               </div>
             </div>
             <!-- end row -->
-        </div>
-        
+          </div>
+
         <!-- end row -->
-        <div class="col-auto layout-rightside-col">
+        <div class="col-auto layout-rightside-col ">
           <div class="overlay"></div>
           <div class="layout-rightside">
             <div class="card h-100 rounded-0">
               <div class="card-body p-0">
                 <div class="p-3">
                   <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                    Instructions
+                    Instrucciones
                   </h6>
                 </div>
-                <div data-simplebar style="max-height: 410px" class="p-3 pt-0">
-                  <div class="acitivity-timeline acitivity-main">
+                <div data-simplebar style="max-height: 700px" class="p-3 pt-0">
+                  <div class="instruction-timeline instruction-main">
                     {% for instruction in instructions %}
-                    <div class="acitivity-item d-flex">
-                      <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                    <div class="instruction-item d-flex">
+                      <div class="flex-shrink-0 avatar-xs instruction-avatar">
+                        <div
+                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
+                        >
                           <i class="ri-info-line"></i>
                         </div>
                       </div>
                       <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1 lh-base">{{ instruction.title }}</h6>
+                        <h6 class="mb-1 lh-base">{{ instruction.instruction }}</h6>
                         <p class="text-muted mb-1">
-                          {{ instruction.description }}
+                          {{ instruction.content }}
                         </p>
                         <small class="mb-0 text-muted">
-                          {{ instruction.date }}
+                          {{ instruction.date_created }}
                         </small>
                       </div>
                     </div>
@@ -363,10 +361,10 @@
                         style="width: 75px; height: 75px"
                       ></lord-icon>
                       <h5 class="mt-2">
-                        Sorry, there are no instructions in the database
+                        Lo siento, no hay instrucciones en la base de datos
                       </h5>
                       <p class="text-muted mb-0">
-                        Please add instructions to the system.
+                        Agregue instrucciones al sistema.
                       </p>
                     </div>
                     {% endfor %}
@@ -388,681 +386,11 @@
   {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
 </div>
 <!-- end main content-->
-{% endblock content %} {% block extra_content %}
-<!-- removeProductModal -->
-<div id="removeProductModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-          id="close-modal"
-        ></button>
-      </div>
-      <div class="modal-body">
-        <div class="mt-2 text-center">
-          <lord-icon
-            src="https://cdn.lordicon.com/gsqxdxog.json"
-            trigger="loop"
-            colors="primary:#f7b84b,secondary:#f06548"
-            style="width: 100px; height: 100px"
-          ></lord-icon>
-          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-            <h4>Are you Sure ?</h4>
-            <p class="text-muted mx-4 mb-0">
-              Are you Sure You want to Remove this Product ?
-            </p>
-          </div>
-        </div>
-        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-          <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-            Close
-          </button>
-          {% if product.id %}
-          <button
-            type="button"
-            class="btn w-sm btn-danger delete-product-btn"
-            data-href="{% url 'product:product.delete' product.id %}"
-          >
-            Yes, Delete It!
-          </button>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    <!-- /.modal-content -->
-  </div>
-  <!-- /.modal-dialog -->
-</div>
-<!-- /.modal -->
-<!-- Modal -->
-<div
-  class="modal fade"
-  id="addVariable"
-  tabindex="-1"
-  aria-labelledby="exampleModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0">
-      <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
-        {% csrf_token %}
-        <div class="modal-body">
-          <input type="hidden" id="variable-id-field" />
-          <div class="row g-3">
-            <div class="col-lg-12">
-              <div class="px-1 pt-1">
-                <div
-                  class="modal-team-cover position-relative mb-0 mt-n4 mx-n4 rounded-top overflow-hidden"
-                >
-                  <div class="d-flex position-absolute start-0 end-0 top-0 p-3">
-                    <div class="flex-grow-1">
-                      <h5 class="modal-title text-white" id="exampleModalLabel">
-                        Create New Variable
-                      </h5>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <div class="d-flex gap-3 align-items-center">
-                        <div>
-                          <!-- You can allow the user to select an image for the variable -->
-                          <label
-                            for="cover-image-input"
-                            class="mb-0"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Select Image"
-                          >
-                            <div class="avatar-xs">
-                              <div
-                                class="avatar-title bg-light border rounded-circle text-muted cursor-pointer"
-                              >
-                                <i class="ri-image-fill"></i>
-                              </div>
-                            </div>
-                          </label>
-                          <input
-                            class="form-control d-none"
-                            value=""
-                            id="cover-image-input"
-                            type="file"
-                            accept="image/png, image/gif, image/jpeg"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          class="btn-close btn-close-white"
-                          id="close-variableModal"
-                          data-bs-dismiss="modal"
-                          aria-label="Close"
-                        ></button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="text-center mb-4 mt-n5 pt-2">
-                <div class="position-relative d-inline-block">
-                  <div class="position-absolute bottom-0 end-0">
-                    <!-- You can allow the user to select a logo for the variable -->
-                    <label
-                      for="image_src"
-                      class="mb-0"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="right"
-                      title="Select Image"
-                    >
-                      <div class="avatar-xs cursor-pointer">
-                        <div class="avatar-title bg-light border rounded-circle text-muted">
-                          <i class="ri-image-fill"></i>
-                        </div>
-                      </div>
-                    </label>
-                    <input
-                      class="form-control d-none"
-                      value=""
-                      id="image_src"
-                      type="file"
-                      accept="image/png, image/gif, image/jpeg"
-                      name="image_src"
-                    />
-                  </div>
-                  <div class="avatar-lg p-1">
-                    <div class="avatar-title bg-light rounded-circle">
-                      <!-- You can display the variable's logo here -->
-                      <img
-                        src="{% static 'images/variable_logo.webp' %}"
-                        id="variablelogo-img"
-                        class="avatar-md rounded-circle object-fit-cover"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <h5 class="fs-13 mt-3">Variable Logo</h5>
-              </div>
-              <div>
-                <label for="name" class="form-label">Variable Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  class="form-control"
-                  placeholder="Enter variable name"
-                  name="name"
-                  required
-                />
-                <div class="invalid-feedback">
-                  Please enter a variable name.
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6">
-              <div>
-                <label for="fk_product" class="form-label">
-                  Associated Product
-                </label>
-                <select class="form-select" id="fk_product" name="fk_product" required>
-                  {% for product in products %}
-                  <option value="{{product.id}}">{{product.name}}</option>
-                  {% empty %}
-                  <option value=".">...</option>
-                  {% endfor %}
-                </select>
-                <div class="invalid-feedback">
-                  Please select the associated product for the variable.
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6">
-              <div>
-                <label for="type" class="form-label">Variable Type</label>
-                <select class="form-select" id="type" name="type" required>
-                  <option value="1">Endogenous</option>
-                  <option value="2">Exogenous</option>
-                </select>
-                <div class="invalid-feedback">
-                  Please select a variable type.
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div>
-                <label for="unit" class="form-label">Unit</label>
-                <select class="form-select" id="unit" name="unit" required>
-                  <option value="Lt">Lt</option>
-                  <option value="Bs">Bs</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-lg-12">
-              <div>
-                <label for="description" class="form-label">Description</label>
-                <textarea
-                  class="form-control"
-                  id="description"
-                  rows="3"
-                  placeholder="Enter description"
-                  name="description"
-                  required
-                ></textarea>
-                <div class="invalid-feedback">
-                  Please enter a description for the variable.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <div class="hstack gap-2 justify-content-end">
-            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-              Close
-            </button>
-            <button type="submit" class="btn btn-success" id="add-variable-btn">
-              Add Variable
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<
-<!--Add Default products Modal -->
-<div
-  class="modal fade zoomIn"
-  id="addDefaultProduct"
-  tabindex="-1"
-  aria-labelledby="addProductLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addProductLabel">Add Product</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="tab-content">
-          <div class="tab-pane active" id="companyDetails" role="tabpanel">
-            <form id="productForm">
-              {% csrf_token %}
-              <div class="row">
-                <div class="col-lg-12">
-                  <div class="mb-3">
-                    <label class="form-label">
-                      Choose one or more that the next products to add to the business
-                    </label>
-
-                    <table
-                      id="product-table"
-                      class="table align-middle table-nowrap table-striped-columns mb-0"
-                    >
-                      <thead class="table-light">
-                        <tr>
-                          <th scope="col" style="width: 46px">
-                            <div class="form-check">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="cardtableCheck"
-                              />
-                              <label class="form-check-label" for="cardtableCheck"></label>
-                            </div>
-                          </th>
-                          <th scope="col">Image</th>
-                          <th scope="col">Name</th>
-                          <th scope="col">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>
-                            <div class="form-check">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="cardtableCheck01"
-                              />
-                              <label class="form-check-label" for="cardtableCheck01"></label>
-                            </div>
-                          </td>
-                          <td>
-                            <iframe
-                              src="https://giphy.com/embed/3oz8xCX30CNCJZigSc"
-                              width="50"
-                              height="50"
-                              frameborder="0"
-                              class="giphy-embed"
-                              allowfullscreen
-                            ></iframe>
-                          </td>
-                          <td>Normal Milk</td>
-                          <td>
-                            <span class="badge bg-success">
-                              Ready to simulations
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="form-check">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="cardtableCheck02"
-                              />
-                              <label class="form-check-label" for="cardtableCheck02"></label>
-                            </div>
-                          </td>
-                          <td>
-                            <iframe
-                              src="https://giphy.com/embed/3oz8xCX30CNCJZigSc"
-                              width="50"
-                              height="50"
-                              frameborder="0"
-                              class="giphy-embed"
-                              allowfullscreen
-                            ></iframe>
-                          </td>
-                          <td>Regular cheese</td>
-                          <td>
-                            <span class="badge bg-success">
-                              Ready to simulations
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="form-check">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="cardtableCheck03"
-                              />
-                              <label class="form-check-label" for="cardtableCheck03"></label>
-                            </div>
-                          </td>
-                          <td>
-                            <iframe
-                              src="https://giphy.com/embed/3oz8xCX30CNCJZigSc"
-                              width="50"
-                              height="50"
-                              frameborder="0"
-                              class="giphy-embed"
-                              allowfullscreen
-                            ></iframe>
-                          </td>
-                          <td>Regular Yogurt</td>
-                          <td>
-                            <span class="badge bg-danger">
-                              Ready to simulations
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div class="col-lg-12">
-                      <div class="hstack gap-2 justify-content-end">
-                        <button
-                          class="btn btn-link link-success text-decoration-none fw-medium"
-                          data-bs-dismiss="modal"
-                        >
-                          <i class="ri-close-line me-1 align-middle"></i>
-                          Close
-                        </button>
-                        <button id="add-selected-products" class="btn btn-primary">
-                          <i class="ri-save-3-line align-bottom me-1"></i>
-                          Add selected items
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!--end col-->
-              </div>
-              <!--end row-->
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Modal -->
-<div
-  class="modal fade zoomIn"
-  id="addProduct"
-  tabindex="-1"
-  aria-labelledby="addProductLabel"
-  aria-hidden="true" >
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addProductLabel">Add Product</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-content border-0 mt-3">
-        <ul class="nav nav-tabs nav-tabs-custom nav-success p-2 pb-0 bg-light" role="tablist">
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              data-bs-toggle="tab"
-              href="#companyDetails"
-              role="tab"
-              aria-selected="false"
-            >
-              Product Details
-            </a>
-          </li>
-        </ul>
-      </div>
-      <div class="modal-body">
-        <div class="tab-content">
-          <div class="tab-pane active" id="companyDetails" role="tabpanel">
-            <form id="productForm">
-              {% csrf_token %}
-              <div class="row">
-                <div class="col-lg-12">
-                  <div class="mb-3">
-                    <label for="name" class="form-label">Product Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="name"
-                      name="name"
-                      placeholder="Enter the product name"
-                      required
-                    />
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="type" class="form-label">Product Type</label>
-                    <select class="form-control" id="type" name="type" required>
-                      <option value="">Select type</option>
-                      <option value="Dairy">Dairy</option>
-                      <option value="Cheese">Cheese</option>
-                      <option value="Yogur">Yogur</option>
-                    </select>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="fk_business" class="form-label">Business</label>
-                    <select class="form-control" id="fk_business" name="fk_business" required>
-                      <option value="">Select type</option>
-                      {% for business in businesses %}
-                      <option value="{{business.id}}">{{business.name}}</option>
-                      {% empty %}
-                      <option value=".">...</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="image_src" class="form-label">
-                      Product Image
-                    </label>
-                    <input
-                      type="file"
-                      class="form-control"
-                      id="image_src"
-                      accept="image/png, image/jpeg"
-                      name="image_src"
-                    />
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-12">
-                  <div>
-                    <label for="description" class="form-label">
-                      Description
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="description"
-                      name="description"
-                      rows="3"
-                      placeholder="Enter description"
-                      required
-                    ></textarea>
-                    <div class="invalid-feedback">
-                      Please enter a description for the product.
-                    </div>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-12">
-                  <div class="hstack gap-2 justify-content-end">
-                    <button
-                      class="btn btn-link link-success text-decoration-none fw-medium"
-                      data-bs-dismiss="modal"
-                    >
-                      <i class="ri-close-line me-1 align-middle"></i>
-                      Close
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                      <i class="ri-save-3-line align-bottom me-1"></i>
-                      Save
-                    </button>
-                  </div>
-                </div>
-                <!--end col-->
-              </div>
-              <!--end row-->
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<!--end modal-->
-<!-- Modal -->
-<div
-  class="modal fade zoomIn"
-  id="editProductModal"
-  tabindex="-1"
-  aria-labelledby="addProductLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addProductLabel">Edit Product</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-content border-0 mt-3">
-        <ul class="nav nav-tabs nav-tabs-custom nav-success p-2 pb-0 bg-light" role="tablist">
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              data-bs-toggle="tab"
-              href="#companyDetails"
-              role="tab"
-              aria-selected="false"
-            >
-              Product Details
-            </a>
-          </li>
-        </ul>
-      </div>
-      <div class="modal-body">
-        <div class="tab-content">
-          <div class="tab-pane active" id="companyDetails" role="tabpanel">
-            <form id="editproductForm">
-              {% csrf_token %}
-              <div class="row">
-                <div class="col-lg-12">
-                  <div class="mb-3">
-                    <label for="name" class="form-label">Product Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="name"
-                      name="name"
-                      placeholder="Enter the product name"
-                      required
-                    />
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="type" class="form-label">Product Type</label>
-                    <select class="form-control" id="type" name="type" required>
-                      <option value="">Select type</option>
-                      <option value="Dairy">Dairy</option>
-                      <option value="Cheese">Cheese</option>
-                      <option value="Yogur">Yogur</option>
-                    </select>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="fk_business" class="form-label">Business</label>
-                    <select class="form-control" id="fk_business" name="fk_business" required>
-                      <option value="">Select type</option>
-                      {% for business in businesses %}
-                      <option value="{{business.id}}">{{business.name}}</option>
-                      {% empty %}
-                      <option value=".">...</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="image_src" class="form-label">
-                      Product Image
-                    </label>
-                    <input
-                      type="file"
-                      class="form-control"
-                      id="image_src"
-                      accept="image/png, image/jpeg"
-                      name="image_src"
-                    />
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-12">
-                  <div>
-                    <label for="description" class="form-label">
-                      Description
-                    </label>
-                    <textarea
-                      class="form-control"
-                      id="description"
-                      name="description"
-                      rows="3"
-                      placeholder="Enter description"
-                      required
-                    ></textarea>
-                    <div class="invalid-feedback">
-                      Please enter a description for the product.
-                    </div>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-lg-12">
-                  <div class="hstack gap-2 justify-content-end">
-                    <button
-                      class="btn btn-link link-success text-decoration-none fw-medium"
-                      data-bs-dismiss="modal"
-                    >
-                      <i class="ri-close-line me-1 align-middle"></i>
-                      Close
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                      <i class="ri-save-3-line align-bottom me-1"></i>
-                      Save
-                    </button>
-                  </div>
-                </div>
-                <!--end col-->
-              </div>
-              <!--end row-->
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<!--end modal-->
-{% endblock extra_content %} {% block extra_js %}
+{% endblock content %} 
+{% block extra_content %}
+{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+{% endblock extra_content %} 
+{% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-wysiwyg8xwV+eObI8jzkzA64mIaaq65CNCCEAV9EjjAdFhU6bH2t3ovxW/dAiS6jX" crossorigin="anonymous"></script>
 <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
 <script src="{% static 'js/crud.js' %}"></script>

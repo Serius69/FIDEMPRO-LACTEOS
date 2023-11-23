@@ -3,108 +3,108 @@ areas_data =[
     "name": "Realimentacion",
     "description": "Área de realimentación de información para mejora continua",
     "params": {
-      "satisfaccion_cliente": 0.8,
-      "lealtad_cliente": 0.7      
+      "satisfaccion_cliente": 0,  
+      "lealtad_cliente": 0
     }
   },
   {
-    "name": "Inventario Insumos",
+    "name": "Inventario Insumos", 
     "description": "Área de gestión de inventario de insumos",
     "params": {
-      "nivel_inventario": 0.7,
-      "costo_inventario": 35,
-      "tiempo_reorden": 7
+      "nivel_inventario": 0,
+      "costo_inventario": 0,
+      "tiempo_reorden": 0  
     }
   },
   {
     "name": "Producción",
-    "description": "Área de producción de bienes",
+    "description": "Área de producción de bienes", 
     "params": {
-      "automatizacion": 0.6,
-      "eficiencia": 0.75,
-      "capacidad_produccion": 5000,
-      "flexibilidad": 0.4
+      "automatizacion": 0,
+      "eficiencia": 0,
+      "capacidad_produccion": 0,
+      "flexibilidad": 0
     }
   },
   {
     "name": "Inspección",
     "description": "Área de inspección y control de calidad",
     "params": {
-      "tasa_defectos": 0.02,
-      "costo_inspeccion": 2      
+      "tasa_defectos": 0,
+      "costo_inspeccion": 0  
     }
   },
   {
     "name": "Inventario Productos Finales",
     "description": "Área de gestión de inventario de productos finales",
     "params": {
-      "capacidad_inventario": 10000,
-      "nivel_inventario": 0.8,
-      "costo_inventario": 15      
+      "capacidad_inventario": 0,
+      "nivel_inventario": 0,  
+      "costo_inventario": 0
     }
   },
-  {  
-    "name": "Distribución",
+  {
+    "name": "Distribución", 
     "description": "Área de distribución y logística",
     "params": {
-      "costo_transporte": 3,
-      "tiempo_entrega": 2      
+      "costo_transporte": 0,
+      "tiempo_entrega": 0
     }
   },
   {
     "name": "Marketing",
     "description": "Área de marketing y ventas",
     "params": {
-      "gasto_marketing": 5000,
-      "conversion_ventas": 0.05      
+      "gasto_marketing": 0, 
+      "conversion_ventas": 0  
     }
   },
   {
     "name": "Ventas",
-    "description": "Área de ejecución de ventas",
+    "description": "Área de ejecución de ventas", 
     "params": {
-      "ventas_mensuales": 10000,
-      "precio_venta": 15      
+      "ventas_mensuales": 0,
+      "precio_venta": 0
     }
   },
   {
     "name": "Competencia",
     "description": "Área de análisis de competencia",
     "params": {
-      "participacion_mercado": 0.4,
-      "precio_competencia": 12      
+      "participacion_mercado": 0,   
+      "precio_competencia": 0
     }
   },
   {
     "name": "Contabilidad",
-    "description": "Área de contabilidad y finanzas",
+    "description": "Área de contabilidad y finanzas", 
     "params": {
-      "costos_fijos": 10000,
-      "costos_variables": 5000      
+      "costos_fijos": 0,
+      "costos_variables": 0   
     }
   },
   {
     "name": "Recursos Humanos",
     "description": "Área de gestión de recursos humanos",
     "params": {
-      "cantidad_empleados": 50,
-      "salario_promedio": 500   
+      "cantidad_empleados": 0,
+      "salario_promedio": 0
     }
   },
   {
     "name": "Abastecimiento",
-    "description": "Área de abastecimiento de materia prima e insumos",
+    "description": "Área de abastecimiento de materia prima e insumos", 
     "params": {
-      "proveedores_leche": 10,
-      "costo_litros_leche": 2
+      "proveedores_leche": 0,  
+      "costo_litros_leche": 0
     }
-  },
+  }, 
   {
-    "name": "Mantenimiento",
+    "name": "Mantenimiento", 
     "description": "Área de mantenimiento de equipos y planta",
     "params": {
-      "costo_mantenimiento": 1000,
-      "horas_mantenimiento": 80
+      "costo_mantenimiento": 0,
+      "horas_mantenimiento": 0  
     }
   }
 ]

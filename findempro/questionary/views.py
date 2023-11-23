@@ -1,7 +1,8 @@
 from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from variable.models import Variable
-from questionary.models import Questionary,Question
+from product.models import Product
+from questionary.models import Questionary,Question,Answer,QuestionaryResult
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.conf import settings
@@ -10,133 +11,166 @@ from django.contrib import messages
 from django.http import HttpResponse,Http404
 from django.utils import timezone
 from django.http import HttpResponseForbidden
-import openai
 import logging
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-openai.api_key = settings.OPENAI_API_KEY
+from django.urls import reverse
+from django.shortcuts import render, redirect
+from .models import Answer
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 def questionnaire_list_view(request):
-    """
-    View function for displaying the questionnaire list.
-    """
-    if not request.session.get('started', False):
-        # Show start button
-        if request.method == 'POST' and 'start' in request.POST:
-            request.session['started'] = True
-            return redirect('first_question')
-        else:
-            return render(request, 'questionary/questionary-list.html')
-    else:
-        try:
-            questions = Question.objects.order_by('-created_at')
-            paginator = Paginator(questions, settings.QUESTIONS_PER_PAGE)
+    started = request.session.get('started', False)
+    selected_questionary_id = None
+    questionary_result_id = None
+    questions = None
+    questionnaires = None
+    paginator = None
+    if request.method == 'GET' and 'select' in request.GET:
+        selected_questionary_id = request.GET.get('selected_questionary_id', 0)
+        print("Se selecciono un cuestionario " + str(selected_questionary_id))
+        # Set the session variable
+        request.session['selected_questionary_id'] = selected_questionary_id
+        print("Se seteo la variable selected_questionary_id " + str(selected_questionary_id))
+        questions = Question.objects.order_by('id').filter(
+            is_active=True, 
+            fk_questionary__fk_product__fk_business__fk_user=request.user, 
+            fk_questionary_id=selected_questionary_id)
+        questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
+        context = {
+            'selected_questionary_id': selected_questionary_id,
+            'questionary_result_id': questionary_result_id,
+            'started': started,
+            'questions': questions,
+            'questionnaires': questionnaires,
+        }
+        return render(request,'questionary/questionary-list.html',context)
+    
+    if request.method == 'POST' and 'start' in request.POST:
+        request.session['started'] = True
+        selected_questionary_id = request.session.get('selected_questionary_id')
+        print("Se comenzará con el cuestionario" +str(selected_questionary_id))
+        questionary_selected = Questionary.objects.get(pk=selected_questionary_id)
+        questionary_result = QuestionaryResult.objects.create(
+            fk_questionary=questionary_selected
+        )
+        questionary_result_id = questionary_result.id      
+        request.session['questionary_result_id'] = questionary_result_id
+        print("Se seteo la variable questionary_result_id " + str(questionary_result_id))
+        return redirect(reverse('questionary:questionary.list'))
+    
+    if request.method == 'POST' and 'cancel' in request.POST:
+        request.session['started'] = False
+        print("Se cancelo el cuestionario")        
+        return redirect('questionary:questionary.list')
+       
+    if not started:
+        if selected_questionary_id == None: 
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)   
+            questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
+            paginator = Paginator(questions, 10) 
             page = request.GET.get('page')
-            questions = paginator.get_page(page)
+            try:
+                questions = paginator.page(page)
+            except PageNotAnInteger:
+                questions = paginator.page(1)
+            except EmptyPage:
+                questions = paginator.page(paginator.num_pages)
+        else:
+            questions = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
+            paginator = Paginator(questions, 10) 
+            page = request.GET.get('page')
+            try:
+                questions = paginator.page(page)
+            except PageNotAnInteger:
+                questions = paginator.page(1)
+            except EmptyPage:
+                questions = paginator.page(paginator.num_pages)
+        
+        context = {
+            'selected_questionary_id':selected_questionary_id,
+            'started': started,
+            'questions': questions,
+            'questionnaires': questionnaires,
+        }
+        return render(request,'questionary/questionary-list.html',context)
+    else:
+        questionary_result_id = request.session.get('questionary_result_id')
+        print("Se guardaran las respuestas en el questionary_result: " + str(questionary_result_id))
+        selected_questionary_id = request.session.get('selected_questionary_id')
+        print("Se comenzó el cuestionario seleccionado" + str(selected_questionary_id))
+        show_questionary = Questionary.objects.get(pk=selected_questionary_id)
+        if selected_questionary_id == None: 
+            questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user) 
+        else:
+            questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
+        paginator = Paginator(questions_to_answer, 5) 
+        page = request.GET.get('page')
+        
+        try:
+            questions_to_answer = paginator.page(page)
+        except PageNotAnInteger:
+            questions_to_answer = paginator.page(1)
+        except EmptyPage:
+            questions_to_answer = paginator.page(paginator.num_pages)
 
-            context = {
-                'started': request.session.get('started', False),
-                'questions': questions
-            }
-        except Exception as e:
-            context = {'error': str(e)}
-
+        context = {
+            'selected_questionary_id':selected_questionary_id,
+            'started': started,
+            'questions_to_answer': questions_to_answer,
+            'questionnaires': questionnaires,
+            'show_questionary': show_questionary
+        }   
         return render(request, 'questionary/questionary-list.html', context)
+                                
 
-# def questionnaire_list_view(request):
-#     try:
-#         if request.method == 'POST' and 'start' in request.POST:
-#             # Redirigir a primera pregunta
-#             return redirect('first_question') 
-#         elif not request.session.get('started', False):
-#             # Mostrar botón de comenzar
-#             request.session['started'] = True
-#             return render(request, 'questions.html')
-#         else:
-#             # Mostrar preguntas
-#             questions = Question.objects.order_by('-id')
-#             per_page = 10 
-#             paginator = Paginator(questions, per_page)
-#             page = request.GET.get('page')
-#             try:
-#                 questions = paginator.page(page)
-#             except PageNotAnInteger:
-#                 questions = paginator.page(1)
-#             except EmptyPage:
-#                 questions = paginator.page(paginator.num_pages)
-#             questionnaires = Questionary.objects.order_by('-id')
-#             context = {'questions': questions, 'questionnaires': questionnaires}
-#     except Exception as e:
-#         error_message = str(e)
-#         context = {'error_message': error_message}
-#     return render(request, 'questionary/questionary-list.html', context)
-
-
-def show_question(request, pk):
-  try:
-    question = Question.objects.get(pk=pk)
-  except Question.DoesNotExist:
-    raise Http404("Pregunta no encontrada")
-  context = {
-    'question': question
-  }
-
-  if request.method == 'POST':
-    # Aquí puedes guardar la respuesta
-    # Y luego redirigir a la siguiente pregunta
-     return render(request, 'question.html', context)
 
 def questionnaire_save_view(request):
-    try:
-        questions = Question.objects.order_by('-id')
-        per_page = 10 
-        paginator = Paginator(questions, per_page)
+    if request.method == 'POST':
+        questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
+        for question in questions_to_answer:
+            answer_text = request.POST.get('answer_' + str(question.id))
+            answer = Answer(answer=answer_text, fk_question=question)
+            answer.save()
+        return redirect('questionary:questionary.result')
+    else:
+        questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
+        context = {
+            'questions_to_answer': questions_to_answer
+        }
+        return render(request, 'questionary/questionnaire_form.html', context)
+               # Add your code here to render the form
+        pass
+def questionnaire_result_view(request, pk):
+    # try:
+        questionary_result = get_object_or_404(QuestionaryResult, pk=pk)
+        print(questionary_result)
+        answers = Answer.objects.filter(
+            fk_questionary_result=questionary_result, 
+            # fk_questionary_result__fk_questionary__fk__product__fk_business__fk_user=request.user).order_by('-id'
+            )
+        # questions = Question.objects.filter(
+        #     fk_questionary__fk_questionary_result_id=questionary_result.id, 
+        #     # fk_questionary__fk_product__fk_business__fk_user=request.user
+        #     ).order_by('-id')
+        paginator = Paginator(answers, 100)
         page = request.GET.get('page')
         try:
-            questions = paginator.page(page)
+            answers = paginator.page(page)
         except PageNotAnInteger:
-            questions = paginator.page(1)
+            answers = paginator.page(1)
         except EmptyPage:
-            questions = paginator.page(paginator.num_pages)
-        questionnaires = Questionary.objects.order_by('-id')
-        context = {'questions': questions, 'questionnaires': questionnaires}
-    except Exception as e:
-        error_message = str(e)
-        context = {'error_message': error_message}
-    return render(request, 'questionary/questionary-result.html', context)
-def generate_variable_questions(request, variable):
-    django_variable = f"{variable.name} = models.{variable.type}Field({variable.get_type_display()}, {variable.get_parameters_display()})"
-    prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
-    response = openai.Completion.create(
-        engine="text-davinci-002",  # Choose the appropriate engine
-        prompt=prompt,
-        max_tokens=100,  # Adjust the max tokens as needed
-        n=1,  # Number of questions to generate
-        stop=None,  # Stop generating questions at a specific token (e.g., "?")
-    )
-    question = [choice['text'].strip() for choice in response.choices]
-    return question
-# THe view to show the questions generate for each variable
-# def generate_questions_for_variables(request):
-#     # Retrieve all Variable objects from the database
-#     variables = Variable.objects.all()
-
-#     # Initialize an empty list to store generated questions for each variable
-#     generated_questions_list = []
-
-#     # Generate questions for each variable
-#     for variable in variables:
-#         generated_questions = generate_variable_questions(request, variable)
-#         generated_questions_list.append((variable, generated_questions))
-
-#     # Render a template with the generated questions
-#     return render(
-#         request,
-#         "questionary/questionary-list.html", 
-#         {"generated_questions_list": generated_questions_list},
-#     )
-
-
-
-
+            answers = paginator.page(paginator.num_pages)
+        context = {'questionary_result': questionary_result, 
+                   'answers': answers,
+                #    'questions': questions,
+                #    'instructions': Instructions.objects.filter(is_active=True).order_by('-id')
+                   }
+        
+        return render(request, 'questionary/questionary-result.html', context)
+    # except Exception as e:
+    #     messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
+    #     return HttpResponse(status=500) 

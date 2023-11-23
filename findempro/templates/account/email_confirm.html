@@ -16,7 +16,7 @@
 
                                         {% user_display confirmation.email_address.user as user_display %}
 
-                                        <p>{% blocktrans with confirmation.email_address.email as email %}Please confirm that <a href="mailto:{{ email }}">{{ email }}</a> is an e-mail address for user {{ user_display }}.{% endblocktrans %}</p>
+                                        <p>{% blocktrans with confirmation.email_address.email as email %}Por favor confirme eso<a href="mailto:{{ email }}">{{ email }}</a> Es una dirección de correo electrónico para el usuario. {{ user_display }}.{% endblocktrans %}</p>
 
                                         <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
                                         {% csrf_token %}
@@ -27,12 +27,12 @@
 
                                         {% url 'account_email' as email_url %}
 
-                                        <p>{% blocktrans %}This e-mail confirmation link expired or is invalid. Please <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.{% endblocktrans %}</p>
+                                        <p>{% blocktrans %}Este enlace de confirmación por correo electrónico expiró o no es válido. Por favor <a href="{{ email_url }}">emitir una nueva solicitud de confirmación por correo electrónico</a>.{% endblocktrans %}</p>
 
                                     {% endif %}
                                 </div>
                                 <div class="mt-4 text-center">
-                                    <p class="mb-0">Back to home ? <a href="{% url 'dashboard:index' %}" class="fw-semibold text-primary text-decoration-underline"> Dashboard </a> </p>
+                                    <p class="mb-0">Volver al Inicio ? <a href="{% url 'dashboard:index' %}" class="fw-semibold text-primary text-decoration-underline"> Panel </a> </p>
                                 </div>
                             </div>
 {% endblock content %}
