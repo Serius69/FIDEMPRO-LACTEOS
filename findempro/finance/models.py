@@ -15,7 +15,7 @@ class FinanceRecommendation(models.Model):
         Business, 
         on_delete=models.CASCADE, 
         related_name='fk_business_finance_recommendation', 
-        help_text='The business associated with the product',
+        help_text='The business associated with the finance recomendation',
         default=1)
     is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the finance is active or not')
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the finance was created')
