@@ -205,14 +205,20 @@
                                                                     <button type="submit" name="save" formaction="?page={{ questions_to_answer.next_page_number }}" class="btn btn-dark">Siguiente Pagina</button>
                                                                 {% else %}
                                                                 <li class="page-item">
-                                                                    <form method="GET" action="{% url 'questionary:questionary.result' %}">
+                                                                    {% comment %} <form method="GET" action="{% url 'questionary:questionary.result' questionary_result_id %}"> {% endcomment %}
                                                                         {% csrf_token %}
                                                                         <div class="alert alert-info" role="alert">
                                                                             ¡Es la última página de preguntas!
                                                                         </div>
-                                                                        <button type="submit" name="next" class="btn btn-primary">Mostrar Resultados</button>
+                                                                        {% if request.session.questionary_result_id %}
+                                                                            <a href="{% url 'questionary:questionary.result' request.session.questionary_result_id %}" class="btn btn-primary">Mostrar Resultados</a>
+                                                                        {% else %}
+                                                                            <!-- Handle the case where questionary_result_id is empty -->
+                                                                            <p>No questionary result ID available.</p>
+                                                                        {% endif %}                                                                        {% comment %} esto mostrara el ultimo questionary result {% endcomment %}
+                                                                        {% comment %} <button type="submit" name="next" class="btn btn-primary">Mostrar Resultados</button> {% endcomment %}
                                                                         {% comment %} esto mostrara el ultimo questionary result {% endcomment %}
-                                                                    </form>
+                                                                    {% comment %} </form> {% endcomment %}
                                                                 </li>
                                                                 {% endif %}                                                                
                                                             {% endif %}

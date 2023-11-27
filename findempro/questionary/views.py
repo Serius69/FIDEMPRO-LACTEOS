@@ -60,6 +60,7 @@ def questionnaire_list_view(request):
 
     if request.method == 'POST' and 'save' in request.POST:
         selected_questionary_id = request.session.get('selected_questionary_id')
+        questionary_result_id = request.session.get('questionary_result_id')
         # post_data = {k: v for k, v in request.POST.items() if not k.startswith('csrf')}
         for key, value in request.POST.items():
             # aqui esta mostranto solo quietion id en texto tiene que mostrar el numero de la pregunta no esto
@@ -74,12 +75,10 @@ def questionnaire_list_view(request):
                 answer_instance = Answer.objects.create(
                     fk_question=question_instance,
                     answer=answer,
-                    fk_questionary_result_id=selected_questionary_id
+                    fk_questionary_result_id=questionary_result_id
                 )
                 answer_instance.save()
-                # Check if 'page' parameter is present in the request
-
-        questionary_result_id = request.session.get('questionary_result_id')
+                # Check if 'page' parameter is present in the reques
         print("Se guardaran las respuestas en el questionary_result: " + str(questionary_result_id))
         selected_questionary_id = request.session.get('selected_questionary_id')
         print("Se comenzó el cuestionario seleccionado" + str(selected_questionary_id))
@@ -102,7 +101,7 @@ def questionnaire_list_view(request):
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
             next_page = paginator.page(paginator.num_pages)
-
+        request.session['questionary_result_id'] = questionary_result_id
         return redirect(reverse('questionary:questionary.list') + f'?page={next_page.number}')
         # return redirect(reverse('questionary:questionary.list'))
     
