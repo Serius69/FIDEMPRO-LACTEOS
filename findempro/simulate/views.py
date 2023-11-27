@@ -21,97 +21,50 @@ from django.http import JsonResponse
 from scipy.stats import kstest
 import numpy as np
 from .utils import get_results_for_simulation, analyze_simulation_results, decision_support
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
-
-def simulate_init_view(request):
+def simulate_show_view(request):
+    started = request.session.get('started', False)
     form = SimulationForm(request.POST or None, request.FILES or None)
     questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
     simulation_instance = None    
     selected_questionary_result_id = None
-    started = request.session.get('started', False)
-    selected = request.session.get('started', False)
+    areas = None
     
     if request.method == 'GET' and 'select' in request.GET:
-        request.session['selected'] = True 
         selected_questionary_result_id = request.GET.get('selected_questionary_result', 0)
-        questionary_result = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
         request.session['selected_questionary_result_id'] = selected_questionary_result_id
-        print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
         areas = Area.objects.order_by('id').filter(
             is_active=True, 
             fk_product__fk_business__fk_user=request.user,
         )
         answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
-        questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
-        questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
-        
         equations_to_use = Equation.objects.order_by('id').filter(
             is_active=True, 
             fk_area__fk_product__fk_business__fk_user=request.user,
             # fk_variable1=questionary_result,
             )
-        
-        # aqui se tomaran las expressiones de las equaciones y se les asignaran los valores de las respuestas
-        equations_with_values = []
-        
-        for equation in equations_to_use:
-            answers = Answer.objects.filter(is_active=True).order_by('id').filter(
-                Q(fk_question__fk_variable=equation.fk_variable2) | 
-                Q(fk_question__fk_variable=equation.fk_variable3) | 
-                Q(fk_question__fk_variable=equation.fk_variable4), 
-                fk_questionary_result_id=selected_questionary_result_id)
-
-            questions = Question.objects.filter(is_active=True).order_by('id').filter(
-                Q(fk_variable=equation.fk_variable2) | 
-                Q(fk_variable=equation.fk_variable3) | 
-                Q(fk_variable=equation.fk_variable4), 
-                fk_questionary_id=int(selected_questionary_result_id))
-
-            try:
-                answer = answers.filter(fk_question__fk_variable=equation.fk_variable2).first()
-                if answer is not None:
-                    equation.expression = equation.expression.replace('var2', str(answer.answer))
-                else:
-                    equation.expression = equation.expression.replace('var2', '0')  # Use a default value or handle as needed
-            except Answer.DoesNotExist:
-                equation.expression = equation.expression.replace('var2', '0')  # Use a default value or handle as needed
-
-            try:
-                answer = answers.filter(fk_question__fk_variable=equation.fk_variable3).first()
-                if answer is not None:
-                    equation.expression = equation.expression.replace('var3', str(answer.answer))
-                else:
-                    equation.expression = equation.expression.replace('var3', '0')  # Use a default value or handle as needed
-            except Answer.DoesNotExist:
-                equation.expression = equation.expression.replace('var3', '0')  # Use a default value or handle as needed
-                
-            equations_with_values.append(equation.expression)
-        
+        questionary_result_instance= get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
+        print("Se selecciono un cuestionario " + str(selected_questionary_result_id))
+        print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
+        print("Started: " + str(started))
         context = {
             'areas': areas,
             'answers': answers,
-            'questionnaires': questionnaires,
-            'started': started,
-            'selected': selected,
             'equations_to_use': equations_to_use,
             'questionnaires_result': questionnaires_result,
-            'equations_with_values': equations_with_values
+            'questionary_result_instance': questionary_result_instance,
         }
         return render(request, 'simulate/simulate-init.html', context)
-    if request.method == 'POST' and 'cancel' in request.POST:
-        request.session['selected'] = False 
-        selected_questionary_result_id = request.POST.get(None)
-        print("Se cancelo el cuestionario")
-        return redirect('simulate:simulate.init')
-
     if request.method == "POST" and form.is_valid() and 'start' in request.POST:
         request.session['started'] = True 
+        
         simulation_instance = form.save(commit=False)
         answers = Answer.objects.order_by('id').filter(fk_questionary_result_id=simulation_instance.fk_questionary_result_id)
         areas = Area.objects.order_by('id').filter(fk_product_id=simulation_instance.fk_product_id)
-        
+               
         # primero buscar la demanda historica guardada en el resultado del cuestionario
         demand_historic = get_object_or_404(
             Answer, 
@@ -137,27 +90,65 @@ def simulate_init_view(request):
         new_simulation.save()        
         #cuarto hacer la simulacion
         print("se creo la simulacion")
+        print("se comenzara con la simulacion")
+        print("Started: " + str(started))
         context = {
+            'areas': areas,
             'simulation_instance': simulation_instance,
             'data_demand_historic': demand_historic,
-            'started': started,
-            'selected': selected,
+            'started': started,            
             'questionnaires_result': questionnaires_result,
+            'questionary_result_instance': questionary_result_instance,
         }
-        return redirect('simulate:simulate.init')  # Redirect to the next step in the simulation
-
-    if form.errors:
-        messages.error(request, "Form validation failed. Please check your inputs.")
-
-    print("salida normal")
-    context = {
-        'simulation_instance': simulation_instance,
-        'started': started,
-        'selected': selected,
-        'questionnaires_result': questionnaires_result,
-        'form': form,
-    }
-    return render(request, 'simulate/simulate-init.html', context)
+        return redirect('simulate:simulate.show')  # Redirect to the next step in the simulation
+    if request.method == 'POST' and 'cancel' in request.POST:
+        request.session['selected'] = False 
+        print("Se cancelo el cuestionario")
+        return redirect('simulate:simulate.show')
+    
+    if not started:
+        if selected_questionary_result_id == None:
+            questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
+        else:
+            equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
+            questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
+            questionary_instance = get_object_or_404(Questionary, pk=selected_questionary_result_id)
+            product_instance = get_object_or_404(Product, pk=questionary_instance.fk_product_id)
+            questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
+            areas = Area.objects.order_by('id').filter(
+                is_active=True, 
+                fk_product__fk_business__fk_user=request.user,
+            )
+            paginator = Paginator(equations_to_use, 10) 
+            page = request.GET.get('page')
+            try:
+                equations_to_use = paginator.page(page)
+            except PageNotAnInteger:
+                equations_to_use = paginator.page(1)
+            except EmptyPage:
+                equations_to_use = paginator.page(paginator.num_pages)
+        print("no se inicio la simulacion")
+        print("Started: " + str(started))
+        context = {
+            'selected_questionary_result_id':selected_questionary_result_id,
+            'started': started,
+            'form': form,
+            'areas': areas,
+            'questionnaires_result': questionnaires_result,
+            'questionary_result_instance': questionary_result_instance,
+        }
+        return render(request, 'simulate/simulate-init.html', context)
+    else:
+        
+        print("se inicio la simulacion")
+        print("Started: " + str(started))
+        context = {
+            'simulation_instance': simulation_instance,
+            'started': started,
+            'questionnaires_result': questionnaires_result,
+            'questionary_result_instance': questionary_result_instance,
+        }
+        return render(request, 'simulate/simulate-init.html', context)
     
 class ProbabilisticDensityFunctionmanager:
     @classmethod

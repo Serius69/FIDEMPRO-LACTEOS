@@ -57,133 +57,203 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="row">
-                                    <div class="col-xxl-4">
+                                    <div class="col-xxl-12">
                                         <div class="card">
                                             <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Simulación de parámetros</h4>
+                                                <h4 class="card-title mb-0 flex-grow-1">Parametros para la simulacion</h4>
                                             </div><!-- end card header -->                                        
                                             <div class="card-body">
-                                                <p class="text-muted">Realice una simulación con los siguientes parámetros</p>
+                                                <p class="text-muted">Realizar una simulación con los siguientes parámetros</p>
                                                 <div class="live-preview">
-                                                    Selected: {{selected}}
-                                                    Started: {{simulation_started}}
                                                         <div class="row">
-                                                            <div class="col-md-12">
-                                                                {% if not selected %}
-                                                                    <form method="GET" action="{% url 'simulate:simulate.init' %}" onsubmit=validateForm3()>
-                                                                        {% csrf_token %}
-                                                                        <div class="mb-4">
-                                                                            <label for="selected_questionary_result" class="form-label" title="Select the information to use in the simulation">
-                                                                                <span data-key="t-timeunit"> Información del cuestionario para usar para la simulación</span>
-                                                                            </label>
-                                                                            <select id="selected_questionary_result" name="selected_questionary_result" class="form-select" data-choices data-choices-sorting="true">
-                                                                                <option selected>Elegir...</option>
-                                                                                {% for questionary_result in questionnaires_result %}
-                                                                                    <option value="{{ questionary_result.id }}">Resultado de cuestionario: {{ questionary_result.id }}</option>
-                                                                                {% empty %}
-                                                                                    <option>...</option>
-                                                                                {% endfor %}
-                                                                            </select>
-                                                                            <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
-                                                                        </div>
-                                                                    </form>
-                                                                {% else %}
-                                                                    <form method="POST" action="{% url 'simulate:simulate.init' %}">
-                                                                        {% csrf_token %}
-                                                                        <div class="mb-3">
-                                                                            <span data-key="t-result"> Resultados que se eligió: {{ selected_questionary_result }} </span>
-                                                                        </div>
-                                                                        <div class="mb-3">
-                                                                            <button type="submit" name="cancel" class="btn btn-danger">Cancelar selección</button>
-                                                                        </div>
-                                                                    </form>
+                                                            <div class="col-md-6">
+                                                                {% if not started %}
+                                                                        <form method="GET" action="{% url 'simulate:simulate.show' %}" onsubmit=validateForm3()>
+                                                                            {% csrf_token %}
+                                                                            <div class="mb-4">
+                                                                                <label for="selected_questionary_result" class="form-label" title="Select the information to use in the simulation">
+                                                                                    <span data-key="t-timeunit"> Información del cuestionario para usar para la simulación</span>
+                                                                                </label>
+                                                                                <select id="selected_questionary_result" name="selected_questionary_result" class="form-select" data-choices data-choices-sorting="true">
+                                                                                    <option selected>Elegir...</option>
+                                                                                    {% for questionary_result in questionnaires_result %}
+                                                                                    <option for="selected_questionary_result_id" value="{{ questionary_result.id }}" 
+                                                                                    {% if questionary_result.id == selected_questionary_result_id %} selected {% endif %}>
+                                                                                        {{ questionary_result.id }} {{questionary_result.date_created}}
+                                                                                    </option>
+                                                                                    {% empty %}
+                                                                                        <option>...</option>
+                                                                                    {% endfor %}    
+                                                                                </select>
+                                                                                {% if not started %}
+                                                                                    <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
+                                                                                {% else %}                                          
+                                                                                {% endif %}
+                                                                            </div>
+                                                                        </form>
                                                                 {% endif %}
                                                             </div><!--end col-->
-                                                            <form action="{% url 'simulate:simulate.init' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
-                                                                {% csrf_token %}
-                                                                <input type="hidden" name="question_id" value="{{ selected_questionary_result_id }}">
-                                                                <div class="col-md-12">
-                                                                    <div class="mb-3">
-                                                                        <label for="unit_time" class="form-label" title="Select the unit of time you want to use"><span data-key="t-timeunit"> Unit of time</span></label>
-                                                                            <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
-                                                                            <option selected>Elegir...</option>
-                                                                            <option value="1">año</option>
-                                                                            <option value="2">mes</option>
-                                                                            <option value="2">día</option>
-                                                                        </select>
+                                                            <div class="col-md-6">
+                                                                {% if questionary_result_instance %}
+                                                                    <div class="card">
+                                                                        <div class="card-body">
+                                                                            <h5 class="card-title">Informacion de los resultados del cuestionario seleccionado</h5>
+                                                                            <p>ID: {{ questionary_result_instance.id }}</p>
+                                                                            <p>Fecha de creacion: {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
+                                                                            <p>Producto que cubre: {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>
+                                                                            <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary">Ver Resultados</a>
+                                                                            
+                                                                        </div>
                                                                     </div>
-                                                                </div><!--end col-->
-                                                                <div class="col-lg-12">
-                                                                    <div class="d-flex justify-content-between">
-                                                                        <button type="submit" name="start" class="btn btn-primary">Iniciar simulación</button>
+                                                                {% else %}
+                                                                    <p>No hay resultado de cuestionario seleccionado.</p>
+                                                                {% endif %}
+                                                            </div>
+                                                            <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
+                                                                {% csrf_token %}
+                                                                {% comment %} informacion de ceustionario para hacer la simualcion {% endcomment %}
+                                                                <input type="hidden" name="questionary_result_id" value="{{ selected_questionary_result_id }}">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        {% comment %} Cantidad de Unidad de tiempo que se usara para realizar la simulacion {% endcomment %}
+                                                                        <label for="time" class="form-label" title="Ingresa la cantidad de ">
+                                                                            <span data-key="t-answer">Respuesta</span></label>
+                                                                        {% comment %} esto debe cambiar segun se escoja una opcion de unidad de tiempo tanto su validacion
+                                                                        como lo que se muestra {% endcomment %}
+                                                                        <input type="number" value="{{ question.fk_answer.answer }}"
+                                                                            class="form-control" name="time"
+                                                                            id="time"
+                                                                            placeholder="Ingresa la cantidad de:"
+                                                                            required min="0" max="90">
+                                                                    </div><!--end col-->                                                            
+                                                                    <div class="col-md-6">
+                                                                        {% comment %} que unidad de tiempo se usara para la simulacion {% endcomment %}
+                                                                        <div class="mb-3">
+                                                                            <label for="unit_time" class="form-label" title="Select the unit of time you want to use">
+                                                                                <span data-key="t-timeunit"> Unidad de tiempo</span></label>
+                                                                            <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
+                                                                                <option value="1">día</option>
+                                                                                <option value="2">mes</option>
+                                                                                <option value="3">año</option>    
+                                                                            </select>
                                                                         </div>
                                                                     </div><!--end col-->
                                                                 </div><!--end row-->
+                                                                <div class="col-lg-12">
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <button type="submit" name="start" class="btn btn-primary">Iniciar simulación</button>
+                                                                    </div><!--end col-->
+                                                                </div><!--end row-->
                                                             </form>
+                                                                {% if request.session.simulattion_id %}
+                                                                    <a href="{% url 'questionary:questionary.result' request.session.simulattion_id %}" class="btn btn-primary">Mostrar Resultados</a>
+                                                                {% else %}
+                                                                    <!-- Handle the case where questionary_result_id is empty -->
+                                                                    <p>No simulation ID available.</p>
+                                                                {% endif %}     
+
+                                                                {% if started %}
+                                                                    <form method="POST" action="{% url 'simulate:simulate.show' %}">
+                                                                        {% csrf_token %}
+                                                                        <div class="mb-3">
+                                                                            <button type="submit" name="cancel" class="btn btn-danger">Cancelar simulacion</button>
+                                                                        </div>
+                                                                    </form>
+                                                                {% endif %}
                                                         </div><!--end row-->
                                                 </div><!--end live-preview-->
                                             </div> <!-- end col -->
                                         </div>
+                                    </div><!--end col-->
                                     {% comment %} </div> {% endcomment %}
-                                    <div class="col-lg-8">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title">Información previa</h4>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <h5>Ecuaciones que se utilizaran para la simulacion</h5>
-                                                        <ul>
-                                                            {% for equation in equations_to_use %}
-                                                                <li>
-                                                                    <h6>{{ equation.id }}</h6>
-                                                                    <h6>{{ equation.name }}</h6>
-                                                                    <p>{{ equation.expression }}</p>
-                                                                    <p>Variable 1: {{ equation.fk_variable1 }}</p>
-                                                                    <p>Variable 2: {{ equation.fk_variable2 }}</p>
-                                                                    <p>Variable 3: {{ equation.fk_variable3 }}</p>
-                                                                    <p>Variable 4 : {{ equation.fk_variable4 }}</p>
-                                                                    <p>Variable 5: {{ equation.fk_variable5 }}</p>
-                                                                </li>
-                                                            {% empty %}
-                                                                <p>No hay ecuaciones disponibles.</p>
-                                                            {% endfor %}
-                                                        </ul>
-                                                    </div>
+                                    
+                                </div><!--end row-->
+                            <div>
 
-                                                    {% comment %} <div class="col-md-4">
-                                                        <h5>Ecuaciones con sus respectivos datos</h5>
-                                                        <ul>
-                                                            {% for equation in equations_with_values %}
-                                                                <li>
-                                                                    <h6>{{ equation.name }}</h6>
-                                                                </li>
-                                                            {% empty %}
-                                                                <p>No hay ecuaciones con valores.</p>
-                                                            {% endfor %}
-                                                        </ul>
-                                                    </div> {% endcomment %}
-                                                    <div class="col-md-6">
-                                                        <h5>Detalles de simulación</h5>
-                                                        {% if simulation_started %}
-                                                            <p>¡Comenzó la simulación!</p>
-                                                            <p>Paso actual: {{ simulation_instance.current_step }}</p>
-                                                            <!-- Display simulation data for the current step -->
-                                                        {% else %}
-                                                            <p>No se inició una simulación.</p>
-                                                        {% endif %}
+                                <div class="col-lg-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h4 class="card-title">Areas que se simularan</h4>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        {% for area in areas %}
+                                                            <div class="col-md-3">
+                                                                <div class="card">
+                                                                    <div class="card-body">
+                                                                        <h5 class="card-subtitle mb-2 text-muted">{{ area.name }}</h5>
+                                                                        <h6 class="card-subtitle mb-2 text-muted">{{ area.fk_product.name }}</h6>
+                                                                        <p class="card-text">{{ area.description }}</p>
+                                                                        <h5>Ecuaciones:</h5>
+                                                                        {% for equation in area.equation_set.all %}
+                                                                            <p>{{ equation.id }}: {{ equation.name }}</p>
+                                                                            <p>{{ equation.expression }}</p>
+                                                                            {% if equation.fk_variable1 %}
+                                                                                <p>Variable 1: {{ equation.fk_variable1 }}</p>
+                                                                            {% endif %}
+                                                                            {% if equation.fk_variable2 %}
+                                                                                <p>Variable 2: {{ equation.fk_variable2 }}</p>
+                                                                            {% endif %}
+                                                                            {% if equation.fk_variable3 %}
+                                                                                <p>Variable 3: {{ equation.fk_variable3 }}</p>
+                                                                            {% endif %}
+                                                                            {% if equation.fk_variable4 %}
+                                                                                <p>Variable 4: {{ equation.fk_variable4 }}</p>
+                                                                            {% endif %}
+                                                                            {% if equation.fk_variable5 %}
+                                                                                <p>Variable 5: {{ equation.fk_variable5 }}</p>
+                                                                            {% endif %}
+                                                                        {% empty %}
+                                                                            <p>No hay ecuaciones disponibles para esta área.</p>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {% empty %}
+                                                            <p>No hay areas disponibles.</p>
+                                                        {% endfor %}
                                                     </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="col-lg-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h4 class="card-title">Información previa</h4>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h5>Ecuaciones con sus respectivos datos</h5>
+                                                    <ul>
+                                                        {% for equation in equations_with_values %}
+                                                            <li>
+                                                                <h6>{{ equation.name }}</h6>
+                                                            </li>
+                                                        {% empty %}
+                                                            <p>No hay ecuaciones con valores.</p>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h5>Detalles de simulación</h5>
+                                                    {% if started %}
+                                                        <p>¡Comenzó la simulación!</p>
+                                                        <p>Paso actual: {{ simulation_instance.current_step }}</p>
+                                                        <!-- Display simulation data for the current step -->
+                                                    {% else %}
+                                                        <p>No se inició una simulación.</p>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
-                                    </div> 
-                                </div><!--end row-->
-                                
+                                    </div>
+                                </div> 
 
                                 
-
-                            <div>
                         </div> <!-- container-fluid -->
                 </div>
                 </div>
@@ -236,7 +306,7 @@
             clickable: true,
             acceptedFiles: ".txt",
             maxFiles: 1, // Only one file
-            init: function() {
+            show: function() {
                 this.on("addedfile", function(file) {
                     if (this.files.length > 1) {
                         this.removeFile(this.files[0]);

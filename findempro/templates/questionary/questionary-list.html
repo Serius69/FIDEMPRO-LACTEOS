@@ -61,17 +61,19 @@
                                                 {% if not started %}
                                                     <div class="d-grid gap-1">
                                                         <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
-                                                    </div>
-                                                {% else %}                                          
+                                                    </div>                                       
                                                 {% endif %}
                                             </form>
-                                            
-                                            <div class="d-grid gap-1 mt-auto">
-                                                <form method="POST" action="{% url 'questionary:questionary.list' %}">
-                                                    {% csrf_token %}
-                                                    <button type="submit" name="start" class="btn btn-primary">Iniciar cuestionario</button>
-                                                </form>
-                                            </div>
+                                            {% if selected_questionary_id == None %}
+                                                
+                                            {% else %}
+                                                <div class="d-grid gap-1 mt-auto">
+                                                    <form method="POST" action="{% url 'questionary:questionary.list' %}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" name="start" class="btn btn-primary">Iniciar cuestionario</button>
+                                                    </form>
+                                                </div>
+                                            {% endif %}
                                         {% endif %}
                                         {% if started %}
                                             <div class="card">
@@ -135,8 +137,7 @@
                                                         </div>
                                                         <div class="col-sm-auto">
                                                         <ul
-                                                            class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"
-                                                        >
+                                                            class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
                                                             {% if questions_to_answer.has_Anterior %}
                                                             <li class="page-item">
                                                             <a href="?page={{ questions_to_answer.Anterior_page_number }}" class="page-link">
