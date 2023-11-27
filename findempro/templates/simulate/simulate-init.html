@@ -30,10 +30,7 @@
                                         <div class="py-4">
                                             <h4 class="display-6 -text">SIMULAR</h4>
                                             <div class="container">                      
-                                              <p>Explore nuestra lista completa de productos que presenta una amplia gama de artículos obtenidos de 
-                                                nuestra extensa base de datos. Esta plataforma fácil de usar le permite tomar el control de su inventario
-                                                 de productos sin esfuerzo. Si usted es propietario de un negocio, administrador de existencias o 
-                                                 simplemente alguien apasionado por la organización, esta página está diseñada pensando en usted.</p>
+                                              <p>Ahora puedes generar simulaciones basadas en las respuestas de tus cuestionarios previos.</p>
                                               <h2>Características clave:</h2>
                                               <ul>
                                                 <li>
@@ -102,7 +99,6 @@
                                                                             <p>Fecha de creacion: {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
                                                                             <p>Producto que cubre: {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>
                                                                             <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary">Ver Resultados</a>
-                                                                            
                                                                         </div>
                                                                     </div>
                                                                 {% else %}
@@ -117,7 +113,7 @@
                                                                     <div class="col-md-6">
                                                                         {% comment %} Cantidad de Unidad de tiempo que se usara para realizar la simulacion {% endcomment %}
                                                                         <label for="time" class="form-label" title="Ingresa la cantidad de ">
-                                                                            <span data-key="t-answer">Respuesta</span></label>
+                                                                            <span data-key="t-answer">Cantidad</span></label>
                                                                         {% comment %} esto debe cambiar segun se escoja una opcion de unidad de tiempo tanto su validacion
                                                                         como lo que se muestra {% endcomment %}
                                                                         <input type="number" value="{{ question.fk_answer.answer }}"
@@ -145,14 +141,13 @@
                                                                     </div><!--end col-->
                                                                 </div><!--end row-->
                                                             </form>
-                                                                {% if request.session.simulattion_id %}
-                                                                    <a href="{% url 'questionary:questionary.result' request.session.simulattion_id %}" class="btn btn-primary">Mostrar Resultados</a>
-                                                                {% else %}
-                                                                    <!-- Handle the case where questionary_result_id is empty -->
-                                                                    <p>No simulation ID available.</p>
-                                                                {% endif %}     
-
                                                                 {% if started %}
+                                                                    {% if request.session.simulation_id %}
+                                                                        <a href="{% url 'questionary:questionary.result' request.session.simulattion_id %}" class="btn btn-primary">Mostrar Resultados</a>
+                                                                    {% else %}
+                                                                        <!-- Handle the case where questionary_result_id is empty -->
+                                                                        <p>No hay ID de simulación disponible.</p>
+                                                                    {% endif %}    
                                                                     <form method="POST" action="{% url 'simulate:simulate.show' %}">
                                                                         {% csrf_token %}
                                                                         <div class="mb-3">
@@ -182,31 +177,34 @@
                                                         {% for area in areas %}
                                                             <div class="col-md-3">
                                                                 <div class="card">
+                                                                    <img src="{{ area.get_photo_url }}" class="card-img-top img-fluid" style="height: 100px; object-fit: cover;" alt="{{ area.name }}">
                                                                     <div class="card-body">
                                                                         <h5 class="card-subtitle mb-2 text-muted">{{ area.name }}</h5>
                                                                         <h6 class="card-subtitle mb-2 text-muted">{{ area.fk_product.name }}</h6>
                                                                         <p class="card-text">{{ area.description }}</p>
                                                                         <h5>Ecuaciones:</h5>
-                                                                        {% for equation in area.equation_set.all %}
-                                                                            <p>{{ equation.id }}: {{ equation.name }}</p>
-                                                                            <p>{{ equation.expression }}</p>
-                                                                            {% if equation.fk_variable1 %}
-                                                                                <p>Variable 1: {{ equation.fk_variable1 }}</p>
-                                                                            {% endif %}
-                                                                            {% if equation.fk_variable2 %}
-                                                                                <p>Variable 2: {{ equation.fk_variable2 }}</p>
-                                                                            {% endif %}
-                                                                            {% if equation.fk_variable3 %}
-                                                                                <p>Variable 3: {{ equation.fk_variable3 }}</p>
-                                                                            {% endif %}
-                                                                            {% if equation.fk_variable4 %}
-                                                                                <p>Variable 4: {{ equation.fk_variable4 }}</p>
-                                                                            {% endif %}
-                                                                            {% if equation.fk_variable5 %}
-                                                                                <p>Variable 5: {{ equation.fk_variable5 }}</p>
-                                                                            {% endif %}
+                                                                        {% for equation in area.area_equation.all %}
+                                                                            <article>
+                                                                                <p>{{ equation.id }}: {{ equation.name }}</p>
+                                                                                <p>{{ equation.expression }}</p>
+                                                                                {% if equation.fk_variable1 %}
+                                                                                    <p>Variable 1: {{ equation.fk_variable1.name }}</p>
+                                                                                {% endif %}
+                                                                                {% if equation.fk_variable2 %}
+                                                                                    <p>Variable 2: {{ equation.fk_variable2.name }}</p>
+                                                                                {% endif %}
+                                                                                {% if equation.fk_variable3 %}
+                                                                                    <p>Variable 3: {{ equation.fk_variable3.name }}</p>
+                                                                                {% endif %}
+                                                                                {% if equation.fk_variable4 %}
+                                                                                    <p>Variable 4: {{ equation.fk_variable4.name }}</p>
+                                                                                {% endif %}
+                                                                                {% if equation.fk_variable5 %}
+                                                                                    <p>Variable 5: {{ equation.fk_variable5.name }}</p>
+                                                                                {% endif %}
+                                                                            </article>
                                                                         {% empty %}
-                                                                            <p>No hay ecuaciones disponibles para esta área.</p>
+                                                                            <p>No se encontraron ecuaciones para esta área.</p>
                                                                         {% endfor %}
                                                                     </div>
                                                                 </div>
@@ -215,6 +213,7 @@
                                                             <p>No hay areas disponibles.</p>
                                                         {% endfor %}
                                                     </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

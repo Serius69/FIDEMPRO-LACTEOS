@@ -28,28 +28,36 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def simulate_show_view(request):
     started = request.session.get('started', False)
     form = SimulationForm(request.POST or None, request.FILES or None)
-    questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
+    # questionnaires_result = QuestionaryResult.objects.filter(is_active=True,).order_by('-id')
+    questionnaires_result = None
     simulation_instance = None    
     selected_questionary_result_id = None
+    questionary_result_instance = None
     areas = None
     
     if request.method == 'GET' and 'select' in request.GET:
         selected_questionary_result_id = request.GET.get('selected_questionary_result', 0)
         request.session['selected_questionary_result_id'] = selected_questionary_result_id
+        answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
+        equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
+        questionnaires_result = QuestionaryResult.objects.filter(is_active=True, 
+                                                                 fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+                    
+        questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
+            
+        print(questionary_result_instance.fk_questionary.fk_product)
+        product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product.id)
+        print(product_instance.id)
         areas = Area.objects.order_by('id').filter(
             is_active=True, 
             fk_product__fk_business__fk_user=request.user,
+            fk_product_id=product_instance.id
         )
-        answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
-        equations_to_use = Equation.objects.order_by('id').filter(
-            is_active=True, 
-            fk_area__fk_product__fk_business__fk_user=request.user,
-            # fk_variable1=questionary_result,
-            )
         questionary_result_instance= get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
-        print("Se selecciono un cuestionario " + str(selected_questionary_result_id))
+        print("Se selecciono el cuestionario " + str(selected_questionary_result_id))
         print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
         print("Started: " + str(started))
+        print(areas)
         context = {
             'areas': areas,
             'answers': answers,
@@ -108,16 +116,22 @@ def simulate_show_view(request):
     
     if not started:
         if selected_questionary_result_id == None:
-            questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
+            questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
         else:
             equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
-            questionnaires_result = QuestionaryResult.objects.filter(is_active=True).order_by('-id')
-            questionary_instance = get_object_or_404(Questionary, pk=selected_questionary_result_id)
-            product_instance = get_object_or_404(Product, pk=questionary_instance.fk_product_id)
+            questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+                    
             questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
+            
+            questionary_instance = get_object_or_404(Questionary, )
+            print(questionary_result_instance.fk_questionary.fk_product)
+            product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product)
+            
+            
             areas = Area.objects.order_by('id').filter(
                 is_active=True, 
                 fk_product__fk_business__fk_user=request.user,
+                fk_product=product_instance
             )
             paginator = Paginator(equations_to_use, 10) 
             page = request.GET.get('page')

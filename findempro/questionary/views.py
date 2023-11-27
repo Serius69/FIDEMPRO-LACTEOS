@@ -174,8 +174,6 @@ def questionnaire_list_view(request):
         }   
         return render(request, 'questionary/questionary-list.html', context)
                                 
-
-
 # def questionnaire_save_view(request):
 #     if request.method == 'POST':
 #         questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
