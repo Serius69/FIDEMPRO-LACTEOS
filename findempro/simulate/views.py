@@ -20,6 +20,8 @@ openai.api_key = settings.OPENAI_API_KEY
 from django.http import JsonResponse
 from scipy.stats import kstest
 import numpy as np
+from .utils import get_results_for_simulation, analyze_simulation_results, decision_support
+
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
@@ -197,12 +199,9 @@ class ProbabilisticDensityFunctionmanager:
 
 # aqui se le manda el Simulate object que se creo en la vista de arriba
 def simulate_result_simulation_view(request):
-    
-    
-    
-    
-    
-    
+    results = get_results_for_simulation(simulation_id)
+    analysis_results = analyze_simulation_results(results)
+    decision = decision_support(analysis_results)
     
     data = {
             'demanda_inicial': 100,

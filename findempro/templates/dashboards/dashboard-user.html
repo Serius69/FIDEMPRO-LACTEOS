@@ -35,21 +35,7 @@
                                             </div>
                                             <div class="mt-3 mt-lg-0">
                                                 <form method="GET" action="{% url 'dashboard:dashboard.user' %}">
-                                                    <div class="row g-3 mb-0 align-items-center">
-                                                        <div class="col-sm-auto">
-                                                            <div class="input-group">
-                                                                <input type="text"
-                                                                    class="form-control border-0 dash-filter-picker shadow"
-                                                                    data-provider="flatpickr" data-range-date="true"
-                                                                    data-date-format="d M, Y"
-                                                                    data-deafult-date="01 Jan 2023 to 31 Jan 2024">
-                                                                <div
-                                                                    class="input-group-text bg-primary border-primary text-white">
-                                                                    <i class="ri-calendar-2-line"></i></div>
-                                                            </div>
-                                                        </div>
-                                                        <!--end col-->
-                                                        
+                                                    <div class="row g-3 mb-0 align-items-center">                                                        
                                                         <div class="col-sm-auto">
                                                                 <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
                                                                     <option selected>Elija el negocio:</option>
@@ -78,7 +64,7 @@
                                 </div>
                                 <!--end row-->
                                 <div class="row">
-                                    <div class="col-xl-4 col-md-6">
+                                    <div class="col-xl-3 col-md-6">
                                         <!-- card -->
                                         <div class="card card-animate">
                                             <div class="card-body">
@@ -95,7 +81,7 @@
                                                 <div class="d-flex align-items-end justify-content-between mt-4">
                                                     <div>
                                                         <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                                class="counter-value" data-target="{{total_revenue}}">0</span>k</h4>
+                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
                                                         {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
@@ -107,150 +93,97 @@
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
                                     </div><!-- end col -->
-                                    <div class="col-xl-4 col-md-6">
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span
-                                                            class="avatar-title bg-primary-subtle text-primary rounded-2 fs-2">
-                                                            <i data-feather="briefcase" class="text-primary"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div class="flex-grow-1 overflow-hidden ms-3">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-3">
-                                                            Costos totales </p>
-                                                        <div class="d-flex align-items-center mb-3">
-                                                            <h4 class="fs-4 flex-grow-1 mb-0"><span class="counter-value"
-                                                                    data-target="{{total_costs}}">0</span></h4>
-                                                            <span class="badge bg-danger-subtle text-danger fs-12"><i
-                                                                    class="ri-arrow-down-s-line fs-13 align-middle me-1"></i>{{total_costs_percentage}}
-                                                                </span>
-                                                        </div>
-                                                        {% comment %} <p class="text-muted text-truncate mb-0"> Productos este mes </p> {% endcomment %}
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div>
-                                    </div><!-- end col -->
-                                    <div class="col-xl-4 col-md-6">
+                                    <div class="col-xl-3 col-md-6">
                                         <!-- card -->
                                         <div class="card card-animate">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Margen de beneficio </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-danger fs-14 mb-0">
-                                                            <i class="ri-arrow-right-down-line fs-13 align-middle"></i> {{total_profit_margin_percentage}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
-                                                                class="counter-value" data-target="{{total_profit_margin}}">0</span></h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver todos los pedidos </a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-info-subtle rounded fs-3">
-                                                            <i class="bx bx-shopping-bag text-info"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xl-4 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                                                            Pronóstico de demanda </p>
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Ingresos totales </p>
                                                     </div>
                                                     <div class="flex-shrink-0">
                                                         <h5 class="text-success fs-14 mb-0">
-                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{demand_forecast_percentage}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span
-                                                                class="counter-value" data-target="{{demand_forecast}}">0</span>M</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline">Ver detalles </a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-warning-subtle rounded fs-3">
-                                                            <i class="bx bx-user-circle text-warning"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xl-4 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Mis
-                                                           Niveles de inventario </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-muted fs-14 mb-0">
-                                                            {{total_inventory_levels_percentage}}
+                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{total_revenue_percentage}}
                                                         </h5>
                                                     </div>
                                                 </div>
                                                 <div class="d-flex align-items-end justify-content-between mt-4">
                                                     <div>
                                                         <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                        class="counter-value" data-target="{{total_inventory_levels}}">0</span>k</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline">Retirar dinero </a> {% endcomment %}
+                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
+                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-primary-subtle rounded fs-3">
-                                                            <i class="bx bx-wallet text-primary"></i>
+                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                                                            <i class="bx bx-dollar-circle text-success"></i>
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
                                     </div><!-- end col -->
-                                    <div class="col-xl-4 col-md-6">
+                                    <div class="col-xl-3 col-md-6">
+                                        <!-- card -->
                                         <div class="card card-animate">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span
-                                                            class="avatar-title bg-warning-subtle text-warning rounded-2 fs-2">
-                                                            <i data-feather="award" class="text-warning"></i>
-                                                        </span>
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Ingresos totales </p>
                                                     </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <p class="text-uppercase fw-medium text-muted mb-3">Production Output</p>
-                                                        <div class="d-flex align-items-center mb-3">
-                                                            <h4 class="fs-4 flex-grow-1 mb-0"><span class="counter-value"
-                                                                    data-target="{{total_production_output}}">0</span></h4>
-                                                            <span class="badge bg-success-subtle text-success fs-12"><i
-                                                                    class="ri-arrow-up-s-line fs-13 align-middle me-1"></i> {{total_production_output_percentage}}
-                                                                </span>
-                                                        </div>
-                                                        {% comment %} <p class="text-muted mb-0"> Líderes este mes</p> {% endcomment %}
+                                                    <div class="flex-shrink-0">
+                                                        <h5 class="text-success fs-14 mb-0">
+                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{total_revenue_percentage}}
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                                    <div>
+                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
+                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
+                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
+                                                    </div>
+                                                    <div class="avatar-sm flex-shrink-0">
+                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                                                            <i class="bx bx-dollar-circle text-success"></i>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div><!-- end card body -->
-                                        </div>
-                                    </div><!-- end col -->                                  
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->
+                                    <div class="col-xl-3 col-md-6">
+                                        <!-- card -->
+                                        <div class="card card-animate">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Ingresos totales </p>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <h5 class="text-success fs-14 mb-0">
+                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{total_revenue_percentage}}
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                                    <div>
+                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
+                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
+                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
+                                                    </div>
+                                                    <div class="avatar-sm flex-shrink-0">
+                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                                                            <i class="bx bx-dollar-circle text-success"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div><!-- end card body -->
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->                      
                                 </div> <!-- end row-->
                                 <div class="row">
                                     {% if business %}
-                                    <div class="col-xxl-4 col-md-6">
+                                    <div class="col-xxl-3 col-md-6">
                                         <div class="card shadow-sm" id="business-view-detail">
                                             <div class="card-body text-center">
                                                 <div class="position-relative d-inline-block">
@@ -267,14 +200,20 @@
                                                         <tbody>
                                                             <tr>
                                                                 <td class="fw-medium" scope="row"> Tipo de industria</td>
-                                                                <td>{{ business.type }}</td>
+                                                                <td>
+                                                                    {% if business.type == 1 %}
+                                                                        Lacteos
+                                                                    {% else %}
+                                                                        Otros
+                                                                    {% endif %}
+                                                                </td>
                                                             </tr>
                                                             <tr>
                                                                 <td class="fw-medium" scope="row">Ubicación</td>
                                                                 <td>{{ business.location }}</td>
                                                             </tr>
                                                             <tr>
-                                                                <td class="fw-medium" scope="row">Póngase en contacto con el correo electrónico </td>
+                                                                <td class="fw-medium" scope="row">Correo electronico </td>
                                                                 <td>{{business.fk_user.email}}</td>
                                                             </tr>
                                                             <tr>
@@ -293,452 +232,83 @@
                                         <p class="text-muted">No hay datos de negocio en la base de datos.</p>
                                     </div>
                                     {% endif %}
-                                    <div class="col-xxl-4">
-                                        <div class="card">
-                                            <div class="card-header border-0 align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Ganancia</h4>
-                                            </div><!-- end card header -->
-                                            <div class="card-header p-0 border-0 bg-light-subtle">
-                                                <div class="row g-0 text-center">
-                                                    <div class="col-6 col-sm-3">
-                                                        <div class="p-3 border border-dashed border-start-0">
-                                                            <h5 class="mb-1"><span class="counter-value"
-                                                                    data-target="{{total_sales}}">0</span></h5>
-                                                            <p class="text-muted mb-0">Ventas</p>
-                                                        </div>
-                                                    </div>
-                                                    <!--end col-->
-                                                    <div class="col-6 col-sm-3">
-                                                        <div class="p-3 border border-dashed border-start-0">
-                                                            <h5 class="mb-1">$<span class="counter-value"
-                                                                    data-target="{{total_earnings}}">0</span>k</h5>
-                                                            <p class="text-muted mb-0">Ganancias</p>
-                                                        </div>
-                                                    </div>
-                                                    <!--end col-->
-                                                    <div class="col-6 col-sm-3">
-                                                        <div class="p-3 border border-dashed border-start-0">
-                                                            <h5 class="mb-1"><span class="counter-value"
-                                                                    data-target="{{total_costs}}">0</span></h5>
-                                                            <p class="text-muted mb-0">Costo</p>
-                                                        </div>
-                                                    </div>
-                                                    <!--end col-->
-                                                    <div class="col-6 col-sm-3">
-                                                        <div class="p-3 border border-dashed border-start-0 border-end-0">
-                                                            <h5 class="mb-1 text-success"><span class="counter-value"
-                                                                    data-target="{{conversion_rate}}">0</span>%</h5>
-                                                            <p class="text-muted mb-0">Relación de conversación</p>
-                                                        </div>
-                                                    </div>
-                                                    <!--end col-->
-                                                </div>
-                                            </div><!-- end card header -->
-
-                                            <div class="card-body p-0 pb-2">
-                                                <div class="w-100">
-                                                    <div id="total_revenue" class="apex-charts" dir="ltr"></div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    
-                                    <div class="col-xxl-4">
-                                        <div class="card card-height-100">
-                                            <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Estado de productos</h4>
-                                            </div><!-- end card header -->
-
-                                            <div class="card-body">
-                                                <div id="products-status"
-                                                    data-colors='["--vz-success", "--vz-primary", "--vz-warning", "--vz-danger"]'
-                                                    class="apex-charts" dir="ltr"></div>
-                                                <div class="mt-3">
-                                                    <div class="d-flex justify-content-center align-items-center mb-4">
-                                                        <h2 class="me-3 ff-secondary mb-0">{{total_products}}</h2>
-                                                        <div>
-                                                            <p class="text-muted mb-0">Productos totales </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-success align-middle me-2"></i>
-                                                            Listo para simular</p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{products_ready}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                    <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
-                                                           No listo para simular </p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{products_no_ready}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                    <div
-                                                    class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                    <p class="fw-medium mb-0"><i
-                                                            class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
-                                                       No listo para simular </p>
-                                                    <div>
-                                                        <span class="text-muted pe-5">{{products_no_ready}}</span>
-                                                    </div>
-                                                        </div><!-- end -->
-                                                        <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
-                                                        No listo para simular </p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{products_no_ready}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                </div>
-                                                <div id="variables-status"
-                                                    data-colors='["--vz-success", "--vz-primary", "--vz-warning", "--vz-danger"]'
-                                                    class="apex-charts" dir="ltr"></div>
-                                                <div class="mt-3">
-                                                    <div class="d-flex justify-content-center align-items-center mb-4">
-                                                        <h2 class="me-3 ff-secondary mb-0">{{total_variables}}</h2>
-                                                        <div>
-                                                            <p class="text-muted mb-0">Variables totales </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-success align-middle me-2"></i>
-                                                            Endogenas</p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{total_variables_endogen}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                    <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
-                                                           Exogenas </p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{total_variables_exogen}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                    <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
-                                                           Estado </p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{total_variables_state}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                </div>
-                                                <div id="products-status"
-                                                    data-colors='["--vz-success", "--vz-primary", "--vz-warning", "--vz-danger"]'
-                                                    class="apex-charts" dir="ltr"></div>
-                                                <div class="mt-3">
-                                                    <div class="d-flex justify-content-center align-items-center mb-4">
-                                                        <h2 class="me-3 ff-secondary mb-0">{{total_equations}}</h2>
-                                                        <div>
-                                                            <p class="text-muted mb-0">Productos totales </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-success align-middle me-2"></i>
-                                                            Listo para simular</p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{products_ready}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                    <div
-                                                        class="d-flex justify-content-between border-bottom border-bottom-dashed py-2">
-                                                        <p class="fw-medium mb-0"><i
-                                                                class="ri-checkbox-blank-circle-fill text-warning align-middle me-2"></i>
-                                                           No listo para simular </p>
-                                                        <div>
-                                                            <span class="text-muted pe-5">{{products_no_ready}}</span>
-                                                        </div>
-                                                    </div><!-- end -->
-                                                </div>
-                                            </div><!-- end cardbody -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                </div>
-                                <div class="row">
-                                    <div class="col-xl-6">
+                                    <div class="col-xl-9">
                                         <div class="card">
                                             <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Productos</h4>
+                                                <h4 class="card-title mb-0 flex-grow-1">Recomendaciones Financieras</h4>
                                             </div><!-- end card header -->
                                             <div class="card-body">
                                                 <div class="table-responsive table-card">
-                                                    <table
-                                                        class="table table-hover table-centered align-middle table-nowrap mb-0">
+                                                    <table class="table table-hover table-centered align-middle table-nowrap mb-0">
                                                         <tbody>
-                                                            {% for product in products %}
+                                                            {% for recommendation in recommendations %}
                                                             <tr>
                                                                 <td>
                                                                     <div class="d-flex align-items-center">
                                                                         <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                                            {% if product.image_src %}
-                                                                                <img src="{{ MEDIA_URL }}{{ product.image_src.url }}" alt="" class="img-fluid d-block" />
+                                                                            {% if recommendation.image_src %}
+                                                                                <img src="{{ MEDIA_URL }}{{ recommendation.image_src.url }}" alt="" class="img-fluid d-block" />
                                                                             {% else %}
                                                                                 <img src="{% static 'path_to_dummy_image.webp' %}" alt="" class="img-fluid d-block" />
                                                                             {% endif %}
-                                                                            
                                                                         </div>
                                                                         <div>
-                                                                            <h5 class="fs-14 my-1"><a
-                                                                                    href="{% url 'product:product.overview' pk=product.id %}"
-                                                                                    class="text-reset">{{product.name}}</a></h5>
-                                                                            <span class="text-muted">{{product.name}}</span>
+                                                                            <h5 class="mb-1">{{ recommendation.title }}</h5>
+                                                                            <p class="text-muted mb-0">{{ recommendation.description }}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td>
-                                                                    <h5 class="fs-14 my-1 fw-normal">{{product.name}}</h5>
-                                                                    <span class="text-muted">Precio</span>
-                                                                </td>
-                                                                <td>
-                                                                    <h5 class="fs-14 my-1 fw-normal">{{product.name}}</h5>
-                                                                    <span class="text-muted">Pedidos</span>
-                                                                </td>
-                                                                <td>
-                                                                    <h5 class="fs-14 my-1 fw-normal">{{product.inventory}}</h5>
-                                                                    <span class="text-muted">Existencias</span>
-                                                                </td>
-                                                                <td>
-                                                                    <h5 class="fs-14 my-1 fw-normal">{{product.name}}</h5>
-                                                                    <span class="text-muted">Cantidad</span>
-                                                                </td>
                                                             </tr>
-                                                            {% empty %}
-                                                            <div class="text-center py-4">
-                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                <h5 class="mt-2">Lo siento, no hay ningún registro de productos en la base de datos</h5>
-                                                                <p class="text-muted mb-0">Tienes que ir a "productos".</p>
-                                                            </div>
                                                             {% endfor %}
                                                         </tbody>
                                                     </table>
                                                 </div>
-                                                <div class="align-items-center mt-4 pt-2 justify-content-between row text-center text-sm-start">
-                                                    <div class="col-sm">
-                                                        <div class="text-muted">Demostración <span class="fw-semibold">{{products.count}}</span> de
-                                                            <span class="fw-semibold">{{products.count}}</span> Resultados
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-sm-auto  mt-3 mt-sm-0">
-                                                        <ul class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                                                            <li class="page-item disabled">
-                                                                <a href="#" class="page-link">←</a>
-                                                            </li>
-                                                            <li class="page-item">
-                                                                <a href="#" class="page-link">1</a>
-                                                            </li>
-                                                            <li class="page-item">
-                                                                <a href="#" class="page-link">→</a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-6">
-                                        <div class="card card-height-100">
-                                            <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Areas</h4>
-                                            </div><!-- end card header -->
+                                            </div><!-- end card body -->
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->
+                                </div>
+                                <!-- Asegúrate de incluir la biblioteca ApexCharts en tu proyecto -->
 
-                                            <div class="card-body">
-                                                <div class="table-responsive table-card">
-                                                    <table class="table table-centered table-hover align-middle table-nowrap mb-0">
-                                                        <tbody>
-                                                            {% for area in areas %}
-                                                            <tr>
-                                                                <td>
-                                                                    <div class="d-flex align-items-center">
-                                                                        <div class="flex-shrink-0 me-2">
-                                                                            <img src="{{ area.get_photo_url }}" alt=""
-                                                                                class="avatar-sm p-2" />
-                                                                        </div>
-                                                                        <div>
-                                                                            <h5 class="fs-14 my-1 fw-medium"><a
-                                                                                   href="{% url 'business:business.overview' business.id %}"
-                                                                                    class="text-reset">{{area.name}}</a></h5>
-                                                                            <span class="text-muted">{{area.fk_product.name}}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <p class="mb-0">{{area.area_equation.count}}</p>
-                                                                    <span class="text-muted">Ecuaciones</span>
-                                                                </td>
-                                                                <td>
-                                                                    <span class="text-muted">{{area.fk_product.name}}</span>
-                                                                </td>
-                                                                <td>
-                                                                    <h5 class="fs-14 mb-0">{{area.fk_product.name}}<i
-                                                                            class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                                                                    </h5>
-                                                                </td>
-                                                            </tr><!-- end -->
-                                                            {% empty %}
-                                                            <div class="text-center py-4">
-                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                <h5 class="mt-2">Lo siento, no hay ningún registro de productos en la base de datos</h5>
-                                                                <p class="text-muted mb-0">Debe ir a la lista de "producto" y luego crear una nueva área en el producto que desee</p>
-                                                            </div>
-                                                            {% endfor %}
-
-                                                        </tbody>
-                                                    </table><!-- end table -->
-                                                </div>
-
-                                                <div class="align-items-center mt-2 row text-center text-sm-start">
-                                                    <div class="col-sm">
-                                                      <div class="text-muted">
-                                                        Demostración
-                                                        <span class="fw-semibold">{{ areas.number }}</span>
-                                                        de
-                                                        <span class="fw-semibold">{{ areas.paginator.num_pages }}</span>
-                                                        Resultados
-                                                      </div>
-                                                    </div>
-                                                    <div class="col-sm-auto">
-                                                      <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                                        {% if areas.has_previous %}
-                                                          <li class="page-item">
-                                                            <a href="?page=1" class="page-link" aria-label="First">
-                                                              ««
-                                                            </a>
-                                                          </li>
-                                                          <li class="page-item">
-                                                            <a href="?page={{ areas.previous_page_number }}" class="page-link" aria-label="Previous">
-                                                              «
-                                                            </a>
-                                                          </li>
-                                                        {% endif %}
-                                                        {% for i in areas.paginator.page_range %}
-                                                          <li class="page-item {% if i == areas.number %}active{% endif %}">
-                                                            <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                          </li>
-                                                        {% endfor %}
-                                                        {% if areas.has_next %}
-                                                          <li class="page-item">
-                                                            <a href="?page={{ areas.next_page_number }}" class="page-link" aria-label="Next">
-                                                              »
-                                                            </a>
-                                                          </li>
-                                                          <li class="page-item">
-                                                            <a href="?page={{ areas.paginator.num_pages }}" class="page-link" aria-label="Last">
-                                                              »»
-                                                            </a>
-                                                          </li>
-                                                        </li>
-                                                        {% endif %}
-                                                      </ul>
-                                                    </div>
-                                                  </div> 
-
-                                            </div> <!-- .card-body-->
-                                        </div> <!-- .card-->
-                                    </div> <!-- .col-->
-                                </div> <!-- end row-->
                                 <div class="row">
-                                    <div class="col-xl-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title mb-0">Análisis de la demanda</h4>
-                                            </div>
-                                            <div class="card-body">
-                                                <canvas id="chart-line" width="400" height="200"></canvas>
+                                    {% for chart in charts %}
+                                        <div class="col-xl-4">
+                                            <div class="card h-100">
+                                                <div class="card-header">
+                                                    <h4 class="card-title mb-0">{{ chart.title }}</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div id="{{ chart.id }}" class="apex-charts" dir="ltr" style="height: 200px;"></div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <!-- end card -->
+                                        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+                                        <script>
+                                            
+                                            // Obtén los datos del gráfico desde el modelo y pásalos al contexto de tu template
+                                            var chartData = {{ chart.chart_data|safe }};
+                                            
+                                            // Configura el gráfico utilizando ApexCharts
+                                            var options = { 
+                                                chart: {
+                                                    type: '{{ chart.chart_type }}',
+                                                },
+                                                series: [{
+                                                    name: '{{ chart.title }}',
+                                                    data: chartData,
+                                                }],
+                                            };
+
+                                            var chart = new ApexCharts(document.getElementById('{{ chart.id }}'), options);
+                                            chart.render();
+                                        </script>
+                                    {% empty %}
+                                    <div class="text-center py-4">
+                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                        <h5 class="mt-2">Lo siento, no hay graficos relacionador a algun producto del negocio {{business.name}} en la base de datos</h5>
                                     </div>
-                                    <!-- end col -->
-                                    <div class="col-xl-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title mb-0">Simulación de demanda</h4>
-                                            </div><!-- end card header -->
-                                            <div class="card-body">
-                                                <div id="basic_candlestick" class="apex-charts" dir="ltr"></div>
-                                            </div><!-- end card-body -->
-                                        </div><!-- end card -->
-                                    </div>
-                                    <!-- end col -->
-                                    <div class="col-xl-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title mb-0">Desglose de los costos</h4>
-                                            </div><!-- end card header -->
-                                            <div class="card-body">
-                                                <div>
-                                                    <div id="combo_candlestick" class="apex-charts" dir="ltr"></div>
-                                                    <div id="combo_candlestick_chart" class="apex-charts" dir="ltr"></div>
-                                                </div>
-                                            </div><!-- end card-body -->
-                                        </div><!-- end card -->
-                                    </div>
-                                    <!-- end col -->
-                                    <div class="col-xl-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title mb-0">La gestión del inventario</h4>
-                                            </div><!-- end card header -->
-                                            <div class="card-body">
-                                                <div id="line_chart_zoomable" class="apex-charts" dir="ltr"></div>
-                                            </div><!-- end card-body -->
-                                        </div><!-- end card -->
-                                    </div>
-                                    <!-- end col -->
-                                    <div class="col-xl-4">
-                                        <div class="card card-height-100">
-                                            <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Análisis de rentabilidad</h4>
-                                                <div class="flex-shrink-0">
-                                                    <div class="dropdown card-header-dropdown">
-                                                        <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                                            aria-haspopup="true" aria-expanded="false">
-                                                            <span class="text-muted">Informe<i
-                                                                class="mdi mdi-chevron-down ms-1"></i></span>
-                                                        </a>
-                                                        <div class="dropdown-menu dropdown-menu-end">
-                                                            <a class="dropdown-item" href="#">Descargar informe</a>
-                                                            <a class a="dropdown-item" href="#">Exportar</a>
-                                                            <a class="dropdown-item" href="#">Importar</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card header -->
-                                            <div class="card-body">
-                                                <div id="store-visits-source"
-                                                    class="apex-charts" dir="ltr"></div>
-                                            </div>
-                                        </div> <!-- .card-->
-                                    </div> <!-- .col-->
-                                    <div class="col-xl-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title mb-0">Planeación de producción</h4>
-                                            </div><!-- end card header -->
-                                            <div class="card-body">
-                                                <div id="line_chart_datalabel" class="apex-charts" dir="ltr"></div>
-                                            </div><!-- end card-body -->
-                                        </div><!-- end card -->
-                                    </div>
-                                    <!-- end col -->
-                                </div> <!-- end row-->
+                                    {% endfor %}
+                                </div>
+
                             </div> <!-- end .h-100-->
                         </div> <!-- end col -->
 
@@ -792,190 +362,6 @@
 
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script>
-    // Datos de ejemplo para el gráfico
-    var revenueData = {
-        series: [{
-            name: 'Total Revenue',
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        }],
-        categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep']
-    };
 
-    var options = {
-        chart: {
-            type: 'line',
-            toolbar: {
-                show: true,
-            },
-        },
-        colors: ['#00b8d4'], 
-        legend: {
-            show: true,
-        },
-        xaxis: {
-            categories: revenueData.categories,
-        },
-    };
-    var chart = new ApexCharts(document.querySelector("#total_revenue"), options);
-    chart.render();
 
-    var ctx = document.getElementById('chart-line').getContext('2d');
-
-    var data = {
-        labels: ['1', '2', '3', '4', '5'],
-        datasets: [{
-            label: 'Demanda',
-            data: [0, 0, 0, 0, 0],
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 2
-        }]
-    };
-
-    var options = {
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    };
-
-    var myChart = new Chart(ctx, {
-        type: 'line',
-        data: data,
-        options: options
-    });
-</script>
-<script>
-
-    var options = {
-        series: [{
-            data: [{
-                x: new Date(2023, 1, 1),
-                y: [0, 0, 0, 0]
-            }, {
-                x: new Date(2023, 2, 1),
-                y: [0, 0, 0, 0]
-            }, {
-                x: new Date(2023, 3, 1),
-                y: [0, 0, 0, 0]
-            }]
-        }],
-        chart: {
-            type: 'candlestick',
-            height: 350
-        },
-        xaxis: {
-            type: 'datetime'
-        },
-    };
-
-    var chart = new ApexCharts(document.querySelector("#basic_candlestick"), options);
-    chart.render();
-
-    var comboData = {
-        series: [{
-            name: "Revenue",
-            type: "line",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        }, {
-            name: "Expenses",
-            type: "bar",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        }],
-        chart: {
-            height: 350,
-            type: "line",
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May']
-        }
-    };
-
-    var comboChart = new ApexCharts(document.querySelector("#combo_candlestick"), comboData);
-    comboChart.render();
-
-    var comboChartData = {
-        series: [{
-            name: "Profit",
-            type: "column",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        }, {
-            name: "Loss",
-            type: "line",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        }],
-        chart: {
-            height: 350,
-            type: "line",
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May']
-        }
-    };
-
-    var comboChart2 = new ApexCharts(document.querySelector("#combo_candlestick_chart"), comboChartData);
-    comboChart2.render();
-</script>
-<script>
-    // Datos de ejemplo para el gráfico de línea zoomable
-    var chartData = {
-        series: [{
-            name: "Inventory",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        }],
-        chart: {
-            height: 350,
-            type: "line",
-            zoom: {
-                enabled: true
-            }
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov']
-        }
-    };
-
-    var chart = new ApexCharts(document.querySelector("#line_chart_zoomable"), chartData);
-    chart.render();
-</script>
-<script>
-    // Datos de ejemplo para el gráfico
-    var chartData = {
-        series: [30, 40, 35, 50, 49, 60, 70, 91, 125],
-        chart: {
-            type: 'bar',
-            height: 350,
-        },
-        xaxis: {
-            categories: ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5', 'Category 6', 'Category 7', 'Category 8', 'Category 9'],
-        }
-    };
-
-    var chart = new ApexCharts(document.querySelector("#store-visits-source"), chartData);
-    chart.render();
-</script>
-<script>
-    // Datos de ejemplo para el gráfico de línea con etiquetas de datos
-    var chartData = {
-        series: [{
-            name: "Production",
-            data: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        }],
-        chart: {
-            height: 350,
-            type: "line"
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
-        },
-        dataLabels: {
-            enabled: true
-        }
-    };
-
-    var chart = new ApexCharts(document.querySelector("#line_chart_datalabel"), chartData);
-    chart.render();
-</script>
 {% endblock extra_js %}

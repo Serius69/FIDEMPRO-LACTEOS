@@ -27,8 +27,6 @@ class ProbabilisticDensityFunction(models.Model):
     is_active = models.BooleanField(default=True, help_text='Whether the distribution is active or not')
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the distribution was created')
     last_updated = models.DateTimeField(auto_now=True, help_text='The date the distribution was last updated')
-    def __str__(self):
-        return f"{self.distribution_type()} - {self.name}"
     @receiver(post_save, sender=Product)
     def create_probabilistic_density_functions(sender, instance, created, **kwargs):
         distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic
@@ -51,19 +49,21 @@ class DataPoint(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-    def __str__(self):        return f'DataPoint: {self.value}'
+    def __str__(self):        
+        return f'DataPoint: {self.value}'
 
 class DemandHistorical(models.Model):
     unit_time = models.IntegerField()
     demand = models.IntegerField()
 class Simulation(models.Model):
     unit_time = models.CharField(max_length=100, default='day', help_text='The unit of time for the simulation')
-    fk_fdp = models.ForeignKey(
-        ProbabilisticDensityFunction, 
-        on_delete=models.CASCADE,
-        related_name='fk_fdp_simulation', 
-        default=ProbabilisticDensityFunction.objects.first(), null=True, blank=True,     
-        help_text='The probabilistic density function associated with the simulation')
+    fk_fdp = models.ForeignKey(ProbabilisticDensityFunction, on_delete=models.CASCADE, default=1)
+    # fk_fdp = models.ForeignKey(
+    #     ProbabilisticDensityFunction, 
+    #     on_delete=models.CASCADE,
+    #     related_name='fk_fdp_simulation', 
+    #     default=ProbabilisticDensityFunction.objects.first(), null=True, blank=True,     
+    #     help_text='The probabilistic density function associated with the simulation')
     # se guardara un archivo JSON con los 30 datos de la demanda historica
     demand_history = models.JSONField(null=True, blank=True, help_text='The demand history for the simulation')
     fk_questionary_result = models.ForeignKey(

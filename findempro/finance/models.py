@@ -3,7 +3,7 @@ from django.db import models
 from simulate.models import ResultSimulation  # Make sure the import statement is correct.
 from django.utils import timezone
 from django.dispatch import receiver
-from .finance_data import finance_data
+from .finance_data import finance_data, recomendation_data
 from django.db.models.signals import post_save
 from product.models import Product
 from business.models import Business
@@ -26,8 +26,7 @@ class FinanceRecommendation(models.Model):
     def create_finance_recommendation(sender, instance, created, **kwargs):
         if created:
             business = Business.objects.get(pk=instance.pk)
-            finance_data = kwargs.get('finance_data', [])  # Assuming finance_data is passed in kwargs
-            for data in finance_data:
+            for data in recomendation_data:
                 FinanceRecommendation.objects.create(
                     name=data['name'],
                     recommendation=data['recommendation'],

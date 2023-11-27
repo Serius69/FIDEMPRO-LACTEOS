@@ -48,7 +48,7 @@ class Variable(models.Model):
                     initials=data.get('initials'),
                     type=data.get('type'),
                     unit=data.get('unit'),
-                    image_src=f"/images/variable/{data.get('name').replace(' ', '')}.jpg",
+                    image_src=f"/images/variable/{data.get('name')}.jpg",
                     description=data.get('description'),
                     fk_product_id=product.id,
                     is_active=True

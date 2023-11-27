@@ -76,7 +76,7 @@ class Question(models.Model):
         help_text='The variable associated with the question'
         )
     type = models.IntegerField(default=1, help_text='The type of question')
-    posible_answers = models.JSONField(null=True, blank=True)
+    possible_answers = models.JSONField(null=True, blank=True)
     is_active = models.BooleanField(default=True, help_text='The status of the question')
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
     last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
@@ -88,33 +88,24 @@ class Question(models.Model):
         questionary = Questionary.objects.get(pk=instance.pk)
         if created:
             for data in question_data:
-                if data['type'] == 1: 
-                    try:
-                        variable = Variable.objects.get(initials=data['initials_variable'])
-                    except MultipleObjectsReturned:
-                        variable = Variable.objects.filter(initials=data['initials_variable']).first()
-                    
-                    Question.objects.create(
-                        question=data['question'],
-                        type=data['type'],
-                        fk_questionary_id=instance.id,
-                        fk_variable_id=variable.id,
-                        is_active=True
-                    )
+                try:
+                    variable = Variable.objects.get(initials=data['initials_variable'])
+                except MultipleObjectsReturned:
+                    variable = Variable.objects.filter(initials=data['initials_variable']).first()
+
+                if data['type'] == 1:
+                    possible_answers = None  # Default value if 'possible_answers' is not present
                 else:
-                    try:
-                        variable = Variable.objects.get(initials=data['initials_variable'])
-                    except MultipleObjectsReturned:
-                        variable = Variable.objects.filter(initials=data['initials_variable']).first()
+                    possible_answers = data.get('possible_answers')
                     
-                    Question.objects.create(
-                        question=data['question'],
-                        type=data['type'],
-                        fk_questionary_id=instance.id,
-                        posible_answers=data['possible_answers'],
-                        fk_variable_id=variable.id,
-                        is_active=True
-                    )
+                Question.objects.create(
+                    question=data['question'],
+                    type=data['type'],
+                    fk_questionary_id=instance.id,
+                    fk_variable_id=variable.id,
+                    possible_answers=possible_answers,
+                    is_active=True
+                )
             # hay que hacer que tambien se creen las preguntas de tipo 2
             def create_answer(instance):
                 questionary_result = QuestionaryResult.objects.create(

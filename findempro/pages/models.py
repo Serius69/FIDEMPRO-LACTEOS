@@ -18,7 +18,7 @@ class Instructions(models.Model):
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the finance was created')
     last_updated = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the finance was created')
     def __str__(self):
-        return f"Instructions: {self.id}"
+        return f"Instructions: {self.instruction}"
     class Meta:
         verbose_name_plural = 'Instructions'
     @receiver(post_save, sender=User)

@@ -80,7 +80,7 @@
                                                 </div>
                                                 <div class="card-body">
                                                     <p><strong>Nombre del cuestionario:</strong> {{ show_questionary.questionary }}</p>
-                                                    <p><strong>Empresa que abarcara las respuestas para la simulacion:</strong> {{ show_questionary.fk_business }}</p>
+                                                    <p><strong>Llenara datos para generar simulaciones con el producto:</strong> {{ show_questionary.fk_product.name }}</p>
                                                     <hr>
                                                     <h5>Instrucciones:</h5>
                                                     <ol>
@@ -165,7 +165,7 @@
                                             <div class="card mb-3">
                                                 <div class="card-body">
                                                     {% if questions_to_answer %}
-                                                        <form method="POST" action="{% url 'questionary:questionary.save' %}" onsubmit="return validateForm2()">
+                                                        <form method="POST" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm2()">
                                                             {% csrf_token %}
                                                             {% for question in questions_to_answer %}
                                                                 <h5 class="card-title">
@@ -175,14 +175,14 @@
                                                                         No se encontro una relacion con alguna variable
                                                                     {% endif %}
                                                                 </h5>
-                                                                <input type="hidden" name="question_id" value="{{ question.id }}">
+                                                                <input type="hidden" name="question_{{ question.id }}" value="{{ question.id }}">
                                                                 <input type="hidden" name="next_question_id" value="{{ next_question_id }}">
                                                                 <p class="card-text" name="question_id" id="question_id" value="{{ question.id }}"><i class="fa fa-id-badge" aria-hidden="true"></i> {{ question.question }}</p>
                                                                 {% if question.type == 1 %}
                                                                     <div class="input-group">
                                                                         <input type="number" value="{{ question.fk_answer.answer }}"
-                                                                        class="form-control" name="answer"
-                                                                        id="answer"
+                                                                        class="form-control" name="answer_{{ question.id }}"
+                                                                        id="answer_{{ question.id }}"
                                                                         placeholder="Responda la pregunta solo con números"
                                                                         required min="0" max="10000">
 
@@ -200,21 +200,22 @@
                                                                     </div>
                                                                 {% endif %}
                                                             {% endfor %}
-
-
-                                                            {% if questions_to_answer.last %}
-                                                                <div class="alert alert-info" role="alert">
-                                                                    ¡Es la última página de preguntas!
-                                                                </div>
-                                                                <button type="submit" name="save" class="btn btn-dark">Guardar Respuestas</button>
-                                                            </form>
-                                                            {% else %}
-
-                                                                <button type="submit" name="save" class="btn btn-dark">Guardar Respuestas</button>
-                                                            
+                                                            {% if not questions_to_answer.last %}
+                                                                {% if questions_to_answer.has_next %}
+                                                                    <button type="submit" name="save" formaction="?page={{ questions_to_answer.next_page_number }}" class="btn btn-dark">Siguiente Pagina</button>
+                                                                {% else %}
+                                                                <li class="page-item">
+                                                                    <form method="GET" action="{% url 'questionary:questionary.result' %}">
+                                                                        {% csrf_token %}
+                                                                        <div class="alert alert-info" role="alert">
+                                                                            ¡Es la última página de preguntas!
+                                                                        </div>
+                                                                        <button type="submit" name="next" class="btn btn-primary">Mostrar Resultados</button>
+                                                                        {% comment %} esto mostrara el ultimo questionary result {% endcomment %}
+                                                                    </form>
+                                                                </li>
+                                                                {% endif %}                                                                
                                                             {% endif %}
-
-                                                            
                                                         </form>
                                                     {% else %}
                                                         <p>No hay preguntas que responder.</p>
@@ -225,14 +226,7 @@
                                                         {% csrf_token %}
                                                         <button type="submit" name="cancel" class="btn btn-danger">Cancelar cuestionario</button>
                                                     </form>
-                                                    {% if questions_to_answer.last %}
-                                                        <li class="page-item">
-                                                            <form method="POST" action="{% url 'questionary:question.save' %}">
-                                                                {% csrf_token %}
-                                                                <button type="submit" name="next" class="btn btn-primary">Cuestionario de finalización</button>
-                                                            </form>
-                                                        </li>
-                                                    {% endif %}
+                                                    
                                                 </div>
                                             </div>
                                             <!-- Pagination -->
@@ -251,6 +245,7 @@
                                                     <ul
                                                         class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"  >   
                                                     </ul>
+                                                </div>
                                             </div>
                                             <!-- end row -->
                                         {% endif %} 
@@ -294,8 +289,6 @@
             return false; // Prevenir el envío del formulario
         }
 
-        // Agregar más validaciones según sea necesario
-
         // Ejemplo: Verificar si la respuesta es un número válido
         if (isNaN(answer)) {
             alert('Por favor, introduce un número válido para la respuesta.');
@@ -304,7 +297,7 @@
 
         // Ejemplo: Verificar si la respuesta está dentro de un rango específico
         var min = 0;
-        var max = 100;
+        var max = 1000;
         if (answer < min || answer > max) {
             alert('Por favor, introduce un número entre ' + min + ' y ' + max + ' para la respuesta.');
             return false;
