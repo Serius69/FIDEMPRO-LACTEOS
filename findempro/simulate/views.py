@@ -23,7 +23,8 @@ import matplotlib
 matplotlib.use('Agg')  # Modo no interactivo para evitar el error en entornos web
 import matplotlib.pyplot as plt
 import numpy as np
-from .utils import get_results_for_simulation, analyze_simulation_results, decision_support
+from finance.utils import analyze_simulation_results, decision_support
+from .utils import get_results_for_simulation
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import json
 import statistics
@@ -125,7 +126,8 @@ def simulate_show_view(request):
             'answers': answers,
             'image_data':image_data,
             'fdp': prob_density_function,
-            'demand_history': demand_history,
+            # esta parte cambiar luego soloes para pruebas
+            'demand_history': demand_mean,
             'equations_to_use': equations_to_use,
             'questionnaires_result': questionnaires_result,
             'questionary_result_instance': questionary_result_instance,
