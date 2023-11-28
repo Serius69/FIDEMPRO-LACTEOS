@@ -139,25 +139,26 @@
                                                             
                                                             <div class="col-md-6">
                                                                 {% if questionary_result_instance %}
-                                                                    <div class="card">
+                                                                    <div class="card shadow-sm">
                                                                         <div class="card-body">
                                                                             <h5 class="card-title">Informacion de la informacion</h5>
-                                                                            <p>Nombre Cuestionario: {{ questionary_result_instance.fk_questionary.name }}</p>
-                                                                            <p>Fecha de respuestas: {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
-                                                                            <p>Producto que cubre: {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>                                                                            
-                                                                            <p>Demanda Historica: {{ demand_history }}</p>
-
-
-                                                                            <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary">Ver Resultados del cuestionario</a>
-
-                                                                            <p>Cantidad de {{selected_unit_time}} que se hara la simulacion: {{selected_quantity_time}} </p>
-
-                                                                    
-                                    
+                                                                            <p class="mb-1"><strong>Nombre Cuestionario:</strong> {{ questionary_result_instance.fk_questionary.name }}</p>
+                                                                            <p class="mb-1"><strong>Fecha de respuestas:</strong> {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
+                                                                            <p class="mb-1"><strong>Producto que cubre:</strong> {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>
+                                                                            <p class="mb-1"><strong>Demanda Historica:</strong> {{ demand_history }}</p>
+                                                                            <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary mt-3">Ver Resultados del cuestionario</a>
+                                                                            <p class="mt-3"><strong>Cantidad de {% if selected_unit_time == '1' %}
+                                                                                                                    días
+                                                                                                                {% elif selected_unit_time == '2' %}
+                                                                                                                    meses
+                                                                                                                {% elif selected_unit_time == '3' %}
+                                                                                                                    años
+                                                                                                                {% endif %} que se hara la simulacion:</strong> {{selected_quantity_time}} </p>
+                                                                            <img src="data:image/png;base64,{{ image_data }}" class="img-fluid mt-3" alt="PDF Chart" style="max-width: 800px;">
                                                                         </div>
                                                                     </div>
                                                                 {% else %}
-                                                                    <p>No hay resultado de cuestionario seleccionado.</p>
+                                                                    <p>No hay modelo armado.</p>
                                                                 {% endif %}
                                                                 <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
                                                                     {% csrf_token %}
@@ -216,11 +217,9 @@
                                         </div>
                                     </div><!--end col-->
                                     {% comment %} </div> {% endcomment %}
-                                    
                                 </div><!--end row-->
                             <div>
-
-                                <div class="col-lg-12">
+                                <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                     <div class="card">
                                         <div class="card-header">
                                             <h4 class="card-title">Areas que se simularan</h4>
@@ -231,7 +230,7 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-12">
+                                                <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
                                                     <div class="row">
                                                         {% for area in areas %}
                                                             <div class="col-md-3">
@@ -242,9 +241,8 @@
                                                                         <h6 class="card-subtitle mb-2 text-muted">{{ area.fk_product.name }}</h6>
                                                                         <p class="card-text">{{ area.description }}</p>
                                                                         <h5>Ecuaciones:</h5>
-                                                                        {{ area.area_equation.all }}
-                                                                        {{ area.area_equation.all }}
-                                                                        {% for equation in area.equation_set.all %}
+                                                                        {% comment %} {{ area.area_equation.all }} {% endcomment %}
+                                                                        {% for equation in area.area_equation.all %}
                                                                             <article>
                                                                                 <p>{{ equation.id }}: {{ equation.name }}</p>
                                                                                 <p>{{ equation.expression }}</p>

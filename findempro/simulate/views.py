@@ -19,6 +19,8 @@ import openai
 openai.api_key = settings.OPENAI_API_KEY
 from django.http import JsonResponse
 from scipy.stats import kstest,norm,expon,lognorm
+import matplotlib
+matplotlib.use('Agg')  # Modo no interactivo para evitar el error en entornos web
 import matplotlib.pyplot as plt
 import numpy as np
 from .utils import get_results_for_simulation, analyze_simulation_results, decision_support
@@ -85,36 +87,35 @@ def simulate_show_view(request):
             std_dev = prob_density_function.std_dev_param
             if std_dev is not None:
                 pdf = norm.pdf(data, loc=mean, scale=std_dev)
+                distribution_label = 'Distribución normal'
             else:
                 pdf = np.zeros_like(data)
+                distribution_label = 'Distribución desconocida'
         elif prob_density_function.distribution_type == 2:  # Exponential distribution
             lambda_param = prob_density_function.lambda_param
             pdf = expon.pdf(data, scale=1 / lambda_param)
+            distribution_label = 'Distribución exponencial'
         elif prob_density_function.distribution_type == 3:  # Logarithmic distribution
             s = prob_density_function.lognormal_shape_param
             scale = prob_density_function.lognormal_scale_param
             pdf = lognorm.pdf(data, s=s, scale=scale)
+            distribution_label = 'Distribución logarítmica'
         else:
             pdf = None
 
         # Plotea la distribución de la muestra y la PDF generada
-        plt.hist(data, bins=20, density=True, alpha=0.5, label='Sample Distribution')
-        plt.plot(data, pdf, label='Probability Density Function (PDF)')
+        plt.hist(data, bins=20, density=True, alpha=0.5, label='Demanda Historica')
+        plt.plot(data, pdf, label=f'Función de densidad de probabilidad ({distribution_label})')
         plt.legend()
-        plt.xlabel('Value')
-        plt.ylabel('Probability Density')
-        plt.title('Comparison of Sample Distribution and PDF')
-        plt.show()
-        
+        plt.xlabel('Valor')
+        plt.ylabel('Densidad de probabilidad')
+        plt.title('Demanda historica VS Funcion de Densidad de Probabilidad (FDP)')        
         # Guarda el gráfico en un BytesIO buffer
         buffer = BytesIO()
         plt.savefig(buffer, format='png')
         buffer.seek(0)
-
         # Codifica el buffer en base64 para pasarlo al template
         image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
-        
-
         print("Se selecciono el cuestionario " + str(selected_questionary_result_id))
         print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
         print("Started: " + str(started))
@@ -122,6 +123,7 @@ def simulate_show_view(request):
         context = {
             'areas': areas,
             'answers': answers,
+            'image_data':image_data,
             'fdp': prob_density_function,
             'demand_history': demand_history,
             'equations_to_use': equations_to_use,
