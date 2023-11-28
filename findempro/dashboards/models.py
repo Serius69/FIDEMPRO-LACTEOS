@@ -47,7 +47,7 @@ class Chart(models.Model):
                 )
     @receiver(post_save, sender=Product)
     def save_dashboard(sender, instance, **kwargs):
-        for dashboard in instance.fk_product_dashboard.all():
+        for dashboard in instance.fk_product_charts.all():
             dashboard.is_active = instance.is_active
             dashboard.save()
 class Demand(models.Model):

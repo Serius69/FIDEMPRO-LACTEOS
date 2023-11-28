@@ -10,9 +10,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 import random
+import numpy as np
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime, timedelta
-from scipy.stats import expon
+from scipy.stats import expon, lognorm, norm
 class ProbabilisticDensityFunction(models.Model):
     DISTRIBUTION_TYPES = [
         (1, 'Normal'),
@@ -35,7 +36,7 @@ class ProbabilisticDensityFunction(models.Model):
     @receiver(post_save, sender=Product)
     def create_probabilistic_density_functions(sender, instance, created, **kwargs):
         distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic
-        names = ['Normal Distribution', 'Exponential Distribution', 'Logarithmic Distribution']
+        names = ['Normal Distribution', 'Exponential Distribution', 'Log-Normal Distribution']
 
         for distribution_type, name in zip(distribution_types, names):
             pdf = ProbabilisticDensityFunction(
@@ -45,23 +46,21 @@ class ProbabilisticDensityFunction(models.Model):
             )
             if distribution_type == 1:  # Normal distribution
                 pdf.lambda_param = 1.0  # Adjust with your specific values
-                pdf.cumulative_distribution_function = None  # Adjust with your specific values
+                pdf.cumulative_distribution_function = 0.5  # Adjust with your specific values
+                pdf.mean_param = 450.0
+                pdf.std_dev_param = 10.0
+            elif distribution_type == 2:  # Exponential distribution
+                pdf.lambda_param = 0.5           
+                pdf.cumulative_distribution_function = expon.cdf(2.0, scale=1/0.5) 
+                pdf.mean_param = 1 / 0.5 
+                pdf.std_dev_param = expon(scale=1/pdf.lambda_param).std()
+            elif distribution_type == 3:  # Log-Normal distribution
+                pdf.lambda_param = 0  # Adjust with your specific values
+                pdf.cumulative_distribution_function = lognorm.cdf(2.0, s=0.2, scale=np.exp(0.0))  # Adjust with your specific values
                 pdf.mean_param = 50.0
-                pdf.mean_param = 50.0
-            elif distribution_type == 2:
-                lambda_param = 0.5  
-                mean_param = 1 / lambda_param
-                pdf.lambda_param = lambda_param          
-                pdf.cumulative_distribution_function = expon.cdf 
-                pdf.mean_param = mean_param
-                pdf.mean_param = 50.0
-            elif distribution_type == 3:  # Logarithmic distribution
-                pdf.lambda_param = None  # Adjust with your specific values
-                pdf.cumulative_distribution_function = 0.8  # Adjust with your specific values
-                pdf.mean_param = 50.0
-                pdf.mean_param = 50.0
+                pdf.std_dev_param = np.exp(0.0 + (0.2 ** 2) / 2)
             pdf.save()
-            print('se crearon las distribuciones')
+        print('Se crearon las distribuciones')
 class DataPoint(models.Model):
     value = models.FloatField()
     is_active = models.BooleanField(default=True)
