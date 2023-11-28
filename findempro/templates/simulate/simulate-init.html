@@ -82,97 +82,105 @@
                                                                                     {% empty %}
                                                                                         <option>...</option>
                                                                                     {% endfor %}    
-                                                                                </select>
-
-
-
-
-
-                                                                                {% if not started %}
-                                                                                    <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
-                                                                                {% else %}                                          
-                                                                                {% endif %}
+                                                                                </select>                                                                                
                                                                             </div>
+                                                                            <div class="row">
+                                                                                <div class="col-md-6">
+                                                                                    <!-- Cantidad de Unidades de tiempo -->
+                                                                                    <label for="quantity_time" class="form-label">
+                                                                                        <span data-key="t-quantity-time">Cantidad de unidades de tiempo</span>
+                                                                                    </label>
+                                                                                    <input type="number" class="form-control" name="selected_quantity_time" id="selected_quantity_time"
+                                                                                        placeholder="Ingresa la cantidad de :" required min="0" max="90" title="Ingresa la cantidad en valores numéricos">
+                                                                                </div>
+                                                                                
+                                                                                <div class="col-md-6">
+                                                                                    <!-- Unidad de tiempo -->
+                                                                                    <label for="selected_unit_time" class="form-label" title="Selecciona la unidad de tiempo que deseas usar">
+                                                                                        <span data-key="t-timeunit"> Unidad de tiempo</span>
+                                                                                    </label>
+                                                                                    <div class="mb-3">
+                                                                                        <select id="selected_unit_time" name="selected_unit_time" class="form-select" data-choices data-choices-sorting="true">
+                                                                                            <option value="1">día</option>
+                                                                                            <option value="2">mes</option>
+                                                                                            <option value="3">año</option>    
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            {% if not started %}
+                                                                                <button type="submit" name="select" class="btn btn-primary">Armar Modelo de Simulacion</button>                                       
+                                                                            {% endif %}
                                                                         </form>
-                                                                {% endif %}
-                                                               
-                                                                
+                                                                {% endif %}       
+                                                            <!-- Agrega este script en tu página HTML -->
+                                                            <script>
+                                                                function validateForm3() {
+                                                                    // Obtén los elementos del formulario
+                                                                    var selectedQuestionaryResult = document.getElementById('selected_questionary_result');
+                                                                    var quantityTime = document.getElementById('selected_quantity_time');
 
-
-                                                                <script>
-                                                                    function validateForm3() {
-                                                                        var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
-                                                                        if (selectedQuestionary === 'Choose...') {
-                                                                            alert('Please select a questionary.');
-                                                                            return false;
-                                                                        }
-                                                                        return true;
+                                                                    // Realiza la validación aquí
+                                                                    if (selectedQuestionaryResult.value === 'Elegir...') {
+                                                                        alert('Por favor selecciona un resultado de cuestionario.');
+                                                                        return false; // Evita que el formulario se envíe si no pasa la validación
                                                                     }
-                                                                </script>
+
+                                                                    if (isNaN(quantityTime.value) || quantityTime.value < 0 || quantityTime.value > 90) {
+                                                                        alert('La cantidad de unidades de tiempo debe ser un número entre 0 y 90.');
+                                                                        return false;
+                                                                    }
+
+                                                                    // La validación pasó, puedes enviar el formulario
+                                                                    return true;
+                                                                }
+                                                            </script>
                                                             </div><!--end col-->
+                                                            
                                                             <div class="col-md-6">
                                                                 {% if questionary_result_instance %}
                                                                     <div class="card">
                                                                         <div class="card-body">
-                                                                            <h5 class="card-title">Informacion de los resultados del cuestionario seleccionado</h5>
-                                                                            <p>ID: {{ questionary_result_instance.id }}</p>
-                                                                            <p>Fecha de creacion: {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
-                                                                            <p>Producto que cubre: {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>
-                                                                            <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary">Ver Resultados</a>
+                                                                            <h5 class="card-title">Informacion de la informacion</h5>
+                                                                            <p>Nombre Cuestionario: {{ questionary_result_instance.fk_questionary.name }}</p>
+                                                                            <p>Fecha de respuestas: {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
+                                                                            <p>Producto que cubre: {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>                                                                            
+                                                                            <p>Demanda Historica: {{ demand_history }}</p>
+
+
+                                                                            <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary">Ver Resultados del cuestionario</a>
+
+                                                                            <p>Cantidad de {{selected_unit_time}} que se hara la simulacion: {{selected_quantity_time}} </p>
+
+                                                                    
+                                    
                                                                         </div>
                                                                     </div>
                                                                 {% else %}
                                                                     <p>No hay resultado de cuestionario seleccionado.</p>
                                                                 {% endif %}
+                                                                <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="questionary_result_id" value="{{ selected_questionary_result_id }}">
+                                                                    <input type="hidden" name="quantity_time" value="{{ selected_quantity_time }}">
+                                                                    <input type="hidden" name="unit_time" value="{{ selected_unit_time }}">
+                                                                    <input type="hidden" name="demand_history" value="{{ selected_demand_history }}">
+                                                                    <div class="col-lg-12">
+                                                                        <div class="d-flex justify-content-between">
+                                                                            <button type="submit" name="start" class="btn btn-primary" onclick="displayMessage()">Iniciar Modelo de Simulación</button>
+                                                                        </div><!--end col-->
+                                                                    </div><!--end row-->
+                                                                    <script>
+                                                                        function displayMessage() {
+                                                                            var message = document.getElementById('message');
+                                                                            message.style.display = 'block';
+                                                                            setTimeout(function() {
+                                                                                message.style.display = 'none';
+                                                                            }, 20000);  // Display the message for 20 seconds
+                                                                        }
+                                                                    </script>
+                                                                </form>
                                                             </div>
-                                                            
-                                                                {% csrf_token %}
-                                                                {% comment %} informacion de ceustionario para hacer la simualcion {% endcomment %}
-                                                                <input type="hidden" name="questionary_result_id" value="{{ selected_questionary_result_id }}">
-                                                                <input type="hidden" name="quantity_time" value="{{ quantity_time }}">
-                                                                <input type="hidden" name="unit_time" value="{{ unit_time }}">
-                                                                
-                                                                    <div class="col-md-6">
-                                                                        {% comment %} Cantidad de Unidad de tiempo que se usara para realizar la simulacion {% endcomment %}
-                                                                        <label for="quantity_time" class="form-label">
-                                                                            <span data-key="t-quantity-time">Cantidad de unidades de tiempo</span></label>
-                                                                        {% comment %} esto debe cambiar segun se escoja una opcion de unidad de tiempo tanto su validacion
-                                                                        como lo que se muestra {% endcomment %}
-                                                                        <input type="number" 
-                                                                            class="form-control" name="quantity_time"
-                                                                            id="quantity_time"
-                                                                            placeholder="Ingresa la cantidad de :"
-                                                                            required min="0" max="90"
-                                                                            title="Ingresa la cantidad en valores numericos">
-                                                                    </div><!--end col-->                                                            
-                                                                    <div class="col-md-6">
-                                                                        {% comment %} que unidad de tiempo se usara para la simulacion {% endcomment %}
-                                                                        <div class="mb-3">
-                                                                            <label for="unit_time" class="form-label" title="Select the unit of time you want to use">
-                                                                                <span data-key="t-timeunit"> Unidad de tiempo</span></label>
-                                                                            <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
-                                                                                <option value="1">día</option>
-                                                                                <option value="2">mes</option>
-                                                                                <option value="3">año</option>    
-                                                                            </select>
-                                                                        </div>
-                                                                    </div><!--end col-->
-                                                            <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
-                                                                <div class="col-lg-12">
-                                                                    <div class="d-flex justify-content-between">
-                                                                        <button type="submit" name="start" class="btn btn-primary" onclick="displayMessage()">Iniciar simulación</button>
-                                                                    </div><!--end col-->
-                                                                </div><!--end row-->
-                                                                <script>
-                                                                    function displayMessage() {
-                                                                        var message = document.getElementById('message');
-                                                                        message.style.display = 'block';
-                                                                        setTimeout(function() {
-                                                                            message.style.display = 'none';
-                                                                        }, 20000);  // Display the message for 20 seconds
-                                                                    }
-                                                                </script>
-                                                            </form>
                                                             <script>
                                                                 function validateForm() {
                                                                     var time = document.getElementById('time').value;

@@ -18,11 +18,15 @@ from sympy import Eq, sympify
 import openai
 openai.api_key = settings.OPENAI_API_KEY
 from django.http import JsonResponse
-from scipy.stats import kstest
+from scipy.stats import kstest,norm,expon,lognorm
+import matplotlib.pyplot as plt
 import numpy as np
 from .utils import get_results_for_simulation, analyze_simulation_results, decision_support
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+import json
+import statistics
+from io import BytesIO
+import base64
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def simulate_show_view(request):
@@ -37,12 +41,14 @@ def simulate_show_view(request):
     
     if request.method == 'GET' and 'select' in request.GET:
         selected_questionary_result_id = request.GET.get('selected_questionary_result', 0)
+        selected_quantity_time = request.GET.get('selected_quantity_time', 0)
+        selected_unit_time = request.GET.get('selected_unit_time', 0)
         request.session['selected_questionary_result_id'] = selected_questionary_result_id
         answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
         equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
         questionnaires_result = QuestionaryResult.objects.filter(is_active=True, 
                                                                  fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
-                    
+        # no tocar
         questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
             
         print(questionary_result_instance.fk_questionary.fk_product)
@@ -54,6 +60,61 @@ def simulate_show_view(request):
             fk_product_id=product_instance.id
         )
         questionary_result_instance= get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
+        # hasta aqui no tocar
+        
+        # primero buscar la demanda historica guardada en el resultado del cuestionario
+        demand_history = get_object_or_404(
+            Answer, 
+            fk_question__question='Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
+            fk_questionary_result_id=selected_questionary_result_id
+            )
+        print(demand_history.answer)   
+        # numbers = json.loads(demand_history.answer)
+        # solo para probar
+        numbers = json.loads('[513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]')
+        demand_mean = statistics.mean(numbers)
+        DemandHistorical.objects.create(demand=demand_mean)
+             
+        # segundo mandar esa demanda a la prueba de kolmogorov smirnov
+        prob_density_function = ProbabilisticDensityFunction.objects.get(pk=1)  # Reemplaza 1 con el ID de tu objeto
+        # La muestra de datos
+        data = numbers
+        # Genera la PDF basada en el tipo de distribución almacenada en el modelo
+        if prob_density_function.distribution_type == 1:  # Normal distribution
+            mean = prob_density_function.mean_param
+            std_dev = prob_density_function.std_dev_param
+            if std_dev is not None:
+                pdf = norm.pdf(data, loc=mean, scale=std_dev)
+            else:
+                pdf = np.zeros_like(data)
+        elif prob_density_function.distribution_type == 2:  # Exponential distribution
+            lambda_param = prob_density_function.lambda_param
+            pdf = expon.pdf(data, scale=1 / lambda_param)
+        elif prob_density_function.distribution_type == 3:  # Logarithmic distribution
+            s = prob_density_function.lognormal_shape_param
+            scale = prob_density_function.lognormal_scale_param
+            pdf = lognorm.pdf(data, s=s, scale=scale)
+        else:
+            pdf = None
+
+        # Plotea la distribución de la muestra y la PDF generada
+        plt.hist(data, bins=20, density=True, alpha=0.5, label='Sample Distribution')
+        plt.plot(data, pdf, label='Probability Density Function (PDF)')
+        plt.legend()
+        plt.xlabel('Value')
+        plt.ylabel('Probability Density')
+        plt.title('Comparison of Sample Distribution and PDF')
+        plt.show()
+        
+        # Guarda el gráfico en un BytesIO buffer
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+
+        # Codifica el buffer en base64 para pasarlo al template
+        image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+
         print("Se selecciono el cuestionario " + str(selected_questionary_result_id))
         print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
         print("Started: " + str(started))
@@ -61,32 +122,25 @@ def simulate_show_view(request):
         context = {
             'areas': areas,
             'answers': answers,
+            'fdp': prob_density_function,
+            'demand_history': demand_history,
             'equations_to_use': equations_to_use,
             'questionnaires_result': questionnaires_result,
             'questionary_result_instance': questionary_result_instance,
+            'selected_unit_time': selected_unit_time,
+            'selected_quantity_time': selected_quantity_time,
         }
         return render(request, 'simulate/simulate-init.html', context)
+    
     if request.method == "POST" and form.is_valid() and 'start' in request.POST:
-        request.session['started'] = True 
-        
+        # tomar los valores
+        request.session['started'] = True     
         simulation_instance = form.save(commit=False)
         answers = Answer.objects.order_by('id').filter(fk_questionary_result_id=simulation_instance.fk_questionary_result_id)
         areas = Area.objects.order_by('id').filter(fk_product_id=simulation_instance.fk_product_id)
-               
-        # primero buscar la demanda historica guardada en el resultado del cuestionario
-        demand_historic = get_object_or_404(
-            Answer, 
-            fk_question_question='Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
-            fk_questionary_result_id=simulation_instance.fk_questionary_result_id
-            )
-        DemandHistorical.objects.create(demand=demand_historic.answer)
-        # segundo mandar esa demanda a la prueba de kolmogorov smirnov
-        ProbabilisticDensityFunctionmanager.kolmovorov_smirnov_test(demand_historic.answer)
-        print(demand_historic.answer)
                                                              
         # tercero tomar que tipo de distribucion toma
-        fdp = ProbabilisticDensityFunctionmanager.get_fdp(demand_historic.fk_question.fk_variable.fk_fdp_id)
-        
+        # Supongamos que tienes un objeto ProbabilisticDensityFunction
         new_simulation = Simulation(
             fk_product=simulation_instance.fk_product,
             fk_business=simulation_instance.fk_business,
@@ -103,10 +157,11 @@ def simulate_show_view(request):
         context = {
             'areas': areas,
             'simulation_instance': simulation_instance,
-            'data_demand_historic': demand_historic,
+            # 'data_demand_historic': demand_historic,
             'started': started,            
             'questionnaires_result': questionnaires_result,
             'questionary_result_instance': questionary_result_instance,
+            'image_data': image_data
         }
         return redirect('simulate:simulate.show')  # Redirect to the next step in the simulation
     if request.method == 'POST' and 'cancel' in request.POST:
@@ -160,45 +215,7 @@ def simulate_show_view(request):
             'questionary_result_instance': questionary_result_instance,
         }
         return render(request, 'simulate/simulate-init.html', context)
-    
-class ProbabilisticDensityFunctionmanager:
-    @classmethod
-    def get_fdp(cls, fdp_id):
-        return ProbabilisticDensityFunction.objects.get(pk=fdp_id)
-    @classmethod
-    def kolmogorov_smirnov_test(cls, data_demand_historic):
-        try:
-            if not data_demand_historic:
-                raise Variable.DoesNotExist('Variable not found.')
-
-            data_points = DataPoint.objects.values_list('value', flat=True)
-            fdp = data_demand_historic.fdp
-
-            if isinstance(fdp, fdp.NormalDistribution):
-                distribution_type = 'norm'
-                distribution_args = (fdp.mean, fdp.std_deviation)
-            elif isinstance(fdp, ExponentialDistribution):
-                distribution_type = 'expon'
-                distribution_args = (0, 1 / fdp.lambda_param)
-            elif isinstance(fdp, LogNormalDistribution):
-                distribution_type = 'lognorm'
-                distribution_args = (fdp.mean, fdp.std_deviation)
-            else:
-                return JsonResponse({'error_message': 'Invalid distribution type.'})
-
-            p_value = stats.kstest(data_points, distribution_type, args=distribution_args)
-
-            if p_value < 0.05:
-                result = "Reject null hypothesis: Data does not fit the distribution."
-            else:
-                result = "Fail to reject null hypothesis: Data fits the distribution."
-
-            return HTTPResponse(result)
-
-        except Variable.DoesNotExist:
-            return JsonResponse({'error_message': 'Variable not found.'})
-
-
+  
 # aqui se le manda el Simulate object que se creo en la vista de arriba
 def simulate_result_simulation_view(request, simulation_id):
     results = get_results_for_simulation(simulation_id)
