@@ -30,10 +30,7 @@
                                         <div class="py-4">
                                             <h4 class="display-6 -text">SIMULAR</h4>
                                             <div class="container">                      
-                                              <p>Explore nuestra lista completa de productos que presenta una amplia gama de artículos obtenidos de 
-                                                nuestra extensa base de datos. Esta plataforma fácil de usar le permite tomar el control de su inventario
-                                                 de productos sin esfuerzo. Si usted es propietario de un negocio, administrador de existencias o 
-                                                 simplemente alguien apasionado por la organización, esta página está diseñada pensando en usted.</p>
+                                              <p>Ahora puedes generar simulaciones basadas en las respuestas de tus cuestionarios previos.</p>
                                               <h2>Características clave:</h2>
                                               <ul>
                                                 <li>
@@ -57,133 +54,297 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="row">
-                                    <div class="col-xxl-4">
+                                    <div class="col-xxl-12">
                                         <div class="card">
                                             <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Simulación de parámetros</h4>
+                                                <h4 class="card-title mb-0 flex-grow-1">Parametros para la simulacion</h4>
                                             </div><!-- end card header -->                                        
                                             <div class="card-body">
-                                                <p class="text-muted">Realice una simulación con los siguientes parámetros</p>
+                                                <p class="text-muted">Realizar una simulación con los siguientes parámetros</p>
                                                 <div class="live-preview">
-                                                    Selected: {{selected}}
-                                                    Started: {{simulation_started}}
                                                         <div class="row">
-                                                            <div class="col-md-12">
-                                                                {% if not selected %}
-                                                                    <form method="GET" action="{% url 'simulate:simulate.init' %}" onsubmit=validateForm3()>
-                                                                        {% csrf_token %}
-                                                                        <div class="mb-4">
-                                                                            <label for="selected_questionary_result" class="form-label" title="Select the information to use in the simulation">
-                                                                                <span data-key="t-timeunit"> Información del cuestionario para usar para la simulación</span>
-                                                                            </label>
-                                                                            <select id="selected_questionary_result" name="selected_questionary_result" class="form-select" data-choices data-choices-sorting="true">
-                                                                                <option selected>Elegir...</option>
-                                                                                {% for questionary_result in questionnaires_result %}
-                                                                                    <option value="{{ questionary_result.id }}">Resultado de cuestionario: {{ questionary_result.id }}</option>
-                                                                                {% empty %}
-                                                                                    <option>...</option>
-                                                                                {% endfor %}
-                                                                            </select>
-                                                                            <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
+                                                            <div class="col-md-6">
+                                                                {% if not started %}
+                                                                        <form method="GET" action="{% url 'simulate:simulate.show' %}" onsubmit=validateForm3()>
+                                                                            {% csrf_token %}
+                                                                            <div class="mb-4">
+                                                                                <label for="selected_questionary_result" class="form-label" title="Selecciona uno de los resultados de cuestionarios">
+                                                                                    <span data-key="t-timeunit"> Seleccionar los resultados de un cuestionario:</span>
+                                                                                </label>
+                                                                                <select id="selected_questionary_result" name="selected_questionary_result" class="form-select" 
+                                                                                data-choices data-choices-sorting="true" title="Selecciona uno de los resultados de cuestionarios">
+                                                                                    <option selected>Elegir...</option>
+                                                                                    {% for questionary_result in questionnaires_result %}
+                                                                                    <option for="selected_questionary_result_id" value="{{ questionary_result.id }}" 
+                                                                                    {% if questionary_result.id == selected_questionary_result_id %} selected {% endif %}>
+                                                                                        {{ questionary_result.id }} {{questionary_result.date_created}}
+                                                                                    </option>
+                                                                                    {% empty %}
+                                                                                        <option>...</option>
+                                                                                    {% endfor %}    
+                                                                                </select>                                                                                
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-md-6">
+                                                                                    <!-- Cantidad de Unidades de tiempo -->
+                                                                                    <label for="quantity_time" class="form-label">
+                                                                                        <span data-key="t-quantity-time">Cantidad de unidades de tiempo</span>
+                                                                                    </label>
+                                                                                    <input type="number" class="form-control" name="selected_quantity_time" id="selected_quantity_time"
+                                                                                        placeholder="Ingresa la cantidad de :" required min="0" max="90" title="Ingresa la cantidad en valores numéricos">
+                                                                                </div>
+                                                                                
+                                                                                <div class="col-md-6">
+                                                                                    <!-- Unidad de tiempo -->
+                                                                                    <label for="selected_unit_time" class="form-label" title="Selecciona la unidad de tiempo que deseas usar">
+                                                                                        <span data-key="t-timeunit"> Unidad de tiempo</span>
+                                                                                    </label>
+                                                                                    <div class="mb-3">
+                                                                                        <select id="selected_unit_time" name="selected_unit_time" class="form-select" data-choices data-choices-sorting="true">
+                                                                                            <option value="1">día</option>
+                                                                                            <option value="2">mes</option>
+                                                                                            <option value="3">año</option>    
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            {% if not started %}
+                                                                                <button type="submit" name="select" class="btn btn-primary">Armar Modelo de Simulacion</button>                                       
+                                                                            {% endif %}
+                                                                        </form>
+                                                                {% endif %}       
+                                                            <!-- Agrega este script en tu página HTML -->
+                                                            <script>
+                                                                function validateForm3() {
+                                                                    // Obtén los elementos del formulario
+                                                                    var selectedQuestionaryResult = document.getElementById('selected_questionary_result');
+                                                                    var quantityTime = document.getElementById('selected_quantity_time');
+
+                                                                    // Realiza la validación aquí
+                                                                    if (selectedQuestionaryResult.value === 'Elegir...') {
+                                                                        alert('Por favor selecciona un resultado de cuestionario.');
+                                                                        return false; // Evita que el formulario se envíe si no pasa la validación
+                                                                    }
+
+                                                                    if (isNaN(quantityTime.value) || quantityTime.value < 0 || quantityTime.value > 90) {
+                                                                        alert('La cantidad de unidades de tiempo debe ser un número entre 0 y 90.');
+                                                                        return false;
+                                                                    }
+
+                                                                    // La validación pasó, puedes enviar el formulario
+                                                                    return true;
+                                                                }
+                                                            </script>
+                                                            </div><!--end col-->
+                                                            
+                                                            <div class="col-md-6">
+                                                                {% if questionary_result_instance %}
+                                                                    <div class="card shadow-sm">
+                                                                        <div class="card-body">
+                                                                            <h5 class="card-title">Modelo Armado:</h5>
+                                                                            <p class="mb-1"><strong>Nombre Cuestionario:</strong> {{ questionary_result_instance.fk_questionary.questionary }}</p>
+                                                                            <p class="mb-1"><strong>Fecha de respuestas:</strong> {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
+                                                                            <p class="mb-1"><strong>Producto que cubre:</strong> {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>
+                                                                            <p class="mb-1"><strong>Media de la Demanda Historica:</strong> {{ demand_history }}</p>
+                                                                            <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary mt-3">Ver Resultados del cuestionario</a>
+                                                                            <p class="mt-3"><strong>Cantidad de {% if selected_unit_time == '1' %}
+                                                                                                                    días
+                                                                                                                {% elif selected_unit_time == '2' %}
+                                                                                                                    meses
+                                                                                                                {% elif selected_unit_time == '3' %}
+                                                                                                                    años
+                                                                                                                {% endif %} que se hara la simulacion:</strong> {{selected_quantity_time}} </p>
+                                                                            <img src="data:image/png;base64,{{ image_data }}" class="img-fluid mt-3" alt="PDF Chart" style="max-width: 400px;">
                                                                         </div>
-                                                                    </form>
+                                                                    </div>
                                                                 {% else %}
-                                                                    <form method="POST" action="{% url 'simulate:simulate.init' %}">
+                                                                    <p>No hay modelo armado.</p>
+                                                                {% endif %}
+                                                                <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="questionary_result_id" value="{{ selected_questionary_result_id }}">
+                                                                    <input type="hidden" name="quantity_time" value="{{ selected_quantity_time }}">
+                                                                    <input type="hidden" name="unit_time" value="{{ selected_unit_time }}">
+                                                                    <input type="hidden" name="demand_history" value="{{ selected_demand_history }}">
+                                                                    <div class="col-lg-12">
+                                                                        <div class="d-flex justify-content-between">
+                                                                            <button type="submit" name="start" class="btn btn-primary" onclick="displayMessage()">Iniciar Modelo de Simulación</button>
+                                                                        </div><!--end col-->
+                                                                    </div><!--end row-->
+                                                                    <script>
+                                                                        function displayMessage() {
+                                                                            var message = document.getElementById('message');
+                                                                            message.style.display = 'block';
+                                                                            setTimeout(function() {
+                                                                                message.style.display = 'none';
+                                                                            }, 20000);  // Display the message for 20 seconds
+                                                                        }
+                                                                    </script>
+                                                                </form>
+                                                            </div>
+                                                            <script>
+                                                                function validateForm() {
+                                                                    var time = document.getElementById('time').value;
+                                                                    var unitTime = document.getElementById('unit_time').value;
+                                                                    if (isNaN(time) || time < 0 || time > 90) {
+                                                                        alert('La cantidad de tiempo debe ser un número entre 0 y 90.');
+                                                                        return false;
+                                                                    }
+                                                                    if (unitTime === "") {
+                                                                        alert('Selecciona una unidad de tiempo.');
+                                                                        return false;
+                                                                    }
+                                                                    return true;
+                                                                }
+                                                            </script>
+                                                                {% if started %}
+                                                                    {% if request.session.simulation_id %}
+                                                                        <a href="{% url 'questionary:questionary.result' request.session.simulattion_id %}" class="btn btn-primary">Mostrar Resultados</a>
+                                                                    {% else %}
+                                                                        <!-- Handle the case where questionary_result_id is empty -->
+                                                                        <p>No hay ID de simulación disponible.</p>
+                                                                    {% endif %}    
+                                                                    <form method="POST" action="{% url 'simulate:simulate.show' %}">
                                                                         {% csrf_token %}
                                                                         <div class="mb-3">
-                                                                            <span data-key="t-result"> Resultados que se eligió: {{ selected_questionary_result }} </span>
-                                                                        </div>
-                                                                        <div class="mb-3">
-                                                                            <button type="submit" name="cancel" class="btn btn-danger">Cancelar selección</button>
+                                                                            <button type="submit" name="cancel" class="btn btn-danger">Cancelar simulacion</button>
                                                                         </div>
                                                                     </form>
                                                                 {% endif %}
-                                                            </div><!--end col-->
-                                                            <form action="{% url 'simulate:simulate.init' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
-                                                                {% csrf_token %}
-                                                                <input type="hidden" name="question_id" value="{{ selected_questionary_result_id }}">
-                                                                <div class="col-md-12">
-                                                                    <div class="mb-3">
-                                                                        <label for="unit_time" class="form-label" title="Select the unit of time you want to use"><span data-key="t-timeunit"> Unit of time</span></label>
-                                                                            <select id="unit_time" class="form-select" data-choices data-choices-sorting="true" >
-                                                                            <option selected>Elegir...</option>
-                                                                            <option value="1">año</option>
-                                                                            <option value="2">mes</option>
-                                                                            <option value="2">día</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div><!--end col-->
-                                                                <div class="col-lg-12">
-                                                                    <div class="d-flex justify-content-between">
-                                                                        <button type="submit" name="start" class="btn btn-primary">Iniciar simulación</button>
-                                                                        </div>
-                                                                    </div><!--end col-->
-                                                                </div><!--end row-->
-                                                            </form>
                                                         </div><!--end row-->
                                                 </div><!--end live-preview-->
                                             </div> <!-- end col -->
                                         </div>
+                                    </div><!--end col-->
                                     {% comment %} </div> {% endcomment %}
-                                    <div class="col-lg-8">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h4 class="card-title">Información previa</h4>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <h5>Ecuaciones que se utilizaran para la simulacion</h5>
-                                                        <ul>
-                                                            {% for equation in equations_to_use %}
-                                                                <li>
-                                                                    <h6>{{ equation.id }}</h6>
-                                                                    <h6>{{ equation.name }}</h6>
-                                                                    <p>{{ equation.expression }}</p>
-                                                                    <p>Variable 1: {{ equation.fk_variable1 }}</p>
-                                                                    <p>Variable 2: {{ equation.fk_variable2 }}</p>
-                                                                    <p>Variable 3: {{ equation.fk_variable3 }}</p>
-                                                                    <p>Variable 4 : {{ equation.fk_variable4 }}</p>
-                                                                    <p>Variable 5: {{ equation.fk_variable5 }}</p>
-                                                                </li>
-                                                            {% empty %}
-                                                                <p>No hay ecuaciones disponibles.</p>
+                                </div><!--end row-->
+                            <div>
+                                <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h4 class="card-title">Areas que se simularan</h4>
+                                            <p class="card-title-desc">Las siguientes areas se simularan con los datos del cuestionario seleccionado.
+                                            </p>
+                                            <p class="card-title-desc">Las ecuaciones que se usaran para la simulacion son las siguientes:  
+                                            </p>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                                                    <div class="row">
+                                                        {% for area in areas %}
+                                                            <div class="col-md-3">
+                                                                <div class="card">
+                                                                    <img src="{{ area.get_photo_url }}" class="card-img-top img-fluid" style="height: 100px; object-fit: cover;" alt="{{ area.name }}">
+                                                                    <div class="card-body">
+                                                                        <h5 class="card-subtitle mb-2 text-muted">{{ area.name }}</h5>
+                                                                        <h6 class="card-subtitle mb-2 text-muted">{{ area.fk_product.name }}</h6>
+                                                                        <p class="card-text">{{ area.description }}</p>
+                                                                        <hr> 
+                                                                        <h5>Ecuaciones:</h5>
+                                                                        {% comment %} {{ area.area_equation.all }} {% endcomment %}
+                                                                        <div id="equations{{ area.id }}">
+                                                                            {% for equation in area.area_equation.all.distinct %}
+                                                                                {% if equation.fk_area.fk_product.id == area.fk_product.id %}
+                                                                                    {% if equation.fk_area.id == area.id%}
+                                                                                    <article class="equation" style="display: none;">
+                                                                                        <p>
+                                                                                            {{ equation.id }}
+                                                                                            {{ equation.name }}</p>
+                                                                                        
+                                                                                        <p>{{ equation.expression }}</p>
+                                                                                        {% if equation.fk_variable1 %}
+                                                                                            <p class="small">Variable 1: {{ equation.fk_variable1.name }}</p>
+                                                                                        {% endif %}
+                                                                                        {% if equation.fk_variable2 %}
+                                                                                            <p class="small">Variable 2: {{ equation.fk_variable2.name }}</p>
+                                                                                        {% endif %}
+                                                                                        {% if equation.fk_variable3 %}
+                                                                                            <p class="small">Variable 3: {{ equation.fk_variable3.name }}</p>
+                                                                                        {% endif %}
+                                                                                        {% if equation.fk_variable4 %}
+                                                                                            <p class="small">Variable 4: {{ equation.fk_variable4.name }}</p>
+                                                                                        {% endif %}
+                                                                                        {% if equation.fk_variable5 %}
+                                                                                            <p class="small">Variable 5: {{ equation.fk_variable5.name }}</p>
+                                                                                        {% endif %}
+                                                                                    </article>
+                                                                                    {% endif %}
+                                                                                {% endif %}
+                                                                            {% empty %}
+                                                                                <p>No se encontraron ecuaciones para esta área.</p>
+                                                                            {% endfor %}
+                                                                        </div>
+                                                                        <button id="showMore{{ area.id }}" onclick="showMore({{ area.id }})">Mostrar más</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {% empty %}
+                                                            <p>No hay areas disponibles.</p>
+                                                        {% endfor %}
+                                                        <script>
+                                                            var indices = {};
+                                                            
+                                                            function showMore(areaId) {
+                                                                if (!(areaId in indices)) {
+                                                                    indices[areaId] = 0;
+                                                                }
+                                                                var equations = document.getElementById('equations' + areaId).getElementsByClassName('equation');
+                                                                var end = Math.min(indices[areaId] + 5, equations.length);
+                                                                for (; indices[areaId] < end; indices[areaId]++) {
+                                                                    equations[indices[areaId]].style.display = 'block';
+                                                                }
+                                                                if (indices[areaId] >= equations.length) {
+                                                                    document.getElementById('showMore' + areaId).style.display = 'none';
+                                                                }
+                                                            }
+                                                            
+                                                            // Show the first 5 equations for each area initially
+                                                            {% for area in areas %}
+                                                                showMore({{ area.id }});
                                                             {% endfor %}
-                                                        </ul>
-                                                    </div>
-
-                                                    {% comment %} <div class="col-md-4">
-                                                        <h5>Ecuaciones con sus respectivos datos</h5>
-                                                        <ul>
-                                                            {% for equation in equations_with_values %}
-                                                                <li>
-                                                                    <h6>{{ equation.name }}</h6>
-                                                                </li>
-                                                            {% empty %}
-                                                                <p>No hay ecuaciones con valores.</p>
-                                                            {% endfor %}
-                                                        </ul>
-                                                    </div> {% endcomment %}
-                                                    <div class="col-md-6">
-                                                        <h5>Detalles de simulación</h5>
-                                                        {% if simulation_started %}
-                                                            <p>¡Comenzó la simulación!</p>
-                                                            <p>Paso actual: {{ simulation_instance.current_step }}</p>
-                                                            <!-- Display simulation data for the current step -->
-                                                        {% else %}
-                                                            <p>No se inició una simulación.</p>
-                                                        {% endif %}
+                                                        </script>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div> 
-                                </div><!--end row-->
-                                
+                                    </div>
+                                </div> 
+                                <div class="col-lg-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h4 class="card-title">Información previa</h4>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h5>Ecuaciones con sus respectivos datos</h5>
+                                                    <ul>
+                                                        {% for equation in equations_with_values %}
+                                                            <li>
+                                                                <h6>{{ equation.name }}</h6>
+                                                            </li>
+                                                        {% empty %}
+                                                            <p>No hay ecuaciones con valores.</p>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h5>Detalles de simulación</h5>
+                                                    {% if started %}
+                                                        <p>¡Comenzó la simulación!</p>
+                                                        <p>Paso actual: {{ simulation_instance.current_step }}</p>
+                                                        <!-- Display simulation data for the current step -->
+                                                    {% else %}
+                                                        <p>No se inició una simulación.</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> 
 
                                 
-
-                            <div>
                         </div> <!-- container-fluid -->
                 </div>
                 </div>
@@ -201,58 +362,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" integrity="sha512-vjeXE7PyNKQmUtsaO+t4fT80y8AGCPiHdM2AUxP2dG9KqDYZSfGAF4RqXUsXgD9PwtGZe5Jr9Ok6mbT7FpQlgg==" crossorigin="anonymous"></script>
     <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
 
-    <script>
-        function validateForm3() {
-            var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
-            // Validate if a questionary is selected
-            if (selectedQuestionary === 'Choose...') {
-                alert('Please select a questionary.');
-                return false;
-            }
-            // Add more validations if needed
-            return true; // Submit the form if all validations pass
-        }
-    </script>
-    <script>
-        function validateForm() {
-            var unitTime = document.getElementById("unit_time").value;
-
-            // Verifica si se ha seleccionado una unidad de tiempo
-            if (unitTime === "Elegir...") {
-                alert("Por favor, selecciona una unidad de tiempo.");
-                return false; // Evita que el formulario se envíe
-            }
-
-            // Puedes agregar más validaciones según tus necesidades
-
-            return true; // Permite que el formulario se envíe
-        }
-    </script>
-    <script>
-        Dropzone.options.myDropzone = {
-            paramName: "file", // The name that will be used to transfer the file
-            maxFilesize: 5, // MB
-            previewsContainer: ".dropzone",
-            clickable: true,
-            acceptedFiles: ".txt",
-            maxFiles: 1, // Only one file
-            init: function() {
-                this.on("addedfile", function(file) {
-                    if (this.files.length > 1) {
-                        this.removeFile(this.files[0]);
-                    }
-                });
-                this.on("success", function(file, responseText) {
-                    // Check if the file has at least 30 data points
-                    var dataPoints = responseText.split('\n');
-                    if (dataPoints.length < 30) {
-                        alert("The file must contain at least 30 data points.");
-                        this.removeFile(file);
-                    }
-                });
-            }
-        };
-    </script>
-
-
+    
+    
 {% endblock extra_js %}

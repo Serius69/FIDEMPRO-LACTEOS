@@ -33,9 +33,9 @@
                                     <div class="p-2">
                                         <h3 class="text-white mb-1">{{user.first_name}} {{user.last_name}}</h3>
                                         {% if user.is_staff %}
-                                            <p class="text-muted mb-0">Administrator</p>
+                                            <p class="text-muted mb-0">Administrador</p>
                                             {% else %}
-                                            <p class="text-muted mb-0">User</p>
+                                            <p class="text-muted mb-0">Usuario</p>
                                             {% endif %}
                                         <div class="hstack text-white-50 gap-1">
                                             {% comment %} <div><i class="ri-building-line me-1 text-white text-opacity-75 fs-16 align-middle"></i>Sergio Troche</div> {% endcomment %}
@@ -47,19 +47,19 @@
                                         <div class="col-lg-6 col-4">
                                             <div class="p-2">
                                                 <h4 class="text-white mb-1">{{ business_count }}</h4>
-                                                <p class="fs-14 mb-0">Businesses</p>
+                                                <p class="fs-14 mb-0">Empresas</p>
                                             </div>
                                         </div> 
                                         <div class="col-lg-6 col-4">
                                             <div class="p-2">
                                                 <h4 class="text-white mb-1">{{ product_count }}</h4>
-                                                <p class="fs-14 mb-0">Products</p>
+                                                <p class="fs-14 mb-0">Productos</p>
                                             </div>
                                         </div>
                                         <div class="col-lg-6 col-4">
                                             <div class="p-2">
                                                 <h4 class="text-white mb-1">{{ variable_count }}</h4>
-                                                <p class="fs-14 mb-0">Variables</p>
+                                                <p class="fs-14 mb-0">variables</p>
                                             </div>
                                         </div> 
                                     </div>
@@ -76,22 +76,22 @@
                                         <ul class="nav nav-pills animation-nav profile-nav gap-2 gap-lg-3 flex-grow-1" role="tablist">
                                             <li class="nav-item">
                                                 <a class="nav-link fs-14 active" data-bs-toggle="tab" href="#overview-tab" role="tab">
-                                                    <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Overview</span>
+                                                    <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Descripción general</span>
                                                 </a>
                                             </li>
                                             <li class="nav-item">
                                                 <a class="nav-link fs-14" data-bs-toggle="tab" href="#products" role="tab">
-                                                    <i class="ri-price-tag-line d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Products</span>    
+                                                    <i class="ri-price-tag-line d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Productos</span>    
                                                 </a>
                                             </li>
                                             <li class="nav-item">
                                                 <a class="nav-link fs-14" data-bs-toggle="tab" href="#documents" role="tab">
-                                                    <i class="ri-folder-4-line d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Variables</span>   
+                                                    <i class="ri-folder-4-line d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">variables</span>   
                                                 </a>
                                             </li>
                                         </ul>
                                         <div class="flex-shrink-0">
-                                            <a href="{% url 'pages:pages.profile_settings' %}" class="btn btn-success"><i class="ri-edit-box-line align-bottom"></i> Edit Profile</a>
+                                            <a href="{% url 'user:user.profile_settings' %}" class="btn btn-success"><i class="ri-edit-box-line align-bottom"></i> Editar perfil</a>
                                         </div>
                                     </div>
                                     <!-- Tab panes -->
@@ -101,7 +101,7 @@
                                                 <div class="col-xxl-12">
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <h5 class="card-title mb-5">Complete Your Profile</h5>
+                                                            <h5 class="card-title mb-5">Completa tu perfil</h5>
                                                             <div class="progress animated-progess custom-progress progress-label">
                                                                 <div class="progress-bar bg-danger" role="progressbar" style="width: {{ completeness_percentage }}%" aria-valuenow="{{ completeness_percentage }}" aria-valuemin="0" aria-valuemax="100"><div class="label">{{ completeness_percentage }}%</div></div>
                                                             </div>
@@ -109,21 +109,21 @@
                                                     </div>                                                    
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <h5 class="card-title mb-3">Info</h5>
+                                                            <h5 class="card-title mb-3">Información</h5>
                                                             <div class="table-responsive">
                                                                 <table class="table table-borderless mb-0">
                                                                     <tbody>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Full Name :</th>
+                                                                            <th class="ps-0" scope="row">Nombre completo :</th>
                                                                             <td class="text-muted">{{user.first_name}} {{user.last_name}}</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">E-mail :</th>
+                                                                            <th class="ps-0" scope="row">Correo electrónico :lectrónico :</th>
                                                                             <td class="text-muted">{{user.email}}</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <th class="ps-0" scope="row">Joining Date</th>
-                                                                            <td class="text-muted">{{user.date_joined}}</td>
+                                                                            <th class="ps-0" scope="row">Dia de ingreso</th>
+                                                                            <td class="text-muted">{{ user.date_joined|date:"F j, Y, g:i a" }}</td>
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -162,7 +162,7 @@
                                                                                             <a href="product:product.overview" class="text-body">{{ business.name }}</a>
                                                                                         </h5>
                                                                                         <p class="text-muted text-truncate mb-0">
-                                                                                            Last Update: <span class="fw-semibold text-body">{{ business.last_updated|timesince }} ago</span>
+                                                                                            Última actualización: <span class="fw-semibold text-body">{{ business.last_updated|timesince }} ago</span>
                                                                                         </p>
                                                                                     </div>
                                                                                     <div class="ms-2">
@@ -173,7 +173,7 @@
                                                                                     <div class="flex-grow-1">
                                                                                         <div class="d-flex align-items-center gap-2">
                                                                                             <div>
-                                                                                                <h5 class="fs-12 text-muted mb-0">Products :</h5>
+                                                                                                <h5 class="fs-12 text-muted mb-0">Productos:</h5>
                                                                                             </div>
                                                                                             <div class="avatar-group">
                                                                                                 {% for product in products %}
@@ -207,12 +207,7 @@
                                                                                 colors="primary:#405189,secondary:#0ab39c"
                                                                                 style="width:75px;height:75px"
                                                                             ></lord-icon>
-                                                                            <h5 class="mt-2">No registered products in the database</h5>
-                                                                            <p class="text-muted mb-0">You can view products here:</p>
-                                                                            <a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'product:product.list' %}" role="tab">
-                                                                                <i class="ri-airplay-fill d-inline-block d-md-none"></i>
-                                                                                <span class="d-none d-md-inline-block">List Products</span>
-                                                                            </a>
+                                                                            <h5 class="mt-2">No hay productos registrados en la base de datos</h5>
                                                                         </div>                                                                    
                                                                         {% endfor %}
                                                                     </div>
@@ -238,11 +233,11 @@
                                                                     <div class="d-flex">
                                                                         <div class="flex-grow-1 text-muted overflow-hidden">
                                                                             <h5 class="fs-14 text-truncate"><a href="{% url 'product:product.overview' product.id %}" class="text-body">{{product.name}}</a></h5>
-                                                                            <p class="text-muted text-truncate mb-0">Last Update : <span class="fw-semibold text-body">{{product.last_updated}}</span></p>
+                                                                            <p class="text-muted text-truncate mb-0">Última actualización : <span class="fw-semibold text-body">{{product.last_updated}}</span></p>
                                                                         </div>
                                                                         <div class="flex-shrink-0 ms-2">
                                                                             {% if product.is_ready %}
-                                                                            <div class="badge bg-warning-subtle text-warning fs-10">Ready for simulation</div>
+                                                                            <div class="badge bg-warning-subtle text-warning fs-10">Listo para la simulación</div>
                                                                             {% else %}
                                                                             <div class="badge bg-warning-subtle text-warning fs-10">Inprogress</div>
                                                                             {% endif %}
@@ -327,12 +322,12 @@
                                                                 <table class="table table-borderless align-middle mb-0">
                                                                     <thead class="table-light">
                                                                         <tr>
-                                                                            <th scope="col">Variable Image</th>
-                                                                            <th scope="col">Variable Name</th>
-                                                                            <th scope="col">Unit</th>
-                                                                            <th scope="col">Type</th>                                                                            
-                                                                            <th scope="col">Created Date</th>
-                                                                            <th scope="col">Action</th>
+                                                                            <th scope="col">Imagen</th>
+                                                                            <th scope="col">Nombre de la variable</th>
+                                                                            <th scope="col">Unidades</th>
+                                                                            <th scope="col">Tipo</th>                                                                            
+                                                                            <th scope="col">Fecha de creación</th>
+                                                                            <th scope="col">Acción</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -351,10 +346,10 @@
                                                                                         <i class="ri-equalizer-fill"></i>
                                                                                     </a>
                                                                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink15">
-                                                                                        <li><a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}"><i class="ri-eye-fill me-2 align-middle text-muted"></i>View</a></li>
-                                                                                        <li><a class="dropdown-item" ><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Download</a></li>
+                                                                                        <li><a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}"><i class="ri-eye-fill me-2 align-middle text-muted"></i>Ver</a></li>
+                                                                                        <li><a class="dropdown-item" href="{% url 'variable:variable.edit' variable.id %}"><i class="ri-download-2-fill me-2 align-middle text-muted"></i>Editar</a></li>
                                                                                         <li class="dropdown-divider"></li>
-                                                                                        <li><a class="dropdown-item" ><i class="ri-delete-bin-5-line me-2 align-middle text-muted"></i>Delete</a></li>
+                                                                                        <li><a class="dropdown-item" ><i class="ri-delete-bin-5-line me-2 align-middle text-muted"></i>Borrar</a></li>
                                                                                     </ul>
                                                                                 </div>
                                                                             </td>
@@ -362,9 +357,9 @@
                                                                          {% empty %}
                                                                         <div class="text-center py-12">
                                                                             <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                            <h5 class="mt-2">Sorry there isn't any variable register in the database</h5>
-                                                                            <p class="text-muted mb-0">You have to go to: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'variable:variable.list' %}" role="tab">
-                                                                                <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">List Products</span>
+                                                                            <h5 class="mt-2">Lo siento, no hay ningún registro variable en la base de datos</h5>
+                                                                            <p class="text-muted mb-0">Tienes que ir a: </p><a class="nav-link fs-14 active" data-bs-toggle="tab" href="{% url 'variable:variable.list' %}" role="tab">
+                                                                                <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span class="d-none d-md-inline-block">Lista Variables</span>
                                                                             </a>
                                                                         </div>
                                                                         {% endfor %}

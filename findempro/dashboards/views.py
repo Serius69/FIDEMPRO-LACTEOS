@@ -7,7 +7,10 @@ from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from product.models import Product,Area
+from finance.models import FinanceRecommendation
 from business.models import Business
+from dashboards.models import Chart,Demand,DemandBehavior
+from simulate.models import ResultSimulation,Simulation
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass
@@ -32,21 +35,19 @@ def dashboard_admin(request):
         'users_change_percentage': users_change_percentage,
     }
     return render(request, 'dashboards/dashboard-admin.html', context)
+
 def dashboard_user(request) -> str:
     try:
         business = get_object_or_404(Business, fk_user=request.user)
     except Business.DoesNotExist:
         return redirect("business:business_list")
+    
+    recommendations=FinanceRecommendation.objects.filter(fk_business=business.id)
         
-    businesses = Business.objects.all()
+    businesses = Business.objects.all().filter(fk_user=request.user, is_active=True).order_by('-id')
     today = timezone.now()
     last_month = today - relativedelta(months=1)
-    users = User.objects.all()
-    users_last_month = User.objects.filter(date_joined__month=last_month.month, date_joined__year=last_month.year)
-    users_count = users.count()
-    users_last_month_count = users_last_month.count()
-    users_change = users_count - users_last_month_count
-    users_change_percentage = (users_change / users_last_month_count * 100) if users_last_month_count > 0 else 0
+    
     current_time = datetime.now().time()
     if current_time >= datetime(1900, 1, 1, 5, 0).time() and current_time < datetime(1900, 1, 1, 12, 0).time():
         greeting = "Buenos Dias"
@@ -56,32 +57,9 @@ def dashboard_user(request) -> str:
         greeting = "Buenas Noches"
     products = Product.objects.filter(fk_business=business.id)
     areas = Area.objects.filter(fk_product__fk_business=business.id)
-    products_ready = 0
-    products_no_ready = 0
+        
+    charts = Chart.objects.all()
     
-    paginator = Paginator(products, 10)  # Show 10 products per page
-    page = request.GET.get('page')
-    try:
-        products = paginator.page(page)
-    except PageNotAnInteger:
-        products = paginator.page(1)
-    except EmptyPage:
-        products = paginator.page(paginator.num_pages)
-            
-    paginator = Paginator(areas, 10)  # Show 10 products per page
-    page = request.GET.get('page')
-    try:
-        areas = paginator.page(page)
-    except PageNotAnInteger:
-        areas = paginator.page(1)
-    except EmptyPage:
-        areas = paginator.page(paginator.num_pages)        
-    
-    for product in products:
-        if product.is_ready == True:
-            products_ready += 1
-        else:
-            products_no_ready += 1
     total_revenue = sum(product.earnings or 0 for product in products)
     total_costs = sum(product.costs or 0 for product in products)
     total_inventory_levels = sum(product.inventory_levels or 0 for product in products)
@@ -89,14 +67,7 @@ def dashboard_user(request) -> str:
     total_profit_margin = sum(product.profit_margin or 0 for product in products)
 
     context: Dict[str, Any] = {
-        'users': users,
-        'users_last_month': users_last_month,
-        'users_count': users_count,
-        'users_last_month_count': users_last_month_count,
-        'users_change': users_change,
-        'users_change_percentage': users_change_percentage,
         'greeting': greeting,
-        'products': products,
         'areas': areas,
         'business': business,
         'businesses': businesses,
@@ -105,9 +76,9 @@ def dashboard_user(request) -> str:
         'total_inventory_levels': total_inventory_levels,
         'total_production_output': total_production_output,
         'total_profit_margin': total_profit_margin,
-        'products_ready': products_ready,
-        'products_no_ready': products_no_ready,
-        'total_products': products_ready+products_no_ready,
+        'charts': charts,
+        
+        'recommendations': recommendations
     }
 
     return render(request, 'dashboards/dashboard-user.html', context)

@@ -12,6 +12,7 @@ from django.utils import timezone
 import random
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime, timedelta
+from scipy.stats import expon
 class ProbabilisticDensityFunction(models.Model):
     DISTRIBUTION_TYPES = [
         (1, 'Normal'),
@@ -24,11 +25,13 @@ class ProbabilisticDensityFunction(models.Model):
         default=1, help_text='The type of the distribution')
     lambda_param = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0)], help_text='The lambda parameter for the exponential distribution')
     cumulative_distribution_function = models.FloatField(null=True, blank=True )  # CDF field
+    mean_param = models.FloatField(null=True, blank=True, help_text='Mean parameter for the normal distribution')
+    std_dev_param = models.FloatField(null=True, blank=True, help_text='Standard deviation parameter for the normal distribution')
+
     is_active = models.BooleanField(default=True, help_text='Whether the distribution is active or not')
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the distribution was created')
     last_updated = models.DateTimeField(auto_now=True, help_text='The date the distribution was last updated')
-    def __str__(self):
-        return f"{self.distribution_type()} - {self.name}"
+    
     @receiver(post_save, sender=Product)
     def create_probabilistic_density_functions(sender, instance, created, **kwargs):
         distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic
@@ -38,32 +41,41 @@ class ProbabilisticDensityFunction(models.Model):
             pdf = ProbabilisticDensityFunction(
                 name=name,
                 distribution_type=distribution_type,
-                lambda_param=None,
-                cumulative_distribution_function=None,
                 is_active=True
             )
-
+            if distribution_type == 1:  # Normal distribution
+                pdf.lambda_param = 1.0  # Adjust with your specific values
+                pdf.cumulative_distribution_function = None  # Adjust with your specific values
+                pdf.mean_param = 50.0
+                pdf.mean_param = 50.0
+            elif distribution_type == 2:
+                lambda_param = 0.5  
+                mean_param = 1 / lambda_param
+                pdf.lambda_param = lambda_param          
+                pdf.cumulative_distribution_function = expon.cdf 
+                pdf.mean_param = mean_param
+                pdf.mean_param = 50.0
+            elif distribution_type == 3:  # Logarithmic distribution
+                pdf.lambda_param = None  # Adjust with your specific values
+                pdf.cumulative_distribution_function = 0.8  # Adjust with your specific values
+                pdf.mean_param = 50.0
+                pdf.mean_param = 50.0
             pdf.save()
-
-        return "Three ProbabilisticDensityFunction objects created successfully."
+            print('se crearon las distribuciones')
 class DataPoint(models.Model):
     value = models.FloatField()
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-    def __str__(self):        return f'DataPoint: {self.value}'
+    def __str__(self):        
+        return f'DataPoint: {self.value}'
 
 class DemandHistorical(models.Model):
-    unit_time = models.IntegerField()
     demand = models.IntegerField()
 class Simulation(models.Model):
+    quantity_time = models.IntegerField(default=1, help_text='The quantity of the simulation')
     unit_time = models.CharField(max_length=100, default='day', help_text='The unit of time for the simulation')
-    fk_fdp = models.ForeignKey(
-        ProbabilisticDensityFunction, 
-        on_delete=models.CASCADE,
-        related_name='fk_fdp_simulation', 
-        default=ProbabilisticDensityFunction.objects.first(), null=True, blank=True,     
-        help_text='The probabilistic density function associated with the simulation')
+    fk_fdp = models.ForeignKey(ProbabilisticDensityFunction, on_delete=models.CASCADE, default=1)
     # se guardara un archivo JSON con los 30 datos de la demanda historica
     demand_history = models.JSONField(null=True, blank=True, help_text='The demand history for the simulation')
     fk_questionary_result = models.ForeignKey(

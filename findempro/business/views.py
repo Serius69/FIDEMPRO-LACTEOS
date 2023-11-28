@@ -20,7 +20,7 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def business_list(request):
     form = BusinessForm()
     try:
-        businesses = Business.objects.filter(fk_user=request.user).order_by('-id')
+        businesses = Business.objects.filter(fk_user=request.user, is_active=True).order_by('-id')
         paginator = Paginator(businesses, 10)
         page = request.GET.get('page')
         try:
@@ -43,7 +43,7 @@ def business_list(request):
 def business_overview(request, pk):
     # try:
         business = get_object_or_404(Business, pk=pk)
-        products = Product.objects.filter(fk_business_id=business.id, fk_business__fk_user=request.user).order_by('-id')
+        products = Product.objects.filter(fk_business_id=business.id, fk_business__fk_user=request.user, is_active=True).order_by('-id')
         paginator = Paginator(products, 10)
         page = request.GET.get('page')
         try:

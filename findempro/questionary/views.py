@@ -57,6 +57,53 @@ def questionnaire_list_view(request):
         request.session['questionary_result_id'] = questionary_result_id
         print("Se seteo la variable questionary_result_id " + str(questionary_result_id))
         return redirect(reverse('questionary:questionary.list'))
+
+    if request.method == 'POST' and 'save' in request.POST:
+        selected_questionary_id = request.session.get('selected_questionary_id')
+        questionary_result_id = request.session.get('questionary_result_id')
+        # post_data = {k: v for k, v in request.POST.items() if not k.startswith('csrf')}
+        for key, value in request.POST.items():
+            # aqui esta mostranto solo quietion id en texto tiene que mostrar el numero de la pregunta no esto
+            if key.startswith('question_'):
+                question_id = int(value)
+                answer = request.POST.get(f'answer_{question_id}')
+                print(f'Question ID: {question_id}, Answer: {answer}')
+
+                question_instance = get_object_or_404(Question, pk=question_id)
+                print(f'Saving answer for question {question_instance.id}: {answer} in questionnaire result {selected_questionary_id}')
+
+                answer_instance = Answer.objects.create(
+                    fk_question=question_instance,
+                    answer=answer,
+                    fk_questionary_result_id=questionary_result_id
+                )
+                answer_instance.save()
+                # Check if 'page' parameter is present in the reques
+        print("Se guardaran las respuestas en el questionary_result: " + str(questionary_result_id))
+        selected_questionary_id = request.session.get('selected_questionary_id')
+        print("Se comenzó el cuestionario seleccionado" + str(selected_questionary_id))
+        show_questionary = Questionary.objects.get(pk=selected_questionary_id)
+        if selected_questionary_id == None: 
+            questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user) 
+        else:
+            questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
+        paginator = Paginator(questions_to_answer, 5) 
+              
+        page_number = request.GET.get('page', 1)
+        try:
+            # Attempt to get the requested page
+            next_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            next_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            next_page = paginator.page(paginator.num_pages)
+        request.session['questionary_result_id'] = questionary_result_id
+        return redirect(reverse('questionary:questionary.list') + f'?page={next_page.number}')
+        # return redirect(reverse('questionary:questionary.list'))
     
     if request.method == 'POST' and 'cancel' in request.POST:
         request.session['started'] = False
@@ -108,6 +155,7 @@ def questionnaire_list_view(request):
             questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
             questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__fk_business__fk_user=request.user)
         paginator = Paginator(questions_to_answer, 5) 
+        
         page = request.GET.get('page')
         
         try:
@@ -126,24 +174,22 @@ def questionnaire_list_view(request):
         }   
         return render(request, 'questionary/questionary-list.html', context)
                                 
-
-
-def questionnaire_save_view(request):
-    if request.method == 'POST':
-        questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
-        for question in questions_to_answer:
-            answer_text = request.POST.get('answer_' + str(question.id))
-            answer = Answer(answer=answer_text, fk_question=question)
-            answer.save()
-        return redirect('questionary:questionary.result')
-    else:
-        questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
-        context = {
-            'questions_to_answer': questions_to_answer
-        }
-        return render(request, 'questionary/questionnaire_form.html', context)
-               # Add your code here to render the form
-        pass
+# def questionnaire_save_view(request):
+#     if request.method == 'POST':
+#         questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
+#         for question in questions_to_answer:
+#             answer_text = request.POST.get('answer_' + str(question.id))
+#             answer = Answer(answer=answer_text, fk_question=question)
+#             answer.save()
+#         return redirect('questionary:questionary.result')
+#     else:
+#         questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
+#         context = {
+#             'questions_to_answer': questions_to_answer
+#         }
+#         return render(request, 'questionary/questionnaire_form.html', context)
+#                # Add your code here to render the form
+#         pass
 def questionnaire_result_view(request, pk):
     # try:
         questionary_result = get_object_or_404(QuestionaryResult, pk=pk)
