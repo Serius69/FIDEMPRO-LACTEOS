@@ -121,12 +121,9 @@ def simulate_show_view(request):
             equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
             questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
                     
-            questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
-            
-            questionary_instance = get_object_or_404(Questionary, )
+            questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)            
             print(questionary_result_instance.fk_questionary.fk_product)
             product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product)
-            
             
             areas = Area.objects.order_by('id').filter(
                 is_active=True, 
@@ -203,26 +200,12 @@ class ProbabilisticDensityFunctionmanager:
 
 
 # aqui se le manda el Simulate object que se creo en la vista de arriba
-def simulate_result_simulation_view(request):
+def simulate_result_simulation_view(request, simulation_id):
     results = get_results_for_simulation(simulation_id)
     analysis_results = analyze_simulation_results(results)
     decision = decision_support(analysis_results)
     
-    data = {
-            'demanda_inicial': 100,
-            'tasa_crecimiento': 5,
-            'horizonte': 12,
-            'utilidad_neta': 2000,
-            'flujo_caja': 5000,
-            'simulate': {
-                'date': '2023-11-23',
-                'variable': 'Variable 1',
-                'unit': 'Unit 1',
-                'unittime': 'Month',
-                'result': 'Result 1'
-            },
-            'demand_data': [100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155],
-            }
-    return render(request, 'simulate/simulate-result.html',data)
+
+    return render(request, 'simulate/simulate-result.html')
 
     

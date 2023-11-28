@@ -68,10 +68,11 @@
                                                                         <form method="GET" action="{% url 'simulate:simulate.show' %}" onsubmit=validateForm3()>
                                                                             {% csrf_token %}
                                                                             <div class="mb-4">
-                                                                                <label for="selected_questionary_result" class="form-label" title="Select the information to use in the simulation">
+                                                                                <label for="selected_questionary_result" class="form-label" title="Selecciona uno de los resultados de cuestionarios">
                                                                                     <span data-key="t-timeunit"> Información del cuestionario para usar para la simulación</span>
                                                                                 </label>
-                                                                                <select id="selected_questionary_result" name="selected_questionary_result" class="form-select" data-choices data-choices-sorting="true">
+                                                                                <select id="selected_questionary_result" name="selected_questionary_result" class="form-select" 
+                                                                                data-choices data-choices-sorting="true" title="Selecciona uno de los resultados de cuestionarios">
                                                                                     <option selected>Elegir...</option>
                                                                                     {% for questionary_result in questionnaires_result %}
                                                                                     <option for="selected_questionary_result_id" value="{{ questionary_result.id }}" 
@@ -82,6 +83,11 @@
                                                                                         <option>...</option>
                                                                                     {% endfor %}    
                                                                                 </select>
+
+
+
+
+
                                                                                 {% if not started %}
                                                                                     <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
                                                                                 {% else %}                                          
@@ -89,6 +95,20 @@
                                                                             </div>
                                                                         </form>
                                                                 {% endif %}
+                                                               
+                                                                
+
+
+                                                                <script>
+                                                                    function validateForm3() {
+                                                                        var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
+                                                                        if (selectedQuestionary === 'Choose...') {
+                                                                            alert('Please select a questionary.');
+                                                                            return false;
+                                                                        }
+                                                                        return true;
+                                                                    }
+                                                                </script>
                                                             </div><!--end col-->
                                                             <div class="col-md-6">
                                                                 {% if questionary_result_instance %}
@@ -105,22 +125,25 @@
                                                                     <p>No hay resultado de cuestionario seleccionado.</p>
                                                                 {% endif %}
                                                             </div>
-                                                            <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
+                                                            
                                                                 {% csrf_token %}
                                                                 {% comment %} informacion de ceustionario para hacer la simualcion {% endcomment %}
                                                                 <input type="hidden" name="questionary_result_id" value="{{ selected_questionary_result_id }}">
-                                                                <div class="row">
+                                                                <input type="hidden" name="quantity_time" value="{{ quantity_time }}">
+                                                                <input type="hidden" name="unit_time" value="{{ unit_time }}">
+                                                                
                                                                     <div class="col-md-6">
                                                                         {% comment %} Cantidad de Unidad de tiempo que se usara para realizar la simulacion {% endcomment %}
-                                                                        <label for="time" class="form-label" title="Ingresa la cantidad de ">
-                                                                            <span data-key="t-answer">Cantidad</span></label>
+                                                                        <label for="quantity_time" class="form-label">
+                                                                            <span data-key="t-quantity-time">Cantidad de unidades de tiempo</span></label>
                                                                         {% comment %} esto debe cambiar segun se escoja una opcion de unidad de tiempo tanto su validacion
                                                                         como lo que se muestra {% endcomment %}
-                                                                        <input type="number" value="{{ question.fk_answer.answer }}"
-                                                                            class="form-control" name="time"
-                                                                            id="time"
-                                                                            placeholder="Ingresa la cantidad de:"
-                                                                            required min="0" max="90">
+                                                                        <input type="number" 
+                                                                            class="form-control" name="quantity_time"
+                                                                            id="quantity_time"
+                                                                            placeholder="Ingresa la cantidad de :"
+                                                                            required min="0" max="90"
+                                                                            title="Ingresa la cantidad en valores numericos">
                                                                     </div><!--end col-->                                                            
                                                                     <div class="col-md-6">
                                                                         {% comment %} que unidad de tiempo se usara para la simulacion {% endcomment %}
@@ -134,13 +157,37 @@
                                                                             </select>
                                                                         </div>
                                                                     </div><!--end col-->
-                                                                </div><!--end row-->
+                                                            <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
                                                                 <div class="col-lg-12">
                                                                     <div class="d-flex justify-content-between">
-                                                                        <button type="submit" name="start" class="btn btn-primary">Iniciar simulación</button>
+                                                                        <button type="submit" name="start" class="btn btn-primary" onclick="displayMessage()">Iniciar simulación</button>
                                                                     </div><!--end col-->
                                                                 </div><!--end row-->
+                                                                <script>
+                                                                    function displayMessage() {
+                                                                        var message = document.getElementById('message');
+                                                                        message.style.display = 'block';
+                                                                        setTimeout(function() {
+                                                                            message.style.display = 'none';
+                                                                        }, 20000);  // Display the message for 20 seconds
+                                                                    }
+                                                                </script>
                                                             </form>
+                                                            <script>
+                                                                function validateForm() {
+                                                                    var time = document.getElementById('time').value;
+                                                                    var unitTime = document.getElementById('unit_time').value;
+                                                                    if (isNaN(time) || time < 0 || time > 90) {
+                                                                        alert('La cantidad de tiempo debe ser un número entre 0 y 90.');
+                                                                        return false;
+                                                                    }
+                                                                    if (unitTime === "") {
+                                                                        alert('Selecciona una unidad de tiempo.');
+                                                                        return false;
+                                                                    }
+                                                                    return true;
+                                                                }
+                                                            </script>
                                                                 {% if started %}
                                                                     {% if request.session.simulation_id %}
                                                                         <a href="{% url 'questionary:questionary.result' request.session.simulattion_id %}" class="btn btn-primary">Mostrar Resultados</a>
@@ -169,6 +216,10 @@
                                     <div class="card">
                                         <div class="card-header">
                                             <h4 class="card-title">Areas que se simularan</h4>
+                                            <p class="card-title-desc">Las siguientes areas se simularan con los datos del cuestionario seleccionado.
+                                            </p>
+                                            <p class="card-title-desc">Las ecuaciones que se usaran para la simulacion son las siguientes:  
+                                            </p>
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
@@ -183,7 +234,9 @@
                                                                         <h6 class="card-subtitle mb-2 text-muted">{{ area.fk_product.name }}</h6>
                                                                         <p class="card-text">{{ area.description }}</p>
                                                                         <h5>Ecuaciones:</h5>
-                                                                        {% for equation in area.area_equation.all %}
+                                                                        {{ area.area_equation.all }}
+                                                                        {{ area.area_equation.all }}
+                                                                        {% for equation in area.equation_set.all %}
                                                                             <article>
                                                                                 <p>{{ equation.id }}: {{ equation.name }}</p>
                                                                                 <p>{{ equation.expression }}</p>
@@ -270,58 +323,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" integrity="sha512-vjeXE7PyNKQmUtsaO+t4fT80y8AGCPiHdM2AUxP2dG9KqDYZSfGAF4RqXUsXgD9PwtGZe5Jr9Ok6mbT7FpQlgg==" crossorigin="anonymous"></script>
     <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
 
-    <script>
-        function validateForm3() {
-            var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
-            // Validate if a questionary is selected
-            if (selectedQuestionary === 'Choose...') {
-                alert('Please select a questionary.');
-                return false;
-            }
-            // Add more validations if needed
-            return true; // Submit the form if all validations pass
-        }
-    </script>
-    <script>
-        function validateForm() {
-            var unitTime = document.getElementById("unit_time").value;
-
-            // Verifica si se ha seleccionado una unidad de tiempo
-            if (unitTime === "Elegir...") {
-                alert("Por favor, selecciona una unidad de tiempo.");
-                return false; // Evita que el formulario se envíe
-            }
-
-            // Puedes agregar más validaciones según tus necesidades
-
-            return true; // Permite que el formulario se envíe
-        }
-    </script>
-    <script>
-        Dropzone.options.myDropzone = {
-            paramName: "file", // The name that will be used to transfer the file
-            maxFilesize: 5, // MB
-            previewsContainer: ".dropzone",
-            clickable: true,
-            acceptedFiles: ".txt",
-            maxFiles: 1, // Only one file
-            show: function() {
-                this.on("addedfile", function(file) {
-                    if (this.files.length > 1) {
-                        this.removeFile(this.files[0]);
-                    }
-                });
-                this.on("success", function(file, responseText) {
-                    // Check if the file has at least 30 data points
-                    var dataPoints = responseText.split('\n');
-                    if (dataPoints.length < 30) {
-                        alert("The file must contain at least 30 data points.");
-                        this.removeFile(file);
-                    }
-                });
-            }
-        };
-    </script>
-
-
+    
+    
 {% endblock extra_js %}

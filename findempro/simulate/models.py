@@ -56,14 +56,9 @@ class DemandHistorical(models.Model):
     unit_time = models.IntegerField()
     demand = models.IntegerField()
 class Simulation(models.Model):
+    quantity_time = models.IntegerField(default=1, help_text='The quantity of the simulation')
     unit_time = models.CharField(max_length=100, default='day', help_text='The unit of time for the simulation')
     fk_fdp = models.ForeignKey(ProbabilisticDensityFunction, on_delete=models.CASCADE, default=1)
-    # fk_fdp = models.ForeignKey(
-    #     ProbabilisticDensityFunction, 
-    #     on_delete=models.CASCADE,
-    #     related_name='fk_fdp_simulation', 
-    #     default=ProbabilisticDensityFunction.objects.first(), null=True, blank=True,     
-    #     help_text='The probabilistic density function associated with the simulation')
     # se guardara un archivo JSON con los 30 datos de la demanda historica
     demand_history = models.JSONField(null=True, blank=True, help_text='The demand history for the simulation')
     fk_questionary_result = models.ForeignKey(
