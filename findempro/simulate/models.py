@@ -75,8 +75,6 @@ class ProbabilisticDensityFunction(models.Model):
             probabilistic_density_function.save()
             print('Se guardaron las fdps')
 
-class DemandHistorical(models.Model):
-    demand = models.IntegerField()
 class Simulation(models.Model):
     quantity_time = models.IntegerField(default=1, help_text='The quantity of the simulation')
     unit_time = models.CharField(max_length=100, default='day', help_text='The unit of time for the simulation')
@@ -101,6 +99,7 @@ class Simulation(models.Model):
         if fdp_instance is not None:
             demand = [513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]
             # Create the Simulation
+            current_date = datetime.now()
             simulation = Simulation(
                 unit_time='day',
                 fk_fdp=fdp_instance,
@@ -110,12 +109,69 @@ class Simulation(models.Model):
                 is_active=True
             )
             simulation.save()
+            create_random_result_simulations(simulation, current_date)
+
+            def create_random_result_simulations(sender, instance, created, **kwargs):
+                # Obtén la fecha inicial de la instancia de Simulation
+                current_date = instance.date_created
+                fk_simulation = Simulation.objects.get(id=instance.id)
+                days = 30
+                for _ in range(days):
+                    demand_mean = 0
+                    demand = [random.uniform(1000, 5000) for _ in range(10)]
+                    demand_std_deviation = random.uniform(5, 20)            
+                    variables = {
+                        "CTR": [random.uniform(1000, 5000) for _ in range(10)],
+                        "CTAI": [random.uniform(5000, 20000) for _ in range(10)],
+                        "TPV": [random.uniform(1000, 5000) for _ in range(10)],
+                        "TPPRO": [random.uniform(800, 4000) for _ in range(10)],
+                        "DI": [random.uniform(50, 200) for _ in range(10)],
+                        "VPC": [random.uniform(500, 1500) for _ in range(10)],
+                        "IT": [random.uniform(5000, 20000) for _ in range(10)],
+                        "GT": [random.uniform(3000, 12000) for _ in range(10)],
+                        "TCA": [random.uniform(500, 2000) for _ in range(10)],
+                        "NR": [random.uniform(0.1, 0.5) for _ in range(10)],
+                        "GO": [random.uniform(1000, 5000) for _ in range(10)],
+                        "GG": [random.uniform(1000, 5000) for _ in range(10)],
+                        "GT": [random.uniform(2000, 8000) for _ in range(10)],
+                        "CTT": [random.uniform(1000, 5000) for _ in range(10)],
+                        "CPP": [random.uniform(500, 2000) for _ in range(10)],
+                        "CPV": [random.uniform(500, 2000) for _ in range(10)],
+                        "CPI": [random.uniform(500, 2000) for _ in range(10)],
+                        "CPMO": [random.uniform(500, 2000) for _ in range(10)],
+                        "CUP": [random.uniform(500, 2000) for _ in range(10)],
+                        "FU": [random.uniform(0.1, 0.5) for _ in range(10)],
+                        "TG": [random.uniform(2000, 8000) for _ in range(10)],
+                        "IB": [random.uniform(3000, 12000) for _ in range(10)],
+                        "MB": [random.uniform(2000, 8000) for _ in range(10)],
+                        "RI": [random.uniform(1000, 5000) for _ in range(10)],
+                        "RTI": [random.uniform(1000, 5000) for _ in range(10)],
+                        "RTC": [random.uniform(0.1, 0.5) for _ in range(10)],
+                        "PM": [random.uniform(500, 1500) for _ in range(10)],
+                        "PE": [random.uniform(1000, 5000) for _ in range(10)],
+                        "HO": [random.uniform(10, 50) for _ in range(10)],
+                        "CHO": [random.uniform(1000, 5000) for _ in range(10)],
+                        "CA": [random.uniform(1000, 5000) for _ in range(10)],
+                    }
+                    demand_mean = np.mean(demand)
+                    means = {variable: np.mean(values) for variable, values in variables.items()}
+                    result_simulation = ResultSimulation(
+                        demand_mean=demand_mean,
+                        demand_std_deviation=demand_std_deviation,
+                        date=current_date,
+                        variables=means,
+                        fk_simulation=fk_simulation,
+                        is_active=True
+                    )
+                    result_simulation.save()
+    
     @receiver(post_save, sender=QuestionaryResult)
     def save_question(sender, instance, **kwargs):
         for simulate in instance.simulations.all():
             simulate.is_active = instance.is_active
             simulate.save()
-        
+
+# se tienen que guardar de 30 dias no 30 dias en una solafila o campo
 class ResultSimulation(models.Model):
     demand_mean = models.DecimalField(max_digits=10, decimal_places=2,help_text='The mean of the demand')
     demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2,help_text='The standard deviation of the demand')
@@ -131,68 +187,20 @@ class ResultSimulation(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
-    @receiver(post_save, sender=Simulation)
-    def create_random_result_simulations(sender, instance, created, **kwargs):
-        fk_simulation = Simulation.objects.get(id=instance.id)
-        current_date = datetime.now()
-        for _ in range(30):
-            demand_mean = random.uniform(50, 150)
-            demand_std_deviation = random.uniform(5, 20)
-            current_date += timedelta(days=1)
-            variables = {
-                "CTR": [random.randint(100, 500) for _ in range(10)], 
-                "CTAI": [random.uniform(1, 2) for _ in range(10)],
-                "TPV": [random.uniform(1, 2) for _ in range(10)],
-                "TPPRO": [random.uniform(1, 2) for _ in range(10)],
-                "DI": [random.uniform(1, 2) for _ in range(10)],
-                "IT": [random.uniform(1, 2) for _ in range(10)],
-                "GT": [random.uniform(1, 2) for _ in range(10)],
-                "TCA": [random.uniform(1, 2) for _ in range(10)],
-                "NR": [random.uniform(1, 2) for _ in range(10)],
-                "GO": [random.uniform(1, 2) for _ in range(10)],
-                "GG": [random.uniform(1, 2) for _ in range(10)],
-                "GT": [random.uniform(1, 2) for _ in range(10)],
-                "CTT": [random.uniform(1, 2) for _ in range(10)],
-                "CPP": [random.uniform(1, 2) for _ in range(10)],    
-                "CPV": [random.uniform(1, 2) for _ in range(10)],
-                "CPI": [random.uniform(1, 2) for _ in range(10)],
-                "CPMO": [random.uniform(1, 2) for _ in range(10)],
-                "CUP": [random.uniform(1, 2) for _ in range(10)],
-                "FU": [random.uniform(1, 2) for _ in range(10)],
-                "TG": [random.uniform(1, 2) for _ in range(10)],
-                "IB": [random.uniform(1, 2) for _ in range(10)],
-                "MB": [random.uniform(1, 2) for _ in range(10)],
-                "RI": [random.uniform(1, 2) for _ in range(10)],
-                "RTI": [random.uniform(1, 2) for _ in range(10)],
-                "RTC": [random.uniform(1, 2) for _ in range(10)],
-                "PVP": [random.uniform(1, 2) for _ in range(10)],
-                "PVP": [random.uniform(1, 2) for _ in range(10)],
-                "PVP": [random.uniform(1, 2) for _ in range(10)],
-                "PVP": [random.uniform(1, 2) for _ in range(10)],
-                
-                
-                }
-            result_simulation = ResultSimulation(
-                demand_mean=demand_mean,
-                demand_std_deviation=demand_std_deviation,
-                date=current_date,
-                variables=variables,
-                fk_simulation=fk_simulation,
-                is_active=True
-            )
-            result_simulation.save()
+    # @receiver(post_save, sender=Simulation)
+    
     def get_average_demand_by_date(self):
         average_demand_data = []
         # Asegúrate de que self.demand_mean sea una lista, incluso si contiene un solo elemento
         demand_mean_values = [self.demand_mean] if isinstance(self.demand_mean, Decimal) else self.demand_mean
+        # Convertir self.date a un objeto datetime.date si no lo es
+        date_obj = datetime.strptime(str(self.date), "%Y-%m-%d").date()
         # Recorre las fechas y calcula el promedio de la demanda
-        for date_str, demand_mean_value in zip(self.date, demand_mean_values):
-            # Convierte 'date_str' a un objeto datetime.date
-            date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f")
+        for demand_mean_value in demand_mean_values:
             # Para calcular el promedio, simplemente usa 'demand_mean_value' directamente
             average_demand = float(demand_mean_value)
             # Añade el resultado a la lista
-            average_demand_data.append({'date': date_str, 'average_demand': average_demand})
+            average_demand_data.append({'date': date_obj, 'average_demand': average_demand})
         return average_demand_data
 
     

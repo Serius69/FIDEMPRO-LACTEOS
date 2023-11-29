@@ -5,7 +5,7 @@ from django.dispatch import receiver
 from product.models import Product
 from django.db import models
 from product.models import Product
-from simulate.models import ResultSimulation
+from simulate.models import ResultSimulation,Simulation
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .dashboard_data import chart_data
@@ -61,8 +61,8 @@ class Demand(models.Model):
     is_predicted = models.BooleanField(
         default=False, verbose_name='Predicted', 
         help_text='Whether the demand is predicted or not')
-    fk_result_simulation = models.ForeignKey(
-        ResultSimulation, 
+    fk_simulation = models.ForeignKey(
+        Simulation, 
         default=1, 
         on_delete=models.CASCADE, 
         related_name='fk_result_simulation_demand', 

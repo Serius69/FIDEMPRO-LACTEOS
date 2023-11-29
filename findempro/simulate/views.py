@@ -14,7 +14,8 @@ from .models import ProbabilisticDensityFunction
 from variable.models import Variable, Equation, EquationResult
 from product.models import Product, Area
 from business.models import Business
-from simulate.models import Simulation,ResultSimulation,DemandHistorical
+from simulate.models import Simulation,ResultSimulation
+from dashboards.models import Chart,Demand,DemandBehavior
 from questionary.models import QuestionaryResult,Questionary,Answer,Question
 from sympy import Eq, sympify
 import openai
@@ -76,14 +77,18 @@ def simulate_show_view(request):
             fk_questionary_result_id=selected_questionary_result_id
             )
         print(demand_history.answer)   
-        # numbers = json.loads(demand_history.answer)
+        numbers = json.loads(demand_history.answer)
         # solo para probar
-        numbers = json.loads('[513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]')
+        # numbers = json.loads('[513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]')
         demand_mean = statistics.mean(numbers)
-        DemandHistorical.objects.create(demand=demand_mean)
+        # Demand.objects.create(
+        #     quantity=demand_mean,
+        #     fk_simulation=,
+        #     fk_product=
+        #     is_predicted=False)
              
         # segundo mandar esa demanda a la prueba de kolmogorov smirnov
-        prob_density_function = ProbabilisticDensityFunction.objects.get(pk=1)  # Reemplaza 1 con el ID de tu objeto
+        prob_density_function = ProbabilisticDensityFunction.objects.get()  # Reemplaza 1 con el ID de tu objeto
         # La muestra de datos
         data = numbers
         # Genera la PDF basada en el tipo de distribución almacenada en el modelo
@@ -275,7 +280,7 @@ def simulate_result_simulation_view(request, simulation_id):
     business_instance = get_object_or_404(Business, pk=product_instance.fk_business.id)
     areas = Area.objects.filter(is_active=True, fk_product=product_instance)
     
-    demand_initial = DemandHistorical.objects.get(pk=1)
+    # demand_initial = get_object_or_404(Demand, pk=1)
      # Obtén datos de la base de datos
     result_simulations = ResultSimulation.objects.filter(is_active=True, 
                                                          fk_simulation_id=simulation_id)
@@ -289,19 +294,23 @@ def simulate_result_simulation_view(request, simulation_id):
         list_formatted_date = [] 
         if data: 
             for entry in data:
-                date_string = entry['date']          
-                date_object = datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S.%f')  # Ajusta el formato según tus necesidades
-                formatted_date = date_object.strftime('%Y-%m-%d')  # Ajusta el formato según tus necesidades
+                date_object = entry['date']
+                formatted_date = date_object.strftime('%Y-%m-%d')
                 list_formatted_date.append(formatted_date)
                 all_values.append(entry['average_demand'])
 
-        unique_labels = sorted(set(list_formatted_date))
-        chart_data = {
-            'labels': unique_labels,
-            'values': [all_values[list_formatted_date.index(label)] for label in unique_labels],
-            'x_label': 'Date',
-            'y_label': 'Average Demand',
-        }
+    # Asegúrate de que todas las fechas sean únicas
+    all_labels = sorted(set(list_formatted_date))
+
+    # Ordena all_values de acuerdo con all_labels
+    sorted_values = [value for label, value in sorted(zip(list_formatted_date, all_values), key=lambda x: x[0])]
+
+    chart_data = {
+        'labels': all_labels,
+        'values': sorted_values,
+        'x_label': 'Date',
+        'y_label': 'Average Demand',
+    }
 
     # Crea el objeto Chart
     chart = Chart.objects.create(
@@ -332,14 +341,27 @@ def simulate_result_simulation_view(request, simulation_id):
     paginator = Paginator(results_simulation, 10)  # Show 10 results per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    page = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     
     
     financial_recomnmendations=FinanceRecommendation.objects.filter(is_active=True,
                                                                       fk_business_id=business_instance.id)
     
+    paginator2 = Paginator(financial_recomnmendations, 10)  # Show 10 results per page.
+    page_number2 = request.GET.get('page')
+    page_obj2 = paginator2.get_page(page_number2)
+    counter_start = (page_obj.number - 1) * paginator.per_page + 1
+    
+    
     # return render(request, 'your_template.html', {'page_obj': page_obj})
     context = {
-        'demand_initial':demand_initial,
+        # 'demand_initial':demand_initial,
         'simulation_instance': simulation_instance,
         'results_simulation': results_simulation,
         'analysis_results': analysis_results,
@@ -350,6 +372,8 @@ def simulate_result_simulation_view(request, simulation_id):
         'areas': areas,
         'image_data': image_data,
         'page_obj'  : page_obj,
+        'counter_start': counter_start,
+        'page_obj2'  : page_obj2,
         'financial_recomnmendations':financial_recomnmendations
     }
 
