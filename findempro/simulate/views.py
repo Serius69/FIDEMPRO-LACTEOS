@@ -214,32 +214,43 @@ def simulate_show_view(request):
         }
         return render(request, 'simulate/simulate-init.html', context)
     else:
-        
-        # aqui ya tomar los datos de la simulacion
-
-
+        # aqui ya tomar los datos de la simulacion que se creo en start
+        simulation_instance = get_object_or_404(Simulation, pk=request.session['simulation_started_id'])
+        nmd = simulation_instance.quantity_time
+        # tomar la fdp para poder hacer los randoms en base a esa distribucion
+        fdp = simulation_instance.fk_fdp
+        # tomar las respuestas del cuestionario con el que se creo la simulacion
+        all_answers = simulation_instance.fk_questionary_result.fk_questionary.fk_answers.all()
         # esto dentro de un for hasta llegar al maximo de dias ()
+        for i in range(nmd):          
             # tomar las areas
-
-
-                # de cada area tomar las ecuaciones que la componen
-                
-                
+            areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_product)
+            for area in areas:
+            # de cada area tomar las ecuaciones que la componen
+                equations = Equation.objects.filter(is_active=True, fk_area=area)            
                 # de cada ecuacion tomar las expresiones y llenarlas con las variables que la componen
-                
-                
+                for equation in equations:                
+                    equation.expressions = equation.expressions.replace(" ", "")
+                    
                 # resolver las expresiones y guardarlas en un diccionario
+                    
+                    
+                    
+                    # tomar las variables que componen la ecuacion
+                    
+                    
+                            # tomar en cuenta que las variables tipo 1 son exogenas 
+                            # Tomar en cuenta que las variables tipo 2 son endogenar
+                            # tomar en cuenta que las variables tipo 3 son de estado
+                            
+                            
+                # los resultados de las variables endogenas guardarlas en ResultSimulation.variables
                 
-                
-                # los resultados guardarlas en ResultSimulation.variables
-                
-                
-                # tomar en cuenta que las variables tipo 1 son exogenas 
-                # Tomar en cuenta que las variables tipo 2 son endogenar
-                # tomar en cuenta que las variables tipo 3 son de estado
             
+            # calcular los parametros totales que cada area tuvi ese dia o mes o semana
             
-            # 
+            # aumentar al siguiente dia
+            
         
         
         print("se inicio la simulacion")
