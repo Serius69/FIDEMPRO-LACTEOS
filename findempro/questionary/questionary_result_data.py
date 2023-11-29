@@ -19,11 +19,8 @@ answer_data = [
         'question': '¿Cuántos productos lácteos vende diariamente?'
     },
     {
-        'answer': round(random.uniform(1, 5), 2),
-        'question': '¿Cuál es el precio actual de sus productos lácteos?'
-    },
-    {
-        'answer': [random.randint(100, 1000) for i in range(30)],
+        # 'answer': [random.randint(100, 1000) for i in range(30)],
+        'answer': [513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906],
         'question': 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).'
     }, 
     {
@@ -55,7 +52,7 @@ answer_data = [
         'question': '¿Cuál es el nivel de competitividad en el mercado de su empresa?'
     },
     {
-        'answer': random.randint(1, 10),
+        'answer': random.choice(['No responde', 'Seguidor', 'Lider']),
         'question': '¿Cómo se posiciona su empresa en el mercado?'
     },
     {
@@ -67,7 +64,7 @@ answer_data = [
         'question': '¿Cuál es la tasa de retención de clientes de su empresa?'
     },
     {
-        'answer': random.randint(1, 10),
+        'answer': random.choice(['Mala','Regular','Buena']),
         'question': '¿Cuál es el nivel de satisfacción del cliente?'
     },
     {
@@ -107,23 +104,23 @@ answer_data = [
         'question': '¿Cuál es el nivel de capacidad de producción?'
     },
     {
-        'answer': random.randint(1, 10),
+        'answer': random.choice(['Alto','Medio','Bajo']),
         'question': '¿Cuál es el nivel de flexibilidad en la producción?'
     },
     {
-        'answer': random.randint(1, 10),
+        'answer': random.choice(['Alto','Medio','Bajo']),
         'question': '¿Cuál es el nivel de eficiencia del inventario?'
     },
     {
-        'answer': random.randint(1, 10), 
+        'answer': random.choice(['Alto','Medio','Bajo']), 
         'question': '¿Cuál es el nivel de eficiencia en la cadena de suministro?'
     },
     {
-        'answer': random.randint(1, 10),
+        'answer': random.choice(['Alto','Medio','Bajo']),
         'question': '¿Cuál es el nivel de eficiencia en la gestión de compra de insumos?'
     },
     {
-        'answer': random.randint(1, 10),
+        'answer': random.choice(['Alto','Medio','Bajo']),
         'question': '¿Cuál es el nivel de eficiencia en la gestión de ventas?'
     },
     {
@@ -131,7 +128,7 @@ answer_data = [
         'question': '¿Cuáles son los sueldos y salarios de los empleados?'
     },
     {
-        'answer': round(random.uniform(1, 5), 2),
+        'answer': round(random.uniform(10, 20), 2),
         'question': '¿Cuál es el precio promedio actual de los productos lácteos de la competencia?'
     }, 
     {
@@ -151,7 +148,7 @@ answer_data = [
         'question': '¿Cuáles son los gastos de marketing mensuales?'
     },
     {
-        'answer': random.choice(['Semanalmente', 'Quincenalmente', 'Mensualmente', 'Bimensualmente']),
+        'answer': random.randint(3, 10),
         'question': '¿Cada cuánto tiempo se reabastece de insumos?'
     },
     {
@@ -170,13 +167,5 @@ answer_data = [
         'answer': random.randint(1, 10),
         'question': '¿Cuánto tiempo tarda cada empleado en producir una unidad de producto?'
     },
-    {
-        'answer': random.randint(5, 10), 
-        'question': '¿Cómo calificaría la calidad del producto final en una escala de 1 a 10?'
-    },  
-    {
-        'answer': round(random.uniform(0.1, 1), 2), 
-        'question': '¿Cuál es el costo por unidad de transportar el producto de la fábrica a la tienda?'
-    }
 ]
     

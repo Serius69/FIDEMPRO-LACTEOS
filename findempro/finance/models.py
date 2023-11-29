@@ -34,6 +34,7 @@ class FinanceRecommendation(models.Model):
                     fk_business_id=business.id,
                     is_active=True
                 )
+        print('Se crearon las recomendaciones')
     @receiver(post_save, sender=Business)
     def save_finance_recommendation(sender, instance, **kwargs):
         for finance_recommendation in instance.fk_business_finance_recommendation.all():

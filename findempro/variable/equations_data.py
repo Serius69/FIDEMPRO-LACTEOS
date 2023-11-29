@@ -12,9 +12,9 @@ equations_data = [
   {
     "name": "Total Productos Producidos",
     "description": "Ecuación para calcular el total de productos producidos multiplicando la capacidad de producción por el número promedio de productos producidos por empleado",
-    "expression": "TPPRO = CP * NEPP",
+    "expression": "TPPRO = CPROD * NEPP",
     "variable1": "TPPRO",
-    "variable2": "CP",
+    "variable2": "CPROD",
     "variable3": "NEPP",
     "area": "Producción"
   },
@@ -100,10 +100,10 @@ equations_data = [
 {
 "name": "Pedido Insumos",
 "description": "Ecuación para calcular el monto total en dinero de cada pedido de insumos multiplicando el costo unitario por la cantidad solicitada",
-"expression": "PI = CIP * CP",
+"expression": "PI = CIP * CPROD",
 "variable1": "PI",
 "variable2": "CIP",
-"variable3": "CP",
+"variable3": "CPROD",
 "area": "Contabilidad"
 },
 {
@@ -217,9 +217,9 @@ equations_data = [
   {
     "name": "Costo Unitario Producción",
     "description": "Ecuación para calcular el costo unitario de producción, que es la suma del costo promedio de producción, el costo promedio de insumos y el costo promedio de mano de obra",
-    "expression": "CUP = CPP + CPI + CPMO",
+    "expression": "CUP = CPROD + CPI + CPMO",
     "variable1": "CUP",
-    "variable2": "CPP",
+    "variable2": "CPROD",
     "variable3": "CPI",
     "variable4": "CPMO",
     "area": "Contabilidad"
@@ -236,8 +236,8 @@ equations_data = [
   {
     "name": "Capacidad Producción",
     "description": "Ecuación para calcular la capacidad de producción, que es el número medio de días multiplicado por el tonelaje por producto multiplicado por el número de empleados por producto",
-    "expression": "CP = NMD * TPP * NEPP",
-    "variable1": "CP",
+    "expression": "CPROD = NMD * TPP * NEPP",
+    "variable1": "CPROD",
     "variable2": "NMD",
     "variable3": "TPP",
     "variable4": "NEPP",
@@ -246,18 +246,18 @@ equations_data = [
   {
     "name": "Factor Utilización",
     "description": "Ecuación para calcular el factor de utilización, que es el tonelaje por producto dividido por la capacidad de producción",
-    "expression": "FU = TPP / CP",
+    "expression": "FU = TPP / CPROD",
     "variable1": "FU",
     "variable2": "TPP",
-    "variable3": "CP",
+    "variable3": "CPROD",
     "area": "Producción"
   },
   {
     "name": "Productos Producidos",
     "description": "Ecuación para calcular el número de productos producidos, que es la capacidad de producción multiplicada por el número de artículos por lote de producción",
-    "expression": "PP = CP * ALEP", 
+    "expression": "PP = CPROD * ALEP", 
     "variable1": "PP",
-    "variable2": "CP", 
+    "variable2": "CPROD", 
     "variable3": "ALEP",
     "area": "Producción"
   },
@@ -301,9 +301,9 @@ equations_data = [
   {
     "name": "Rotación Inventario",
     "description": "Ecuación para calcular la rotación de inventario, que es el costo promedio de producción dividido por el inventario de productos finales",
-    "expression": "RTI = CP / IPF",
+    "expression": "RTI = CPROD / IPF",
     "variable1": "RTI",
-    "variable2": "CP",
+    "variable2": "CPROD",
     "variable3": "IPF",
     "area": "Inventario Productos Finales" 
   },

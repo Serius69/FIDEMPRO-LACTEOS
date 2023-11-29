@@ -2,8 +2,8 @@ variables_data = [
 {'name': 'CANTIDAD DE PRODUCTOS QUE VENDE POR DIA',
 'initials': 'CPVD',
 'type': 1,
-'unit': 'LITROS/UNIDAD DE TIEMPO',
-'description': 'CANTIDAD DE LITROS DEL PRODUCTO QUE LA EMPRESA VENDE POR UNIDAD DE TIEMPO'},
+'unit': 'LITROS/DIAS',
+'description': 'CANTIDAD DE LITROS DEL PRODUCTO QUE LA EMPRESA VENDE POR DIAS'},
 
 {'name': 'PRECIO DE VENTA DEL PRODUCTO',
 'initials': 'PVP',
@@ -62,7 +62,7 @@ variables_data = [
 {'name': 'FRECUENCIA DE COMPRA',
 'initials': 'FC',
 'type': 1,
-'unit': 'UNIDAD DE TIEMPO',
+'unit': 'DIAS',
 'description': 'CON QUÉ FRECUENCIA SUS CLIENTES COMPRAN PRODUCTOS DE SU EMPRESA'},
 
 {'name': 'TASA DE RETENCIÓN CLIENTES',
@@ -127,9 +127,9 @@ variables_data = [
 
 {'name': 'CAPACIDAD DE PRODUCCIÓN',
 'initials': 'CPROD',
-'type': 1,
-'unit': 'LITROS/UNIDAD DE TIEMPO',
-'description': 'NIVEL DE CAPACIDAD'},
+'type': 2,
+'unit': 'LITROS/DIAS',
+'description': 'Capacidad de produccion'},
 
 {'name': 'Artículos por lote de producción',
 'initials': 'ALEP',
@@ -140,7 +140,7 @@ variables_data = [
 {'name': 'Tiempo de produccion por empleado',
 'initials': 'TE',
 'type': 1,
-'unit': 'UNIDAD DE TIEMPO',
+'unit': 'DIAS',
 'description': 'Tiempo de produccion por empleado'},
 
 {'name': 'NIVEL FLEXIBILIDAD EN LA PRODUCCIÓN',
@@ -212,7 +212,7 @@ variables_data = [
 {'name': 'TIEMPO REABASTECIMIENTO',
 'initials': 'TR',
 'type': 1,
-'unit': 'UNIDAD DE TIEMPO',
+'unit': 'DIAS',
 'description': 'ES EL PERIODO NECESARIO PARA REPONER EL INVENTARIO DE UN PRODUCTO UNA VEZ AGOTADO.'},
 
 {'name': 'CANTIDAD DE INSUMOS PARA UN PRODUCTO',
@@ -227,11 +227,17 @@ variables_data = [
 'unit': 'LITROS',
 'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
 
-{'name': 'CONTADOR UNIDAD DE TIEMPO',
+{'name': 'NUMERO MAXIMO DE DIAS',
+'initials': 'NMD',
+'type': 1,
+'unit': 'DIAS',
+'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
+
+{'name': 'CONTADOR DIAS',
 'initials': 'CD',
 'type': 2,
-'unit': 'UNIDAD DE TIEMPO',
-'description': 'CONTADOR DE UNIDAD DE TIEMPO QUE PASAN'},
+'unit': 'DIAS',
+'description': 'CONTADOR DE DIAS QUE PASAN'},
 
 {'name': 'ALEATORIO LLEGADA DE CLIENTES',
 'initials': 'ALC',
@@ -287,7 +293,7 @@ variables_data = [
 'unit': 'LITROS',
 'description': 'CANTIDAD DE VÍVERES QUE SE PIDEN AL REORDENAR PARA EL REABASTECIMIENTO DE INVENTARIO'},
 
-{'name': 'TOTAL CLIENTES ATENDIDOS EN EL UNIDAD DE TIEMPO',
+{'name': 'TOTAL CLIENTES ATENDIDOS EN EL DIAS',
 'initials': 'TCAE',
 'type': 2,
 'unit': 'CLIENTES',

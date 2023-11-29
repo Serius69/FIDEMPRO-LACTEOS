@@ -74,12 +74,13 @@ question_data = [
     },
     {
         'question': '¿Cuál es el nivel de satisfacción del cliente?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'SC',
+        'possible_answers': ['Mala','Regular','Buena']
     },
     {
         'question': '¿Cuál es el nivel de lealtad del cliente?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'NLC',
         'possible_answers': ['Muy competitivo', 'Medianamente competitivo', 'Poco competitivo'] 
     },

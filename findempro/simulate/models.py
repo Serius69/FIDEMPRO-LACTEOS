@@ -2,6 +2,7 @@ from decimal import Decimal
 import math
 from django.db import models
 from product.models import Product, Area
+from business.models import Business
 from variable.models import Variable,EquationResult,Equation
 from questionary.models import QuestionaryResult,Questionary,Answer,Question
 from django.utils import timezone
@@ -29,46 +30,50 @@ class ProbabilisticDensityFunction(models.Model):
     cumulative_distribution_function = models.FloatField(null=True, blank=True )  # CDF field
     mean_param = models.FloatField(null=True, blank=True, help_text='Mean parameter for the normal distribution')
     std_dev_param = models.FloatField(null=True, blank=True, help_text='Standard deviation parameter for the normal distribution')
-
+    fk_business = models.ForeignKey(
+        Business, 
+        on_delete=models.CASCADE, 
+        related_name='fk_business_fdp', 
+        help_text='The business associated with the fdp',
+        default=1)
     is_active = models.BooleanField(default=True, help_text='Whether the distribution is active or not')
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the distribution was created')
     last_updated = models.DateTimeField(auto_now=True, help_text='The date the distribution was last updated')
     
-    @receiver(post_save, sender=Product)
-    def create_probabilistic_density_functions(sender, instance, created, **kwargs):
+    @receiver(post_save, sender=Business)
+    def create_probabilistic_density_functions(sender, instance, **kwargs):
         distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic
-        names = ['Normal Distribution', 'Exponential Distribution', 'Log-Normal Distribution']
-
+        names = ['Normal Distribution', 'Exponential Distribution', 'Log-Normal Distribution']            
         for distribution_type, name in zip(distribution_types, names):
             pdf = ProbabilisticDensityFunction(
                 name=name,
                 distribution_type=distribution_type,
-                is_active=True
+                is_active=True,
+                fk_business_id=instance.id
             )
             if distribution_type == 1:  # Normal distribution
-                pdf.lambda_param = 1.0  # Adjust with your specific values
-                pdf.cumulative_distribution_function = 0.5  # Adjust with your specific values
+                pdf.lambda_param = 1.0
+                pdf.cumulative_distribution_function = 0.5
                 pdf.mean_param = 450.0
                 pdf.std_dev_param = 10.0
             elif distribution_type == 2:  # Exponential distribution
-                pdf.lambda_param = 0.5           
-                pdf.cumulative_distribution_function = expon.cdf(2.0, scale=1/0.5) 
-                pdf.mean_param = 1 / 0.5 
+                pdf.lambda_param = 0.5
+                pdf.cumulative_distribution_function = expon.cdf(2.0, scale=1/0.5)
+                pdf.mean_param = 1 / 0.5
                 pdf.std_dev_param = expon(scale=1/pdf.lambda_param).std()
             elif distribution_type == 3:  # Log-Normal distribution
-                pdf.lambda_param = 0  # Adjust with your specific values
-                pdf.cumulative_distribution_function = lognorm.cdf(2.0, s=0.2, scale=np.exp(0.0))  # Adjust with your specific values
+                pdf.lambda_param = 0
+                pdf.cumulative_distribution_function = lognorm.cdf(2.0, s=0.2, scale=np.exp(0.0))
                 pdf.mean_param = 50.0
                 pdf.std_dev_param = np.exp(0.0 + (0.2 ** 2) / 2)
             pdf.save()
-        print('Se crearon las distribuciones')
-class DataPoint(models.Model):
-    value = models.FloatField()
-    is_active = models.BooleanField(default=True)
-    date_created = models.DateTimeField(default=timezone.now)
-    last_updated = models.DateTimeField(auto_now=True)
-    def __str__(self):        
-        return f'DataPoint: {self.value}'
+    @receiver(post_save, sender=Business)
+    def save_probabilistic_density_functions(sender, instance, **kwargs):
+        # Asumiendo que 'fk_business_fdp' es el campo relacionado entre Business y ProbabilisticDensityFunction
+        for probabilistic_density_function in instance.fk_business_fdp.all():
+            probabilistic_density_function.is_active = instance.is_active
+            probabilistic_density_function.save()
+            print('Se guardaron las fdps')
 
 class DemandHistorical(models.Model):
     demand = models.IntegerField()
@@ -91,33 +96,26 @@ class Simulation(models.Model):
     
     @receiver(post_save, sender=QuestionaryResult)
     def create_simulation(sender, instance, created, **kwargs):
-        # Get the related Questionary
-        # fk_questionary = instance.fk_questionary
-
-        # Get the Question object based on the question text
-        # question_text = 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).'
-        # fk_question_object = get_object_or_404(Question, question=question_text, fk_questionary=fk_questionary)
-
-        # Get the related Answer
-        # demand = get_object_or_404(Answer, fk_question=fk_question_object, fk_questionary_result=instance)
-        demand =[513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]
-        # Create the Simulation
-        simulation = Simulation(
-            unit_time='day',
-            fk_fdp_id=1,
-            demand_history=demand,
-            quantity_time=30,
-            fk_questionary_result=instance,
-            is_active=True
-        )
-        simulation.save()
+        # Get the first ProbabilisticDensityFunction related to the Business
+        fdp_instance = instance.fk_questionary.fk_product.fk_business.fk_business_fdp.first()
+        if fdp_instance is not None:
+            demand = [513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]
+            # Create the Simulation
+            simulation = Simulation(
+                unit_time='day',
+                fk_fdp=fdp_instance,
+                demand_history=demand,
+                quantity_time=30,
+                fk_questionary_result=instance,
+                is_active=True
+            )
+            simulation.save()
     @receiver(post_save, sender=QuestionaryResult)
     def save_question(sender, instance, **kwargs):
         for simulate in instance.simulations.all():
             simulate.is_active = instance.is_active
             simulate.save()
         
-
 class ResultSimulation(models.Model):
     demand_mean = models.DecimalField(max_digits=10, decimal_places=2,help_text='The mean of the demand')
     demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2,help_text='The standard deviation of the demand')
@@ -136,29 +134,48 @@ class ResultSimulation(models.Model):
     @receiver(post_save, sender=Simulation)
     def create_random_result_simulations(sender, instance, created, **kwargs):
         fk_simulation = Simulation.objects.get(id=instance.id)
+        current_date = datetime.now()
         for _ in range(30):
             demand_mean = random.uniform(50, 150)
             demand_std_deviation = random.uniform(5, 20)
-            date = [str(datetime.now() + timedelta(days=i)) for i in range(10)]
+            current_date += timedelta(days=1)
             variables = {
-                "CPVD": [random.randint(100, 500) for _ in range(10)], 
-                "PVP": [random.uniform(1, 2) for _ in range(10)
-                        
-                        
-                        
-                        ]}
-            variables = {
-                "CPVD": [random.randint(100, 500) for _ in range(10)], 
-                "PVP": [random.uniform(1, 2) for _ in range(10)
-                        
-                        
-                        
-                        ]}
-
+                "CTR": [random.randint(100, 500) for _ in range(10)], 
+                "CTAI": [random.uniform(1, 2) for _ in range(10)],
+                "TPV": [random.uniform(1, 2) for _ in range(10)],
+                "TPPRO": [random.uniform(1, 2) for _ in range(10)],
+                "DI": [random.uniform(1, 2) for _ in range(10)],
+                "IT": [random.uniform(1, 2) for _ in range(10)],
+                "GT": [random.uniform(1, 2) for _ in range(10)],
+                "TCA": [random.uniform(1, 2) for _ in range(10)],
+                "NR": [random.uniform(1, 2) for _ in range(10)],
+                "GO": [random.uniform(1, 2) for _ in range(10)],
+                "GG": [random.uniform(1, 2) for _ in range(10)],
+                "GT": [random.uniform(1, 2) for _ in range(10)],
+                "CTT": [random.uniform(1, 2) for _ in range(10)],
+                "CPP": [random.uniform(1, 2) for _ in range(10)],    
+                "CPV": [random.uniform(1, 2) for _ in range(10)],
+                "CPI": [random.uniform(1, 2) for _ in range(10)],
+                "CPMO": [random.uniform(1, 2) for _ in range(10)],
+                "CUP": [random.uniform(1, 2) for _ in range(10)],
+                "FU": [random.uniform(1, 2) for _ in range(10)],
+                "TG": [random.uniform(1, 2) for _ in range(10)],
+                "IB": [random.uniform(1, 2) for _ in range(10)],
+                "MB": [random.uniform(1, 2) for _ in range(10)],
+                "RI": [random.uniform(1, 2) for _ in range(10)],
+                "RTI": [random.uniform(1, 2) for _ in range(10)],
+                "RTC": [random.uniform(1, 2) for _ in range(10)],
+                "PVP": [random.uniform(1, 2) for _ in range(10)],
+                "PVP": [random.uniform(1, 2) for _ in range(10)],
+                "PVP": [random.uniform(1, 2) for _ in range(10)],
+                "PVP": [random.uniform(1, 2) for _ in range(10)],
+                
+                
+                }
             result_simulation = ResultSimulation(
                 demand_mean=demand_mean,
                 demand_std_deviation=demand_std_deviation,
-                date=date,
+                date=current_date,
                 variables=variables,
                 fk_simulation=fk_simulation,
                 is_active=True

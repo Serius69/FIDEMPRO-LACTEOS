@@ -10,7 +10,7 @@ from datetime import datetime
 from finance.models import FinanceRecommendation  # Import pkg_resources
 from .forms import SimulationForm  # Replace with your actual form import
 from scipy import stats  # Import scipy for KS test
-from .models import DataPoint, ProbabilisticDensityFunction
+from .models import ProbabilisticDensityFunction
 from variable.models import Variable, Equation, EquationResult
 from product.models import Product, Area
 from business.models import Business
