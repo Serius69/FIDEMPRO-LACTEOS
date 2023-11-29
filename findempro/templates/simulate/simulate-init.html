@@ -76,8 +76,8 @@
                                                                                     <option selected>Elegir...</option>
                                                                                     {% for questionary_result in questionnaires_result %}
                                                                                     <option for="selected_questionary_result_id" value="{{ questionary_result.id }}" 
-                                                                                    {% if questionary_result.id == selected_questionary_result_id %} selected {% endif %}>
-                                                                                        {{ questionary_result.id }} {{questionary_result.date_created}}
+                                                                                        {% if questionary_result.id == selected_questionary_result_id %} selected {% endif %}>
+                                                                                        Respuestas del {{ questionary_result.fk_questionary.questionary }} realizado el {{ questionary_result.date_created|date:"Y-m-d H:i:s" }}
                                                                                     </option>
                                                                                     {% empty %}
                                                                                         <option>...</option>
@@ -102,8 +102,8 @@
                                                                                     <div class="mb-3">
                                                                                         <select id="selected_unit_time" name="selected_unit_time" class="form-select" data-choices data-choices-sorting="true">
                                                                                             <option value="1">día</option>
-                                                                                            <option value="2">mes</option>
-                                                                                            <option value="3">año</option>    
+                                                                                            {% comment %} <option value="2">mes</option> {% endcomment %}
+                                                                                            {% comment %} <option value="3">año</option>     {% endcomment %}
                                                                                         </select>
                                                                                     </div>
                                                                                 </div>
@@ -244,33 +244,33 @@
                                                                         <h5>Ecuaciones:</h5>
                                                                         {% comment %} {{ area.area_equation.all }} {% endcomment %}
                                                                         <div id="equations{{ area.id }}">
-                                                                            {% for equation in area.area_equation.all.distinct %}
-                                                                                {% if equation.fk_area.fk_product.id == area.fk_product.id %}
+                                                                            {% for equation in area.area_equation.all %}
+                                                                                {% comment %} {% if equation.fk_area.fk_product.id == area.fk_product.id %} {% endcomment %}
                                                                                     {% if equation.fk_area.id == area.id%}
-                                                                                    <article class="equation" style="display: none;">
-                                                                                        <p>
-                                                                                            {{ equation.id }}
-                                                                                            {{ equation.name }}</p>
-                                                                                        
-                                                                                        <p>{{ equation.expression }}</p>
-                                                                                        {% if equation.fk_variable1 %}
-                                                                                            <p class="small">Variable 1: {{ equation.fk_variable1.name }}</p>
-                                                                                        {% endif %}
-                                                                                        {% if equation.fk_variable2 %}
-                                                                                            <p class="small">Variable 2: {{ equation.fk_variable2.name }}</p>
-                                                                                        {% endif %}
-                                                                                        {% if equation.fk_variable3 %}
-                                                                                            <p class="small">Variable 3: {{ equation.fk_variable3.name }}</p>
-                                                                                        {% endif %}
-                                                                                        {% if equation.fk_variable4 %}
-                                                                                            <p class="small">Variable 4: {{ equation.fk_variable4.name }}</p>
-                                                                                        {% endif %}
-                                                                                        {% if equation.fk_variable5 %}
-                                                                                            <p class="small">Variable 5: {{ equation.fk_variable5.name }}</p>
-                                                                                        {% endif %}
-                                                                                    </article>
+                                                                                        <article class="equation">
+                                                                                            <p>
+                                                                                                {{ equation.id }}
+                                                                                                {{ equation.name }}</p>
+                                                                                            
+                                                                                            <p>{{ equation.expression }}</p>
+                                                                                            {% if equation.fk_variable1 %}
+                                                                                                <p class="small">Variable 1: {{ equation.fk_variable1.name }}</p>
+                                                                                            {% endif %}
+                                                                                            {% if equation.fk_variable2 %}
+                                                                                                <p class="small">Variable 2: {{ equation.fk_variable2.name }}</p>
+                                                                                            {% endif %}
+                                                                                            {% if equation.fk_variable3 %}
+                                                                                                <p class="small">Variable 3: {{ equation.fk_variable3.name }}</p>
+                                                                                            {% endif %}
+                                                                                            {% if equation.fk_variable4 %}
+                                                                                                <p class="small">Variable 4: {{ equation.fk_variable4.name }}</p>
+                                                                                            {% endif %}
+                                                                                            {% if equation.fk_variable5 %}
+                                                                                                <p class="small">Variable 5: {{ equation.fk_variable5.name }}</p>
+                                                                                            {% endif %}
+                                                                                        </article>
                                                                                     {% endif %}
-                                                                                {% endif %}
+                                                                                {% comment %} {% endif %} {% endcomment %}
                                                                             {% empty %}
                                                                                 <p>No se encontraron ecuaciones para esta área.</p>
                                                                             {% endfor %}

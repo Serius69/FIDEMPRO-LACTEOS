@@ -27,14 +27,6 @@ areas_data =[
     }
   },
   {
-    "name": "Inspección",
-    "description": "Área de inspección y control de calidad",
-    "params": {
-      "tasa_defectos": 0,
-      "costo_inspeccion": 0  
-    }
-  },
-  {
     "name": "Inventario Productos Finales",
     "description": "Área de gestión de inventario de productos finales",
     "params": {
