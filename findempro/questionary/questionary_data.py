@@ -9,7 +9,7 @@ question_data = [
         'initials_variable': 'CPVD',
     },
     {
-        'question': '¿Cuál es el precio actual de sus productos lácteos?',
+        'question': '¿Cuál es el precio actual del producto?',
         'type': 1,
         'initials_variable': 'PVP',
     },
@@ -21,7 +21,7 @@ question_data = [
     {
         'question': '¿Cuántos productos están siendo producidos actualmente?',
         'type': 1,
-        'initials_variable': 'CP',
+        'initials_variable': 'CPROD',
     },
     {
         'question': '¿Cuál es la demanda esperada para los productos lácteos?',
@@ -31,22 +31,23 @@ question_data = [
     {
         'question': '¿Cuál es el costo unitario de producción?',
         'type': 1,
-        'initials_variable': 'CUIP',
+        'initials_variable': 'CPU',
     },
     {
         'question': '¿Cuál es la capacidad del inventario de productos?',
         'type': 1,
-        'initials_variable': 'CPVD',
+        'initials_variable': 'CIP',
     },
     {
         'question': '¿Existe estacionalidad en la demanda?',
-        'type': 1,
-        'initials_variable': 'CPVD',
+        'type': 2,
+        'initials_variable': 'ED',
+        'possible_answers': ['Si', 'No'] 
     },
     {
         'question': '¿Cuál es el costo unitario del insumo para la producción?',
         'type': 1,
-        'initials_variable': 'CPVD',
+        'initials_variable': 'CUIP',
     },
     {
         'question': '¿Cuál es el nivel de competitividad en el mercado de su empresa?',
@@ -56,8 +57,9 @@ question_data = [
     },
     {
         'question': '¿Cómo se posiciona su empresa en el mercado?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'PE',
+        'possible_answers': ['No responde', 'Seguidor', 'Lider']
     },
     {
         'question': '¿Con qué frecuencia compran los clientes?',
@@ -79,6 +81,7 @@ question_data = [
         'question': '¿Cuál es el nivel de lealtad del cliente?',
         'type': 1,
         'initials_variable': 'NLC',
+        'possible_answers': ['Muy competitivo', 'Medianamente competitivo', 'Poco competitivo'] 
     },
     {
         'question': '¿Cuánto cuesta adquirir un nuevo cliente?',
@@ -103,14 +106,15 @@ question_data = [
     },
     {
         'question': '¿Cuál es el nivel de eficiencia del proceso de producción?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'NEPP',
+        'possible_answers': ['Alto','Medio','Bajo']
     },
     {
         'question': '¿La empresa cuenta con certificaciones de calidad?',
         'type': 2,
-        'initials_variable': 'CP',
-        'possible_answers': ['ISO 9001', 'HACCP', 'Ninguna', 'Otras (especificar)']
+        'initials_variable': 'CERCAL',
+        'possible_answers': ['ISO 9001', 'HACCP', 'Ninguna']
     },
     {
         'question': '¿Cuánto tiempo tarda en producir un producto?',
@@ -120,32 +124,37 @@ question_data = [
     {
         'question': '¿Cuál es el nivel de capacidad de producción?',
         'type': 1,
-        'initials_variable': 'CP',
+        'initials_variable': 'CPROD',
     },
     {
         'question': '¿Cuál es el nivel de flexibilidad en la producción?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'NFP',
+        'possible_answers': ['Alto','Medio','Bajo']
     },
     {
         'question': '¿Cuál es el nivel de eficiencia del inventario?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'NEI',
+        'possible_answers': ['Alto','Medio','Bajo']
     },
     {
         'question': '¿Cuál es el nivel de eficiencia en la cadena de suministro?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'NECS',
+        'possible_answers': ['Alto','Medio','Bajo']
     },
     {
         'question': '¿Cuál es el nivel de eficiencia en la gestión de compra de insumos?',
-        'type': 1,
+        'type': 2,
         'initials_variable': 'NEGCI',
+        'possible_answers': ['Alto','Medio','Bajo']
     },
     {
         'question': '¿Cuál es el nivel de eficiencia en la gestión de ventas?',
         'type': 1,
         'initials_variable': 'NEGV',
+        'possible_answers': ['Alto','Medio','Bajo']
     },
     {
         'question': '¿Cuáles son los sueldos y salarios de los empleados?',
@@ -165,7 +174,7 @@ question_data = [
     {
         'question': '¿Cuál es el costo unitario por transporte?',
         'type': 1,
-        'initials_variable': 'CUP',
+        'initials_variable': 'CUTRANS',
     },
     {
         'question': '¿Cuál es el costo unitario del inventario?',
@@ -179,9 +188,8 @@ question_data = [
     },
     {
         'question': '¿Cada cuánto tiempo se reabastece de insumos?',
-        'type': 2,
+        'type': 1,
         'initials_variable': 'TR',
-        'possible_answers': ['Semanalmente','Quincenalmente','Mensualmente','Bimensualmente']
     },
     {
         'question': '¿Cuántos insumos se utilizan para fabricar un producto lácteo?',
@@ -203,14 +211,4 @@ question_data = [
         'type': 1,
         'initials_variable': 'TE'  
     },
-    {
-        'question': '¿Cómo calificaría la calidad del producto final en una escala de 1 a 10?',
-        'type': 1,
-        'initials_variable': 'CALPRO'
-    },
-    {
-        'question': '¿Cuál es el costo por unidad de transportar el producto de la fábrica a la tienda?',
-        'type': 1, 
-        'initials_variable': 'CUTRANS'
-    }
 ]

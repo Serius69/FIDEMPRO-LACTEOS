@@ -1,10 +1,4 @@
 variables_data = [
-{'name': 'NÚMERO MÁXIMO UNIDAD DE TIEMPO',
-'initials': 'NMD',
-'type': 1,
-'unit': 'UNIDAD DE TIEMPO',
-'description': 'CANTIDAD DE UNIDAD DE TIEMPO'},
-
 {'name': 'CANTIDAD DE PRODUCTOS QUE VENDE POR DIA',
 'initials': 'CPVD',
 'type': 1,
@@ -22,12 +16,6 @@ variables_data = [
 'type': 1,
 'unit': 'LITROS',
 'description': 'DATOS HISTÓRICOS DE DEMANDA DE LOS ÚLTIMOS UNIDADES DE TIEMPO'},
-
-{'name': 'CANTIDAD DE PRODUCCIÓN',
-'initials': 'CPRO',
-'type': 1,
-'unit': 'LITROS',
-'description': 'CANTIDAD DE PRODUCTOS ESPERADOS A VENDER EN UN PERIODO DE TIEMPO'},
 
 {'name': 'DEMANDA ESPERADA',
 'initials': 'DE',
@@ -125,11 +113,11 @@ variables_data = [
 'unit': '[0-1]',
 'description': 'NIVEL DE EFICIENCIA EN EL PROCESO DE PRODUCCIÓN DE LOS PRODUCTOS'},
 
-{'name': 'CALIDAD DEL PRODUCTO',
-'initials': 'CALPRO',
+{'name': 'CERTIFICACION DE CALIDAD DEL PRODUCTO',
+'initials': 'CERCAL',
 'type': 1,
 'unit': '[0-1]',
-'description': 'NIVEL DE CALIDAD DEL PRODUCTO FINAL'},
+'description': 'CERTIFICACION DE CALIDAD DEL PRODUCTO'},
 
 {'name': 'TIEMPO PRODUCCIÓN POR PRODUCTO',
 'initials': 'TPP',
@@ -138,7 +126,7 @@ variables_data = [
 'description': 'EL TIEMPO QUE SE TOMA LA EMPRESA POR LA PRODUCCIÓN DE UN PRODUCTO'},
 
 {'name': 'CAPACIDAD DE PRODUCCIÓN',
-'initials': 'CP',
+'initials': 'CPROD',
 'type': 1,
 'unit': 'LITROS/UNIDAD DE TIEMPO',
 'description': 'NIVEL DE CAPACIDAD'},
@@ -158,38 +146,38 @@ variables_data = [
 {'name': 'NIVEL FLEXIBILIDAD EN LA PRODUCCIÓN',
 'initials': 'NFP',
 'type': 1,
-'unit': '[0.1,0.2,0.3,0.4,0.5]',
+'unit': '[0.1,0.3,0.5]',
 'description': 'NIVEL DE FLEXIBILIDAD DE LOS PROCESOS DE PRODUCCIÓN DE LA EMPRESA'},
 
 {'name': 'NIVEL DE EFICIENCIA DE INVENTARIO',
 'initials': 'NEI',
 'type': 1,
-'unit': '[0.1,0.2,0.3,0.4,0.5]',
+'unit': '[0.1,0.3,0.5]',
 'description': 'NIVEL DE EFICIENCIA EN EL MANEJO DE INVENTARIOS'},
 
 {'name': 'NIVEL EFICIENCIA CADENA SUMINISTRO',
 'initials': 'NECS',
 'type': 1,
-'unit': '[0.1,0.2,0.3,0.4,0.5]',
+'unit': '[0.1,0.3,0.5]',
 'description': 'NIVEL DE EFICIENCIA EN LA CADENA DE SUMINISTRO'},
 
 {'name': 'NIVEL EFICIENCIA GESTIÓN DE COMPRA INSUMOS',
 'initials': 'NEGCI',
 'type': 1,
-'unit': '[0.1,0.2,0.3,0.4,0.5]',
+'unit': '[0.1,0.3,0.5]',
 'description': 'NIVEL DE EFICIENCIA EN LA GESTIÓN DE COMPRA DE INSUMOS'},
 
 {'name': 'NIVEL DE EFICIENCIA EN LA GESTIÓN DE VENTAS',
 'initials': 'NEGV',
 'type': 1,
-'unit': '[0.1,0.2,0.3,0.4,0.5]',
+'unit': '[0.1,0.3,0.5]',
 'description': 'NIVEL DE EFICIENCIA EN LA GESTIÓN DE VENTAS'},
 
 {'name': 'SUELDOS EMPLEADOS',
 'initials': 'SE',
 'type': 1,
 'unit': 'BS',
-'description': 'NIVEL DE DEUDAS DE LA EMPRESA'},
+'description': 'SUELDOS EMPLEADOS'},
 
 {'name': 'PRECIO DE VENTA PROMEDIO DE LOS PRODUCTOS DE LA COMPETENCIA',
 'initials': 'PVPCC',
@@ -201,7 +189,7 @@ variables_data = [
 'initials': 'CFD',
 'type': 1,
 'unit': 'BS',
-'description': 'COSTO DE MATERIALES TERCEROS PARA LA PRODUCCIÓN DE BIENES'},
+'description': 'COSTO FIJO DIARIO DE LA EMPRESA'},
 
 {'name': 'COSTO UNITARIO POR TRANSPORTE',
 'initials': 'CUTRANS',
@@ -265,13 +253,13 @@ variables_data = [
 
 {'name': 'COSTO TOTAL REORDEN',
 'initials': 'CTR',
-'type': 2,
+'type': 3,
 'unit': 'LITROS/BS',
 'description': 'EL COSTO TOTAL DE REALIZAR UN NUEVO PEDIDO DE INVENTARIO, INCLUYENDO EL COSTO DE ADQUISICIÓN, TRANSPORTE Y ALMACENAMIENTO.'},
 
 {'name': 'COSTO TOTAL ADQUISICIÓN INSUMOS',
 'initials': 'CTAI',
-'type': 2,
+'type': 3,
 'unit': 'BS',
 'description': 'GASTO TOTAL EN LA ADQUISICIÓN DE INSUMOS UTILIZADOS EN LA PRODUCCIÓN'},
 
@@ -330,7 +318,7 @@ variables_data = [
 'description': 'CANTIDAD TOTAL DE PRODUCTOS VENDIDOS DE LA EMPRESA DURANTE UN PERIODO DETERMINADO'},
 
 {'name': 'TOTAL PRODUCTOS PRODUCIDOS',
-'initials': 'TPP',
+'initials': 'TPPRO',
 'type': 3,
 'unit': 'LITROS',
 'description': 'CANTIDAD TOTAL DE PRODUCTOS PRODUCIDOS DE LA EMPRESA DURANTE UN PERIODO DETERMINADO'},
@@ -368,14 +356,8 @@ variables_data = [
 {'name': 'NIVEL DE RENTABILIDAD',
 'initials': 'NR',
 'type': 3,
-'unit': '[0.1,0.2,0.3,0.4,0.5]',
+'unit': '[0.1,0.3,0.5]',
 'description': 'NIVEL DE RENTABILIDAD DE LA EMPRESA'},
-
-{'name': 'GASTOS ORGANIZACIONALES',
-'initials': 'GOR',
-'type': 3,
-'unit': 'BS',
-'description': 'GASTOS TOTALES EN OPERACIONES Y ADMINISTRACIÓN DE LAS PYMES DEL SECTOR LÁCTEO, UTILIZADOS EN EL SISTEMA WEB PARA LA TOMA DE DECISIONES FINANCIERAS.'},
 
 {'name': 'GASTOS OPERATIVOS',
 'initials': 'GO',
@@ -438,23 +420,11 @@ variables_data = [
 'unit': 'BS',
 'description': 'Precio Venta Recomendado'},
 
-{'name': 'Capacidad Producción',
-'initials': 'CP',
-'type': 3,
-'unit': 'BS',
-'description': 'Capacidad Producción'},
-
 {'name': 'Factor Utilización',
 'initials': 'FU',
 'type': 3,
 'unit': 'BS',
 'description': 'Factor Utilización'},
-
-{'name': 'Productos Producidos',
-'initials': 'CPI',
-'type': 3,
-'unit': 'BS',
-'description': 'Productos Producidos'},
 
 {'name': 'Total Gastos',
 'initials': 'TG',
@@ -483,7 +453,7 @@ variables_data = [
 {'name': 'Rotación Inventario',
 'initials': 'RTI',
 'type': 3,
-'unit': 'BS',
+'unit': 'LITROS',
 'description': 'Rotación Inventario'},
 
 {'name': 'Rotación Clientes',
@@ -495,7 +465,7 @@ variables_data = [
 {'name': 'Participación Mercado',
  'initials': 'PM',
  'type': 3,
- 'unit': 'BS',
+ 'unit': 'LITROS',
  'description': 'Participación de mercado - Porcentaje de ventas de una empresa en relación con el total de ventas del mercado.'},
 
 {'name': 'Productividad Empleados',
@@ -507,7 +477,7 @@ variables_data = [
 {'name': 'Horas Ociosas',
  'initials': 'HO',
  'type': 3,
- 'unit': 'BS',
+ 'unit': 'Horas',
  'description': 'Horas ociosas - Tiempo en el que los empleados no están realizando ninguna actividad productiva.'},
 
 {'name': 'Costo Horas Ociosas',

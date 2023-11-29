@@ -12,8 +12,8 @@ equations_data = [
   {
     "name": "Total Productos Producidos",
     "description": "Ecuación para calcular el total de productos producidos multiplicando la capacidad de producción por el número promedio de productos producidos por empleado",
-    "expression": "TPP = CP * NEPP",
-    "variable1": "TPP",
+    "expression": "TPPRO = CP * NEPP",
+    "variable1": "TPPRO",
     "variable2": "CP",
     "variable3": "NEPP",
     "area": "Producción"
