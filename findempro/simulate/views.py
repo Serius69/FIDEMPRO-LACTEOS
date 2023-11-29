@@ -5,7 +5,9 @@ from django.db.models import Q
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
-import pkg_resources  # Import pkg_resources
+import pkg_resources
+from datetime import datetime
+from finance.models import FinanceRecommendation  # Import pkg_resources
 from .forms import SimulationForm  # Replace with your actual form import
 from scipy import stats  # Import scipy for KS test
 from .models import DataPoint, ProbabilisticDensityFunction
@@ -29,7 +31,9 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import json
 import statistics
 from io import BytesIO
+from dashboards.models import Chart
 import base64
+import os
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def simulate_show_view(request):
@@ -153,7 +157,8 @@ def simulate_show_view(request):
             is_active=True
         )
         # aqui solamente hacermos el guardado de la simulacion
-        new_simulation.save()        
+        request.session['simulation_started_id'] = new_simulation.id
+        new_simulation.save()  
         #cuarto hacer la simulacion
         print("se creo la simulacion")
         print("se comenzara con la simulacion")
@@ -210,6 +215,33 @@ def simulate_show_view(request):
         return render(request, 'simulate/simulate-init.html', context)
     else:
         
+        # aqui ya tomar los datos de la simulacion
+
+
+        # esto dentro de un for hasta llegar al maximo de dias ()
+            # tomar las areas
+
+
+                # de cada area tomar las ecuaciones que la componen
+                
+                
+                # de cada ecuacion tomar las expresiones y llenarlas con las variables que la componen
+                
+                
+                # resolver las expresiones y guardarlas en un diccionario
+                
+                
+                # los resultados guardarlas en ResultSimulation.variables
+                
+                
+                # tomar en cuenta que las variables tipo 1 son exogenas 
+                # Tomar en cuenta que las variables tipo 2 son endogenar
+                # tomar en cuenta que las variables tipo 3 son de estado
+            
+            
+            # 
+        
+        
         print("se inicio la simulacion")
         print("Started: " + str(started))
         context = {
@@ -225,8 +257,91 @@ def simulate_result_simulation_view(request, simulation_id):
     results = get_results_for_simulation(simulation_id)
     analysis_results = analyze_simulation_results(results)
     decision = decision_support(analysis_results)
+    results_simulation = ResultSimulation.objects.filter(is_active=True,fk_simulation_id=simulation_id)
+    simulation_instance = get_object_or_404(Simulation, pk=simulation_id)
+    questionary_result_instance = get_object_or_404(QuestionaryResult, pk=simulation_instance.fk_questionary_result.id)
+    product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product.id)
+    business_instance = get_object_or_404(Business, pk=product_instance.fk_business.id)
+    areas = Area.objects.filter(is_active=True, fk_product=product_instance)
     
+    demand_initial = DemandHistorical.objects.get(pk=1)
+     # Obtén datos de la base de datos
+    result_simulations = ResultSimulation.objects.filter(is_active=True, 
+                                                         fk_simulation_id=simulation_id)
 
-    return render(request, 'simulate/simulate-result.html')
+    # Recopila todos los datos fuera del bucle
+    all_labels = []
+    all_values = []
+
+    for result_simulation in result_simulations:
+        data = result_simulation.get_average_demand_by_date()
+        list_formatted_date = [] 
+        if data: 
+            for entry in data:
+                date_string = entry['date']          
+                date_object = datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S.%f')  # Ajusta el formato según tus necesidades
+                formatted_date = date_object.strftime('%Y-%m-%d')  # Ajusta el formato según tus necesidades
+                list_formatted_date.append(formatted_date)
+                all_values.append(entry['average_demand'])
+
+        unique_labels = sorted(set(list_formatted_date))
+        chart_data = {
+            'labels': unique_labels,
+            'values': [all_values[list_formatted_date.index(label)] for label in unique_labels],
+            'x_label': 'Date',
+            'y_label': 'Average Demand',
+        }
+
+    # Crea el objeto Chart
+    chart = Chart.objects.create(
+        title=f'Average Demand Chart - All Simulations',
+        chart_type='line',  # Cambia 'line' por el tipo de gráfico que desees
+        chart_data=chart_data,
+        fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
+        # Agrega más campos según sea necesario
+    )
+    # No tocar
+    image_data=None
+    file_name = f'line_chart_all_simulations.png'
+    print(len(all_labels))
+    print(len(all_values))
+    if len(all_labels) == len(all_values):
+        plt.plot(chart_data['labels'], chart_data['values'], marker='o')
+        plt.xlabel(chart_data['x_label'])
+        plt.ylabel(chart_data['y_label'])
+        plt.title(chart.title)
+        plt.savefig(file_name)
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    else:
+        print("Las listas tienen diferentes longitudes, no se puede trazar el gráfico correctamente.")    
+    
+    paginator = Paginator(results_simulation, 10)  # Show 10 results per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    
+    financial_recomnmendations=FinanceRecommendation.objects.filter(is_active=True,
+                                                                      fk_business_id=business_instance.id)
+    
+    # return render(request, 'your_template.html', {'page_obj': page_obj})
+    context = {
+        'demand_initial':demand_initial,
+        'simulation_instance': simulation_instance,
+        'results_simulation': results_simulation,
+        'analysis_results': analysis_results,
+        'decision': decision,
+        'questionary_result_instance': questionary_result_instance,
+        'product_instance': product_instance,
+        'business_instance': business_instance,
+        'areas': areas,
+        'image_data': image_data,
+        'page_obj'  : page_obj,
+        'financial_recomnmendations':financial_recomnmendations
+    }
+
+    return render(request, 'simulate/simulate-result.html',context)
 
     

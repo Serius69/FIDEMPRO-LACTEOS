@@ -1,3 +1,4 @@
+from decimal import Decimal
 import math
 from django.db import models
 from product.models import Product, Area
@@ -103,8 +104,9 @@ class Simulation(models.Model):
         # Create the Simulation
         simulation = Simulation(
             unit_time='day',
-            # fk_fdp_id=1,
+            fk_fdp_id=1,
             demand_history=demand,
+            quantity_time=30,
             fk_questionary_result=instance,
             is_active=True
         )
@@ -114,15 +116,14 @@ class Simulation(models.Model):
         for simulate in instance.simulations.all():
             simulate.is_active = instance.is_active
             simulate.save()
+        
 
 class ResultSimulation(models.Model):
     demand_mean = models.DecimalField(max_digits=10, decimal_places=2,help_text='The mean of the demand')
     demand_std_deviation = models.DecimalField(max_digits=10, decimal_places=2,help_text='The standard deviation of the demand')
-    date = models.JSONField(null=True, blank=True, help_text='The date of the simulation')
+    date = models.DateField(null=True, blank=True, help_text='The date of the simulation')
     variables = models.JSONField(null=True, blank=True, help_text='The variables of the simulation')
-    unit = models.JSONField(null=True, blank=True, help_text='The unit of the simulation')
-    unit_time = models.JSONField(null=True, blank=True ,help_text='The unit of time for the simulation')
-    results = models.JSONField(null=True, blank=True, help_text='The results of the simulation')
+    areas = models.JSONField(null=True, blank=True, help_text='The areas of the simulation')
     fk_simulation = models.ForeignKey(
         Simulation, 
         on_delete=models.CASCADE, 
@@ -139,22 +140,42 @@ class ResultSimulation(models.Model):
             demand_mean = random.uniform(50, 150)
             demand_std_deviation = random.uniform(5, 20)
             date = [str(datetime.now() + timedelta(days=i)) for i in range(10)]
-            variables = {"CPVD": [random.randint(100, 500) for _ in range(10)], "PVP": [random.uniform(1, 2) for _ in range(10)]}
-            unit = {"measurement": "kg", "value": random.randint(1, 10)}
-            unit_time = {"time_unit": "day", "value": random.randint(1, 30)}
-            results = {"result" + str(i): random.randint(20, 60) for i in range(1, 5)}
+            variables = {
+                "CPVD": [random.randint(100, 500) for _ in range(10)], 
+                "PVP": [random.uniform(1, 2) for _ in range(10)
+                        
+                        
+                        
+                        ]}
+            variables = {
+                "CPVD": [random.randint(100, 500) for _ in range(10)], 
+                "PVP": [random.uniform(1, 2) for _ in range(10)
+                        
+                        
+                        
+                        ]}
 
             result_simulation = ResultSimulation(
                 demand_mean=demand_mean,
                 demand_std_deviation=demand_std_deviation,
                 date=date,
                 variables=variables,
-                unit=unit,
-                unit_time=unit_time,
-                results=results,
                 fk_simulation=fk_simulation,
                 is_active=True
             )
             result_simulation.save()
-    
+    def get_average_demand_by_date(self):
+        average_demand_data = []
+        # Asegúrate de que self.demand_mean sea una lista, incluso si contiene un solo elemento
+        demand_mean_values = [self.demand_mean] if isinstance(self.demand_mean, Decimal) else self.demand_mean
+        # Recorre las fechas y calcula el promedio de la demanda
+        for date_str, demand_mean_value in zip(self.date, demand_mean_values):
+            # Convierte 'date_str' a un objeto datetime.date
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f")
+            # Para calcular el promedio, simplemente usa 'demand_mean_value' directamente
+            average_demand = float(demand_mean_value)
+            # Añade el resultado a la lista
+            average_demand_data.append({'date': date_str, 'average_demand': average_demand})
+        return average_demand_data
 
+    
