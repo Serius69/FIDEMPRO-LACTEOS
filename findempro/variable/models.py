@@ -57,31 +57,34 @@ class Variable(models.Model):
             # Verificar si todas las variables se han creado
             def create_equations(instance):
                     for data in equations_data:
-                        def get_variable(variable_name):
+                        # aqui se debe determinar que la varaible que se quiere  tomar tenga el id product que se esta creando
+                        def get_variable(variable_name, product_id):
                             try:
                                 if variable_name == None:
                                     return None
-                                return Variable.objects.get(initials=variable_name)
+                                return Variable.objects.get(initials=variable_name, fk_product_id=product_id)
                             except Variable.DoesNotExist:
-                                raise Http404(f"Variable with initials '{variable_name}' does not exist.")
+                                raise Http404(f"Variable with initials '{variable_name}' associated with product id '{product_id}' does not exist.")
                             except Variable.MultipleObjectsReturned:
-                                return Variable.objects.filter(initials=variable_name).first()
-                            
-                        def get_area(area_name):
+                                return Variable.objects.filter(initials=variable_name, fk_product_id=product_id).first()
+                        # aqui se debe determinar que el area que quiere tomar tenga el id product que se esta creando    
+                        def get_area(area_name, product_id):
                             try:
-                                return Area.objects.get(name=area_name)
+                                return Area.objects.get(name=area_name, fk_product_id=product_id)
                             except Area.DoesNotExist:
-                                raise Http404(f"Area with name '{area_name}' does not exist.")
+                                raise Http404(f"Area with name '{area_name}' associated with product id '{product_id}' does not exist.")
                             except Area.MultipleObjectsReturned:
-                                return Area.objects.filter(name=area_name).first()
+                                return Area.objects.filter(name=area_name, fk_product_id=product_id).first()
                             
-                        variable1 = get_variable(data['variable1'])
-                        variable2 = get_variable(data['variable2'])
-                        variable3 = get_variable(data['variable3'])
-                        variable4 = get_variable(data.get('variable4', None))
-                        variable5 = get_variable(data.get('variable5', None))
-                        area = get_area(data['area'])
+                        product_id = product.id  # Assuming 'product' is the Product object being created
 
+                        variable1 = get_variable(data['variable1'], product_id)
+                        variable2 = get_variable(data['variable2'], product_id)
+                        variable3 = get_variable(data['variable3'], product_id)
+                        variable4 = get_variable(data.get('variable4', None), product_id)
+                        variable5 = get_variable(data.get('variable5', None), product_id)
+                        area = get_area(data['area'], product_id)
+                        
                         Equation.objects.create(
                             name=data['name'],
                             description=data['description'],

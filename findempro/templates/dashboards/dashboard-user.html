@@ -241,19 +241,12 @@
                                                 <div class="table-responsive table-card">
                                                     <table class="table table-hover table-centered align-middle table-nowrap mb-0">
                                                         <tbody>
-                                                            {% for recommendation in recommendations %}
+                                                            {% for recommendation in page_obj %}
                                                             <tr>
                                                                 <td>
                                                                     <div class="d-flex align-items-center">
-                                                                        <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                                            {% if recommendation.image_src %}
-                                                                                <img src="{{ MEDIA_URL }}{{ recommendation.image_src.url }}" alt="" class="img-fluid d-block" />
-                                                                            {% else %}
-                                                                                <img src="{% static 'path_to_dummy_image.webp' %}" alt="" class="img-fluid d-block" />
-                                                                            {% endif %}
-                                                                        </div>
                                                                         <div>
-                                                                            <h5 class="mb-1">{{ recommendation.title }}</h5>
+                                                                            <h5 class="mb-1">{{ recommendation.recommendation }}</h5>
                                                                             <p class="text-muted mb-0">{{ recommendation.description }}</p>
                                                                         </div>
                                                                     </div>
@@ -262,6 +255,19 @@
                                                             {% endfor %}
                                                         </tbody>
                                                     </table>
+                                                    <nav aria-label="Page navigation example">
+                                                        <ul class="pagination justify-content-center">
+                                                            {% if page_obj.has_previous %}
+                                                                <li class="page-item"><a class="page-link" href="?page=1">Primera</a></li>
+                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                                                            {% endif %}
+                                                            <li class="page-item disabled"><a class="page-link">Página {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a></li>
+                                                            {% if page_obj.has_next %}
+                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>
+                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </nav>
                                                 </div>
                                             </div><!-- end card body -->
                                         </div><!-- end card -->

@@ -57,8 +57,13 @@ def dashboard_user(request) -> str:
         greeting = "Buenas Noches"
     products = Product.objects.filter(fk_business=business.id)
     areas = Area.objects.filter(fk_product__fk_business=business.id)
+    product_ids = [product.id for product in products]
         
-    charts = Chart.objects.all()
+    charts = Chart.objects.filter(fk_product_id__in=product_ids).order_by('-id')[:6]
+    
+    paginator = Paginator(recommendations, 10)  # Show 10 recommendations per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     total_revenue = sum(product.earnings or 0 for product in products)
     total_costs = sum(product.costs or 0 for product in products)
@@ -78,7 +83,7 @@ def dashboard_user(request) -> str:
         'total_profit_margin': total_profit_margin,
         'charts': charts,
         
-        'recommendations': recommendations
+        'page_obj': page_obj
     }
 
     return render(request, 'dashboards/dashboard-user.html', context)

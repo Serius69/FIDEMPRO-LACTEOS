@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Area
 from business.models import Business
-from variable.models import Variable
+from variable.models import Variable, Equation
 from pages.models import Instructions
 from report.models import Report
 from simulate.models import ResultSimulation
@@ -52,15 +52,20 @@ def product_overview(request, pk):
         reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         areas = Area.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         simulations = ResultSimulation.objects.filter(
-            fk_simulation__fk_questionary_result__fk_questionary__fk_business_id=product.fk_business.id, is_active=True).order_by('-id')
+            fk_simulation__fk_questionary_result__fk_questionary__fk_product_id=product.fk_business.id, is_active=True).order_by('-id')
         paginator = Paginator(variables_product, 10)
+        paginator2 = Paginator(simulations, 5)
         page = request.GET.get('page')
+        page2 = request.GET.get('page')
         try:
             variables_product = paginator.page(page)
+            simulations = paginator2.page(page2)
         except PageNotAnInteger:
             variables_product = paginator.page(1)
+            simulations = paginator2.page(1)
         except EmptyPage:
             variables_product = paginator.page(paginator.num_pages)
+            simulations = paginator2.page(paginator2.num_pages)
         
         context = {
                 'variables_product': variables_product, 
@@ -69,8 +74,34 @@ def product_overview(request, pk):
                 'simulations': simulations,
                 'reports': reports,
                 'areas': areas
-                   } 
+                } 
         return render(request, 'product/product-overview.html', context)
+    # except Exception as e:
+    #     messages.error(request, "An error occurred. Please check the server logs for more information.")
+    #     return HttpResponse(status=500)
+    
+def area_overview(request, pk):
+        current_datetime = timezone.now()
+    # try:
+        # product = get_object_or_404(Product, pk=pk)
+        area = get_object_or_404(Area, pk=pk)
+        equations_area = Equation.objects.filter(fk_area_id=area.id, is_active=True).order_by('-id')
+        paginator = Paginator(equations_area, 10)
+        page = request.GET.get('page')
+        try:
+            equations_area = paginator.page(page)
+        except PageNotAnInteger:
+            equations_area = paginator.page(1)
+        except EmptyPage:
+            equations_area = paginator.page(paginator.num_pages)
+        
+        context = { 
+                'area': area,
+                
+                'equations_area':equations_area,
+                'current_datetime': current_datetime,
+                } 
+        return render(request, 'product/area-overview.html', context)
     # except Exception as e:
     #     messages.error(request, "An error occurred. Please check the server logs for more information.")
     #     return HttpResponse(status=500)

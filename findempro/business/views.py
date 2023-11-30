@@ -45,6 +45,7 @@ def business_overview(request, pk):
         business = get_object_or_404(Business, pk=pk)
         products = Product.objects.filter(fk_business_id=business.id, fk_business__fk_user=request.user, is_active=True).order_by('-id')
         paginator = Paginator(products, 10)
+        num_products = products.count()
         page = request.GET.get('page')
         try:
             products = paginator.page(page)
@@ -54,6 +55,7 @@ def business_overview(request, pk):
             products = paginator.page(paginator.num_pages)
         context = {'business': business, 
                    'products': products,
+                   'num_products': num_products,
                    'instructions': Instructions.objects.filter(is_active=True).order_by('-id')}
         
         return render(request, 'business/business-overview.html', context)

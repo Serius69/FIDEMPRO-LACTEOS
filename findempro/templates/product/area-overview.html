@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Descripción del producto{% endblock title %}
+{% block title %}Descripción del areao{% endblock title %}
 {% block extra_css %}
 {% endblock extra_css %}
 {% block content %}
@@ -11,7 +11,7 @@
                 <div class="page-content">
                     <div class="container-fluid">
                         {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Producto" title=product.name %}
+                        {% include "partials/page-title.html" with pagetitle="Producto" title=area.name %}
                         {% endblock pagetitle %}
                         <div class="row">
                             <div class="col-lg-12">
@@ -21,18 +21,18 @@
                                             <div class="row mb-1">
                                                 <!-- Product Image -->
                                                 <div class="col-lg-3 col-md-4 col-sm-6">
-                                                    <img src="{{ product.get_photo_url }}" alt="{{ product.name }}" class="img-fluid rounded" style="object-fit: cover; width: 100%; height: auto;">
+                                                    <img src="{{ area.get_photo_url }}" alt="{{ area.name }}" class="img-fluid rounded" style="object-fit: cover; width: 100%; height: auto;">
                                                 </div>
                                                 <!-- Product Details -->
                                                 <div class="col-lg-9 col-md-8 col-sm-6">
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <h4 class="card-title fw-bold">{{product.name}}</h4>
+                                                            <h4 class="card-title fw-bold">{{area.name}}</h4>
                                                             <ul class="list-group list-group-flush">
-                                                                <li class="list-group-item"><i class="ri-building-line align-bottom me-1"></i> {{product.fk_business.name}}</li>
-                                                                <li class="list-group-item">Fecha de Creación: <span class="fw-medium">{{product.date_created}}</span></li>
-                                                                <li class="list-group-item">Fecha actualizada: <span class="fw-medium">{{product.last_updated}}</span></li>
-                                                                {% with days_since_creation=product.date_created|timesince:current_datetime %}
+                                                                <li class="list-group-item"><i class="ri-building-line align-bottom me-1"></i> {{area.fk_business.name}}</li>
+                                                                <li class="list-group-item">Fecha de Creación: <span class="fw-medium">{{area.date_created}}</span></li>
+                                                                <li class="list-group-item">Fecha actualizada: <span class="fw-medium">{{area.last_updated}}</span></li>
+                                                                {% with days_since_creation=area.date_created|timesince:current_datetime %}
                                                                     {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
                                                                         <li class="list-group-item"><span class="badge rounded-pill bg-info">Nuevo</span></li>
                                                                     {% endif %}
@@ -43,7 +43,7 @@
                                                     <div class="card">
                                                         <div class="card-body">
                                                         <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
-                                                                <p>{{product.description}}</p>    
+                                                                <p>{{area.description}}</p>    
                     
                                                                 <div class="pt-3 border-top border-top-dashed mt-4">
                                                                     <div class="row">
@@ -51,19 +51,19 @@
                                                                         <div class="col-lg-3 col-sm-6">
                                                                             <div>
                                                                                 <p class="mb-2 text-uppercase fw-medium">Fecha de Creación:</p>
-                                                                                <h5 class="fs-15 mb-0">{{ product.date_created|date:"F j, Y, P" }}</h5>
+                                                                                <h5 class="fs-15 mb-0">{{ area.date_created|date:"F j, Y, P" }}</h5>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-lg-3 col-sm-6">
                                                                             <div>
                                                                                 <p class="mb-2 text-uppercase fw-medium">Fecha de actualizacion: </p>
-                                                                                <h5 class="fs-15 mb-0">{{ product.last_updated|date:"F j, Y, P" }}</h5>
+                                                                                <h5 class="fs-15 mb-0">{{ area.last_updated|date:"F j, Y, P" }}</h5>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-lg-3 col-sm-6">
                                                                             <div>
                                                                                 <p class="mb-2 text-uppercase fw-medium">Listo para simular:</p>
-                                                                                {% if product.is_ready %}
+                                                                                {% if area.is_ready %}
                                                                                     <div class="badge bg-success fs-12">Listo</div>
                                                                                 {% else %}
                                                                                     <div class="badge bg-danger fs-12">No Listo</div>
@@ -72,8 +72,8 @@
                                                                         </div>
                                                                         <div class="col-lg-3 col-sm-6">
                                                                             <div>
-                                                                                <p class="mb-2 text-uppercase fw-medium">Tipo de producto:</p>
-                                                                                {% if product.type == 1 %}
+                                                                                <p class="mb-2 text-uppercase fw-medium">Tipo de areao:</p>
+                                                                                {% if area.type == 1 %}
                                                                                     <div class="badge bg-warning fs-12">Lacteos</div>
                                                                                 {% else %}
                                                                                     <div class="badge bg-warning fs-12">Otros</div>
@@ -89,10 +89,10 @@
                                             <!-- Product Tabs -->
                                             <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
                                                 <li class="nav-item">
-                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview" role="tab">Descripción general</a>
+                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#area-overview" role="tab">Descripción general</a>
                                                 </li>
                                                 <li class="nav-item">
-                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable" role="tab">variables</a>
+                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#area-variable" role="tab">variables</a>
                                                 </li>
                                             </ul>
                                         </div>
@@ -104,25 +104,23 @@
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="tab-content text-muted">
-                                    <div class="tab-pane fade show active" id="product-overview" role="tabpanel">
+                                    <div class="tab-pane fade show active" id="area-overview" role="tabpanel">
                                         <div class="row">
                                             <div class="col-xl-9 col-lg-8">
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1">Areas</h4>
+                                                        <h4 class="card-title mb-0 flex-grow-1">Ecuaciones</h4>
                                                         <div class="flex-shrink-0">
                                                             <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
                                                         </div>
                                                     </div>
                                                     <div class="row">
-                                                        {% for area in areas %}
+                                                        {% for equation in equations_area %}
                                                             <div class="col-md-2">
                                                                 <div class="card">
-                                                                    <img src="{{ area.get_photo_url }}" class="card-img-top img-fluid" alt="Area Image">
                                                                     <div class="card-body">
-                                                                        <h5 class="card-title">{{ area.name }}</h5>
-                                                                        <p class="card-text">{{ area.description }}</p>
-                                                                        <a href="{% url 'product:area.overview' area.id %}" class="btn btn-primary">Ver</a>
+                                                                        <h5 class="card-title">{{ equation.name }}</h5>
+                                                                        <p class="card-text">{{ equation.expression }}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -190,147 +188,8 @@
                                                 <!-- end card -->
                                             </div>
                                             <!-- ene col -->
-                                            <div class="col-xl-3 col-lg-6">  
-                                                
-                                                <!-- end card -->
-                                                <div class="card">
-                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1">Simulaciones</h4>
-                                                        <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-info btn-sm" href=""><i class="ri-upload-2-fill me-1 align-bottom"></i> Nueva simulación</button>
-                                                        </div>
-                                                    </div>
-                                                    {% for simulation in simulations %}
-                                                        <div class="card mb-3">
-                                                            <div class="card-body">
-                                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                                    <h5 class="mb-0">{{simulation.date_created}}</h5>
-                                                                    <div class="d-flex gap-2">
-                                                                        <button type="button" href="" class="btn btn-sm btn-outline-secondary">
-                                                                            <i class="ri-download-2-line"></i> Generar Reporte
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                                <ul class="list-group list-group-flush">
-                                                                    <li class="list-group-item">Media de la demanda: {{simulation.demand_mean}}</li>
-                                                                    <li class="list-group-item">Desviación estándar de la demanda: {{simulation.demand_std_deviation}}</li>
-                                                                    <li class="list-group-item">Unidad de tiempo: {{simulation.unit_time}}</li>
-                                                                </ul>
-                                                                <a href="{% url 'simulate:simulate.result' simulation.id %}" class="btn btn-success">
-                                                                    Ver más
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                    {% empty %}
-                                                        <div class="text-center py-4">
-                                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                            <h5 class="mt-2">Lo sentimos, no hay ningúna simulacion registrado en la base de datos</h5>
-                                                        </div>
-                                                    {% endfor %}
-                                                </div>
-                                                <!-- end card -->
-
-                                            </div>
-                                            <!-- end col -->
                                         </div>
                                         <!-- end row -->
-                                    </div>
-                                    <!-- end tab pane -->
-                                    <div class="tab-pane fade" id="product-variable" role="tabpanel">
-                                        <div class="row g-4 mb-3">
-                                            <div class="col-sm-auto">
-                                                <div>
-                                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-add-line me-1 align-bottom"></i> Agregar una variable</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- end row -->
-
-                                        <div class="team-list list-view-filter">
-                                            {% for variable in variables_product %}
-                                            <div class="card team-box">
-                                                <div class="card-body px-4">
-                                                    <div class="row align-items-center team-row">
-                                                        <div class="col team-settings">
-                                                            <div class="row align-items-center">
-                                                                <div class="col text-end dropdown">
-                                                                    <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                        <i class="ri-more-fill fs-17"></i>
-                                                                    </a>
-                                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                                        <li><a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                        <li><a class="dropdown-item" href="{% url 'variable:variable.edit' variable.id %}"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Edit</a></li>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-4 col">
-                                                            <div class="team-profile-img">
-                                                                <div class="team-content">
-                                                                    <a href="#" class="d-block"><h5 class="fs-16 mb-1">{{variable.name}}</h5></a>
-                                                                    <p class="text-muted mb-0">{{variable.name}}</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-4 col">
-                                                            <div class="row text-muted text-center">
-                                                                <div class="col-6 border-end border-end-dashed">
-                                                                    <h5 class="mb-1">{{variable.fk_variable_equation.all}}</h5>
-                                                                    <p class="text-muted mb-0">ecuaciones</p>
-                                                                </div>
-                                                                <div class="col-6">
-                                                                    <h5 class="mb-1">{{variable.fk_variable_question.all}}</h5>
-                                                                    <p class="text-muted mb-0">preguntas</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div><!--end card-->
-                                            {% empty %}
-                                            <tr>
-                                                   <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                   <h5 class="mt-2">Lo siento, no hay ningún negocio registrado en la base de datos</h5>
-                                                   <p class="text-muted mb-0">Tienes que "agregar negocios".</p>
-                                           </tr>
-                                           {% endfor %} 
-                                        </div>
-                                        <!-- end team list -->
-
-                                        <div class="align-items-center mt-2 row text-center text-sm-start">
-                                            <div class="col-sm">
-                                              <div class="text-muted"
-                                                >Mostrar
-                                                <span class="fw-semibold">{{ simulations.number }}</span> of
-                                                <span class="fw-semibold"
-                                                  >{{ simulations.paginator.num_pages }}</span
-                                                >
-                                                Results
-                                              </div>
-                                            </div>
-                                            <div class="col-sm-auto">
-                                              <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                                {% if simulations.has_Anterior %}
-                                                  <li class="page-item">
-                                                    <a href="?page={{ simulations.Anterior_page_number }}" class="page-link">←</a>
-                                                  </li>
-                                                {% endif %}
-                                            
-                                                {% for i in simulations.paginator.page_range %}
-                                                  <li class="page-item {% if i == simulations.number %}active{% endif %}">
-                                                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                  </li>
-                                                {% endfor %}
-                                            
-                                                {% if simulations.has_next %}
-                                                  <li class="page-item">
-                                                    <a href="?page={{ simulations.next_page_number }}" class="page-link">→</a>
-                                                  </li>
-                                                {% endif %}
-                                              </ul>
-                                            </div>            
-                                          </div>
-                                          <!-- end row -->
                                     </div>
                                     <!-- end tab pane -->
                                 </div>
