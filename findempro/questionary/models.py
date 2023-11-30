@@ -44,23 +44,31 @@ class QuestionaryResult(models.Model):
         related_name='fk_questionary_questionary_result',
         help_text='The questionnaire associated with the question',
         default=1
-        )
+    )
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
     last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
+
     @receiver(post_save, sender=Questionary)
-    def create_questionary_result(sender, instance, created, **kwargs):
-        if created:
-            for data in questionary_data:  # Assuming products_data is defined somewhere
-                QuestionaryResult.objects.create(
-                    fk_questionary=instance,
-                    is_active=True
-                )
-    @receiver(post_save, sender=Questionary)
-    def save_questionary_result(sender, instance, **kwargs):
-        for questionary in instance.fk_questionary_questionary_result.all():
-            questionary.is_active = instance.is_active
-            questionary.save()
+    def create_or_update_questionary_result(sender, instance, created, **kwargs):
+        # Evitar crear o actualizar si es una instancia existente
+        if not created:
+            return
+
+        # Intentar obtener un objeto existente
+        questionary_result = QuestionaryResult.objects.filter(fk_questionary=instance).first()
+
+        # Si no existe, crear uno
+        if not questionary_result:
+            questionary_result = QuestionaryResult.objects.create(
+                fk_questionary=instance,
+                is_active=instance.is_active
+            )
+        else:
+            # Si existe, actualizar el estado
+            questionary_result.is_active = instance.is_active
+            questionary_result.save()
+
 class Question(models.Model):
     question = models.TextField()
     fk_questionary = models.ForeignKey(

@@ -9,8 +9,8 @@ from datetime import datetime
 from product.models import Product,Area
 from finance.models import FinanceRecommendation
 from business.models import Business
-from dashboards.models import Chart,Demand,DemandBehavior
-from simulate.models import ResultSimulation,Simulation
+from dashboards.models import Chart
+from simulate.models import ResultSimulation,Simulation,Demand,DemandBehavior
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class DashboardView(LoginRequiredMixin,TemplateView):
     pass

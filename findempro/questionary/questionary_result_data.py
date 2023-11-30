@@ -1,13 +1,12 @@
 questionary_result_data = [
-    
     {
-    'name': 'Leche',
+    'name': 'Respuestas para el producto Leche',
     },
     {
-    'name': 'Queso',
+    'name': 'Respuestas para el producto Queso',
     },
     {
-    'name': 'Yogurt',
+    'name': 'Respuestas para el producto Yogur',
     },
     ]
 
@@ -18,6 +17,10 @@ answer_data = [
         'answer': random.randint(100, 500),  
         'question': '¿Cuántos productos lácteos vende diariamente?'
     },
+    {
+        'answer': random.randint(5, 15),  
+        'question': '¿Cuál es el precio actual del producto?'
+    },    
     {
         # 'answer': [random.randint(100, 1000) for i in range(30)],
         'answer': [513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906],

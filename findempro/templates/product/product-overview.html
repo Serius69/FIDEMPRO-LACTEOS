@@ -212,9 +212,31 @@
                                                                     </div>
                                                                 </div>
                                                                 <ul class="list-group list-group-flush">
-                                                                    <li class="list-group-item">Media de la demanda: {{simulation.demand_mean}}</li>
-                                                                    <li class="list-group-item">Desviación estándar de la demanda: {{simulation.demand_std_deviation}}</li>
-                                                                    <li class="list-group-item">Unidad de tiempo: {{simulation.unit_time}}</li>
+                                                                    {% for demand in demands %}
+                                                                        {% if demand.fk_simulation_id == simulation.id %}
+                                                                            <li class="list-group-item">
+                                                                                {% if not demand.is_predicted %}
+                                                                                    Demanda Inicial Historica: 
+                                                                                {% else %}
+                                                                                    Demanda Simulada: 
+                                                                                {% endif %}
+                                                                                {{demand.quantity}}
+                                                                            </li>
+                                                                            <li class="list-group-item">
+                                                                                Desviación estándar de la demanda: 
+                                                                                {{ simulation.fk_fdp.std_dev_param|floatformat:2 }} * {{ demand.quantity|floatformat:2 }}
+                                                                            </li>
+                                                                        {% endif %}                                                                        
+                                                                    {% endfor %}
+                                                                    
+                                                                    <li class="list-group-item">
+                                                                        Unidad de tiempo: 
+                                                                        {% if simulation.unit_time == "days" %}
+                                                                            días
+                                                                        {% else %}
+                                                                            {{simulation.unit_time}}
+                                                                        {% endif %}
+                                                                    </li>
                                                                 </ul>
                                                                 <a href="{% url 'simulate:simulate.result' simulation.id %}" class="btn btn-success">
                                                                     Ver más

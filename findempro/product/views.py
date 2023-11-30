@@ -4,7 +4,7 @@ from business.models import Business
 from variable.models import Variable, Equation
 from pages.models import Instructions
 from report.models import Report
-from simulate.models import ResultSimulation
+from simulate.models import ResultSimulation,Simulation, DemandBehavior,Demand
 from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
@@ -51,8 +51,14 @@ def product_overview(request, pk):
         variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         areas = Area.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
-        simulations = ResultSimulation.objects.filter(
-            fk_simulation__fk_questionary_result__fk_questionary__fk_product_id=product.fk_business.id, is_active=True).order_by('-id')
+        simulations = Simulation.objects.filter(
+            fk_questionary_result__fk_questionary__fk_product_id=product.id, is_active=True).order_by('-id')
+        
+        demands = Demand.objects.filter(
+            fk_product_id=product.id, is_active=True
+        )
+        print('demandas')
+        print(demands)
         paginator = Paginator(variables_product, 10)
         paginator2 = Paginator(simulations, 5)
         page = request.GET.get('page')
@@ -73,7 +79,8 @@ def product_overview(request, pk):
                 'current_datetime': current_datetime,
                 'simulations': simulations,
                 'reports': reports,
-                'areas': areas
+                'areas': areas,
+                'demands': demands,
                 } 
         return render(request, 'product/product-overview.html', context)
     # except Exception as e:

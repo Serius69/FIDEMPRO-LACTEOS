@@ -1,40 +1,48 @@
-from http.client import HTTPResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.db.models import Q
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.conf import settings
-import pkg_resources
+# Standard library imports
 from datetime import datetime
-from finance.models import FinanceRecommendation  # Import pkg_resources
-from .forms import SimulationForm  # Replace with your actual form import
-from scipy import stats  # Import scipy for KS test
-from .models import ProbabilisticDensityFunction
-from variable.models import Variable, Equation, EquationResult
-from product.models import Product, Area
-from business.models import Business
-from simulate.models import Simulation,ResultSimulation
-from dashboards.models import Chart,Demand,DemandBehavior
-from questionary.models import QuestionaryResult,Questionary,Answer,Question
-from sympy import Eq, sympify
-import openai
-openai.api_key = settings.OPENAI_API_KEY
+from http.client import HTTPResponse
+from io import BytesIO
+import base64
+import json
+import os
+import pkg_resources
+import statistics
+
+# Third-party imports
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 from django.http import JsonResponse
-from scipy.stats import kstest,norm,expon,lognorm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import TemplateView
 import matplotlib
-matplotlib.use('Agg')  # Modo no interactivo para evitar el error en entornos web
 import matplotlib.pyplot as plt
 import numpy as np
-from finance.utils import analyze_simulation_results, decision_support
+import openai
+from scipy import stats
+from scipy.stats import kstest, norm, expon, lognorm
+from sympy import Eq, sympify
+
+# Local application imports
+from .forms import SimulationForm
+from .models import ProbabilisticDensityFunction
 from .utils import get_results_for_simulation
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import json
-import statistics
-from io import BytesIO
+from business.models import Business
 from dashboards.models import Chart
-import base64
-import os
+from finance.models import FinanceRecommendation
+from finance.utils import analyze_simulation_results, decision_support
+from product.models import Product, Area
+from questionary.models import QuestionaryResult, Questionary, Answer, Question
+from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
+from variable.models import Variable, Equation, EquationResult
+
+# Set matplotlib to non-interactive mode to avoid error in web environments
+matplotlib.use('Agg')
+
+# Set OpenAI API key
+openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def simulate_show_view(request):
@@ -54,8 +62,7 @@ def simulate_show_view(request):
         request.session['selected_questionary_result_id'] = selected_questionary_result_id
         answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
         equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
-        questionnaires_result = QuestionaryResult.objects.filter(is_active=True, 
-                                                                 fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+        questionnaires_result = QuestionaryResult.objects.filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
         # no tocar
         questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
             
@@ -88,8 +95,9 @@ def simulate_show_view(request):
         #     is_predicted=False)
              
         # segundo mandar esa demanda a la prueba de kolmogorov smirnov
-        prob_density_function = ProbabilisticDensityFunction.objects.get()  # Reemplaza 1 con el ID de tu objeto
-        # La muestra de datos
+        prob_density_function = ProbabilisticDensityFunction.objects.filter(
+            fk_business__fk_user=questionary_result_instance.fk_questionary.fk_product.fk_business.fk_user
+        ).first()        # La muestra de datos
         data = numbers
         # Genera la PDF basada en el tipo de distribución almacenada en el modelo
         if prob_density_function.distribution_type == 1:  # Normal distribution
@@ -271,8 +279,8 @@ def simulate_show_view(request):
 # aqui se le manda el Simulate object que se creo en la vista de arriba
 def simulate_result_simulation_view(request, simulation_id):
     results = get_results_for_simulation(simulation_id)
-    analysis_results = analyze_simulation_results(results)
-    decision = decision_support(analysis_results)
+    # analysis_results = analyze_simulation_results(results)
+    # decision = decision_support(analysis_results)
     results_simulation = ResultSimulation.objects.filter(is_active=True,fk_simulation_id=simulation_id)
     simulation_instance = get_object_or_404(Simulation, pk=simulation_id)
     questionary_result_instance = get_object_or_404(QuestionaryResult, pk=simulation_instance.fk_questionary_result.id)
@@ -364,8 +372,8 @@ def simulate_result_simulation_view(request, simulation_id):
         # 'demand_initial':demand_initial,
         'simulation_instance': simulation_instance,
         'results_simulation': results_simulation,
-        'analysis_results': analysis_results,
-        'decision': decision,
+        # 'analysis_results': analysis_results,
+        # 'decision': decision,
         'questionary_result_instance': questionary_result_instance,
         'product_instance': product_instance,
         'business_instance': business_instance,

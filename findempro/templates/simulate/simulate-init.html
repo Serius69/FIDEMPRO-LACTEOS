@@ -162,10 +162,11 @@
                                                                 {% endif %}
                                                                 <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
                                                                     {% csrf_token %}
-                                                                    <input type="hidden" name="questionary_result_id" value="{{ selected_questionary_result_id }}">
+                                                                    <input type="hidden" name="fk_questionary_result" value="{{ selected_questionary_result_id }}">
                                                                     <input type="hidden" name="quantity_time" value="{{ selected_quantity_time }}">
                                                                     <input type="hidden" name="unit_time" value="{{ selected_unit_time }}">
                                                                     <input type="hidden" name="demand_history" value="{{ selected_demand_history }}">
+                                                                    <input type="hidden" name="fk_fdp" value="{{ selected_fdp }}">
                                                                     <div class="col-lg-12">
                                                                         <div class="d-flex justify-content-between">
                                                                             <button type="submit" name="start" class="btn btn-primary" onclick="displayMessage()">Iniciar Modelo de Simulación</button>
@@ -223,9 +224,7 @@
                                     <div class="card">
                                         <div class="card-header">
                                             <h4 class="card-title">Areas que se simularan</h4>
-                                            <p class="card-title-desc">Las siguientes areas se simularan con los datos del cuestionario seleccionado.
-                                            </p>
-                                            <p class="card-title-desc">Las ecuaciones que se usaran para la simulacion son las siguientes:  
+                                            <p class="card-title-desc">Las siguientes areas se simularan con los datos del cuestionario seleccionado con sus respectivas ecuaciones.
                                             </p>
                                         </div>
                                         <div class="card-body">
@@ -249,10 +248,9 @@
                                                                                     {% if equation.fk_area.id == area.id%}
                                                                                         <article class="equation">
                                                                                             <p>
-                                                                                                {{ equation.id }}
                                                                                                 {{ equation.name }}</p>
                                                                                             
-                                                                                            <p>{{ equation.expression }}</p>
+                                                                                            <p style="text-align: center;">{{ equation.expression|safe }}</p>
                                                                                             {% if equation.fk_variable1 %}
                                                                                                 <p class="small">Variable 1: {{ equation.fk_variable1.name }}</p>
                                                                                             {% endif %}
