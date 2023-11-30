@@ -92,7 +92,6 @@ class DemandBehavior(models.Model):
         Demand, 
         on_delete=models.CASCADE, 
         related_name='fk_demand_behavior_current_demand', 
-        default=1,
         blank=  True,
     )
     predicted_demand = models.OneToOneField(

@@ -3,6 +3,7 @@ import math
 from django.db import models
 from product.models import Product, Area
 from business.models import Business
+from dashboards.models import Demand, DemandBehavior
 from variable.models import Variable,EquationResult,Equation
 from questionary.models import QuestionaryResult,Questionary,Answer,Question
 from django.utils import timezone
@@ -43,37 +44,45 @@ class ProbabilisticDensityFunction(models.Model):
     @receiver(post_save, sender=Business)
     def create_probabilistic_density_functions(sender, instance, **kwargs):
         distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic
-        names = ['Normal Distribution', 'Exponential Distribution', 'Log-Normal Distribution']            
+        names = ['Normal Distribution', 'Exponential Distribution', 'Log-Normal Distribution']
+
         for distribution_type, name in zip(distribution_types, names):
-            pdf = ProbabilisticDensityFunction(
-                name=name,
-                distribution_type=distribution_type,
-                is_active=True,
-                fk_business_id=instance.id
-            )
+            defaults = {
+                "name": name,
+                "distribution_type": distribution_type,
+                "is_active": True,
+                "fk_business": instance,
+            }
+
             if distribution_type == 1:  # Normal distribution
-                pdf.lambda_param = 1.0
-                pdf.cumulative_distribution_function = 0.5
-                pdf.mean_param = 450.0
-                pdf.std_dev_param = 10.0
+                defaults["lambda_param"] = 1.0
+                defaults["cumulative_distribution_function"] = 0.5
+                defaults["mean_param"] = 450.0
+                defaults["std_dev_param"] = 10.0
             elif distribution_type == 2:  # Exponential distribution
-                pdf.lambda_param = 0.5
-                pdf.cumulative_distribution_function = expon.cdf(2.0, scale=1/0.5)
-                pdf.mean_param = 1 / 0.5
-                pdf.std_dev_param = expon(scale=1/pdf.lambda_param).std()
+                defaults["lambda_param"] = 0.5
+                defaults["cumulative_distribution_function"] = expon.cdf(2.0, scale=1/0.5)
+                defaults["mean_param"] = 1 / 0.5
+                defaults["std_dev_param"] = expon(scale=1/defaults["lambda_param"]).std()
             elif distribution_type == 3:  # Log-Normal distribution
-                pdf.lambda_param = 0
-                pdf.cumulative_distribution_function = lognorm.cdf(2.0, s=0.2, scale=np.exp(0.0))
-                pdf.mean_param = 50.0
-                pdf.std_dev_param = np.exp(0.0 + (0.2 ** 2) / 2)
-            pdf.save()
+                defaults["lambda_param"] = 0
+                defaults["cumulative_distribution_function"] = lognorm.cdf(2.0, s=0.2, scale=np.exp(0.0))
+                defaults["mean_param"] = 50.0
+                defaults["std_dev_param"] = np.exp(0.0 + (0.2 ** 2) / 2)
+
+            ProbabilisticDensityFunction.objects.create(**defaults)
     @receiver(post_save, sender=Business)
     def save_probabilistic_density_functions(sender, instance, **kwargs):
         # Asumiendo que 'fk_business_fdp' es el campo relacionado entre Business y ProbabilisticDensityFunction
         for probabilistic_density_function in instance.fk_business_fdp.all():
             probabilistic_density_function.is_active = instance.is_active
             probabilistic_density_function.save()
-            print('Se guardaron las fdps')
+        print('Se guardaron las fdps')
+
+        # Desactivar todas las fdps si el business se desactiva
+        if not instance.is_active:
+            instance.fk_business_fdp.update(is_active=False)
+            print('Se desactivaron las fdps debido a que el business se desactivó')
 
 class Simulation(models.Model):
     quantity_time = models.IntegerField(default=1, help_text='The quantity of the simulation')
@@ -114,9 +123,9 @@ class Simulation(models.Model):
             def create_random_result_simulations(sender, instance, created, **kwargs):
                 # Obtén la fecha inicial de la instancia de Simulation
                 current_date = instance.date_created
-                fk_simulation = Simulation.objects.get(id=instance.id)
-                days = 30
-                for _ in range(days):
+                fk_simulation_instance = Simulation.objects.get(id=instance.id)
+                
+                for _ in range(simulation.quantity_time):
                     demand_mean = 0
                     demand = [random.uniform(1000, 5000) for _ in range(10)]
                     demand_std_deviation = random.uniform(5, 20)            
@@ -153,6 +162,7 @@ class Simulation(models.Model):
                         "CHO": [random.uniform(1000, 5000) for _ in range(10)],
                         "CA": [random.uniform(1000, 5000) for _ in range(10)],
                     }
+    
                     demand_mean = np.mean(demand)
                     means = {variable: np.mean(values) for variable, values in variables.items()}
                     result_simulation = ResultSimulation(
@@ -160,13 +170,36 @@ class Simulation(models.Model):
                         demand_std_deviation=demand_std_deviation,
                         date=current_date,
                         variables=means,
-                        fk_simulation=fk_simulation,
+                        fk_simulation=fk_simulation_instance,
                         is_active=True
                     )
-                    result_simulation.save()
+                    
+                demand_instance=Demand(
+                    quantity=fk_simulation_instance.de,
+                    is_predicted=False,
+                    fk_simulation=fk_simulation_instance,
+                    fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
+                    is_active=True
+                )
+                demand_predicted_instance=Demand(
+                    quantity=demand_mean,
+                    is_predicted=True,
+                    fk_simulation=fk_simulation_instance,
+                    fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
+                    is_active=True
+                )
+                demand_behavior=DemandBehavior(
+                    current_demand=demand_instance,
+                    predicted_demand=demand_predicted_instance,
+                    is_active=True
+                )
+                demand_instance.save()
+                demand_predicted_instance.save()
+                demand_behavior.save()
+                result_simulation.save()
     
     @receiver(post_save, sender=QuestionaryResult)
-    def save_question(sender, instance, **kwargs):
+    def save_simulation(sender, instance, **kwargs):
         for simulate in instance.simulations.all():
             simulate.is_active = instance.is_active
             simulate.save()
