@@ -149,7 +149,7 @@ class ResultSimulation(models.Model):
     last_updated = models.DateTimeField(auto_now=True)   
     def get_average_demand_by_date(self):
         average_demand_data = []
-        # Asegúrate de que self.demand_mean sea una lista, incluso si contiene un solo elemento
+        # Asegúrate de que self.demand_mean sea una lista
         demand_mean_values = [self.demand_mean] if isinstance(self.demand_mean, Decimal) else self.demand_mean
         # Convertir self.date a un objeto datetime.date si no lo es
         date_obj = datetime.strptime(str(self.date), "%Y-%m-%d").date()
@@ -158,7 +158,8 @@ class ResultSimulation(models.Model):
             # Para calcular el promedio, simplemente usa 'demand_mean_value' directamente
             average_demand = float(demand_mean_value)
             # Añade el resultado a la lista
-            average_demand_data.append({'date': date_obj, 'average_demand': average_demand})
+            average_demand_data.append({'date': date_obj.strftime("%Y-%m-%d"), 'average_demand': average_demand})
+        
         return average_demand_data
     
     def get_variables(self):

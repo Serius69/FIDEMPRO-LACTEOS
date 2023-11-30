@@ -351,32 +351,27 @@ def simulate_result_simulation_view(request, simulation_id):
     all_labels = []
     all_values = []
 
-    for result_simulation in result_simulations:
+    for i, result_simulation in enumerate(result_simulations):
         data = result_simulation.get_average_demand_by_date()
-        list_formatted_date = [] 
-        if data: 
+        if data:
             for entry in data:
-                date_object = entry['date']
-                formatted_date = date_object.strftime('%Y-%m-%d')
-                list_formatted_date.append(formatted_date)
+                all_labels.append(i + 1)
                 all_values.append(entry['average_demand'])
 
-    # Asegúrate de que todas las fechas sean únicas
-    all_labels = sorted(set(list_formatted_date))
-
-    # Ordena all_values de acuerdo con all_labels
-    sorted_values = [value for label, value in sorted(zip(list_formatted_date, all_values), key=lambda x: x[0])]
+    # Asegúrate de que las fechas estén ordenadas correctamente
+    sorted_data = sorted(zip(all_labels, all_values), key=lambda x: x[0])
+    all_labels, all_values = zip(*sorted_data)
 
     chart_data = {
         'labels': all_labels,
-        'values': sorted_values,
-        'x_label': 'Date',
-        'y_label': 'Average Demand',
+        'values': all_values,
+        'x_label': 'Resultado',
+        'y_label': 'Demanda',
     }
 
     # Crea el objeto Chart
     chart = Chart.objects.create(
-        title=f'Average Demand Chart - All Simulations',
+        title=f'Comportamiendo de la demanda promedio para la simulación {simulation_id}',
         chart_type='line',  # Cambia 'line' por el tipo de gráfico que desees
         chart_data=chart_data,
         fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
@@ -388,7 +383,22 @@ def simulate_result_simulation_view(request, simulation_id):
     print(len(all_labels))
     print(len(all_values))
     if len(all_labels) == len(all_values):
-        plt.plot(chart_data['labels'], chart_data['values'], marker='o')
+        plt.plot(chart_data['labels'], chart_data['values'], marker='o', label='Demanda')
+        # Agrega líneas horizontales y verticales
+        for value in all_values:
+            plt.axhline(y=value, linestyle='--', color='gray', alpha=0.5)
+
+        for label in all_labels:
+            plt.axvline(x=label, linestyle='--', color='gray', alpha=0.5)
+            
+        # Agrega una línea de tendencia
+        coefficients = np.polyfit(chart_data['labels'], chart_data['values'], 1)
+        polynomial = np.poly1d(coefficients)
+        trendline_values = polynomial(chart_data['labels'])
+        plt.plot(chart_data['labels'], trendline_values, label=f'Línea de tendencia: {coefficients[0]:.2f}x + {coefficients[1]:.2f}', linestyle='--')
+
+        # Añade leyenda
+        plt.legend()
         plt.xlabel(chart_data['x_label'])
         plt.ylabel(chart_data['y_label'])
         plt.title(chart.title)
