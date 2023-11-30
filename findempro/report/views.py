@@ -47,26 +47,30 @@ def report_overview(request, pk):
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
 
-def generate_pdf_report(request):
-    try:
-        # Create a response object with the appropriate PDF content type.
-        response = FileResponse(request, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="sample_report.pdf"'
+def generar_reporte_pdf(request, report_id):
+    # Obtener el objeto Report
+    reporte = get_object_or_404(Report, pk=report_id)
 
-        # Create a PDF canvas and add content to it.
-        c = canvas.Canvas(response, pagesize=letter)
-        c.drawString(100, 750, "Sample PDF Report")
-        # You can add more content here, like tables and charts.
+    # Configuración del response para un archivo PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{reporte.title}.pdf"'
 
-        # Save the PDF and close the canvas.
-        c.showPage()
-        c.save()
+    # Crear el objeto PDF con reportlab
+    p = canvas.Canvas(response)
+    p.drawString(100, 800, f'Título del Informe: {reporte.title}')
+    p.drawString(100, 780, 'Contenido:')
+    
+    # Iterar sobre el contenido JSON y agregarlo al PDF
+    y_position = 760
+    for key, value in reporte.content.items():
+        p.drawString(120, y_position, f'{key}: {value}')
+        y_position -= 20
 
-        return response
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)
+    # Cerrar el objeto PDF
+    p.showPage()
+    p.save()
 
+    return response
 def create_report(request):
     try:
         if request.method == 'POST':

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 import math
 import random
-
+import json
 # Third-party imports
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -61,7 +61,7 @@ class ProbabilisticDensityFunction(models.Model):
             if distribution_type == 1:  # Normal distribution
                 defaults["lambda_param"] = 1.0
                 defaults["cumulative_distribution_function"] = 0.5
-                defaults["mean_param"] = 450.0
+                defaults["mean_param"] = 2500.0
                 defaults["std_dev_param"] = 10.0
             elif distribution_type == 2:  # Exponential distribution
                 defaults["lambda_param"] = 0.5
@@ -160,6 +160,12 @@ class ResultSimulation(models.Model):
             # Añade el resultado a la lista
             average_demand_data.append({'date': date_obj, 'average_demand': average_demand})
         return average_demand_data
+    
+    def get_variables(self):
+        return self.variables
+    
+    
+    
     @receiver(post_save, sender=Simulation)
     def create_random_result_simulations(sender, instance, created, **kwargs):
         # Obtén la fecha inicial de la instancia de Simulation

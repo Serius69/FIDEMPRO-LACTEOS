@@ -281,7 +281,61 @@ def simulate_result_simulation_view(request, simulation_id):
     results = get_results_for_simulation(simulation_id)
     # analysis_results = analyze_simulation_results(results)
     # decision = decision_support(analysis_results)
-    results_simulation = ResultSimulation.objects.filter(is_active=True,fk_simulation_id=simulation_id)
+    results_simulation = ResultSimulation.objects.filter(is_active=True, fk_simulation_id=simulation_id)
+    iniciales_a_buscar = ['CTR', 'CTAI', 'TPV', 'TPPRO', 'DI', 'VPC', 'IT', 'GT', 'TCA', 'NR', 'GO', 'GG', 'GT', 'CTT', 'CPP', 'CPV', 'CPI', 'CPMO', 'CUP', 'PVR', 'FU', 'TG', 'IB', 'MB', 'RI', 'RTI', 'RTC', 'PM', 'PE', 'HO', 'CHO', 'CA']
+    # Crear una lista para almacenar todas las variables extraídas
+    all_variables_extracted = []
+
+    for result_simulation in results_simulation:
+        variables_extracted = result_simulation.get_variables()
+
+        # Filtrar variables que coinciden con las iniciales
+        variables_filtradas = Variable.objects.filter(initials__in=iniciales_a_buscar).values('name', 'initials')
+        iniciales_a_nombres = {variable['initials']: variable['name'] for variable in variables_filtradas}
+# en lugar de mostrar las iniciales compararlas con la base de datos de varaibles y mostrar el nombre de la variable
+        # Calcular la suma total por variable
+        totales_por_variable = {}
+        for inicial, value in variables_extracted.items():
+            if inicial in iniciales_a_nombres:
+                nombre_variable = iniciales_a_nombres[inicial]
+                if nombre_variable not in totales_por_variable:
+                    totales_por_variable[nombre_variable] = 0
+                totales_por_variable[nombre_variable] += value
+
+        # Agregar las variables filtradas a la lista
+        all_variables_extracted.append({'result_simulation': result_simulation, 'totales_por_variable': totales_por_variable})
+    
+    # Crear un objeto Paginator
+    paginator_all_variables_extracted = Paginator(all_variables_extracted, 1)
+    # Obtener el número de página desde la solicitud GET
+    page_all_variables_extracte = request.GET.get('page')
+    try:
+        # Obtener la página solicitada
+        all_variables_extracted = paginator_all_variables_extracted.page(page_all_variables_extracte)
+    except PageNotAnInteger:
+        # Si la página no es un número entero, mostrar la primera página
+        all_variables_extracted = paginator_all_variables_extracted.page(1)
+    except EmptyPage:
+        # Si la página está fuera de rango (por ejemplo, 9999), mostrar la última página
+        all_variables_extracted = paginator_all_variables_extracted.page(paginator_all_variables_extracted.num_pages)
+        
+    totales_acumulativos = {}    
+    for result_simulation in results_simulation:
+        variables_extracted = result_simulation.get_variables()    
+        # Filtrar variables que coinciden con las iniciales
+        variables_filtradas = {inicial: value for inicial, value in variables_extracted.items() if inicial in iniciales_a_buscar}
+        
+        # Calcular la suma total por variable
+        for inicial, value in variables_filtradas.items():
+            if inicial not in totales_acumulativos:
+                totales_acumulativos[inicial] = 0
+            totales_acumulativos[inicial] += value
+        # Agregar impresiones para depurar
+        print(f"Result Simulation: {result_simulation}")
+        print(f"Variables Extracted: {variables_extracted}")
+        print(f"Variables Filtradas: {variables_filtradas}")
+        print(f"Totales Acumulativos: {totales_acumulativos}")   
+    
     simulation_instance = get_object_or_404(Simulation, pk=simulation_id)
     questionary_result_instance = get_object_or_404(QuestionaryResult, pk=simulation_instance.fk_questionary_result.id)
     product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product.id)
@@ -357,6 +411,11 @@ def simulate_result_simulation_view(request, simulation_id):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
     
+    demand_initial = get_object_or_404(Demand, fk_simulation_id=simulation_id, is_predicted=False)
+    demand_predicted = get_object_or_404(Demand, fk_simulation_id=simulation_id, is_predicted=
+                                         True)
+    growth_rate = ((demand_predicted.quantity / demand_initial.quantity) ** (1 / 1) - 1) * 100
+    growth_rate = round(growth_rate, 2)
     
     financial_recomnmendations=FinanceRecommendation.objects.filter(is_active=True,
                                                                       fk_business_id=business_instance.id)
@@ -366,10 +425,11 @@ def simulate_result_simulation_view(request, simulation_id):
     page_obj2 = paginator2.get_page(page_number2)
     counter_start = (page_obj.number - 1) * paginator.per_page + 1
     
-    
     # return render(request, 'your_template.html', {'page_obj': page_obj})
     context = {
-        # 'demand_initial':demand_initial,
+        'demand_initial':demand_initial,
+        'demand_predicted':demand_predicted,
+        'growth_rate':growth_rate,
         'simulation_instance': simulation_instance,
         'results_simulation': results_simulation,
         # 'analysis_results': analysis_results,
@@ -382,7 +442,9 @@ def simulate_result_simulation_view(request, simulation_id):
         'page_obj'  : page_obj,
         'counter_start': counter_start,
         'page_obj2'  : page_obj2,
-        'financial_recomnmendations':financial_recomnmendations
+        'financial_recomnmendations':financial_recomnmendations,
+        'all_variables_extracted':all_variables_extracted,
+        'totales_acumulativos': totales_acumulativos
     }
 
     return render(request, 'simulate/simulate-result.html',context)

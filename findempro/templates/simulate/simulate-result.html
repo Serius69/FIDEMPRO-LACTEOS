@@ -31,34 +31,47 @@
                                                 <h5 class="card-title">Parámetros</h5>
                                                 <p>Negocio: {{ business_instance.name }}</p>
                                                 <p>Producto: {{ product_instance.name }}</p>
-                                                <p>Demanda inicial: {{ demand_behavior.demand_initial.quantity }}</p>
-                                                <p>Demanda predecida: {{ demand_behavior.predicted_demand.quantity }}</p>
-                                                <p>Tasa de crecimiento: {{ tasa_crecimiento }}%</p>
+                                                <p>Demanda inicial: {{ demand_initial.quantity }}</p>
+                                                <p>Demanda predecida: {{ demand_predicted.quantity }}</p>
+                                                <p>Tasa de crecimiento: {{ growth_rate }}%</p>
                                                 <p>Horizonte de tiempo: {{ simulation_instance.quantity_time }} {{simulation_instance.unit_time}}</p>
                                             </div>
                                         </div>
                                         <!-- Key Metrics Table -->
                                         <div class="card">
                                             <div class="card-body">
-                                                <h5 class="card-title">Llaves metricas</h5>
-                                                <table class="table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Métrica</th>
-                                                            <th>Valor</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td>Beneficio neto</td>
-                                                            <td>{{ utilidad_neta }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Flujo de fondos</td>
-                                                            <td>{{ flujo_caja }}</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                                                <h5 class="card-title">Valores Totales</h5>
+                                                <div class="row">
+                                                    <div class="col-xl-12">
+                                                        <div class="card crm-widget">
+                                                            <div class="card-body p-0">
+                                                                <div class="row row-cols-md-3 row-cols-1">
+                                                                    {% for key, value in totales_acumulativos.items %}
+                                                                    <div class="card card-height-100">
+                                                                        <div class="card-body">
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="avatar-sm flex-shrink-0">
+                                                                                    <span class="avatar-title bg-danger text-white rounded-2 fs-2 shadow">
+                                                                                        <i class="bx bxs-badge-dollar"></i>
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div class="flex-grow-1 ms-3">
+                                                                                    <p class="text-uppercase fw-medium text-muted mb-3">{{ key }}</p>
+                                                                                    <h4 class="fs-4 mb-3">$<span class="counter-value" data-target="{{ value|floatformat:2 }}">{{ value|floatformat:2 }}</span></h4>
+                                                                                    <p class="text-muted mb-0">From $1,750.04 last year</p>
+                                                                                </div>
+                                                                                <div class="flex-shrink-0 align-self-center">
+                                                                                    <span class="badge badge-soft-success fs-12"><i class="ri-arrow-up-s-line fs-13 align-middle me-1"></i>22.96 %<span>
+                                                                                </span></span></div>
+                                                                            </div>
+                                                                        </div><!-- end card body -->
+                                                                    </div><!-- end card -->
+                                                                    {% endfor %}                                                                    
+                                                                </div><!-- end row -->
+                                                            </div><!-- end card body -->
+                                                        </div><!-- end card -->
+                                                    </div><!-- end col -->
+                                                </div>
                                             </div>
                                         </div>
                                         <!-- Key Metrics Table -->
@@ -90,7 +103,7 @@
                                     <div class="col-md-6">
                                         <div class="card mb-4">
                                             <div class="card-body">
-                                                <h5 class="card-title">Graficos</h5>
+                                                <h5 class="card-title">Grafico Lineal del comportamiento de la demanda</h5>
                                                 <div id="main-graph"></div>
                                                 <div class="d-flex justify-content-center align-items-center mt-4">
                                                     <img src="data:image/png;base64,{{ image_data }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
@@ -100,7 +113,7 @@
                                         </div>
                                         <div class="card">
                                             <div class="card-header">
-                                                <h4 class="card-title mb-0">Tabla de simulación</h4>
+                                                <h4 class="card-title mb-0">Tabla </h4>
                                             </div>
                                             <div class="card-body">
                                                 <div id="resultSimulationrList">
@@ -159,7 +172,50 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                        <div class="card" id="results-container">
+                                            <div class="card-header">
+                                                <h4 class="card-title mb-0">Resultado <span class="current">
+                                                    {{ all_variables_extracted.number }} de {{ all_variables_extracted.paginator.num_pages }}.
+                                                </span></h4>
+                                            </div>
+                                            <div class="card-body">
+                                                {% for item in all_variables_extracted %}
+                                                    <h2> {{ item.date }}</h2>
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Variable</th>
+                                                                <th>Total</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for variable, total in item.totales_por_variable.items %}
+                                                                <tr>
+                                                                    <td>{{ variable }}</td>
+                                                                    <td>{{ total|floatformat:2 }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                {% endfor %}
+                                                <!-- Add the pagination -->
+                                                <nav aria-label="Page navigation example">
+                                                    <ul class="pagination justify-content-center">
+                                                        {% if all_variables_extracted.has_previous %}
+                                                            <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                                                            <li class="page-item"><a class="page-link" href="?page={{ all_variables_extracted.previous_page_number }}">Previous</a></li>
+                                                        {% endif %}
+
+                                                        {% if all_variables_extracted.has_next %}
+                                                            <li class="page-item"><a class="page-link" href="?page={{ all_variables_extracted.next_page_number }}">Next</a></li>
+                                                            <li class="page-item"><a class="page-link" href="?page={{ all_variables_extracted.paginator.num_pages }}">Last</a></li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </nav>
+                                            </div>
+                                        </div>
+
+
                                 </div>
                             </div>
                         </div>
@@ -178,6 +234,23 @@
             <!-- end main content-->
 {% endblock %}
 {% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.pagination a').click(function(event) {
+                event.preventDefault();
+    
+                var url = $(this).attr('href');
+    
+                $.ajax({
+                    url: url,
+                    success: function(data) {
+                        $('#results-container').html(data);
+                    }
+                });
+            });
+        });
+    </script>
 <script>
     // Obtén una referencia al elemento canvas
     var ctx = document.getElementById('myChart').getContext('2d');
