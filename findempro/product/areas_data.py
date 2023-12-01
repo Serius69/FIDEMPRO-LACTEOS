@@ -1,12 +1,12 @@
 areas_data =[
   {
-    "name": "Realimentacion",
-    "description": "Área de realimentación de información para mejora continua",
+    "name": "Abastecimiento",
+    "description": "Área de abastecimiento de materia prima e insumos", 
     "params": {
-      "satisfaccion_cliente": 0,  
-      "lealtad_cliente": 0
+      "proveedores_leche": 0,  
+      "costo_litros_leche": 0
     }
-  },
+  }, 
   {
     "name": "Inventario Insumos", 
     "description": "Área de gestión de inventario de insumos",
@@ -19,6 +19,16 @@ areas_data =[
   {
     "name": "Producción",
     "description": "Área de producción de bienes", 
+    "params": {
+      "automatizacion": 0,
+      "eficiencia": 0,
+      "capacidad_produccion": 0,
+      "flexibilidad": 0
+    }
+  },
+  {
+    "name": "Inspeccion",
+    "description": "Área de inspecccion", 
     "params": {
       "automatizacion": 0,
       "eficiencia": 0,
@@ -44,14 +54,6 @@ areas_data =[
     }
   },
   {
-    "name": "Marketing",
-    "description": "Área de marketing y ventas",
-    "params": {
-      "gasto_marketing": 0, 
-      "conversion_ventas": 0  
-    }
-  },
-  {
     "name": "Ventas",
     "description": "Área de ejecución de ventas", 
     "params": {
@@ -65,6 +67,22 @@ areas_data =[
     "params": {
       "participacion_mercado": 0,   
       "precio_competencia": 0
+    }
+  },
+  {
+    "name": "Realimentacion",
+    "description": "Área de realimentación de información para mejora continua",
+    "params": {
+      "satisfaccion_cliente": 0,  
+      "lealtad_cliente": 0
+    }
+  },
+  {
+    "name": "Marketing",
+    "description": "Área de marketing y ventas",
+    "params": {
+      "gasto_marketing": 0, 
+      "conversion_ventas": 0  
     }
   },
   {
@@ -83,14 +101,7 @@ areas_data =[
       "salario_promedio": 0
     }
   },
-  {
-    "name": "Abastecimiento",
-    "description": "Área de abastecimiento de materia prima e insumos", 
-    "params": {
-      "proveedores_leche": 0,  
-      "costo_litros_leche": 0
-    }
-  }, 
+
   {
     "name": "Mantenimiento", 
     "description": "Área de mantenimiento de equipos y planta",

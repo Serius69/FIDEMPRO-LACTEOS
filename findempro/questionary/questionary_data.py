@@ -4,11 +4,6 @@ questionary_data = [
         ]
 question_data = [
     {
-        'question': '¿Cuántos productos lácteos vende diariamente?',
-        'type': 1,
-        'initials_variable': 'CPVD',
-    },
-    {
         'question': '¿Cuál es el precio actual del producto?',
         'type': 1,
         'initials_variable': 'PVP',

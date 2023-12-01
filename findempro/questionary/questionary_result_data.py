@@ -14,10 +14,6 @@ import random
 import numpy as np
 answer_data = [
     {
-        'answer': random.randint(100, 500),  
-        'question': '¿Cuántos productos lácteos vende diariamente?'
-    },
-    {
         'answer': random.randint(5, 15),  
         'question': '¿Cuál es el precio actual del producto?'
     },    

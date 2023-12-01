@@ -1,10 +1,4 @@
 variables_data = [
-{'name': 'CANTIDAD DE PRODUCTOS QUE VENDE POR DIA',
-'initials': 'CPVD',
-'type': 1,
-'unit': 'LITROS/DIAS',
-'description': 'CANTIDAD DE LITROS DEL PRODUCTO QUE LA EMPRESA VENDE POR DIAS'},
-
 {'name': 'PRECIO DE VENTA DEL PRODUCTO',
 'initials': 'PVP',
 'type': 1,
