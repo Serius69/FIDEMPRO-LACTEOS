@@ -292,7 +292,7 @@ def simulate_result_simulation_view(request, simulation_id):
         # Filtrar variables que coinciden con las iniciales
         variables_filtradas = Variable.objects.filter(initials__in=iniciales_a_buscar).values('name', 'initials')
         iniciales_a_nombres = {variable['initials']: variable['name'] for variable in variables_filtradas}
-# en lugar de mostrar las iniciales compararlas con la base de datos de varaibles y mostrar el nombre de la variable
+        # en lugar de mostrar las iniciales compararlas con la base de datos de varaibles y mostrar el nombre de la variable
         # Calcular la suma total por variable
         totales_por_variable = {}
         for inicial, value in variables_extracted.items():
@@ -320,21 +320,24 @@ def simulate_result_simulation_view(request, simulation_id):
         all_variables_extracted = paginator_all_variables_extracted.page(paginator_all_variables_extracted.num_pages)
         
     totales_acumulativos = {}    
+    # Obtén todas las variables desde la base de datos
+    variables_db = Variable.objects.all()
+    # Crea un diccionario de mapeo entre iniciales y nombres completos de variables
+    nombre_variables = {variable.initials: {'name': variable.name, 'unit': variable.unit} for variable in variables_db}
     for result_simulation in results_simulation:
-        variables_extracted = result_simulation.get_variables()    
+        variables_extracted = result_simulation.get_variables()
+
         # Filtrar variables que coinciden con las iniciales
-        variables_filtradas = {inicial: value for inicial, value in variables_extracted.items() if inicial in iniciales_a_buscar}
-        
+        variables_filtradas = {nombre_variables[inicial]['name']: {'value': value, 'unit': nombre_variables[inicial]['unit']} for inicial, value in variables_extracted.items() if inicial in iniciales_a_buscar}
+
         # Calcular la suma total por variable
-        for inicial, value in variables_filtradas.items():
-            if inicial not in totales_acumulativos:
-                totales_acumulativos[inicial] = 0
-            totales_acumulativos[inicial] += value
-        # Agregar impresiones para depurar
-        print(f"Result Simulation: {result_simulation}")
-        print(f"Variables Extracted: {variables_extracted}")
-        print(f"Variables Filtradas: {variables_filtradas}")
-        print(f"Totales Acumulativos: {totales_acumulativos}")   
+        for nombre_variable, info_variable in variables_filtradas.items():
+            if nombre_variable not in totales_acumulativos:
+                totales_acumulativos[nombre_variable] = {'total': 0, 'unit': info_variable['unit']}
+            totales_acumulativos[nombre_variable]['total'] += info_variable['value']
+    
+    
+    print(totales_acumulativos )
     
     simulation_instance = get_object_or_404(Simulation, pk=simulation_id)
     questionary_result_instance = get_object_or_404(QuestionaryResult, pk=simulation_instance.fk_questionary_result.id)
@@ -427,10 +430,35 @@ def simulate_result_simulation_view(request, simulation_id):
     growth_rate = ((demand_predicted.quantity / demand_initial.quantity) ** (1 / 1) - 1) * 100
     growth_rate = round(growth_rate, 2)
     
-    financial_recomnmendations=FinanceRecommendation.objects.filter(is_active=True,
-                                                                      fk_business_id=business_instance.id)
+
+    financial_recommendations = FinanceRecommendation.objects.filter(
+        is_active=True,
+        fk_business=business_instance
+    )
+    financial_recommendations_to_show = []
+    # Analizar resultados y comparar con umbrales o criterios
+    for recommendation_instance in financial_recommendations:
+        name = recommendation_instance.name
+        variable_name = recommendation_instance.variable_name  # Asegúrate de tener este campo en tu modelo FinanceRecommendation
+        threshold_value = recommendation_instance.threshold_value  # Asegúrate de tener este campo en tu modelo FinanceRecommendation
+
+        # Obtener el valor correspondiente desde totales_acumulativos
+        if variable_name in totales_acumulativos:
+            variable_value = totales_acumulativos[variable_name]
+
+            # Comparar con el umbral y tomar decisiones
+            if threshold_value is not None and variable_value > threshold_value:
+                # La variable supera el umbral, mostrar recomendación
+                recommendation_data = {
+                    'name': name,
+                    'recommendation': recommendation_instance.recommendation,
+                    'description': recommendation_instance.description,
+                    'variable_value': variable_value
+                }
+                financial_recommendations_to_show.append(recommendation_data)
     
-    paginator2 = Paginator(financial_recomnmendations, 10)  # Show 10 results per page.
+    
+    paginator2 = Paginator(financial_recommendations_to_show, 10)  # Show 10 results per page.
     page_number2 = request.GET.get('page')
     page_obj2 = paginator2.get_page(page_number2)
     counter_start = (page_obj.number - 1) * paginator.per_page + 1
@@ -452,7 +480,7 @@ def simulate_result_simulation_view(request, simulation_id):
         'page_obj'  : page_obj,
         'counter_start': counter_start,
         'page_obj2'  : page_obj2,
-        'financial_recomnmendations':financial_recomnmendations,
+        'financial_recommendations_to_show':financial_recommendations_to_show,
         'all_variables_extracted':all_variables_extracted,
         'totales_acumulativos': totales_acumulativos
     }

@@ -9,8 +9,9 @@ from product.models import Product
 from business.models import Business
 class FinanceRecommendation(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True, verbose_name='Name', help_text='The name of the finance')
+    variable_name = models.CharField(max_length=255, blank=True, null=True, verbose_name='Variable Name', help_text='The variable name of the finance')
+    threshold_value = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name='Threshold Value', help_text='The threshold value of the finance')
     recommendation = models.TextField(blank=True, null=True, verbose_name='Recommendation', help_text='The recommendation of the finance')
-    description = models.TextField(blank=True, null=True, verbose_name='Description', help_text='The description of the finance')
     fk_business = models.ForeignKey(
         Business, 
         on_delete=models.CASCADE, 
