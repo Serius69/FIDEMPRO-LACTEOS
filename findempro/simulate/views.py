@@ -356,7 +356,7 @@ def simulate_show_view(request):
                 answers = Answer.objects.filter(fk_questionary_result=questionary_result)
 
                 # Mapear las respuestas a las preguntas y luego a las variables exógenas
-                answers_dict = {answer.fk_question.initials: answer.answer for answer in answers}
+                answers_dict = {str(answer.fk_question.id): answer.answer for answer in answers}
 
                 # Iterar sobre cada ecuación
                 for equation in equations:
@@ -364,26 +364,29 @@ def simulate_show_view(request):
                     variables = [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5]
 
                     # Crear símbolos para las variables en la ecuación
-                    var_symbols = symbols([var.initials for var in variables])
+                    var_symbols = symbols([var.initials for var in variables if var is not None])
 
                     # Sustituir los valores conocidos en las expresiones de la ecuación
                     substituted_expression = equation.expression
                     for var, symbol in zip(variables, var_symbols):
                         if var.type == 1:
-                            # Variable exógena, usar valor conocido
-                            substituted_expression = substituted_expression.replace(var.initials, str(variable_values[var.initials]))
+                            # Variable exógena, usar valor conocido de las respuestas
+                            substituted_expression = substituted_expression.replace(var.initials, str(answers_dict.get(var.initials, 0)))
                         elif var.type == 2:
                             # Variable endógena, usar valor calculado (ya debería estar en el diccionario)
                             substituted_expression = substituted_expression.replace(var.initials, str(endogenous_results[var.initials]))
                         elif var.type == 3:
-                            # Variable de estado, usar valor conocido
-                            substituted_expression = substituted_expression.replace(var.initials, str(variable_values[var.initials]))
+                            # Variable de estado, usar valor conocido de las respuestas
+                            substituted_expression = substituted_expression.replace(var.initials, str(answers_dict.get(var.initials, 0)))
 
                     # Resolver la ecuación
                     result = solve(Eq(substituted_expression, 0), var_symbols[0])
 
                     # Asignar el resultado a la variable endógena correspondiente
-                    endogenous_results[variables[-1].initials] = result[0] if result else None
+                    if result is not None:
+                        endogenous_results[variables[-1].initials] = result[0]
+                    else:
+                        endogenous_results[variables[-1].initials] = None
 
                 # Calcular la demanda total usando la nueva ecuación
                 demand_total = 0
@@ -415,23 +418,12 @@ def simulate_show_view(request):
 
                     
                 # resolver las expresiones y guardarlas en un diccionario
-                    
-                    
-                    
                     # tomar las variables que componen la ecuacion
-                    
-                    
                             # tomar en cuenta que las variables tipo 1 son exogenas 
                             # Tomar en cuenta que las variables tipo 2 son endogenar
                             # tomar en cuenta que las variables tipo 3 son de estado
-                            
-                            
                 # los resultados de las variables endogenas guardarlas en ResultSimulation.variables
-            
             # aumentar al siguiente dia
-            
-        
-        
         print("se inicio la simulacion")
         print("Started: " + str(started))
         context = {
