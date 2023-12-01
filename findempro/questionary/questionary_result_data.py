@@ -11,7 +11,7 @@ questionary_result_data = [
     ]
 
 import random
-
+import numpy as np
 answer_data = [
     {
         'answer': random.randint(100, 500),  
@@ -23,7 +23,7 @@ answer_data = [
     },    
     {
         # 'answer': [random.randint(100, 1000) for i in range(30)],
-        'answer': [513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906],
+        'answer': np.random.normal(loc=2500.0, scale=10.0, size=30),
         'question': 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).'
     }, 
     {

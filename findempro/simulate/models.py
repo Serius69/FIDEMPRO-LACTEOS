@@ -44,6 +44,35 @@ class ProbabilisticDensityFunction(models.Model):
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the distribution was created')
     last_updated = models.DateTimeField(auto_now=True, help_text='The date the distribution was last updated')
     
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'distribution_type': self.distribution_type,
+            'lambda_param': self.lambda_param,
+            'cumulative_distribution_function': self.cumulative_distribution_function,
+            'mean_param': self.mean_param,
+            'std_dev_param': self.std_dev_param,
+            'fk_business': self.fk_business_id,
+            'is_active': self.is_active,
+            'date_created': self.date_created,
+            'last_updated': self.last_updated
+        }
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'distribution_type': self.distribution_type,
+            'lambda_param': self.lambda_param,
+            'cumulative_distribution_function': self.cumulative_distribution_function,
+            'mean_param': self.mean_param,
+            'std_dev_param': self.std_dev_param,
+            'fk_business': self.fk_business.id,
+            'is_active': self.is_active,
+            'date_created': self.date_created.strftime('%Y-%m-%d %H:%M:%S'),
+            'last_updated': self.last_updated.strftime('%Y-%m-%d %H:%M:%S'),
+        }
     @receiver(post_save, sender=Business)
     def create_probabilistic_density_functions(sender, instance, **kwargs):
         distribution_types = [1, 2, 3]  # Normal, Exponential, Logarithmic

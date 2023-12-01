@@ -361,5 +361,17 @@ equations_data = [
     "variable2": "IPF",
     "variable3": "CUI",
     "area": "Inventario Productos Finales"
+  },
+  {
+    "name": "Demanda Total",
+    "description": "Ecuación para calcular la demanda total sumando TPV, DI, TCA y PM",
+    "expression": "DT = TPV + DI + TCA + PM",
+    "variable1": "DT",
+    "variable2": "TPV",
+    "variable3": "DI",
+    "variable4": "TCA",
+    "variable5": "PM",
+    "area": "Ventas"
   }
+  
 ]

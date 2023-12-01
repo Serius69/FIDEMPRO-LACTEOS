@@ -1,5 +1,5 @@
 # Standard library imports
-from datetime import datetime
+from datetime import datetime, timedelta
 from http.client import HTTPResponse
 from io import BytesIO
 import base64
@@ -23,8 +23,9 @@ import numpy as np
 import openai
 from scipy import stats
 from scipy.stats import kstest, norm, expon, lognorm
-from sympy import Eq, sympify
-
+from scipy.optimize import minimize
+from sympy import Eq, sympify, solve, symbols
+from scipy.stats import gaussian_kde
 # Local application imports
 from .forms import SimulationForm
 from .models import ProbabilisticDensityFunction
@@ -47,7 +48,7 @@ class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def simulate_show_view(request):
     started = request.session.get('started', False)
-    form = SimulationForm(request.POST or None, request.FILES or None)
+    form = SimulationForm(request.POST)
     # questionnaires_result = QuestionaryResult.objects.filter(is_active=True,).order_by('-id')
     questionnaires_result = None
     simulation_instance = None    
@@ -84,42 +85,122 @@ def simulate_show_view(request):
             fk_questionary_result_id=selected_questionary_result_id
             )
         print(demand_history.answer)   
-        numbers = json.loads(demand_history.answer)
-        # solo para probar
-        # numbers = json.loads('[513, 820, 648, 720, 649, 414, 704, 814, 647, 934, 483, 882, 220, 419, 254, 781, 674, 498, 518, 948, 983, 154, 649, 625, 865, 800, 848, 783, 218, 906]')
-        demand_mean = statistics.mean(numbers)
-        # Demand.objects.create(
-        #     quantity=demand_mean,
-        #     fk_simulation=,
-        #     fk_product=
-        #     is_predicted=False)
-             
+        # solo para prober
+        numbers = np.round(np.random.normal(loc=2500.0, scale=10.0, size=30)).astype(int)
+        
+        # Ajuste inicial de la FDP a los datos históricos
+        
+        # numbers = json.loads(demand_history.answer)
+        mean, std_dev = norm.fit(numbers)
+        # Suavizado de datos con KDE
+        kde = gaussian_kde(numbers)
+        smoothed_data = kde(numbers)
+        # Ajuste suave de parámetros de FDP teórica
+        def loss_function(parameters):
+            theoretical_pdf = norm.pdf(smoothed_data, loc=parameters[0], scale=parameters[1])
+            loss = np.sum((smoothed_data - theoretical_pdf)**2)
+            return loss
+        initial_parameters = [mean, std_dev]
+        result = minimize(loss_function, initial_parameters, method='L-BFGS-B')
+        optimized_mean, optimized_std_dev = result.x
+        results = []
         # segundo mandar esa demanda a la prueba de kolmogorov smirnov
-        prob_density_function = ProbabilisticDensityFunction.objects.filter(
-            fk_business__fk_user=questionary_result_instance.fk_questionary.fk_product.fk_business.fk_user
-        ).first()        # La muestra de datos
+        distributions = ProbabilisticDensityFunction.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
+        demand_mean = statistics.mean(numbers)
+        demand_mean_array = np.array([demand_mean])
+        # Inicializa variables para el seguimiento del mejor ajuste
+        best_distribution = None
+        best_ks_statistic = float('inf')  # Inicializado a infinito para que cualquier valor lo mejore
+        best_ks_p_value = 0.0  # Inicializado a 0 para que cualquier valor lo mejore
         data = numbers
-        # Genera la PDF basada en el tipo de distribución almacenada en el modelo
-        if prob_density_function.distribution_type == 1:  # Normal distribution
-            mean = prob_density_function.mean_param
-            std_dev = prob_density_function.std_dev_param
-            if std_dev is not None:
-                pdf = norm.pdf(data, loc=mean, scale=std_dev)
-                distribution_label = 'Distribución normal'
+        # Itera sobre las distribuciones almacenadas
+        for distribution in distributions:
+            if distribution.distribution_type == 1:  # Normal distribution
+                theoretical_distribution = norm(loc=optimized_mean, scale=optimized_std_dev)
+            elif distribution.distribution_type == 2:  # Exponential distribution
+                theoretical_distribution = expon(scale=1/distribution.lambda_param)
+            elif distribution.distribution_type == 3:  # Log-Normal distribution
+                theoretical_distribution = lognorm(s=optimized_std_dev, scale=np.exp(optimized_mean))
+
+            # Realiza la prueba de Kolmogorov-Smirnov
+            ks_statistic, ks_p_value = kstest(demand_mean_array, theoretical_distribution.cdf)
+            # Almacenar resultados en una estructura serializable
+            result_data = {
+                'distribution_type': distribution.get_distribution_type_display(),
+                'ks_statistic': ks_statistic,
+                'ks_p_value': ks_p_value,
+                'mean_param': distribution.mean_param,
+                'std_dev_param': distribution.std_dev_param,
+                'lambda_param': distribution.lambda_param,
+                # Agrega otros atributos que desees serializar
+            }
+            results.append(result_data)
+            # Actualiza el mejor ajuste si el valor p es más alto
+            if ks_p_value > best_ks_p_value:
+                best_ks_statistic = ks_statistic
+                best_ks_p_value = ks_p_value
+                best_distribution = distribution
+
+        # Imprime el resultado
+        if best_distribution:
+            print(f'Mejor ajuste: {best_distribution.get_distribution_type_display()}')
+            print(f'KS Statistic: {best_ks_statistic}')
+            print(f'KS P-Value: {best_ks_p_value}')
+            
+            # Utiliza la mejor distribución encontrada para generar la PDF
+            if best_distribution.get_distribution_type_display() == "Normal":  # Normal distribution
+                mean = best_distribution.mean_param
+                std_dev = best_distribution.std_dev_param
+                if std_dev is not None:
+                    pdf = norm.pdf(data, loc=mean, scale=std_dev)
+                    distribution_label = 'Distribución normal'
+                    print("se encontro una distribucion normal")
+                else:
+                    pdf = np.zeros_like(data)
+                    distribution_label = 'Distribución desconocida'
+            elif best_distribution.get_distribution_type_display() == "Exponential":  # Exponential distribution
+                lambda_param = best_distribution.lambda_param
+                pdf = expon.pdf(data, scale=1 / lambda_param)
+                distribution_label = 'Distribución exponencial'
+                print("se encontro una distribucion exponencial")
+            elif best_distribution.get_distribution_type_display() == "Log-NOrm":  # Logarithmic distribution
+                s = best_distribution.std_dev_param
+                scale = np.exp(best_distribution.mean_param)
+                pdf = lognorm.pdf(data, s=s, scale=scale)
+                distribution_label = 'Distribución logarítmica'
+                print("se encontro una distribucion logaritmica")
             else:
-                pdf = np.zeros_like(data)
-                distribution_label = 'Distribución desconocida'
-        elif prob_density_function.distribution_type == 2:  # Exponential distribution
-            lambda_param = prob_density_function.lambda_param
-            pdf = expon.pdf(data, scale=1 / lambda_param)
-            distribution_label = 'Distribución exponencial'
-        elif prob_density_function.distribution_type == 3:  # Logarithmic distribution
-            s = prob_density_function.lognormal_shape_param
-            scale = prob_density_function.lognormal_scale_param
-            pdf = lognorm.pdf(data, s=s, scale=scale)
-            distribution_label = 'Distribución logarítmica'
+                pdf = None
         else:
-            pdf = None
+            print('No se encontró una distribución adecuada.')
+        
+        
+        
+        # prob_density_function = ProbabilisticDensityFunction.objects.filter(
+        #     fk_business__fk_user=questionary_result_instance.fk_questionary.fk_product.fk_business.fk_user
+        # ).first()        # La muestra de datos
+        # data = numbers
+        # # Genera la PDF basada en el tipo de distribución almacenada en el modelo
+        # if prob_density_function.distribution_type == 1:  # Normal distribution
+        #     mean = prob_density_function.mean_param
+        #     std_dev = prob_density_function.std_dev_param
+        #     if std_dev is not None:
+        #         pdf = norm.pdf(data, loc=mean, scale=std_dev)
+        #         distribution_label = 'Distribución normal'
+        #     else:
+        #         pdf = np.zeros_like(data)
+        #         distribution_label = 'Distribución desconocida'
+        # elif prob_density_function.distribution_type == 2:  # Exponential distribution
+        #     lambda_param = prob_density_function.lambda_param
+        #     pdf = expon.pdf(data, scale=1 / lambda_param)
+        #     distribution_label = 'Distribución exponencial'
+        # elif prob_density_function.distribution_type == 3:  # Logarithmic distribution
+        #     s = prob_density_function.lognormal_shape_param
+        #     scale = prob_density_function.lognormal_scale_param
+        #     pdf = lognorm.pdf(data, s=s, scale=scale)
+        #     distribution_label = 'Distribución logarítmica'
+        # else:
+        #     pdf = None
 
         # Plotea la distribución de la muestra y la PDF generada
         plt.hist(data, bins=20, density=True, alpha=0.5, label='Demanda Historica')
@@ -138,13 +219,17 @@ def simulate_show_view(request):
         print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
         print("Started: " + str(started))
         print(areas)
+        # este era el error de que no se guardaba el cuestionario seleccionado
+        # request.session['selected_fdp'] = best_distribution
         context = {
             'areas': areas,
             'answers': answers,
             'image_data':image_data,
-            'fdp': prob_density_function,
+            'selected_fdp': best_distribution,
             # esta parte cambiar luego soloes para pruebas
-            'demand_history': demand_mean,
+            'demand_mean': demand_mean,
+            'form': form,
+            'demand_history': numbers,
             'equations_to_use': equations_to_use,
             'questionnaires_result': questionnaires_result,
             'questionary_result_instance': questionary_result_instance,
@@ -159,7 +244,7 @@ def simulate_show_view(request):
         simulation_instance = form.save(commit=False)
         answers = Answer.objects.order_by('id').filter(fk_questionary_result_id=simulation_instance.fk_questionary_result_id)
         areas = Area.objects.order_by('id').filter(fk_product_id=simulation_instance.fk_product_id)
-                                                             
+        product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product.id)                                  
         # tercero tomar que tipo de distribucion toma
         # Supongamos que tienes un objeto ProbabilisticDensityFunction
         new_simulation = Simulation(
@@ -169,6 +254,12 @@ def simulate_show_view(request):
             fk_fdp=fdp,
             is_active=True
         )
+        demand_mean=statistics.mean(simulation_instance.demand_history)
+        Demand.objects.create(
+            quantity=demand_mean,
+            fk_simulation=simulation_instance,
+            fk_product=product_instance,
+            is_predicted=False)
         # aqui solamente hacermos el guardado de la simulacion
         request.session['simulation_started_id'] = new_simulation.id
         new_simulation.save()  
@@ -180,12 +271,14 @@ def simulate_show_view(request):
             'areas': areas,
             'simulation_instance': simulation_instance,
             # 'data_demand_historic': demand_historic,
-            'started': started,            
+            'started': started,  
+            'form': form,          
             'questionnaires_result': questionnaires_result,
             'questionary_result_instance': questionary_result_instance,
             'image_data': image_data
         }
-        return redirect('simulate:simulate.show')  # Redirect to the next step in the simulation
+        return redirect('simulate:simulate.show', simulation_id=new_simulation.id)  # Redirect to the next step in the simulation
+    
     if request.method == 'POST' and 'cancel' in request.POST:
         request.session['selected'] = False 
         print("Se cancelo el cuestionario")
@@ -235,15 +328,84 @@ def simulate_show_view(request):
         # tomar las respuestas del cuestionario con el que se creo la simulacion
         all_answers = simulation_instance.fk_questionary_result.fk_questionary.fk_answers.all()
         # esto dentro de un for hasta llegar al maximo de dias ()
+        # Iterar sobre cada día de la simulación
+        endogenous_results = {}
         for i in range(nmd):          
-            # tomar las areas
+            # Tomar las áreas
             areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_product)
+            
+            # Iterar sobre cada área
             for area in areas:
-            # de cada area tomar las ecuaciones que la componen
-                equations = Equation.objects.filter(is_active=True, fk_area=area)            
-                # de cada ecuacion tomar las expresiones y llenarlas con las variables que la componen
-                for equation in equations:                
-                    equation.expressions = equation.expressions.replace(" ", "")
+                # Obtener todas las ecuaciones asociadas a un área específica
+                equations = Equation.objects.filter(fk_area=area)
+
+                # Crear un diccionario para almacenar los valores de las variables
+                variable_values = {}
+
+                # Obtener el resultado del cuestionario asociado a la simulación
+                questionary_result = simulation_instance.fk_questionary_result
+
+                # Obtener todas las respuestas asociadas al resultado del cuestionario
+                answers = Answer.objects.filter(fk_questionary_result=questionary_result)
+
+                # Mapear las respuestas a las preguntas y luego a las variables exógenas
+                answers_dict = {answer.fk_question.initials: answer.answer for answer in answers}
+
+                # Iterar sobre cada ecuación
+                for equation in equations:
+                    # Obtener todas las variables asociadas a la ecuación
+                    variables = [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5]
+
+                    # Crear símbolos para las variables en la ecuación
+                    var_symbols = symbols([var.initials for var in variables])
+
+                    # Sustituir los valores conocidos en las expresiones de la ecuación
+                    substituted_expression = equation.expression
+                    for var, symbol in zip(variables, var_symbols):
+                        if var.type == 1:
+                            # Variable exógena, usar valor conocido
+                            substituted_expression = substituted_expression.replace(var.initials, str(variable_values[var.initials]))
+                        elif var.type == 2:
+                            # Variable endógena, usar valor calculado (ya debería estar en el diccionario)
+                            substituted_expression = substituted_expression.replace(var.initials, str(endogenous_results[var.initials]))
+                        elif var.type == 3:
+                            # Variable de estado, usar valor conocido
+                            substituted_expression = substituted_expression.replace(var.initials, str(variable_values[var.initials]))
+
+                    # Resolver la ecuación
+                    result = solve(Eq(substituted_expression, 0), var_symbols[0])
+
+                    # Asignar el resultado a la variable endógena correspondiente
+                    endogenous_results[variables[-1].initials] = result[0] if result else None
+
+                # Calcular la demanda total usando la nueva ecuación
+                demand_total = 0
+                for variable_name, variable_value in endogenous_results.items():
+                    if variable_name == "DT":
+                        # Agregar el resultado de la ecuación a la demanda total
+                        demand_total += variable_value
+            
+                
+                combined = demand_total + simulation_instance.demand_history
+
+                # Calculate the standard deviation
+                standard_deviation = np.std(combined)
+                
+                # Guardar los resultados en ResultSimulation.variables
+                simulation_result = ResultSimulation.objects.create(
+                    demand_mean=demand_total,  # Ajusta según tus necesidades
+                    demand_std_deviation=standard_deviation,  # Ajusta según tus necesidades
+                    date=simulation_instance.start_date,  # Ajusta según tus necesidades
+                    variables=endogenous_results,
+                    areas={},  # Puedes ajustar según las necesidades de tu modelo
+                    fk_simulation=simulation_instance,
+                    is_active=True
+                )
+                # Demanda Total=TPV+DI+TCA+PM
+                # Incrementar al siguiente día (o período)
+                simulation_result.start_date += timedelta(days=1)  # Ajusta según la frecuencia de tu simulación
+                simulation_result.save()
+
                     
                 # resolver las expresiones y guardarlas en un diccionario
                     
@@ -258,9 +420,6 @@ def simulate_show_view(request):
                             
                             
                 # los resultados de las variables endogenas guardarlas en ResultSimulation.variables
-                
-            
-            # calcular los parametros totales que cada area tuvi ese dia o mes o semana
             
             # aumentar al siguiente dia
             
