@@ -175,35 +175,6 @@ def simulate_show_view(request):
         else:
             print('No se encontró una distribución adecuada.')
         
-        
-        
-        # prob_density_function = ProbabilisticDensityFunction.objects.filter(
-        #     fk_business__fk_user=questionary_result_instance.fk_questionary.fk_product.fk_business.fk_user
-        # ).first()        # La muestra de datos
-        # data = numbers
-        # # Genera la PDF basada en el tipo de distribución almacenada en el modelo
-        # if prob_density_function.distribution_type == 1:  # Normal distribution
-        #     mean = prob_density_function.mean_param
-        #     std_dev = prob_density_function.std_dev_param
-        #     if std_dev is not None:
-        #         pdf = norm.pdf(data, loc=mean, scale=std_dev)
-        #         distribution_label = 'Distribución normal'
-        #     else:
-        #         pdf = np.zeros_like(data)
-        #         distribution_label = 'Distribución desconocida'
-        # elif prob_density_function.distribution_type == 2:  # Exponential distribution
-        #     lambda_param = prob_density_function.lambda_param
-        #     pdf = expon.pdf(data, scale=1 / lambda_param)
-        #     distribution_label = 'Distribución exponencial'
-        # elif prob_density_function.distribution_type == 3:  # Logarithmic distribution
-        #     s = prob_density_function.lognormal_shape_param
-        #     scale = prob_density_function.lognormal_scale_param
-        #     pdf = lognorm.pdf(data, s=s, scale=scale)
-        #     distribution_label = 'Distribución logarítmica'
-        # else:
-        #     pdf = None
-
-        # Plotea la distribución de la muestra y la PDF generada
         plt.hist(data, bins=20, density=True, alpha=0.5, label='Demanda Historica')
         plt.plot(data, pdf, label=f'Función de densidad de probabilidad ({distribution_label})')
         plt.legend()
@@ -234,6 +205,7 @@ def simulate_show_view(request):
             'selected_fdp': best_distribution.id,
             'demand_mean': demand_mean,
             'form': form,
+            # 'demand_history': demand_history.answer,
             'demand_history': json_numbers_data,
             'equations_to_use': equations_to_use,
             'questionnaires_result': questionnaires_result,
@@ -478,7 +450,13 @@ def simulate_result_simulation_view(request, simulation_id):
 
     # Asegúrate de que las fechas estén ordenadas correctamente
     sorted_data = sorted(zip(all_labels, all_values), key=lambda x: x[0])
-    all_labels, all_values = zip(*sorted_data)
+    if sorted_data:
+        all_labels, all_values = zip(*sorted_data)
+    else:
+        # Handle the case when sorted_data is empty
+        # You might want to provide default values or handle it according to your application logic
+        all_labels = []
+        all_values = []
 
     chart_data = {
         'labels': all_labels,

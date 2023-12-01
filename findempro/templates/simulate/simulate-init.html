@@ -162,9 +162,9 @@
                                                                 {% endif %}
                                                                 <form action="{% url 'simulate:simulate.show' %}" method="post" onsubmit="return validateForm()">
                                                                     {% csrf_token %}  
-                                                                    {{ selected_fdp }}
+                                                                    {% comment %} {{ selected_fdp }}
                                                                     {{ demand_history }}
-                                                                    {{ questionary_result_instance_id }}
+                                                                    {{ questionary_result_instance_id }} {% endcomment %}
                                                                     <input type="hidden" name="fk_questionary_result" value="{{ questionary_result_instance_id }}">
                                                                     <input type="hidden" name="quantity_time" value="{{ selected_quantity_time }}">
                                                                     <input type="hidden" name="unit_time" value="day">

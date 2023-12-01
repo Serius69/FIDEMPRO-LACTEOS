@@ -70,14 +70,6 @@ areas_data =[
     }
   },
   {
-    "name": "Realimentacion",
-    "description": "Área de realimentación de información para mejora continua",
-    "params": {
-      "satisfaccion_cliente": 0,  
-      "lealtad_cliente": 0
-    }
-  },
-  {
     "name": "Marketing",
     "description": "Área de marketing y ventas",
     "params": {
