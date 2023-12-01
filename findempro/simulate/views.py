@@ -4,10 +4,17 @@ from http.client import HTTPResponse
 from io import BytesIO
 import base64
 import json
+import re
 import os
 import pkg_resources
 import statistics
-
+import numpy as np
+import openai
+from scipy import stats
+from scipy.stats import kstest, norm, expon, lognorm
+from scipy.optimize import minimize
+from sympy import Eq, sympify, solve, symbols
+from scipy.stats import gaussian_kde
 # Third-party imports
 from django.conf import settings
 from django.contrib import messages
@@ -17,15 +24,9 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
+from django.urls import reverse
 import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
-import openai
-from scipy import stats
-from scipy.stats import kstest, norm, expon, lognorm
-from scipy.optimize import minimize
-from sympy import Eq, sympify, solve, symbols
-from scipy.stats import gaussian_kde
 # Local application imports
 from .forms import SimulationForm
 from .models import ProbabilisticDensityFunction
@@ -221,67 +222,73 @@ def simulate_show_view(request):
         print(areas)
         # este era el error de que no se guardaba el cuestionario seleccionado
         # request.session['selected_fdp'] = best_distribution
+        # Convierte el array de números a una lista de enteros
+        numbers_list = numbers.tolist()
+
+        # Convierte la lista de enteros a formato JSON
+        json_numbers_data = json.dumps(numbers_list)
         context = {
             'areas': areas,
             'answers': answers,
             'image_data':image_data,
-            'selected_fdp': best_distribution,
-            # esta parte cambiar luego soloes para pruebas
+            'selected_fdp': best_distribution.id,
             'demand_mean': demand_mean,
             'form': form,
-            'demand_history': numbers,
+            'demand_history': json_numbers_data,
             'equations_to_use': equations_to_use,
             'questionnaires_result': questionnaires_result,
+            'questionary_result_instance_id': questionary_result_instance.id,
             'questionary_result_instance': questionary_result_instance,
             'selected_unit_time': selected_unit_time,
             'selected_quantity_time': selected_quantity_time,
         }
         return render(request, 'simulate/simulate-init.html', context)
     
-    if request.method == "POST" and form.is_valid() and 'start' in request.POST:
-        # tomar los valores
-        request.session['started'] = True     
-        simulation_instance = form.save(commit=False)
-        answers = Answer.objects.order_by('id').filter(fk_questionary_result_id=simulation_instance.fk_questionary_result_id)
-        areas = Area.objects.order_by('id').filter(fk_product_id=simulation_instance.fk_product_id)
-        product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product.id)                                  
-        # tercero tomar que tipo de distribucion toma
-        # Supongamos que tienes un objeto ProbabilisticDensityFunction
-        new_simulation = Simulation(
-            fk_product=simulation_instance.fk_product,
-            fk_business=simulation_instance.fk_business,
-            fk_questionary_result=simulation_instance.fk_questionary_result,
-            fk_fdp=fdp,
+    if request.method == 'POST' and 'start' in request.POST:
+        print("se comenzara la simulacion ")
+        request.session['started'] = True 
+        # Obtén los datos del formulario
+        fk_questionary_result = request.POST.get('fk_questionary_result')
+        quantity_time = request.POST.get('quantity_time')
+        unit_time = request.POST.get('unit_time')
+        demand_history = request.POST.get('demand_history')
+        fk_fdp_id = request.POST.get('fk_fdp')
+        fk_fdp_instance = get_object_or_404(ProbabilisticDensityFunction, id=fk_fdp_id)
+        fk_questionary_result_instance = get_object_or_404(QuestionaryResult, id=fk_questionary_result)
+        # Puedes realizar la lógica de validación aquí si es necesario
+
+        # arreglar como se guarda demadn_history
+        # Crea una nueva instancia de Simulation y almacena los datos
+        simulation_instance = Simulation.objects.create(
+            fk_questionary_result=fk_questionary_result_instance,
+            quantity_time=quantity_time,
+            unit_time=unit_time,
+            demand_history=demand_history,
+            fk_fdp=fk_fdp_instance,
             is_active=True
         )
-        demand_mean=statistics.mean(simulation_instance.demand_history)
+
+        # Calcula la media de la demanda y crea una instancia de Demand
+        cleaned_demand_history = demand_history.replace('[', '').replace(']', '').replace('\r\n', '').split()
+        demand_history_list = [float(item) for item in cleaned_demand_history if item.isdigit()]
+        demand_mean = statistics.mean(demand_history_list)
+        product_instance = get_object_or_404(Product, pk=simulation_instance.fk_questionary_result.fk_questionary.fk_product.id)
         Demand.objects.create(
             quantity=demand_mean,
             fk_simulation=simulation_instance,
             fk_product=product_instance,
-            is_predicted=False)
-        # aqui solamente hacermos el guardado de la simulacion
-        request.session['simulation_started_id'] = new_simulation.id
-        new_simulation.save()  
-        #cuarto hacer la simulacion
-        print("se creo la simulacion")
-        print("se comenzara con la simulacion")
-        print("Started: " + str(started))
-        context = {
-            'areas': areas,
-            'simulation_instance': simulation_instance,
-            # 'data_demand_historic': demand_historic,
-            'started': started,  
-            'form': form,          
-            'questionnaires_result': questionnaires_result,
-            'questionary_result_instance': questionary_result_instance,
-            'image_data': image_data
-        }
-        return redirect('simulate:simulate.show', simulation_id=new_simulation.id)  # Redirect to the next step in the simulation
+            is_predicted=False
+        )
+
+        # Almacena el ID de la simulación en la sesión
+        request.session['simulation_started_id'] = simulation_instance.id
+
+        # Redirige a la página deseada
+        return redirect(reverse('simulate:simulate.show'))
     
     if request.method == 'POST' and 'cancel' in request.POST:
         request.session['selected'] = False 
-        print("Se cancelo el cuestionario")
+        print("Se cancelo la simulacion")
         return redirect('simulate:simulate.show')
     
     if not started:
@@ -322,17 +329,17 @@ def simulate_show_view(request):
     else:
         # aqui ya tomar los datos de la simulacion que se creo en start
         simulation_instance = get_object_or_404(Simulation, pk=request.session['simulation_started_id'])
-        nmd = simulation_instance.quantity_time
+        nmd = int(simulation_instance.quantity_time)
         # tomar la fdp para poder hacer los randoms en base a esa distribucion
         fdp = simulation_instance.fk_fdp
         # tomar las respuestas del cuestionario con el que se creo la simulacion
-        all_answers = simulation_instance.fk_questionary_result.fk_questionary.fk_answers.all()
+        # all_answers = simulation_instance.fk_questionary_result.fk_questionary.fk_answers.all()
         # esto dentro de un for hasta llegar al maximo de dias ()
         # Iterar sobre cada día de la simulación
         endogenous_results = {}
         for i in range(nmd):          
             # Tomar las áreas
-            areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_product)
+            areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_questionary_result.fk_questionary.fk_product)
             
             # Iterar sobre cada área
             for area in areas:

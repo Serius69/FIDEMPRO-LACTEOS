@@ -194,9 +194,7 @@ class ResultSimulation(models.Model):
     def get_variables(self):
         return self.variables
     
-    
-    
-    @receiver(post_save, sender=Simulation)
+    # @receiver(post_save, sender=Simulation)
     def create_random_result_simulations(sender, instance, created, **kwargs):
         # Obtén la fecha inicial de la instancia de Simulation
         current_date = instance.date_created

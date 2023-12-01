@@ -160,9 +160,12 @@
                                                                 {% else %}
                                                                     <p>No hay modelo armado.</p>
                                                                 {% endif %}
-                                                                <form action="{% url 'simulate:simulate.show' %}" method="post" id="simulateForm" onsubmit="return validateForm()">
+                                                                <form action="{% url 'simulate:simulate.show' %}" method="post" onsubmit="return validateForm()">
                                                                     {% csrf_token %}  
-                                                                    <input type="hidden" name="fk_questionary_result" value="{{ questionary_result_instance }}">
+                                                                    {{ selected_fdp }}
+                                                                    {{ demand_history }}
+                                                                    {{ questionary_result_instance_id }}
+                                                                    <input type="hidden" name="fk_questionary_result" value="{{ questionary_result_instance_id }}">
                                                                     <input type="hidden" name="quantity_time" value="{{ selected_quantity_time }}">
                                                                     <input type="hidden" name="unit_time" value="day">
                                                                     <input type="hidden" name="demand_history" value="{{ demand_history }}">
