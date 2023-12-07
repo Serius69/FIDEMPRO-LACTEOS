@@ -6,8 +6,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
+from variable.models import Variable
+from user.models import ActivityLog
 from product.models import Product,Area
-from finance.models import FinanceRecommendation
+from finance.models import FinanceRecommendationSimulation
 from business.models import Business
 from dashboards.models import Chart
 from simulate.models import ResultSimulation,Simulation,Demand,DemandBehavior
@@ -42,7 +44,7 @@ def dashboard_user(request) -> str:
     except Business.DoesNotExist:
         return redirect("business:business_list")
     
-    recommendations=FinanceRecommendation.objects.filter(fk_business=business.id)
+    recommendations=FinanceRecommendationSimulation.objects.filter(fk_finance_recommendation__fk_business=business.id, is_active=True)
         
     businesses = Business.objects.all().filter(fk_user=request.user, is_active=True).order_by('-id')
     today = timezone.now()
@@ -58,26 +60,70 @@ def dashboard_user(request) -> str:
     products = Product.objects.filter(fk_business=business.id)
     areas = Area.objects.filter(fk_product__fk_business=business.id)
     product_ids = [product.id for product in products]
-        
-    charts = Chart.objects.filter(fk_product_id__in=product_ids).order_by('-id')[:6]
+    print(product_ids)    
+    
+    charts = Chart.objects.filter(fk_product_id__in=product_ids, is_active=True ).order_by('-id')[:6]
     
     paginator = Paginator(recommendations, 10)  # Show 10 recommendations per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    # buscar toda la ultima simulacion de cada producto
+    simulations = Simulation.objects.filter(fk_questionary_result__fk_questionary__fk_product_id__in=product_ids).order_by('-id')
+    print(simulations)
+    for simulation in simulations:
+        simulation_id = simulation.id
+        print(simulation_id)
+        results_simulation = ResultSimulation.objects.filter(is_active=True, fk_simulation_id=simulation_id)
+        print(results_simulation)
+        iniciales_a_buscar = ['TPV', 'IT', 'GT', 'TG','DT']
+        all_variables_extracted = []
+        for result_simulation in results_simulation:
+            variables_extracted = result_simulation.get_variables()
+
+            # Filtrar variables que coinciden con las iniciales
+            variables_filtrates = Variable.objects.filter(initials__in=iniciales_a_buscar).values('name', 'initials')
+            initials_a_nombres = {variable['initials']: variable['name'] for variable in variables_filtrates}
+            # en lugar de mostrar las iniciales compararlas con la base de datos de varaibles y mostrar el nombre de la variable
+            # Calcular la suma total por variable
+            totals_por_variable = {}
+            for initial, value in variables_extracted.items():
+                if initial in initials_a_nombres:
+                    nombre_variable = initials_a_nombres[initial]
+                    if nombre_variable not in totals_por_variable:
+                        totals_por_variable[nombre_variable] = 0
+                    totals_por_variable[nombre_variable] += value
+
+            # Agregar las variables filtradas a la lista
+            all_variables_extracted.append({'result_simulation': result_simulation, 'totales_por_variable': totals_por_variable})
     
-    total_revenue = sum(product.earnings or 0 for product in products)
-    total_costs = sum(product.costs or 0 for product in products)
-    total_inventory_levels = sum(product.inventory_levels or 0 for product in products)
-    total_production_output = sum(product.production_output or 0 for product in products)
-    total_profit_margin = sum(product.profit_margin or 0 for product in products)
+    total_revenue=0
+    total_costs=0
+    total_inventory_levels=0
+    total_demand=0
+    total_production_output=0
+    total_profit_margin=0
+    print(all_variables_extracted)
+    for variables_extracted in all_variables_extracted:
+        totals_por_variable = variables_extracted['totales_por_variable']
+        total_revenue += totals_por_variable.get('Total Revenue', 0)
+        total_costs += totals_por_variable.get('Total Costs', 0)
+        total_inventory_levels += totals_por_variable.get('Total Inventory Levels', 0)
+        total_demand += totals_por_variable.get('Total Demand', 0)
+        total_production_output += totals_por_variable.get('Total Production Output', 0)
+        total_profit_margin += totals_por_variable.get('Total Profit Margin', 0)
+       
+    recent_activity = ActivityLog.objects.filter(user=request.user).order_by('-timestamp')[:10] 
 
     context: Dict[str, Any] = {
         'greeting': greeting,
+        'recent_activity': recent_activity,
         'areas': areas,
         'business': business,
         'businesses': businesses,
         'total_revenue': total_revenue,
         'total_costs': total_costs,
+        'total_demand': total_demand, # 'total_demand': total_demand,
         'total_inventory_levels': total_inventory_levels,
         'total_production_output': total_production_output,
         'total_profit_margin': total_profit_margin,

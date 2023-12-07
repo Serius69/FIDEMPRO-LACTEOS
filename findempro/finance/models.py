@@ -41,11 +41,8 @@ class FinanceRecommendation(models.Model):
         for finance_recommendation in instance.fk_business_finance_recommendation.all():
             finance_recommendation.is_active = instance.is_active
             finance_recommendation.save()
-class FinancialDecision(models.Model):
-    decision_date = models.DateField()
-    quantity_to_produce = models.PositiveIntegerField()
-    revenue = models.DecimalField(max_digits=10, decimal_places=2)
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
+class FinanceRecommendationSimulation(models.Model):
+    data = models.FloatField()
     fk_result_simulation = models.ForeignKey(
         ResultSimulation, 
         on_delete=models.CASCADE,  # Added a comma here

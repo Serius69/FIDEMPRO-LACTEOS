@@ -78,6 +78,7 @@ MIDDLEWARE = [
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'user.middleware.ActivityLogMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [

@@ -14,14 +14,6 @@ from django.http import HttpResponseForbidden, HttpResponseServerError
 # Create your views here.
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
-def make_decision(request):
-    # Retrieve the simulation results from the database
-    simulation_results = ResultSimulation.objects.all()
-    
-    # Analyze the results and make a financial decision
-    decision = "Invest" if simulation_results[0].result_value > 500 else "Don't invest"
-
-    return render(request, 'decision_template.html', {'decision': decision})
 def finance_list_view(request):
     try:
         FinancialDecisions = FinancialDecision.objects.order_by('-id')

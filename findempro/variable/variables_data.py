@@ -340,12 +340,6 @@ variables_data = [
 'description': 'COSTOS OPERATIVOS Y ADMINISTRATIVOS EN LAS PYMES DEL SECTOR LÁ'
 },
 
-{'name': 'GASTOS TOTALES',
-'initials': 'GT',
-'type': 3,
-'unit': 'BS',
-'description': 'GASTOS TOTALES EN EL TIEMPO DE SIMULACIÓN'},
-
 {'name': 'COSTO TOTAL TRANSPORTE',
 'initials': 'CTTL',
 'type': 3,

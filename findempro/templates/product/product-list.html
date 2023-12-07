@@ -20,7 +20,7 @@
                     <div class="py-4">
                         <h4 class="display-6 -text">LISTA DE PRODUCTOS</h4>
                         <div class="container">                      
-                          <p>Explore nuestra lista completa de productos con una amplia gama de artículos procedentes de nuestra extensa base de datos.Esta plataforma fácil de usar le permite tomar el control de su inventario de productos sin esfuerzo.Ya sea que sea propietario de un negocio, gerente de valores o simplemente alguien apasionado por la organización, esta página está diseñada con usted en mente.</p>
+                          <p>El listado de productos que se tienen para realizar simulaciones.</p>
                           <h2>Características clave:</h2>
                           <ul>
                             <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles del producto como nombre, descripción, precio y cantidad.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite mantener actualizado la información de su producto con solo unos pocos clics.</li>
@@ -178,24 +178,28 @@
                         </p>
                       </div>
                     </div>
+                    
                     <div class="mt-auto">
                       <div class="d-flex mb-2">
                         <div class="flex-shrink-0">
-                          <div>
-                            <i class="ri-list-check align-bottom me-1 text-muted"></i>
-                            Cantidad de variables: 
-                            {{ product.fk_product_variable.count|default:"0" }}
+                          <div style="display: flex; justify-content: space-between;">
+                            <div>
+                              <i class="ri-list-check align-bottom me-1 text-muted"></i>
+                              Cantidad de Areas: 
+                              {{ product.fk_product_area.count|default:"0" }}
+                            </div>
+                            <div>
+                              <i class="ri-list-check align-bottom me-1 text-muted"></i>
+                              Cantidad de variables: 
+                              {{ product.fk_product_variable.count|default:"0" }}
+                            </div>
+                            <div>
+                              <i class="ri-list-check align-bottom me-1 text-muted"></i>
+                              Cantidad de ecuaciones: 
+                              {{ product.fk_product_variable.fk_variable_equations.count|default:"0" }}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div class="progress progress-sm animated-progress">
-                        <div
-                          id="progress-bar"
-                          class="progress-bar bg-success"
-                          role="progressbar"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                        ></div>
                       </div>
                     </div>
                   </div>

@@ -34,3 +34,9 @@ class UserProfile(models.Model):
             user_profile, created = UserProfile.objects.get_or_create(user=instance.user)
             user_profile.image_src = instance.extra_data.get('picture', '')
             user_profile.save()
+            
+class ActivityLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True, null=True)
