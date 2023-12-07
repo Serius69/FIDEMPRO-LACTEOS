@@ -307,48 +307,66 @@ def simulate_show_view(request):
         endogenous_results = {}
         for i in range(nmd):         
             areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_questionary_result.fk_questionary.fk_product)
-            # Obtener todas las ecuaciones asociadas a las áreas del producto
+            product_instance = get_object_or_404(Product, pk=simulation_instance.fk_questionary_result.fk_questionary.fk_product.id)
             equations = Equation.objects.filter(is_active=True, fk_area__in=areas).order_by('fk_area_id')
-            print(equations)
-            # Obtener el resultado del cuestionario asociado a la simulación
+            
+            variables = Variable.objects.filter(is_active=True, fk_product=product_instance)
             questionary_result = simulation_instance.fk_questionary_result
-            # Obtener todas las respuestas asociadas al resultado del cuestionario
             answers = Answer.objects.filter(fk_questionary_result=questionary_result)
-            # Mapear las respuestas a las preguntas y luego a las variables exógenas
-            answers_dict = {str(answer.fk_question.id): answer.answer for answer in answers}
-            # Iterar sobre cada ecuación
-            for equation in equations:
-                # Obtener todas las variables asociadas a la ecuación
-                variables = [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5]
-                # Crear símbolos para las variables en la ecuación
-                var_symbols = symbols([var.initials for var in variables if var is not None])
-                # Sustituir los valores conocidos en las expresiones de la ecuación
-                substituted_expression = equation.expression
-                for var in variables:
-                    if var.type == 1:
-                        # Variable exógena, usar valor conocido de las respuestas
-                        substituted_expression = substituted_expression.replace(var.initials, str(answers_dict.get(var.initials, 0)))
-                    elif var.type == 2:
-                        # Variable endógena, usar valor calculado (ya debería estar en el diccionario)
-                        substituted_expression = substituted_expression.replace(var.initials, str(endogenous_results[var.initials]))
-                    elif var.type == 3:
-                        # Variable de estado, usar valor conocido de las respuestas
-                        substituted_expression = substituted_expression.replace(var.initials, str(answers_dict.get(var.initials, 0)))
-                    # Resolver la ecuación
-                    result = solve(Eq(substituted_expression, 0), var_symbols[0])
-                    # Asignar el resultado a la variable endógena correspondiente
-                    if result is not None:
-                        endogenous_results[variables[-1].initials] = result[0]
-                    else:
-                        endogenous_results[variables[-1].initials] = None
-            # Calcular la demanda total usando la nueva ecuación
+            variable_initials_dict = {}
             demand_total = 0
+            for answer in answers:
+                question_id = str(answer.fk_question.id)
+                question = get_object_or_404(Question, pk=question_id)
+                variable_name = f"{question.fk_variable.initials}"
+                print(variable_name)
+                if variable_name == "DH":
+                    print(answer.answer)
+                    print(variable_initials_dict)
+                    if answer.answer in variable_initials_dict:
+                        demand_mean = round(statistics.mean(variable_initials_dict[answer.answer]), 2)
+                        print("DH" + str(demand_mean))
+                    else:
+                        demand_mean = None                    
+                        variable_initials_dict[variable_name] = demand_mean
+                        print("DH: No demand mean available")
+                else:
+                    variable_initials_dict[variable_name] = answer.answer
+
+
+            for equation in equations:
+                print(equation.expression)
+                variables_to_use = []
+                for var in [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5]:
+                    if var is not None:
+                        variables_to_use.append(var.initials)
+
+                substituted_expression = equation.expression
+                for var in variables_to_use:
+                    if var in variable_initials_dict:
+                        substituted_expression = substituted_expression.replace(var, str(variable_initials_dict.get(var)))
+
+                lhs, rhs = substituted_expression.split('=')
+                print(lhs.strip() + "=" + rhs.strip())                # print()
+                if rhs is not None:
+                    expresion_evaluated = sympify(rhs.strip())
+                else:
+                    # Handle the case where rhs is None
+                    expresion_evaluated = None  # Adjust based on your requirements
+
+                if expresion_evaluated is not None:
+                    synbol = symbols(lhs.strip())  # Esto crea el símbolo 'DF'
+                    result = solve(Eq(expresion_evaluated, 0), synbol)
+                    if result:
+                        endogenous_results[variables_to_use[-1]] = result[0]
+                    else:
+                        endogenous_results[variables_to_use[-1]] = None
+            
             for variable_name, variable_value in endogenous_results.items():
                 if variable_name == "DT":
                     demand_total += variable_value
-            # Calcular la desviación estándar de la demanda
+
             demand_std_dev = np.std(list(simulation_instance.demand_history.all()) + [demand_total])
-            # Crear un nuevo objeto ResultSimulation con los detalles de la simulación
             new_result_simulation = ResultSimulation(
                 fk_simulation=simulation_instance,
                 demand_mean=demand_total,
@@ -357,6 +375,7 @@ def simulate_show_view(request):
                 end_date=simulation_instance.start_date + timedelta(days=i+1),
             )
             new_result_simulation.save()
+
         print("La simulación ha comenzado")
         return render(request, 'simulate/simulate-result.html', {
             'simulation_instance_id': simulation_instance,

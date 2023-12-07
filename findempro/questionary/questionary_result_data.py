@@ -101,15 +101,27 @@ answer_data = [
     },
     {
         'answer': random.randint(100, 1000),
-        'question': '¿Cuánto es la cantidad promedio producida por lote ?'
-    },
-    {
-        'answer': random.randint(100, 1000),
         'question': '¿Cuál es el stock de inventario mínimo de seguridad (SI) para la capacidad máxima de insumos del producto final, medido en días?'
     },
     {
         'answer': random.randint(1, 10),
         'question': '¿Dias promedio de reabastecimiento?'
+    },
+    {
+        'answer': random.randint(1, 10),
+        'question': '¿Cuál es el tiempo medio de procesamiento de pedidos (TMP) actual en dias?'
+    },
+    {
+        'answer': random.randint(100, 1000),
+        'question': '¿Cuántos litros, en promedio, se transportan por viaje según la variable Cantidad transportada por viaje?'
+    },
+    {
+        'answer': random.randint(100, 1000),
+        'question': '¿Cuántos litros, en promedio, se transportan por viaje según la variable Cantidad transportada por viaje?'
+    },
+    {
+        'answer': random.randint(1, 3),
+        'question': 'Número de Proveedores de Leche'
     },
 ]
     

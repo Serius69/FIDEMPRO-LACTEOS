@@ -19,7 +19,7 @@ from django.db.models import Q
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def variable_list(request):
-    # try:
+    try:
         product_id = request.GET.get('product_id', 'All')
         if product_id == 'All':
             variables = Variable.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user).order_by('-id')
@@ -27,7 +27,7 @@ def variable_list(request):
         else:
             variables = Variable.objects.filter(is_active=True, fk_product_id=product_id, fk_product__fk_business__fk_user=request.user).order_by('-id')
             products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
-        paginator = Paginator(variables, 10)
+        paginator = Paginator(variables, 12)
         page = request.GET.get('page')
 
         try:
@@ -42,9 +42,9 @@ def variable_list(request):
             'products': products,
             'instructions': Instructions.objects.filter(is_active=True).order_by('-id')}
         return render(request, 'variable/variable-list.html', context)
-    # except Exception as e:
-    #     messages.error(request, f"An error occurred: {str(e)}")
-    #     return HttpResponse(status=500)
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
 def variable_overview(request, pk):
     # try:
         variable = get_object_or_404(Variable, pk=pk)

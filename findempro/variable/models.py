@@ -80,14 +80,15 @@ class Variable(models.Model):
 
                         variable1 = get_variable(data['variable1'], product_id)
                         variable2 = get_variable(data['variable2'], product_id)
-                        variable3 = get_variable(data['variable3'], product_id)
+                        variable3 = get_variable(data.get('variable3', None), product_id)
                         variable4 = get_variable(data.get('variable4', None), product_id)
                         variable5 = get_variable(data.get('variable5', None), product_id)
                         area = get_area(data['area'], product_id)
                         
+                        
                         Equation.objects.create(
                             name=data['name'],
-                            description=data['description'],
+                            description=data.get('description', 'Descripcion predeterminada'),
                             expression=data['expression'],
                             fk_variable1=variable1,
                             fk_variable2=variable2,

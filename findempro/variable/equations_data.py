@@ -158,10 +158,10 @@ equations_data = [
 {
 "name": "Uso de Inventario Insumos",
 "description": "Ecuación para calcular el consumo de insumos del inventario multiplicando el consumo unitario del insumo por los productos producidos",
-"expression": "UII = CIP * PP",
+"expression": "UII = CIP * PPL",
 "variable1": "UII",
 "variable2": "CIP",
-"variable3": "PP",
+"variable3": "PPL",
 "area": "Inventario Insumos"
 },
   {
@@ -176,9 +176,9 @@ equations_data = [
 {
   "name": "Inventario Productos Finales",
   "description": "Ecuación para calcular el saldo de inventario de productos finales sumando el inventario anterior más entradas de producción menos salidas por ventas",
-  "expression": "IPF = IPF + PP - VPC",
+  "expression": "IPF = IPF + PPL - VPC",
   "variable1": "IPF",
-  "variable2": "PP",
+  "variable2": "PPL",
   "variable3": "VPC",
   "area": "Inventario Productos Finales"
   },
@@ -230,10 +230,10 @@ equations_data = [
   {
     "name": "Costo Promedio Producción",
     "description": "Ecuación para calcular el costo promedio de producción, que es el costo total de producción dividido por el tonelaje por producto",
-    "expression": "CPP = GT / TPP",
+    "expression": "CPP = GT / CPL",
     "variable1": "CPP",
     "variable2": "GT",
-    "variable3": "TPP",
+    "variable3": "CPL",
     "area": "Contabilidad"
   },
   {
@@ -257,10 +257,10 @@ equations_data = [
   {
     "name": "Costo Promedio Mano Obra",
     "description": "Ecuación para calcular el costo promedio de mano de obra, que es el salario total de empleados dividido por el tonelaje por producto",
-    "expression": "CPMO = SE / TPP",
+    "expression": "CPMO = SE / CPL",
     "variable1": "CPMO",
     "variable2": "SE",
-    "variable3": "TPP",
+    "variable3": "CPL",
     "area": "Contabilidad"
   },
   {
@@ -295,9 +295,9 @@ equations_data = [
   {
     "name": "Factor Utilización",
     "description": "Ecuación para calcular el factor de utilización, que es el tonelaje por producto dividido por la capacidad de producción",
-    "expression": "FU = TPP / CPROD",
+    "expression": "FU = CPL / CPROD",
     "variable1": "FU",
-    "variable2": "TPP",
+    "variable2": "CPL",
     "variable3": "CPROD",
     "area": "Producción"
   },
@@ -387,8 +387,8 @@ equations_data = [
     "name": "COSTO UNITARIO DE ADQUISICIÓN DE CLIENTES",
     "expression": "CUAC = GTM / CPD",
     "variable1": "CUAC",
-    "variable2": "Gasto Total de Marketing",
-    "variable3": "Número Total de Nuevos Clientes Adquiridos",
+    "variable2": "GMM",
+    "variable3": "CPD",
     "area": "Marketing"
   },
   {

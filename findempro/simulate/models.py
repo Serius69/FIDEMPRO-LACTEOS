@@ -202,7 +202,7 @@ class ResultSimulation(models.Model):
         result_simulation = None
         print(f'Number of ResultSimulation instances to be created by the Simulate: {instance.quantity_time}')
         # por que se esta creando 4 veces ResultSimulation por Simulation
-        for _ in range(instance.quantity_time):
+        for _ in range(int(instance.quantity_time)):
             demand_mean = 0
             demand = [random.uniform(1000, 5000) for _ in range(10)]
             demand_std_deviation = random.uniform(5, 20)

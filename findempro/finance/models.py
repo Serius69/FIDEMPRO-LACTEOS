@@ -31,7 +31,7 @@ class FinanceRecommendation(models.Model):
                 FinanceRecommendation.objects.create(
                     name=data['name'],
                     recommendation=data['recommendation'],
-                    description=data['description'],
+                    threshold_value=data['threshold_value'],
                     fk_business_id=business.id,
                     is_active=True
                 )

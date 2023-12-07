@@ -17,6 +17,7 @@ variables_data = [
 'unit': 'L/BS',
 'description': 'DEMANDA ESPERADA EN EL PERIODO DE TIEMPO ESTABLECIDO'},
 
+
 {'name': 'CAPACIDAD INVENTARIO PRODUCTOS',
 'initials': 'CIP',
 'type': 1,
@@ -169,11 +170,11 @@ variables_data = [
 'unit': 'DIAS',
 'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
 
-{'name': 'Tiempo Formulación Pedido',
+{'name': 'Número de Proveedores de Leche',
 'initials': 'NPD',
 'type': 1,
 'unit': 'DIAS',
-'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
+'description': 'Número de Proveedores de Leche'},
 
 {'name': 'Nivel Ideal del Inventario Leche',
 'initials': 'NIL',
@@ -459,4 +460,27 @@ variables_data = [
  'unit': 'BS',
  'description': 'Costo de almacenamiento - Costo asociado al almacenamiento de productos o materiales durante un período de tiempo determinado.'},
 
+{'name': 'Tiempo Formulación Pedido',
+'initials': 'TMP',
+'type': 1,
+'unit': 'DIAS',
+'description': 'DEMANDA ESPERADA EN EL PERIODO DE TIEMPO ESTABLECIDO'},
+
+{'name': 'Cantidad transportada por viaje',
+'initials': 'CTPLV',
+'type': 1,
+'unit': 'L',
+'description': 'Cantidad transportada por viaje'},
+
+{'name': 'cantidad promedio producida por lote ',
+'initials': 'CPL',
+'type': 1,
+'unit': 'L',
+'description': 'cantidad promedio producida por lote '},
+
+{'name': 'Demanda Total ',
+'initials': 'DT',
+'type': 3,
+'unit': 'L',
+'description': 'Demanda Total '},
 ]

@@ -114,4 +114,29 @@ question_data = [
         'type': 1,
         'initials_variable': 'DPL'  
     },
+                {
+        'question': '¿Cuál es el tiempo medio de procesamiento de pedidos (TMP) actual en dias?', 
+        'type': 1,
+        'initials_variable': 'TMP'  
+    },
+                {
+        'question': '¿Cuántos litros, en promedio, se transportan por viaje según la variable Cantidad transportada por viaje?', 
+        'type': 1,
+        'initials_variable': 'TMP'  
+    },
+    {
+        'question': '¿Cuánto es la cantidad promedio producida por lote ?', 
+        'type': 1,
+        'initials_variable': 'CPL'  
+    },
+     {
+        'question': '¿Cantidad en Litros transportada por transporte ?', 
+        'type': 1,
+        'initials_variable': 'CTPLV'  
+    },
+     {
+        'question': 'Número de Proveedores de Leche', 
+        'type': 1,
+        'initials_variable': 'NPD'  
+    },
 ]
