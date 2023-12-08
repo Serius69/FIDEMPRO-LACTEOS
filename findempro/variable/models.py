@@ -33,7 +33,7 @@ class Variable(models.Model):
     def __str__(self):
         return self.name
 
-    def get_image_url(self):
+    def get_photo_url(self):
         if self.image_src and hasattr(self.image_src, 'url'):
             return self.image_src.url
         else:

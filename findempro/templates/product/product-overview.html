@@ -20,14 +20,13 @@
                                         <div class="card-body pb-0 px-2">
                                             <div class="row mb-1">
                                                 <!-- Product Image -->
-                                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                                    <img src="{{ product.get_photo_url }}" alt="{{ product.name }}" class="img-fluid rounded" style="object-fit: cover; width: 100%; height: auto;">
+                                                <div class="col-lg-3 col-md-4 col-sm-6" style="background-image: url('{{ product.get_photo_url }}'); background-size: cover; background-position: center;">
                                                 </div>
                                                 <!-- Product Details -->
                                                 <div class="col-lg-9 col-md-8 col-sm-6">
                                                     <div class="card">
                                                         <div class="card-body">
-                                                            <h4 class="card-title fw-bold">{{product.name}}</h4>
+                                                            <h4 class="card-title fw-bold" style="font-size: 2em;">{{product.name}}</h4>
                                                             <ul class="list-group list-group-flush">
                                                                 <li class="list-group-item"><i class="ri-building-line align-bottom me-1"></i> {{product.fk_business.name}}</li>
                                                                 <li class="list-group-item">Fecha de Creación: <span class="fw-medium">{{product.date_created}}</span></li>
@@ -42,7 +41,7 @@
                                                     </div>
                                                     <div class="card">
                                                         <div class="card-body">
-                                                        <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
+                                                        <h6 class="mb-3 fw-semibold text-uppercase" style="font-size: 1.5em;">Descripción</h6>
                                                                 <p>{{product.description}}</p>    
                     
                                                                 <div class="pt-3 border-top border-top-dashed mt-4">
@@ -89,10 +88,10 @@
                                             <!-- Product Tabs -->
                                             <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
                                                 <li class="nav-item">
-                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview" role="tab">Descripción general</a>
+                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview" role="tab" style="font-size: 1.5em;">Descripción general</a>
                                                 </li>
                                                 <li class="nav-item">
-                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable" role="tab">variables</a>
+                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable" role="tab" style="font-size: 1.5em;">Variables</a>
                                                 </li>
                                             </ul>
                                         </div>
@@ -109,7 +108,7 @@
                                             <div class="col-xl-9 col-lg-8">
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1">Areas</h4>
+                                                        <h4 class="card-title mb-0 flex-grow-1" style="font-size: 2em;">Areas</h4>
                                                         <div class="flex-shrink-0">
                                                             <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
                                                         </div>
@@ -137,11 +136,13 @@
                                                     </div>
                                                 </div>
                                                 <div class="card">
-
+                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
+                                                        <h4 class="card-title mb-0 flex-grow-1" style="font-size: 2em;">Informes</h4>
+                                                    </div>
+                                                    
                                                     <div class="card-body">
                                                         <div class="text-muted">
-                                                            <div class="pt-3 border-top border-top-dashed mt-4">
-                                                                <h6 class="mb-3 fw-semibold text-uppercase">Informes</h6>
+                                                            <div class="pt-3 border-top border-top-dashed mt-4"> 
                                                                 <div class="row g-3">
                                                                     {% for report in reports %}
                                                                     <div class="col-xxl-4 col-lg-6">
@@ -196,7 +197,7 @@
                                                 <!-- end card -->
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1">Simulaciones</h4>
+                                                        <h4 class="card-title mb-0 flex-grow-1" style="font-size: 2em;">Simulaciones</h4>
                                                         <div class="flex-shrink-0">
                                                             <button type="button" class="btn btn-soft-info btn-sm" 
                                                             href=><i class="ri-upload-2-fill me-1 align-bottom"></i> Nueva simulación</button>
@@ -250,12 +251,11 @@
                                                     {% empty %}
                                                         <div class="text-center py-4">
                                                             <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                            <h5 class="mt-2">Lo sentimos, no hay ningúna simulacion registrado en la base de datos</h5>
+                                                            <h5 class="mt-2">Lo sentimos, no hay ningúna simulacion del producto: {{product.name}}</h5>
                                                         </div>
                                                     {% endfor %}
                                                 </div>
                                                 <!-- end card -->
-
                                             </div>
                                             <!-- end col -->
                                         </div>
@@ -264,55 +264,41 @@
                                     <!-- end tab pane -->
                                     <div class="tab-pane fade" id="product-variable" role="tabpanel">
                                         <div class="team-list list-view-filter">
-                                            {% for variable in variables_product %}
-                                            <div class="card team-box">
-                                                <div class="card-body px-4">
-                                                    <div class="row align-items-center team-row">
-                                                        <div class="col team-settings">
-                                                            <div class="row align-items-center">
-                                                                <div class="col text-end dropdown">
-                                                                    <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                        <i class="ri-more-fill fs-17"></i>
-                                                                    </a>
-                                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                                        <li><a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                        <li><a class="dropdown-item" href="{% url 'variable:variable.edit' variable.id %}"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Edit</a></li>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-4 col">
-                                                            <div class="team-profile-img">
-                                                                <div class="team-content">
-                                                                    <a href="#" class="d-block"><h5 class="fs-16 mb-1">{{variable.name}}</h5></a>
-                                                                    <p class="text-muted mb-0">{{variable.name}}</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-4 col">
-                                                            <div class="row text-muted text-center">
-                                                                <div class="col-6 border-end border-end-dashed">
-                                                                    <h5 class="mb-1">{{variable.fk_variable_equation.all}}</h5>
-                                                                    <p class="text-muted mb-0">Ecuaciones</p>
-                                                                </div>
-                                                                <div class="col-6">
-                                                                    <h5 class="mb-1">{{variable.fk_variable_question.all}}</h5>
-                                                                    <p class="text-muted mb-0">Preguntas</p>
+                                            <div class="row">
+                                                {% for variable in variables_product %}
+                                                    <div class="col-lg-2 col-md-6">
+                                                        <div class="card team-box">
+                                                            <div class="card-body px-4">
+                                                                <div class="row align-items-center team-row">
+                                                                    <div class="col-lg-12" style="background-image: url('{{ variable.get_photo_url }}'); background-size: cover; background-position: center; height: 200px;">
+                                                                    </div>
+                                                                    <div class="col-lg-12 team-settings mt-3">
+                                                                        <div class="team-content">
+                                                                            <a href="#" class="d-block"><h5 class="fs-16 mb-1">{{variable.name}}</h5></a>
+                                                                            <p class="text-muted mb-0">{{variable.description}}</p>
+                                                                        </div>
+                                                                        <div class="dropdown">
+                                                                            <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                                <i class="ri-more-fill fs-17"></i>
+                                                                            </a>
+                                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                                                <li><a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
+                                                                                <li><a class="dropdown-item" href="{% url 'variable:variable.edit' variable.id %}"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Edit</a></li>
+                                                                            </ul>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div><!--end card-->
-                                            {% empty %}
-                                            <tr>
-                                                   <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                   <h5 class="mt-2">Lo siento, no hay ningúna variable registrada en la base de datos</h5>
-                                           </tr>
-                                           {% endfor %} 
+                                                {% empty %}
+                                                    <div class="col text-center py-4">
+                                                        <h5 class="mt-2">No variables found</h5>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                         <!-- end team list -->
-
                                         <div class="align-items-center mt-2 row text-center text-sm-start">
                                             <div class="col-sm">
                                               <div class="text-muted"
@@ -325,30 +311,50 @@
                                               </div>
                                             </div>
                                             <div class="col-sm-auto">
-                                              <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                                {% if variables_product.has_Anterior %}
-                                                  <li class="page-item">
-                                                    <a href="?page={{ variables_product.previous_page_number }}" class="page-link">←</a>
-                                                  </li>
-                                                {% endif %}
-                                            
-                                                {% for i in variables_product.paginator.page_range %}
-                                                  <li class="page-item {% if i == variables_product.number %}active{% endif %}">
-                                                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                  </li>
-                                                {% endfor %}
-                                            
-                                                {% if variables_product.has_next %}
-                                                  <li class="page-item">
-                                                    <a href="?page={{ variables_product.next_page_number }}" class="page-link">→</a>
-                                                  </li>
-                                                {% endif %}
-                                              </ul>
+                                                <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+                                                    {% if variables_product.has_previous %}
+                                                        <li class="page-item">
+                                                            <a href="javascript:void(0);" class="page-link pagination-link" data-page="{{ variables_product.previous_page_number }}">←</a>
+                                                        </li>
+                                                    {% endif %}
+                                                
+                                                    {% for i in variables_product.paginator.page_range %}
+                                                        <li class="page-item {% if i == variables_product.number %}active{% endif %}">
+                                                            <a href="javascript:void(0);" class="page-link pagination-link" data-page="{{ i }}">{{ i }}</a>
+                                                        </li>
+                                                    {% endfor %}
+                                                
+                                                    {% if variables_product.has_next %}
+                                                        <li class="page-item">
+                                                            <a href="javascript:void(0);" class="page-link pagination-link" data-page="{{ variables_product.next_page_number }}">→</a>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
                                             </div>            
                                           </div>
                                           <!-- end row -->
                                     </div>
                                     <!-- end tab pane -->
+                                    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+                                    <script>
+                                        $(document).ready(function() {
+                                            $('.pagination-link').on('click', function() {
+                                                var page = $(this).data('page');
+                                                $.ajax({
+                                                    url: window.location.href,
+                                                    type: 'GET',
+                                                    data: { page: page },
+                                                    success: function(data) {
+                                                        // Actualiza el contenido de la pestaña con la respuesta AJAX
+                                                        $('.tab-pane#product-variable .team-list').html($(data).find('.tab-pane#product-variable .team-list').html());
+                                                    },
+                                                    error: function(error) {
+                                                        console.error('Error al realizar la solicitud AJAX:', error);
+                                                    }
+                                                });
+                                            });
+                                        });
+                                    </script>
                                 </div>
                             </div>
                             <!-- end col -->

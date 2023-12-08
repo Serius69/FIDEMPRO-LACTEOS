@@ -59,7 +59,7 @@ def product_overview(request, pk):
         )
         print('demandas')
         print(demands)
-        paginator = Paginator(variables_product, 10)
+        paginator = Paginator(variables_product, 18)
         paginator2 = Paginator(simulations, 5)
         page = request.GET.get('page')
         page2 = request.GET.get('page')

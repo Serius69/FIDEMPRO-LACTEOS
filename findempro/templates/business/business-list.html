@@ -17,22 +17,29 @@
       {% endblock pagetitle %}
       <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
         <div class="px-4">
-            <div class="row">
-                <div class="col-xxl-9 align-self-center">
-                  <div class="py-4">
-                    <h4 class="display-6 -text">Lista de negocios</h4>
-                    <p class="text-success fs-15 mt-3">Bienvenido a nuestro directorio comercial integral, su recurso de referencia para descubrir y conectarse con una amplia gama de empresas en varias industrias. Ya sea que sea un consumidor que busca servicios o un propietario de un negocio que busque expandir su red, nuestra página de lista de negocios está diseñada para simplificar su búsqueda y fomentar conexiones significativas.</p>
-                    <p class="text-success fs-15 mt-3">En esta página, puede explorar la lista de negocios, filtrar los resultados por tipo de negocio, y crear un nuevo negocio. Cada negocio en la lista tiene una descripción detallada, y puede ver más detalles haciendo clic en el nombre del negocio. También puede navegar a través de las páginas de la lista de negocios utilizando la paginación en la parte inferior de la página.</p>
-                  </div>
+          <div class="row">
+            <div class="col-xxl-9 align-self-center">
+              <div class="py-4">
+                <h4 class="display-6 -text">Lista de negocios</h4>
+                <div class="container">                      
+                  <p>Pagina de listado de negocios registradas.</p>
+                  <h2>Características clave:</h2>
+                  <ul>
+                    <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles de las variables, modifique los parámetros y refine los escenarios.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite ajustar simulaciones con solo unos pocos clics.</li>
+                    <li><span class="text-danger">Eliminar: </span> ¿Necesita eliminar una variable?La función Eliminar le permite eliminar de manera rápida y segura escenarios que ya no son necesarios.Agilice su biblioteca de simulación sin esfuerzo.</li>
+                    <li><span class="text-primary">Ver: </span>Sumérgete profundamente en los detalles de cada variable con la opción Vista.Explore los parámetros, resultados y más.Esta característica es perfecta para analizar los resultados de la simulación y tomar decisiones informadas.</li>
+                  </ul>
                 </div>
-                <div class="col-xxl-3 ms-auto">
-                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                        <img src="{% static 'images/business-img.webp'%}" alt="" class="img-fluid">
-                    </div>
-                </div>
+              </div>
             </div>
+            <div class="col-xxl-3 ms-auto">
+              <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                <img src="{% static 'images/business-img.webp'%}" alt="" class="img-fluid" style="max-width: 100%; height: auto;">
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
     <div class="row">
       <div class="col">
           <div class="h-100">
@@ -124,11 +131,15 @@
                                         </div>
                                         <div>
                                             <i class="ri-map-pin-2-line align-bottom me-1"></i>
-                                            <span class="job-location">{{business.unit}}</span>
+                                            <span class="job-location">{{business.location}}</span>
                                         </div>
                                         <div>
                                             <i class="ri-user-3-line align-bottom me-1"></i>
-                                            <span class="badge badge-primary">{{business.type}}</span>
+                                            {% if business.type == 1 %}
+                                              <span class="badge badge-primary">Lácteos</span>
+                                            {% else %}
+                                              <span class="badge badge-primary">Otros</span>
+                                            {% endif %}
                                         </div>
                                         <div>
                                             <i class="ri-time-line align-bottom me-1"></i>
@@ -152,7 +163,6 @@
                             <h5 class="mt-2">
                               Lo siento, no hay ningún negocio registrado en la base de datos
                             </h5>
-                            <p class="text-muted mb-0">Tienes que "agregar negocios".</p>
                           </div>
                           {% endfor %}
                         </div>
@@ -161,11 +171,11 @@
                         <div class="align-items-center mt-2 row text-center text-sm-start">
                           <div class="col-sm">
                             <div class="text-muted">
-                              Demostración
+                              Mostrar pagina
                               <span class="fw-semibold">{{ businesses.number }}</span>
                               de
                               <span class="fw-semibold">{{ businesses.paginator.num_pages }}</span>
-                              Resultados
+                              paginas
                             </div>
                           </div>
                           <div class="col-sm-auto">
