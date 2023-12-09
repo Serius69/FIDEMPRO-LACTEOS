@@ -1,0 +1,157 @@
+<div class="modal fade zoomIn" id="addOrUpdateBusiness" tabindex="-1" aria-labelledby="addOrUpdateBusinessLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addOrUpdateBusinessLabel">Negocio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-content border-0 mt-3">
+                <ul class="nav nav-tabs nav-tabs-custom nav-success p-2 pb-0 bg-light" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#businessDetails" role="tab" aria-selected="false">
+                            Detalles del negocio
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="businessDetails" role="tabpanel">
+                        <form method="POST" class="post-form" id="businessForm" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="business_id" id="business_id" value="">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">
+                                            Nombre del Negocio
+                                        </label>
+                                        <input type="text" class="form-control" name="name" id="name"
+                                            placeholder="Ingrese su nombre comercial" required />
+                                        <div class="invalid-feedback">
+                                            Ingrese un nombre comercial.
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end col-->
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="type" class="form-label">
+                                            Business Type
+                                        </label>
+                                        <select class="form-control" name="type" id="type" required>
+                                            <option value="">Seleccione tipo</option>
+                                            <option value="1">Lácteos</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Seleccione un tipo de negocio.
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end col-->
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="location" class="form-label">
+                                            Ubicación
+                                        </label>
+                                        <select class="form-control" name="location" id="location" required>
+                                            <option value="">Seleccionar ubicación</option>
+                                            <option value="La Paz">La Paz</option>
+                                            <option value="Cochabamba">Cochabamba</option>
+                                            <option value="Santa Cruz">Santa Cruz</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Seleccione una ubicación para el negocio.
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end col-->
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="image_src" class="form-label">Imagen</label>
+                                        <input type="file" class="form-control" id="image_src" name="image_src" onchange="loadFile(event)" />
+                                        <img id="output" width="200" />
+                                        <script>
+                                        var loadFile = function(event) {
+                                            var output = document.getElementById('output');
+                                            output.src = URL.createObjectURL(event.target.files[0]);
+                                            output.onload = function() {
+                                                URL.revokeObjectURL(output.src)
+                                            }
+                                        };
+                                        </script>
+                                    </div>
+                                </div>
+                                <!--end col-->
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">
+                                            Descripción
+                                        </label>
+                                        <textarea class="form-control" id="description" name="description" rows="3"
+                                            placeholder="Enter description" required></textarea>
+                                        <div class="invalid-feedback">
+                                            Ingrese una descripción para el negocio.
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end col-->
+                                <div class="col-lg-12">
+                                    <div class="hstack gap-2 justify-content-end">
+                                        <button class="btn btn-link link-success text-decoration-none fw-medium"
+                                            data-bs-dismiss="modal">
+                                            <i class="ri-close-line me-1 align-middle"></i>
+                                            Cerrar
+                                        </button>
+                                        <!-- Agrega este campo oculto en tu formulario -->
+                                        <input type="hidden" name="business_id" id="business_id" value="{{ business.id }}">
+
+                                        <!-- Modifica el botón "Guardar" para llamar a la función con la bandera isUpdate -->
+                                        <button type="submit" class="btn btn-primary" onclick="businessForm.handleSubmission('{{ business.id }}' !== '');">
+                                            <i class="ri-save-3-line align-bottom me-1"></i>
+                                            Guardar
+                                        </button>
+                                    </div>
+                                </div>
+                                <!--end col-->
+                            </div>
+                            <!--end row-->
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end modal -->
+<!-- removeBusinessModal -->
+<div id="removeBusinessModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button  type="button" class="btn-close"  data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mt-2 text-center">
+          <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
+          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+            <h4>Está seguro ?</h4>
+            <p class="text-muted mx-4 mb-0">
+              ¿Estás seguro de que quieres eliminar este producto?
+            </p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+          <button type="button"  class="btn w-sm btn-light"  data-bs-dismiss="modal">
+            Cerca
+          </button>
+          {% if product.id %}
+          <button type="button" class="btn w-sm btn-danger delete-product-btn" data-href="{% url 'product:product.delete' product.id %}">
+            ¡Sí, borrarlo!
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->

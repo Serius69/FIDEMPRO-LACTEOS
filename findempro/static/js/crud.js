@@ -38,11 +38,113 @@ const formUtils = {
     },
 };
 
+async function loadBusinessDetails(businessId) {
+    try {
+        const businessDetails = await modelActions.getDetails('business', businessId);
+
+        // Llenar los campos del formulario con los detalles del negocio
+        $('#business_id').val(businessId);
+        $('#name').val(businessDetails.name);
+        $('#type').val(businessDetails.type);
+        $('#location').val(businessDetails.location);
+        $('#image_src').val(businessDetails.image_src);
+
+        // Mostrar el modal
+        $('#addOrUpdateBusiness').modal('show');
+    } catch (error) {
+        console.error('Error al cargar detalles del negocio:', error);
+    }
+}
+
+async function loadProductDetails(productId) {
+    try {
+        const businessDetails = await modelActions.getDetails('product', businessId);
+
+        // Llenar los campos del formulario con los detalles del negocio
+        $('#product_id').val(productId);
+        $('#name').val(businessDetails.name);
+        $('#type').val(businessDetails.type);
+        $('#description').val(businessDetails.description);
+        $('#image_src').val(businessDetails.image_src);
+
+        // Mostrar el modal
+        $('#addOrUpdateBusiness').modal('show');
+    } catch (error) {
+        console.error('Error al cargar detalles del negocio:', error);
+    }
+}
+
+async function loadAreaDetails(areaId) {
+    try {
+        const businessDetails = await modelActions.getDetails('area', businessId);
+
+        // Llenar los campos del formulario con los detalles del negocio
+        $('#area_id').val(areaId);
+        $('#name').val(businessDetails.name);
+        $('#description').val(businessDetails.description);
+        $('#location').val(businessDetails.location);
+        $('#image_src').val(businessDetails.image_src);
+
+        // Mostrar el modal
+        $('#addOrUpdateBusiness').modal('show');
+    } catch (error) {
+        console.error('Error al cargar detalles del negocio:', error);
+    }
+}
+
+
+async function loadVariableDetails(areaId) {
+    try {
+        const businessDetails = await modelActions.getDetails('variable', businessId);
+
+        // Llenar los campos del formulario con los detalles del negocio
+        $('#variable_id').val(areaId);
+        $('#name').val(businessDetails.name);
+        $('#initials').val(businessDetails.name);
+        $('#description').val(businessDetails.description);
+        $('#location').val(businessDetails.location);
+        $('#image_src').val(businessDetails.image_src);
+
+        // Mostrar el modal
+        $('#addOrUpdateBusiness').modal('show');
+    } catch (error) {
+        console.error('Error al cargar detalles del negocio:', error);
+    }
+}
+
+
+async function loadEquationDetails(areaId) {
+    try {
+        const businessDetails = await modelActions.getDetails('equation', businessId);
+
+        // Llenar los campos del formulario con los detalles del negocio
+        $('#variable_id').val(areaId);
+        $('#name').val(businessDetails.name);
+        $('#initials').val(businessDetails.name);
+        $('#description').val(businessDetails.description);
+        $('#location').val(businessDetails.location);
+        $('#image_src').val(businessDetails.image_src);
+
+        // Mostrar el modal
+        $('#addOrUpdateBusiness').modal('show');
+    } catch (error) {
+        console.error('Error al cargar detalles del negocio:', error);
+    }
+}
+
+
+
 const modelActions = {
     // Funciones comunes para operaciones CRUD en modelos
     getDetails: async (model, id) => {
         try {
             const response = await fetch(`/${model}/get_details/${id}/`);
+            const contentType = response.headers.get('content-type');
+
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Error al obtener detalles de ${model}: respuesta no es JSON`);
+            }
+
             return await response.json();
         } catch (error) {
             console.error(`Error al obtener detalles de ${model}:`, error);

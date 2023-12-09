@@ -15,6 +15,6 @@ urlpatterns = [
     path("create/", create_business_view, name='business.create'),
     path("update/<int:pk>/", view=update_business_view, name='business.edit'),
     path("delete/<int:pk>/", view=delete_business_view, name='business.delete'),
-    path('get_business_details/<int:pk>/', get_business_details, name='business.get_business_details'),
+    path('get_details/<int:pk>/', get_business_details, name='business.get_business_details'),
 
 ]

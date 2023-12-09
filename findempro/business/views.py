@@ -4,13 +4,12 @@ from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import Business
 from product.models import Product
 from .forms import BusinessForm
 from pages.models import Instructions
 from django.urls import reverse
-from django.http import JsonResponse
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
@@ -84,15 +83,27 @@ def update_business_view(request, pk):
         form = BusinessForm(request.POST, request.FILES, instance=business)
         try:
             if form.is_valid():
-                form.save()
-                messages.success(request, "Business updated successfully!")
+                # Verifica si estás actualizando o creando
+                if 'business_id' in request.POST:
+                    # Actualización
+                    form.save()
+                    messages.success(request, "Business updated successfully!")
+                else:
+                    # Creación
+                    form.save()
+                    messages.success(request, "Business created successfully!")
+
                 return redirect("business:business_list")
             else:
                 messages.error(request, "Please check your inputs.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
-    form = BusinessForm(instance=business)
+    else:
+        # Esto es importante para mostrar la información existente en el formulario durante la actualización
+        form = BusinessForm(instance=business)
+
     return render(request, "business/business-update.html", {'form': form, 'business': business})
+
 def delete_business_view(request, pk):
     try:
         business = get_object_or_404(Business, pk=pk)
@@ -105,16 +116,16 @@ def delete_business_view(request, pk):
         return HttpResponse(status=500)
 def get_business_details(request, pk):
     try:
-        if request.method == 'GET':
-            business = Business.objects.get(id=pk)
-            business_details = {
-                "name": business.name,
-                "type": business.type,
-                "fk_user": business.fk_user.name,
-                "description": business.description,
-            }
-            return JsonResponse(business_details)
-    except ObjectDoesNotExist:
+        business = Business.objects.get(id=pk)
+        business_details = {
+            "name": business.name,
+            "type": business.type,
+            "location": business.location,
+            "image_src": str(business.image_src.url) if business.image_src else None,
+            "description": business.description,
+        }
+        return JsonResponse(business_details)
+    except Business.DoesNotExist:
         return JsonResponse({"error": "El negocio no existe"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

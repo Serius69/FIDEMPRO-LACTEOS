@@ -65,7 +65,7 @@
                       </div>
                       <div class="col-lg-3 text-end">
                           <div class="hstack gap-2">
-                              <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBusiness">
+                              <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateBusiness">
                                   <i class="ri-add-fill me-1 align-bottom"></i>Crear nuevo
                               </button>
                           </div>
@@ -96,15 +96,13 @@
                                           href="{% url 'business:business.overview' business.id %}"
                                       >
                                           <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                          Vista
+                                          Ver
                                       </a>
-                                      <a
-                                          class="dropdown-item edit-variable"
-                                          data-bs-target="#editBusinessModal"
-                                          data-variable-id="{{ business.id }}"
-                                      >
-                                          <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                          Editar
+                                      <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
+                                        data-bs-target="#addOrUpdateBusiness" data-variable-id="{{ business.id }}"
+                                        onclick="loadBusinessDetails('{{ business.id }}'); return false;">
+                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                        Editar
                                       </a>
                                       <div class="dropdown-divider"></div>
                                       <a
@@ -275,6 +273,7 @@
                   
                 </div>
                 <!--end row-->
+              
                               
       
     </div>
@@ -284,7 +283,9 @@
   <!-- end main content-->
   {% endblock content %}
   {% block extra_content %}
-  {% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+  {% block modals %} 
+  {% include "business/business-modal.html" %} 
+  {% endblock modals %}
   {% endblock extra_content %} 
   {% block extra_js %}
   <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>

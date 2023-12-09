@@ -5,7 +5,10 @@ from variable.views import(
     create_variable_view,
     update_variable_view,
     delete_variable_view,
-    get_variable_details
+    get_variable_details,
+    create_equation_view,
+    update_equation_view,
+    delete_equation_view,
 )
 app_name = 'variable'
 
@@ -17,4 +20,7 @@ urlpatterns = [
     path("update/<int:pk>/", view=update_variable_view, name='variable.edit'),
     path("delete/<int:pk>/", view=delete_variable_view, name='variable.delete'),
     path('get_variable_details/<int:pk>/', get_variable_details, name='variable.get_variable_details'),
+    path("equation/create/", create_equation_view, name='equation.create'),
+    path("equation/update/<int:pk>/", view=update_equation_view, name='equation.edit'),
+    path("equation/delete/<int:pk>/", view=delete_equation_view, name='equation.delete'),
 ]
