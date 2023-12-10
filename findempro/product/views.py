@@ -51,6 +51,7 @@ def read_product_view(request, pk):
     # try:
         product = get_object_or_404(Product, pk=pk)
         variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
         reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         areas = Area.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         results_simulation = ResultSimulation.objects.filter(is_active=True, 
@@ -87,6 +88,7 @@ def read_product_view(request, pk):
                 'reports': reports,
                 'areas': areas,
                 'demands': demands,
+                'products': products,
                 } 
         return render(request, 'product/product-overview.html', context)
     # except Exception as e:

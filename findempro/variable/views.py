@@ -229,19 +229,20 @@ def delete_equation_view(request, pk):
 def get_equation_details(request, pk):
     try:
         if request.method == 'GET':
-            variable = Equation.objects.get(id=pk)
-            variable_details = {
-                "name": variable.name,
-                "expression": variable.expression,
-                "fk_area": variable.fk_area.name,
-                "fk_variable1": variable.fk_variable1.name,
-                "fk_variable2": variable.fk_variable2.name,
-                "fk_variable3": variable.fk_variable3.name,
-                "fk_variable4": variable.fk_variable4.name,
-                "fk_variable5": variable.fk_variable5.name,
-                "description": variable.description,
+            equation = Equation.objects.get(id=pk)
+            equation_details = {
+                "name": equation.name,
+                "expression": equation.expression,
+                "fk_area": equation.fk_area.name,
+                "fk_variable1": equation.fk_variable1.name if equation.fk_variable1 else None,
+                "fk_variable2": equation.fk_variable2.name if equation.fk_variable2 else None,
+                "fk_variable3": equation.fk_variable3.name if equation.fk_variable3 else None,
+                "fk_variable4": equation.fk_variable4.name if equation.fk_variable4 else None,
+                "fk_variable5": equation.fk_variable5.name if equation.fk_variable5 else None,
+                "description": equation.description,
             }
-            return JsonResponse(variable_details)
+
+            return JsonResponse(equation_details)
     except ObjectDoesNotExist:
         return JsonResponse({"error": "La ecuacion no existe"}, status=404)
 

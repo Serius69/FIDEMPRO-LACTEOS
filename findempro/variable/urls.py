@@ -9,6 +9,7 @@ from variable.views import(
     create_equation_view,
     update_equation_view,
     delete_equation_view,
+    get_equation_details
 )
 app_name = 'variable'
 
@@ -23,6 +24,6 @@ urlpatterns = [
     path("equation/create/", create_equation_view, name='equation.create'),
     path("equation/update/<int:pk>/", view=update_equation_view, name='equation.edit'),
     path("equation/delete/<int:pk>/", view=delete_equation_view, name='equation.delete'),
-    path("equation/get_details/<int:pk>/", view=get_variable_details, name='variable.get_variable_details'),
+    path("equation/get_details/<int:pk>/", view=get_equation_details, name='variable.get_variable_details'),
 
 ]

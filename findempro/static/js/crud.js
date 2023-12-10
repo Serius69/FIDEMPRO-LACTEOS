@@ -44,24 +44,47 @@ const businessForm = {
 };
 const productForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('productForm', '/product/create/', () => formUtils.hideModal('addProduct'));
+        await formUtils.handleFormSubmission('productForm', '/product/create/', () => formUtils.hideModal('addOrUpdateProduct'));
     },
 };
 const variableForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('variableForm', '/variable/create/', () => formUtils.hideModal('addVariable'));
+        await formUtils.handleFormSubmission('variableForm', '/variable/create/', () => formUtils.hideModal('addOrUpdateVariable'));
     },
 };
 const equationForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('equationForm', '/equation/create/', () => formUtils.hideModal('addEquation'));
+        await formUtils.handleFormSubmission('equationForm', '/equation/create/', () => formUtils.hideModal('addOrUpdateEquation'));
     },
 };
 const areaForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('areaForm', '/area/create/', () => formUtils.hideModal('addArea'));
+        await formUtils.handleFormSubmission('areaForm', '/area/create/', () => formUtils.hideModal('addOrUpdateArea'));
     },
 };
+
+function setModalTitle(modal, idInput, modalName) {
+    if (!modal || !idInput || !modalName) {
+        throw new Error('Modal, input o nombre del modal no especificados');
+    }
+    if (modalName === 'business') {
+        modalName = 'negocio';
+    }else if (modalName === 'product') {
+        modalName = 'producto';
+    }else if (modalName === 'variable') {
+        modalName = 'variable';
+    }else if (modalName === 'equation') {
+        modalName = 'ecuación';
+    }else if (modalName === 'area') {
+        modalName = 'área';
+    }
+    var modalTitle = modal.find('.modal-title');
+    if (idInput.val()) {
+        modalTitle.text(`Actualizar ${modalName}`);
+    } else {
+        modalTitle.text(`Añadir ${modalName}`);
+    }
+}
 async function loadDetailsAndShowModal(model, id, modalId) {
     try {
         const details = await modelActions.getDetails(model, id);
@@ -69,8 +92,8 @@ async function loadDetailsAndShowModal(model, id, modalId) {
         $('#name').val(details.name);
         const baseUrl = '/media';
         const imageSrcInput = $('#image_src');
-        imageSrcInput.val(''); // Limpiar el input de la imagen
-        // Manejar campos específicos de cada modelo
+        imageSrcInput.val(''); 
+        setModalTitle($(`#${modalId}`), $(`#${model}_id`), model);
         switch (model) {
             case 'business':
                 $('#id').val(details.id);
@@ -179,19 +202,7 @@ function loadImagePreview(imageSrc) {
     const imagePreview = $('#logo-img');
     imagePreview.attr('src', imageSrc);
 }
-// Función modular para cambiar el título del modal
-function setModalTitle(modal, areaIdInput, modalName) {
-    var modalTitle = modal.find('.modal-title');
 
-    // Verifica si el área está siendo actualizada (tiene un ID)
-    if (areaIdInput.val()) {
-        // Si tiene un ID, cambia el título a "Actualizar [ModalName]"
-        modalTitle.text('Actualizar ' + modalName);
-    } else {
-        // Si no tiene un ID, cambia el título a "Añadir [ModalName]"
-        modalTitle.text('Añadir ' + modalName);
-    }
-}
 // Event listener para el cambio en el input de la imagen
 $('#image_src').on('change', function () {
     const imageSrcInput = $(this);

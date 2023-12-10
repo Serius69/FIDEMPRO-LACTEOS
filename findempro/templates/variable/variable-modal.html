@@ -1,12 +1,12 @@
 <!-- addOrUpdateVariableModal -->
-<div class="modal fade" id="addOrUpdateVariable" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="addOrUpdateVariable" tabindex="-1" aria-labelledby="addOrUpdateVariablelabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0">
         <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
             {% csrf_token %}
-            <div class="modal-header">
-                <h5 class="modal-title" id="addOrUpdateProductLabel">Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <div class="modal-header p-3 ps-4 bg-success-subtle">
+                <h5 class="modal-title" id="addOrUpdateVariablelabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="variable-id-field" />
@@ -138,6 +138,10 @@
         <div class="modal-content border-0">
           <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
             {% csrf_token %}
+            <div class="modal-header p-3 ps-4 bg-success-subtle">
+              <h5 class="modal-title" id="addOrUpdateEquationModalLabel"></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
             <div class="modal-body">
               <input type="hidden" id="variable-id-field" />
               <div class="row g-3">
@@ -145,15 +149,15 @@
                   <div>
                     <label for="name" class="form-label">Nombre de la Ecuacion</label>
                     <input type="text" id="name"  class="form-control"  placeholder="Ingrese el nombre de la variable" name="name"  required/>
-                    <div class="invalid-feedback">Ingrese un nombre de variable.</div>
+                    <div class="invalid-feedback">Ingrese un nombre de la ecuacion.</div>
                   </div>
                 </div>
                 <div class="col-lg-12">
                   <div>
-                      <label for="equation" class="form-label">Ecuación</label>
-                      <div id="equation" class="mathquill-editable"></div>
+                      <label for="expression" class="form-label">Expresion</label>
+                      <div id="expression" class="mathquill-editable"></div>
                       <input type="hidden" id="equationInput" name="equation">
-                      <div class="invalid-feedback">Ingrese una ecuación para la variable.</div>
+                      <div class="invalid-feedback">Ingrese la expresion de la ecucaion</div>
                   </div>
               </div>
                 <div class="col-lg-12">
@@ -172,8 +176,8 @@
             <div class="modal-footer">
               <div class="hstack gap-2 justify-content-end">
                 <button type="button"  class="btn btn-light"  data-bs-dismiss="modal" >Cerrar</button>
-                <input type="hidden" name="product_id" id="product_id" value="{{ variable.id }}">
-                  <button type="submit" class="btn btn-primary" onclick="variableForm.handleSubmission('{{ variable.id }}' !== '');">
+                <input type="hidden" name="equation_id" id="equation_id" value="{{ equation.id }}">
+                  <button type="submit" class="btn btn-primary" onclick="variableForm.handleSubmission('{{ equation.id }}' !== '');">
                       <i class="ri-save-3-line align-bottom me-1"></i>
                       Guardar
                   </button>
