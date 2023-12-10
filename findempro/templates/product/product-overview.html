@@ -110,18 +110,56 @@
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
                                                         <h4 class="card-title mb-0 flex-grow-1" style="font-size: 2em;">Areas</h4>
                                                         <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" data-bs-target="#inviteVariablesModal"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
+                                                            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" 
+                                                            data-bs-target="#addOrUpdateArea"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
                                                         </div>
                                                     </div>
                                                     <div class="row">
                                                         {% for area in areas %}
                                                             <div class="col-md-2">
                                                                 <div class="card">
-                                                                    <img src="{{ area.get_photo_url }}" class="card-img-top img-fluid" alt="Area Image">
+                                                                    <img src="{{ area.get_photo_url }}" class="card-img-top img-fluid" style="height: 220px;" alt="Area Image">
                                                                     <div class="card-body">
                                                                         <h5 class="card-title">{{ area.name }}</h5>
                                                                         <p class="card-text">{{ area.description }}</p>
-                                                                        <a href="{% url 'product:area.overview' area.id %}" class="btn btn-primary">Ver</a>
+                                                                    </div>
+                                                                    <div class="card-footer border-top-dashed">
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                                                                    <div>
+                                                                                        <i class="ri-function-line align-bottom me-1"></i>
+                                                                                        <span class="job-location">{{area.fk_area_equations.count}}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-6 justify-content-end d-flex">
+                                                                                <div class="dropdown">
+                                                                                    <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                                                                        <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                                                    </button>
+                                                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                                                        <a class="dropdown-item" href="{% url 'product:area.overview' area.id %}">
+                                                                                            <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                                                            Vista
+                                                                                        </a>
+                                                                                        <a href="#" class="dropdown-item edit-area" data-bs-toggle="modal"
+                                                                                            data-bs-target="#addOrUpdateArea" data-variable-id="{{ area.id }}"
+                                                                                            onclick="loadAreaDetails('{{ area.id }}'); return false;">
+                                                                                            <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                                            Editar
+                                                                                        </a>
+                                                                                        <div class="dropdown-divider"></div>
+                                                                                        <a id="delete-area-link" class="dropdown-item delete-area" 
+                                                                                            data-bs-toggle="modal" data-bs-target="#removeAreaModal" 
+                                                                                            data-area-id="{{ area.id }}">
+                                                                                            <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                                            Eliminar
+                                                                                        </a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -193,7 +231,6 @@
                                             </div>
                                             <!-- ene col -->
                                             <div class="col-xl-3 col-lg-6">  
-                                                
                                                 <!-- end card -->
                                                 <div class="card">
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
@@ -373,9 +410,14 @@
 {% endblock content %}
 
 {% block extra_content %}
-{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+{% block modals %} 
+{% include "partials/modals.html" %}
+{% include "product/product-modal.html" %}
+{% endblock modals %}
+
 {% endblock extra_content %}
     
 {% block extra_js %}
     <script src="{% static 'js/pages/variable-overview.init.js'%}"></script>
+    <script src="{% static 'js/crud.js' %}"></script>
 {% endblock extra_js %}

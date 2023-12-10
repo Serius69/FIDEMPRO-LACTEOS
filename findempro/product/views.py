@@ -5,7 +5,7 @@ from variable.models import Variable, Equation
 from pages.models import Instructions
 from report.models import Report
 from simulate.models import ResultSimulation,Simulation, DemandBehavior,Demand
-from .forms import ProductForm
+from .forms import ProductForm, AreaForm
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin  # Create a Django form for Product
@@ -46,7 +46,7 @@ def product_list(request):
     # except Exception as e:
     #     messages.error(request, f"An error occurred: {str(e)}")
     #     return HttpResponse(status=500)
-def product_overview(request, pk):
+def read_product_view(request, pk):
         current_datetime = timezone.now()
     # try:
         product = get_object_or_404(Product, pk=pk)
@@ -176,6 +176,72 @@ def get_product_details(request, pk):
                 "description": product.description,
             }
             return JsonResponse(product_details)
+    # except ObjectDoesNotExist:
+    #     # Manejo de la excepción si el objeto Product no se encuentra
+    #     return JsonResponse({"error": "El producto no existe"}, status=404)
+    # except Exception as e:
+    #     # Manejo de otras excepciones inesperadas
+    #     return JsonResponse({"error": str(e)}, status=500)
+
+def create_area_view(request):
+    if request.method == 'POST':
+        try:
+            form = AreaForm(request.POST, request.FILES)
+            if form.is_valid():
+                area = form.save()
+                messages.success(request, 'Área creada con éxito')
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors})
+        except Exception as e:
+            # Manejo de excepción. Puedes imprimir un mensaje de error o realizar otras acciones necesarias.
+            error_message = str(e)
+            return JsonResponse({'success': False, 'errors': {'non_field_errors': error_message}})
+    else:
+        form = AreaForm()
+    return render(request, 'product/product-list.html', {'form': form})
+def update_area_view(request, pk):
+    try:
+        area = get_object_or_404(Area, pk=pk)
+        if request.method == "PUT":
+            form = AreaForm(request.POST or None, request.FILES or None, instance=area)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Área actualizada con éxito!")
+                return redirect("product:area.overview")
+            else:
+                messages.error(request, "Something went wrong!")
+    except Exception as e:
+        # Manejo de excepción. Puedes imprimir un mensaje de error o realizar otras acciones necesarias.
+        error_message = str(e)
+        messages.error(request, f"An error occurred: {error_message}")
+
+    return render(request, "product/product-list.html")
+def delete_area_view(request, pk):
+    # try:
+        if request.method == 'POST':
+            area = get_object_or_404(Area, pk=pk)
+            area.is_active = False
+            area.save()
+            messages.success(request, "¡Producto eliminado con éxito!")
+            return redirect("product:product.list")
+        else:
+            # Handle the case where the request method is not POST
+            return HttpResponse(status=405)  # Method Not Allowed
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
+def get_area_details(request, pk):
+    # try:
+        if request.method == 'GET':
+            area = Area.objects.get(id=pk)
+            area_details = {
+                "name": area.name,
+                'image_src': str(area.image_src.url),
+                "fk_product": area.fk_product.id,
+                "description": area.description,
+            }
+            return JsonResponse(area_details)
     # except ObjectDoesNotExist:
     #     # Manejo de la excepción si el objeto Product no se encuentra
     #     return JsonResponse({"error": "El producto no existe"}, status=404)

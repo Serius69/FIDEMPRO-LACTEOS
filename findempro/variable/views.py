@@ -188,7 +188,6 @@ def create_equation_view(request):
             if form.is_valid():
                 name = form.cleaned_data.get('name')
                 expression = form.cleaned_data.get('expression')
-
                 equation = form.save()
                 messages.success(request, 'Variable created successfully')
                 return JsonResponse({'success': True})
@@ -201,9 +200,9 @@ def create_equation_view(request):
         form = VariableForm()
     return render(request, 'variable/variable-form.html', {'form': form})
 def update_equation_view(request, pk):
-    variable = Variable.objects.get(pk=pk)
+    equation = Variable.objects.get(pk=pk)
     if request.method == "POST":
-        form = VariableForm(request.POST or None, request.FILES or None, instance=variable)
+        form = VariableForm(request.POST or None, request.FILES or None, instance=equation)
         try:
             if form.is_valid():
                 form.save()
@@ -219,15 +218,33 @@ def update_equation_view(request, pk):
     return render(request, "variable/variable-form.html", {'form': form})
 def delete_equation_view(request, pk):
     try:
-        variable = get_object_or_404(Variable, pk=pk)
-        variable.is_active=False
-        variable.save()
+        equation = get_object_or_404(Equation, pk=pk)
+        equation.is_active=False
+        equation.save()
         messages.success(request, "Variable deleted successfully!")
-        return redirect("variable:variable.list")
+        return redirect("product:area.overview")
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)  
-    
+def get_equation_details(request, pk):
+    try:
+        if request.method == 'GET':
+            variable = Equation.objects.get(id=pk)
+            variable_details = {
+                "name": variable.name,
+                "expression": variable.expression,
+                "fk_area": variable.fk_area.name,
+                "fk_variable1": variable.fk_variable1.name,
+                "fk_variable2": variable.fk_variable2.name,
+                "fk_variable3": variable.fk_variable3.name,
+                "fk_variable4": variable.fk_variable4.name,
+                "fk_variable5": variable.fk_variable5.name,
+                "description": variable.description,
+            }
+            return JsonResponse(variable_details)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "La ecuacion no existe"}, status=404)
+
 def solve_equation(request):
     if request.method == 'POST':
         equation_str = request.POST.get('equation', '')

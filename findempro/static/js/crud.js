@@ -44,22 +44,22 @@ const businessForm = {
 };
 const productForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('productForm', '/product/create', () => formUtils.hideModal('addProduct'));
+        await formUtils.handleFormSubmission('productForm', '/product/create/', () => formUtils.hideModal('addProduct'));
     },
 };
 const variableForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('variableForm', '/variable/create', () => formUtils.hideModal('addVariable'));
+        await formUtils.handleFormSubmission('variableForm', '/variable/create/', () => formUtils.hideModal('addVariable'));
     },
 };
 const equationForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('equationForm', '/equation/create', () => formUtils.hideModal('addEquation'));
+        await formUtils.handleFormSubmission('equationForm', '/equation/create/', () => formUtils.hideModal('addEquation'));
     },
 };
 const areaForm = {
     handleSubmission: async () => {
-        await formUtils.handleFormSubmission('areaForm', '/area/create', () => formUtils.hideModal('addArea'));
+        await formUtils.handleFormSubmission('areaForm', '/area/create/', () => formUtils.hideModal('addArea'));
     },
 };
 async function loadDetailsAndShowModal(model, id, modalId) {
@@ -101,15 +101,25 @@ async function loadDetailsAndShowModal(model, id, modalId) {
                 }
                 break;
             case 'area':
-                $('#fk_area').val(details.fk_area);
                 $('#description').val(details.description);
-                console.log(details.type);
-                console.log(details.fk_business);
+                console.log(details.fk_product);
                 const imageUrl3 = `${baseUrl}${details.image_src}`;
                 $('#logo-img').attr('src', imageUrl3);
-                $('#image_src').val(details.image_src);
+            
+                // Crear un nuevo input de tipo file
+                var newInput = $('<input type="file" class="form-control d-none" accept="image/png, image/jpeg" name="image_src"/>');
+            
+                // Copiar los atributos necesarios del input existente al nuevo input
+                newInput.prop('files', $('#image_src').prop('files'));
+                newInput.data('existing-image', details.image_src);
+            
+                // Reemplazar el input existente con el nuevo input
+                $('#image_src').replaceWith(newInput);
+            
+                // Limpiar el input (opcional)
+                newInput.val('');
+            
                 if (details.image_src) {
-                    imageSrcInput.data('existing-image', details.image_src);  // Almacenar la URL de la imagen existente en un atributo de datos
                     loadImagePreview(details.image_src);
                 }
                 break;
@@ -165,7 +175,19 @@ function loadImagePreview(imageSrc) {
     const imagePreview = $('#logo-img');
     imagePreview.attr('src', imageSrc);
 }
+// Función modular para cambiar el título del modal
+function setModalTitle(modal, areaIdInput, modalName) {
+    var modalTitle = modal.find('.modal-title');
 
+    // Verifica si el área está siendo actualizada (tiene un ID)
+    if (areaIdInput.val()) {
+        // Si tiene un ID, cambia el título a "Actualizar [ModalName]"
+        modalTitle.text('Actualizar ' + modalName);
+    } else {
+        // Si no tiene un ID, cambia el título a "Añadir [ModalName]"
+        modalTitle.text('Añadir ' + modalName);
+    }
+}
 // Event listener para el cambio en el input de la imagen
 $('#image_src').on('change', function () {
     const imageSrcInput = $(this);
@@ -189,66 +211,37 @@ $('#image_src').on('change', function () {
         loadImagePreview('');
     }
 });
-$('#removeBusinessModal').on('show.bs.modal', function (event) {
-    // Retrieve the business ID from the data attribute of the delete-business-link element
-    var businessId = $('#delete-business-link').data('variable-id');
-    
-    // Select modal elements
-    var modal = $(this);
-    var deleteForm = modal.find('#deleteBusinessForm');
-    var deleteFormUrlInput = modal.find('#delete-business-url');
-
-    // Construct the URL for the delete action, replacing '0' with the actual business ID
-    var url = deleteFormUrlInput.val().replace('0', businessId);
-
-    // Set the constructed URL as the action attribute of the form
-    deleteForm.attr('action', url);
-});
-$('#removeProductModal').on('show.bs.modal', function (event) {
-    // Retrieve the business ID from the data attribute of the delete-business-link element
-    var productId = $('#delete-product-link').data('variable-id');
-    
-    // Select modal elements
-    var modal = $(this);
-    var deleteForm = modal.find('#deleteProductForm');
-    var deleteFormUrlInput = modal.find('#delete-product-url');
-
-    // Construct the URL for the delete action, replacing '0' with the actual business ID
-    var url = deleteFormUrlInput.val().replace('0', productId);
-
-    // Set the constructed URL as the action attribute of the form
-    deleteForm.attr('action', url);
-});
-$('#removeAreaModal').on('show.bs.modal', function (event) {
-    // Retrieve the business ID from the data attribute of the delete-business-link element
-    var businessId = $('#delete-business-link').data('variable-id');
-    
-    // Select modal elements
-    var modal = $(this);
-    var deleteForm = modal.find('#deleteBusinessForm');
-    var deleteFormUrlInput = modal.find('#delete-business-url');
-
-    // Construct the URL for the delete action, replacing '0' with the actual business ID
-    var url = deleteFormUrlInput.val().replace('0', businessId);
-
-    // Set the constructed URL as the action attribute of the form
-    deleteForm.attr('action', url);
-});
-$('#removeVariableModal').on('show.bs.modal', function (event) {
-    var variableId = $('#delete-variable-link').data('variable-id');
-    var modal = $(this);
-    var deleteForm = modal.find('#deleteVariableForm');
-    var deleteFormUrlInput = modal.find('#delete-variable-url');
-    var url = deleteFormUrlInput.val().replace('0', variableId);
-    deleteForm.attr('action', url);
-});
+function setModalEvent(modalId, deleteLinkId, deleteFormId, deleteFormUrlId, variableId) {
+    $(modalId).on('show.bs.modal', function (event) {
+        var modal = $(this);
+        var deleteForm = modal.find(deleteFormId);
+        var deleteFormUrlInput = modal.find(deleteFormUrlId);
+        var url = deleteFormUrlInput.val().replace('0', variableId);
+        deleteForm.attr('action', url);
+    });
+}
+// Usage:
+setModalEvent('#removeBusinessModal', '#delete-business-link', '#deleteBusinessForm', '#delete-business-url', $('#delete-business-link').data('variable-id'));
+setModalEvent('#removeProductModal', '#delete-product-link', '#deleteProductForm', '#delete-product-url', $('#delete-product-link').data('variable-id'));
+setModalEvent('#removeAreaModal', '#delete-area-link', '#deleteAreaForm', '#delete-area-url', $('#delete-area-link').data('variable-id'));
+setModalEvent('#removeVariableModal', '#delete-variable-link', '#deleteVariableForm', '#delete-variable-url', $('#delete-variable-link').data('variable-id'));
+setModalEvent('#removeEquationModal', '#delete-equation-link', '#deleteEquationForm', '#delete-equation-url', $('#delete-equation-link').data('variable-id'));
 const modelActions = {
-    // Funciones comunes para operaciones CRUD en modelos
     getDetails: async (model, id) => {
         try {
-            const response = await fetch(`/${model}/get_details/${id}/`);
+            console.log(model);
+            if (!model || !id) {
+                throw new Error(`Error al obtener detalles de ${model}: modelo o ID no especificados`);
+            }
+            let response;
+            if (model === 'area') {
+                response = await fetch(`/product/${model}/get_details/${id}/`);
+            } else if (model === 'equation') {
+                response = await fetch(`/variable/${model}/get_details/${id}/`);
+            } else {
+                response = await fetch(`/${model}/get_details/${id}/`);
+            }
             const contentType = response.headers.get('content-type');
-
             if (!contentType || !contentType.includes('application/json')) {
                 throw new Error(`Error al obtener detalles de ${model}: respuesta no es JSON`);
             }
