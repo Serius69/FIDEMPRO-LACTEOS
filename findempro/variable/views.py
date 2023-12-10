@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
+from business.models import Business
 from .forms import VariableForm
 from pages.models import Instructions
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -22,11 +23,12 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def variable_list(request):
     # try:
         product_id = request.GET.get('product_id', 'All')
+        businesses = Business.objects.filter(is_active=True, fk_user=request.user).order_by('-id')
         if product_id == 'All':
-            variables = Variable.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user).order_by('-id')
+            variables = Variable.objects.filter(is_active=True, fk_product__fk_business__in=businesses, fk_product__fk_business__fk_user=request.user).order_by('-id')
             products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
         else:
-            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id, fk_product__fk_business__fk_user=request.user).order_by('-id')
+            variables = Variable.objects.filter(is_active=True, fk_product__fk_business__in=businesses, fk_product_id=product_id, fk_product__fk_business__fk_user=request.user).order_by('-id')
             products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
         paginator = Paginator(variables, 12)
         page = request.GET.get('page')
@@ -148,14 +150,19 @@ def update_variable_view(request, pk):
 
     return render(request, "variable/variable-form.html", {'form': form})
 def delete_variable_view(request, pk):
-    try:
-        variable = get_object_or_404(Variable, pk=pk)
-        variable.is_active=False
-        variable.save()
-        messages.success(request, "Variable deleted successfully!")
-        return redirect("variable:variable.list")
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
+    # try:
+        if request.method == 'POST':
+            variable = get_object_or_404(Variable, pk=pk)
+            variable.is_active = False
+            variable.save()
+            messages.success(request, "Variable eliminado con éxito!")
+            return redirect("variable:variable.list")
+        else:
+            # Handle the case where the request method is not POST
+            return HttpResponse(status=405)  # Method Not Allowed
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
         return HttpResponse(status=500)
 def get_variable_details(request, pk):
     try:

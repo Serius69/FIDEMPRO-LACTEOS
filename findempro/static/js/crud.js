@@ -204,7 +204,44 @@ $('#removeBusinessModal').on('show.bs.modal', function (event) {
     // Set the constructed URL as the action attribute of the form
     deleteForm.attr('action', url);
 });
+$('#removeProductModal').on('show.bs.modal', function (event) {
+    // Retrieve the business ID from the data attribute of the delete-business-link element
+    var productId = $('#delete-product-link').data('variable-id');
+    
+    // Select modal elements
+    var modal = $(this);
+    var deleteForm = modal.find('#deleteProductForm');
+    var deleteFormUrlInput = modal.find('#delete-product-url');
 
+    // Construct the URL for the delete action, replacing '0' with the actual business ID
+    var url = deleteFormUrlInput.val().replace('0', productId);
+
+    // Set the constructed URL as the action attribute of the form
+    deleteForm.attr('action', url);
+});
+$('#removeAreaModal').on('show.bs.modal', function (event) {
+    // Retrieve the business ID from the data attribute of the delete-business-link element
+    var businessId = $('#delete-business-link').data('variable-id');
+    
+    // Select modal elements
+    var modal = $(this);
+    var deleteForm = modal.find('#deleteBusinessForm');
+    var deleteFormUrlInput = modal.find('#delete-business-url');
+
+    // Construct the URL for the delete action, replacing '0' with the actual business ID
+    var url = deleteFormUrlInput.val().replace('0', businessId);
+
+    // Set the constructed URL as the action attribute of the form
+    deleteForm.attr('action', url);
+});
+$('#removeVariableModal').on('show.bs.modal', function (event) {
+    var variableId = $('#delete-variable-link').data('variable-id');
+    var modal = $(this);
+    var deleteForm = modal.find('#deleteVariableForm');
+    var deleteFormUrlInput = modal.find('#delete-variable-url');
+    var url = deleteFormUrlInput.val().replace('0', variableId);
+    deleteForm.attr('action', url);
+});
 const modelActions = {
     // Funciones comunes para operaciones CRUD en modelos
     getDetails: async (model, id) => {

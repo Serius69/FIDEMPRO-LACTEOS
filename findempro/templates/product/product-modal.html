@@ -103,7 +103,42 @@
     </div>
 </div>
 <!--end modal-->
-<div class="modal fade" id="addArea" tabindex="-1" aria-labelledby="addArealabel" aria-hidden="true">
+<!-- removeProductModal -->
+<div id="removeProductModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Icon and text content -->
+                <div class="mt-2 text-center">
+                    <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>¿Está seguro?</h4>
+                        <p class="text-muted mx-4 mb-0">
+                            ¿Estás seguro de que quieres eliminar este producto?
+                        </p>
+                    </div>
+                </div>
+                <!-- Form for deletion -->
+                <form id="deleteProductForm" method="POST" action="{% url 'product:product.delete' 0 %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="delete-product-url" value="{% url 'product:product.delete' 0 %}">
+                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
+                            Cerrar
+                        </button>
+                        <button type="submit" class="btn w-sm btn-danger delete-product-btn">
+                            ¡Sí, borrarlo!
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addOrUpdateArea" tabindex="-1" aria-labelledby="addArealabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
             <div class="modal-header p-3 ps-4 bg-success-subtle">
@@ -183,28 +218,5 @@
     </div>
 </div>
 <!--end modal-->
-                        <div class="col-lg-12">
-                            <div class="hstack gap-2 justify-content-end">
-                                <button class="btn btn-link link-success text-decoration-none fw-medium"
-                                    data-bs-dismiss="modal">
-                                    <i class="ri-close-line me-1 align-middle"></i>
-                                    Cerrar
-                                </button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ri-save-3-line align-bottom me-1"></i>
-                                    {% if is_update %}
-                                        Actualizar
-                                    {% else %}
-                                        Guardar
-                                    {% endif %}
-                                </button>
-                            </div>
-                        </div>
-                        <!--end col-->
-                    </div>
-                    <!--end row-->
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+
+

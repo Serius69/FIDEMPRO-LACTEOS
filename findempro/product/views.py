@@ -150,17 +150,19 @@ def update_product_view(request, pk):
 
     return render(request, "product/product-list.html")
 def delete_product_view(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    
-    # Realiza la eliminación lógica (por ejemplo, establecer un campo "eliminado" en True)
-    if request.method == 'PATCH':
-        product.is_active = False
-        product.save()
-        messages.success(request, "Product deleted successfully!")
-        return redirect("product:product.list")
-    
-    # Si se accede a la vista mediante GET, puedes mostrar un error o redirigir
-    return HttpResponseForbidden("GET request not allowed for this view")
+    # try:
+        if request.method == 'POST':
+            product = get_object_or_404(Product, pk=pk)
+            product.is_active = False
+            product.save()
+            messages.success(request, "¡Producto eliminado con éxito!")
+            return redirect("product:product.list")
+        else:
+            # Handle the case where the request method is not POST
+            return HttpResponse(status=405)  # Method Not Allowed
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
 def get_product_details(request, pk):
     # try:
         if request.method == 'GET':

@@ -32,7 +32,7 @@
             </div>
             <div class="col-xxl-3 ms-auto">
               <div class="mb-n5 pb-1 faq-img d-none d-lg-block">
-                <img src="{% static 'images/product-img.webp'%}" alt="" class="img-fluid" style="max-width: 100%; height: auto;">
+                <img src="{% static 'images/product-img.webp'%}" alt="" class="img-fluid" style="max-width: 70%; height: auto;">
               </div>
             </div>
           </div>
@@ -131,22 +131,19 @@
                                 <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
                                 Vista
                               </a>
-                              <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
+                              <a href="#" class="dropdown-item edit-product" data-bs-toggle="modal"
                                 data-bs-target="#addOrUpdateProduct" data-variable-id="{{ product.id }}"
                                 onclick="loadProductDetails('{{ product.id }}'); return false;">
                                 <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                 Editar
                               </a>
                               <div class="dropdown-divider"></div>
-                              <a
-                                class="dropdown-item delete-product"
-                                data-bs-toggle="modal"
-                                data-bs-target="#removeProductModal"
-                                data-variable-id="{{ product.id }}"
-                              >
-                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                Eliminar
-                              </a>
+                              <a id="delete-product-link" class="dropdown-item delete-product" 
+                                  data-bs-toggle="modal" data-bs-target="#removeProductModal" 
+                                  data-variable-id="{{ product.id }}">
+                                  <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                  Eliminar
+                                </a>
                             </div>
                           </div>
                         </div>

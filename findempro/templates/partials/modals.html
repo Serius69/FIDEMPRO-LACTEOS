@@ -1,28 +1,4 @@
 {% block modals %}
-<!-- removeVariableModal -->
-<div id="removeVariableModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" id="close-modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mt-2 text-center">
-          <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
-          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-            <h4>¿Estás seguro?</h4>
-            <p class="text-muted mx-4 mb-0">¿Estás seguro de que quieres eliminar este producto?</p>
-          </div>
-        </div>
-        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-          <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Cerrar</button>
-          <button type="button" class="btn w-sm btn-danger" id="remove-variable">Sí, ¡bórralo!</button>
-        </div>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
 <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -46,57 +22,6 @@
       </div>
     </div>
 </div>
-  
-<!-- tModal -->
-<div id="removeProductModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-            id="close-modal"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <div class="mt-2 text-center">
-            <lord-icon
-              src="https://cdn.lordicon.com/gsqxdxog.json"
-              trigger="loop"
-              colors="primary:#f7b84b,secondary:#f06548"
-              style="width: 100px; height: 100px"
-            ></lord-icon>
-            <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-              <h4>Está seguro ?</h4>
-              <p class="text-muted mx-4 mb-0">
-                ¿Estás seguro de que quieres eliminar este producto?
-              </p>
-            </div>
-          </div>
-          <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-            <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-              Close
-            </button>
-            {% if product.id %}
-            <button
-              type="button"
-              class="btn w-sm btn-danger delete-product-btn"
-              data-href="{% url 'product:product.delete' product.id %}"
-            >
-              ¡Sí, borrarlo!
-            </button>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-  </div>
-  <!-- /.modal -->
-
 {% endblock modals %}
     
 
