@@ -137,8 +137,12 @@ async function loadDetailsAndShowModal(model, id, modalId) {
                 }
                 break;
             case 'equation':
-                $('#initials').val(details.initials);
-                $('#description').val(details.description);
+                $('#expression').val(details.expression);
+                $('#fk_variable1').val(details.fk_variable1);
+                $('#fk_variable2').val(details.fk_variable2);
+                $('#fk_variable3').val(details.fk_variable3);
+                $('#fk_variable4').val(details.fk_variable4);
+                $('#fk_variable5').val(details.fk_variable5);
                 $('#location').val(details.location);
                 $('#image_src').val(details.image_src);
                 break;

@@ -2,6 +2,7 @@
 {% load static %}
 {% block title %}Descripción del areao{% endblock title %}
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css" integrity="sha384-HE6mLTh5BORvU8h5XUAu/rs2s1+04dQTYoMsAAQd7wK5DtzQVFjtQdEtaPXtoeh3" crossorigin="anonymous">
 {% endblock extra_css %}
 {% block content %}
             <!-- ============================================================== -->
@@ -41,7 +42,7 @@
                                                     </div>
                                                     <div class="card">
                                                         <div class="card-body">
-                                                        <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
+                                                            <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
                                                                 <p>{{area.description}}</p>    
                     
                                                                 <div class="pt-3 border-top border-top-dashed mt-4">
@@ -62,6 +63,7 @@
                                                                     </div>
                                                                 </div>
                                                         </div>
+                                                        
                                                     </div>
                                                 </div>
                                             </div>
@@ -87,7 +89,7 @@
                                                     <div class="card-header align-items-center d-flex border-bottom-dashed">
                                                         <h4 class="card-title mb-0 flex-grow-1"style="font-size: 2em;">Ecuaciones</h4>
                                                         <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEquationModal">
+                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOrUpdateEquationModal">
                                                                 Crear Nueva Ecuación
                                                             </button>                                                        </div>
                                                     </div>
@@ -113,6 +115,32 @@
                                                                     {% if equation.fk_variable5 %}
                                                                         <p class="small" style="font-size: 1em;">Variable 5: {{ equation.fk_variable5.name|capfirst }}</p>
                                                                     {% endif %}
+                                                                </div>
+                                                                <div class="card-footer border-top-dashed">
+                                                                    <div class="row">
+                                                                        <div class="col-md-12 justify-content-end d-flex">
+                                                                            <div class="dropdown">
+                                                                                <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                                                                    <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                                                </button>
+                                                                                <div class="dropdown-menu dropdown-menu-end">
+                                                                                    <a href="#" class="dropdown-item edit-equation" data-bs-toggle="modal"
+                                                                                        data-bs-target="#addOrUpdateEquation" data-variable-id="{{ equation.id }}"
+                                                                                        onclick="loadAreaDetails('{{ equation.id }}'); return false;">
+                                                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                                        Editar
+                                                                                    </a>
+                                                                                    <div class="dropdown-divider"></div>
+                                                                                    <a id="delete-equation-link" class="dropdown-item delete-equation" 
+                                                                                        data-bs-toggle="modal" data-bs-target="#removeEquationModal" 
+                                                                                        data-area-id="{{ equation.id }}">
+                                                                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                                        Eliminar
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -144,9 +172,12 @@
 {% endblock content %}
 
 {% block extra_content %}
-{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+{% block modals %} 
+{% include "variable/variable-modal.html" %}
+{% include "partials/modals.html" %} {% endblock modals %}
 {% endblock extra_content %}
     
 {% block extra_js %}
-    <script src="{% static 'js/pages/variable-overview.init.js'%}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js" integrity="sha384-RBk1jltzHKz5l1cUO7JrI/xiKAtaZjvvBvu1/wSkohgWoJ2toB+6IRzMvemWy+f" crossorigin="anonymous"></script>
+    <script src="{% static 'js/crud.js' %}"></script>
 {% endblock extra_js %}

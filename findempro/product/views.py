@@ -53,8 +53,12 @@ def read_product_view(request, pk):
         variables_product = Variable.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         reports = Report.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
         areas = Area.objects.filter(fk_product_id=product.id, is_active=True).order_by('-id')
+        results_simulation = ResultSimulation.objects.filter(is_active=True, 
+            fk_simulation__fk_questionary_result__fk_questionary__fk_product=product).order_by('-id')
         simulations = Simulation.objects.filter(
-            fk_questionary_result__fk_questionary__fk_product_id=product.id, is_active=True).order_by('-id')
+            fk_questionary_result__fk_questionary__fk_product_id=product.id, 
+            fk_simulation_result_simulation__in=results_simulation,
+            is_active=True).order_by('-id')
         
         demands = Demand.objects.filter(
             fk_product_id=product.id, is_active=True

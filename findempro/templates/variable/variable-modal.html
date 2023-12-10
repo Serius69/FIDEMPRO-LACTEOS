@@ -132,8 +132,8 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="addOrUpdateEquationModal" tabindex="-1" aria-labelledby="addOrUpdateEquationModalLabel" aria-hidden="true">
+<!-- addOrUpdateEquationModalModal -->
+<div class="modal fade" id="addOrUpdateEquation" tabindex="-1" aria-labelledby="addOrUpdateEquationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0">
           <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
@@ -142,84 +142,26 @@
               <input type="hidden" id="variable-id-field" />
               <div class="row g-3">
                 <div class="col-lg-12">
-                  <div class="text-center mb-4 mt-n5 pt-2">
-                    <div class="position-relative d-inline-block">
-                      <div class="position-absolute bottom-0 end-0">
-                        <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
-                          <div class="avatar-xs cursor-pointer">
-                            <div class="avatar-title bg-light border rounded-circle text-muted">
-                              <i class="ri-image-fill"></i>
-                            </div>
-                          </div>
-                        </label>
-                        <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png,  image/jpeg" name="image_src"/>
-                      </div>
-                      <div class="avatar-lg p-1">
-                        <div class="avatar-title bg-light rounded-circle">
-                          <img
-                            src="{{ variable.get_photo_url }}"
-                            id="variablelogo-img"
-                            class="avatar-md rounded-circle object-fit-cover"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <h5 class="fs-13 mt-3">Imagen</h5>
-                  </div>
                   <div>
-                    <label for="name" class="form-label">Nombre de la variable</label>
+                    <label for="name" class="form-label">Nombre de la Ecuacion</label>
                     <input type="text" id="name"  class="form-control"  placeholder="Ingrese el nombre de la variable" name="name"  required/>
                     <div class="invalid-feedback">Ingrese un nombre de variable.</div>
                   </div>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-12">
                   <div>
-                    <label for="fk_product" class="form-label"
-                      >Producto asociado</label>
-                    <select  class="form-select" id="fk_product" name="fk_product"  required>
-                      {% for product in products %}
-                      <option value="{{product.id}}">{{product.name}}</option>
-                      {% empty %}
-                      <option value=".">...</option>
-                      {% endfor %}
-                    </select>
-                    <div class="invalid-feedback">Seleccione el producto asociado para la variable.
+                      <label for="equation" class="form-label">Ecuación</label>
+                      <div id="equation" class="mathquill-editable"></div>
+                      <input type="hidden" id="equationInput" name="equation">
+                      <div class="invalid-feedback">Ingrese una ecuación para la variable.</div>
                   </div>
-                </div>
-                <div class="col-lg-6">
-                  <div>
-                    <label for="type" class="form-label">Tipo de variable</label>
-                    <select class="form-select" id="type" name="type" required>
-                      <option value="1">Endógena</option>
-                      <option value="2">Exógeno</option>
-                      <option value="2">Estado</option>
-                    </select>
-                    <div class="invalid-feedback">Seleccione un tipo de variable.</div
-                    >
-                  </div>
-                </div>
-                <div class="col-lg-4">
-                  <div>
-                    <label for="unit" class="form-label">Unidad</label>
-                    <select class="form-select" id="unit" name="unit" required>
-                      <option value="Lt">Lt</option>
-                      <option value="Bs">Bs</option>
-                      <option value="Lt/Bs">Bs</option>
-                    </select>
-                  </div>
-                </div>
+              </div>
                 <div class="col-lg-12">
                   <div>
                     <label for="description" class="form-label"
                       >Descripción</label>
-                    <textarea
-                      class="form-control"
-                      id="description"
-                      rows="3"
-                      placeholder="Enter description"
-                      name="description"
-                      required
-                    ></textarea>
+                    <textarea class="form-control" id="description" rows="3"
+                      placeholder="Ingrese la descripción" name="description" required></textarea>
                     <div class="invalid-feedback"
                       >Ingrese una descripción de la variable.</div
                     >
@@ -241,6 +183,17 @@
         </div>
       </div>
 </div>
+<script>
+  var mathField = MQ.MathField(document.getElementById('equation'), {
+      spaceBehavesLikeTab: true,
+      handlers: {
+          edit: function () {
+              var latex = mathField.latex();
+              $('#equationInput').val(latex);
+          }
+      }
+  });
+</script>
 <!-- removeProductModal -->
 <div id="removeEquationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
