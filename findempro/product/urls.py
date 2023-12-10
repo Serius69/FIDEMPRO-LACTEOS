@@ -15,6 +15,6 @@ urlpatterns = [
     path("update/<int:pk>/", view=update_product_view, name='product.edit'),
     path("delete/<int:pk>/", view=delete_product_view, name='product.delete'),
     path("area/overview/<int:pk>/", view=area_overview, name='area.overview'),
-    # path('generate-products/', generate_default_products, name='product.generate_default'),
-    path('get_product_details/<int:pk>/', get_product_details, name='product.get_product_details'),
+    path('get_details/<int:pk>/', get_product_details, name='product.get_product_details'),
+    path('area/get_details/<int:pk>/', get_product_details, name='product.get_product_details'),
 ]

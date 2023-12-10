@@ -34,14 +34,13 @@
                 </div>
                 <div class="col-xxl-3 ms-auto">
                     <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                        <img src="{% static 'images/variable-img.webp'%}" alt="" class="img-fluid">
-                    </div>
+                        <img src="{% static 'images/variable-img.webp'%}" alt="" class="img-fluid" style="max-width: 60%; height: auto;">                    </div>
                 </div>
             </div>
         </div>
     </div>
       <div class="row">
-        <div class="col-lg-10 col-md-9 col-sm-12">
+        <div class="col-lg-12 col-md-9 col-sm-12">
           <div class="card shadow-sm">
             <div class="card-header bg-light">
               <h6 class="mb-0">Filtrar Resultados</h6>
@@ -150,9 +149,11 @@
                                                 <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
                                                 Vista
                                             </a>
-                                            <a class="dropdown-item edit-variable" data-bs-target="#editVariableModal" data-variable-id="{{ variable.id }}">
-                                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                                Editar
+                                            <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
+                                              data-bs-target="#addOrUpdateVariable" data-variable-id="{{ variable.id }}"
+                                              onclick="loadVariableDetails('{{ variable.id }}'); return false;">
+                                              <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                              Editar
                                             </a>
                                             <div class="dropdown-divider"></div>
                                             <a class="dropdown-item delete-variable" data-bs-toggle="modal" data-bs-target="#removeVariableModal" data-variable-id="{{ variable.id }}">
@@ -186,7 +187,7 @@
             <div class="col-sm">
               <div class="text-muted"
                 >Mostrar
-                <span class="fw-semibold">{{ variables.number }}</span> of
+                <span class="fw-semibold">{{ variables.number }}</span> de
                 <span class="fw-semibold"
                   >{{ variables.paginator.num_pages }}</span
                 >
@@ -237,59 +238,6 @@
           </div>
           <!-- end row -->
         </div>
-        <div class="col-lg-1 col-md-3 col-sm-12 layout-rightside-col">
-          <div class="overlay"></div>
-          <div class="layout-rightside">
-            <div class="card h-100 rounded-0">
-              <div class="card-body p-0">
-                <div class="p-3">
-                  <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                    Instrucciones
-                  </h6>
-                </div>
-                <div data-simplebar style="max-height: 700px" class="p-3 pt-0">
-                  <div class="instruction-timeline instruction-main">
-                    {% for instruction in instructions %}
-                    <div class="instruction-item d-flex">
-                      <div class="flex-shrink-0 avatar-xs instruction-avatar">
-                        <div
-                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
-                        >
-                          <i class="ri-info-line"></i>
-                        </div>
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1 lh-base">{{ instruction.instruction }}</h6>
-                        <p class="text-muted mb-1">
-                          {{ instruction.content }}
-                        </p>
-                      </div>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4">
-                      <lord-icon
-                        src="https://cdn.lordicon.com/msoeawqm.json"
-                        trigger="loop"
-                        colors="primary:#405189,secondary:#0ab39c"
-                        style="width: 75px; height: 75px"
-                      ></lord-icon>
-                      <h5 class="mt-2">
-                        Lo siento, no hay instrucciones en la base de datos
-                      </h5>
-                      <p class="text-muted mb-0">
-                        Agregue instrucciones al sistema.
-                      </p>
-                    </div>
-                    {% endfor %}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- end card-->
-          </div>
-          <!-- end .rightbar-->
-        </div>
-        <!-- end col activity -->
       </div> 
     </div>
     <!-- container-fluid -->
@@ -302,7 +250,10 @@
 <!-- end main content-->
 {% endblock content %} 
 {% block extra_content %}
-{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+{% block modals %} 
+{% include "partials/modals.html" %}
+{% include "variable/variable-modal.html" %}
+{% endblock modals %}
 {% endblock extra_content %}
 {% block extra_js %}
 <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>

@@ -8,12 +8,14 @@ from django.http import HttpResponse, JsonResponse
 from .models import Business
 from product.models import Product
 from .forms import BusinessForm
+from django.utils import timezone
 from pages.models import Instructions
 from django.urls import reverse
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.models import User
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 def business_list(request):
@@ -66,7 +68,18 @@ def create_business_view(request):
         form = BusinessForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                business=form.save()
+                if request.user.is_authenticated:
+                    try:
+                        business_instance = form.save(commit=False)
+                        user = User.objects.get(id=request.user.id)
+                        business_instance.fk_user = user
+                        business_instance.save()
+                        messages.success(request, "Business created successfully!")
+                    except User.DoesNotExist:
+                        messages.error(request, "User does not exist.")
+                else:
+                    messages.error(request, "User is not authenticated.")
+                # business=form.save()
                 messages.success(request, 'Business created successfully')
                 return JsonResponse({'success': True})
             except Exception as e:
@@ -79,19 +92,32 @@ def create_business_view(request):
     return render(request, 'business/business-form.html', {'form': form})
 def update_business_view(request, pk):
     business = get_object_or_404(Business, pk=pk)
+    
     if request.method == "POST":
         form = BusinessForm(request.POST, request.FILES, instance=business)
         try:
             if form.is_valid():
-                # Verifica si estás actualizando o creando
-                if 'business_id' in request.POST:
+                # Guardar el formulario y verificar si es una actualización o creación
+                business_instance = form.save(commit=False)
+
+                if business_instance.id:
                     # Actualización
-                    form.save()
+                    business_instance.fk_user = request.user
+                    business_instance.last_updated = timezone.now()
+                    business_instance.save()
                     messages.success(request, "Business updated successfully!")
                 else:
                     # Creación
-                    form.save()
-                    messages.success(request, "Business created successfully!")
+                    if request.user.is_authenticated:
+                        try:
+                            user = User.objects.get(id=request.user.id)
+                            business_instance.fk_user = user
+                            business_instance.save()
+                            messages.success(request, "Business created successfully!")
+                        except User.DoesNotExist:
+                            messages.error(request, "User does not exist.")
+                    else:
+                        messages.error(request, "User is not authenticated.")
 
                 return redirect("business:business_list")
             else:
@@ -103,25 +129,30 @@ def update_business_view(request, pk):
         form = BusinessForm(instance=business)
 
     return render(request, "business/business-update.html", {'form': form, 'business': business})
-
 def delete_business_view(request, pk):
-    try:
-        business = get_object_or_404(Business, pk=pk)
-        business.is_active=False
-        business.save()
-        messages.success(request, "Business deleted successfully!")
-        return redirect("business:business_list")
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)
+    # try:
+        if request.method == 'POST':
+            business = get_object_or_404(Business, pk=pk)
+            business.is_active = False
+            business.save()
+            messages.success(request, "Business deleted successfully!")
+            return redirect("business:business.list")
+        else:
+            # Handle the case where the request method is not POST
+            return HttpResponse(status=405)  # Method Not Allowed
+    # except Exception as e:
+    #     messages.error(request, f"An error occurred: {str(e)}")
+    #     return HttpResponse(status=500)
+
 def get_business_details(request, pk):
     try:
         business = Business.objects.get(id=pk)
         business_details = {
+            "id": business.id,
             "name": business.name,
             "type": business.type,
             "location": business.location,
-            "image_src": str(business.image_src.url) if business.image_src else None,
+            "image_src": str(business.image_src),
             "description": business.description,
         }
         return JsonResponse(business_details)

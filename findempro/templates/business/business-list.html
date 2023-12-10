@@ -25,9 +25,9 @@
                   <p>Pagina de listado de negocios registradas.</p>
                   <h2>Características clave:</h2>
                   <ul>
-                    <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles de las variables, modifique los parámetros y refine los escenarios.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite ajustar simulaciones con solo unos pocos clics.</li>
-                    <li><span class="text-danger">Eliminar: </span> ¿Necesita eliminar una variable?La función Eliminar le permite eliminar de manera rápida y segura escenarios que ya no son necesarios.Agilice su biblioteca de simulación sin esfuerzo.</li>
-                    <li><span class="text-primary">Ver: </span>Sumérgete profundamente en los detalles de cada variable con la opción Vista.Explore los parámetros, resultados y más.Esta característica es perfecta para analizar los resultados de la simulación y tomar decisiones informadas.</li>
+                    <li><span class="text-success">Editar:</span> Actualice la informacion de sus negocios.</li>
+                    <li><span class="text-danger">Eliminar: </span> Eliminacion de alguno de los negocios que tiene registrado</li>
+                    <li><span class="text-primary">Ver: </span>Ver la informacion de cada elmento.</li>
                   </ul>
                 </div>
               </div>
@@ -42,243 +42,160 @@
       </div>
     <div class="row">
       <div class="col">
-          <div class="h-100">
-              <div class="card">
-                  <div class="card-header border-0 rounded">
-                      <div class="row g-3">
-                          <div class="col-md-12 mb-3">
-                              <form method="GET" action="{% url 'business:business.list' %}">
-                                  <select class="form-select" id="type-select" name="type">
-                                      <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>Seleccionar tipos</option>
-                                      <option value="Dairy" {% if request.GET.type == "Dairy" %}selected{% endif %}>Lácteos</option>
-                                      <option value="Meat" {% if request.GET.type == "Meat" %}selected{% endif %}>Carne</option>
-                                      <!-- Otros elementos options -->
-                                  </select>
-                                  <div class="col-lg-12 text-end mt-3">
-                                      <button type="submit" class="btn btn-outline-primary">
-                                          <i class="ri-equalizer-fill me-1 align-bottom"></i>Filtros
-                                      </button>
-                                  </div>
-                              </form>
-                          </div>
-                          <!--end col-->
-                      </div>
-                      <div class="col-lg-3 text-end">
-                          <div class="hstack gap-2">
-                              <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateBusiness">
-                                  <i class="ri-add-fill me-1 align-bottom"></i>Crear nuevo
-                              </button>
-                          </div>
-                      </div>
-                      <!--end row-->
-                  </div>
-              </div>
-              <!-- List of Businesess -->
-              <div class="row mt-4" id="business-list">
-                  <div class="card-deck">
-                      {% for business in businesses %}
-                      <div class="col-xl-4 col-lg-6 col-md-12 mb-4">
-                          <div class="card h-100">
-                            <div class="card-img-container position-relative">
-                              <img src="{{ business.get_photo_url }}" class="card-img-top fixed-image" alt="{{ business.name }}" />
-                              <div class="dropdown position-absolute top-0 end-0 mt-2 me-2">
-                                  <button
-                                      class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
-                                      data-bs-toggle="dropdown"
-                                      aria-haspopup="true"
-                                      aria-expanded="true"
-                                  >
-                                      <i data-feather="more-horizontal" class="icon-sm"></i>
+          <div class="card">
+              <div class="card-header border-0 rounded">
+                  <div class="row g-3">
+                      <div class="col-md-12 mb-3">
+                          <form method="GET" action="{% url 'business:business.list' %}">
+                              <select class="form-select" id="type-select" name="type">
+                                  <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>Seleccionar tipos</option>
+                                  <option value="Dairy" {% if request.GET.type == "Dairy" %}selected{% endif %}>Lácteos</option>
+                                  <option value="Meat" {% if request.GET.type == "Meat" %}selected{% endif %}>Carne</option>
+                                  <!-- Otros elementos options -->
+                              </select>
+                              <div class="col-lg-12 text-end mt-3">
+                                  <button type="submit" class="btn btn-outline-primary">
+                                      <i class="ri-equalizer-fill me-1 align-bottom"></i>Filtros
                                   </button>
-                                  <div class="dropdown-menu dropdown-menu-end">
-                                      <a
-                                          class="dropdown-item"
-                                          href="{% url 'business:business.overview' business.id %}"
-                                      >
-                                          <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                          Ver
-                                      </a>
-                                      <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
-                                        data-bs-target="#addOrUpdateBusiness" data-variable-id="{{ business.id }}"
-                                        onclick="loadBusinessDetails('{{ business.id }}'); return false;">
-                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                        Editar
-                                      </a>
-                                      <div class="dropdown-divider"></div>
-                                      <a
-                                          class="dropdown-item delete-variable"
-                                          data-bs-toggle="modal"
-                                          data-bs-target="#removeBusinessModal"
-                                          data-variable-id="{{ business.id }}"
-                                      >
-                                          <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                          Eliminar
-                                      </a>
-                                  </div>
                               </div>
-                          </div>
-                              <div class="card-body p-4">
-                                  <h5 class="card-title">{{ business.name }}</h5>
-                                  <p class="card-text text-truncate">{{ business.description }}</p>
-                              </div>
-                              <div class="card-footer border-top-dashed">
-                                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                      <div>
-                                          <i class="ri-briefcase-2-line align-bottom me-1"></i>
-                                          <span class="job-type">{{business.fk_product.name}}</span>
-                                        </div>
-                                        <div>
-                                            <i class="ri-map-pin-2-line align-bottom me-1"></i>
-                                            <span class="job-location">{{business.location}}</span>
-                                        </div>
-                                        <div>
-                                            <i class="ri-user-3-line align-bottom me-1"></i>
-                                            {% if business.type == 1 %}
-                                              <span class="badge badge-primary">Lácteos</span>
-                                            {% else %}
-                                              <span class="badge badge-primary">Otros</span>
-                                            {% endif %}
-                                        </div>
-                                        <div>
-                                            <i class="ri-time-line align-bottom me-1"></i>
-                                            <span class="job-postdate">{{ business.date_created|date:"F d, Y" }}</span>
-                                        </div>
-                                        <!-- ... -->
-                                    </div>
-                                </div>
-                                
-                              </div>
-                          </div>
-                          
-                        {% empty %}
-                          <div class="col text-center py-4">
-                            <lord-icon
-                              src="https://cdn.lordicon.com/msoeawqm.json"
-                              trigger="loop"
-                              colors="primary:#405189,secondary:#0ab39c"
-                              style="width: 75px; height: 75px"
-                            ></lord-icon>
-                            <h5 class="mt-2">
-                              Lo siento, no hay ningún negocio registrado en la base de datos
-                            </h5>
-                          </div>
-                          {% endfor %}
-                        </div>
-                        <!-- End List of Businesess -->
-                        <!-- Pagination -->
-                        <div class="align-items-center mt-2 row text-center text-sm-start">
-                          <div class="col-sm">
-                            <div class="text-muted">
-                              Mostrar pagina
-                              <span class="fw-semibold">{{ businesses.number }}</span>
-                              de
-                              <span class="fw-semibold">{{ businesses.paginator.num_pages }}</span>
-                              paginas
-                            </div>
-                          </div>
-                          <div class="col-sm-auto">
-                            <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                              {% if businesses.has_previous %}
-                                <li class="page-item">
-                                  <a href="?page=1" class="page-link" aria-label="First">
-                                    ««
-                                  </a>
-                                </li>
-                                <li class="page-item">
-                                  <a href="?page={{ businesses.previous_page_number }}" class="page-link" aria-label="Previous">
-                                    «
-                                  </a>
-                                </li>
-                              {% endif %}
-                              {% for i in businesses.paginator.page_range %}
-                                <li class="page-item {% if i == businesses.number %}active{% endif %}">
-                                  <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                </li>
-                              {% endfor %}
-                              {% if businesses.has_next %}
-                                <li class="page-item">
-                                  <a href="?page={{ businesses.next_page_number }}" class="page-link" aria-label="Next">
-                                    »
-                                  </a>
-                                </li>
-                                <li class="page-item">
-                                  <a href="?page={{ businesses.paginator.num_pages }}" class="page-link" aria-label="Last">
-                                    »»
-                                  </a>
-                                </li>
-                              </li>
-                              {% endif %}
-                            </ul>
-                          </div>
-                        </div>              
+                          </form>
                       </div>
-                    </div>
+                      <!--end col-->
                   </div>
-                  <div class="col-auto layout-rightside-col ">
-                    <div class="overlay"></div>
-                    <div class="layout-rightside">
-                      <div class="card h-100 rounded-0">
-                        <div class="card-body p-0">
-                          <div class="p-3">
-                            <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                              Instrucciones
-                            </h6>
-                          </div>
-                          <div data-simplebar style="max-height: 700px" class="p-3 pt-0">
-                            <div class="instruction-timeline instruction-main">
-                              {% for instruction in instructions %}
-                              <div class="instruction-item d-flex">
-                                <div class="flex-shrink-0 avatar-xs instruction-avatar">
-                                  <div
-                                    class="avatar-title bg-primary-subtle text-primary rounded-circle"
-                                  >
-                                    <i class="ri-info-line"></i>
-                                  </div>
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                  <h6 class="mb-1 lh-base">{{ instruction.instruction }}</h6>
-                                  <p class="text-muted mb-1">
-                                    {{ instruction.content }}
-                                  </p>
-                                  <small class="mb-0 text-muted">
-                                    {{ instruction.date_created }}
-                                  </small>
-                                </div>
-                              </div>
-                              {% empty %}
-                              <div class="text-center py-4">
-                                <lord-icon
-                                  src="https://cdn.lordicon.com/msoeawqm.json"
-                                  trigger="loop"
-                                  colors="primary:#405189,secondary:#0ab39c"
-                                  style="width: 75px; height: 75px"
-                                ></lord-icon>
-                                <h5 class="mt-2">
-                                  Lo siento, no hay instrucciones en la base de datos
-                                </h5>
-                                <p class="text-muted mb-0">
-                                  Agregue instrucciones al sistema.
-                                </p>
-                              </div>
-                              {% endfor %}
-                            </div>
-                          </div>
-                        </div>
+                  <div class="col-lg-3 text-end">
+                      <div class="hstack gap-2">
+                          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateBusiness">
+                              <i class="ri-add-fill me-1 align-bottom"></i>Crear nuevo
+                          </button>
                       </div>
-                      <!-- end card-->
-                    </div>
-                    <!-- end .rightbar-->
                   </div>
-                  <!-- end col activity -->
-                  
+                  <!--end row-->
+              </div>
+          </div>
+      </div>
+      <!-- List of Businesess -->          
+      <div class="row" id="business-list">
+        {% for business in businesses %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <!-- Contenido de la tarjeta -->
+                    <div class="card-img-container position-relative">
+                        <img src="{{ business.get_photo_url }}" class="card-img-top fixed-image" alt="{{ business.name }}" />
+                        <div class="dropdown position-absolute top-0 end-0 mt-2 me-2">
+                            <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                <i data-feather="more-horizontal" class="icon-sm"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="{% url 'business:business.overview' business.id %}">
+                                    <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                    Ver
+                                </a>
+                                <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal" 
+                                data-bs-target="#addOrUpdateBusiness" data-variable-id="{{ business.id }}" 
+                                onclick="loadBusinessDetails('{{ business.id }}'); return false;">
+                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                    Editar
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                {{ business.id }}
+                                <a id="delete-business-link" class="dropdown-item delete-variable" 
+                                  data-bs-toggle="modal" data-bs-target="#removeBusinessModal" data-variable-id="{{ business.id }}">
+                                  <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                  Eliminar
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <h5 class="card-title">{{ business.name }}</h5>
+                        <p class="card-text text-truncate">{{ business.description }}</p>
+                    </div>
+                    <div class="card-footer border-top-dashed">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <i class="ri-briefcase-2-line align-bottom me-1"></i>
+                                <span class="job-type">{{business.fk_product.name}}</span>
+                            </div>
+                            <div>
+                                <i class="ri-map-pin-2-line align-bottom me-1"></i>
+                                <span class="job-location">{{business.location}}</span>
+                            </div>
+                            <div>
+                                <i class="ri-user-3-line align-bottom me-1"></i>
+                                {% if business.type == 1 %}
+                                    <span class="badge badge-primary">Lácteos</span>
+                                {% else %}
+                                    <span class="badge badge-primary">Otros</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <i class="ri-time-line align-bottom me-1"></i>
+                        <span class="job-postdate">{{ business.date_created|date:"F d, Y" }}</span>
+                    </div>
                 </div>
-                <!--end row-->
-              
-                              
-      
+            </div>
+        {% empty %}
+            <div class="col text-center py-4">
+                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width: 75px; height: 75px"></lord-icon>
+                <h5 class="mt-2">
+                    Lo siento, no hay ningún negocio registrado en la base de datos
+                </h5>
+            </div>
+        {% endfor %}
+    </div>    
+      <!-- End List of Businesess -->
+      <!-- Pagination -->
+      <div class="align-items-center mt-2 row text-center text-sm-start">
+        <div class="col-sm">
+          <div class="text-muted">
+            Mostrar pagina
+            <span class="fw-semibold">{{ businesses.number }}</span>
+            de
+            <span class="fw-semibold">{{ businesses.paginator.num_pages }}</span>
+            paginas
+          </div>
+        </div>
+        <div class="col-sm-auto">
+          <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+            {% if businesses.has_previous %}
+              <li class="page-item">
+                <a href="?page=1" class="page-link" aria-label="First">
+                  ««
+                </a>
+              </li>
+              <li class="page-item">
+                <a href="?page={{ businesses.previous_page_number }}" class="page-link" aria-label="Previous">
+                  «
+                </a>
+              </li>
+            {% endif %}
+            {% for i in businesses.paginator.page_range %}
+              <li class="page-item {% if i == businesses.number %}active{% endif %}">
+                <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+              </li>
+            {% endfor %}
+            {% if businesses.has_next %}
+              <li class="page-item">
+                <a href="?page={{ businesses.next_page_number }}" class="page-link" aria-label="Next">
+                  »
+                </a>
+              </li>
+              <li class="page-item">
+                <a href="?page={{ businesses.paginator.num_pages }}" class="page-link" aria-label="Last">
+                  »»
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div> 
+      <!-- End Pagination --> 
     </div>
-    <!-- End Page-content -->
-    {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
+  <!-- End Page-content -->
+  {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
   </div>
   <!-- end main content-->
   {% endblock content %}

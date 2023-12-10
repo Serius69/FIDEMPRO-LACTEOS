@@ -86,7 +86,7 @@
                       </div>
                   </form>
                   <div class="col-lg-3">
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateProductLabel">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateProduct">
                       <i class="ri-add-fill me-1 align-bottom"></i>
                       Crear nuevo
                     </button>
@@ -131,12 +131,9 @@
                                 <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
                                 Vista
                               </a>
-                              <a
-                                class="dropdown-item edit-product"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editProductModal"
-                                data-product-id="{{ product.id }}"
-                              >
+                              <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
+                                data-bs-target="#addOrUpdateProduct" data-variable-id="{{ product.id }}"
+                                onclick="loadProductDetails('{{ product.id }}'); return false;">
                                 <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                 Editar
                               </a>

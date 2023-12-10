@@ -5,15 +5,6 @@
                 <h5 class="modal-title" id="addOrUpdateBusinessLabel">Negocio</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-content border-0 mt-3">
-                <ul class="nav nav-tabs nav-tabs-custom nav-success p-2 pb-0 bg-light" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#businessDetails" role="tab" aria-selected="false">
-                            Detalles del negocio
-                        </a>
-                    </li>
-                </ul>
-            </div>
             <div class="modal-body">
                 <div class="tab-content">
                     <div class="tab-pane active" id="businessDetails" role="tabpanel">
@@ -22,6 +13,26 @@
                             <input type="hidden" name="business_id" id="business_id" value="">
                             <div class="row">
                                 <div class="col-lg-12">
+                                    <div class="text-center mb-4 mt-n5 pt-2">
+                                        <div class="position-relative d-inline-block">
+                                            <div class="position-absolute bottom-0 end-0">
+                                                <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                                    <div class="avatar-xs cursor-pointer">
+                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                            <i class="ri-image-fill"></i>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                                <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png, image/jpeg" name="image_src"/>
+                                            </div>
+                                            <div class="avatar-lg p-1">
+                                                <div class="avatar-title bg-light rounded-circle">
+                                                    <img src="" id="logo-img" name="image_src" class="avatar-md rounded-circle object-fit-cover"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h5 class="fs-13 mt-3">Imagen</h5>
+                                    </div>
                                     <div class="mb-3">
                                         <label for="name" class="form-label">
                                             Nombre del Negocio
@@ -66,23 +77,6 @@
                                     </div>
                                 </div>
                                 <!--end col-->
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="image_src" class="form-label">Imagen</label>
-                                        <input type="file" class="form-control" id="image_src" name="image_src" onchange="loadFile(event)" />
-                                        <img id="output" width="200" />
-                                        <script>
-                                        var loadFile = function(event) {
-                                            var output = document.getElementById('output');
-                                            output.src = URL.createObjectURL(event.target.files[0]);
-                                            output.onload = function() {
-                                                URL.revokeObjectURL(output.src)
-                                            }
-                                        };
-                                        </script>
-                                    </div>
-                                </div>
-                                <!--end col-->
                                 <div class="col-lg-12">
                                     <div class="mb-3">
                                         <label for="description" class="form-label">
@@ -103,10 +97,7 @@
                                             <i class="ri-close-line me-1 align-middle"></i>
                                             Cerrar
                                         </button>
-                                        <!-- Agrega este campo oculto en tu formulario -->
-                                        <input type="hidden" name="business_id" id="business_id" value="{{ business.id }}">
-
-                                        <!-- Modifica el botón "Guardar" para llamar a la función con la bandera isUpdate -->
+                                        <input type="hidden" name="id" id="id" value="id">
                                         <button type="submit" class="btn btn-primary" onclick="businessForm.handleSubmission('{{ business.id }}' !== '');">
                                             <i class="ri-save-3-line align-bottom me-1"></i>
                                             Guardar
@@ -125,33 +116,37 @@
 </div>
 <!-- end modal -->
 <!-- removeBusinessModal -->
-<div id="removeBusinessModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button  type="button" class="btn-close"  data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mt-2 text-center">
-          <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
-          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-            <h4>Está seguro ?</h4>
-            <p class="text-muted mx-4 mb-0">
-              ¿Estás seguro de que quieres eliminar este producto?
-            </p>
-          </div>
+<div id="removeBusinessModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Icon and text content -->
+                <div class="mt-2 text-center">
+                    <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>¿Está seguro?</h4>
+                        <p class="text-muted mx-4 mb-0">
+                            ¿Estás seguro de que quieres eliminar este negocio?
+                        </p>
+                    </div>
+                </div>
+                <!-- Form for deletion -->
+                <form id="deleteBusinessForm" method="POST" action="{% url 'business:business.delete' 0 %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="delete-business-url" value="{% url 'business:business.delete' 0 %}">
+                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
+                            Cerrar
+                        </button>
+                        <button type="submit" class="btn w-sm btn-danger delete-business-btn">
+                            ¡Sí, borrarlo!
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-          <button type="button"  class="btn w-sm btn-light"  data-bs-dismiss="modal">
-            Cerca
-          </button>
-          {% if product.id %}
-          <button type="button" class="btn w-sm btn-danger delete-product-btn" data-href="{% url 'product:product.delete' product.id %}">
-            ¡Sí, borrarlo!
-          </button>
-          {% endif %}
-        </div>
-      </div>
     </div>
-    <!-- /.modal-content -->
-  </div>
-  <!-- /.modal-dialog -->
+</div>

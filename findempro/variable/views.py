@@ -165,6 +165,9 @@ def get_variable_details(request, pk):
                 "name": variable.name,
                 "type": variable.type,
                 "fk_product": variable.fk_product.name,
+                "unit": variable.unit,
+                "image_src": str(variable.image_src),
+                "initials": variable.initials,
                 "description": variable.description,
             }
             return JsonResponse(variable_details)

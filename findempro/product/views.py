@@ -22,11 +22,13 @@ def product_list(request):
     # try:
         business_id = request.GET.get('business_id', 'All')
         if business_id == 'All':
-            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
             businesses = Business.objects.filter(is_active=True, fk_user=request.user).order_by('-id')
+            products = Product.objects.filter(is_active=True, fk_business__in=businesses ,fk_business__fk_user=request.user).order_by('-id')
+            
         else:
-            products = Product.objects.filter(fk_business_id=business_id, is_active=True, fk_business__fk_user=request.user).order_by('-id')
             businesses = Business.objects.filter(is_active=True, fk_user=request.user).order_by('-id')
+            products = Product.objects.filter(fk_business_id=business_id, is_active=True , fk_business__fk_user=request.user).order_by('-id')
+
         paginator = Paginator(products, 10)  # Show 10 products per page
         page = request.GET.get('page')
         instructions = Instructions.objects.filter(fk_user=request.user, is_active=True).order_by('-id')
@@ -104,7 +106,6 @@ def area_overview(request, pk):
         
         context = { 
                 'area': area,
-                
                 'equations_area':equations_area,
                 'current_datetime': current_datetime,
                 } 
@@ -161,20 +162,21 @@ def delete_product_view(request, pk):
     # Si se accede a la vista mediante GET, puedes mostrar un error o redirigir
     return HttpResponseForbidden("GET request not allowed for this view")
 def get_product_details(request, pk):
-    try:
+    # try:
         if request.method == 'GET':
             product = Product.objects.get(id=pk)
 
             product_details = {
                 "name": product.name,
                 "type": product.type,
-                "fk_business": product.fk_business.name,
+                'image_src': str(product.image_src),
+                "fk_business": product.fk_business_id,
                 "description": product.description,
             }
             return JsonResponse(product_details)
-    except ObjectDoesNotExist:
-        # Manejo de la excepción si el objeto Product no se encuentra
-        return JsonResponse({"error": "El producto no existe"}, status=404)
-    except Exception as e:
-        # Manejo de otras excepciones inesperadas
-        return JsonResponse({"error": str(e)}, status=500)
+    # except ObjectDoesNotExist:
+    #     # Manejo de la excepción si el objeto Product no se encuentra
+    #     return JsonResponse({"error": "El producto no existe"}, status=404)
+    # except Exception as e:
+    #     # Manejo de otras excepciones inesperadas
+    #     return JsonResponse({"error": str(e)}, status=500)
