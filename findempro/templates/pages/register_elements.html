@@ -1,0 +1,106 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}FAQs{% endblock title %}
+{% block content %}
+<!-- ============================================================== -->
+<!-- Start right Content here -->
+<!-- ============================================================== -->
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+                        <div class="px-4">
+                            <div class="row">
+                                <div class="col-xxl-5 align-self-center">
+                                    <div class="py-4">
+                                        <h4 class="display-6 -text">Preguntas frecuentes</h4>
+                                        <p class="text-success fs-15 mt-3">Si no puede encontrar la respuesta a su pregunta en nuestras preguntas frecuentes, no dude en contactarnos.Le proporcionaremos la información que necesita.</p>
+                                        <div class="hstack flex-wrap gap-2">
+                                            <button type="button" class="btn btn-primary btn-label rounded-pill" onclick="openMailTo()">
+                                                <i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Contáctenos
+                                            </button>                                            
+                                            <button type="button" class="btn btn-info btn-label rounded-pill" onclick="openTwitterFollow()">
+                                                <i class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> Síganos en Twitter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xxl-3 ms-auto">
+                                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                                        <img src="{% static 'images/faq-img.webp'%}" alt="" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row justify-content-evenly mb-4">
+                        <div class="col-12">
+                            <h2 class="text-center mb-4">Registro con Elementos</h2>
+                            <form method="post" class="needs-validation" novalidate>
+                                {% csrf_token %}
+                                {% for element, label, image_url in form.elements.field.choices %}
+                                    <div class="mb-3 form-check">
+                                        <label class="form-check-label">
+                                            <img src="{{ image_url }}" alt="{{ label }}" class="img-thumbnail">
+                                            {{ label }}
+                                            <input type="checkbox" name="{{ form.elements.name }}" value="{{ element }}" class="form-check-input" id="{{ element }}" {% if element in form.elements.value %}checked{% endif %}>
+                                            {% if form.elements.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.elements.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Registrar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    
+                </div><!--end col-->
+            </div><!--end row-->
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+<!-- end main content-->
+{% endblock content %}
+{% block extra_js %}
+<!-- Agrega el script JavaScript para abrir la ventana de correo electrónico -->
+<script>
+    function openMailTo() {
+        // Cambia 'developer@example.com' con la dirección de correo electrónico del desarrollador
+        var email = 'developer@example.com';
+        var subject = 'Consulta sobre el sistema';
+        var body = 'Hola, me gustaría hacer una consulta sobre el sistema.';
+
+        var mailtoLink = 'mailto:' + email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+        // Abre la ventana de correo electrónico
+        window.location.href = mailtoLink;
+    }
+</script>
+    <!-- Agrega el script JavaScript para abrir la ventana de Twitter -->
+<script>
+    function openTwitterFollow() {
+        // Cambia 'nombredeusuario' con el nombre de usuario real de Twitter
+        var twitterUsername = 'nombredeusuario';
+        var twitterFollowLink = 'https://twitter.com/intent/follow?screen_name=' + encodeURIComponent(twitterUsername);
+
+        // Abre la ventana de Twitter
+        window.open(twitterFollowLink, '_blank');
+    }
+</script>
+{% endblock extra_js %}

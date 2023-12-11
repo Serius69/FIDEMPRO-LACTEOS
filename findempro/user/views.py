@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .forms import UserForm, RegisteerElementsForm
+from .forms import UserForm
 from user.models import UserProfile
 from product.models import Product
 from business.models import Business
@@ -18,25 +18,6 @@ from django.contrib.auth import update_session_auth_hash
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth import login
 from findempro.forms import UserLoginForm
-
-@login_required
-def registro_con_elementos(request):
-    if request.method == 'POST':
-        form = RegisteerElementsForm(request.POST)
-        if form.is_valid():
-            elementos_seleccionados = form.cleaned_data['elementos']
-
-            if elementos_seleccionados:
-                # Lógica de creación solo si hay elementos seleccionados
-                for elemento in elementos_seleccionados:
-                    crear_elemento(elemento, request.user)  # Debes definir la función `crear_elemento`
-
-            return redirect('inicio')  # Redirigir a la página de inicio después de procesar
-
-    else:
-        form = RegistroForm()
-
-    return render(request, 'registro_con_elementos.html', {'form': form})
 @login_required
 def pages_profile_settings(request):
     user = request.user

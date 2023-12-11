@@ -119,7 +119,7 @@ def update_business_view(request, pk):
                     else:
                         messages.error(request, "User is not authenticated.")
 
-                return redirect("business:business_list")
+                return redirect("business:business.list")
             else:
                 messages.error(request, "Please check your inputs.")
         except Exception as e:

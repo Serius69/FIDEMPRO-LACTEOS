@@ -39,25 +39,6 @@ class Product(models.Model):
             return self.image_src.url
         else:
             return "/static/images/product/product-dummy-img.webp"
-    @receiver(post_save, sender=Business)
-    def create_product(sender, instance, created, **kwargs):
-        if created:
-            business = Business.objects.get(pk=instance.pk)
-            for data in products_data:
-                Product.objects.create(
-                    name=data['name'],                    
-                    description=data['description'],
-                    image_src=f"/images/product/{data.get('name')}.jpg",
-                    type= data['type'],
-                    is_active= True,
-                    fk_business_id=business.id,
-                )
-        print('Se crearon los productos')
-    @receiver(post_save, sender=Business)
-    def save_product(sender, instance, **kwargs):
-        for product in instance.fk_business_product.all():
-            product.is_active = instance.is_active
-            product.save()
 
 class Area(models.Model):
     name = models.CharField(max_length=100)
@@ -81,21 +62,3 @@ class Area(models.Model):
             return self.image_src.url
         else:
             return "/static/images/product/product-dummy-img.webp"
-    @receiver(post_save, sender=Product)
-    def create_area(sender, instance, created, **kwargs):
-        if created:
-            product = Product.objects.get(pk=instance.pk)
-            for data in areas_data:
-                Area.objects.create(
-                    name=data['name'],                    
-                    description=data['description'],
-                    params= data['params'],
-                    image_src=f"/images/area/{data.get('name')}.jpg",
-                    is_active= True,
-                    fk_product_id=product.id,
-                )
-    @receiver(post_save, sender=Product)
-    def save_area(sender, instance, **kwargs):
-        for area in instance.fk_product_area.all():
-            area.is_active = instance.is_active
-            area.save()

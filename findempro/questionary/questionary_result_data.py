@@ -1,3 +1,5 @@
+import random
+import numpy as np
 questionary_result_data = [
     {
     'name': 'Respuestas para el producto Leche',
@@ -9,9 +11,6 @@ questionary_result_data = [
     'name': 'Respuestas para el producto Yogur',
     },
     ]
-
-import random
-import numpy as np
 answer_data = [
     {
         'answer': random.randint(5, 15),  

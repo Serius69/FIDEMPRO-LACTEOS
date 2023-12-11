@@ -35,32 +35,34 @@
                                             </div>
                                             <div class="mt-3 mt-lg-0">
                                                 <form method="GET" action="{% url 'dashboard:dashboard.user' %}">
-                                                    <div class="row g-3 mb-0 align-items-center">                                                        
+                                                    <div class="row g-3 mb-0 align-items-center">
                                                         <div class="col-sm-auto">
-                                                                <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
-                                                                    <option selected>Elija el negocio:</option>
-                                                                    {% for business in businesses %}
-                                                                    <option value="{{business.id}}<"  {% if request.GET.type == "{{ business.id }}" %}selected{% endif %}>
-                                                                        {{business.name}}</option>
-                                                                    {% empty %}
-                                                                    <option>...</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                        </div><!--end col-->
+                                                            <label for="business_id" class="form-label">Elija el negocio:</label>
+                                                        </div>                                               
+                                                        <div class="col-sm-auto">
+                                                            <select id="business_id" name="business_id" class="form-select" data-choices data-choices-sorting="true" >
+                                                                <option selected>Elija el negocio:</option>
+                                                                {% for business in businesses %}
+                                                                <option value="{{ business.id }}" {% if request.GET.business_id == business.id %}selected{% endif %} >
+                                                                    {{ business.name }}</option>
+                                                                {% empty %}
+                                                                <option>...</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
                                                         <div class="col-auto">
-                                                            <button type="button"
-                                                                class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn"><i
-                                                                    class="ri-pulse-line"></i>
-                                                            </button>
-                                                        </div>                                                        
-                                                        <!--end col-->
+                                                            <button type="submit" class="btn btn-primary">Generar Dashboard</button>
+                                                        </div>
                                                     </div>
-                                                    <!--end row-->
-                                                </form>
+                                                </form>                                                
                                             </div>
-                                        </div><!-- end card header -->
+                                            <div class="col-auto">
+                                                <button type="button" class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn">
+                                                    <i class="ri-pulse-line"></i>
+                                                </button>
+                                            </div> 
+                                        </div>
                                     </div>
-                                    <!--end col-->
                                 </div>
                                 <!--end row-->
                                 <div class="row">

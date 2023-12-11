@@ -17,7 +17,6 @@ variables_data = [
 'unit': 'L/BS',
 'description': 'DEMANDA ESPERADA EN EL PERIODO DE TIEMPO ESTABLECIDO'},
 
-
 {'name': 'CAPACIDAD INVENTARIO PRODUCTOS',
 'initials': 'CIP',
 'type': 1,
