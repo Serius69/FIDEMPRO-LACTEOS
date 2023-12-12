@@ -13,7 +13,7 @@ import openai
 from scipy import stats
 from scipy.stats import kstest, norm, expon, lognorm
 from scipy.optimize import minimize
-from sympy import Eq, sympify, solve, symbols
+from sympy import Eq, sympify, solve, symbols,Sum
 from scipy.stats import gaussian_kde
 # Third-party imports
 from django.conf import settings
@@ -304,7 +304,6 @@ def simulate_show_view(request):
         # aqui ya tomar los datos de la simulacion que se creo en start
         simulation_instance = get_object_or_404(Simulation, pk=request.session['simulation_started_id'])
         nmd = int(simulation_instance.quantity_time)
-
         # Iterar sobre cada día de la simulación
         endogenous_results = {}
         for i in range(nmd):         
@@ -315,28 +314,53 @@ def simulate_show_view(request):
             variables = Variable.objects.filter(is_active=True, fk_product=product_instance)
             questionary_result = simulation_instance.fk_questionary_result
             answers = Answer.objects.filter(fk_questionary_result=questionary_result)
+
             variable_initials_dict = {}
             demand_total = 0
+            answer_dict = {str(answer.fk_question.id): answer for answer in answers}
+            print("diccionario de respuestas " + str(answer_dict))
             for answer in answers:
                 question_id = str(answer.fk_question.id)
                 question = get_object_or_404(Question, pk=question_id)
                 variable_name = f"{question.fk_variable.initials}"
-                print(variable_name)
+                print(f"entra aca {variable_name}")
+
                 if variable_name == "DH":
                     print(answer.answer)
-                    print(variable_initials_dict)
-                    if answer.answer in variable_initials_dict:
-                        demand_mean = round(statistics.mean(variable_initials_dict[answer.answer]), 2)
-                        print("DH" + str(demand_mean))
-                    else:
-                        demand_mean = None                    
-                        variable_initials_dict[variable_name] = demand_mean
-                        print("DH: No demand mean available")
+                    if variable_name not in variable_initials_dict:
+                        variable_initials_dict[variable_name] = []
+                    try:
+                        # Extract values between square brackets and convert to floats
+                        values = [float(val) for val in answer.answer.strip('[]').split()]
+                        answer_array = np.array(values)
+                        print("answer_array")
+                        print(answer_array)
+                        variable_initials_dict[variable_name].extend(answer_array)
+                    except Exception as e:
+                        print(f"Error appending to {variable_name}: {e}")
+                        continue
                 else:
-                    variable_initials_dict[variable_name] = answer.answer
+                    if answer.answer == "Sí":
+                        variable_initials_dict[variable_name] = 1.0
+                    elif answer.answer == "No":
+                        variable_initials_dict[variable_name] = 0.5
+                    else:
+                        variable_initials_dict[variable_name] = float(answer.answer)
 
+            print("diccionario de variables", variable_initials_dict)
+
+            # Calculate the mean for "DH"
+            if "DH" in variable_initials_dict:
+                demand_mean = round(np.mean(variable_initials_dict["DH"]), 2)
+                print("media de la DH", demand_mean)
+                variable_initials_dict["DH"] = demand_mean
+            else:
+                demand_mean = None
+                print("DH: No demand mean available")
+            
+            
             for equation in equations:
-                print(equation.expression)
+                print("ecuacion " + str(equation.expression))
                 variables_to_use = []
                 for var in [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5]:
                     if var is not None:
@@ -348,12 +372,18 @@ def simulate_show_view(request):
                         substituted_expression = substituted_expression.replace(var, str(variable_initials_dict.get(var)))
 
                 lhs, rhs = substituted_expression.split('=')
-                print(lhs.strip() + "=" + rhs.strip())                # print()
+                print("ecuacion armada " + str(lhs.strip() + "=" + rhs.strip()))  # print()
                 if rhs is not None:
+                    # Replace '∑' with 'Sum'
+                    if '∑' in rhs:
+                        # Replace '∑' with the Sum function and adjust the syntax
+                        # rhs = rhs.replace('∑', 'Sum(') + ')'
+                        rhs = rhs.replace('∑', '')
                     expresion_evaluated = sympify(rhs.strip())
                 else:
                     # Handle the case where rhs is None
                     expresion_evaluated = None  # Adjust based on your requirements
+                    continue
 
                 if expresion_evaluated is not None:
                     synbol = symbols(lhs.strip())  # Esto crea el símbolo 'DF'
