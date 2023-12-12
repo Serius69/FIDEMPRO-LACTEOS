@@ -56,6 +56,8 @@ def simulate_show_view(request):
     selected_questionary_result_id = None
     questionary_result_instance = None
     areas = None
+    businessess = Business.objects.filter(is_active=True, fk_user=request.user)
+    products = Product.objects.filter(is_active=True,fk_business__in=businessess, fk_business__fk_user=request.user)
     
     if request.method == 'GET' and 'select' in request.GET:
         selected_questionary_result_id = request.GET.get('selected_questionary_result', 0)
@@ -64,7 +66,7 @@ def simulate_show_view(request):
         request.session['selected_questionary_result_id'] = selected_questionary_result_id
         answers = Answer.objects.order_by('id').filter(is_active=True, fk_questionary_result_id=selected_questionary_result_id)
         equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
-        questionnaires_result = QuestionaryResult.objects.filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+        questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__in=products  , fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
         # no tocar
         questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)
             
@@ -265,10 +267,10 @@ def simulate_show_view(request):
     
     if not started:
         if selected_questionary_result_id == None:
-            questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+            questionnaires_result = QuestionaryResult.objects.filter(is_active=True, fk_questionary__fk_product__in=products ,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
         else:
             equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
-            questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+            questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__in=products   ,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
                     
             questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)            
             print(questionary_result_instance.fk_questionary.fk_product)
@@ -332,7 +334,6 @@ def simulate_show_view(request):
                         print("DH: No demand mean available")
                 else:
                     variable_initials_dict[variable_name] = answer.answer
-
 
             for equation in equations:
                 print(equation.expression)

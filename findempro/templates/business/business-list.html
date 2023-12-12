@@ -44,7 +44,7 @@
       <div class="col">
           <div class="card">
               <div class="card-header border-0 rounded">
-                  <div class="row g-3">
+                  {% comment %} <div class="row g-3">
                       <div class="col-md-12 mb-3">
                           <form method="GET" action="{% url 'business:business.list' %}">
                               <select class="form-select" id="type-select" name="type">
@@ -61,7 +61,7 @@
                           </form>
                       </div>
                       <!--end col-->
-                  </div>
+                  </div> {% endcomment %}
                   <div class="col-lg-3 text-end">
                       <div class="hstack gap-2">
                           <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateBusiness">
@@ -76,9 +76,8 @@
       <!-- List of Businesess -->          
       <div class="row" id="business-list">
         {% for business in businesses %}
-            <div class="col-md-4 mb-4">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
                 <div class="card h-100">
-                    <!-- Contenido de la tarjeta -->
                     <div class="card-img-container position-relative">
                         <img src="{{ business.get_photo_url }}" class="card-img-top fixed-image" alt="{{ business.name }}" />
                         <div class="dropdown position-absolute top-0 end-0 mt-2 me-2">
@@ -103,7 +102,6 @@
                                   <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
                                   Eliminar
                                 </a>
-
                             </div>
                         </div>
                     </div>
@@ -114,12 +112,8 @@
                     <div class="card-footer border-top-dashed">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
-                                <i class="ri-briefcase-2-line align-bottom me-1"></i>
-                                <span class="job-type">{{business.fk_product.name}}</span>
-                            </div>
-                            <div>
                                 <i class="ri-map-pin-2-line align-bottom me-1"></i>
-                                <span class="job-location">{{business.location}}</span>
+                                <span class="business-location">{{business.location}}</span>
                             </div>
                             <div>
                                 <i class="ri-user-3-line align-bottom me-1"></i>
@@ -129,12 +123,12 @@
                                     <span class="badge badge-primary">Otros</span>
                                 {% endif %}
                             </div>
+                            <div>
+                              <i class="ri-time-line align-bottom me-1"></i>
+                              <span class="business-postdate">{{ business.date_created|date:"F d, Y" }}</span>
+                          </div>
                         </div>
-                    </div>
-                    <div>
-                        <i class="ri-time-line align-bottom me-1"></i>
-                        <span class="job-postdate">{{ business.date_created|date:"F d, Y" }}</span>
-                    </div>
+                    </div>                    
                 </div>
             </div>
         {% empty %}
@@ -207,5 +201,6 @@
   {% block extra_js %}
   <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
   <script src="{% static 'js/crud.js' %}"></script>
+  <script src="{% static 'js/common-utils.js' %}"></script>
   {% endblock extra_js %}
 </div>

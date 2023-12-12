@@ -43,7 +43,7 @@ def report_overview(request, pk):
         return render(request, 'report/report-overview.html', context)
     except Exception as e:
         # Registra el error completo
-        logger.exception("An error occurred in the 'business_overview' view")
+        logger.exception("An error occurred in the 'read_business_view' view")
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
 
