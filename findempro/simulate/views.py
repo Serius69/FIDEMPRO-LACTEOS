@@ -13,7 +13,7 @@ import openai
 from scipy import stats
 from scipy.stats import kstest, norm, expon, lognorm
 from scipy.optimize import minimize
-from sympy import Eq, sympify, solve, symbols,Sum,sp
+from sympy import Eq, sympify, solve, symbols, Sum
 from scipy.stats import gaussian_kde
 # Third-party imports
 from django.conf import settings
@@ -39,6 +39,7 @@ from product.models import Product, Area
 from questionary.models import QuestionaryResult, Questionary, Answer, Question
 from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
 from variable.models import Variable, Equation, EquationResult
+import sympy as sp
 
 # Set matplotlib to non-interactive mode to avoid error in web environments
 matplotlib.use('Agg')
@@ -306,11 +307,10 @@ def simulate_show_view(request):
         nmd = int(simulation_instance.quantity_time)
         # Iterar sobre cada día de la simulación
         endogenous_results = {}
+        areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_questionary_result.fk_questionary.fk_product).order_by('id')
         for i in range(nmd):         
-            areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_questionary_result.fk_questionary.fk_product)
             product_instance = get_object_or_404(Product, pk=simulation_instance.fk_questionary_result.fk_questionary.fk_product.id)
             equations = Equation.objects.filter(is_active=True, fk_area__in=areas).order_by('fk_area_id')
-            
             variables = Variable.objects.filter(is_active=True, fk_product=product_instance)
             questionary_result = simulation_instance.fk_questionary_result
             answers = Answer.objects.filter(fk_questionary_result=questionary_result)
@@ -357,8 +357,10 @@ def simulate_show_view(request):
             else:
                 demand_mean = None
                 print("DH: No demand mean available")
-            
-            
+                
+            if "NMD" in variable_initials_dict:
+                variable_initials_dict["NMD"] = nmd
+                        
             pending_equations = []  # List to store equations that are not ready to be solved
 
             for equation in equations:
@@ -375,49 +377,57 @@ def simulate_show_view(request):
                         substituted_expression = substituted_expression.replace(var, str(variable_initials_dict.get(var)))
 
                 lhs, rhs = substituted_expression.split('=')
-                print("ecuacion armada " + str(lhs.strip() + "=" + rhs.strip()))  # print()
+                lhs1, rhs1 = equation.expression.split('=')
+                print("ecuacion armada son valores " + str(lhs.strip() + "=" + rhs.strip()))  # print()
+                print("ecuacion armada con los valores " + str(lhs1.strip() + "=" + rhs1.strip()))  # print()
 
                 if rhs is not None:
                     # Replace '∑' with 'Sum'
                     if '∑' in rhs:
-                        # Replace '∑' with the Sum function and adjust the syntax
-                        # rhs = rhs.replace('∑', 'Sum(') + ')'
                         rhs = rhs.replace('∑', '')
-                    expresion_evaluated = sp.sympify(rhs.strip())
+                    try:
+                        expresion_evaluated = sp.sympify(rhs.strip())
+                    except sp.SympifyError:
+                        print(f"Error: No se pudo convertir la cadena '{rhs}' en una expresión SymPy.")
+                        expresion_evaluated = None
+                    print("expresion evaluada " + str(expresion_evaluated))
                 else:
                     # Handle the case where rhs is None
                     expresion_evaluated = None  # Adjust based on your requirements
                     continue
 
                 if expresion_evaluated is not None:
-                    symbol = sp.symbols(lhs.strip())
+                    print("variables a usar " + str(variables_to_use))
+                    # symbol = tuple(rhs1.split("="))[0].strip()
+                    symbol = sp.symbols(rhs.strip())
+                    print("simbolo " + str(symbol))
 
-                    # Check if all symbols in the expression are defined
-                    if all(var in variable_initials_dict for var in sp.symbols(lhs)):
+                    if symbol in variable_initials_dict:
                         try:
-                            # Try to solve the equation
+                            # Intentar resolver la ecuación
                             result = sp.solve(sp.Eq(expresion_evaluated, 0), symbol)
                             print(f"Debug: lhs={lhs}, expresion_evaluated={expresion_evaluated}, result={result}")
 
                             if result:
-                                # Equation has a solution
+                                # La ecuación tiene una solución
                                 endogenous_results[variables_to_use[-1]] = result[0]
                             else:
-                                # Equation has no solution, add it to pending equations
+                                # La ecuación no tiene solución, agrégala a las ecuaciones pendientes
                                 print(f"Info: Equation {lhs} has no solution.")
                                 pending_equations.append((lhs, rhs))
                         except Exception as e:
                             print(f"Error: Unable to solve equation {lhs}. Reason: {str(e)}")
                             pending_equations.append((lhs, rhs))
                     else:
-                        # Equation is not ready, add it to pending equations
+                        # La ecuación no está lista, agrégala a las ecuaciones pendientes
                         print(f"Info: Equation {lhs} is waiting for complete data.")
                         pending_equations.append((lhs, rhs))
 
             # At this point, pending_equations contains equations waiting for complete data
             # You can later attempt to solve the pending equations when more data is available.
             # For example, when new data comes in:
-            pending_equations = [(lhs, rhs) for lhs, rhs in pending_equations if all(variable in endogenous_results for variable in variables_to_use)]
+            print("ecuaciones pendientes " + str(pending_equations))
+            pending_equations = try_to_solve_pending_equations(pending_equations, variable_initials_dict, endogenous_results)
 
             # Convert demand_total to a numeric type (assuming it's a string)
             demand_total = float(demand_total)
@@ -450,8 +460,42 @@ def simulate_show_view(request):
         print("dia de la simulacion " + str(i))
         return render(request, 'simulate/simulate-result.html', {
             'simulation_instance_id': simulation_instance,
-        })
-                    
+        })              
+  
+def try_to_solve_pending_equations(pending_equations, variable_initials_dict, endogenous_results):
+    new_pending_equations = []
+    for lhs, rhs in pending_equations:
+        lhs_symbols = sp.symbols(lhs.strip())
+
+        # Verificar que cada símbolo en lhs_symbols esté en variable_initials_dict
+        lhs_symbols = sp.symbols(lhs)
+        if isinstance(lhs_symbols, sp.Symbol):
+            lhs_symbols = [lhs_symbols]
+
+        if all(var in variable_initials_dict or (isinstance(var, sp.Symbol) and var.is_number) for var in lhs_symbols):
+            print("simbolo " + str(lhs_symbols))
+
+            try:
+                # Attempt to solve the equation
+                result = sp.solve(sp.Eq(rhs, 0), lhs_symbols)
+                print(f"Debug: lhs={lhs}, expresion_evaluated={rhs}, result={result}")
+
+                if result:
+                    # The equation has a solution
+                    for symbol in lhs_symbols:
+                        endogenous_results[variable_initials_dict[symbol]] = result[0]  # Use index 0 if there's only one solution
+                else:
+                    # The equation has no solution, add it to new_pending_equations
+                    print(f"Info: Equation {lhs} has no solution.")
+                    new_pending_equations.append((lhs, rhs))
+            except Exception as e:
+                print(f"Error: Unable to solve equation {lhs}. Reason: {str(e)}")
+                new_pending_equations.append((lhs, rhs))
+        else:
+            # Some symbol in lhs_symbols is not in variable_initials_dict, add it to new_pending_equations
+            print(f"Info: Equation {lhs} is waiting for complete data.")
+            new_pending_equations.append((lhs, rhs))
+    return new_pending_equations
   
 # aqui se le manda el Simulate object que se creo en la vista de arriba
 def simulate_result_simulation_view(request, simulation_id):
@@ -639,7 +683,6 @@ def simulate_result_simulation_view(request, simulation_id):
                     'variable_value': variable_value
                 }
                 financial_recommendations_to_show.append(recommendation_data)
-    
     
     paginator2 = Paginator(financial_recommendations_to_show, 10)  # Show 10 results per page.
     page_number2 = request.GET.get('page')

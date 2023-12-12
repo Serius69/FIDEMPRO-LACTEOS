@@ -35,30 +35,12 @@ variables_data = [
 'unit': 'L/BS',
 'description': 'COSTO QUE LE CUESTA A LA EMPRESA POR INSUMO'},
 
-{'name': 'NIVEL DE COMPETENCIA EN EL MERCADO',
-'initials': 'NCM',
-'type': 3,
-'unit': '[0-1]',
-'description': 'EL NIVEL QUE LA EMPRESA TIENE DE COMPETENCIA EN EL MERCADO'},
-
-{'name': 'FRECUENCIA DE COMPRA',
-'initials': 'FC',
-'type': 3,
-'unit': 'DIAS',
-'description': 'CON QUÉ FRECUENCIA SUS CLIENTES COMPRAN PRODUCTOS DE SU EMPRESA'},
-
 {"name": "Tiempo Promedio entre Compras",
   "initials": "TPC",
-  "type": 1,
+  'type': 1,
   "unit": "DÍAS",
   "description": "Tiempo promedio que transcurre entre las compras de los clientes de la empresa"
 },
-
-{'name': 'COSTO UNITARIO DE ADQUISICIÓN DE CLIENTES',
-'initials': 'CUAC',
-'type': 3,
-'unit': 'CLIENTE/BS',
-'description': 'EL GASTO PROMEDIO NECESARIO PARA CONSEGUIR QUE UN CLIENTE REALICE UNA COMPRA'},
 
 {'name': 'CLIENTES POR DÍA',
 'initials': 'CPD',
@@ -72,18 +54,6 @@ variables_data = [
 'unit': 'EMPLEADOS',
 'description': 'Numero de empleados'},
 
-{'name': 'Cantidad producida de productos lácteos',
-'initials': 'QPL',
-'type': 2,
-'unit': 'L',
-'description': 'Cantidad producida de productos lácteos'},
-
-{'name': 'CAPACIDAD DE PRODUCCIÓN',
-'initials': 'CPROD',
-'type': 2,
-'unit': 'L/DIAS',
-'description': 'Capacidad de produccion'},
-
 {'name': 'Cantidad Promedio Producción por Lote',
 'initials': 'CPPL',
 'type': 1,
@@ -95,7 +65,6 @@ variables_data = [
 'type': 1,
 'unit': 'DIAS',
 'description': 'Tiempo de produccion por empleado'},
-
 
 {'name': 'SUELDOS EMPLEADOS',
 'initials': 'SE',
@@ -121,11 +90,23 @@ variables_data = [
 'unit': 'L/BS',
 'description': 'COSTO UNITARIO POR TRANSPORTE DE UN BIEN FINAL DE LA FÁBRICA A LA TIENDA'},
 
-{'name': 'COSTO UNITARIO INVENTARIO',
-'initials': 'CUI',
-'type': 3,
-'unit': 'BS',
-'description': 'EL COSTO POR UNIDAD DE MANTENER INVENTARIO, INCLUYENDO ALMACENAMIENTO, SEGUROS, DEPRECIACIÓN Y OPORTUNIDAD DE CAPITAL INMOVILIZADO.'},
+{'name': 'Tiempo Formulación Pedido',
+'initials': 'TMP',
+'type': 1,
+'unit': 'DIAS',
+'description': 'DEMANDA ESPERADA EN EL PERIODO DE TIEMPO ESTABLECIDO'},
+
+{'name': 'Cantidad transportada por viaje',
+'initials': 'CTPLV',
+'type': 1,
+'unit': 'L',
+'description': 'Cantidad transportada por viaje'},
+
+{'name': 'cantidad promedio producida por lote ',
+'initials': 'CPL',
+'type': 1,
+'unit': 'L',
+'description': 'cantidad promedio producida por lote '},
 
 {'name': 'GASTO TOTAL MARKETING',
 'initials': 'GMM',
@@ -140,7 +121,7 @@ variables_data = [
 'description': 'ES EL PERIODO NECESARIO PARA REPONER EL INVENTARIO DE UN PRODUCTO UNA VEZ AGOTADO.'},
 
 {'name': 'CANTIDAD DE INSUMOS PARA UN PRODUCTO',
-'initials': 'CIP',
+'initials': 'CINSP',
 'type': 1,
 'unit': 'L',
 'description': 'CANTIDAD QUE LA EMPRESA UTILIZA PAR LA PRODUCCIÓN DE UN INSUMO'},
@@ -175,12 +156,6 @@ variables_data = [
 'unit': 'DIAS',
 'description': 'Número de Proveedores de Leche'},
 
-{'name': 'Nivel Ideal del Inventario Leche',
-'initials': 'NIL',
-'type': 3,
-'unit': 'DIAS',
-'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
-
 {'name': 'Stock de Inventario mínimo de Seguridad',
 'initials': 'SI',
 'type': 1,
@@ -198,6 +173,18 @@ variables_data = [
 'type': 1,
 'unit': 'L',
 'description': 'Consumo diario promedio'},
+
+{'name': 'Cantidad producida de productos lácteos',
+'initials': 'QPL',
+'type': 2,
+'unit': 'L',
+'description': 'Cantidad producida de productos lácteos'},
+
+{'name': 'CAPACIDAD DE PRODUCCIÓN',
+'initials': 'CPROD',
+'type': 2,
+'unit': 'L/DIAS',
+'description': 'Capacidad de produccion'},
 
 {'name': 'ALEATORIO LLEGADA DE CLIENTES',
 'initials': 'ALC',
@@ -242,7 +229,7 @@ variables_data = [
 'unit': 'L',
 'description': 'CANTIDAD DE VÍVERES QUE SE PIDEN AL REORDENAR PARA EL REABASTECIMIENTO DE INVENTARIO'},
 
-{'name': 'TOTAL CLIENTES ATENDIDOS EN EL DIAS',
+{'name': 'TOTAL CLIENTES ATENDIDOS EN EL DIA',
 'initials': 'TCAE',
 'type': 2,
 'unit': 'CLIENTES',
@@ -253,12 +240,6 @@ variables_data = [
 'type': 2,
 'unit': 'L',
 'description': 'AUXILIAR CANTIDAD DE INSUMOS QUE SE USA AL REALIZAR UNA VENTA'},
-
-{'name': 'ALEATORIO EXITO PRODUCCIÓN',
-'initials': 'AEP',
-'type': 2,
-'unit': '[0-1]',
-'description': 'ALEATORIO PARA GENERAR EL NÚMERO DE CLIENTES'},
 
 {'name': 'PRODUCTOS PRODUCIDOS',
 'initials': 'PPL',
@@ -453,27 +434,39 @@ variables_data = [
  'unit': 'BS',
  'description': 'Costo de almacenamiento - Costo asociado al almacenamiento de productos o materiales durante un período de tiempo determinado.'},
 
-{'name': 'Tiempo Formulación Pedido',
-'initials': 'TMP',
-'type': 1,
-'unit': 'DIAS',
-'description': 'DEMANDA ESPERADA EN EL PERIODO DE TIEMPO ESTABLECIDO'},
-
-{'name': 'Cantidad transportada por viaje',
-'initials': 'CTPLV',
-'type': 1,
-'unit': 'L',
-'description': 'Cantidad transportada por viaje'},
-
-{'name': 'cantidad promedio producida por lote ',
-'initials': 'CPL',
-'type': 1,
-'unit': 'L',
-'description': 'cantidad promedio producida por lote '},
-
 {'name': 'Demanda Total ',
 'initials': 'DT',
 'type': 3,
 'unit': 'L',
 'description': 'Demanda Total '},
+
+{'name': 'NIVEL DE COMPETENCIA EN EL MERCADO',
+'initials': 'NCM',
+'type': 3,
+'unit': '[0-1]',
+'description': 'EL NIVEL QUE LA EMPRESA TIENE DE COMPETENCIA EN EL MERCADO'},
+
+{'name': 'FRECUENCIA DE COMPRA',
+'initials': 'FC',
+'type': 3,
+'unit': 'DIAS',
+'description': 'CON QUÉ FRECUENCIA SUS CLIENTES COMPRAN PRODUCTOS DE SU EMPRESA'},
+
+{'name': 'COSTO UNITARIO DE ADQUISICIÓN DE CLIENTES',
+'initials': 'CUAC',
+'type': 3,
+'unit': 'CLIENTE/BS',
+'description': 'EL GASTO PROMEDIO NECESARIO PARA CONSEGUIR QUE UN CLIENTE REALICE UNA COMPRA'},
+
+{'name': 'COSTO UNITARIO INVENTARIO',
+'initials': 'CUI',
+'type': 3,
+'unit': 'BS',
+'description': 'EL COSTO POR UNIDAD DE MANTENER INVENTARIO, INCLUYENDO ALMACENAMIENTO, SEGUROS, DEPRECIACIÓN Y OPORTUNIDAD DE CAPITAL INMOVILIZADO.'},
+
+{'name': 'Nivel Ideal del Inventario Leche',
+'initials': 'NIL',
+'type': 3,
+'unit': 'DIAS',
+'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
 ]

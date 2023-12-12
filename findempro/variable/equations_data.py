@@ -1,4 +1,14 @@
 equations_data = [
+  
+  {
+    "name": "Total clientes atendidos en el dia",
+    "description": "Ecuación para la cantidad total de clientes que se tiene por dia",
+    "expression": "TCAE = CPD * random()", 
+    "variable1": "TCAE",
+    "variable2": "CPD",
+    "area": "Ventas"
+  },
+  
   {
     "name": "Total Productos Vendidos",
     "description": "Ecuación para calcular el total de productos vendidos multiplicando el total de clientes atendidos por el promedio de ventas por cliente",
@@ -67,8 +77,6 @@ equations_data = [
   "variable3": "PC",
   "area": "Competencia"
 },
-
-# Tiempo de Formulación del Pedido
 {
    "name": "Tiempo Formulación Pedido",
    "description": "Tiempo necesario para crear y procesar una orden de compra de materia prima (leche)",
@@ -79,11 +87,6 @@ equations_data = [
    "area": "Abastecimiento"
 },
 
-# NPD - Número de Proveedores de Leche
-# TMP - Tiempo Medio de Procesamiento de Pedido
-
-
-# Pedido de Reabastecimiento de Leche
 {
    "name": "Pedido Reabastecimiento Leche",
    "description": "Cantidad de litros de leche requeridos en el próximo pedido de compra para reabastecer inventarios",
@@ -93,9 +96,6 @@ equations_data = [
    "variable3": "DE",
    "area": "Abastecimiento"   
 },
-
-# NIL - Nivel Ideal del Inventario Leche
-# DE - Demanda Estimada Leche
 
 {
   "name": "Nivel Ideal Inventario Leche",

@@ -92,7 +92,7 @@ question_data = [
     {
         'question': '¿Cuántos insumos se utilizan para fabricar un producto lácteo?',
         'type': 1,
-        'initials_variable': 'CIP',
+        'initials_variable': 'CINSP',
     },
     {
         'question': '¿Cuál es la capacidad máxima de almacenamiento en inventario de productos lácteos?',
@@ -138,5 +138,10 @@ question_data = [
         'question': 'Número de Proveedores de Leche', 
         'type': 1,
         'initials_variable': 'NPD'  
+    },
+     {
+        'question': 'Cual es el consumo diario promedio de leche por proveedor?', 
+        'type': 1,
+        'initials_variable': 'CTL'  
     },
 ]

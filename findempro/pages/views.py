@@ -8,7 +8,7 @@ from variable.models import Variable,Equation
 from questionary.models import Questionary,Question,QuestionaryResult,Answer
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
-from simulate.models import Simulation
+from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
 from django.contrib.auth.decorators import login_required
 from product.products_data import products_data
 from product.areas_data import areas_data
@@ -19,6 +19,9 @@ from variable.equations_data import equations_data
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import MultipleObjectsReturned
 from django.http import Http404
+import random
+import numpy as np
+from datetime import datetime, timedelta
 class PagesView(TemplateView):
     pass
 @login_required
@@ -158,23 +161,10 @@ def create_and_save_questionary(instance, created, **kwargs):
             )
             questionary.is_active = instance.is_active
             questionary.save()
-            
-def create_and_save_questionary_result(sender, instance, created, **kwargs):
-    if not created:
-        return
+        
+        create_and_save_question(questionary, created=True)
 
-    questionary_result = QuestionaryResult.objects.filter(fk_questionary=instance).first()
-
-    if not questionary_result:
-        questionary_result = QuestionaryResult.objects.create(
-            fk_questionary=instance,
-            is_active=instance.is_active
-        )
-    else:
-        # Si existe, actualizar el estado
-        questionary_result.is_active = instance.is_active
-        questionary_result.save()    
-def create_and_save_question(sender, instance, created, **kwargs):
+def create_and_save_question(instance, created, **kwargs):
     if created:
         for data in question_data:
             try:
@@ -204,13 +194,39 @@ def create_and_save_question(sender, instance, created, **kwargs):
             print(f"All questions have been correctly created for the product {instance.id}.")
             create_and_save_answer(instance)
         else:
-            print(f"Not all questions have been created for the questionnaire {instance.id}.")          
+            print(f"Not all questions have been created for the questionnaire {instance.id}.")   
+
+@login_required
+def register_elements_simulation(request):
+    if request.method == 'POST':
+        form = RegisterElementsForm(request.POST)
+        if form.is_valid():
+            create_and_save_questionary_result(request.user, created=True)
+            return redirect("dashboard:index")  # Redirigir a la página de inicio después de procesar
+
+    else:
+        form = RegisterElementsForm()
+
+    return render(request, 'pages/register_elements.html', {'form': form})
+def create_and_save_questionary_result(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    questionary_result = QuestionaryResult.objects.filter(fk_questionary=instance).first()
+
+    if not questionary_result:
+        questionary_result = QuestionaryResult.objects.create(
+            fk_questionary=instance,
+            is_active=instance.is_active
+        )
+    else:
+        # Si existe, actualizar el estado
+        questionary_result.is_active = instance.is_active
+        questionary_result.save()    
+        
+    create_and_save_answer(questionary_result, created=True)
 
 def create_and_save_answer(instance):
-    questionary_result = QuestionaryResult.objects.create(
-        fk_questionary=instance,
-        is_active=True
-    )
     for data in answer_data:
         def get_question(question):
             try:
@@ -226,11 +242,124 @@ def create_and_save_answer(instance):
         answer = Answer.objects.create(
             answer=data['answer'],
             fk_question=question,
-            fk_questionary_result=questionary_result,
+            fk_questionary_result=instance,
             is_active=True
         )
         answer.is_active = instance.is_active
         answer.save()
+def create_simulation(sender, instance, created, **kwargs):
+    # Verifica si ya existe una simulación para este cuestionario
+    existing_simulation = Simulation.objects.filter(fk_questionary_result=instance).first()        
+    if not existing_simulation:
+        # Get the first ProbabilisticDensityFunction related to the Business
+        fdp_instance = instance.fk_questionary.fk_product.fk_business.fk_business_fdp.first()
+        if fdp_instance is not None:
+            demand = [random.randint(1000, 5000) for _ in range(30)]
+            
+            simulation = Simulation(
+                unit_time='day',
+                fk_fdp=fdp_instance,
+                demand_history=demand,
+                quantity_time=30,
+                fk_questionary_result=instance,
+                is_active=True
+            )
+            simulation.save()
+
+def create_random_result_simulations(sender, instance, created, **kwargs):
+    # Obtén la fecha inicial de la instancia de Simulation
+    current_date = instance.date_created
+    fk_simulation_instance = instance
+    result_simulation = None
+    print(f'Number of ResultSimulation instances to be created by the Simulate: {instance.quantity_time}')
+    # por que se esta creando 4 veces ResultSimulation por Simulation
+    for _ in range(int(instance.quantity_time)):
+        demand_mean = 0
+        demand = [random.uniform(1000, 5000) for _ in range(10)]
+        demand_std_deviation = random.uniform(5, 20)
+        
+        variables = {
+            "CTR": [random.uniform(1000, 5000) for _ in range(10)],
+            "CTAI": [random.uniform(5000, 20000) for _ in range(10)],
+            "TPV": [random.uniform(1000, 5000) for _ in range(10)],
+            "TPPRO": [random.uniform(800, 4000) for _ in range(10)],
+            "DI": [random.uniform(50, 200) for _ in range(10)],
+            "VPC": [random.uniform(500, 1500) for _ in range(10)],
+            "IT": [random.uniform(5000, 20000) for _ in range(10)],
+            "GT": [random.uniform(3000, 12000) for _ in range(10)],
+            "TCA": [random.uniform(500, 2000) for _ in range(10)],
+            "NR": [random.uniform(0.1, 0.5) for _ in range(10)],
+            "GO": [random.uniform(1000, 5000) for _ in range(10)],
+            "GG": [random.uniform(1000, 5000) for _ in range(10)],
+            "GT": [random.uniform(2000, 8000) for _ in range(10)],
+            "CTTL": [random.uniform(1000, 5000) for _ in range(10)],
+            "CPP": [random.uniform(500, 2000) for _ in range(10)],
+            "CPV": [random.uniform(500, 2000) for _ in range(10)],
+            "CPI": [random.uniform(500, 2000) for _ in range(10)],
+            "CPMO": [random.uniform(500, 2000) for _ in range(10)],
+            "CUP": [random.uniform(500, 2000) for _ in range(10)],
+            "FU": [random.uniform(0.1, 0.5) for _ in range(10)],
+            "TG": [random.uniform(2000, 8000) for _ in range(10)],
+            "IB": [random.uniform(3000, 12000) for _ in range(10)],
+            "MB": [random.uniform(2000, 8000) for _ in range(10)],
+            "RI": [random.uniform(1000, 5000) for _ in range(10)],
+            "RTI": [random.uniform(1000, 5000) for _ in range(10)],
+            "RTC": [random.uniform(0.1, 0.5) for _ in range(10)],
+            "PM": [random.uniform(500, 1500) for _ in range(10)],
+            "PE": [random.uniform(1000, 5000) for _ in range(10)],
+            "HO": [random.uniform(10, 50) for _ in range(10)],
+            "CHO": [random.uniform(1000, 5000) for _ in range(10)],
+            "CA": [random.uniform(1000, 5000) for _ in range(10)],
+        }
+        demand_mean = np.mean(demand)
+        means = {variable: np.mean(values) for variable, values in variables.items()}
+        current_date += timedelta(days=1)
+        result_simulation = ResultSimulation(
+            demand_mean=demand_mean,
+            demand_std_deviation=demand_std_deviation,
+            date=current_date,
+            variables=means,
+            fk_simulation=fk_simulation_instance,
+            is_active=True
+        )
+        result_simulation.save()
+        # aqui acaba el for 
+    # Verifica si ya existe una instancia de demand_instance
+    demand_instance = None
+    demand_predicted_instance = None
+
+    # Verifica si ya existe una instancia de demand_instance
+    if not Demand.objects.filter(fk_simulation=fk_simulation_instance, is_predicted=False).exists():
+        demand_instance = Demand(
+            quantity=fk_simulation_instance.demand_history[0],
+            is_predicted=False,
+            fk_simulation=fk_simulation_instance,
+            fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
+            is_active=True
+        )
+        demand_instance.save()
+
+    # Verifica si ya existe una instancia de demand_predicted_instance
+    if not Demand.objects.filter(fk_simulation=fk_simulation_instance, is_predicted=True).exists():
+        demand_predicted_instance = Demand(
+            quantity=demand_mean,  # Puedes ajustar esto según tus necesidades
+            is_predicted=True,
+            fk_simulation=fk_simulation_instance,
+            fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
+            is_active=True
+        )
+        demand_predicted_instance.save()
+
+    # Verifica si tanto demand_instance como demand_predicted_instance tienen valores antes de crear DemandBehavior
+    if demand_instance is not None and demand_predicted_instance is not None:
+        # Verifica si ya existe una instancia de demand_behavior
+        if not DemandBehavior.objects.filter(current_demand=demand_instance, predicted_demand=demand_predicted_instance).exists():
+            demand_behavior = DemandBehavior(
+                current_demand=demand_instance,
+                predicted_demand=demand_predicted_instance,
+                is_active=True
+            )
+            demand_behavior.save()
 
 def pages_faqs(request):
     template_name = "pages/faqs.html"

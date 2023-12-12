@@ -134,25 +134,7 @@ class Simulation(models.Model):
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
     
-    @receiver(post_save, sender=QuestionaryResult)
-    def create_simulation(sender, instance, created, **kwargs):
-         # Verifica si ya existe una simulación para este cuestionario
-        existing_simulation = Simulation.objects.filter(fk_questionary_result=instance).first()        
-        if not existing_simulation:
-            # Get the first ProbabilisticDensityFunction related to the Business
-            fdp_instance = instance.fk_questionary.fk_product.fk_business.fk_business_fdp.first()
-            if fdp_instance is not None:
-                demand = [random.randint(1000, 5000) for _ in range(30)]
-                
-                simulation = Simulation(
-                    unit_time='day',
-                    fk_fdp=fdp_instance,
-                    demand_history=demand,
-                    quantity_time=30,
-                    fk_questionary_result=instance,
-                    is_active=True
-                )
-                simulation.save()
+    
                 # create_random_result_simulations(simulation)         
     # @receiver(post_save, sender=QuestionaryResult)
     # def save_simulation(sender, instance, **kwargs):
@@ -195,100 +177,7 @@ class ResultSimulation(models.Model):
         return self.variables
     
     # @receiver(post_save, sender=Simulation)
-    def create_random_result_simulations(sender, instance, created, **kwargs):
-        # Obtén la fecha inicial de la instancia de Simulation
-        current_date = instance.date_created
-        fk_simulation_instance = instance
-        result_simulation = None
-        print(f'Number of ResultSimulation instances to be created by the Simulate: {instance.quantity_time}')
-        # por que se esta creando 4 veces ResultSimulation por Simulation
-        for _ in range(int(instance.quantity_time)):
-            demand_mean = 0
-            demand = [random.uniform(1000, 5000) for _ in range(10)]
-            demand_std_deviation = random.uniform(5, 20)
-            
-            variables = {
-                "CTR": [random.uniform(1000, 5000) for _ in range(10)],
-                "CTAI": [random.uniform(5000, 20000) for _ in range(10)],
-                "TPV": [random.uniform(1000, 5000) for _ in range(10)],
-                "TPPRO": [random.uniform(800, 4000) for _ in range(10)],
-                "DI": [random.uniform(50, 200) for _ in range(10)],
-                "VPC": [random.uniform(500, 1500) for _ in range(10)],
-                "IT": [random.uniform(5000, 20000) for _ in range(10)],
-                "GT": [random.uniform(3000, 12000) for _ in range(10)],
-                "TCA": [random.uniform(500, 2000) for _ in range(10)],
-                "NR": [random.uniform(0.1, 0.5) for _ in range(10)],
-                "GO": [random.uniform(1000, 5000) for _ in range(10)],
-                "GG": [random.uniform(1000, 5000) for _ in range(10)],
-                "GT": [random.uniform(2000, 8000) for _ in range(10)],
-                "CTT": [random.uniform(1000, 5000) for _ in range(10)],
-                "CPP": [random.uniform(500, 2000) for _ in range(10)],
-                "CPV": [random.uniform(500, 2000) for _ in range(10)],
-                "CPI": [random.uniform(500, 2000) for _ in range(10)],
-                "CPMO": [random.uniform(500, 2000) for _ in range(10)],
-                "CUP": [random.uniform(500, 2000) for _ in range(10)],
-                "FU": [random.uniform(0.1, 0.5) for _ in range(10)],
-                "TG": [random.uniform(2000, 8000) for _ in range(10)],
-                "IB": [random.uniform(3000, 12000) for _ in range(10)],
-                "MB": [random.uniform(2000, 8000) for _ in range(10)],
-                "RI": [random.uniform(1000, 5000) for _ in range(10)],
-                "RTI": [random.uniform(1000, 5000) for _ in range(10)],
-                "RTC": [random.uniform(0.1, 0.5) for _ in range(10)],
-                "PM": [random.uniform(500, 1500) for _ in range(10)],
-                "PE": [random.uniform(1000, 5000) for _ in range(10)],
-                "HO": [random.uniform(10, 50) for _ in range(10)],
-                "CHO": [random.uniform(1000, 5000) for _ in range(10)],
-                "CA": [random.uniform(1000, 5000) for _ in range(10)],
-            }
-            demand_mean = np.mean(demand)
-            means = {variable: np.mean(values) for variable, values in variables.items()}
-            current_date += timedelta(days=1)
-            result_simulation = ResultSimulation(
-                demand_mean=demand_mean,
-                demand_std_deviation=demand_std_deviation,
-                date=current_date,
-                variables=means,
-                fk_simulation=fk_simulation_instance,
-                is_active=True
-            )
-            result_simulation.save()
-            # aqui acaba el for 
-        # Verifica si ya existe una instancia de demand_instance
-        demand_instance = None
-        demand_predicted_instance = None
-
-        # Verifica si ya existe una instancia de demand_instance
-        if not Demand.objects.filter(fk_simulation=fk_simulation_instance, is_predicted=False).exists():
-            demand_instance = Demand(
-                quantity=fk_simulation_instance.demand_history[0],
-                is_predicted=False,
-                fk_simulation=fk_simulation_instance,
-                fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
-                is_active=True
-            )
-            demand_instance.save()
-
-        # Verifica si ya existe una instancia de demand_predicted_instance
-        if not Demand.objects.filter(fk_simulation=fk_simulation_instance, is_predicted=True).exists():
-            demand_predicted_instance = Demand(
-                quantity=demand_mean,  # Puedes ajustar esto según tus necesidades
-                is_predicted=True,
-                fk_simulation=fk_simulation_instance,
-                fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
-                is_active=True
-            )
-            demand_predicted_instance.save()
-
-        # Verifica si tanto demand_instance como demand_predicted_instance tienen valores antes de crear DemandBehavior
-        if demand_instance is not None and demand_predicted_instance is not None:
-            # Verifica si ya existe una instancia de demand_behavior
-            if not DemandBehavior.objects.filter(current_demand=demand_instance, predicted_demand=demand_predicted_instance).exists():
-                demand_behavior = DemandBehavior(
-                    current_demand=demand_instance,
-                    predicted_demand=demand_predicted_instance,
-                    is_active=True
-                )
-                demand_behavior.save()
+    
 
 class Demand(models.Model):
     quantity = models.IntegerField(default=0, help_text='The quantity of the demand')
