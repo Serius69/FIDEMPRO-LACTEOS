@@ -13,7 +13,7 @@ import openai
 from scipy import stats
 from scipy.stats import kstest, norm, expon, lognorm
 from scipy.optimize import minimize
-from sympy import Eq, sympify, solve, symbols,Sum
+from sympy import Eq, sympify, solve, symbols,Sum,sp
 from scipy.stats import gaussian_kde
 # Third-party imports
 from django.conf import settings
@@ -359,9 +359,12 @@ def simulate_show_view(request):
                 print("DH: No demand mean available")
             
             
+            pending_equations = []  # List to store equations that are not ready to be solved
+
             for equation in equations:
                 print("ecuacion " + str(equation.expression))
                 variables_to_use = []
+
                 for var in [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5]:
                     if var is not None:
                         variables_to_use.append(var.initials)
@@ -373,41 +376,78 @@ def simulate_show_view(request):
 
                 lhs, rhs = substituted_expression.split('=')
                 print("ecuacion armada " + str(lhs.strip() + "=" + rhs.strip()))  # print()
+
                 if rhs is not None:
                     # Replace '∑' with 'Sum'
                     if '∑' in rhs:
                         # Replace '∑' with the Sum function and adjust the syntax
                         # rhs = rhs.replace('∑', 'Sum(') + ')'
                         rhs = rhs.replace('∑', '')
-                    expresion_evaluated = sympify(rhs.strip())
+                    expresion_evaluated = sp.sympify(rhs.strip())
                 else:
                     # Handle the case where rhs is None
                     expresion_evaluated = None  # Adjust based on your requirements
                     continue
 
                 if expresion_evaluated is not None:
-                    synbol = symbols(lhs.strip())  # Esto crea el símbolo 'DF'
-                    result = solve(Eq(expresion_evaluated, 0), synbol)
-                    if result:
-                        endogenous_results[variables_to_use[-1]] = result[0]
-                    else:
-                        endogenous_results[variables_to_use[-1]] = None
-            
-            for variable_name, variable_value in endogenous_results.items():
-                if variable_name == "DT":
-                    demand_total += variable_value
+                    symbol = sp.symbols(lhs.strip())
 
-            demand_std_dev = np.std(list(simulation_instance.demand_history.all()) + [demand_total])
+                    # Check if all symbols in the expression are defined
+                    if all(var in variable_initials_dict for var in sp.symbols(lhs)):
+                        try:
+                            # Try to solve the equation
+                            result = sp.solve(sp.Eq(expresion_evaluated, 0), symbol)
+                            print(f"Debug: lhs={lhs}, expresion_evaluated={expresion_evaluated}, result={result}")
+
+                            if result:
+                                # Equation has a solution
+                                endogenous_results[variables_to_use[-1]] = result[0]
+                            else:
+                                # Equation has no solution, add it to pending equations
+                                print(f"Info: Equation {lhs} has no solution.")
+                                pending_equations.append((lhs, rhs))
+                        except Exception as e:
+                            print(f"Error: Unable to solve equation {lhs}. Reason: {str(e)}")
+                            pending_equations.append((lhs, rhs))
+                    else:
+                        # Equation is not ready, add it to pending equations
+                        print(f"Info: Equation {lhs} is waiting for complete data.")
+                        pending_equations.append((lhs, rhs))
+
+            # At this point, pending_equations contains equations waiting for complete data
+            # You can later attempt to solve the pending equations when more data is available.
+            # For example, when new data comes in:
+            pending_equations = [(lhs, rhs) for lhs, rhs in pending_equations if all(variable in endogenous_results for variable in variables_to_use)]
+
+            # Convert demand_total to a numeric type (assuming it's a string)
+            demand_total = float(demand_total)
+            # Parse demand_history JSON string into a list
+            demand_history_list = json.loads(simulation_instance.demand_history)
+            # Convert the elements in demand_history to a numeric type
+            demand_history_numeric = [float(value) for value in demand_history_list]
+            # Calculate the standard deviation
+            demand_std_dev = np.std(demand_history_numeric + [demand_total])
+            # demand_std_dev = np.std(list(simulation_instance.demand_history) + [demand_total])
+            # Add this before the serialization
+            print("Before serialization:", endogenous_results)
+
+            # Convert non-serializable parts of endogenous_results to serializable types
+            serializable_endogenous_results = {k: float(v) if isinstance(v, np.float64) else v for k, v in endogenous_results.items()}
+
+            # Add this after the serialization
+            print("After serialization:", serializable_endogenous_results)
             new_result_simulation = ResultSimulation(
                 fk_simulation=simulation_instance,
                 demand_mean=demand_total,
-                demand_std_dev=demand_std_dev,
-                start_date=simulation_instance.start_date + timedelta(days=i),
-                end_date=simulation_instance.start_date + timedelta(days=i+1),
+                demand_std_deviation=demand_std_dev,
+                date=simulation_instance.date_created + timedelta(days=i),
+                variables=serializable_endogenous_results,
+                # end_date=simulation_instance.date_created + timedelta(days=i+1),
             )
             new_result_simulation.save()
 
         print("La simulación ha comenzado")
+        print("dia de la simulacion " + str(i))
         return render(request, 'simulate/simulate-result.html', {
             'simulation_instance_id': simulation_instance,
         })
