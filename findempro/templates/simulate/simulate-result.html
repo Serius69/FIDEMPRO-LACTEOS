@@ -67,15 +67,23 @@
                                                                                             <span class="avatar-title bg-warning text-white rounded-2 fs-2 shadow">
                                                                                                 <i class="bx bxs-user-account"></i>
                                                                                             </span>
-                                                                                        {% elif info_variable.unit == "LITROS" %}
+                                                                                        {% elif info_variable.unit == "L" %}
                                                                                             <span class="avatar-title bg-info text-white rounded-2 fs-2 shadow">
                                                                                                 <i class="bx bx-store-alt"></i>
                                                                                             </span>
-                                                                                        {% elif info_variable.unit == "HORAS" %}
+                                                                                        {% elif info_variable.unit == "%" %}
+                                                                                            <span class="avatar-title bg-info text-white rounded-2 fs-2 shadow">
+                                                                                                <i class="bx bx-store-alt"></i>
+                                                                                            </span>
+                                                                                        {% elif info_variable.unit == "Horas" %}
                                                                                             <span class="avatar-title bg-light text-success rounded-2 fs-2 shadow">
                                                                                                 <i class="bx bx-alarm"></i>
                                                                                             </span>
-                                                                                        {% elif info_variable.unit == "LITROS/BS" %}
+                                                                                        {% elif info_variable.unit == "L/BS" %}
+                                                                                            <span class="avatar-title bg-light text-success rounded-2 fs-2 shadow">
+                                                                                                <i class="bx bx-adjust"></i>
+                                                                                            </span>
+                                                                                        {% elif info_variable.unit == "[0.1,0.3,0.5]" %}
                                                                                             <span class="avatar-title bg-light text-success rounded-2 fs-2 shadow">
                                                                                                 <i class="bx bx-adjust"></i>
                                                                                             </span>
@@ -83,8 +91,7 @@
                                                                                     </div>
                                                                                     <div class="flex-grow-1 ms-3">
                                                                                         <p class="text-uppercase fw-medium text-muted mb-3">{{ nombre_variable }} </p>
-                                                                                        <h4 class="fs-4 mb-3">{{ info_variable.unit }} <span class="counter-value" data-target="{{ info_variable.total|floatformat:2 }}">{{ info_variable.total|floatformat:2 }}</span></h4>
-                                                                                        {% comment %} <p class="text-muted mb-0">Tipo: {{ info_variable.unit }}</p> {% endcomment %}
+                                                                                        <h4 class="fs-4 mb-3">{{ info_variable.total|floatformat:2}} {{ info_variable.unit }}</h4>
                                                                                     </div>
                                                                                     <div class="flex-shrink-0 align-self-center">
                                                                                         <span class="badge badge-soft-success fs-12">

@@ -83,11 +83,10 @@ def simulate_show_view(request):
         # hasta aqui no tocar
         
         # primero buscar la demanda historica guardada en el resultado del cuestionario
-        demand_history = get_object_or_404(
-            Answer, 
-            fk_question__question='Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
-            fk_questionary_result_id=selected_questionary_result_id
-            )
+        demand_history = Answer.objects.filter(
+    fk_question__question='Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
+    fk_questionary_result_id=selected_questionary_result_id
+).first()
         print(demand_history.answer)   
         # solo para prober
         numbers = np.round(np.random.normal(loc=2500.0, scale=10.0, size=30)).astype(int)
@@ -505,7 +504,7 @@ def simulate_result_simulation_view(request, simulation_id):
     # analysis_results = analyze_simulation_results(results)
     # decision = decision_support(analysis_results)
     results_simulation = ResultSimulation.objects.filter(is_active=True, fk_simulation_id=simulation_id)
-    iniciales_a_buscar = ['CTR', 'CTAI', 'TPV', 'TPPRO', 'DI', 'VPC', 'IT', 'GT', 'TCA', 'NR', 'GO', 'GG', 'GT', 'CTT', 'CPP', 'CPV', 'CPI', 'CPMO', 'CUP', 'PVR', 'FU', 'TG', 'IB', 'MB', 'RI', 'RTI', 'RTC', 'PM', 'PE', 'HO', 'CHO', 'CA']
+    iniciales_a_buscar = ['CTR', 'CTAI', 'TPV', 'TPPRO', 'DI', 'VPC', 'IT', 'GT', 'TCA', 'NR', 'GO', 'GG', 'GT', 'CTTL', 'CPP', 'CPV', 'CPI', 'CPMO', 'CUP', 'PVR', 'FU', 'TG', 'IB', 'MB', 'RI', 'RTI', 'RTC', 'PM', 'PE', 'HO', 'CHO', 'CA']
     # Crear una lista para almacenar todas las variables extraídas
     all_variables_extracted = []
 

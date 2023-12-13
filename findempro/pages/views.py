@@ -194,12 +194,13 @@ def register_elements_simulation(request):
         form = RegisterElementsForm(request.POST)
         if form.is_valid():
             questionaries = Questionary.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user)
-            for questionary in questionaries:
-                create_and_save_questionary_result(questionary, created=True)
-            # questionary=get_object_or_404(Questionary, is_active=True, fk_product__fk_business__fk_user=request.user)
-            create_and_save_questionary_result(questionary, created=True)
             
-            return redirect("dashboard:index")  # Redirigir a la página de inicio después de procesar
+            if questionaries.exists():
+                for questionary in questionaries:
+                    create_and_save_questionary_result(questionary, created=True)
+                
+                return redirect("dashboard:index")  # Redirect to the dashboard after processing
+
     else:
         form = RegisterElementsForm()
 
@@ -208,60 +209,57 @@ def create_and_save_questionary_result(instance, created, **kwargs):
     if not created:
         return
 
-    questionary_result = QuestionaryResult.objects.filter(fk_questionary=instance).first()
-    if not questionary_result:
-        questionary_result = QuestionaryResult.objects.create(
-            fk_questionary=instance,
-            is_active=instance.is_active
-        )
-    else:
-        # Si existe, actualizar el estado
+    questionary_result, created = QuestionaryResult.objects.get_or_create(
+        fk_questionary=instance,
+        defaults={'is_active': instance.is_active}
+    )
+
+    if not created and questionary_result.is_active != instance.is_active:
+        # Si existe, pero el estado ha cambiado, actualizar el estado
         questionary_result.is_active = instance.is_active
         questionary_result.save()    
-        
+
     create_and_save_answer(questionary_result)
     create_and_save_simulation(questionary_result, created=True)
 
 def create_and_save_answer(instance):
     for data in answer_data:
         def get_question(question):
+            if question is None:
+                return None
             try:
-                if question == None:
-                    return None
                 return Question.objects.get(question=question)
             except Question.DoesNotExist:
-                raise Http404(f"question with question '{question}' does not exist.")
+                raise Http404(f"Question with question '{question}' does not exist.")
             except Question.MultipleObjectsReturned:
                 return Question.objects.filter(question=question).first()
 
         question = get_question(data['question'])
-        answer = Answer.objects.create(
+        answer, created = Answer.objects.get_or_create(
             answer=data['answer'],
             fk_question=question,
             fk_questionary_result=instance,
-            is_active=True
+            defaults={'is_active': True}
         )
-        answer.is_active = instance.is_active
-        answer.save()
+
+        if not created and answer.is_active != instance.is_active:
+            # Si existe, pero el estado ha cambiado, actualizar el estado
+            answer.is_active = instance.is_active
+            answer.save()
 def create_and_save_simulation(instance, created, **kwargs):
-    # Verifica si ya existe una simulación para este cuestionario resultante
-    existing_simulation = Simulation.objects.filter(fk_questionary_result=instance).first()        
-    if not existing_simulation:
-        # Get the first ProbabilisticDensityFunction related to the Business
-        fdp_instance = instance.fk_questionary.fk_product.fk_business.fk_business_fdp.first()
-        if fdp_instance is not None:
-            demand = [random.randint(1000, 5000) for _ in range(30)]
-            
-            simulation = Simulation(
-                unit_time='day',
-                fk_fdp=fdp_instance,
-                demand_history=demand,
-                quantity_time=30,
-                fk_questionary_result=instance,
-                is_active=True
-            )
-            simulation.save()
-    create_random_result_simulations(simulation,created=True)
+    fdp_instance = instance.fk_questionary.fk_product.fk_business.fk_business_fdp.first()
+    if fdp_instance is not None:
+        demand = [random.randint(1000, 5000) for _ in range(30)]
+        simulation, created = Simulation.objects.get_or_create(
+            unit_time='day',
+            fk_fdp=fdp_instance,
+            demand_history=demand,
+            quantity_time=30,
+            fk_questionary_result=instance,
+            defaults={'is_active': True}
+        )
+        if created:
+            create_random_result_simulations(simulation, created=True)
 
 def create_random_result_simulations(instance, created, **kwargs):
     # Obtén la fecha inicial de la instancia de Simulation
