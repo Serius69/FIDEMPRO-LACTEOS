@@ -1,4 +1,5 @@
 import random
+# from questionary_data import question_data
 import numpy as np
 questionary_result_data = [
     {
@@ -122,5 +123,20 @@ answer_data = [
         'answer': random.randint(1, 3),
         'question': 'Número de Proveedores de Leche'
     },
+    {
+        'answer': random.randint(100, 1000),
+        'question': '¿Cual es el consumo diario promedio de leche por proveedor?'
+    },
 ]
     
+    
+    
+# questions = [q['question'] for q in question_data]
+# answered_questions = [a['question'] for a in answer_data]
+# unanswered = set(questions) - set(answered_questions)
+# if unanswered:
+#     print("Las siguientes preguntas no tienen respuesta:")
+#     for question in unanswered:
+#         print(question)
+# else:
+#     print("Todas las preguntas tienen una respuesta asociada")

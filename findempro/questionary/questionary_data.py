@@ -140,7 +140,7 @@ question_data = [
         'initials_variable': 'NPD'  
     },
      {
-        'question': 'Cual es el consumo diario promedio de leche por proveedor?', 
+        'question': '¿Cual es el consumo diario promedio de leche por proveedor?', 
         'type': 1,
         'initials_variable': 'CTL'  
     },

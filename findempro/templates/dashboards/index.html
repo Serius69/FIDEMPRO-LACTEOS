@@ -63,6 +63,21 @@
                                             <button type="submit" class="btn btn-primary">Registrar</button>
                                         </div>
                                     </form>
+                                    <form method="POST" action="{% url 'pages:pages.register_elements_simulation' %}" class="needs-validation" novalidate>
+                                        <div class="modal-body">
+                                            {% csrf_token %}
+                                            <div class="mb-3 form-check">
+                                                <label class="form-check-label">
+                                                    <input type="checkbox" name="create_all_elements" class="form-check-input">
+                                                    Crear elementos de prueba simulacion
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                            <button type="submit" class="btn btn-primary">Registrar</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>

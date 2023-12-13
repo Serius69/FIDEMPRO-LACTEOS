@@ -6,7 +6,8 @@ pages_maintenance,
 pages_coming_soon,
 pages_privacy_policy,
 pages_terms_conditions,
-register_elements
+register_elements,
+register_elements_simulation
 )
 app_name = "pages"
 urlpatterns = [       
@@ -16,5 +17,6 @@ urlpatterns = [
     path("privacy-policy",view =pages_privacy_policy,name="pages.privacy_policy"),
     path("terms-conditions",view =pages_terms_conditions,name="pages.terms_conditions"),
     path('register_elements/', view=register_elements, name='pages.register_elements'),
+    path('register_elements_simulation/', view=register_elements_simulation, name='pages.register_elements_simulation'),
 ] 
 

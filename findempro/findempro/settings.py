@@ -81,8 +81,13 @@ MIDDLEWARE = [
     'user.middleware.ActivityLogMiddleware',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+}
+
 CORS_ALLOWED_ORIGINS = [
     "https://gifer.com", 
+    "http://localhost:8000"
 ]
 
 ROOT_URLCONF = 'findempro.urls'

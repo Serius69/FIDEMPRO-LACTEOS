@@ -192,17 +192,21 @@
                                                                 {% elif  question.type == 2 %}
                                                                     <div class="form-group">
                                                                         <label for="answer">Seleccione una opción:</label>
-                                                                        <select class="form-control" id="answer" name="answer" required>
+                                                                        {% comment %} {% set question.posible_answers = ["Si", "No"] %} {% endcomment %}
+                                                                        <select class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" required>
                                                                             <option value="">Seleccione una opción</option>
-                                                                            {% for option in question.posible_answers %}
-                                                                                <option value="{{option}}">{{option}}</option>
+                                                                            {% for option in question.possible_answers %}
+                                                                                <option value="{{ option }}">{{ option }}</option>
                                                                             {% endfor %}
                                                                         </select>
                                                                     </div>
                                                                 {% comment %} aqui tiene que validar que los 30 datos que se subiran como demandas historicas deben seguir una distribucion adecuada y no ser tan disparados {% endcomment %}
                                                                 {% elif  question.type == 3 %}
                                                                 <div class="form-group">
-                                                                   
+                                                                    <div class="custom-file">
+                                                                        <input type="file" class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" accept=".txt">
+                                                                        <label class="custom-file-label" for="answer_{{ question.id }}">Subir Archivo que contenga la demanda historica</label>
+                                                                    </div>
                                                                 </div>
                                                                 {% endif %}
                                                             {% endfor %}

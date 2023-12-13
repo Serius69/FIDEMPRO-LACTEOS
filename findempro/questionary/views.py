@@ -92,9 +92,11 @@ def questionnaire_list_view(request):
             show_questionary = None
         if selected_questionary_id == None: 
             questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
+            
             questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__in=products , fk_product__fk_business__fk_user=request.user) 
         else:
             questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_id)
+            
             questionnaires = Questionary.objects.order_by('id').filter(is_active=True, fk_product__in=products, fk_product__fk_business__fk_user=request.user)
         paginator = Paginator(questions_to_answer, 5) 
               
@@ -167,7 +169,6 @@ def questionnaire_list_view(request):
         paginator = Paginator(questions_to_answer, 5) 
         
         page = request.GET.get('page')
-        
         try:
             questions_to_answer = paginator.page(page)
         except PageNotAnInteger:
@@ -201,33 +202,17 @@ def questionnaire_list_view(request):
 #                # Add your code here to render the form
 #         pass
 def questionnaire_result_view(request, pk):
-    # try:
+    try:
         questionary_result = get_object_or_404(QuestionaryResult, pk=pk)
-        print(questionary_result)
         answers = Answer.objects.filter(
             fk_questionary_result=questionary_result, 
             is_active=True,
-            # fk_questionary_result__fk_questionary__fk__product__fk_business__fk_user=request.user).order_by('-id'
-            )
-        # questions = Question.objects.filter(
-        #     fk_questionary__fk_questionary_result_id=questionary_result.id, 
-        #     # fk_questionary__fk_product__fk_business__fk_user=request.user
-        #     ).order_by('-id')
+        )
         paginator = Paginator(answers, 100)
         page = request.GET.get('page')
-        try:
-            answers = paginator.page(page)
-        except PageNotAnInteger:
-            answers = paginator.page(1)
-        except EmptyPage:
-            answers = paginator.page(paginator.num_pages)
-        context = {'questionary_result': questionary_result, 
-                   'answers': answers,
-                #    'questions': questions,
-                #    'instructions': Instructions.objects.filter(is_active=True).order_by('-id')
-                   }
-        
+        answers = paginator.get_page(page)
+        context = {'questionary_result': questionary_result, 'answers': answers}
         return render(request, 'questionary/questionary-result.html', context)
-    # except Exception as e:
-    #     messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
-    #     return HttpResponse(status=500) 
+    except Exception as e:
+        messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
+        return HttpResponse(status=500)

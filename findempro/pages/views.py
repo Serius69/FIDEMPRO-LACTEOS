@@ -188,32 +188,27 @@ def create_and_save_question(instance, created, **kwargs):
             question.is_active = instance.is_active
             question.save()
 
-        questions_created = Question.objects.filter(fk_questionary_id=instance.id).count()
-        total_questions_expected = len(question_data)
-        if questions_created == total_questions_expected:
-            print(f"All questions have been correctly created for the product {instance.id}.")
-            create_and_save_answer(instance)
-        else:
-            print(f"Not all questions have been created for the questionnaire {instance.id}.")   
-
 @login_required
 def register_elements_simulation(request):
     if request.method == 'POST':
         form = RegisterElementsForm(request.POST)
         if form.is_valid():
-            create_and_save_questionary_result(request.user, created=True)
+            questionaries = Questionary.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user)
+            for questionary in questionaries:
+                create_and_save_questionary_result(questionary, created=True)
+            # questionary=get_object_or_404(Questionary, is_active=True, fk_product__fk_business__fk_user=request.user)
+            create_and_save_questionary_result(questionary, created=True)
+            
             return redirect("dashboard:index")  # Redirigir a la página de inicio después de procesar
-
     else:
         form = RegisterElementsForm()
 
     return render(request, 'pages/register_elements.html', {'form': form})
-def create_and_save_questionary_result(sender, instance, created, **kwargs):
+def create_and_save_questionary_result(instance, created, **kwargs):
     if not created:
         return
 
     questionary_result = QuestionaryResult.objects.filter(fk_questionary=instance).first()
-
     if not questionary_result:
         questionary_result = QuestionaryResult.objects.create(
             fk_questionary=instance,
@@ -224,7 +219,8 @@ def create_and_save_questionary_result(sender, instance, created, **kwargs):
         questionary_result.is_active = instance.is_active
         questionary_result.save()    
         
-    create_and_save_answer(questionary_result, created=True)
+    create_and_save_answer(questionary_result)
+    create_and_save_simulation(questionary_result, created=True)
 
 def create_and_save_answer(instance):
     for data in answer_data:
@@ -247,8 +243,8 @@ def create_and_save_answer(instance):
         )
         answer.is_active = instance.is_active
         answer.save()
-def create_simulation(sender, instance, created, **kwargs):
-    # Verifica si ya existe una simulación para este cuestionario
+def create_and_save_simulation(instance, created, **kwargs):
+    # Verifica si ya existe una simulación para este cuestionario resultante
     existing_simulation = Simulation.objects.filter(fk_questionary_result=instance).first()        
     if not existing_simulation:
         # Get the first ProbabilisticDensityFunction related to the Business
@@ -265,8 +261,9 @@ def create_simulation(sender, instance, created, **kwargs):
                 is_active=True
             )
             simulation.save()
+    create_random_result_simulations(simulation,created=True)
 
-def create_random_result_simulations(sender, instance, created, **kwargs):
+def create_random_result_simulations(instance, created, **kwargs):
     # Obtén la fecha inicial de la instancia de Simulation
     current_date = instance.date_created
     fk_simulation_instance = instance

@@ -303,6 +303,7 @@ def simulate_show_view(request):
         return render(request, 'simulate/simulate-init.html', context)
     else:
         # aqui ya tomar los datos de la simulacion que se creo en start
+        print("La simulación ha comenzado")
         simulation_instance = get_object_or_404(Simulation, pk=request.session['simulation_started_id'])
         nmd = int(simulation_instance.quantity_time)
         # Iterar sobre cada día de la simulación
@@ -455,9 +456,10 @@ def simulate_show_view(request):
                 # end_date=simulation_instance.date_created + timedelta(days=i+1),
             )
             new_result_simulation.save()
+            print("dia de la simulacion " + str(i))
 
-        print("La simulación ha comenzado")
-        print("dia de la simulacion " + str(i))
+        
+        request.session['started'] = False 
         return render(request, 'simulate/simulate-result.html', {
             'simulation_instance_id': simulation_instance,
         })              

@@ -63,7 +63,7 @@ variables_data = [
 {'name': 'Tiempo de produccion por empleado',
 'initials': 'TPE',
 'type': 1,
-'unit': 'DIAS',
+'unit': 'minutos',
 'description': 'Tiempo de produccion por empleado'},
 
 {'name': 'SUELDOS EMPLEADOS',
@@ -123,7 +123,7 @@ variables_data = [
 {'name': 'CANTIDAD DE INSUMOS PARA UN PRODUCTO',
 'initials': 'CINSP',
 'type': 1,
-'unit': 'L',
+'unit': 'ml',
 'description': 'CANTIDAD QUE LA EMPRESA UTILIZA PAR LA PRODUCCIÓN DE UN INSUMO'},
 
 {'name': 'CAPACIDAD MÁXIMA INVENTARIO PRODUCTO FINAL',
