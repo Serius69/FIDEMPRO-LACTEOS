@@ -23,6 +23,9 @@ class DashboardView(LoginRequiredMixin,TemplateView):
     
 def index(request):
     form = RegisterElementsForm(request.POST)
+    business_id_instance_query = get_object_or_404(Business, fk_user=request.user, is_active=True)
+    business_id_instance = business_id_instance_query.id
+    request.session['business_id'] = business_id_instance
     return render(request, 'dashboards/index.html',{'form': form})
 def dashboard_admin(request):
     today = timezone.now()
@@ -44,6 +47,7 @@ def dashboard_admin(request):
     return render(request, 'dashboards/dashboard-admin.html', context)
 
 def dashboard_user(request) -> str:
+    
     business_id_instance = request.session.get('business_id')
     if business_id_instance:
         try:

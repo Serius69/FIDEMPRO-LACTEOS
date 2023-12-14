@@ -566,16 +566,11 @@ def simulate_result_simulation_view(request, simulation_id):
     product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product.id)
     business_instance = get_object_or_404(Business, pk=product_instance.fk_business.id)
     areas = Area.objects.filter(is_active=True, fk_product=product_instance)
-    
-    # demand_initial = get_object_or_404(Demand, pk=1)
-     # Obtén datos de la base de datos
+
     result_simulations = ResultSimulation.objects.filter(is_active=True, 
                                                          fk_simulation_id=simulation_id)
-
-    # Recopila todos los datos fuera del bucle
     all_labels = []
     all_values = []
-
     for i, result_simulation in enumerate(result_simulations):
         data = result_simulation.get_average_demand_by_date()
         if data:
@@ -583,13 +578,10 @@ def simulate_result_simulation_view(request, simulation_id):
                 all_labels.append(i + 1)
                 all_values.append(entry['average_demand'])
 
-    # Asegúrate de que las fechas estén ordenadas correctamente
     sorted_data = sorted(zip(all_labels, all_values), key=lambda x: x[0])
     if sorted_data:
         all_labels, all_values = zip(*sorted_data)
     else:
-        # Handle the case when sorted_data is empty
-        # You might want to provide default values or handle it according to your application logic
         all_labels = []
         all_values = []
 
@@ -599,48 +591,47 @@ def simulate_result_simulation_view(request, simulation_id):
         'x_label': 'Resultado',
         'y_label': 'Demanda',
     }
-
-    # Crea el objeto Chart
-    chart = Chart.objects.create(
-        title=f'Comportamiendo de la demanda promedio para la simulación {simulation_id}',
-        chart_type='line',  # Cambia 'line' por el tipo de gráfico que desees
-        chart_data=chart_data,
-        fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
-        # Agrega más campos según sea necesario
-    )
-    # No tocar
-    image_data=None
-    file_name = f'line_chart_all_simulations.png'
-    print(len(all_labels))
-    print(len(all_values))
+    image_data = None
     if len(all_labels) == len(all_values):
-        plt.plot(chart_data['labels'], chart_data['values'], marker='o', label='Demanda')
-        # Agrega líneas horizontales y verticales
-        for value in all_values:
-            plt.axhline(y=value, linestyle='--', color='gray', alpha=0.5)
+        chart = None
+        try:
+            plt.plot(chart_data['labels'], chart_data['values'], marker='o', label='Demanda')
+            for value in all_values:
+                plt.axhline(y=value, linestyle='--', color='gray', alpha=0.5)
 
-        for label in all_labels:
-            plt.axvline(x=label, linestyle='--', color='gray', alpha=0.5)
-            
-        # Agrega una línea de tendencia
-        coefficients = np.polyfit(chart_data['labels'], chart_data['values'], 1)
-        polynomial = np.poly1d(coefficients)
-        trendline_values = polynomial(chart_data['labels'])
-        plt.plot(chart_data['labels'], trendline_values, label=f'Línea de tendencia: {coefficients[0]:.2f}x + {coefficients[1]:.2f}', linestyle='--')
+            for label in all_labels:
+                plt.axvline(x=label, linestyle='--', color='gray', alpha=0.5)
 
-        # Añade leyenda
-        plt.legend()
-        plt.xlabel(chart_data['x_label'])
-        plt.ylabel(chart_data['y_label'])
-        plt.title(chart.title)
-        plt.savefig(file_name)
-        buffer = BytesIO()
-        plt.savefig(buffer, format='png')
-        buffer.seek(0)
-        image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            coefficients = np.polyfit(chart_data['labels'], chart_data['values'], 1)
+            polynomial = np.poly1d(coefficients)
+            trendline_values = polynomial(chart_data['labels'])
+            plt.plot(chart_data['labels'], trendline_values, label=f'Línea de tendencia: {coefficients[0]:.2f}x + {coefficients[1]:.2f}', linestyle='--')
+
+            plt.legend()
+            plt.xlabel(chart_data['x_label'])
+            plt.ylabel(chart_data['y_label'])
+            plt.title(f'Comportamiendo de la demanda promedio para la simulación {simulation_id}')
+
+            with BytesIO() as buffer:
+                plt.savefig(buffer, format='png')
+                buffer.seek(0)
+                image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+            chart = Chart.objects.create(
+                title=f'Comportamiendo de la demanda promedio para la simulación {simulation_id}',
+                chart_type='line',
+                chart_data=chart_data,
+                fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
+            )
+            chart.save_chart_image()
+            chart.save()
+            plt.close()
+
+        except Exception as e:
+            print(f"Error generating chart or creating Chart object: {e}")
     else:
-        print("Las listas tienen diferentes longitudes, no se puede trazar el gráfico correctamente.")    
-    
+        print("Las listas tienen diferentes longitudes, no se puede trazar el gráfico correctamente.")
+
     paginator = Paginator(results_simulation, 10)  # Show 10 results per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -667,23 +658,25 @@ def simulate_result_simulation_view(request, simulation_id):
     # Analizar resultados y comparar con umbrales o criterios
     for recommendation_instance in financial_recommendations:
         name = recommendation_instance.name
-        variable_name = recommendation_instance.variable_name  # Asegúrate de tener este campo en tu modelo FinanceRecommendation
-        threshold_value = recommendation_instance.threshold_value  # Asegúrate de tener este campo en tu modelo FinanceRecommendation
+        variable_name = recommendation_instance.variable_name
+        threshold_value = recommendation_instance.threshold_value
 
-        # Obtener el valor correspondiente desde totales_acumulativos
+        # Check if variable_name exists in totales_acumulativos
         if variable_name in totales_acumulativos:
-            variable_value = totales_acumulativos[variable_name]
+            variable_value = totales_acumulativos[variable_name]['total']  # Get the numeric value
 
-            # Comparar con el umbral y tomar decisiones
-            if threshold_value is not None and variable_value > threshold_value:
-                # La variable supera el umbral, mostrar recomendación
-                recommendation_data = {
-                    'name': name,
-                    'recommendation': recommendation_instance.recommendation,
-                    'description': recommendation_instance.description,
-                    'variable_value': variable_value
-                }
-                financial_recommendations_to_show.append(recommendation_data)
+            # Check if threshold_value is not None and compare with variable_value
+            if threshold_value is not None and variable_value is not None:
+                if variable_value > threshold_value:
+                    # The variable exceeds the threshold, show recommendation
+                    recommendation_data = {
+                        'name': name,
+                        'recommendation': recommendation_instance.recommendation,
+                        'variable_name': variable_name
+                    }
+                    financial_recommendations_to_show.append(recommendation_data)
+        else:
+            print(f"Variable name {variable_name} not found in totales_acumulativos.")
     
     paginator2 = Paginator(financial_recommendations_to_show, 10)  # Show 10 results per page.
     page_number2 = request.GET.get('page')

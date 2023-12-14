@@ -7,7 +7,11 @@ from django.db import models
 from product.models import Product
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .dashboard_data import chart_data
+from PIL import Image
+from io import BytesIO
+import base64
+from django.core.files.base import ContentFile
+import matplotlib.pyplot as plt
 class Chart(models.Model):
     title = models.CharField(max_length=255, default='Chart', help_text="The title of the chart.")
     chart_type = models.CharField(max_length=50, default='line', help_text="The type of chart to use.")
@@ -30,22 +34,38 @@ class Chart(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the chart is active or not')
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the chart was created')
     last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the chart was last updated')
-    @receiver(post_save, sender=Product)
-    def create_dashboard(sender, instance, created, **kwargs):
-        if created:
-            product = Product.objects.get(pk=instance.pk)
-            for data in chart_data:
-                Chart.objects.create(
-                    title=data['title'],                    
-                    chart_type=data['chart_type'],
-                    chart_data= data['chart_data'],
-                    widget_config= data['widget_config'],
-                    layout_config= data['layout_config'],
-                    is_active= True,
-                    fk_product_id=product.id,
-                )
-    @receiver(post_save, sender=Product)
-    def save_dashboard(sender, instance, **kwargs):
-        for dashboard in instance.fk_product_charts.all():
-            dashboard.is_active = instance.is_active
-            dashboard.save()
+    chart_image = models.ImageField(upload_to='chart_images/', blank=True, null=True, help_text="Chart image")
+
+    def save_chart_image(self):
+        try:
+            # Generar la imagen con Matplotlib
+            plt.legend()
+            plt.xlabel(self.chart_data['x_label'])
+            plt.ylabel(self.chart_data['y_label'])
+            plt.title(self.title)
+            
+            with BytesIO() as buffer:
+                plt.savefig(buffer, format='png')
+                buffer.seek(0)
+
+                # Convertir a formato de imagen para guardar en ImageField
+                image = Image.open(buffer)
+                image_format = 'PNG'  # Especificar el formato de la imagen
+
+                # Guardar la imagen en el campo ImageField
+                self.chart_image.save(f"{self.title}_chart.png", ContentFile(buffer.getvalue()), save=False)
+
+            
+            # Limpiar el buffer y cerrar el gráfico de Matplotlib
+            plt.close()
+
+            # Llamar al método save del modelo para guardar otros campos si es necesario
+            super().save()
+        except Exception as e:
+            print(f"Error saving chart image: {e}")
+            
+    def get_photo_url(self) -> str:
+        if self.chart_image and hasattr(self.chart_image, 'url'):
+            return self.chart_image.url
+        else:
+            return "/static/images/business/business-dummy-img.webp"

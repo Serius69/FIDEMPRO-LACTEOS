@@ -1,6 +1,6 @@
 from typing import Optional
 from django.db import models
-from simulate.models import ResultSimulation  # Make sure the import statement is correct.
+from simulate.models import Simulation
 from django.utils import timezone
 from django.dispatch import receiver
 from .finance_data import recommendation_data
@@ -32,6 +32,7 @@ class FinanceRecommendation(models.Model):
                     name=data['name'],
                     recommendation=data['recommendation'],
                     threshold_value=data['threshold_value'],
+                    variable_name=data['variable_name'],
                     fk_business_id=business.id,
                     is_active=True
                 )
@@ -43,25 +44,23 @@ class FinanceRecommendation(models.Model):
             finance_recommendation.save()
 class FinanceRecommendationSimulation(models.Model):
     data = models.FloatField()
-    fk_result_simulation = models.ForeignKey(
-        ResultSimulation, 
-        on_delete=models.CASCADE,  # Added a comma here
-        related_name='fk_result_simulation_decision',
-        # default=ResultSimulation.objects.first(),
+    fk_simulation = models.ForeignKey(
+        Simulation, 
+        on_delete=models.CASCADE, 
+        related_name='fk_simulation_decision',
         default=1
     )
     fk_finance_recommendation = models.ForeignKey(
         FinanceRecommendation,
         on_delete=models.CASCADE,  # Adjust the on_delete behavior as needed
         related_name='fk_finance_recommendation_decision',
-        # default=FinanceRecommendation.objects.first(),
         default=1
     )    
     is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the finance is active or not')
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
-    def __str__(self) -> str:
-        return f"Decision for {self.fk_result_simulation.product.name} on {self.decision_date}"
+    # def __str__(self) -> str:
+    #     return f"Decision for {self.fk_simulation.fk_product.name} on {self.decision_date}"
 
 
