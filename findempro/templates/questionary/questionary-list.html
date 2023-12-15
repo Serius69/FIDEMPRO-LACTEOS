@@ -43,7 +43,7 @@
                             <div class="card-header border-0 rounded">
                                 <div class="row g-6 mb-4">
                                     <div class="col-md-4">                                        
-                                        {% if not started %}
+                                        {% if not started_questionary %}
                                             <form method="GET" action="{% url 'questionary:questionary.list' %}" onsubmit="return validateForm()">
                                                 {% csrf_token %}
                                                 <div class="input-group mb-2">
@@ -58,7 +58,7 @@
                                                         {% endfor %}
                                                     </select>
                                                 </div> 
-                                                {% if not started %}
+                                                {% if not started_questionary %}
                                                     <div class="d-grid gap-1">
                                                         <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
                                                     </div>                                       
@@ -75,7 +75,7 @@
                                                 </div>
                                             {% endif %}
                                         {% endif %}
-                                        {% if started %}
+                                        {% if started_questionary %}
                                             <div class="card">
                                                 <div class="card-header">
                                                     <h3 class="card-title">Información del cuestionario seleccionado:</h3>
@@ -97,7 +97,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-md-6">
-                                        {% if not started %}
+                                        {% if not started_questionary %}
                                             {% if questions %}
                                                 {% for question in questions %}
                                                     <div class="card questionlist-card mb-2">
@@ -162,7 +162,7 @@
                                                     </div>
                                                     <!-- end row -->
                                         {% endif %}
-                                        {% if started %}
+                                        {% if started_questionary %}
                                             <div class="card mb-3">
                                                 <div class="card-body">
                                                     {% if questions_to_answer %}
@@ -192,13 +192,22 @@
                                                                 {% elif  question.type == 2 %}
                                                                     <div class="form-group">
                                                                         <label for="answer">Seleccione una opción:</label>
-                                                                        <select class="form-control" id="answer" name="answer" required>
+                                                                        {% comment %} {% set question.posible_answers = ["Si", "No"] %} {% endcomment %}
+                                                                        <select class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" required>
                                                                             <option value="">Seleccione una opción</option>
-                                                                            {% for option in question.posible_answers %}
-                                                                                <option value="{{option}}">{{option}}</option>
+                                                                            {% for option in question.possible_answers %}
+                                                                                <option value="{{ option }}">{{ option }}</option>
                                                                             {% endfor %}
                                                                         </select>
                                                                     </div>
+                                                                {% comment %} aqui tiene que validar que los 30 datos que se subiran como demandas historicas deben seguir una distribucion adecuada y no ser tan disparados {% endcomment %}
+                                                                {% elif  question.type == 3 %}
+                                                                <div class="form-group">
+                                                                    <div class="custom-file">
+                                                                        <input type="file" class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" accept=".txt">
+                                                                        <label class="custom-file-label" for="answer_{{ question.id }}">Subir Archivo que contenga la demanda historica</label>
+                                                                    </div>
+                                                                </div>
                                                                 {% endif %}
                                                             {% endfor %}
                                                             {% if not questions_to_answer.last %}

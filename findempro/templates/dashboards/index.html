@@ -21,7 +21,69 @@
                             distintas funciones y características que ofrece nuestro sistema. Para aprovechar al máximo todas las funcionalidades, te 
                             recomendamos iniciar sesión. ¡Iniciar sesión te dará acceso completo a las herramientas y recursos que hacen que nuestro 
                             sistema sea aún más útil y personalizado para ti! ¡Esperamos que disfrutes utilizando el sistema!    
-                        </div> </div>
+                        </div> 
+                        <div class="col-xxl-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="card-title mb-3">Crear Elementos Predeterminados</h5>
+                                            <p class="card-text">
+                                                Al hacer clic en este botón, se crearán automáticamente los elementos predeterminados necesarios para las simulaciones.
+                                                Estos elementos incluyen negocios, productos, áreas, variables y ecuaciones que son esenciales para realizar simulaciones exitosas.
+                                            </p>
+                                        </div>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                            Crear Elementos
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Registrar Elementos Predeterminados</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="{% url 'pages:pages.register_elements' %}" class="needs-validation" novalidate>
+                                        <div class="modal-body">
+                                            {% csrf_token %}
+                                            <div class="mb-3 form-check">
+                                                <label class="form-check-label">
+                                                    <input type="checkbox" name="create_all_elements" class="form-check-input">
+                                                    Crear todos los elementos automáticamente
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                            <button type="submit" class="btn btn-primary">Registrar</button>
+                                        </div>
+                                    </form>
+                                    <form method="POST" action="{% url 'pages:pages.register_elements_simulation' %}" class="needs-validation" novalidate>
+                                        <div class="modal-body">
+                                            {% csrf_token %}
+                                            <div class="mb-3 form-check">
+                                                <label class="form-check-label">
+                                                    <input type="checkbox" name="create_all_elements" class="form-check-input">
+                                                    Crear elementos de prueba simulacion
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                            <button type="submit" class="btn btn-primary">Registrar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        </div>
                         <div class="row">
                             <div class="col-12">
                                 <div class="row">
@@ -29,8 +91,8 @@
                                         <div class="card">
                                             <div class="row g-0">
                                                 <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:75%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/74pZ.gif' %}" width="400" height="300" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
+                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
+                                                        <iframe src="{% static 'images/GIF/74pZ.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
                                                     </div>                                        
                                                 </div>
                                                 <div class="col-md-8">
@@ -64,8 +126,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:75%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/ASzm.gif' %}" width="400" height="300" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
+                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
+                                                        <iframe src="{% static 'images/GIF/ASzm.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
                                                     </div>                                                
                                                 </div>
                                             </div>
@@ -76,8 +138,8 @@
                                         <div class="card">
                                             <div class="row g-0">
                                                 <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:75%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/75ez.gif' %}" width="400" height="300" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
+                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
+                                                        <iframe src="{% static 'images/GIF/75ez.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
                                                     </div> 
                                                 </div>
                                                 <div class="col-md-8">
@@ -108,8 +170,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:75%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/7WpW.gif' %}" width="2000" height="300" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
+                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
+                                                        <iframe src="{% static 'images/GIF/7WpW.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
                                                     </div>   
                                                 </div>
                                             </div>
@@ -119,8 +181,8 @@
                                         <div class="card">
                                             <div class="row g-0">
                                                 <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:75%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/2mVW.gif' %}" width="400" height="300" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
+                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
+                                                        <iframe src="{% static 'images/GIF/2mVW.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
                                                     </div>                                                
                                                 </div>
                                                 <div class="col-md-8">
@@ -155,8 +217,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:75%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/72qy.gif' %}" width="400" height="300" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
+                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
+                                                        <iframe src="{% static 'images/GIF/72qy.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
                                                     </div> 
                                                 </div>
                                             </div>
@@ -167,8 +229,8 @@
                                         <div class="card">
                                             <div class="row g-0">
                                                 <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:75%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/Qqdd.gif' %}" width="400" height="300" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
+                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
+                                                        <iframe src="{% static 'images/GIF/Qqdd.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
                                                     </div> 
                                                 </div>
                                                 <div class="col-md-8">

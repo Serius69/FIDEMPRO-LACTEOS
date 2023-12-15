@@ -4,12 +4,7 @@ questionary_data = [
         ]
 question_data = [
     {
-        'question': '¿Cuántos productos lácteos vende diariamente?',
-        'type': 1,
-        'initials_variable': 'CPVD',
-    },
-    {
-        'question': '¿Cuál es el precio actual de sus productos lácteos?',
+        'question': '¿Cuál es el precio actual del producto?',
         'type': 1,
         'initials_variable': 'PVP',
     },
@@ -21,7 +16,7 @@ question_data = [
     {
         'question': '¿Cuántos productos están siendo producidos actualmente?',
         'type': 1,
-        'initials_variable': 'CP',
+        'initials_variable': 'CPROD',
     },
     {
         'question': '¿Cuál es la demanda esperada para los productos lácteos?',
@@ -29,66 +24,25 @@ question_data = [
         'initials_variable': 'DE',
     },
     {
-        'question': '¿Cuál es el costo unitario de producción?',
-        'type': 1,
-        'initials_variable': 'CUIP',
-    },
-    {
         'question': '¿Cuál es la capacidad del inventario de productos?',
         'type': 1,
-        'initials_variable': 'CPVD',
+        'initials_variable': 'CIP',
     },
     {
         'question': '¿Existe estacionalidad en la demanda?',
-        'type': 1,
-        'initials_variable': 'CPVD',
+        'type': 2,
+        'initials_variable': 'ED',
+        'possible_answers': ['Si', 'No'] 
     },
     {
         'question': '¿Cuál es el costo unitario del insumo para la producción?',
         'type': 1,
-        'initials_variable': 'CPVD',
+        'initials_variable': 'CUIP',
     },
     {
-        'question': '¿Cuál es el nivel de competitividad en el mercado de su empresa?',
-        'type': 2,
-        'initials_variable': 'NCM',
-        'possible_answers': ['Muy competitivo', 'Medianamente competitivo', 'Poco competitivo'] 
-    },
-    {
-        'question': '¿Cómo se posiciona su empresa en el mercado?',
+        'question': '¿Tiempo promedio entre compras?',
         'type': 1,
-        'initials_variable': 'PE',
-    },
-    {
-        'question': '¿Con qué frecuencia compran los clientes?',
-        'type': 2,
-        'initials_variable': 'FC',
-        'possible_answers': ['Diaria','Semanal','Quincenal','Mensual']
-    },
-    {
-        'question': '¿Cuál es la tasa de retención de clientes de su empresa?',
-        'type': 1,
-        'initials_variable': 'TRC',
-    },
-    {
-        'question': '¿Cuál es el nivel de satisfacción del cliente?',
-        'type': 1,
-        'initials_variable': 'SC',
-    },
-    {
-        'question': '¿Cuál es el nivel de lealtad del cliente?',
-        'type': 1,
-        'initials_variable': 'NLC',
-    },
-    {
-        'question': '¿Cuánto cuesta adquirir un nuevo cliente?',
-        'type': 1,
-        'initials_variable': 'CUAC',
-    },
-    {
-        'question': '¿Cuánto cuesta retener a un cliente?',
-        'type': 1,
-        'initials_variable': 'CURC',
+        'initials_variable': 'TPC',
     },
     {
         'question': '¿Cuántos clientes llegan diariamente?',
@@ -96,56 +50,14 @@ question_data = [
         'initials_variable': 'CPD',
     },
     {
-        'question': '¿Cuál es el nivel de automatización del proceso de producción?',
-        'type': 2,
-        'initials_variable': 'NAPP',
-        'possible_answers': ['Totalmente automatizado','Parcialmente automatizado','Manual']
-    },
-    {
-        'question': '¿Cuál es el nivel de eficiencia del proceso de producción?',
+        'question': '¿Cuál es el numero de empleados?',
         'type': 1,
         'initials_variable': 'NEPP',
     },
     {
-        'question': '¿La empresa cuenta con certificaciones de calidad?',
-        'type': 2,
-        'initials_variable': 'CP',
-        'possible_answers': ['ISO 9001', 'HACCP', 'Ninguna', 'Otras (especificar)']
-    },
-    {
-        'question': '¿Cuánto tiempo tarda en producir un producto?',
-        'type': 1,
-        'initials_variable': 'TPP',
-    },
-    {
         'question': '¿Cuál es el nivel de capacidad de producción?',
         'type': 1,
-        'initials_variable': 'CP',
-    },
-    {
-        'question': '¿Cuál es el nivel de flexibilidad en la producción?',
-        'type': 1,
-        'initials_variable': 'NFP',
-    },
-    {
-        'question': '¿Cuál es el nivel de eficiencia del inventario?',
-        'type': 1,
-        'initials_variable': 'NEI',
-    },
-    {
-        'question': '¿Cuál es el nivel de eficiencia en la cadena de suministro?',
-        'type': 1,
-        'initials_variable': 'NECS',
-    },
-    {
-        'question': '¿Cuál es el nivel de eficiencia en la gestión de compra de insumos?',
-        'type': 1,
-        'initials_variable': 'NEGCI',
-    },
-    {
-        'question': '¿Cuál es el nivel de eficiencia en la gestión de ventas?',
-        'type': 1,
-        'initials_variable': 'NEGV',
+        'initials_variable': 'CPROD',
     },
     {
         'question': '¿Cuáles son los sueldos y salarios de los empleados?',
@@ -155,7 +67,7 @@ question_data = [
     {
         'question': '¿Cuál es el precio promedio actual de los productos lácteos de la competencia?',
         'type': 1,
-        'initials_variable': 'PVPCC',
+        'initials_variable': 'PC',
     },
     {
         'question': '¿Cuál es el costo fijo diario?',
@@ -165,28 +77,22 @@ question_data = [
     {
         'question': '¿Cuál es el costo unitario por transporte?',
         'type': 1,
-        'initials_variable': 'CUP',
+        'initials_variable': 'CUTRANS',
     },
     {
-        'question': '¿Cuál es el costo unitario del inventario?',
-        'type': 1,
-        'initials_variable': 'CUI',
-    },
-    {
-        'question': '¿Cuáles son los gastos de marketing mensuales?',
+        'question': '¿Cuáles son los gastos de marketing?',
         'type': 1,
         'initials_variable': 'GMM',
     },
     {
         'question': '¿Cada cuánto tiempo se reabastece de insumos?',
-        'type': 2,
+        'type': 1,
         'initials_variable': 'TR',
-        'possible_answers': ['Semanalmente','Quincenalmente','Mensualmente','Bimensualmente']
     },
     {
         'question': '¿Cuántos insumos se utilizan para fabricar un producto lácteo?',
         'type': 1,
-        'initials_variable': 'CIP',
+        'initials_variable': 'CINSP',
     },
     {
         'question': '¿Cuál es la capacidad máxima de almacenamiento en inventario de productos lácteos?',
@@ -194,23 +100,48 @@ question_data = [
         'initials_variable': 'CMIPF',
     },
     {
-        'question': '¿Cuántos artículos produce en cada lote de producción?',
-        'type': 1,
-        'initials_variable': 'ALEP'
-    },
-    {
         'question': '¿Cuánto tiempo tarda cada empleado en producir una unidad de producto?', 
         'type': 1,
-        'initials_variable': 'TE'  
+        'initials_variable': 'TPE'  
     },
-    {
-        'question': '¿Cómo calificaría la calidad del producto final en una escala de 1 a 10?',
+        {
+        'question': '¿Cuál es el stock de inventario mínimo de seguridad (SI) para la capacidad máxima de insumos del producto final, medido en días?', 
         'type': 1,
-        'initials_variable': 'CALPRO'
+        'initials_variable': 'SI'  
+    },
+                {
+        'question': '¿Dias promedio de reabastecimiento?', 
+        'type': 1,
+        'initials_variable': 'DPL'  
+    },
+                {
+        'question': '¿Cuál es el tiempo medio de procesamiento de pedidos (TMP) actual en dias?', 
+        'type': 1,
+        'initials_variable': 'TMP'  
+    },
+                {
+        'question': '¿Cuántos litros, en promedio, se transportan por viaje según la variable Cantidad transportada por viaje?', 
+        'type': 1,
+        'initials_variable': 'TMP'  
     },
     {
-        'question': '¿Cuál es el costo por unidad de transportar el producto de la fábrica a la tienda?',
-        'type': 1, 
-        'initials_variable': 'CUTRANS'
-    }
+        'question': '¿Cuánto es la cantidad promedio producida por lote ?', 
+        'type': 1,
+        'initials_variable': 'CPL'  
+    },
+     {
+        'question': '¿Cantidad en Litros transportada por transporte ?', 
+        'type': 1,
+        'initials_variable': 'CTPLV'  
+    },
+     {
+        'question': 'Número de Proveedores de Leche', 
+        'type': 1,
+        'initials_variable': 'NPD'  
+    },
+     {
+        'question': '¿Cual es el consumo diario promedio de leche por proveedor?', 
+        'type': 1,
+        'initials_variable': 'CTL'  
+    },
 ]

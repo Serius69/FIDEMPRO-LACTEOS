@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
+from business.models import Business
 from .forms import VariableForm
 from pages.models import Instructions
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -15,19 +16,25 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
 from sympy import symbols, Eq, solve
 openai.api_key = settings.OPENAI_API_KEY
+from .forms import EquationForm
 from django.db.models import Q
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
+VARIABLES_PER_PAGE2 = 24
 def variable_list(request):
-    # try:
+    try:
         product_id = request.GET.get('product_id', 'All')
-        if product_id == 'All':
-            variables = Variable.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user).order_by('-id')
-            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
-        else:
-            variables = Variable.objects.filter(is_active=True, fk_product_id=product_id, fk_product__fk_business__fk_user=request.user).order_by('-id')
-            products = Product.objects.filter(is_active=True, fk_business__fk_user=request.user).order_by('-id')
-        paginator = Paginator(variables, 10)
+        businesses = Business.objects.filter(is_active=True, fk_user=request.user).order_by('-id')
+        
+        products = Product.objects.filter(is_active=True,fk_business__in=businesses, fk_business__fk_user=request.user).order_by('-id')
+        variables_conditions = Q(is_active=True, fk_product__in=products, fk_product__fk_business__fk_user=request.user)
+        
+        if product_id != 'All':
+            variables_conditions &= Q(fk_product_id=product_id)
+            
+        variables = Variable.objects.filter(variables_conditions).order_by('-id')
+            
+        paginator = Paginator(variables, VARIABLES_PER_PAGE2)
         page = request.GET.get('page')
 
         try:
@@ -40,86 +47,74 @@ def variable_list(request):
         context = {
             'variables': variables, 
             'products': products,
-            'instructions': Instructions.objects.filter(is_active=True).order_by('-id')}
+            'instructions': Instructions.objects.filter(is_active=True).order_by('-id')
+        }
         return render(request, 'variable/variable-list.html', context)
-    # except Exception as e:
-    #     messages.error(request, f"An error occurred: {str(e)}")
-    #     return HttpResponse(status=500)
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
+VARIABLES_PER_PAGE = 4
 def variable_overview(request, pk):
-    # try:
+    try:
         variable = get_object_or_404(Variable, pk=pk)
         product_id = variable.fk_product.id
         variable_id = variable.id
+
         variables_related = Variable.objects.filter(
             is_active=True, 
             fk_product_id=product_id
-            ).order_by('-id')
-        variable_initials = Variable.objects.get(id=variable_id).initials
-        
+        ).order_by('-id')
+
         equation_conditions = Q(
             is_active=True,
-            # expression__contains=variable_initials,
             fk_variable1__fk_product_id=product_id,
             fk_variable1_id=variable_id
         ) 
-        # | Q(
-        #     expression__contains=variable_initials,
-        #     fk_variable2__fk_product_id=product_id,
-        #     fk_variable2_id=variable_id
-        # ) | Q(
-        #     expression__contains=variable_initials,
-        #     fk_variable3__fk_product_id=product_id,
-        #     fk_variable3_id=variable_id
-        # ) | Q(
-        #     expression__contains=variable_initials,
-        #     fk_variable4__fk_product_id=product_id,
-        #     fk_variable4_id=variable_id
-        # )
-
-        
-        equations = Equation.objects.filter(equation_conditions,).order_by('-id')
+        equations = Equation.objects.filter(equation_conditions).order_by('-id')
         
         # Paginate the variables
-        paginator = Paginator(variables_related, 4)  # Show 6 variables per page
+        paginator = Paginator(variables_related, VARIABLES_PER_PAGE)
         page = request.GET.get('page')
 
         try:
             variables_related = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver the first page.
             variables_related = paginator.page(1)
         except EmptyPage:
-            # If the page is out of range, deliver the last page of results.
             variables_related = paginator.page(paginator.num_pages)
             
         return render(request, "variable/variable-overview.html", {
             'variable': variable, 
             'variables_related': variables_related,
             'equations': equations
-            })
-    # except Exception as e:
-    #     messages.error(request, f"An error occurred: {str(e)}")
-    #     return HttpResponse(status=500)
-def create_variable_view(request):
+        })
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)
+def create_or_update_variable_view(request, pk=None):
+    variable = None
+    if pk:
+        variable = get_object_or_404(Variable, pk=pk)
     if request.method == 'POST':
-        form = VariableForm(request.POST, request.FILES)
+        form = VariableForm(request.POST, request.FILES, instance=variable)
         try:
             if form.is_valid():
-                variable_name = form.cleaned_data.get('name')
-                initial_prompt = f"Generate the initials of the variable, but only use 4 characters. Do not include additional advertisements or instructions. Provide the initials for the next variable: {variable_name}"
+                if pk is None:
+                    variable_name = form.cleaned_data.get('name')
+                    initial_prompt = f"Generate the initials of the variable, but only use 4 characters. Do not include additional advertisements or instructions. Provide the initials for the next variable: {variable_name}"
 
-                response = openai.Completion.create(
-                    engine="text-davinci-002",
-                    prompt=initial_prompt,
-                    max_tokens=5,
-                    stop=None
-                )
-                initials = response.choices[0].text.strip()
+                    response = openai.Completion.create(
+                        engine="text-davinci-002",
+                        prompt=initial_prompt,
+                        max_tokens=5,
+                        stop=None
+                    )
+                    initials = response.choices[0].text.strip()
 
-                form.instance.initials = initials
+                    form.instance.initials = initials
 
                 variable = form.save()
-                messages.success(request, 'Variable created successfully')
+                messages.success(request, 'Variable created successfully' if pk is None else 'Variable updated successfully')
                 return JsonResponse({'success': True})
             else:
                 return JsonResponse({'success': False, 'errors': form.errors})
@@ -127,36 +122,23 @@ def create_variable_view(request):
             print(e)
             return JsonResponse({'success': False, 'error': 'An error occurred while saving the variable'})
     else:
-        form = VariableForm()
+        form = VariableForm(instance=variable)
     return render(request, 'variable/variable-form.html', {'form': form})
-def update_variable_view(request, pk):
-    variable = Variable.objects.get(pk=pk)
-    if request.method == "POST":
-        form = VariableForm(request.POST or None, request.FILES or None, instance=variable)
-        try:
-            if form.is_valid():
-                form.save()
-                messages.success(request, "Variable updated successfully!")
-                return redirect("variable:variable.overview", pk=pk)
-            else:
-                messages.error(request, "Something went wrong!")
-                return render(request, "variable/variable-form.html", {'form': form})
-        except Exception as e:
-            messages.error(request, f"An error occurred: {str(e)}")
-            return HttpResponse(status=500)
-
-    return render(request, "variable/variable-form.html", {'form': form})
 def delete_variable_view(request, pk):
     try:
-        variable = get_object_or_404(Variable, pk=pk)
-        variable.is_active=False
-        variable.save()
-        messages.success(request, "Variable deleted successfully!")
-        return redirect("variable:variable.list")
+        if request.method == 'POST':
+            variable = get_object_or_404(Variable, pk=pk)
+            variable.is_active = False
+            variable.save()
+            messages.success(request, "Variable eliminado con éxito!")
+            return redirect("variable:variable.list")
+        else:
+            messages.error(request, "Invalid request method. Only POST is allowed.")
+            return HttpResponse("Invalid request method. Only POST is allowed.", status=405)  # Method Not Allowed
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
-def get_variable_details(request, pk):
+def get_variable_details_view(request, pk):
     try:
         if request.method == 'GET':
             variable = Variable.objects.get(id=pk)
@@ -164,11 +146,63 @@ def get_variable_details(request, pk):
                 "name": variable.name,
                 "type": variable.type,
                 "fk_product": variable.fk_product.name,
+                "unit": variable.unit,
+                "image_src": str(variable.image_src),
+                "initials": variable.initials,
                 "description": variable.description,
             }
             return JsonResponse(variable_details)
     except ObjectDoesNotExist:
         return JsonResponse({"error": "El negocio no existe"}, status=404)
+def create_or_update_equation_view(request, pk=None):
+    equation = None
+    if pk:
+        equation = get_object_or_404(Variable, pk=pk)
+    if request.method in ['POST', 'PUT']:
+        form = EquationForm(request.POST, request.FILES, instance=equation)
+        try:
+            if form.is_valid():
+                equation = form.save()
+                messages.success(request, 'Equation created successfully' if pk is None else 'Equation updated successfully')
+                return JsonResponse({'success': True}) if pk is None else redirect("variable:variable.overview", pk=pk)
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors}) if pk is None else render(request, "variable/variable-form.html", {'form': form})
+        except Exception as e:
+            print(e)
+            return JsonResponse({'success': False, 'error': 'An error occurred while saving the equation'}) if pk is None else HttpResponse(status=500)
+    else:
+        form = EquationForm(instance=equation)
+    return render(request, 'variable/variable-form.html', {'form': form})
+def delete_equation_view(request, pk):
+    try:
+        equation = get_object_or_404(Equation, pk=pk)
+        equation.is_active=False
+        equation.save()
+        messages.success(request, "Variable deleted successfully!")
+        return redirect("product:area.overview")
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponse(status=500)  
+def get_equation_details(request, pk):
+    try:
+        if request.method == 'GET':
+            equation = Equation.objects.get(id=pk)
+            equation_details = {
+                "name": equation.name,
+                "expression": equation.expression,
+                "fk_area": equation.fk_area.name,
+                "fk_variable1": equation.fk_variable1.name if equation.fk_variable1 else None,
+                "fk_variable2": equation.fk_variable2.name if equation.fk_variable2 else None,
+                "fk_variable3": equation.fk_variable3.name if equation.fk_variable3 else None,
+                "fk_variable4": equation.fk_variable4.name if equation.fk_variable4 else None,
+                "fk_variable5": equation.fk_variable5.name if equation.fk_variable5 else None,
+                "description": equation.description,
+            }
+
+            return JsonResponse(equation_details)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "La ecuacion no existe"}, status=404)
+
 def solve_equation(request):
     if request.method == 'POST':
         equation_str = request.POST.get('equation', '')

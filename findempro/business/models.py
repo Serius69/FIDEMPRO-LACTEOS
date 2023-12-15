@@ -35,22 +35,7 @@ class Business(models.Model):
             return self.image_src.url
         else:
             return "/static/images/business/business-dummy-img.webp"
-    @receiver(post_save, sender=User)
-    def create_business(sender, instance, created, **kwargs):
-        if created:
-            user = User.objects.get(pk=instance.pk)
-            Business.objects.create(
-                name="Pyme Lactea",
-                type= 1,  
-                location="La Paz",
-                image_src = f"/images/business/Pyme Lactea.jpg",
-                fk_user_id=user.id,
-                )
-    @receiver(post_save, sender=User)
-    def save_business(sender, instance, **kwargs):
-        business = instance.fk_user_business.first() 
-        if business:
-            business.is_active = instance.is_active
-            business.save()
+
+
                 
     

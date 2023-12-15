@@ -18,7 +18,7 @@
                     <div class="py-4">
                         <h4 class="display-6 -text">Lista de variables</h4>
                         <div class="container">                      
-                            <p>Bienvenido a nuestra página de la lista de simulación, con una colección dinámica de escenarios variables procedentes de nuestra base de datos integral.Ya sea que sea un entusiasta, un investigador o alguien que explore el mundo de las simulaciones, esta página está diseñada para atender sus intereses.</p>
+                            <p>Pagina de listado de variables registradas en la base de datos.</p>
                         
                             <h2>Características clave:</h2>
                         
@@ -34,59 +34,62 @@
                 </div>
                 <div class="col-xxl-3 ms-auto">
                     <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                        <img src="{% static 'images/variable-img.webp'%}" alt="" class="img-fluid">
-                    </div>
+                        <img src="{% static 'images/variable-img.webp'%}" alt="" class="img-fluid" style="max-width: 60%; height: auto;">                    </div>
                 </div>
             </div>
         </div>
     </div>
       <div class="row">
-        <div class="col-lg-10 col-md-9 col-sm-12">
-          <div class="card shadow-sm">
-            <div class="card-header bg-light">
-              <h6 class="mb-0">Filtrar Resultados</h6>
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-title">
+              <h6 class="card-title mb-0">Filtrar Resultados</h6>
             </div>
             <div class="card-body">
-              <form method="get" action="{% url 'variable:variable.list' %}">
+              <form method="GET" action="{% url 'variable:variable.list' %}">
                 <div class="row g-3">
-                  <div class="col-md-6">
-                    <label for="business-select" class="form-label">Seleccionar producto</label>
-                    <select class="form-select" id="business-select" name="business_id">
+                  <div class="col-md-4">
+                    <label for="business-select" class="form-label">Seleccione el producto</label>
+                    <select class="form-control" id="business-select" name="business_id">
                       <option value="All">Todos los productos</option>
                       {% for product in products %}
-                      <option value="{{ product.id }}">
+                      <option value="{{ product.id }}" {% if request.GET.type == "{{ product.id }}" %}selected{% endif %}>
                         {{ product.name }}
                       </option>
                       {% empty %}
-                      <option value="All">Todos</option>
+                      <option value="All">Todos los productos</option>
                       {% endfor %}
                     </select>
                   </div>
-                  <div class="col-md-6">
-                    <label for="type-select" class="form-label">Seleccione tipo</label>
-                    <select class="form-select" id="type-select">
+                  <div class="col-md-4">
+                    <label for="type-select" class="form-label">Seleccione el tipo</label>
+                    <select class="form-control" id="type-select" name="type">
                       <option value="All">Todos los tipos</option>
                       <option value="Endogena">Endógena</option>
-                      <option value="Exogena">Exogena</option>
+                      <option value="Exogena">Exógena</option>
                       <option value="Estado">Estado</option>
                     </select>
                   </div>
-                  <div class="col-12 d-flex justify-content-end">
-                    <button type="submit" class="btn btn-danger mt-3" id="apply-filters">
+                  <div class="col-md-4">
+                    <button type="submit" class="btn btn-danger mt-4" id="apply-filters">
                       <i class="ri-equalizer-fill me-1 align-bottom"></i>
                       Aplicar Filtros
                     </button>
                   </div>
                 </div>
               </form>
-              <div class="d-flex justify-content-end mt-3">
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariable">
-                  <i class="ri-add-fill me-1 align-bottom"></i>
-                  Crear nuevo
-                </button>
+              <div class="row g-3 mt-3">
+                <div class="col-lg-12">
+                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
+                    <i class="ri-add-fill me-1 align-bottom"></i>
+                    Crear nuevo
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
           <div class="row">
             {% for variable in variables %}
                 <div class="col-md-3 mb-4">
@@ -96,7 +99,7 @@
                                 <div class="col-lg-4 col-md-3">
                                     <div class="avatar-lg">
                                         <div class="avatar-title bg-light rounded">
-                                            <img src="{{ variable.get_image_url }}" alt="" class="avatar-md companyLogo-img" style="object-fit: cover; width: 100%; height: 100%;" />
+                                            <img src="{{ variable.get_photo_url }}" alt="" class="avatar-md companyLogo-img" style="object-fit: cover; width: 100%; height: 100%;" />
                                         </div>
                                     </div>
                                 </div>
@@ -130,14 +133,23 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                        <div>
-                                            <i class="ri-battery-fill align-bottom me-1"></i>
-                                            {{variable.type}}
-                                        </div>
-                                        <div>
-                                            <i class="ri-time-line align-bottom me-1"></i>
-                                            <span class="job-postdate">{{ variable.date_created|date:"F j, Y" }}</span>
-                                        </div>
+                                      <div>
+                                        <i class="ri-battery-fill align-bottom me-1"></i>
+                                        
+                                        {% if variable.type == 1 %}
+                                            Exógena
+                                        {% elif variable.type == 2 %}
+                                            Estado
+                                        {% elif variable.type == 3 %}
+                                            Endógena
+                                        {% else %}
+                                            Otro Tipo
+                                        {% endif %}
+                                      </div>
+                                      <div>
+                                          <i class="ri-time-line align-bottom me-1"></i>
+                                          <span class="job-postdate">{{ variable.date_created|date:"F j, Y" }}</span>
+                                      </div>
                                     </div>
                                 </div>
                                 <div class="col-md-2">
@@ -150,14 +162,18 @@
                                                 <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
                                                 Vista
                                             </a>
-                                            <a class="dropdown-item edit-variable" data-bs-target="#editVariableModal" data-variable-id="{{ variable.id }}">
-                                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                                Editar
+                                            <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
+                                              data-bs-target="#addOrUpdateVariable" data-variable-id="{{ variable.id }}"
+                                              onclick="loadVariableDetails('{{ variable.id }}'); return false;">
+                                              <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                              Editar
                                             </a>
                                             <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item delete-variable" data-bs-toggle="modal" data-bs-target="#removeVariableModal" data-variable-id="{{ variable.id }}">
-                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                                Eliminar
+                                            <a id="delete-variable-link" class="dropdown-item delete-variable" 
+                                              data-bs-toggle="modal" data-bs-target="#removeVariableModal" 
+                                              data-variable-id="{{ variable.id }}">
+                                              <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                              Eliminar
                                             </a>
                                         </div>
                                     </div>
@@ -186,7 +202,7 @@
             <div class="col-sm">
               <div class="text-muted"
                 >Mostrar
-                <span class="fw-semibold">{{ variables.number }}</span> of
+                <span class="fw-semibold">{{ variables.number }}</span> de
                 <span class="fw-semibold"
                   >{{ variables.paginator.num_pages }}</span
                 >
@@ -237,60 +253,6 @@
           </div>
           <!-- end row -->
         </div>
-        <div class="col-lg-2 col-md-3 col-sm-12 layout-rightside-col">
-          <div class="overlay"></div>
-          <div class="layout-rightside">
-            <div class="card h-100 rounded-0">
-              <div class="card-body p-0">
-                <div class="p-3">
-                  <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                    Instrucciones
-                  </h6>
-                </div>
-                <div data-simplebar style="max-height: 700px" class="p-3 pt-0">
-                  <div class="instruction-timeline instruction-main">
-                    {% for instruction in instructions %}
-                    <div class="instruction-item d-flex">
-                      <div class="flex-shrink-0 avatar-xs instruction-avatar">
-                        <div
-                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
-                        >
-                          <i class="ri-info-line"></i>
-                        </div>
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1 lh-base">{{ instruction.instruction }}</h6>
-                        <p class="text-muted mb-1">
-                          {{ instruction.content }}
-                        </p>
-                      </div>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4">
-                      <lord-icon
-                        src="https://cdn.lordicon.com/msoeawqm.json"
-                        trigger="loop"
-                        colors="primary:#405189,secondary:#0ab39c"
-                        style="width: 75px; height: 75px"
-                      ></lord-icon>
-                      <h5 class="mt-2">
-                        Lo siento, no hay instrucciones en la base de datos
-                      </h5>
-                      <p class="text-muted mb-0">
-                        Agregue instrucciones al sistema.
-                      </p>
-                    </div>
-                    {% endfor %}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- end card-->
-          </div>
-          <!-- end .rightbar-->
-        </div>
-        <!-- end col activity -->
-      </div> 
     </div>
     <!-- container-fluid -->
   </div>
@@ -302,9 +264,13 @@
 <!-- end main content-->
 {% endblock content %} 
 {% block extra_content %}
-{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+{% block modals %} 
+{% include "partials/modals.html" %}
+{% include "variable/variable-modal.html" %}
+{% endblock modals %}
 {% endblock extra_content %}
 {% block extra_js %}
 <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
 <script src="{% static 'js/crud.js' %}"></script>
+<script src="{% static 'js/commom-utils.js' %}"></script>
 {% endblock extra_js %}

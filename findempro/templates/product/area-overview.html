@@ -1,0 +1,185 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Descripción del areao{% endblock title %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css" integrity="sha384-HE6mLTh5BORvU8h5XUAu/rs2s1+04dQTYoMsAAQd7wK5DtzQVFjtQdEtaPXtoeh3" crossorigin="anonymous">
+{% endblock extra_css %}
+{% block content %}
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+                <div class="page-content">
+                    <div class="container-fluid">
+                        {% block pagetitle %}
+                        {% include "partials/page-title.html" with pagetitle="Producto" title=area.name %}
+                        {% endblock pagetitle %}
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card mt-n2 mx-n2">
+                                    <div class="bg-warning-subtle">
+                                        <div class="card-body pb-0 px-2">
+                                            <div class="row mb-1">
+                                                <!-- Product Image -->
+                                                <div class="col-lg-4 col-md-4 col-sm-12" style="background-image: url('{{ area.get_photo_url }}'); background-size: cover; background-position: center;">
+                                                </div>
+                                                <!-- Product Details -->
+                                                <div class="col-lg-8 col-md-8 col-sm-12">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <h4 class="card-title fw-bold" style="font-size: 2em;">{{area.name}}</h4>
+                                                            <ul class="list-group list-group-flush">
+                                                                <li class="list-group-item"><i class="ri-building-line align-bottom me-1"></i> {{area.fk_product.name}}</li>
+                                                                <li class="list-group-item">Fecha de Creación: <span class="fw-medium">{{area.date_created}}</span></li>
+                                                                <li class="list-group-item">Fecha actualizada: <span class="fw-medium">{{area.last_updated}}</span></li>
+                                                                {% with days_since_creation=area.date_created|timesince:current_datetime %}
+                                                                    {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
+                                                                        <li class="list-group-item"><span class="badge rounded-pill bg-info">Nuevo</span></li>
+                                                                    {% endif %}
+                                                                {% endwith %}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <h6 class="mb-3 fw-semibold text-uppercase">Descripción</h6>
+                                                                <p>{{area.description}}</p>    
+                    
+                                                                <div class="pt-3 border-top border-top-dashed mt-4">
+                                                                    <div class="row">
+                                                                        
+                                                                        <div class="col-lg-6 col-sm-6">
+                                                                            <div>
+                                                                                <p class="mb-2 text-uppercase fw-medium">Fecha de Creación:</p>
+                                                                                <h5 class="fs-15 mb-0">{{ area.date_created|date:"F j, Y, P" }}</h5>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-lg-6 col-sm-6">
+                                                                            <div>
+                                                                                <p class="mb-2 text-uppercase fw-medium">Fecha de actualizacion: </p>
+                                                                                <h5 class="fs-15 mb-0">{{ area.last_updated|date:"F j, Y, P" }}</h5>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                        </div>
+                                                        
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Product Tabs -->
+                                            <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
+                                                <li class="nav-item">
+                                                    <a class="nav-link active fw-semibold" style="font-size: 1.5em;" data-bs-toggle="tab" href="#area-overview" role="tab">Descripción general</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end row -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="tab-content text-muted">
+                                    <div class="tab-pane fade show active" id="area-overview" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="card">
+                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
+                                                        <h4 class="card-title mb-0 flex-grow-1"style="font-size: 2em;">Ecuaciones</h4>
+                                                        <div class="flex-shrink-0">
+                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOrUpdateEquation">
+                                                                Crear Nueva Ecuación
+                                                            </button>                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        {% for equation in equations_area %}
+                                                        <div class="col-md-4">
+                                                            <div class="card">
+                                                                <div class="card-body">
+                                                                    <h4 class="card-title" style="font-size: 1.5em;">{{ equation.name }}</h4>
+                                                                    <pre class="card-text" style="font-size: 3em;">{{ equation.expression }}</pre>
+                                                                    {% if equation.fk_variable1 %}
+                                                                        {% if equation.fk_variable1 %}
+                                                                            <p class="small" style="font-size: 1em;">Variable 1: {{ equation.fk_variable1.name|capfirst }}</p>
+                                                                        {% endif %}
+                                                                        {% if equation.fk_variable2 %}
+                                                                            <p class="small" style="font-size: 1em;">Variable 2: {{ equation.fk_variable2.name|capfirst }}</p>
+                                                                        {% endif %}
+                                                                        {% if equation.fk_variable3 %}
+                                                                            <p class="small" style="font-size: 1em;">Variable 3: {{ equation.fk_variable3.name|capfirst }}</p>
+                                                                        {% endif %}
+                                                                        {% if equation.fk_variable4 %}
+                                                                            <p class="small" style="font-size: 1em;">Variable 4: {{ equation.fk_variable4.name|capfirst }}</p>
+                                                                        {% endif %}
+                                                                        {% if equation.fk_variable5 %}
+                                                                            <p class="small" style="font-size: 1em;">Variable 5: {{ equation.fk_variable5.name|capfirst }}</p>
+                                                                        {% endif %}
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="card-footer border-top-dashed">
+                                                                    <div class="row">
+                                                                        <div class="col-md-12 justify-content-end d-flex">
+                                                                            <div class="dropdown">
+                                                                                <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                                                                    <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                                                </button>
+                                                                                <div class="dropdown-menu dropdown-menu-end">
+                                                                                    <a href="#" class="dropdown-item edit-equation" data-bs-toggle="modal"
+                                                                                        data-bs-target="#addOrUpdateEquation" data-variable-id="{{ equation.id }}"
+                                                                                        onclick="loadEquationDetails('{{ equation.id }}'); return false;">
+                                                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                                        Editar
+                                                                                    </a>
+                                                                                    <div class="dropdown-divider"></div>
+                                                                                    <a id="delete-equation-link" class="dropdown-item delete-equation" 
+                                                                                        data-bs-toggle="modal" data-bs-target="#removeEquationModal" 
+                                                                                        data-area-id="{{ equation.id }}">
+                                                                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                                        Eliminar
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {% empty %}
+                                                            <div class="col text-center py-4">
+                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                <h5 class="mt-2">Lo sentimos, no tiene ninguna ecuación en este área</h5>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- container-fluid -->
+                </div>
+                <!-- End Page-content -->
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+            </div>
+            <!-- end main content-->
+{% endblock content %}
+
+{% block extra_content %}
+{% block modals %} 
+{% include "variable/variable-modal.html" %}
+{% include "partials/modals.html" %} {% endblock modals %}
+{% endblock extra_content %}
+    
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js" integrity="sha384-RBk1jltzHKz5l1cUO7JrI/xiKAtaZjvvBvu1/wSkohgWoJ2toB+6IRzMvemWy+f" crossorigin="anonymous"></script>
+    <script src="{% static 'js/crud.js' %}"></script>
+{% endblock extra_js %}

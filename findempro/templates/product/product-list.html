@@ -15,93 +15,76 @@
       {% endblock pagetitle %}
       <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
         <div class="px-4">
-            <div class="row">
-                <div class="col-xxl-9 align-self-center">
-                    <div class="py-4">
-                        <h4 class="display-6 -text">LISTA DE PRODUCTOS</h4>
-                        <div class="container">                      
-                          <p>Explore nuestra lista completa de productos con una amplia gama de artículos procedentes de nuestra extensa base de datos.Esta plataforma fácil de usar le permite tomar el control de su inventario de productos sin esfuerzo.Ya sea que sea propietario de un negocio, gerente de valores o simplemente alguien apasionado por la organización, esta página está diseñada con usted en mente.</p>
-                          <h2>Características clave:</h2>
-                          <ul>
-                            <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles del producto como nombre, descripción, precio y cantidad.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite mantener actualizado la información de su producto con solo unos pocos clics.</li>
-                            <li><span class="text-danger">Borrar:</span> ¿Necesita eliminar un producto de su inventario?La función Eliminar le permite eliminar de forma rápida y segura los elementos que ya no son relevantes.Diga adiós al desorden innecesario en su base de datos.</li>
-                            <li><span class="text-primary"> Ver: </span> Sumérgete profundamente en los detalles de cada producto con la opción Vista.Obtenga información sobre las especificaciones, datos históricos y más.Esta característica es perfecta para analizar el rendimiento del producto y tomar decisiones informadas.</li>
-                          </ul>
-                        </div>
-                    </div>
+          <div class="row">
+            <div class="col-xxl-9 align-self-center">
+              <div class="py-4">
+                <h4 class="display-6 -text">LISTA DE PRODUCTOS</h4>
+                <div class="container">                      
+                  <p>El listado de productos que se tienen para realizar simulaciones.</p>
+                  <h2>Características clave:</h2>
+                  <ul>
+                    <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles del producto como nombre, descripción, precio y cantidad.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite mantener actualizado la información de su producto con solo unos pocos clics.</li>
+                    <li><span class="text-danger">Borrar:</span> ¿Necesita eliminar un producto de su inventario?La función Eliminar le permite eliminar de forma rápida y segura los elementos que ya no son relevantes.Diga adiós al desorden innecesario en su base de datos.</li>
+                    <li><span class="text-primary"> Ver: </span> Sumérgete profundamente en los detalles de cada producto con la opción Vista.Obtenga información sobre las especificaciones, datos históricos y más.Esta característica es perfecta para analizar el rendimiento del producto y tomar decisiones informadas.</li>
+                  </ul>
                 </div>
-                <div class="col-xxl-3 ms-auto">
-                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                        <img src="{% static 'images/product-img.webp'%}" alt="" class="img-fluid">
-                    </div>
-                </div>
+              </div>
             </div>
+            <div class="col-xxl-3 ms-auto">
+              <div class="mb-n5 pb-1 faq-img d-none d-lg-block">
+                <img src="{% static 'images/product-img.webp'%}" alt="" class="img-fluid" style="max-width: 70%; height: auto;">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="row">
-        <div class="col lg-12">
+        <div class="col-lg-12">
           <div class="card">
             <div class="card-title">
-              <div class="d-flex align-items-center">
-                <h6 class="card-title mb-0 flex-grow-1">Filtrar Resultados</h6>
-              </div>
+              <h6 class="card-title mb-0">Filtrar Resultados</h6>
             </div>
             <div class="card-body">
-              <div class="row g-12">
-                  <form method="GET" action="{% url 'product:product.list' %}">
-                      <div class="col-lg-auto">
-                          <div class="row g-3">
-                              <div class="col-md-6">
-                                  <select class="form-control" id="business-select" name="business_id">
-                                      <option value="All">Seleccione el negocio </option>
-                                      {% for business in businesses %}
-                                      <option value="{{ business.id }}" {% if request.GET.type == "{{ business.id }}" %}selected{% endif %}>
-                                          {{ business.name }}
-                                      </option>
-                                      {% empty %}
-                                      <option value="All">All</option>
-                                      {% endfor %}
-                                  </select>
-                              </div>
-                              <div class="col-md-6">
-                                  <select class="form-control" id="category-select">
-                                    <option value="All" {% if request.GET.type == "All" %}selected{% endif %}>
-                                      Seleccionar tipo de producto
-                                    </option>
-                                    <option value="Dairy" {% if request.GET.type == "Dairy" %}selected{% endif %}>
-                                      Lácteos
-                                    </option>
-                                    <option value="Meat" {% if request.GET.type == "Meat" %}selected{% endif %}>
-                                      Carne
-                                    </option>
-                                  </select>
-                              </div>
-                              <div class="col-lg-12 text-end">
-                                <button type="submit" class="btn btn-danger" id="apply-filters">
-                                  <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                                  Filtros
-                                </button>
-                              </div>
-                          </div>
-                      </div>
-                  </form>
-                  <div class="col-lg-3">
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProduct">
-                      <i class="ri-add-fill me-1 align-bottom"></i>
-                      Crear nuevo
+              <form method="GET" action="{% url 'product:product.list' %}">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="business-select" class="form-label">Seleccione el negocio</label>
+                    <select class="form-control" id="business-select" name="business_id">
+                      <option value="All">Todos los negocios</option>
+                      {% for business in businesses %}
+                      <option value="{{ business.id }}" {% if request.GET.type == "{{ business.id }}" %}selected{% endif %}>
+                        {{ business.name }}
+                      </option>
+                      {% empty %}
+                      <option value="All">Todos los negocios</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <button type="submit" class="btn btn-danger mt-4" id="apply-filters">
+                      <i class="ri-equalizer-fill me-1 align-bottom"></i>
+                      Aplicar Filtros
                     </button>
                   </div>
+                </div>
+              </form>
+              <div class="row g-3 mt-3">
+                <div class="col-lg-12">
+                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateProduct">
+                    <i class="ri-add-fill me-1 align-bottom"></i>
+                    Crear nuevo
+                  </button>
+                </div>
               </div>
+            </div>
           </div>
-            <!--end car body-->
-          
-          </div>
+        </div>
+      </div>
+      <!--end row-->
+      <div class="row" id="product-list">
             {% for product in products %}
-            <div
-              class="col-xxl-auto col-sm-auto project-card"
-              data-business="{{ product.business_id }}"
-              data-category="{{ product.category }}"
-            >
+            <div class="col-xxl-4 col-sm-auto product-card" data-business="{{ product.business_id }}"
+              data-category="{{ product.category }}">
               <div class="card card-height-100">
                 <div class="card-body">
                   <div class="d-flex flex-column h-100">
@@ -114,42 +97,30 @@
                       <div class="flex-shrink-0">
                         <div class="d-flex gap-1 align-items-center">
                           <div class="dropdown">
-                            <button
-                              class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
-                              data-bs-toggle="dropdown"
-                              aria-haspopup="true"
-                              aria-expanded="true"
-                            >
+                            <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15"
+                              data-bs-toggle="dropdown" aria-haspopup="true"  aria-expanded="true">
                               <i data-feather="more-horizontal" class="icon-sm"></i>
                             </button>
   
                             <div class="dropdown-menu dropdown-menu-end">
-                              <a
-                                class="dropdown-item"
-                                href="{% url 'product:product.overview' product.id %}"
-                              >
+                              <a class="dropdown-item"
+                                href="{% url 'product:product.overview' product.id %}">
                                 <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
                                 Vista
                               </a>
-                              <a
-                                class="dropdown-item edit-product"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editProductModal"
-                                data-product-id="{{ product.id }}"
-                              >
+                              <a href="#" class="dropdown-item edit-product" data-bs-toggle="modal"
+                                data-bs-target="#addOrUpdateProduct" data-variable-id="{{ product.id }}"
+                                onclick="loadProductDetails('{{ product.id }}'); return false;">
                                 <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
                                 Editar
                               </a>
                               <div class="dropdown-divider"></div>
-                              <a
-                                class="dropdown-item delete-product"
-                                data-bs-toggle="modal"
-                                data-bs-target="#removeProductModal"
-                                data-variable-id="{{ product.id }}"
-                              >
-                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                Eliminar
-                              </a>
+                              <a id="delete-product-link" class="dropdown-item delete-product" 
+                                  data-bs-toggle="modal" data-bs-target="#removeProductModal" 
+                                  data-variable-id="{{ product.id }}">
+                                  <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                  Eliminar
+                                </a>
                             </div>
                           </div>
                         </div>
@@ -178,24 +149,23 @@
                         </p>
                       </div>
                     </div>
+                    
                     <div class="mt-auto">
                       <div class="d-flex mb-2">
                         <div class="flex-shrink-0">
-                          <div>
-                            <i class="ri-list-check align-bottom me-1 text-muted"></i>
-                            Cantidad de variables: 
-                            {{ product.fk_product_variable.count|default:"0" }}
+                          <div style="display: flex; justify-content: space-between;">
+                            <div>
+                              <i class="ri-list-check align-bottom me-1 text-muted"></i>
+                              Cantidad de Areas: 
+                              {{ product.fk_product_area.count|default:"0" }}
+                            </div>
+                            <div>
+                              <i class="ri-list-check align-bottom me-1 text-muted"></i>
+                              Cantidad de variables: 
+                              {{ product.fk_product_variable.count|default:"0" }}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div class="progress progress-sm animated-progress">
-                        <div
-                          id="progress-bar"
-                          class="progress-bar bg-success"
-                          role="progressbar"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                        ></div>
                       </div>
                     </div>
                   </div>
@@ -206,17 +176,15 @@
                     <div class="flex-grow-1">
                       <div class="avatar-group">
                         {% for variable in product.fk_product_variable.all|slice:":10" %}
-                                <a
-                                    href=""
+                                <a href=""
                                     class="avatar-group-item"
                                     data-bs-toggle="tooltip"
                                     data-bs-trigger="hover"
                                     data-bs-placement="top"
-                                    title="{{ variable.name }}"
-                                >
+                                    title="{{ variable.name }}">
                                     <div class="avatar-xxs">
                                         <img
-                                            src="{{ variable.get_image_url }}"
+                                            src="{{ variable.get_photo_url }}"
                                             alt=""
                                             class="rounded-circle img-fluid"
                                         />
@@ -229,22 +197,15 @@
                                     data-bs-toggle="tooltip"
                                     data-bs-trigger="hover"
                                     data-bs-placement="top"
-                                    title="No variables"
-                                >
+                                    title="No variables">
                                     <div class="avatar-xxs">
-                                        <img src="." alt="" class="rounded-circle img-fluid" />
+                                      <img
+                                      src="{{ variable.get_photo_url }}"
+                                      alt=""
+                                      class="rounded-circle img-fluid"/>
                                     </div>
                                 </a>
                             {% endfor %}
-                        <div class="avatar-xxs">
-                          <button
-                            class="btn btn-primary btn-rounded btn-icon btn-xs"
-                            data-bs-toggle="modal"
-                            data-bs-target="#addVariable"
-                          >
-                            <i class="ri-add-line"></i>
-                          </button>
-                        </div>
                       </div>
                     </div>
                     <div class="flex-shrink-0">
@@ -321,77 +282,26 @@
           </div>
 
         <!-- end row -->
-        <div class="col-auto layout-rightside-col ">
-          <div class="overlay"></div>
-          <div class="layout-rightside">
-            <div class="card h-100 rounded-0">
-              <div class="card-body p-0">
-                <div class="p-3">
-                  <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                    Instrucciones
-                  </h6>
-                </div>
-                <div data-simplebar style="max-height: 700px" class="p-3 pt-0">
-                  <div class="instruction-timeline instruction-main">
-                    {% for instruction in instructions %}
-                    <div class="instruction-item d-flex">
-                      <div class="flex-shrink-0 avatar-xs instruction-avatar">
-                        <div
-                          class="avatar-title bg-primary-subtle text-primary rounded-circle"
-                        >
-                          <i class="ri-info-line"></i>
-                        </div>
-                      </div>
-                      <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1 lh-base">{{ instruction.instruction }}</h6>
-                        <p class="text-muted mb-1">
-                          {{ instruction.content }}
-                        </p>
-                        <small class="mb-0 text-muted">
-                          {{ instruction.date_created }}
-                        </small>
-                      </div>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4">
-                      <lord-icon
-                        src="https://cdn.lordicon.com/msoeawqm.json"
-                        trigger="loop"
-                        colors="primary:#405189,secondary:#0ab39c"
-                        style="width: 75px; height: 75px"
-                      ></lord-icon>
-                      <h5 class="mt-2">
-                        Lo siento, no hay instrucciones en la base de datos
-                      </h5>
-                      <p class="text-muted mb-0">
-                        Agregue instrucciones al sistema.
-                      </p>
-                    </div>
-                    {% endfor %}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- end card-->
-          </div>
-          <!-- end .rightbar-->
-        </div>
-        <!-- end col activity -->
       </div>
-      
+      {% block modals %} 
+        {% include "product/product-modal.html" %} 
+      {% endblock modals %}
     </div>
     <!-- container-fluid -->
   </div>
   <!-- End Page-content -->
-  {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
+  {% block footer %} 
+  {% include "partials/footer.html" %} 
+  {% endblock footer %}
 </div>
 <!-- end main content-->
 {% endblock content %} 
 {% block extra_content %}
-{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
+
 {% endblock extra_content %} 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-wysiwyg8xwV+eObI8jzkzA64mIaaq65CNCCEAV9EjjAdFhU6bH2t3ovxW/dAiS6jX" crossorigin="anonymous"></script>
+{% comment %} <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-wysiwyg8xwV+eObI8jzkzA64mIaaq65CNCCEAV9EjjAdFhU6bH2t3ovxW/dAiS6jX" crossorigin="anonymous"></script> {% endcomment %}
 <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
 <script src="{% static 'js/crud.js' %}"></script>
+<script src="{% static 'js/common-utils.js' %}"></script>
 {% endblock extra_js %}

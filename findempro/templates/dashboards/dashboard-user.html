@@ -31,40 +31,42 @@
                                         <div class="d-flex align-items-lg-center flex-lg-row flex-column">
                                             <div class="flex-grow-1">
                                                 <h4 class="fs-16 mb-1">{{ greeting }}, {{user.username}}</h4>
-                                                <p class="text-muted mb-0">Esto es lo que está sucediendo con su negocio hoy.</p>
+                                                <p class="text-muted mb-0">Los siguientes datos son en base a datos historicos y en caso se tuviera una simulacion registrada en el sistema de algun producto de la empresa</p>
                                             </div>
                                             <div class="mt-3 mt-lg-0">
                                                 <form method="GET" action="{% url 'dashboard:dashboard.user' %}">
-                                                    <div class="row g-3 mb-0 align-items-center">                                                        
+                                                    <div class="row g-3 mb-0 align-items-center">
                                                         <div class="col-sm-auto">
-                                                                <select id="ForminputState" class="form-select" data-choices data-choices-sorting="true" >
-                                                                    <option selected>Elija el negocio:</option>
-                                                                    {% for business in businesses %}
-                                                                    <option value="{{business.id}}<"  {% if request.GET.type == "{{ business.id }}" %}selected{% endif %}>
-                                                                        {{business.name}}</option>
-                                                                    {% empty %}
-                                                                    <option>...</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                        </div><!--end col-->
+                                                            <label for="business_id" class="form-label">Elija el negocio:</label>
+                                                        </div>                                               
+                                                        <div class="col-sm-auto">
+                                                            <select id="business_id" name="business_id" class="form-select" data-choices data-choices-sorting="true" >
+                                                                <option selected>Elija el negocio:</option>
+                                                                {% for business in businesses %}
+                                                                <option value="{{ business.id }}" {% if request.GET.business_id == business.id %}selected{% endif %} >
+                                                                    {{ business.name }}</option>
+                                                                {% empty %}
+                                                                <option>...</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
                                                         <div class="col-auto">
-                                                            <button type="button"
-                                                                class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn"><i
-                                                                    class="ri-pulse-line"></i>
-                                                            </button>
-                                                        </div>                                                        
-                                                        <!--end col-->
+                                                            <button type="submit" class="btn btn-primary">Generar Dashboard</button>
+                                                        </div>
                                                     </div>
-                                                    <!--end row-->
-                                                </form>
+                                                </form>                                                
                                             </div>
-                                        </div><!-- end card header -->
+                                            <div class="col-auto">
+                                                <button type="button" class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn">
+                                                    <i class="ri-pulse-line"></i>
+                                                </button>
+                                            </div> 
+                                        </div>
                                     </div>
-                                    <!--end col-->
                                 </div>
                                 <!--end row-->
                                 <div class="row">
-                                    <div class="col-xl-3 col-md-6">
+                                    <div class="col-xl-2 col-md-6">
                                         <!-- card -->
                                         <div class="card card-animate">
                                             <div class="card-body">
@@ -93,13 +95,13 @@
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
                                     </div><!-- end col -->
-                                    <div class="col-xl-3 col-md-6">
+                                    <div class="col-xl-2 col-md-6">
                                         <!-- card -->
                                         <div class="card card-animate">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Ingresos totales </p>
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Costos Totales </p>
                                                     </div>
                                                     <div class="flex-shrink-0">
                                                         <h5 class="text-success fs-14 mb-0">
@@ -114,21 +116,21 @@
                                                         {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
-                                                            <i class="bx bx-dollar-circle text-success"></i>
+                                                        <span class="avatar-title bg-danger text-white rounded-2 fs-2 shadow">
+                                                            <i class="bx bxs-badge-dollar"></i>
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
                                     </div><!-- end col -->
-                                    <div class="col-xl-3 col-md-6">
+                                    <div class="col-xl-2 col-md-6">
                                         <!-- card -->
                                         <div class="card card-animate">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Ingresos totales </p>
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Margen de Beneficio </p>
                                                     </div>
                                                     <div class="flex-shrink-0">
                                                         <h5 class="text-success fs-14 mb-0">
@@ -144,24 +146,24 @@
                                                     </div>
                                                     <div class="avatar-sm flex-shrink-0">
                                                         <span class="avatar-title bg-success-subtle rounded fs-3">
-                                                            <i class="bx bx-dollar-circle text-success"></i>
+                                                            <i class="las la-money-bill-wave-alt"></i>
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
                                     </div><!-- end col -->
-                                    <div class="col-xl-3 col-md-6">
+                                    <div class="col-xl-2 col-md-6">
                                         <!-- card -->
                                         <div class="card card-animate">
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Ingresos totales </p>
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Inventario </p>
                                                     </div>
                                                     <div class="flex-shrink-0">
                                                         <h5 class="text-success fs-14 mb-0">
-                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{total_revenue_percentage}}
+                                                            <i class="las la-layer-group"></i> {{total_revenue_percentage}}
                                                         </h5>
                                                     </div>
                                                 </div>
@@ -179,7 +181,65 @@
                                                 </div>
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
-                                    </div><!-- end col -->                      
+                                    </div><!-- end col --> 
+                                    <div class="col-xl-2 col-md-6">
+                                        <!-- card -->
+                                        <div class="card card-animate">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Demanda Total </p>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <h5 class="text-success fs-14 mb-0">
+                                                            <i class="las la-layer-group"></i> {{total_demand}}
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                                    <div>
+                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
+                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
+                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
+                                                    </div>
+                                                    <div class="avatar-sm flex-shrink-0">
+                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                                                            <i class="bx bx-dollar-circle text-success"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div><!-- end card body -->
+                                        </div><!-- end card -->
+                                    </div><!-- end col --> 
+                                    <div class="col-xl-2 col-md-6">
+                                        <!-- card -->
+                                        <div class="card card-animate">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">  </p>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <h5 class="text-success fs-14 mb-0">
+                                                            <i class="las la-layer-group"></i> {{total_demand}}
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-end justify-content-between mt-4">
+                                                    <div>
+                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
+                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
+                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
+                                                    </div>
+                                                    <div class="avatar-sm flex-shrink-0">
+                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                                                            <i class="bx bx-dollar-circle text-success"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div><!-- end card body -->
+                                        </div><!-- end card -->
+                                    </div><!-- end col -->                        
                                 </div> <!-- end row-->
                                 <div class="row">
                                     {% if business %}
@@ -240,28 +300,47 @@
                                             <div class="card-body">
                                                 <div class="table-responsive table-card">
                                                     <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                                        <tbody>
-                                                            {% for recommendation in recommendations %}
+                                                        <thead>
                                                             <tr>
-                                                                <td>
-                                                                    <div class="d-flex align-items-center">
-                                                                        <div class="avatar-sm bg-light rounded p-1 me-2">
-                                                                            {% if recommendation.image_src %}
-                                                                                <img src="{{ MEDIA_URL }}{{ recommendation.image_src.url }}" alt="" class="img-fluid d-block" />
-                                                                            {% else %}
-                                                                                <img src="{% static 'path_to_dummy_image.webp' %}" alt="" class="img-fluid d-block" />
-                                                                            {% endif %}
-                                                                        </div>
-                                                                        <div>
-                                                                            <h5 class="mb-1">{{ recommendation.title }}</h5>
-                                                                            <p class="text-muted mb-0">{{ recommendation.description }}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
+                                                                <th>Porcentaje</th>
+                                                                <th>Fecha de simulacion</th>
+                                                                <th>Recomendación</th>
+                                                                <th>Producto</th>
+                                                                <th>Valor Umbral</th>
+                                                                <th>Nombre de Variable</th>
                                                             </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for recommendation in page_obj %}
+                                                            <tr>
+                                                                <td>{{ recommendation.data|floatformat:"2" }}%</td>
+                                                                <td>{{ recommendation.fk_simulation__date_created }}</td>
+                                                                <td>{{ recommendation.fk_finance_recommendation__recommendation }}</td>
+                                                                <td>{{ recommendation.fk_simulation__fk_questionary_result__fk_questionary__fk_product__name }}</td>
+                                                                <td>{{ recommendation.fk_finance_recommendation__threshold_value}}</td>
+                                                                <td>{{ recommendation.fk_finance_recommendation__variable_name }}</td>
+                                                            </tr>
+                                                            {% empty %}
+                                                            <div class="text-center py-4">
+                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                                                <h5 class="mt-2">No hay recomendaciones para {{business.name}} en la base de datos</h5>
+                                                            </div>
                                                             {% endfor %}
                                                         </tbody>
-                                                    </table>
+                                                    </table>                                                    
+                                                    <nav aria-label="Page navigation example">
+                                                        <ul class="pagination justify-content-center">
+                                                            {% if page_obj.has_previous %}
+                                                                <li class="page-item"><a class="page-link" href="?page=1">Primera</a></li>
+                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
+                                                            {% endif %}
+                                                            <li class="page-item disabled"><a class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</a></li>
+                                                            {% if page_obj.has_next %}
+                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>
+                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </nav>
                                                 </div>
                                             </div><!-- end card body -->
                                         </div><!-- end card -->
@@ -277,30 +356,13 @@
                                                     <h4 class="card-title mb-0">{{ chart.title }}</h4>
                                                 </div>
                                                 <div class="card-body">
-                                                    <div id="{{ chart.id }}" class="apex-charts" dir="ltr" style="height: 200px;"></div>
+                                                    <img src="{{ chart.get_photo_url }}" alt="{{ chart.title }}" class="img-fluid">                                                
+                                                </div>
+                                                <div class="card-footer">
+                                                    <p class="text-muted">Fecha de creación: {{ chart.date_created|date:"F j, Y" }}</p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-                                        <script>
-                                            
-                                            // Obtén los datos del gráfico desde el modelo y pásalos al contexto de tu template
-                                            var chartData = {{ chart.chart_data|safe }};
-                                            
-                                            // Configura el gráfico utilizando ApexCharts
-                                            var options = { 
-                                                chart: {
-                                                    type: '{{ chart.chart_type }}',
-                                                },
-                                                series: [{
-                                                    name: '{{ chart.title }}',
-                                                    data: chartData,
-                                                }],
-                                            };
-
-                                            var chart = new ApexCharts(document.getElementById('{{ chart.id }}'), options);
-                                            chart.render();
-                                        </script>
                                     {% empty %}
                                     <div class="text-center py-4">
                                         <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
@@ -320,26 +382,19 @@
                                         <div class="p-3">
                                             <h6 class="text-muted mb-0 text-uppercase fw-semibold"> Actividad reciente </h6>
                                         </div>
-                                        <div data-simplebar style="max-height: 410px;" class="p-3 pt-0">
+                                        <div data-simplebar class="p-3 pt-0" style="max-height: 100%;">
                                             <div class="acitivity-timeline acitivity-main">
-                                                {% for activity in activities %}
-                                                <div class="acitivity-item d-flex">
-                                                    <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                                                        <div class="avatar-title bg-success-subtle text-success rounded-circle">
-                                                            <i class="ri-shopping-cart-2-line"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-3">
-                                                        <h6 class="mb-1 lh-base">{{activity.name}}</h6>
-                                                        <p class="text-muted mb-1">{{activity.description}} </p>
-                                                        <small class="mb-0 text-muted">{{activity.date}} Hoy</small>
-                                                    </div>
-                                                </div>
+                                                {% for log_entry in recent_activity %}
+                                                    <li>
+                                                        <strong>User {{ log_entry.user.username }}</strong> performed the action '{{ log_entry.action }}' on {{ log_entry.timestamp|date:"F j, Y H:i:s" }}.
+                                                        {% if log_entry.details %}
+                                                            <strong>Details:</strong> {{ log_entry.details }}
+                                                        {% endif %}
+                                                    </li>
                                                 {% empty %}
                                                 <div class="text-center py-4">
                                                     <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                    <h5 class="mt-2">Lo siento, no hay ningún registro de productos en la base de datos</h5>
-                                                    <p class="text-muted mb-0">Tienes que ir a "productos".</p>
+                                                    <h5 class="mt-2">Lo siento, no hay ninguna actividad reciente</h5>
                                                 </div>
                                                 {% endfor %}
                                             </div>

@@ -18,7 +18,6 @@ from django.contrib.auth import update_session_auth_hash
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth import login
 from findempro.forms import UserLoginForm
-
 @login_required
 def pages_profile_settings(request):
     user = request.user
@@ -40,28 +39,43 @@ def pages_profile_settings(request):
 @login_required
 def profile_product_variable_list_view(request):
     user = request.user
-    products = Product.objects.filter(fk_business__fk_user=user).order_by('-id')
-    businesses = Business.objects.filter(fk_user=user).order_by('-id')
-    variables = Variable.objects.filter(fk_product__fk_business__fk_user=user).order_by('-id')
+    products = Product.objects.filter(fk_business__fk_user=user, is_active=True).order_by('-id')
+    businesses = Business.objects.filter(fk_user=user, is_active=True).order_by('-id')
+    variables = Variable.objects.filter(fk_product__fk_business__fk_user=user, is_active=True).order_by('-id')
     
     profile = UserProfile.objects.get(user=user)
     paginator_variables = Paginator(variables, 10)  # Show 10 variables per page
-
-    paginator_products = Paginator(variables, 10)  # Show 10 variables per page
+    paginator_products = Paginator(products, 10)  # Show 10 products per page
     page = request.GET.get('page')
     
-    business_count = Business.objects.filter(fk_user=user).count()
-    product_count = Product.objects.filter(fk_business__fk_user=user).count()
-    variable_count = Variable.objects.filter(fk_product__fk_business__fk_user=user).count()
+    business_count = businesses.count()
+    product_count = products.count()
+    variable_count = variables.count()
 
+    completeness_percentage = calculate_completeness_percentage(profile)
+        
+    variables, products = paginate_variables_and_products(page, paginator_variables, paginator_products)
+        
+    context = {
+        'products': products, 
+        'businesses': businesses, 
+        'variables': variables , 
+        'completeness_percentage': completeness_percentage,
+        'business_count': business_count,
+        'product_count': product_count,
+        'variable_count': variable_count
+    }
+    return render(request, 'user/profile.html', context)
+
+def calculate_completeness_percentage(profile):
     if profile.is_profile_complete():
-        completeness_percentage = 100
+        return 100
     else:
         total_fields = len([field for field in profile._meta.get_fields() if field.name != 'id' and field.name != 'user'])
         completed_fields = len([field for field in profile._meta.get_fields() if field.name != 'id' and field.name != 'user' and getattr(profile, field.name)])
+        return (completed_fields / total_fields) * 100
 
-        completeness_percentage = (completed_fields / total_fields) * 100
-        
+def paginate_variables_and_products(page, paginator_variables, paginator_products):
     try:
         variables = paginator_variables.page(page)
         products = paginator_products.page(page)
@@ -71,17 +85,7 @@ def profile_product_variable_list_view(request):
     except EmptyPage:
         variables = paginator_variables.page(paginator_variables.num_pages)
         products = paginator_products.page(paginator_products.num_pages)
-        
-    context = {'products': products, 
-               'businesses': businesses, 
-               'variables': variables , 
-               'completeness_percentage': completeness_percentage,
-               'business_count': business_count,
-               'product_count': product_count,
-               'variable_count': variable_count
-                
-               }
-    return render(request, 'user/profile.html', context)
+    return variables, products
 @login_required
 def user_list_view(request):
     try:
