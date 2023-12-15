@@ -300,17 +300,25 @@
                                             <div class="card-body">
                                                 <div class="table-responsive table-card">
                                                     <table class="table table-hover table-centered align-middle table-nowrap mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Porcentaje</th>
+                                                                <th>Fecha de simulacion</th>
+                                                                <th>Recomendación</th>
+                                                                <th>Producto</th>
+                                                                <th>Valor Umbral</th>
+                                                                <th>Nombre de Variable</th>
+                                                            </tr>
+                                                        </thead>
                                                         <tbody>
                                                             {% for recommendation in page_obj %}
                                                             <tr>
-                                                                <td>
-                                                                    <div class="d-flex align-items-center">
-                                                                        <div>
-                                                                            <h5 class="mb-1">{{ recommendation.recommendation }}</h5>
-                                                                            <p class="text-muted mb-0">{{ recommendation.description }}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
+                                                                <td>{{ recommendation.data|floatformat:"2" }}%</td>
+                                                                <td>{{ recommendation.fk_simulation__date_created }}</td>
+                                                                <td>{{ recommendation.fk_finance_recommendation__recommendation }}</td>
+                                                                <td>{{ recommendation.fk_simulation__fk_questionary_result__fk_questionary__fk_product__name }}</td>
+                                                                <td>{{ recommendation.fk_finance_recommendation__threshold_value}}</td>
+                                                                <td>{{ recommendation.fk_finance_recommendation__variable_name }}</td>
                                                             </tr>
                                                             {% empty %}
                                                             <div class="text-center py-4">
@@ -319,14 +327,14 @@
                                                             </div>
                                                             {% endfor %}
                                                         </tbody>
-                                                    </table>
+                                                    </table>                                                    
                                                     <nav aria-label="Page navigation example">
                                                         <ul class="pagination justify-content-center">
                                                             {% if page_obj.has_previous %}
                                                                 <li class="page-item"><a class="page-link" href="?page=1">Primera</a></li>
                                                                 <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
                                                             {% endif %}
-                                                            <li class="page-item disabled"><a class="page-link">Página {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a></li>
+                                                            <li class="page-item disabled"><a class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</a></li>
                                                             {% if page_obj.has_next %}
                                                                 <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>
                                                                 <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>

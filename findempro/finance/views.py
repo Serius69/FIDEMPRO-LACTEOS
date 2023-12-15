@@ -22,30 +22,25 @@ def finance_list_view(request):
         return render(request, 'FinancialDecision/FinancialDecision-list.html', context)
     except Exception as e:
         return HttpResponseServerError("Ocurrió un error al cargar la página. Por favor, inténtalo de nuevo más tarde.")
-def create_finance_decision_view(request):
-    if request.method == 'POST':
-        form = FinancialDecisionForm(request.POST, request.FILES)
-        if form.is_valid():
-            FinancialDecision = form.save()
-            messages.success(request, 'FinancialDecision created successfully')
-            return JsonResponse({'success': True})
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors})
+def create_or_update_finance_view(request, pk=None):
+    if pk:
+        FinancialDecision = get_object_or_404(FinancialDecision, pk=pk)
+        if request.method == "POST":
+            form = FinancialDecisionForm(request.POST or None, request.FILES or None, instance=FinancialDecision)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "FinancialDecision updated successfully!")
+                return redirect("FinancialDecision:FinancialDecision.overview")
     else:
-        form = FinancialDecisionForm()
+        FinancialDecision = None
+        if request.method == 'POST':
+            form = FinancialDecisionForm(request.POST, request.FILES)
+            if form.is_valid():
+                FinancialDecision = form.save()
+                messages.success(request, 'FinancialDecision created successfully')
+                return JsonResponse({'success': True})
+    form = FinancialDecisionForm(instance=FinancialDecision)
     return render(request, 'finance/finance-list.html', {'form': form})
-def update_finance_decision_view(request, pk):
-    FinancialDecision = get_object_or_404(FinancialDecision, pk=pk)
-    if request.method == "PUT":
-        form = FinancialDecisionForm(request.PUT or None, request.FILES or None, instance=FinancialDecision)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "FinancialDecision updated successfully!")
-        else:
-            messages.error(request, "Something went wrong!")
-        return redirect("FinancialDecision:FinancialDecision.overview")
-
-    return render(request, "finance/financedecision-list.html")
 def delete_finance_decision_view(request, pk):
     try:
         financialdecision = get_object_or_404(FinancialDecision, pk=pk)

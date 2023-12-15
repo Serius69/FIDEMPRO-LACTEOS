@@ -115,8 +115,6 @@ def create_or_update_product_view(request, pk=None):
         form = ProductForm(instance=product_instance)
 
     return render(request, 'product/product-list.html', {'form': form})
-
-@require_POST
 def delete_product_view(request, pk):
     try:
         product = get_object_or_404(Product, pk=pk)

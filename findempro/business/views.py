@@ -94,6 +94,7 @@ def create_or_update_business_view(request, pk=None):
         form = BusinessForm(instance=business_instance)
 
     return render(request, "business/business-list.html", {'form': form, 'business': business_instance})
+@login_required
 def delete_business_view(request, pk):
     try:
         if request.method == 'POST':
@@ -109,9 +110,10 @@ def delete_business_view(request, pk):
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
 
+@login_required
 def get_business_details_view(request, pk):
     try:
-        business = Business.objects.get(id=pk)
+        business = Business.objects.get(id=pk, is_active=True)
         business_details = {
             "id": business.id,
             "name": business.name,
@@ -121,7 +123,7 @@ def get_business_details_view(request, pk):
             "description": business.description,
         }
         return JsonResponse(business_details)
-    except Business.DoesNotExist:
+    except ObjectDoesNotExist:
         return JsonResponse({"error": "El negocio no existe"}, status=404)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": "Error interno del servidor"}, status=500)

@@ -18,24 +18,43 @@ from pages.forms import RegisterElementsForm
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib import messages
 from django.http import Http404
+from django.db.models import Max
+from django.db.models import F
+from django.contrib.auth.decorators import login_required
 class DashboardView(LoginRequiredMixin,TemplateView):
-    pass
-    
+    pass 
+@login_required
 def index(request):
-    form = RegisterElementsForm(request.POST)
-    business_id_instance_query = get_object_or_404(Business, fk_user=request.user, is_active=True)
-    business_id_instance = business_id_instance_query.id
-    request.session['business_id'] = business_id_instance
-    return render(request, 'dashboards/index.html',{'form': form})
+    try:
+        if request.method == 'POST':
+            form = RegisterElementsForm(request.POST)
+            if form.is_valid():
+                # Handle form submission here
+                return redirect('success_url')  # Reemplaza con tu URL de éxito
+        else:
+            form = RegisterElementsForm()
+
+        business_instance = get_business_instance(request.user)
+        if not business_instance:
+            raise Http404("No se encontró ningún objeto que cumpla con los criterios")
+
+        request.session['business_id'] = business_instance.id
+
+        return render(request, 'dashboards/index.html', {'form': form})
+    except Exception:  
+        return render(request, 'error_page.html', {'error_message': 'Ocurrió un error en el servidor'})
+
+def get_business_instance(user):
+    return Business.objects.filter(fk_user=user, is_active=True).first()
+@login_required
 def dashboard_admin(request):
     today = timezone.now()
     last_month = today - relativedelta(months=1)
-    users = User.objects.all()
-    users_last_month = User.objects.filter(date_joined__month=last_month.month, date_joined__year=last_month.year)
-    users_count = users.count()
-    users_last_month_count = users_last_month.count()
-    users_change = users_count - users_last_month_count
-    users_change_percentage = (users_change / users_last_month_count * 100) if users_last_month_count > 0 else 0
+
+    users, users_last_month = get_users(today, last_month)
+    users_count, users_last_month_count = get_users_count(users, users_last_month)
+    users_change, users_change_percentage = calculate_users_change(users_count, users_last_month_count)
+
     context = {
         'users': users,
         'users_last_month': users_last_month,
@@ -46,8 +65,22 @@ def dashboard_admin(request):
     }
     return render(request, 'dashboards/dashboard-admin.html', context)
 
+def get_users(today, last_month):
+    users = User.objects.all()
+    users_last_month = User.objects.filter(date_joined__month=last_month.month, date_joined__year=last_month.year)
+    return users, users_last_month
+
+def get_users_count(users, users_last_month):
+    users_count = users.count()
+    users_last_month_count = users_last_month.count()
+    return users_count, users_last_month_count
+
+def calculate_users_change(users_count, users_last_month_count):
+    users_change = users_count - users_last_month_count
+    users_change_percentage = (users_change / users_last_month_count * 100) if users_last_month_count > 0 else 0
+    return users_change, users_change_percentage
+
 def dashboard_user(request) -> str:
-    
     business_id_instance = request.session.get('business_id')
     if business_id_instance:
         try:
@@ -76,13 +109,26 @@ def dashboard_user(request) -> str:
             messages.error(request, 'No se encontró un negocio asociado a tu usuario.')
             return redirect("business:business.list")
 
-        recommendations = FinanceRecommendationSimulation.objects.filter(
-            fk_finance_recommendation__fk_business=business.id, is_active=True
-        )   
+        recommendations = (
+            FinanceRecommendationSimulation.objects
+            .filter(fk_finance_recommendation__fk_business=business.id, is_active=True)
+            .values(
+                'data',
+                'fk_simulation__date_created',
+                'fk_finance_recommendation__recommendation',
+                'fk_simulation__fk_questionary_result__fk_questionary__fk_product__name',
+                'fk_finance_recommendation__threshold_value',
+                'fk_finance_recommendation__variable_name'
+            )
+            .annotate(
+                data_as_percentage=F('data') * 100,
+                threshold_value_as_percentage=F('fk_finance_recommendation__threshold_value') * 1000
+            )
+            .distinct()
+        )     
         businesses = Business.objects.all().filter(fk_user=request.user, is_active=True).order_by('-id')
         today = timezone.now()
         last_month = today - relativedelta(months=1)
-
         current_time = datetime.now().time()
         if current_time >= datetime(1900, 1, 1, 5, 0).time() and current_time < datetime(1900, 1, 1, 12, 0).time():
             greeting = "Buenos Dias"
@@ -93,15 +139,12 @@ def dashboard_user(request) -> str:
         products = Product.objects.filter(fk_business=business.id)
         areas = Area.objects.filter(fk_product__fk_business=business.id)
         product_ids = [product.id for product in products]
-        print(product_ids)    
-
-        charts = Chart.objects.filter(fk_product_id__in=product_ids, is_active=True ).order_by('-id')[:6]
-
-        paginator = Paginator(recommendations, 10)  # Show 10 recommendations per page
+        latest_chart_ids = Chart.objects.filter(fk_product_id__in=product_ids, is_active=True).values('fk_product_id').annotate(latest_id=Max('id')).values_list('latest_id', flat=True)
+        charts = Chart.objects.filter(id__in=latest_chart_ids)
+        paginator = Paginator(recommendations, 10)  
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        # buscar toda la ultima simulacion de cada producto
         simulations = Simulation.objects.filter(fk_questionary_result__fk_questionary__fk_product_id__in=product_ids).order_by('-id')
         print(simulations)
         all_variables_extracted = []
@@ -114,12 +157,8 @@ def dashboard_user(request) -> str:
             
             for result_simulation in results_simulation:
                 variables_extracted = result_simulation.get_variables()
-
-                # Filtrar variables que coinciden con las iniciales
                 variables_filtrates = Variable.objects.filter(initials__in=iniciales_a_buscar).values('name', 'initials')
                 initials_a_nombres = {variable['initials']: variable['name'] for variable in variables_filtrates}
-                # en lugar de mostrar las iniciales compararlas con la base de datos de varaibles y mostrar el nombre de la variable
-                # Calcular la suma total por variable
                 totals_por_variable = {}
                 for initial, value in variables_extracted.items():
                     if initial in initials_a_nombres:
@@ -127,8 +166,6 @@ def dashboard_user(request) -> str:
                         if nombre_variable not in totals_por_variable:
                             totals_por_variable[nombre_variable] = 0
                         totals_por_variable[nombre_variable] += value
-
-                # Agregar las variables filtradas a la lista
                 all_variables_extracted.append({'result_simulation': result_simulation, 'totales_por_variable': totals_por_variable})
 
         total_revenue=0
@@ -137,7 +174,10 @@ def dashboard_user(request) -> str:
         total_demand=0
         total_production_output=0
         total_profit_margin=0
+        print("all_variables_extracted")
         print(all_variables_extracted)
+        print("variables_extracted")
+        print(variables_extracted)
         for variables_extracted in all_variables_extracted:
             totals_por_variable = variables_extracted['totales_por_variable']
             total_revenue += totals_por_variable.get('Total Revenue', 0)
@@ -157,12 +197,11 @@ def dashboard_user(request) -> str:
             'businesses': businesses,
             'total_revenue': total_revenue,
             'total_costs': total_costs,
-            'total_demand': total_demand, # 'total_demand': total_demand,
+            'total_demand': total_demand, 
             'total_inventory_levels': total_inventory_levels,
             'total_production_output': total_production_output,
             'total_profit_margin': total_profit_margin,
             'charts': charts,
-            
             'page_obj': page_obj
         }
 

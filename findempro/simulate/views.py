@@ -13,7 +13,7 @@ import openai
 from scipy import stats
 from scipy.stats import kstest, norm, expon, lognorm
 from scipy.optimize import minimize
-from sympy import Eq, sympify, solve, symbols, Sum
+from sympy import symbols, Eq, solve, SympifyError
 from scipy.stats import gaussian_kde
 # Third-party imports
 from django.conf import settings
@@ -21,7 +21,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import *
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 from django.urls import reverse
@@ -33,13 +33,14 @@ from .models import ProbabilisticDensityFunction
 from .utils import get_results_for_simulation
 from business.models import Business
 from dashboards.models import Chart
-from finance.models import FinanceRecommendation
+from finance.models import FinanceRecommendation,FinanceRecommendationSimulation
 from finance.utils import analyze_simulation_results, decision_support
 from product.models import Product, Area
 from questionary.models import QuestionaryResult, Questionary, Answer, Question
 from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
 from variable.models import Variable, Equation, EquationResult
 import sympy as sp
+from django.core.exceptions import *
 
 # Set matplotlib to non-interactive mode to avoid error in web environments
 matplotlib.use('Agg')
@@ -48,6 +49,36 @@ matplotlib.use('Agg')
 openai.api_key = settings.OPENAI_API_KEY
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
+
+def plot_histogram_and_pdf(data, pdf, distribution_label):
+    fig, ax = plt.subplots()
+
+    # Histograma
+    ax.hist(data, bins=20, density=True, alpha=0.5, label='Demanda Historica')
+
+    # Plot de la Función de Densidad de Probabilidad (FDP)
+    if pdf is not None:
+        ax.plot(data, pdf, label=f'Función de densidad de probabilidad ({distribution_label})')
+
+    # Configuración del gráfico
+    ax.legend()
+    ax.set_xlabel('Valor')
+    ax.set_ylabel('Densidad de probabilidad')
+    ax.set_title('Demanda historica VS Funcion de Densidad de Probabilidad (FDP)')
+
+    # Guarda el gráfico en un BytesIO buffer
+    buffer = BytesIO()
+    fig.savefig(buffer, format='png')
+
+    # Cerrar la figura para liberar recursos
+    plt.close(fig)
+
+    # Codifica el buffer en base64 para pasarlo al template
+    buffer.seek(0)
+    image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    return image_data
+
 def simulate_show_view(request):
     started = request.session.get('started', False)
     form = SimulationForm(request.POST)
@@ -84,16 +115,28 @@ def simulate_show_view(request):
         
         # primero buscar la demanda historica guardada en el resultado del cuestionario
         demand_history = Answer.objects.filter(
-    fk_question__question='Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
-    fk_questionary_result_id=selected_questionary_result_id
-).first()
+            fk_question__question='Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).',
+            fk_questionary_result_id=selected_questionary_result_id
+        ).first()
+        
+        print("demanda historica")
         print(demand_history.answer)   
         # solo para prober
-        numbers = np.round(np.random.normal(loc=2500.0, scale=10.0, size=30)).astype(int)
+        # numbers = np.round(np.random.normal(loc=2500.0, scale=10.0, size=30)).astype(int)
         
         # Ajuste inicial de la FDP a los datos históricos
         
-        # numbers = json.loads(demand_history.answer)
+        # numbers = np.array(eval(demand_history.answer))
+        cadena_numerica = demand_history.answer
+        cadena_numerica = cadena_numerica.strip('[]')
+        subcadenas = cadena_numerica.split()
+        # Convierte las subcadenas en números
+        numbers = np.array([float(subcadena) for subcadena in subcadenas])
+        # numbers = np.array(json.loads(demand_history.answer))
+
+        # Calcula la media
+        media = np.mean(numbers)
+            
         mean, std_dev = norm.fit(numbers)
         # Suavizado de datos con KDE
         kde = gaussian_kde(numbers)
@@ -166,7 +209,7 @@ def simulate_show_view(request):
                 pdf = expon.pdf(data, scale=1 / lambda_param)
                 distribution_label = 'Distribución exponencial'
                 print("se encontro una distribucion exponencial")
-            elif best_distribution.get_distribution_type_display() == "Log-NOrm":  # Logarithmic distribution
+            elif best_distribution.get_distribution_type_display() == "Log-Norm":  # Logarithmic distribution
                 s = best_distribution.std_dev_param
                 scale = np.exp(best_distribution.mean_param)
                 pdf = lognorm.pdf(data, s=s, scale=scale)
@@ -177,18 +220,7 @@ def simulate_show_view(request):
         else:
             print('No se encontró una distribución adecuada.')
         
-        plt.hist(data, bins=20, density=True, alpha=0.5, label='Demanda Historica')
-        plt.plot(data, pdf, label=f'Función de densidad de probabilidad ({distribution_label})')
-        plt.legend()
-        plt.xlabel('Valor')
-        plt.ylabel('Densidad de probabilidad')
-        plt.title('Demanda historica VS Funcion de Densidad de Probabilidad (FDP)')        
-        # Guarda el gráfico en un BytesIO buffer
-        buffer = BytesIO()
-        plt.savefig(buffer, format='png')
-        buffer.seek(0)
-        # Codifica el buffer en base64 para pasarlo al template
-        image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        image_data = plot_histogram_and_pdf(data, pdf, distribution_label)
         print("Se selecciono el cuestionario " + str(selected_questionary_result_id))
         print("aqui se setea la variable selected_questionary_result_id " + str(selected_questionary_result_id))
         print("Started: " + str(started))
@@ -266,46 +298,47 @@ def simulate_show_view(request):
         return redirect('simulate:simulate.show')
     
     if not started:
-        if selected_questionary_result_id == None:
-            questionnaires_result = QuestionaryResult.objects.filter(is_active=True, fk_questionary__fk_product__in=products ,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
-        else:
-            equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
-            questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__in=products   ,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
-                    
-            questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)            
-            print(questionary_result_instance.fk_questionary.fk_product)
-            product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product)
-            
-            areas = Area.objects.order_by('id').filter(
-                is_active=True, 
-                fk_product__fk_business__fk_user=request.user,
-                fk_product=product_instance
-            )
-            paginator = Paginator(equations_to_use, 10) 
-            page = request.GET.get('page')
-            try:
-                equations_to_use = paginator.page(page)
-            except PageNotAnInteger:
-                equations_to_use = paginator.page(1)
-            except EmptyPage:
-                equations_to_use = paginator.page(paginator.num_pages)
-        print("no se inicio la simulacion")
-        print("Started: " + str(started))
-        context = {
-            'selected_questionary_result_id':selected_questionary_result_id,
-            'started': started,
-            'form': form,
-            'areas': areas,
-            'questionnaires_result': questionnaires_result,
-            'questionary_result_instance': questionary_result_instance,
-        }
-        return render(request, 'simulate/simulate-init.html', context)
+        try:
+            if selected_questionary_result_id is None:
+                questionnaires_result = QuestionaryResult.objects.filter(is_active=True, fk_questionary__fk_product__in=products ,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+            else:
+                equations_to_use = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user, fk_questionary_id=selected_questionary_result_id)
+                questionnaires_result = QuestionaryResult.objects.filter(is_active=True,fk_questionary__fk_product__in=products   ,fk_questionary__fk_product__fk_business__fk_user=request.user).order_by('-id')
+                        
+                questionary_result_instance = get_object_or_404(QuestionaryResult, pk=selected_questionary_result_id)            
+                print(questionary_result_instance.fk_questionary.fk_product)
+                product_instance = get_object_or_404(Product, pk=questionary_result_instance.fk_questionary.fk_product)
+                
+                areas = Area.objects.order_by('id').filter(
+                    is_active=True, 
+                    fk_product__fk_business__fk_user=request.user,
+                    fk_product=product_instance
+                )
+                paginator = Paginator(equations_to_use, 10) 
+                page = request.GET.get('page')
+                try:
+                    equations_to_use = paginator.page(page)
+                except PageNotAnInteger:
+                    equations_to_use = paginator.page(1)
+                except EmptyPage:
+                    equations_to_use = paginator.page(paginator.num_pages)
+            print("no se inicio la simulacion")
+            print("Started: " + str(started))
+            context = {
+                'selected_questionary_result_id':selected_questionary_result_id,
+                'started': started,
+                'form': form,
+                'areas': areas,
+                'questionnaires_result': questionnaires_result,
+                'questionary_result_instance': questionary_result_instance,
+            }
+            return render(request, 'simulate/simulate-init.html', context)
+        except ObjectDoesNotExist:
+            return HttpResponseNotFound("Object not found")
     else:
-        # aqui ya tomar los datos de la simulacion que se creo en start
         print("La simulación ha comenzado")
         simulation_instance = get_object_or_404(Simulation, pk=request.session['simulation_started_id'])
         nmd = int(simulation_instance.quantity_time)
-        # Iterar sobre cada día de la simulación
         endogenous_results = {}
         areas = Area.objects.filter(is_active=True, fk_product=simulation_instance.fk_questionary_result.fk_questionary.fk_product).order_by('id')
         for i in range(nmd):         
@@ -348,8 +381,7 @@ def simulate_show_view(request):
                         variable_initials_dict[variable_name] = float(answer.answer)
 
             print("diccionario de variables", variable_initials_dict)
-
-            # Calculate the mean for "DH"
+            
             if "DH" in variable_initials_dict:
                 demand_mean = round(np.mean(variable_initials_dict["DH"]), 2)
                 print("media de la DH", demand_mean)
@@ -362,14 +394,8 @@ def simulate_show_view(request):
                 variable_initials_dict["NMD"] = nmd
                         
             pending_equations = []  # List to store equations that are not ready to be solved
-
             for equation in equations:
-                print("ecuacion " + str(equation.expression))
-                variables_to_use = []
-
-                for var in [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5]:
-                    if var is not None:
-                        variables_to_use.append(var.initials)
+                variables_to_use = [var.initials for var in [equation.fk_variable1, equation.fk_variable2, equation.fk_variable3, equation.fk_variable4, equation.fk_variable5] if var is not None]
 
                 substituted_expression = equation.expression
                 for var in variables_to_use:
@@ -377,92 +403,97 @@ def simulate_show_view(request):
                         substituted_expression = substituted_expression.replace(var, str(variable_initials_dict.get(var)))
 
                 lhs, rhs = substituted_expression.split('=')
-                lhs1, rhs1 = equation.expression.split('=')
-                print("ecuacion armada son valores " + str(lhs.strip() + "=" + rhs.strip()))  # print()
-                print("ecuacion armada con los valores " + str(lhs1.strip() + "=" + rhs1.strip()))  # print()
 
                 if rhs is not None:
-                    # Replace '∑' with 'Sum'
-                    if '∑' in rhs:
-                        rhs = rhs.replace('∑', '')
+                    rhs = rhs.replace('∑', '')  # Puedes considerar si realmente necesitas este reemplazo
                     try:
-                        expresion_evaluated = sp.sympify(rhs.strip())
-                    except sp.SympifyError:
-                        print(f"Error: No se pudo convertir la cadena '{rhs}' en una expresión SymPy.")
-                        expresion_evaluated = None
-                    print("expresion evaluada " + str(expresion_evaluated))
-                else:
-                    # Handle the case where rhs is None
-                    expresion_evaluated = None  # Adjust based on your requirements
-                    continue
+                        symbol = symbols(rhs.strip())
+                        result = solve(Eq(sp.sympify(rhs.strip()), 0), symbol)
 
-                if expresion_evaluated is not None:
-                    print("variables a usar " + str(variables_to_use))
-                    # symbol = tuple(rhs1.split("="))[0].strip()
-                    symbol = sp.symbols(rhs.strip())
-                    print("simbolo " + str(symbol))
-
-                    if symbol in variable_initials_dict:
-                        try:
-                            # Intentar resolver la ecuación
-                            result = sp.solve(sp.Eq(expresion_evaluated, 0), symbol)
-                            print(f"Debug: lhs={lhs}, expresion_evaluated={expresion_evaluated}, result={result}")
-
-                            if result:
-                                # La ecuación tiene una solución
-                                endogenous_results[variables_to_use[-1]] = result[0]
-                            else:
-                                # La ecuación no tiene solución, agrégala a las ecuaciones pendientes
-                                print(f"Info: Equation {lhs} has no solution.")
-                                pending_equations.append((lhs, rhs))
-                        except Exception as e:
-                            print(f"Error: Unable to solve equation {lhs}. Reason: {str(e)}")
+                        if result:
+                            endogenous_results[variables_to_use[-1]] = result[0]
+                        else:
                             pending_equations.append((lhs, rhs))
-                    else:
-                        # La ecuación no está lista, agrégala a las ecuaciones pendientes
-                        print(f"Info: Equation {lhs} is waiting for complete data.")
+                    except Exception as e:
+                        print(f"Error: Unable to solve equation {lhs}. Reason: {str(e)}")
                         pending_equations.append((lhs, rhs))
 
-            # At this point, pending_equations contains equations waiting for complete data
-            # You can later attempt to solve the pending equations when more data is available.
-            # For example, when new data comes in:
-            print("ecuaciones pendientes " + str(pending_equations))
-            pending_equations = try_to_solve_pending_equations(pending_equations, variable_initials_dict, endogenous_results)
-
-            # Convert demand_total to a numeric type (assuming it's a string)
-            demand_total = float(demand_total)
-            # Parse demand_history JSON string into a list
-            demand_history_list = json.loads(simulation_instance.demand_history)
-            # Convert the elements in demand_history to a numeric type
-            demand_history_numeric = [float(value) for value in demand_history_list]
-            # Calculate the standard deviation
-            demand_std_dev = np.std(demand_history_numeric + [demand_total])
-            # demand_std_dev = np.std(list(simulation_instance.demand_history) + [demand_total])
-            # Add this before the serialization
-            print("Before serialization:", endogenous_results)
-
-            # Convert non-serializable parts of endogenous_results to serializable types
-            serializable_endogenous_results = {k: float(v) if isinstance(v, np.float64) else v for k, v in endogenous_results.items()}
-
-            # Add this after the serialization
-            print("After serialization:", serializable_endogenous_results)
-            new_result_simulation = ResultSimulation(
-                fk_simulation=simulation_instance,
-                demand_mean=demand_total,
-                demand_std_deviation=demand_std_dev,
-                date=simulation_instance.date_created + timedelta(days=i),
-                variables=serializable_endogenous_results,
-                # end_date=simulation_instance.date_created + timedelta(days=i+1),
-            )
+            print("ecuaciones pendientes " + str(pending_equations))          
+            # pending_equations = process_pending_equations(pending_equations, variable_initials_dict, endogenous_results)
+            
+            demand_total = convert_to_float(demand_total)
+            demand_history_numeric = convert_to_numeric_list(simulation_instance.demand_history)
+            demand_std_dev = calculate_std_dev(demand_history_numeric + [demand_total])
+            serializable_endogenous_results = serialize_endogenous_results(endogenous_results)
+            solved_results = solve_endogenous_results(endogenous_results)
+            print ("resultados solucionados " + str(solved_results))
+            print("resultados endogenos " + str(serializable_endogenous_results))
+            json_data = json.dumps(serializable_endogenous_results)
+            new_result_simulation = create_result_simulation(simulation_instance, demand_total, demand_std_dev, i, json_data)
             new_result_simulation.save()
             print("dia de la simulacion " + str(i))
 
-        
         request.session['started'] = False 
         return render(request, 'simulate/simulate-result.html', {
             'simulation_instance_id': simulation_instance,
         })              
-  
+
+def solve_endogenous_results(endogenous_results):
+    solved_results = {}
+
+    for key, expression in endogenous_results.items():
+        coefficient, operator, term = expression
+        symbol = sp.symbols(key)
+        solved_value = None
+        if operator == '+':
+            solved_value = sp.solve(coefficient + symbol - term, symbol)
+        elif operator == '-':
+            solved_value = sp.solve(coefficient - symbol - term, symbol)
+        elif operator == '*':
+            solved_value = sp.solve(coefficient * symbol - term, symbol)
+        elif operator == '/':
+            solved_value = sp.solve(coefficient / symbol - term, symbol)
+        else:
+            # Handle other operators as needed
+            pass
+
+        if solved_value:
+            solved_results[key] = solved_value[0]
+
+    return solved_results
+
+def process_pending_equations(pending_equations, variable_initials_dict, endogenous_results):
+    while pending_equations:
+        pending_equations = try_to_solve_pending_equations(pending_equations, variable_initials_dict, endogenous_results)
+    return pending_equations
+
+def convert_to_float(value):
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+def convert_to_numeric_list(json_string):
+    try:
+        list_values = json.loads(json_string)
+        return [convert_to_float(value) for value in list_values]
+    except json.JSONDecodeError:
+        return []
+
+def calculate_std_dev(numeric_list):
+    return np.std(numeric_list) if numeric_list else None
+
+def serialize_endogenous_results(endogenous_results):
+    return {k: float(v) if isinstance(v, np.float64) else v for k, v in endogenous_results.items()}
+
+def create_result_simulation(simulation_instance, demand_total, demand_std_dev, i, serializable_endogenous_results):
+    return ResultSimulation(
+        fk_simulation=simulation_instance,
+        demand_mean=demand_total,
+        demand_std_deviation=demand_std_dev,
+        date=simulation_instance.date_created + timedelta(days=i),
+        variables=serializable_endogenous_results,
+    )
 def try_to_solve_pending_equations(pending_equations, variable_initials_dict, endogenous_results):
     new_pending_equations = []
     for lhs, rhs in pending_equations:
@@ -593,8 +624,10 @@ def simulate_result_simulation_view(request, simulation_id):
     }
     image_data = None
     if len(all_labels) == len(all_values):
-        chart = None
         try:
+            # Crear una nueva figura antes de cada gráfico
+            plt.figure()
+
             plt.plot(chart_data['labels'], chart_data['values'], marker='o', label='Demanda')
             for value in all_values:
                 plt.axhline(y=value, linestyle='--', color='gray', alpha=0.5)
@@ -610,19 +643,29 @@ def simulate_result_simulation_view(request, simulation_id):
             plt.legend()
             plt.xlabel(chart_data['x_label'])
             plt.ylabel(chart_data['y_label'])
-            plt.title(f'Comportamiendo de la demanda promedio para la simulación {simulation_id}')
+            plt.title(f'Comportamiento de la demanda promedio para la simulación {simulation_id}')
 
             with BytesIO() as buffer:
                 plt.savefig(buffer, format='png')
                 buffer.seek(0)
                 image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-            chart = Chart.objects.create(
-                title=f'Comportamiendo de la demanda promedio para la simulación {simulation_id}',
-                chart_type='line',
-                chart_data=chart_data,
-                fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
-            )
+            # Check if a Chart object for this simulation already exists
+            chart = Chart.objects.filter(fk_simulation_id=simulation_id).first()
+            if chart:
+                # Update the existing Chart object
+                chart.title = f'Comportamiento de la demanda promedio para la simulación {simulation_id}'
+                chart.chart_type = 'line'
+                chart.chart_data = chart_data
+            else:
+                # Create a new Chart object
+                chart = Chart.objects.create(
+                    title=f'Comportamiento de la demanda promedio para la simulación {simulation_id}',
+                    chart_type='line',
+                    chart_data=chart_data,
+                    fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
+                )
+
             chart.save_chart_image()
             chart.save()
             plt.close()
@@ -675,6 +718,14 @@ def simulate_result_simulation_view(request, simulation_id):
                         'variable_name': variable_name
                     }
                     financial_recommendations_to_show.append(recommendation_data)
+                    finance_recommendation_instance = recommendation_instance
+                    finance_recommendation_simulation = FinanceRecommendationSimulation.objects.create(
+                        data=variable_value,
+                        fk_simulation=simulation_instance,
+                        fk_finance_recommendation=finance_recommendation_instance,
+                    )
+                    finance_recommendation_simulation.save()
+                    
         else:
             print(f"Variable name {variable_name} not found in totales_acumulativos.")
     
@@ -707,4 +758,151 @@ def simulate_result_simulation_view(request, simulation_id):
 
     return render(request, 'simulate/simulate-result.html',context)
 
-    
+import random
+# from pages.views import create_and_save_simulation,create_random_result_simulations
+def simulate_add_view(request):
+    if request.method == 'POST':
+        fk_questionary_result = request.POST.get('fk_questionary_result')
+        quantity_time = request.POST.get('quantity_time')
+        unit_time = request.POST.get('unit_time')
+        demand_history = request.POST.get('demand_history')
+        fk_fdp_id = request.POST.get('fk_fdp')
+        print(demand_history)
+        fk_fdp_instance = get_object_or_404(ProbabilisticDensityFunction, id=fk_fdp_id)
+        fk_questionary_result_instance = get_object_or_404(QuestionaryResult, id=fk_questionary_result)
+
+        # Convert demand_history to list of floats
+        # demand_history = [float(x) for x in demand_history.split(',')]
+
+        
+        cleaned_demand_history = demand_history.replace('[', '').replace(']', '').replace('\r\n', '').split(',')
+        demand_history_list = [float(item) for item in cleaned_demand_history if item.strip()]
+
+        if demand_history_list:
+            demand_mean = statistics.mean(demand_history_list)
+            print(f"La media de demand_history es: {demand_mean}")
+        else:
+            print("La lista de demand_history está vacía.")
+        
+        simulation_instance = Simulation.objects.create(
+            fk_questionary_result=fk_questionary_result_instance,
+            quantity_time=quantity_time,
+            unit_time=unit_time,
+            demand_history=demand_history,
+            fk_fdp=fk_fdp_instance,
+            is_active=True
+        )
+        product_instance = get_object_or_404(Product, pk=simulation_instance.fk_questionary_result.fk_questionary.fk_product.id)
+        simulation_instance.save()
+        Demand.objects.create(
+            quantity=demand_mean,
+            fk_simulation=simulation_instance,
+            fk_product=product_instance,
+            is_predicted=False
+        )
+        simulation_id=simulation_instance.id
+        create_random_result_simulations(simulation_instance, created=True)
+        simulate_result_simulation_view(request, simulation_id)
+        return HttpResponseRedirect(reverse('simulate:simulate.result', args=(simulation_instance.id,)))
+        # return render(request, 'simulate/simulate-init.html')
+    else:
+        # Render the form page
+        return render(request, 'simulate/simulate-init.html')
+
+def create_random_result_simulations(instance, created, **kwargs):
+    # Obtén la fecha inicial de la instancia de Simulation
+    current_date = instance.date_created
+    fk_simulation_instance = instance
+    result_simulation = None
+    print(f'Number of Result Simulation instances to be created by the Simulate: {instance.quantity_time}')
+    # por que se esta creando 4 veces ResultSimulation por Simulation
+    for _ in range(int(instance.quantity_time)):
+        initial_demand = json.loads(instance.demand_history)
+        media_demand = sum(initial_demand) / len(initial_demand) if initial_demand else 0
+        # demand = [media_demand] + [random.normalvariate(100, 500) for _ in range(10)]
+        demand = [random.normalvariate(media_demand, 3000) for _ in range(10)]
+        demand_mean = np.mean(demand)
+        demand_std_deviation = np.std(demand)
+        
+        variables = {
+            "CTR": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "CTAI": [random.normalvariate(5000, 20000) for _ in range(10)],
+            "TPV": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "TPPRO": [random.normalvariate(800, 4000) for _ in range(10)],
+            "DI": [random.normalvariate(50, 200) for _ in range(10)],
+            "VPC": [random.normalvariate(500, 1500) for _ in range(10)],
+            "IT": [random.normalvariate(5000, 20000) for _ in range(10)],
+            "GT": [random.normalvariate(3000, 12000) for _ in range(10)],
+            "TCA": [random.normalvariate(500, 2000) for _ in range(10)],
+            "NR": [random.normalvariate(0.1, 0.5) for _ in range(10)],
+            "GO": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "GG": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "GT": [random.normalvariate(2000, 8000) for _ in range(10)],
+            "CTTL": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "CPP": [random.normalvariate(500, 2000) for _ in range(10)],
+            "CPV": [random.normalvariate(500, 2000) for _ in range(10)],
+            "CPI": [random.normalvariate(500, 2000) for _ in range(10)],
+            "CPMO": [random.normalvariate(500, 2000) for _ in range(10)],
+            "CUP": [random.normalvariate(500, 2000) for _ in range(10)],
+            "FU": [random.normalvariate(0.1, 0.5) for _ in range(10)],
+            "TG": [random.normalvariate(2000, 8000) for _ in range(10)],
+            "IB": [random.normalvariate(3000, 12000) for _ in range(10)],
+            "MB": [random.normalvariate(2000, 8000) for _ in range(10)],
+            "RI": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "RTI": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "RTC": [random.normalvariate(0.1, 0.5) for _ in range(10)],
+            "PM": [random.normalvariate(500, 1500) for _ in range(10)],
+            "PE": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "HO": [random.normalvariate(10, 50) for _ in range(10)],
+            "CHO": [random.normalvariate(1000, 5000) for _ in range(10)],
+            "CA": [random.normalvariate(1000, 5000) for _ in range(10)],
+        }
+        demand_mean = np.mean(demand)
+        means = {variable: np.mean(values) for variable, values in variables.items()}
+        current_date += timedelta(days=1)
+        result_simulation = ResultSimulation(
+            demand_mean=demand_mean,
+            demand_std_deviation=demand_std_deviation,
+            date=current_date,
+            variables=means,
+            fk_simulation=fk_simulation_instance,
+            is_active=True
+        )
+        result_simulation.save()
+        # aqui acaba el for 
+    # Verifica si ya existe una instancia de demand_instance
+    demand_instance = None
+    demand_predicted_instance = None
+
+    if not Demand.objects.filter(fk_simulation=fk_simulation_instance, is_predicted=False).exists():
+        demand_instance = Demand(
+            quantity=fk_simulation_instance.demand_history[0],
+            is_predicted=False,
+            fk_simulation=fk_simulation_instance,
+            fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
+            is_active=True
+        )
+        demand_instance.save()
+
+    # Verifica si ya existe una instancia de demand_predicted_instance
+    if not Demand.objects.filter(fk_simulation=fk_simulation_instance, is_predicted=True).exists():
+        demand_predicted_instance = Demand(
+            quantity=demand_mean,
+            is_predicted=True,
+            fk_simulation=fk_simulation_instance,
+            fk_product=fk_simulation_instance.fk_questionary_result.fk_questionary.fk_product,
+            is_active=True
+        )
+        demand_predicted_instance.save()
+
+    # Verifica si tanto demand_instance como demand_predicted_instance tienen valores antes de crear DemandBehavior
+    if demand_instance is not None and demand_predicted_instance is not None:
+        # Verifica si ya existe una instancia de demand_behavior
+        if not DemandBehavior.objects.filter(current_demand=demand_instance, predicted_demand=demand_predicted_instance).exists():
+            demand_behavior = DemandBehavior(
+                current_demand=demand_instance,
+                predicted_demand=demand_predicted_instance,
+                is_active=True
+            )
+            demand_behavior.save()
+            

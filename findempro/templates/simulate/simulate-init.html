@@ -158,7 +158,8 @@
                                                                         </div>
                                                                     </div>
 
-                                                                    <form action="{% url 'simulate:simulate.show' %}" method="post" onsubmit="return validateForm()">
+                                                                    {% comment %} <form action="{% url 'simulate:simulate.show' %}" method="post" onsubmit="return validateForm()"> {% endcomment %}
+                                                                    <form action="{% url 'simulate:simulate.add' %}" method="post" onsubmit="return validateForm()">
                                                                         {% csrf_token %}  
                                                                         {% comment %} {{ selected_fdp }}
                                                                         {{ demand_history }}
@@ -170,7 +171,8 @@
                                                                         <input type="hidden" name="fk_fdp" value="{{ selected_fdp }}">
                                                                         <div class="col-lg-12">
                                                                             <div class="d-flex justify-content-between">
-                                                                                <button type="submit" name="start" class="btn btn-primary">Iniciar Modelo de Simulación</button>
+                                                                                {% comment %} <button type="submit" name="start" class="btn btn-primary">Iniciar Modelo de Simulación</button> {% endcomment %}
+                                                                                <button type="submit" class="btn btn-primary">Iniciar Modelo de Simulación</button>
                                                                             </div><!--end col-->
                                                                         </div><!--end row-->
                                                                     </form>
