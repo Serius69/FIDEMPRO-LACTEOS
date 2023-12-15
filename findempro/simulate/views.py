@@ -822,7 +822,7 @@ def create_random_result_simulations(instance, created, **kwargs):
         # demand = [media_demand] + [random.normalvariate(100, 500) for _ in range(10)]
         demand = [random.normalvariate(media_demand, 3000) for _ in range(10)]
         demand_mean = np.mean(demand)
-        demand_std_deviation = np.std(demand)
+        
         
         variables = {
             "CTR": [random.normalvariate(1000, 5000) for _ in range(10)],
@@ -860,6 +860,13 @@ def create_random_result_simulations(instance, created, **kwargs):
         demand_mean = np.mean(demand)
         means = {variable: np.mean(values) for variable, values in variables.items()}
         current_date += timedelta(days=1)
+        
+        # demand_std_deviation_historical = np.std(initial_demand)
+        # demand_std_deviation_random = np.std(demand)
+        # std_deviation_difference = np.sqrt((demand_std_deviation_historical**2 + demand_std_deviation_random**2) / 2)
+        # desviacion_std = np.std(std_deviation_difference)
+        
+        demand_std_deviation = random.normalvariat(5, 20)
         result_simulation = ResultSimulation(
             demand_mean=demand_mean,
             demand_std_deviation=demand_std_deviation,
