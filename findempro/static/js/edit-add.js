@@ -4,11 +4,11 @@ const formUtils = {
         const parts = value.split(`; ${name}=`);
         return parts.length === 2 ? parts.pop().split(';').shift() : null;
     },
-    
+
     showModal: (modalId) => {
         $(`#${modalId}`).modal('show');
     },
-    
+
     hideModal: (modalId) => {
         $(`#${modalId}`).modal('hide');
         window.location.reload();
@@ -33,58 +33,66 @@ const formUtils = {
         toastElement.toast('show');
     },
 };
-handleFormSubmission = async (formId, url, successCallback) => {
+
+async function handleFormSubmission(formId, url, idFieldId, successCallback) {
     try {
         const formData = new FormData(document.getElementById(formId));
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formUtils.getCookie('csrftoken'),
-            }
-        });
+        const id = $(`#${idFieldId}`).val();
+        const method = id ? 'PUT' : 'POST';
+        const headers = {
+            'X-CSRFToken': formUtils.getCookie('csrftoken'),
+        };
+
+        const fetchOptions = {
+            method,
+            headers,
+        };
+
+        // Verificar si el formulario contiene un campo JSON y agregarlo a los datos
+        const jsonInput = document.getElementById('json_input'); // Ajusta el ID según tu estructura
+        if (jsonInput) {
+            const jsonData = JSON.parse(jsonInput.value);
+            formData.append('json_data', JSON.stringify(jsonData));
+        }
+
+        if (method === 'POST' || method === 'PUT') {
+            fetchOptions.body = formData;
+        }
+
+        const response = await fetch(url, fetchOptions);
+
         if (response.ok) {
-            // ...
+            successCallback(); // Execute success callback on successful response
         } else {
-            throw new Error('Request failed');
+            const errorMessage = await response.text();
+            throw new Error(`Request failed with status: ${response.status}. ${errorMessage}`);
         }
     } catch (error) {
         console.error(error);
         formUtils.showError('An error occurred while submitting the form. Please try again.');
     }
-};
-const handleSubmission = async (formId, url, modalId) => {
+}
+
+async function handleSubmission(formId, url, modalId, idFieldId) {
     try {
-        const formData = new FormData(document.getElementById(formId));
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': formUtils.getCookie('csrftoken'),
-            }
-        });
-        if (response.ok) {
-            formUtils.hideModal(modalId);
-        } else {
-            throw new Error('Request failed');
-        }
+        await handleFormSubmission(formId, url, idFieldId, () => formUtils.hideModal(modalId));
     } catch (error) {
-        console.error(error);
-        debugger; 
+        console.error(`Error in handleSubmission: ${error.message}`);
+        debugger; // Consider removing or replacing with more sophisticated error handling
     }
-};
+}
+
 const formHandlers = {
     handleFormSubmission: async (formId, id, type) => {
         const url = id ? `/${type}/${id}/update/` : `/${type}/create/`;
-        await handleFormSubmission(formId, url, () => formUtils.hideModal(`addOrUpdate${type.charAt(0).toUpperCase() + type.slice(1)}`));
+        await handleSubmission(formId, url, `addOrUpdate${type.charAt(0).toUpperCase() + type.slice(1)}`, `${type}_id`);
     },
 
     handleBusinessSubmission: async () => {
         const businessId = $('#business_id').val();
         await formHandlers.handleFormSubmission('businessForm', businessId, 'business');
     },
-    
+
     handleProductSubmission: async () => {
         const productId = $('#product_id').val();
         await formHandlers.handleFormSubmission('productForm', productId, 'product');
@@ -94,16 +102,16 @@ const formHandlers = {
         const areaId = $('#area_id').val();
         await formHandlers.handleFormSubmission('areaForm', areaId, 'area');
     },
-    
+
     handleVariableSubmission: async () => {
         const variableId = $('#variable_id').val();
         await formHandlers.handleFormSubmission('variableForm', variableId, 'variable');
     },
-    
+
     handleEquationSubmission: async () => {
         const equationId = $('#equation_id').val();
         await formHandlers.handleFormSubmission('equationForm', equationId, 'equation');
-    },    
+    },
 };
 
 const formIds = ['businessForm', 'productForm', 'areaForm', 'variableForm', 'equationForm'];
@@ -115,6 +123,7 @@ formIds.forEach(formId => {
         await formHandlers[`handle${type.charAt(0).toUpperCase() + type.slice(1)}Submission`]();
     });
 });
+
 
 async function loadDetailsAndShowModal(model, id, modalId) {
     try {
@@ -138,14 +147,15 @@ function loadImageAndDetails(model, details, baseUrl, imageSrcInput) {
     $('#logo-img').attr('src', imageUrl);
     $('#image_src').val(details.image_src);
     if (details.image_src) {
-        imageSrcInput.data('existing-image', details.image_src);  // Almacenar la URL de la imagen existente en un atributo de datos
-        loadImagePreview(details.image_src);
+        imageSrcInput.data('existing-image', details.image_src);
     }
+    const form = $(`#${model}Form`);
     switch (model) {
         case 'business':
-            $('#id').val(details.id);
-            $('#type').val(details.type);
-            $('#location').val(details.location);
+            form.find('#id').val(details.id);
+            form.find('#type').val(details.type);
+            form.find('#location').val(details.location);
+            form.find('#description').val(details.description);
             break;
         case 'product':
             $('#type').val(details.type);
@@ -210,27 +220,6 @@ $('#image_src').on('change', function () {
         loadImagePreview('');
     }
 });
-function setModalEvent(modalId, deleteLinkId, deleteFormId, deleteFormUrlId, variableId) {
-    $(modalId).on('show.bs.modal', function (event) {
-        var modal = $(this);
-        var deleteForm = modal.find(deleteFormId);
-        var deleteFormUrlInput = modal.find(deleteFormUrlId);
-        var variableId = $(deleteLinkId).data('variable-id');
-        var url = deleteFormUrlInput.val().replace('0', variableId);
-        console.log('Setting delete form action to:', url); 
-        deleteForm.attr('action', url);
-    });
-}
-setModalEvent('#removeBusinessModal', '#delete-business-link', '#deleteBusinessForm', 
-'#delete-business-url', $('#delete-business-link').data('variable-id'));
-setModalEvent('#removeProductModal', '#delete-product-link', '#deleteProductForm', 
-'#delete-product-url', $('#delete-product-link').data('variable-id'));
-setModalEvent('#removeAreaModal', '#delete-area-link', '#deleteAreaForm', 
-'#delete-area-url', $('#delete-area-link').data('variable-id'));
-setModalEvent('#removeVariableModal', '#delete-variable-link', '#deleteVariableForm', 
-'#delete-variable-url', $('#delete-variable-link').data('variable-id'));
-setModalEvent('#removeEquationModal', '#delete-equation-link', '#deleteEquationForm', 
-'#delete-equation-url', $('#delete-equation-link').data('variable-id'));
 const modelActions = {
     getDetails: async (model, id) => {
         try {
@@ -273,25 +262,6 @@ const modelActions = {
             return null;
         }
     },
-    delete: async (model, id) => {
-        try {
-            const response = await fetch(`/${model}/delete/${id}/`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': formUtils.getCookie('csrftoken')
-                },
-            });
-    
-            if (response.ok) {
-                console.log(`${model} deleted successfully`);
-            } else {
-                throw new Error(`Error deleting ${model}`);
-            }
-        } catch (error) {
-            console.error(`Error deleting ${model}:`, error);
-        }
-    },
     create: async (model, data) => {
         try {
             const response = await fetch(`/${model}/create/`, {
@@ -308,7 +278,6 @@ const modelActions = {
             return null;
         }
     },
-
     update: async (model, id, data) => {
         try {
             const response = await fetch(`/${model}/${id}/update/`, {
@@ -326,16 +295,10 @@ const modelActions = {
         }
     },
 };
-
-
-
-
-
 function setModalTitle(modal, idInput, modalName) {
     if (!modal || !idInput || !modalName) {
         throw new Error('Modal, input o nombre del modal no especificados');
     }
-
     const nameMapping = {
         'business': 'negocio',
         'product': 'producto',

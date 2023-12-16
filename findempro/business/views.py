@@ -16,8 +16,10 @@ from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.models import User
+from django.http import Http404
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
+@login_required
 def business_list_view(request):
     form = BusinessForm()
     try:
@@ -41,6 +43,7 @@ def business_list_view(request):
         return HttpResponse(status=500)
 
     return render(request, 'business/business-list.html', context)
+@login_required
 def read_business_view(request, pk):
     try:
         business = get_object_or_404(Business, pk=pk)
@@ -63,17 +66,12 @@ def read_business_view(request, pk):
     except Exception as e:
         messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
         return HttpResponse(status=500) 
-def create_or_update_business_view(request, pk=None):
-    business_instance = None
-    if pk:
-        try:
-            business_instance = Business.objects.get(pk=pk)
-        except Business.DoesNotExist:
-            messages.error(request, "Business does not exist.")
-            return redirect("business:business.list")
 
-    if request.method == 'POST':
-        form = BusinessForm(request.POST, request.FILES, instance=business_instance)
+@login_required
+def create_or_update_business_view(request, pk=None):
+    if request.method in ['POST', 'PUT']:
+        business_instance = get_object_or_404(Business, pk=pk) if pk else None
+        form = BusinessForm(request.POST or None, request.FILES or None, instance=business_instance)
 
         if form.is_valid():
             business_instance = form.save(commit=False)
@@ -81,22 +79,19 @@ def create_or_update_business_view(request, pk=None):
             business_instance.last_updated = timezone.now()
             business_instance.save()
 
-            if business_instance.id:
-                messages.success(request, "Business updated successfully!")
-            else:
-                messages.success(request, "Business created successfully!")
+            return JsonResponse({'success': True, 'message': 'Business updated successfully!' if business_instance.id else 'Business created successfully!'})
 
-            return redirect("business:business.list")
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid form data', 'errors': form.errors}, status=400)
 
-        messages.error(request, "Please check your inputs.")
-    else:
-        print(form.errors)
+    elif request.method == 'GET':
         form = BusinessForm(instance=business_instance)
+        return render(request, 'business/business_form.html', {'form': form})
 
-    return render(request, "business/business-list.html", {'form': form, 'business': business_instance})
-@login_required
+    else:
+        raise Http404("Invalid request method")
 def delete_business_view(request, pk):
-    try:
+    # try:
         if request.method == 'POST':
             business = get_object_or_404(Business, pk=pk)
             business.is_active = False
@@ -106,9 +101,9 @@ def delete_business_view(request, pk):
         else:
             messages.error(request, "Invalid request method. Only POST is allowed.")
             return HttpResponse("Invalid request method. Only POST is allowed.", status=405)  # Method Not Allowed
-    except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)
+    # except Exception as e:
+        # messages.error(request, f"An error occurred: {str(e)}")
+        # return HttpResponse(status=500)
 
 @login_required
 def get_business_details_view(request, pk):

@@ -202,12 +202,44 @@
                                                                     </div>
                                                                 {% comment %} aqui tiene que validar que los 30 datos que se subiran como demandas historicas deben seguir una distribucion adecuada y no ser tan disparados {% endcomment %}
                                                                 {% elif  question.type == 3 %}
+                                                                <script>
+                                                                    function handleFileUpload(event) {
+                                                                        const fileInput = event.target;
+                                                                        const file = fileInput.files[0];
+                                                                
+                                                                        if (file) {
+                                                                            const reader = new FileReader();
+                                                                
+                                                                            reader.onload = function (e) {
+                                                                                try {
+                                                                                    // Obtener el contenido del archivo como texto
+                                                                                    const fileContent = e.target.result;
+                                                                
+                                                                                    // Dividir el contenido en líneas
+                                                                                    const lines = fileContent.split('\n');
+                                                                
+                                                                                    // Filtrar y mapear las líneas para obtener la lista de números
+                                                                                    const numbers = lines.map(line => parseFloat(line)).filter(number => !isNaN(number));
+                                                                
+                                                                                    // Hacer algo con la lista de números (por ejemplo, imprimir en la consola)
+                                                                                    console.log("Lista de números:", numbers);
+                                                                                } catch (error) {
+                                                                                    console.error("Error al procesar el archivo:", error);
+                                                                                }
+                                                                            };
+                                                                
+                                                                            // Leer como texto el contenido del archivo
+                                                                            reader.readAsText(file);
+                                                                        }
+                                                                    }
+                                                                </script>
+                                                                
                                                                 <div class="form-group">
                                                                     <div class="custom-file">
-                                                                        <input type="file" class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" accept=".txt">
-                                                                        <label class="custom-file-label" for="answer_{{ question.id }}">Subir Archivo que contenga la demanda historica</label>
+                                                                        <input type="file" class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" accept=".txt" onchange="handleFileUpload(event)">
+                                                                        <label class="custom-file-label" for="answer_{{ question.id }}">Subir Archivo que contenga la demanda histórica (TXT)</label>
                                                                     </div>
-                                                                </div>
+                                                                </div>              
                                                                 {% endif %}
                                                             {% endfor %}
                                                             {% if not questions_to_answer.last %}
