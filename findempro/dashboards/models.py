@@ -36,7 +36,7 @@ class Chart(models.Model):
     last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the chart was last updated')
     chart_image = models.ImageField(upload_to='chart_images/', blank=True, null=True, help_text="Chart image")
 
-    def save_chart_image(self):
+    def save_chart_image(self, image_data):
         try:
             # Generar la imagen con Matplotlib
             plt.legend()

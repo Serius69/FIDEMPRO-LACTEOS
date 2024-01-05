@@ -1,6 +1,8 @@
+import json
 from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from variable.models import Variable
+from django.contrib.auth.decorators import login_required
 from product.models import Product
 from questionary.models import Questionary,Question,Answer,QuestionaryResult
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -20,6 +22,7 @@ from .models import Answer
 from django.core.exceptions import ObjectDoesNotExist
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
+@login_required
 def questionnaire_list_view(request):
     started_questionary = request.session.get('started_questionary', False)
     selected_questionary_id = None
@@ -184,23 +187,6 @@ def questionnaire_list_view(request):
             'show_questionary': show_questionary
         }   
         return render(request, 'questionary/questionary-list.html', context)
-                                
-# def questionnaire_save_view(request):
-#     if request.method == 'POST':
-#         questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
-#         for question in questions_to_answer:
-#             answer_text = request.POST.get('answer_' + str(question.id))
-#             answer = Answer(answer=answer_text, fk_question=question)
-#             answer.save()
-#         return redirect('questionary:questionary.result')
-#     else:
-#         questions_to_answer = Question.objects.order_by('id').filter(is_active=True, fk_questionary__fk_product__fk_business__fk_user=request.user)
-#         context = {
-#             'questions_to_answer': questions_to_answer
-#         }
-#         return render(request, 'questionary/questionnaire_form.html', context)
-#                # Add your code here to render the form
-#         pass
 def questionnaire_result_view(request, pk):
     try:
         questionary_result = get_object_or_404(QuestionaryResult, pk=pk)
@@ -216,3 +202,21 @@ def questionnaire_result_view(request, pk):
     except Exception as e:
         messages.error(request, "An error occurred. Please check the server logs for more information: ", e)
         return HttpResponse(status=500)
+    
+def update_question_view(request):
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        answer_id = data.get('answer_id')
+        new_answer = data.get('new_answer')
+
+        # Aquí deberías realizar la lógica para actualizar la respuesta en la base de datos.
+        # Puedes usar el ID de la respuesta para identificarla y actualizar el campo correspondiente.
+
+        # Ejemplo:
+        answer_instance = get_object_or_404(Answer, id=answer_id)
+        answer_instance.answer = new_answer
+        answer_instance.save()
+
+        return JsonResponse({'success': True, 'message': 'Respuesta actualizada exitosamente!'})
+
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})

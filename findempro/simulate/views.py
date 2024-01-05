@@ -41,6 +41,7 @@ from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
 from variable.models import Variable, Equation, EquationResult
 import sympy as sp
 from django.core.exceptions import *
+import seaborn as sns
 
 # Set matplotlib to non-interactive mode to avoid error in web environments
 matplotlib.use('Agg')
@@ -75,7 +76,7 @@ def plot_histogram_and_pdf(data, pdf, distribution_label):
 
     # Codifica el buffer en base64 para pasarlo al template
     buffer.seek(0)
-    image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    image_data = save_plot_as_base64()
 
     return image_data
 
@@ -532,65 +533,45 @@ def try_to_solve_pending_equations(pending_equations, variable_initials_dict, en
 # aqui se le manda el Simulate object que se creo en la vista de arriba
 def simulate_result_simulation_view(request, simulation_id):
     results = get_results_for_simulation(simulation_id)
-    # analysis_results = analyze_simulation_results(results)
-    # decision = decision_support(analysis_results)
     results_simulation = ResultSimulation.objects.filter(is_active=True, fk_simulation_id=simulation_id)
     iniciales_a_buscar = ['CTR', 'CTAI', 'TPV', 'TPPRO', 'DI', 'VPC', 'IT', 'GT', 'TCA', 'NR', 'GO', 'GG', 'GT', 'CTTL', 'CPP', 'CPV', 'CPI', 'CPMO', 'CUP', 'PVR', 'FU', 'TG', 'IB', 'MB', 'RI', 'RTI', 'RTC', 'PM', 'PE', 'HO', 'CHO', 'CA']
-    # Crear una lista para almacenar todas las variables extraídas
     all_variables_extracted = []
 
     for result_simulation in results_simulation:
         variables_extracted = result_simulation.get_variables()
 
         # Filtrar variables que coinciden con las iniciales
-        variables_filtradas = Variable.objects.filter(initials__in=iniciales_a_buscar).values('name', 'initials')
-        iniciales_a_nombres = {variable['initials']: variable['name'] for variable in variables_filtradas}
+        filtered_variables = Variable.objects.filter(initials__in=iniciales_a_buscar).values('name', 'initials')
+        iniciales_a_nombres = {variable['initials']: variable['name'] for variable in filtered_variables}
         # en lugar de mostrar las iniciales compararlas con la base de datos de varaibles y mostrar el nombre de la variable
         # Calcular la suma total por variable
         totales_por_variable = {}
         for inicial, value in variables_extracted.items():
             if inicial in iniciales_a_nombres:
-                nombre_variable = iniciales_a_nombres[inicial]
-                if nombre_variable not in totales_por_variable:
-                    totales_por_variable[nombre_variable] = 0
-                totales_por_variable[nombre_variable] += value
+                name_variable = iniciales_a_nombres[inicial]
+                if name_variable not in totales_por_variable:
+                    totales_por_variable[name_variable] = 0
+                totales_por_variable[name_variable] += value
 
         # Agregar las variables filtradas a la lista
         all_variables_extracted.append({'result_simulation': result_simulation, 'totales_por_variable': totales_por_variable})
-    
-    # Crear un objeto Paginator
-    paginator_all_variables_extracted = Paginator(all_variables_extracted, 1)
-    # Obtener el número de página desde la solicitud GET
-    page_all_variables_extracte = request.GET.get('page')
-    try:
-        # Obtener la página solicitada
-        all_variables_extracted = paginator_all_variables_extracted.page(page_all_variables_extracte)
-    except PageNotAnInteger:
-        # Si la página no es un número entero, mostrar la primera página
-        all_variables_extracted = paginator_all_variables_extracted.page(1)
-    except EmptyPage:
-        # Si la página está fuera de rango (por ejemplo, 9999), mostrar la última página
-        all_variables_extracted = paginator_all_variables_extracted.page(paginator_all_variables_extracted.num_pages)
         
     totales_acumulativos = {}    
     # Obtén todas las variables desde la base de datos
     variables_db = Variable.objects.all()
     # Crea un diccionario de mapeo entre iniciales y nombres completos de variables
-    nombre_variables = {variable.initials: {'name': variable.name, 'unit': variable.unit} for variable in variables_db}
+    name_variables = {variable.initials: {'name': variable.name, 'unit': variable.unit} for variable in variables_db}
     for result_simulation in results_simulation:
         variables_extracted = result_simulation.get_variables()
 
         # Filtrar variables que coinciden con las iniciales
-        variables_filtradas = {nombre_variables[inicial]['name']: {'value': value, 'unit': nombre_variables[inicial]['unit']} for inicial, value in variables_extracted.items() if inicial in iniciales_a_buscar}
-
+        filtered_variables = {name_variables[inicial]['name']: {'value': value, 'unit': name_variables[inicial]['unit']} for inicial, value in variables_extracted.items() if inicial in iniciales_a_buscar}
+        print (filtered_variables)
         # Calcular la suma total por variable
-        for nombre_variable, info_variable in variables_filtradas.items():
-            if nombre_variable not in totales_acumulativos:
-                totales_acumulativos[nombre_variable] = {'total': 0, 'unit': info_variable['unit']}
-            totales_acumulativos[nombre_variable]['total'] += info_variable['value']
-    
-    
-    print(totales_acumulativos )
+        for name_variable, info_variable in filtered_variables.items():
+            if name_variable not in totales_acumulativos:
+                totales_acumulativos[name_variable] = {'total': 0, 'unit': info_variable['unit']}
+            totales_acumulativos[name_variable]['total'] += info_variable['value']
     
     simulation_instance = get_object_or_404(Simulation, pk=simulation_id)
     questionary_result_instance = get_object_or_404(QuestionaryResult, pk=simulation_instance.fk_questionary_result.id)
@@ -618,87 +599,202 @@ def simulate_result_simulation_view(request, simulation_id):
 
     chart_data = {
         'labels': all_labels,
+        'datasets': [
+            {'label': 'Demanda Simulada', 'values': get_variable_values('Ingresos totales', filtered_variables)},
+            # {'label1': 'Gastos Operativos', 'values': get_variable_values('GANANCIAS TOTALES', filtered_variables)},
+        ],
         'values': all_values,
-        'x_label': 'Resultado',
-        'y_label': 'Demanda',
+        'x_label': 'Dias',
+        'y_label': 'Demanda (Litros)',
     }
-    image_data = None
+    image_data_line = None
+    image_data_bar = None
+    image_data_candlestick = None
+    image_data_histogram = None
+    image_data_0 = None
+    image_data_1 = None
+    image_data_2 = None
+    image_data_3 = None
+    image_data_4 = None
+    image_data_5 = None
+    image_data_6 = None
+    image_data_7 = None
+    image_data_8 = None
     if len(all_labels) == len(all_values):
         try:
-            # Crear una nueva figura antes de cada gráfico
-            plt.figure()
-
-            plt.plot(chart_data['labels'], chart_data['values'], marker='o', label='Demanda')
-            for value in all_values:
-                plt.axhline(y=value, linestyle='--', color='gray', alpha=0.5)
-
-            for label in all_labels:
-                plt.axvline(x=label, linestyle='--', color='gray', alpha=0.5)
-
-            coefficients = np.polyfit(chart_data['labels'], chart_data['values'], 1)
-            polynomial = np.poly1d(coefficients)
-            trendline_values = polynomial(chart_data['labels'])
-            plt.plot(chart_data['labels'], trendline_values, label=f'Línea de tendencia: {coefficients[0]:.2f}x + {coefficients[1]:.2f}', linestyle='--')
-
-            plt.legend()
-            plt.xlabel(chart_data['x_label'])
-            plt.ylabel(chart_data['y_label'])
-            plt.title(f'Comportamiento de la demanda promedio para la simulación {simulation_id}')
-
-            with BytesIO() as buffer:
-                plt.savefig(buffer, format='png')
-                buffer.seek(0)
-                image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
-
-            # Check if a Chart object for this simulation already exists
-            chart = Chart.objects.filter(fk_simulation_id=simulation_id).first()
-            if chart:
-                # Update the existing Chart object
-                chart.title = f'Comportamiento de la demanda promedio para la simulación {simulation_id}'
-                chart.chart_type = 'line'
-                chart.chart_data = chart_data
-            else:
-                # Create a new Chart object
-                chart = Chart.objects.create(
-                    title=f'Comportamiento de la demanda promedio para la simulación {simulation_id}',
-                    chart_type='line',
-                    chart_data=chart_data,
-                    fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
-                )
-
-            chart.save_chart_image()
-            chart.save()
-            plt.close()
-
+            image_data_line = plot_and_save_chart(chart_data, 'line', simulation_id, product_instance, result_simulations, 'Demanda promedio', 'Este gráfico de líneas muestra el comportamiento de la demanda para el producto en función del tiempo.')
+            image_data_bar = plot_and_save_chart(chart_data, 'bar', simulation_id, product_instance, result_simulations,'Gráfico de dispersión de la demanda para el producto' , 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+            image_data_candlestick = plot_and_save_chart(chart_data, 'scatter', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+            image_data_histogram = plot_and_save_chart(chart_data, 'histogram', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
         except Exception as e:
             print(f"Error generating chart or creating Chart object: {e}")
     else:
         print("Las listas tienen diferentes longitudes, no se puede trazar el gráfico correctamente.")
-
-    paginator = Paginator(results_simulation, 10)  # Show 10 results per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    page = request.GET.get('page')
-    try:
-        page_obj = paginator.page(page)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+   
     
+    results_dict = analyze_financial_results(
+        simulation_id,
+        totales_acumulativos,
+        business_instance,
+        simulation_instance
+    )
+    chart_data_cost_variables = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Ingresos totales', 'values': get_variable_values('Ingresos totales', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('GANANCIAS TOTALES', filtered_variables)},
+        ],
+        'x_label': 'Ganancias',
+        'y_label': 'Ingresos totales',
+    }
+    chart_data_cost_variables_0 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('VENTAS POR CLIENTE', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('DEMANDA INSATISFECHA', filtered_variables)},
+        ],
+        'x_label': 'Ventas por cliente',
+        'y_label': 'Demanda Insatisfecha',
+    }
+    chart_data_cost_variables_1 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('Rotación Inventario', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('Gastos Operativos', filtered_variables)},
+        ],
+        'values': all_labels,
+        'x_label': 'Rotacion de inventario',
+        'y_label': 'Gastos Operativos',
+    }
+    chart_data_cost_variables_2 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('Costo Unitario Producción', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('Ingreso Bruto', filtered_variables)},
+        ],
+        'x_label': 'Costo Unitario Producción',
+        'y_label': 'Margen bruto',
+    }
+    chart_data_cost_variables_3 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('Rotación Clientes', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('Participación Mercado', filtered_variables)},
+        ],
+        'x_label': 'Rotación de clientes',
+        'y_label': 'Participación de mercado',
+    }
+    chart_data_cost_variables_4 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('Horas ociosas', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('Productividad Empleados', filtered_variables)},
+        ],
+        'x_label': 'Horas ociosas',
+        'y_label': 'Productividad de empleados',
+    }
+    chart_data_cost_variables_5 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('TOTAL PRODUCTOS PRODUCIDOS', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('COSTO TOTAL ADQUISICIÓN INSUMOS', filtered_variables)},
+        ],
+        'x_label': 'Total productos producidos',
+        'y_label': 'Costo total adquisición de insumos',
+    }
+    chart_data_cost_variables_6 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('COSTO PROMEDIO PRODUCCION', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('COSTO PROMEDIO VENTA', filtered_variables)},
+        ],
+        'x_label': 'Costo promedio de producción',
+        'y_label': 'Costo promedio de venta',
+    }
+    chart_data_cost_variables_7 = {
+        'labels': all_labels,
+        'datasets': [
+            {'label': 'Gastos Operativos', 'values': get_variable_values('Retorno Inversión', filtered_variables)},
+            {'label1': 'Gastos Operativos', 'values': get_variable_values('GANANCIAS TOTALE', filtered_variables)},
+        ],
+        'x_label': 'Retorno de la inversión',
+        'y_label': 'Ganancias Totales',
+    }
+    
+    image_data_0 = plot_and_save_chart(chart_data_cost_variables, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_1 = plot_and_save_chart(chart_data_cost_variables_0, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_2 = plot_and_save_chart(chart_data_cost_variables_1, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_3 = plot_and_save_chart(chart_data_cost_variables_2, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_4 = plot_and_save_chart(chart_data_cost_variables_3, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_5 = plot_and_save_chart(chart_data_cost_variables_4, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_6 = plot_and_save_chart(chart_data_cost_variables_5, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_7 = plot_and_save_chart(chart_data_cost_variables_6, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+    image_data_8 = plot_and_save_chart(chart_data_cost_variables_7, 'bar', simulation_id, product_instance, result_simulations, 'Gráfico de dispersión de la demanda para el producto', 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.')
+            
+    context = {
+        'image_data_0':image_data_0,
+        'image_data_1':image_data_1,
+        'image_data_2':image_data_2,
+        'image_data_3':image_data_3,
+        'image_data_4':image_data_4,
+        'image_data_5':image_data_5,
+        'image_data_6':image_data_6,
+        'image_data_7':image_data_7,
+        'image_data_8':image_data_8,
+        'demand_initial':results_dict['demand_initial'],
+        'demand_predicted':results_dict['demand_predicted'],
+        'growth_rate':results_dict['growth_rate'],
+        'simulation_instance': simulation_instance,
+        'results_simulation': results_simulation,
+        'results': results,
+        'financial_recommendations_to_show': results_dict['financial_recommendations_to_show'],
+        'questionary_result_instance': questionary_result_instance,
+        'product_instance': product_instance,
+        'business_instance': business_instance,
+        'areas': areas,
+        'image_data_line': image_data_line,
+        'image_data_bar': image_data_bar,
+        'image_data_candlestick': image_data_candlestick,
+        'image_data_histogram': image_data_histogram,
+        'all_variables_extracted':all_variables_extracted,
+        'totales_acumulativos': totales_acumulativos
+    }
+    return render(request, 'simulate/simulate-result.html',context)
+
+def get_variable_values(variable_to_search, data):
+    values_of_variable = []
+
+    # Convert data to a list of dictionaries if it's a string
+    if isinstance(data, str):
+        data = eval(data)  # Use caution with eval, as it can execute arbitrary code
+
+    # Ensure that data is a list of dictionaries
+    if not isinstance(data, list) or not all(isinstance(record, dict) for record in data):
+        return values_of_variable
+
+    for record in data:
+        if isinstance(record.get(variable_to_search), dict):
+            values_of_variable.append(record[variable_to_search]['value'])
+        else:
+            values_of_variable.append(None)
+
+    return values_of_variable
+
+def analyze_financial_results(simulation_id, totales_acumulativos, business_instance, simulation_instance):
+    # Calculate growth rate
     demand_initial = get_object_or_404(Demand, fk_simulation_id=simulation_id, is_predicted=False)
-    demand_predicted = get_object_or_404(Demand, fk_simulation_id=simulation_id, is_predicted=
-                                         True)
+    demand_predicted = get_object_or_404(Demand, fk_simulation_id=simulation_id, is_predicted=True)
     growth_rate = ((demand_predicted.quantity / demand_initial.quantity) ** (1 / 1) - 1) * 100
     growth_rate = round(growth_rate, 2)
-    
 
+    # Fetch financial recommendations
     financial_recommendations = FinanceRecommendation.objects.filter(
         is_active=True,
         fk_business=business_instance
     )
     financial_recommendations_to_show = []
-    # Analizar resultados y comparar con umbrales o criterios
+
+    # Analyze results and compare with thresholds or criteria
     for recommendation_instance in financial_recommendations:
         name = recommendation_instance.name
         variable_name = recommendation_instance.variable_name
@@ -725,38 +821,160 @@ def simulate_result_simulation_view(request, simulation_id):
                         fk_finance_recommendation=finance_recommendation_instance,
                     )
                     finance_recommendation_simulation.save()
-                    
         else:
             print(f"Variable name {variable_name} not found in totales_acumulativos.")
-    
-    paginator2 = Paginator(financial_recommendations_to_show, 10)  # Show 10 results per page.
-    page_number2 = request.GET.get('page')
-    page_obj2 = paginator2.get_page(page_number2)
-    counter_start = (page_obj.number - 1) * paginator.per_page + 1
-    
-    # return render(request, 'your_template.html', {'page_obj': page_obj})
-    context = {
-        'demand_initial':demand_initial,
-        'demand_predicted':demand_predicted,
-        'growth_rate':growth_rate,
-        'simulation_instance': simulation_instance,
-        'results_simulation': results_simulation,
-        # 'analysis_results': analysis_results,
-        # 'decision': decision,
-        'questionary_result_instance': questionary_result_instance,
-        'product_instance': product_instance,
-        'business_instance': business_instance,
-        'areas': areas,
-        'image_data': image_data,
-        'page_obj'  : page_obj,
-        'counter_start': counter_start,
-        'page_obj2'  : page_obj2,
-        'financial_recommendations_to_show':financial_recommendations_to_show,
-        'all_variables_extracted':all_variables_extracted,
-        'totales_acumulativos': totales_acumulativos
-    }
 
-    return render(request, 'simulate/simulate-result.html',context)
+    # Return the results as a dictionary
+    results_dict = {
+        'demand_initial': demand_initial,
+        'demand_predicted': demand_predicted,
+        'growth_rate': growth_rate,
+        'financial_recommendations_to_show': financial_recommendations_to_show,
+    }
+    return results_dict
+
+def save_plot_as_base64():
+    with BytesIO() as buffer:
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+def plot_and_save_chart(chart_data, chart_type, simulation_id, product_instance, result_simulations, title, description):
+    plt.figure(figsize=(12, 8))
+
+    if chart_type == 'line':
+        for i, variable_data in enumerate(chart_data['datasets']):
+            label = variable_data['label']
+            values = variable_data['values']
+            color = sns.color_palette('Set3', len(chart_data['labels']))[i]
+            # Puedes agregar líneas de regresión si es necesario
+            reg_line = np.polyfit(chart_data['labels'], values, 1)
+            plt.plot(chart_data['labels'], np.polyval(reg_line, chart_data['labels']), label=f'{label} Regression Line', linestyle='--')
+                
+        sns.lineplot(x=chart_data['labels'], y=chart_data['values'], marker='o', label='Demanda (Litros)', palette='viridis')
+        for value in chart_data['values']:
+            plt.axhline(y=value, linestyle='--', color='gray', alpha=0.5)
+        for label in chart_data['labels']:
+            plt.axvline(x=label, linestyle='--', color='gray', alpha=0.5)
+        coefficients = np.polyfit(chart_data['labels'], chart_data['values'], 1)
+        polynomial = np.poly1d(coefficients)
+        trendline_values = polynomial(chart_data['labels'])
+        plt.plot(chart_data['labels'], trendline_values, label=f'Línea de tendencia: {coefficients[0]:.2f}x + {coefficients[1]:.2f}', linestyle='--')
+        plt.fill_between(chart_data['labels'], chart_data['values'], trendline_values, color='skyblue', alpha=0.3)
+    elif chart_type == 'bar':
+        for i, variable_data in enumerate(chart_data['datasets']):
+            label = variable_data.get('label', f'Default Label {i+1}')
+            values = variable_data['values']
+            color = sns.color_palette('Set3', len(chart_data['labels']))[i]
+            sns.barplot(x=chart_data['labels'], y=values, label=label, color=color, alpha=0.7)
+
+        title = f'Gráfico de barras para {chart_type} del producto {product_instance.name}'
+        description = f'Este gráfico de barras muestra la distribución para {chart_type} del producto.'
+    elif chart_type == 'scatter':
+        for i, variable_data in enumerate(chart_data['datasets']):
+            label = variable_data['label']
+            values = variable_data['values']
+            color = sns.color_palette('Set3', len(chart_data['labels']))[i]
+
+            sns.scatterplot(x=chart_data['labels'], y=values, label=label, color=color, marker='o')
+
+            # Puedes agregar líneas de regresión si es necesario
+            reg_line = np.polyfit(chart_data['labels'], values, 1)
+            plt.plot(chart_data['labels'], np.polyval(reg_line, chart_data['labels']), label=f'{label} Regression Line', linestyle='--')
+    elif chart_type == 'histogram':
+        for i, variable_data in enumerate(chart_data['datasets']):
+            values = variable_data['values']
+            color = sns.color_palette('Set3', len(chart_data['labels']))[i]
+
+            sns.histplot(values, bins=20, color=color, alpha=0.7, kde=True)
+
+            mean_value = np.mean(values)
+            plt.axvline(x=mean_value, color='red', linestyle='--', label=f'Mean: {mean_value:.2f}')
+            stats_text = f'Mean: {mean_value:.2f}\nStd Dev: {np.std(values):.2f}'
+            plt.text(0.05, 0.95, stats_text, transform=plt.gca().transAxes, fontsize=8, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+    elif chart_type == 'pie':
+        for i, variable_data in enumerate(chart_data['datasets']):
+            labels = variable_data['labels']
+            values = variable_data['values']
+            explode = [0.1] * len(labels)  # Define el desplazamiento de las porciones del gráfico
+            colors = sns.color_palette('Set3', len(labels))  # Define los colores de las porciones del gráfico
+            plt.pie(values, labels=labels, explode=explode, colors=colors, autopct='%1.1f%%')
+    elif chart_type == 'boxplot':
+        for i, variable_data in enumerate(chart_data['datasets']):
+            values = variable_data['values']
+            sns.boxplot(data=values, palette='Set3', label=variable_data['label'])
+    elif chart_type == 'barApilate':
+        num_groups = len(chart_data['labels'])
+        num_datasets = len(chart_data['datasets'])
+        bar_width = 0.35
+        x = np.arange(num_groups)
+
+        bottom = np.zeros(num_groups)  # Variable para rastrear el punto de partida de cada barra
+
+        for i, dataset in enumerate(chart_data['datasets']):
+            values = dataset['values']
+            label = dataset['label']
+            color = sns.color_palette('Set3')[i]
+
+            plt.bar(x, values, label=label, color=color, alpha=0.7, bottom=bottom)
+
+            bottom += values
+    elif chart_type == 'scatter3D':
+        x = chart_data['x']
+        y = chart_data['y']
+        z = chart_data['z']
+
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        for i, dataset in enumerate(chart_data['datasets']):
+            label = dataset['label']
+            values_x = dataset['x']
+            values_y = dataset['y']
+            values_z = dataset['z']
+            color = sns.color_palette('Set3')[i]
+
+            ax.scatter3D(values_x, values_y, values_z, label=label, c=color)
+
+        ax.set_xlabel(chart_data['x_label'])
+        ax.set_ylabel(chart_data['y_label'])
+        ax.set_zlabel(chart_data['z_label'])
+        ax.legend()
+    else:
+        plt.close()
+        return None
+    
+    plt.xticks(chart_data['labels'], rotation=45, ha='right')
+
+    # Añadir leyenda y etiquetas
+    plt.legend()
+    plt.xlabel(chart_data['x_label'])
+    plt.ylabel(chart_data['y_label'])
+    plt.title(title)
+
+    # Descripción debajo del gráfico
+    plt.figtext(0.5, 0.01, description, ha='center', va='center')
+
+    # Guardar la imagen en base64
+    image_data = save_plot_as_base64()
+
+    # Check if a Chart object for this simulation already exists
+    chart = Chart.objects.filter(fk_product_id=product_instance, chart_type=chart_type).first()
+    if chart:
+        chart.title = title
+        chart.chart_data = chart_data
+    else:
+        chart = Chart.objects.create(
+            title=title,
+            chart_type=chart_type,
+            chart_data=chart_data,
+            fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
+        )
+    chart.save_chart_image(image_data)
+    chart.save()
+    plt.close()
+
+    return image_data
 
 import random
 # from pages.views import create_and_save_simulation,create_random_result_simulations
@@ -770,11 +988,8 @@ def simulate_add_view(request):
         print(demand_history)
         fk_fdp_instance = get_object_or_404(ProbabilisticDensityFunction, id=fk_fdp_id)
         fk_questionary_result_instance = get_object_or_404(QuestionaryResult, id=fk_questionary_result)
-
         # Convert demand_history to list of floats
         # demand_history = [float(x) for x in demand_history.split(',')]
-
-        
         cleaned_demand_history = demand_history.replace('[', '').replace(']', '').replace('\r\n', '').split(',')
         demand_history_list = [float(item) for item in cleaned_demand_history if item.strip()]
 
@@ -822,7 +1037,6 @@ def create_random_result_simulations(instance, created, **kwargs):
         # demand = [media_demand] + [random.normalvariate(100, 500) for _ in range(10)]
         demand = [random.normalvariate(media_demand, 3000) for _ in range(10)]
         demand_mean = np.mean(demand)
-        
         
         variables = {
             "CTR": [random.normalvariate(1000, 5000) for _ in range(10)],
