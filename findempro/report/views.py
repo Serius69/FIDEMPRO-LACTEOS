@@ -15,7 +15,7 @@ import logging
 from django.http import FileResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-
+from bs4 import BeautifulSoup
 # Create your views here.
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
@@ -74,12 +74,21 @@ def generar_reporte_pdf(request, report_id):
 def create_report(request):
     try:
         if request.method == 'POST':
-            title = request.POST['title']
-            content = request.POST['content']
-            report = Report(title=title, content=content)
+            # Assuming the HTML content is sent in the request body
+            html_content = request.POST['html_content']
+
+            # Extract title from HTML content
+            soup = BeautifulSoup(html_content, 'html.parser')
+            title = soup.title.string if soup.title else 'Untitled Report'
+
+            # Create a Report instance
+            report = Report(title=title, content={'html_content': html_content})
             report.save()
+
             return redirect('report_list')  # Redirect to a list of reports
+
         return render(request, 'create_report.html')
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
         return HttpResponse(status=500)
+    
