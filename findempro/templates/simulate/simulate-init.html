@@ -110,6 +110,25 @@
                                                                             </div>
                                                                             {% if not started %}
                                                                                 <button type="submit" name="select" class="btn btn-primary">Armar Modelo de Simulacion</button>                                       
+
+                                                                                <div class="table-responsive">
+                                                                                    <table class="table table-bordered">
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th>Número</th>
+                                                                                                <th>Demanda [Litros]</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            {% for values in demand_history %}
+                                                                                                <tr>
+                                                                                                    <td>{{ forloop.counter }}</td>
+                                                                                                    <td>{{ values|floatformat:"2" }}</td>
+                                                                                                </tr>
+                                                                                            {% endfor %}
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
                                                                             {% endif %}
                                                                         </form>
                                                                 {% endif %}       
@@ -140,21 +159,31 @@
                                                             <div class="col-md-6">
                                                                 {% if questionary_result_instance %}
                                                                     <div class="card shadow-sm">
-                                                                        <div class="card-body">
+                                                                        <div class="card-body" style="font-size: 18px;">
                                                                             <h5 class="card-title">Modelo Armado:</h5>
                                                                             <p class="mb-1"><strong>Nombre Cuestionario:</strong> {{ questionary_result_instance.fk_questionary.questionary }}</p>
                                                                             <p class="mb-1"><strong>Fecha de respuestas:</strong> {{ questionary_result_instance.date_created|date:"F j, Y, P" }}</p>
                                                                             <p class="mb-1"><strong>Producto que cubre:</strong> {{ questionary_result_instance.fk_questionary.fk_product.name }}</p>
-                                                                            <p class="mb-1"><strong>Media de la Demanda Historica:</strong> {{ demand_mean }}</p>
+                                                                            <p class="mb-1"><strong>Media de la Demanda Historica:</strong> {{ demand_mean|floatformat:"2" }} Litros</p>
+                                                                            <p class="mb-1"><strong>Mejor ajuste:</strong> {{ best_distribution }}</p>
+                                                                            <p class="mb-1"><strong>KS P-Value:</strong> {{ best_ks_p_value }}</p>
+                                                                            <p class="mb-1"><strong>KS Statistic:</strong> {{ best_ks_statistic }}</p>
+                                                                         
+                                                                            
                                                                             <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" class="btn btn-primary mt-3">Ver Resultados del cuestionario</a>
                                                                             <p class="mt-3"><strong>Cantidad de {% if selected_unit_time == '1' %}
-                                                                                                                    días
-                                                                                                                {% elif selected_unit_time == '2' %}
-                                                                                                                    meses
-                                                                                                                {% elif selected_unit_time == '3' %}
-                                                                                                                    años
-                                                                                                                {% endif %} que se hara la simulacion:</strong> {{selected_quantity_time}} </p>
-                                                                            <img src="data:image/png;base64,{{ image_data }}" class="img-fluid mt-3" alt="PDF Chart" style="max-width: 400px;">
+                                                                                                                días
+                                                                                                            {% elif selected_unit_time == '2' %}
+                                                                                                                meses
+                                                                                                            {% elif selected_unit_time == '3' %}
+                                                                                                                años
+                                                                                                            {% endif %} que se hara la simulacion:</strong> {{selected_quantity_time}} </p>
+                                                                            <div class="d-flex flex-column align-items-center">
+                                                                                <h5 class="card-title">Grafico Prueba KS:</h5>
+                                                                                
+                                                                                <img src="data:image/png;base64,{{ image_data }}" class="img-fluid mt-3" alt="PDF Chart" style="max-width: 100%;">
+                                                                                <img src="data:image/png;base64,{{ image_data_histogram }}" class="img-fluid mt-3" alt="PDF Chart" style="max-width: 100%;">
+                                                                            </div>
                                                                         </div>
                                                                     </div>
 

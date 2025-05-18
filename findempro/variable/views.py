@@ -240,6 +240,6 @@ def generate_questions_for_variables(request):
         generated_questions_list.append((variable, generated_questions))
     return render(
         request,
-        "questionary/questionary-list.html", 
+        "questionary/questionary-main.html", 
         {"generated_questions_list": generated_questions_list},
     )

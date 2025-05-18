@@ -2,6 +2,11 @@
 {% load static %}
 {% block title %}Resultados Cuestionario{% endblock title %}
 {% block extra_css %}
+<style>
+    .thead-dark th {
+        font-size: 16px; /* Ajusta el tamaño según tus preferencias */
+    }
+</style>
 {% endblock extra_css %}
 {% block content %}
     <!-- ============================================================== -->
@@ -22,37 +27,118 @@
                         <div class="card-body">
                             <h5 class="card-subtitle mb-2 text-muted">¡Bienvenido/a! A continuación, presentamos las respuestas obtenidas del:</h5>
                             <p class="card-text">
-                                <strong>Producto:</strong> {{questionary_result.fk_questionary.fk_product}}<br>
-                                <strong>Fecha:</strong> {{questionary_result.date_created}}<br>
-                                <strong>Usuario:</strong> {{questionary_result.fk_questionary.fk_product.fk_business.fk_user}}
+                                <strong>Producto:</strong> <span id="producto">{{questionary_result.fk_questionary.fk_product}}</span><br>
+                                <strong>Fecha:</strong> <span id="fecha">{{questionary_result.date_created}}</span><br>
+                                <strong>Usuario:</strong> <span id="usuario">{{questionary_result.fk_questionary.fk_product.fk_business.fk_user}}</span>
                             </p>
                         </div>
                     </div>
 
                     {% if answers %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="thead-dark">
-                                    <tr>
-                                        <th>Pregunta</th>
-                                        <th>Respuesta</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for answer in answers %}
-                                    <tr>
-                                        <td>{{ answer.fk_question }}</td>
-                                        <td>{{ answer.answer }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Pregunta</th>
+                                    <th>Variable</th>
+                                    <th>Respuesta</th>
+                                    <th>Unidades</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for answer in answers %}
+                                <tr>
+                                    <td>{{ answer.fk_question }}</td>
+                                    <td>{{ answer.fk_question.fk_variable.name }}</td>
+                                    <td>
+                                        <span class="respuesta" id="respuesta_{{ answer.id }}" data-answer-id="{{ answer.id }}" data-original-value="{{ answer.answer }}">
+                                            {% if answer.fk_question.question == 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).' %}
+                                                {% if processed_answers %}
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nro</th>
+                                                                <th>Valor</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for values in processed_answers %}
+                                                                {% for value in values %}
+                                                                    <tr>
+                                                                        <td>{{ forloop.counter }}</td>
+
+                                                                        <td>{{ value }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                {% else %}
+                                                    No hay datos procesados disponibles.
+                                                {% endif %}
+                                            {% else %}
+                                                {{ answer.answer }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if answer.fk_question.fk_variable.unit %}
+                                            {% if answer.fk_question.fk_variable.unit %}
+                                                {% if answer.fk_question.fk_variable.unit == 'kg' %}
+                                                    Kilogramos
+                                                {% elif answer.fk_question.fk_variable.unit == 'g' %}
+                                                    Gramos
+                                                {% elif answer.fk_question.fk_variable.unit == 'L' %}
+                                                    Litros
+                                                {% elif answer.fk_question.fk_variable.unit == 'ml' %}
+                                                    Mililitros
+                                                {% elif answer.fk_question.fk_variable.unit == 'm' %}
+                                                    Metros
+                                                {% elif answer.fk_question.fk_variable.unit == 'L/DIAS' %}
+                                                    Litros / Dias
+                                                {% elif answer.fk_question.fk_variable.unit == 'L/BS' %}
+                                                    Litros / Pesos Bolivianos
+                                                {% elif answer.fk_question.fk_variable.unit == 'CLIENTE/BS' %}
+                                                    Cliente / Pesos Bolivianos
+                                                {% elif answer.fk_question.fk_variable.unit == 'DIAS' %}
+                                                    Dias
+                                                {% elif answer.fk_question.fk_variable.unit == '[0-1]' %}
+                                                    %
+                                                {% elif answer.fk_question.fk_variable.unit == 'CLIENTE/BS' %}
+                                                    Cliente / Pesos Bolivianos
+                                                {% elif answer.fk_question.fk_variable.unit == 'EMPLEADOS' %}
+                                                    Empleados 
+                                                {% elif answer.fk_question.fk_variable.unit == 'BS' %}
+                                                    Pesos Bolivianos                                         
+                                                {% else %}
+                                                    {{ answer.fk_question.fk_variable.unit }}
+                                                {% endif %}
+                                            {% else %}
+                                                No especificado
+                                            {% endif %}
+                                        {% else %}
+                                            No especificado
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                        <div class="edit-btn-container">
+                            <button id="editarRespuestasBtn" class="btn btn-primary">Editar Respuestas</button>
+                        </div>
+                        <div class="save-cancel-btns-container" style="display: none;">
+                            <button id="guardarRespuestasBtn" class="btn btn-success">Guardar Nuevas Respuestas</button>
+                            <button id="cancelarEdicionBtn" class="btn btn-secondary">Cancelar</button>
                         </div>
                     {% else %}
                         <div class="alert alert-info" role="alert">
                             No hay datos disponibles.
                         </div>
                     {% endif %}
+                    
                 </div>
                 <!-- end row -->                        
             </div>
@@ -67,5 +153,84 @@
     <!-- end main content-->
 {% endblock content %}
 {% block extra_js %}
+    <!-- Script para manejar la edición de respuestas -->
+    <script>
+       
+        document.addEventListener('DOMContentLoaded', function() {
+            var result_id = window.location.pathname.split('/').filter(Boolean).pop();
+            console.log('Result ID:', result_id);
+            console.log('Botón Guardar:', document.getElementById('guardarRespuestasBtn'));
+            document.getElementById('guardarRespuestasBtn').addEventListener('click', function() {
+                var respuestas = document.querySelectorAll('.respuesta');
+        
+                respuestas.forEach(function(respuesta) {
+                    var valorActual = respuesta.dataset.originalValue;
+                    var nuevoValor = respuesta.querySelector('input').value;
+                    var answer_id  = respuesta.dataset.answerId;
+        
+                    console.log('Answer ID:', answer_id);
+                    console.log('Nuevo Valor:', nuevoValor);
+        
+                    const url = `/questionary/result/${result_id}/questionary/update_question_view/${answer_id}/`;
+                    fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            new_answer: nuevoValor,
+                            answerId: answer_id,
+                            resultId: result_id
+                        }) 
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(data);
+                        // Actualizar el valor original
+                        respuesta.innerHTML = nuevoValor;
+                        respuesta.dataset.originalValue = nuevoValor;
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+        
+                // Ocultar los botones de guardar y cancelar, y mostrar el botón de editar
+                document.querySelector('.edit-btn-container').style.display = 'block';
+                document.querySelector('.save-cancel-btns-container').style.display = 'none';
+            });
+            document.getElementById('editarRespuestasBtn').addEventListener('click', function() {
+                var respuestas = document.querySelectorAll('.respuesta');
+                respuestas.forEach(function(respuesta) {
+                    var valorActual = respuesta.innerText;
+                    respuesta.innerHTML = '<input type="text" class="form-control editable-input" value="' + valorActual + '">';
+                });
+        
+                // Mostrar los botones de guardar y cancelar
+                document.querySelector('.edit-btn-container').style.display = 'none';
+                document.querySelector('.save-cancel-btns-container').style.display = 'block';
+            });
+        
+            document.getElementById('cancelarEdicionBtn').addEventListener('click', function() {
+                // Restaurar los valores originales y ocultar los botones de guardar y cancelar
+                var respuestas = document.querySelectorAll('.respuesta');
+                respuestas.forEach(function(respuesta) {
+                    var valorOriginal = respuesta.getAttribute('data-original-value');
+                    respuesta.innerHTML = valorOriginal;
+                });
+        
+                // Ocultar los botones de guardar y cancelar y mostrar el botón de editar
+                document.querySelector('.edit-btn-container').style.display = 'block';
+                document.querySelector('.save-cancel-btns-container').style.display = 'none';
+            });
+        });
+    
+        
+    </script>
+    
 {% endblock extra_js %}
                             

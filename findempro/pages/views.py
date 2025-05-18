@@ -194,11 +194,16 @@ def register_elements_simulation(request):
         form = RegisterElementsForm(request.POST)
         if form.is_valid():
             questionaries = Questionary.objects.filter(is_active=True, fk_product__fk_business__fk_user=request.user)
-            
+
             if questionaries.exists():
                 for questionary in questionaries:
-                    create_and_save_questionary_result(questionary, created=True)
-                
+                    try:
+                        create_and_save_questionary_result(questionary, created=True)
+                    except QuestionaryResult.MultipleObjectsReturned:
+                        # Handle the situation where multiple QuestionaryResult objects are returned
+                        # You may want to log an error, display a message, or take appropriate action
+                        pass
+
                 return redirect("dashboard:index")  # Redirect to the dashboard after processing
 
     else:
@@ -209,18 +214,24 @@ def create_and_save_questionary_result(instance, created, **kwargs):
     if not created:
         return
 
-    questionary_result, created = QuestionaryResult.objects.get_or_create(
-        fk_questionary=instance,
-        defaults={'is_active': instance.is_active}
-    )
+    try:
+        questionary_result, created = QuestionaryResult.objects.get_or_create(
+            fk_questionary=instance,
+            defaults={'is_active': instance.is_active}
+        )
 
-    if not created and questionary_result.is_active != instance.is_active:
-        # Si existe, pero el estado ha cambiado, actualizar el estado
-        questionary_result.is_active = instance.is_active
-        questionary_result.save()    
+        if not created and questionary_result.is_active != instance.is_active:
+            # If it exists but the state has changed, update the state
+            questionary_result.is_active = instance.is_active
+            questionary_result.save()
 
-    create_and_save_answer(questionary_result)
-    create_and_save_simulation(questionary_result, created=True)
+        create_and_save_answer(questionary_result)
+        create_and_save_simulation(questionary_result, created=True)
+
+    except MultipleObjectsReturned:
+        # Handle the situation where multiple QuestionaryResult objects are returned
+        # You may want to log an error, display a message, or take appropriate action
+        pass
 
 def create_and_save_answer(instance):
     for data in answer_data:

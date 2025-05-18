@@ -176,8 +176,6 @@ class ResultSimulation(models.Model):
     def get_variables(self):
         return self.variables
     
-    # @receiver(post_save, sender=Simulation)
-    
 
 class Demand(models.Model):
     quantity = models.IntegerField(default=0, help_text='The quantity of the demand')

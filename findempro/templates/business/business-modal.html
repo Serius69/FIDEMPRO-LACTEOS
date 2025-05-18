@@ -2,112 +2,87 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header p-3 ps-4 bg-success-subtle">
-                <h5 class="modal-title" id="addOrUpdateBusinesslabel"></h5>
+                <h5 class="modal-title" id="addOrUpdateBusinessLabel"></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="tab-content">
                     <div class="tab-pane active" id="businessDetails" role="tabpanel">
-                        <form method="POST" class="post-form" id="businessForm" enctype="multipart/form-data">
+                        <form class="post-form" id="businessForm" data-model="business" enctype="multipart/form-data" onsubmit="handleFormSubmission(event);">
                             {% csrf_token %}
                             <input type="hidden" name="business_id" id="business_id" value="">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="text-center mb-4 mt-n5 pt-2">
-                                        <div class="position-relative d-inline-block">
-                                            <div class="position-absolute bottom-0 end-0">
-                                                <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
-                                                    <div class="avatar-xs cursor-pointer">
-                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
-                                                            <i class="ri-image-fill"></i>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                                <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png, image/jpeg" name="image_src"/>
-                                            </div>
-                                            <div class="avatar-lg p-1">
-                                                <div class="avatar-title bg-light rounded-circle">
-                                                    <img src="" id="logo-img" name="image_src" class="avatar-md rounded-circle object-fit-cover"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <h5 class="fs-13 mt-3">Imagen</h5>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="name" class="form-label">
-                                            Nombre del Negocio
-                                        </label>
-                                        <input type="text" class="form-control" name="name" id="name"
-                                            placeholder="Ingrese su nombre comercial" required />
-                                        <div class="invalid-feedback">
-                                            Ingrese un nombre comercial.
-                                        </div>
-                                    </div>
+                            
+                            <!-- Imagen -->
+                            <div class="mb-3">
+                                <label for="image_src" class="form-label">Imagen</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="image_src" name="image_src" accept="image/png, image/jpeg">
+                                    <label class="input-group-text" for="image_src"><i class="ri-image-fill"></i></label>
                                 </div>
-                                <!--end col-->
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="type" class="form-label">
-                                            Tipo de negocio
-                                        </label>
-                                        <select class="form-control" name="type" id="type" required>
-                                            <option value="">Seleccione tipo</option>
-                                            <option value="1">Lácteos</option>
-                                        </select>
-                                        <div class="invalid-feedback">
-                                            Seleccione un tipo de negocio.
-                                        </div>
-                                    </div>
+                                <div class="invalid-feedback">
+                                    Seleccione una imagen.
                                 </div>
-                                <!--end col-->
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="location" class="form-label">
-                                            Ubicación
-                                        </label>
-                                        <select class="form-control" name="location" id="location" required>
-                                            <option value="">Seleccionar ubicación</option>
-                                            <option value="La Paz">La Paz</option>
-                                            <option value="Cochabamba">Cochabamba</option>
-                                            <option value="Santa Cruz">Santa Cruz</option>
-                                        </select>
-                                        <div class="invalid-feedback">
-                                            Seleccione una ubicación para el negocio.
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                                <div class="col-lg-12">
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">
-                                            Descripción
-                                        </label>
-                                        <textarea class="form-control" id="description" name="description" rows="3"
-                                            placeholder="Enter description" required></textarea>
-                                        <div class="invalid-feedback">
-                                            Ingrese una descripción para el negocio.
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                                <div class="col-lg-12">
-                                    <div class="hstack gap-2 justify-content-end">
-                                        <button class="btn btn-link link-success text-decoration-none fw-medium"
-                                            data-bs-dismiss="modal">
-                                            <i class="ri-close-line me-1 align-middle"></i>
-                                            Cerrar
-                                        </button>
-                                        <input type="hidden" name="id" id="id" value="id">
-                                        <button type="submit" class="btn btn-primary" onclick="businessForm.handleSubmission('{{ business.id }}' !== '');">
-                                            <i class="ri-save-3-line align-bottom me-1"></i>
-                                            Guardar
-                                        </button>
-                                    </div>
-                                </div>
-                                <!--end col-->
+                                <img src="" id="logo-img" class="img-fluid mt-2" alt="Logo Preview">
                             </div>
-                            <!--end row-->
+                        
+                            <!-- Nombre -->
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nombre del Negocio</label>
+                                <input type="text" class="form-control" id="name" name="name" placeholder="Ingrese su nombre comercial" required>
+                                <div class="invalid-feedback">
+                                    Ingrese un nombre comercial.
+                                </div>
+                            </div>
+                        
+                            <!-- Tipo de negocio -->
+                            <div class="mb-3">
+                                <label for="type" class="form-label">Tipo de negocio</label>
+                                <select class="form-control" id="type" name="type" required>
+                                    <option value="">Seleccione tipo</option>
+                                    <option value="1">Lácteos</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Seleccione un tipo de negocio.
+                                </div>
+                            </div>
+                        
+                            <!-- Ubicación -->
+                            <div class="mb-3">
+                                <label for="location" class="form-label">Ubicación</label>
+                                <select class="form-control" id="location" name="location" required>
+                                    <option value="">Seleccionar ubicación</option>
+                                    <option value="La Paz">La Paz</option>
+                                    <option value="Cochabamba">Cochabamba</option>
+                                    <option value="Santa Cruz">Santa Cruz</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Seleccione una ubicación para el negocio.
+                                </div>
+                            </div>
+                        
+                            <!-- Descripción -->
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description" required></textarea>
+                                <div class="invalid-feedback">
+                                    Ingrese una descripción para el negocio.
+                                </div>
+                            </div>
+                        
+                            <!-- Otros campos si los tienes -->
+                        
+                            <div class="hstack gap-2 justify-content-end">
+                                <input type="hidden" name="id" id="id" value="">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-3-line align-bottom me-1"></i>
+                                    Guardar
+                                </button>
+                            </div>
                         </form>
+                            <button class="btn btn-link link-success text-decoration-none fw-medium" onclick="hideModal();" data-bs-dismiss="modal">
+                                <i class="ri-close-line me-1 align-middle"></i>
+                                Cerrar
+                            </button>
                     </div>
                 </div>
             </div>
@@ -138,10 +113,9 @@
                     {% csrf_token %}
                     <input type="hidden" id="delete-business-url" value="{% url 'business:business.delete' 0 %}">
                     <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-                            Cerrar
+                        <button type="submit" class="btn w-sm btn-danger delete-business-btn">
+                            ¡Sí, borrarlo!
                         </button>
-                        <button type="submit" class="btn w-sm btn-danger delete-business-btn">¡Sí, borrarlo!</button>
                     </div>
                 </form>
             </div>
