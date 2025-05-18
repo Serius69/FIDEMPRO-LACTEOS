@@ -35,7 +35,3 @@ class Business(models.Model):
             return self.image_src.url
         else:
             return "/static/images/business/business-dummy-img.webp"
-
-
-                
-    

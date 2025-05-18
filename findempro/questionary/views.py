@@ -22,6 +22,54 @@ from .models import Answer
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 import re
+
+"""
+View function to handle the main questionnaire page.
+This function manages the display and interaction with questionnaires, including:
+- Selecting a questionnaire.
+- Starting a questionnaire.
+- Saving answers to questions.
+- Cancelling a questionnaire.
+It handles GET and POST requests to perform the following actions:
+1. GET request with 'select' parameter:
+    - Sets the selected questionnaire ID in the session.
+    - Retrieves questions and questionnaires associated with the selected questionnaire.
+    - Renders the main questionnaire page with the context.
+2. POST request with 'start' parameter:
+    - Marks the questionnaire as started in the session.
+    - Creates a new `QuestionaryResult` instance for the selected questionnaire.
+    - Redirects to the main questionnaire page.
+3. POST request with 'save' parameter:
+    - Saves answers to questions in the database.
+    - Handles pagination for questions.
+    - Redirects to the main questionnaire page with the current page number.
+4. POST request with 'cancel' parameter:
+    - Cancels the questionnaire and resets the session variable.
+    - Redirects to the main questionnaire page.
+5. Default behavior:
+    - Displays the list of questionnaires and questions based on the user's session state.
+    - Handles pagination for displaying questions.
+Context variables passed to the template:
+- `selected_questionary_id`: ID of the selected questionnaire.
+- `started_questionary`: Boolean indicating if a questionnaire has been started.
+- `questions`: List of questions for the selected questionnaire.
+- `questionnaires`: List of available questionnaires.
+- `questionary_result_id`: ID of the current questionnaire result (if applicable).
+- `questions_to_answer`: Paginated list of questions to answer (if applicable).
+- `show_questionary`: The selected questionnaire instance (if applicable).
+Template:
+- Renders the `questionary/questionary-main.html` template with the provided context.
+Session Variables:
+- `selected_questionary_id`: Stores the ID of the selected questionnaire.
+- `started_questionary`: Indicates if a questionnaire has been started.
+- `questionary_result_id`: Stores the ID of the current questionnaire result.
+Exceptions:
+- Handles `ObjectDoesNotExist` when retrieving a questionnaire that does not exist.
+- Handles pagination errors such as `PageNotAnInteger` and `EmptyPage`.
+Dependencies:
+- `Business`, `Product`, `Question`, `Questionary`, `QuestionaryResult`, and `Answer` models.
+- Django's `Paginator`, `get_object_or_404`, `redirect`, `reverse`, and `render` utilities.
+"""
 class AppsView(LoginRequiredMixin,TemplateView):
     pass
 @login_required
