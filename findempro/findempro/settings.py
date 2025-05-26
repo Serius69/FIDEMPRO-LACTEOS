@@ -177,6 +177,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR,"static")]
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
 
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -250,14 +251,39 @@ GRAPH_MODELS = {
     "path": r"C:\Users\serio\Graphviz\bin\dot.exe"
 }
 
-# Redis
+# ==========================================
+# CONFIGURACIÓN DE CACHÉ
+# ==========================================
+
+# Para desarrollo (usa caché en memoria)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutos
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
+
+# Para producción (usa Redis)
 # CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": "redis://127.0.0.1:6379/1",  # Use your Redis server address and port
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         }
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#         'TIMEOUT': 300,
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#             'PARSER_CLASS': 'redis.connection.HiredisParser',
+#             'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
+#             'CONNECTION_POOL_CLASS_KWARGS': {
+#                 'max_connections': 50,
+#                 'timeout': 20,
+#             },
+#             'MAX_CONNECTIONS': 1000,
+#             'PICKLE_VERSION': -1,
+#         },
 #     }
 # }
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -266,3 +292,147 @@ GRAPH_MODELS = {
 # CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 # CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 
+# ==========================================
+# CONFIGURACIÓN DE LOGGING
+# ==========================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'dashboard_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'dashboard.log'),
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'dashboards': {
+            'handlers': ['console', 'dashboard_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+# ==========================================
+# CONFIGURACIÓN PERSONALIZADA DEL DASHBOARD
+# ==========================================
+
+DASHBOARD_CONFIG = {
+    'CHART_TYPES': [
+        ('line', 'Línea'),
+        ('bar', 'Barras'),
+        ('pie', 'Circular'),
+        ('donut', 'Dona'),
+        ('area', 'Área'),
+        ('scatter', 'Dispersión'),
+        ('heatmap', 'Mapa de calor'),
+        ('candlestick', 'Velas'),
+    ],
+    'MAX_CHARTS_PER_PRODUCT': 10,
+    'CHART_IMAGE_QUALITY': 95,
+    'CHART_DPI': 150,
+    'DEFAULT_CHART_WIDTH': 10,
+    'DEFAULT_CHART_HEIGHT': 6,
+    'ENABLE_CHART_CACHING': True,
+    'CHART_CACHE_TIMEOUT': 3600,  # 1 hora
+}
+# ==========================================
+# CONFIGURACIÓN DE MATPLOTLIB
+# ==========================================
+
+import matplotlib
+matplotlib.use('Agg')  # Backend no interactivo para servidores
+
+# ==========================================
+# CONFIGURACIÓN DE PAGINACIÓN
+# ==========================================
+
+# Configuración global de paginación
+DEFAULT_PAGINATION_SIZE = 10
+MAX_PAGINATION_SIZE = 100
+
+# ==========================================
+# CONFIGURACIÓN DE SESIONES
+# ==========================================
+
+# Duración de sesión (2 semanas)
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+
+# Guardar sesión en cada request
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Usar sesiones basadas en caché para mejor rendimiento
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+
+# ==========================================
+# CONFIGURACIÓN DE SEGURIDAD ADICIONAL
+# ==========================================
+
+# Seguridad de cookies
+SESSION_COOKIE_SECURE = True  # Solo HTTPS en producción
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True  # Solo HTTPS en producción
+CSRF_COOKIE_HTTPONLY = True
+
+# Headers de seguridad
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# ==========================================
+# CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS
+# ==========================================
+
+# Comprimir archivos estáticos en producción
+# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
+# ==========================================
+# CREAR DIRECTORIOS NECESARIOS
+# ==========================================
+# Crear directorio de logs si no existe
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR)
+
+# Crear directorio de media si no existe
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT)
+    os.makedirs(os.path.join(MEDIA_ROOT, 'chart_images'))

@@ -1,7 +1,24 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Profile Settings{% endblock title %}
+{% block title %}Configuración del Perfil{% endblock title %}
 {% block extra_css %}
+    <style>
+        .profile-photo-edit {
+            cursor: pointer;
+        }
+        .progress-label {
+            position: relative;
+        }
+        .progress-label .label {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
 {% endblock extra_css %}
 {% load i18n %}
 {% load crispy_forms_tags %}
@@ -15,12 +32,14 @@
 
             <div class="position-relative mx-n4 mt-n4">
                 <div class="profile-wid-bg profile-setting-img">
-                    <img src="{% static 'images/cover-pattern.webp'%}" class="profile-wid-img" alt="">
+                    <img src="{% static 'images/cover-pattern.webp'%}" class="profile-wid-img" alt="Cover Pattern">
                     <div class="overlay-content">
                         <div class="text-end p-3">
                             <div class="p-0 ms-auto rounded-circle profile-photo-edit">
-                                <input id="profile-foreground-img-file-input" type="file"
-                                    class="profile-foreground-img-file-input">
+                                <input id="profile-foreground-img-file-input" type="file" class="profile-foreground-img-file-input" accept="image/*" style="display: none;">
+                                <button class="btn btn-light btn-sm" onclick="document.getElementById('profile-foreground-img-file-input').click()">
+                                    <i class="ri-image-edit-line"></i> Cambiar Portada
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -32,22 +51,26 @@
                     <div class="card mt-n5">
                         <div class="card-body p-4">
                             <div class="text-center">
-                                <div class="profile-user position-relative d-inline-block mx-auto  mb-4">
+                                <div class="profile-user position-relative d-inline-block mx-auto mb-4">
                                     <img src="{{ profile.get_photo_url }}"
                                     class="rounded-circle avatar-xl img-thumbnail user-profile-image"
                                     alt="user-profile-image">
                                     <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
-                                        <input id="profile-img-file-input" type="file"
-                                            class="profile-img-file-input">
-                                        <label for="profile-img-file-input"
-                                            class="profile-photo-edit avatar-xs">
+                                        <input id="profile-img-file-input" type="file" class="profile-img-file-input" accept="image/*" style="display: none;">
+                                        <label for="profile-img-file-input" class="profile-photo-edit avatar-xs">
                                             <span class="avatar-title rounded-circle bg-light text-body">
                                                 <i class="ri-camera-fill"></i>
                                             </span>
                                         </label>
                                     </div>
                                 </div>
-                                <h5 class="fs-16 mb-1">{{user.username}}</h5>
+                                <h5 class="fs-16 mb-1">
+                                    {% if user.first_name and user.last_name %}
+                                        {{user.first_name}} {{user.last_name}}
+                                    {% else %}
+                                        {{user.username}}
+                                    {% endif %}
+                                </h5>
                                 {% if user.is_staff %}
                                     <p class="text-muted mb-0">Administrador</p>
                                 {% else %}
@@ -59,17 +82,33 @@
                     <!--end card-->
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-flex align-items-center mb-5">
+                            <div class="d-flex align-items-center mb-3">
                                 <div class="flex-grow-1">
-                                    <h5 class="card-title mb-0">Completa tu perfil</h5>
+                                    <h5 class="card-title mb-0">Completitud del perfil</h5>
                                 </div>
                             </div>
                             <div class="progress animated-progress custom-progress progress-label">
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: 30%"
-                                    aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">
-                                    <div class="label">{{completeness_percentage}}</div>
+                                <div class="progress-bar 
+                                    {% if completeness_percentage < 30 %}bg-danger
+                                    {% elif completeness_percentage < 70 %}bg-warning
+                                    {% else %}bg-success{% endif %}" 
+                                    role="progressbar" 
+                                    style="width: {{ completeness_percentage }}%"
+                                    aria-valuenow="{{ completeness_percentage }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    <div class="label">{{ completeness_percentage|floatformat:0 }}%</div>
                                 </div>
                             </div>
+                            <p class="text-muted mt-2 mb-0">
+                                {% if completeness_percentage < 50 %}
+                                    Completa tu perfil para obtener una mejor experiencia
+                                {% elif completeness_percentage < 100 %}
+                                    ¡Casi terminado! Agrega algunos detalles más
+                                {% else %}
+                                    ¡Perfil completo! Excelente trabajo
+                                {% endif %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -77,19 +116,15 @@
                 <div class="col-xxl-9">
                     <div class="card mt-xxl-n5">
                         <div class="card-header">
-                            <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0"
-                                role="tablist">
+                            <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active" data-bs-toggle="tab" href="#personalDetails"
-                                        role="tab">
-                                        <i class="fas fa-home"></i>
-                                        Detalles personales
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#personalDetails" role="tab">
+                                        <i class="fas fa-user"></i> Detalles personales
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="tab" href="#changePassword" role="tab">
-                                        <i class="far fa-user"></i>
-                                        Seguridad
+                                        <i class="fas fa-lock"></i> Seguridad
                                     </a>
                                 </li>
                             </ul>
@@ -97,46 +132,50 @@
                         <div class="card-body p-4">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="personalDetails" role="tabpanel">
-                                    <form method="POST" class="post-form" id="userForm" enctype="multipart/form-data">
+                                    <form method="POST" class="post-form needs-validation" id="userForm" enctype="multipart/form-data" novalidate>
                                         {% csrf_token %}
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="firstnameInput" class="form-label">Nombre</label>
-                                                    <input type="text" class="form-control" id="firstnameInput"
-                                                        placeholder="Enter your firstname" value="{{user.first_name}}">
+                                                    <label for="firstnameInput" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="firstnameInput" name="first_name"
+                                                        placeholder="Ingresa tu nombre" value="{{user.first_name}}" required>
+                                                    <div class="invalid-feedback">Por favor, ingresa tu nombre.</div>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="lastnameInput" class="form-label">Apellido</label>
-                                                    <input type="text" class="form-control" id="lastnameInput"
-                                                        placeholder="Enter your lastname" value="{{user.last_name}}">
+                                                    <label for="lastnameInput" class="form-label">Apellido <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="lastnameInput" name="last_name"
+                                                        placeholder="Ingresa tu apellido" value="{{user.last_name}}" required>
+                                                    <div class="invalid-feedback">Por favor, ingresa tu apellido.</div>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="mb-3">
-                                                    <label for="emailInput" class="form-label">Direccion Correo electrónico
-                                                        </label>
-                                                    <input type="email" class="form-control" id="emailInput"
-                                                        placeholder="Enter your email"
-                                                        value="{{user.email}}">
+                                                    <label for="emailInput" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+                                                    <input type="email" class="form-control" id="emailInput" name="email"
+                                                        placeholder="Ingresa tu correo electrónico" value="{{user.email}}" required>
+                                                    <div class="invalid-feedback">Por favor, ingresa un correo electrónico válido.</div>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="cityInput" class="form-label">Estado</label>
-                                                    <select class="form-control" id="cityInput">
-                                                        <option value="" disabled {% if not selected_state %}selected{% endif %}>Seleccione estado</option>
-                                                        <option value="La Paz">La Paz</option>
-                                                        <option value="Santa Cruz">Santa Cruz</option>
-                                                        <option value="Cochabamba">Cochabamba</option>
-                                                        <option value="Oruro">Oruro</option>
-                                                        <option value="Tarija">Tarija</option>
-                                                        <!-- Add more cities as needed -->
+                                                    <label for="stateInput" class="form-label">Estado</label>
+                                                    <select class="form-control" id="stateInput" name="state">
+                                                        <option value="">Seleccione estado</option>
+                                                        <option value="La Paz" {% if profile.state == "La Paz" %}selected{% endif %}>La Paz</option>
+                                                        <option value="Santa Cruz" {% if profile.state == "Santa Cruz" %}selected{% endif %}>Santa Cruz</option>
+                                                        <option value="Cochabamba" {% if profile.state == "Cochabamba" %}selected{% endif %}>Cochabamba</option>
+                                                        <option value="Oruro" {% if profile.state == "Oruro" %}selected{% endif %}>Oruro</option>
+                                                        <option value="Tarija" {% if profile.state == "Tarija" %}selected{% endif %}>Tarija</option>
+                                                        <option value="Potosí" {% if profile.state == "Potosí" %}selected{% endif %}>Potosí</option>
+                                                        <option value="Chuquisaca" {% if profile.state == "Chuquisaca" %}selected{% endif %}>Chuquisaca</option>
+                                                        <option value="Beni" {% if profile.state == "Beni" %}selected{% endif %}>Beni</option>
+                                                        <option value="Pando" {% if profile.state == "Pando" %}selected{% endif %}>Pando</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -144,23 +183,39 @@
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="countryInput" class="form-label">País</label>
-                                                    <select class="form-control" id="countryInput">
-                                                        <option value="" disabled {% if not selected_country %}selected{% endif %}>Seleccionar país</option>
-                                                        <option value="Bolivia">Bolivia</option>
-                                                        <!-- Add more countries as needed -->
+                                                    <select class="form-control" id="countryInput" name="country">
+                                                        <option value="">Seleccionar país</option>
+                                                        <option value="Bolivia" {% if profile.country == "Bolivia" %}selected{% endif %}>Bolivia</option>
+                                                        <option value="Argentina" {% if profile.country == "Argentina" %}selected{% endif %}>Argentina</option>
+                                                        <option value="Brasil" {% if profile.country == "Brasil" %}selected{% endif %}>Brasil</option>
+                                                        <option value="Chile" {% if profile.country == "Chile" %}selected{% endif %}>Chile</option>
+                                                        <option value="Colombia" {% if profile.country == "Colombia" %}selected{% endif %}>Colombia</option>
+                                                        <option value="Ecuador" {% if profile.country == "Ecuador" %}selected{% endif %}>Ecuador</option>
+                                                        <option value="Paraguay" {% if profile.country == "Paraguay" %}selected{% endif %}>Paraguay</option>
+                                                        <option value="Perú" {% if profile.country == "Perú" %}selected{% endif %}>Perú</option>
+                                                        <option value="Uruguay" {% if profile.country == "Uruguay" %}selected{% endif %}>Uruguay</option>
+                                                        <option value="Venezuela" {% if profile.country == "Venezuela" %}selected{% endif %}>Venezuela</option>
                                                     </select>
                                                 </div>
                                             </div>
-                                                                                        
+                                            <!--end col-->
+                                            <div class="col-lg-12">
+                                                <div class="mb-3">
+                                                    <label for="bioInput" class="form-label">Biografía</label>
+                                                    <textarea class="form-control" id="bioInput" name="bio" rows="4" 
+                                                        placeholder="Cuéntanos sobre ti...">{{ profile.bio }}</textarea>
+                                                    <div class="form-text">Máximo 500 caracteres</div>
+                                                </div>
+                                            </div>
                                             <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="hstack gap-2 justify-content-end">
-
-                                                    <button type="submit"
-                                                        class="btn btn-primary">Actualizar</button>
-
-                                                    <button type="button"
-                                                        class="btn btn-soft-success">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary" id="updateBtn">
+                                                        <i class="ri-save-line align-bottom me-1"></i> Actualizar
+                                                    </button>
+                                                    <button type="button" class="btn btn-soft-success" onclick="resetForm()">
+                                                        <i class="ri-refresh-line align-bottom me-1"></i> Cancelar
+                                                    </button>
                                                 </div>
                                             </div>
                                             <!--end col-->
@@ -170,13 +225,33 @@
                                 </div>
                                 <!--end tab-pane-->
                                 <div class="tab-pane" id="changePassword" role="tabpanel">
-                                    <div class="lg-4">
-                                        <a class="btn btn-success w-100" href="{% url 'account_change_password' %}">
-                                            {% trans "Change Password" %}
-                                        </a>
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <div class="mb-4">
+                                                <h5 class="card-title">Cambiar Contraseña</h5>
+                                                <p class="text-muted">Para tu seguridad, te recomendamos usar una contraseña fuerte y única.</p>
+                                            </div>
+                                            
+                                            <div class="d-grid gap-2 mb-4">
+                                                <a class="btn btn-success" href="{% url 'account_change_password' %}">
+                                                    <i class="ri-lock-line me-2"></i>{% trans "Cambiar Contraseña" %}
+                                                </a>
+                                            </div>
+                                            
+                                            <div class="alert alert-info">
+                                                <h6 class="alert-heading">Consejos de seguridad:</h6>
+                                                <ul class="mb-0">
+                                                    <li>Usa al menos 8 caracteres</li>
+                                                    <li>Incluye mayúsculas, minúsculas y números</li>
+                                                    <li>Agrega símbolos especiales</li>
+                                                    <li>No uses información personal</li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </div>
+                                    
                                     <div class="mt-4 mb-3 border-bottom pb-2">
-                                        <h5 class="card-title">Último acceso</h5>
+                                        <h5 class="card-title">Información de Sesión</h5>
                                     </div>
                                     <div class="d-flex align-items-center mb-3">
                                         <div class="flex-shrink-0 avatar-sm">
@@ -185,23 +260,39 @@
                                             </div>
                                         </div>
                                         <div class="flex-grow-1 ms-3">
-                                            <h6>Navegador web</h6>
-                                            <p class="text-muted mb-0">{{user.last_login}}</p>
+                                            <h6>Último acceso desde navegador web</h6>
+                                            <p class="text-muted mb-0">{{user.last_login|date:"F j, Y, g:i a"|default:"Nunca"}}</p>
                                         </div>
                                     </div>
-                                    <form method="post" action="{% url 'user:user.deactivate_account' %}">
-                                        {% csrf_token %}
-                                        <div>
-                                            <h5 class="card-title text-decoration-underline mb-3">Eliminar esta cuenta:</h5>
-                                            <div>
-                                                <input type="password" class="form-control" name="password" placeholder="Enter your password" style="max-width: 265px;">
-                                            </div>
-                                            <div class="hstack gap-2 mt-3">
-                                                <button type="submit" class="btn btn-soft-danger">Cerrar y eliminar esta cuenta</button>
-                                                <a href="{% url 'user:cancel' %}" class="btn btn-light">Cancelar</a>
-                                            </div>
+                                    
+                                    <div class="mt-4 pt-3 border-top">
+                                        <h5 class="card-title text-danger mb-3">Zona de Peligro</h5>
+                                        <div class="alert alert-warning">
+                                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer. Tu cuenta será desactivada permanentemente.
                                         </div>
-                                    </form>
+                                        
+                                        <form method="post" action="{% url 'user:user.deactivate_account' %}" class="needs-validation" novalidate>
+                                            {% csrf_token %}
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="confirmPassword" class="form-label">Confirma tu contraseña para continuar</label>
+                                                        <input type="password" class="form-control" name="password" id="confirmPassword" 
+                                                            placeholder="Ingresa tu contraseña actual" required>
+                                                        <div class="invalid-feedback">Por favor, ingresa tu contraseña actual.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="hstack gap-2">
+                                                <button type="submit" class="btn btn-danger" onclick="return confirmDeactivation()">
+                                                    <i class="ri-delete-bin-line me-1"></i> Desactivar y Eliminar Cuenta
+                                                </button>
+                                                <a href="{% url 'user:cancel' %}" class="btn btn-light">
+                                                    <i class="ri-close-line me-1"></i> Cancelar
+                                                </a>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                                 <!--end tab-pane-->
                             </div>
@@ -222,73 +313,36 @@
 <!-- end main content-->
 {% endblock content %}
 {% block extra_js %}
-<!-- profile-setting init js -->
 <script>
-    document.getElementById('changePasswordButton').addEventListener('click', async function () {
-        const oldPassword = document.getElementById('oldpassword').value;
-        const newPassword = document.getElementById('newpassword').value;
-        const confirmPassword = document.getElementById('confirmpasswordInput').value;
-        const form = document.getElementById('passwordChangeForm');
-    
-        // Client-side validation
-        if (!form.checkValidity()) {
-            form.classList.add('was-validated');
-            return;
-        }
-    
-        if (newPassword !== confirmPassword) {
-            alert("New password and confirm password do not match.");
-            return;
-        }
-    
-        // Assuming you have a function to send the data to the server
-        const response = await changePassword(oldPassword, newPassword);
-    
-        // Handle the response from the server
-        if (response.success) {
-            alert("Password changed successfully.");
-            form.reset(); // Clear the form
-        } else {
-            alert("Password change failed. Please try again.");
-        }
-    });
-    
-    async function changePassword(oldPassword, newPassword) {
-        try {
-            const response = await fetch('{% url "user:password.change" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-                body: JSON.stringify({ oldPassword, newPassword }),
-            });
-    
-            if (response.ok) {
-                return { success: true };
-            } else {
-                return { success: false };
-            }
-        } catch (error) {
-            return { success: false };
-        }
-    }
-    
-    
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }    
-</script>
-<script>
-// Function to handle form submission
-$('#userForm').on('submit', async function (event) {
+// Utilidades para obtener CSRF token
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// Validación del formulario y envío
+document.getElementById('userForm').addEventListener('submit', async function(event) {
     event.preventDefault();
+    event.stopPropagation();
+
+    const form = this;
+    const updateBtn = document.getElementById('updateBtn');
+    const originalBtnText = updateBtn.innerHTML;
+
+    // Validación del lado del cliente
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+
+    // Mostrar indicador de carga
+    updateBtn.innerHTML = '<i class="ri-loader-2-line me-1 spin"></i> Actualizando...';
+    updateBtn.disabled = true;
 
     try {
-        const formData = new FormData(this);
-        const response = await fetch('{% url "user:user.edit" user_id=user.id %}', {
+        const formData = new FormData(form);
+        const response = await fetch(window.location.pathname, {
             method: 'POST',
             body: formData,
             headers: {
@@ -296,24 +350,146 @@ $('#userForm').on('submit', async function (event) {
             },
         });
         
-        
         if (response.ok) {
-            // Business created successfully, you can show a success message here if needed.
-            hideAddBusinessModal();  // Hide the modal after successful submission
+            // Mostrar mensaje de éxito
+            showAlert('success', 'Perfil actualizado correctamente');
+            
+            // Actualizar la barra de progreso si es necesario
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
         } else {
-            // Handle errors and display them to the user
             const responseData = await response.json();
-            if (responseData.errors && responseData.errors.name) {
-                // Display the specific error message for the "name" field
-                const errorDiv = document.getElementById('error-name'); // Adjust the element ID as needed
-                if (errorDiv) {
-                    errorDiv.textContent = responseData.errors.name[0];
-                }
+            if (responseData.errors) {
+                // Mostrar errores específicos
+                Object.keys(responseData.errors).forEach(field => {
+                    const fieldElement = document.querySelector(`[name="${field}"]`);
+                    if (fieldElement) {
+                        fieldElement.classList.add('is-invalid');
+                        const feedback = fieldElement.parentNode.querySelector('.invalid-feedback');
+                        if (feedback) {
+                            feedback.textContent = responseData.errors[field][0];
+                        }
+                    }
+                });
             }
+            showAlert('error', 'Error al actualizar el perfil. Verifica los datos ingresados.');
         }
     } catch (error) {
-        // Handle network or other errors
-        console.error(error);
+        console.error('Error:', error);
+        showAlert('error', 'Error de conexión. Inténtalo de nuevo.');
+    } finally {
+        // Restaurar botón
+        updateBtn.innerHTML = originalBtnText;
+        updateBtn.disabled = false;
     }
-});</script>
+});
+
+// Función para mostrar alertas
+function showAlert(type, message) {
+    const alertContainer = document.createElement('div');
+    alertContainer.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    alertContainer.innerHTML = `
+        <i class="ri-${type === 'success' ? 'check-circle' : 'error-warning'}-line me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertContainer, container.firstChild);
+    
+    // Auto-ocultar después de 5 segundos
+    setTimeout(() => {
+        if (alertContainer.parentNode) {
+            alertContainer.remove();
+        }
+    }, 5000);
+}
+
+// Función para resetear el formulario
+function resetForm() {
+    const form = document.getElementById('userForm');
+    form.reset();
+    form.classList.remove('was-validated');
+    
+    // Limpiar clases de validación personalizadas
+    form.querySelectorAll('.is-invalid').forEach(element => {
+        element.classList.remove('is-invalid');
+    });
+}
+
+// Confirmación para desactivación de cuenta
+function confirmDeactivation() {
+    return confirm('¿Estás completamente seguro de que quieres desactivar tu cuenta? Esta acción no se puede deshacer.');
+}
+
+// Validación en tiempo real
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('input', function() {
+        if (this.checkValidity()) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+        }
+    });
+});
+
+// Manejo de carga de imágenes
+document.getElementById('profile-img-file-input').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector('.user-profile-image').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Contador de caracteres para biografía
+const bioInput = document.getElementById('bioInput');
+if (bioInput) {
+    const maxLength = 500;
+    const counter = document.createElement('div');
+    counter.className = 'form-text text-end';
+    bioInput.parentNode.appendChild(counter);
+    
+    function updateCounter() {
+        const remaining = maxLength - bioInput.value.length;
+        counter.textContent = `${remaining} caracteres restantes`;
+        counter.className = `form-text text-end ${remaining < 50 ? 'text-warning' : remaining < 0 ? 'text-danger' : ''}`;
+    }
+    
+    bioInput.addEventListener('input', updateCounter);
+    updateCounter(); // Inicializar contador
+}
+
+// Inicializar tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+
+<style>
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.is-valid {
+    border-color: #28a745;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+</style>
 {% endblock extra_js %}

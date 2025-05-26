@@ -1,388 +1,645 @@
 {% extends "partials/base.html" %}
 {% load static %}
+{% load questionary_tags %}
 {% block title %}Cuestionario{% endblock title %}
 {% block extra_css %}
+<style>
+    .historical-data-table {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+    }
+    .question-card {
+        border-left: 4px solid #0066cc;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    .question-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15);
+        transform: translateY(-2px);
+    }
+    .variable-badge {
+        background-color: #e7f3ff;
+        color: #0066cc;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .question-number {
+        background-color: #0066cc;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    .progress-info {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .data-input-row {
+        margin-bottom: 5px;
+    }
+    .success-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        display: none;
+    }
+</style>
 {% endblock extra_css %}
 {% block content %}
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
-                <div class="page-content">
-                    <div class="container-fluid">
-                        {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Cuestionario" title="Resolver Cuestionario" %}
-                        {% endblock pagetitle %}
-                        <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-                            <div class="px-4">
-                                <div class="row">
-                                    <div class="col-xxl-9 align-self-center">
-                                        <div class="py-4">
-                                            <h4 class="display-6 -text">CUESTIONARIO</h4>
-                                            <div class="container">
-                                                <p>
-                                                    Elija el cuestionario del producto al que desea agregar información.Con esta información, le brindamos la posibilidad de hacer simulaciones y comprender el estado de su negocio.
-                                                </p>
-                                                <h2>Características clave:</h2>
-                                                <ul>
-                                                    <li><span class="text-success">Iniciar cuestionario:</span> Comience a responder preguntas sobre su producto.</li>
-                                                    <li><span class="text-info">Opciones cuestionadoras:</span> Elija el cuestionario al que desee responder.</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-3 col-xl-4 col-lg-6 col-md-12 ms-auto">
-                                        <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                                            <img src="{% static 'images/questionary-img.webp'%}" alt="Product Image" class="img-fluid" style="width: 200%; height: 150%;">
-                                        </div>
-                                    </div>
+<!-- ============================================================== -->
+<!-- Start right Content here -->
+<!-- ============================================================== -->
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Cuestionario" title="Resolver Cuestionario" %}
+            {% endblock pagetitle %}
+            
+            <!-- Mensaje de éxito flotante -->
+            <div class="alert alert-success success-message" role="alert">
+                <i class="fa fa-check-circle"></i> <span id="success-text">Operación exitosa</span>
+            </div>
+            
+            <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+                <div class="px-4">
+                    <div class="row">
+                        <div class="col-xxl-9 align-self-center">
+                            <div class="py-4">
+                                <h4 class="display-6 -text">CUESTIONARIO</h4>
+                                <div class="container">
+                                    <p>
+                                        Elija el cuestionario del producto al que desea agregar información. Con esta información, le brindamos la posibilidad de hacer simulaciones y comprender el estado de su negocio.
+                                    </p>
+                                    <h2>Características clave:</h2>
+                                    <ul>
+                                        <li><span class="text-success">Iniciar cuestionario:</span> Comience a responder preguntas sobre su producto.</li>
+                                        <li><span class="text-info">Opciones cuestionadoras:</span> Elija el cuestionario al que desee responder.</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
-                        <div class="card w-100 h-100">
-                            <div class="card-header border-0 rounded">
-                                <div class="row g-6 mb-4">
-                                    <div class="col-md-4">                                        
-                                        {% if not started_questionary %}
-                                            <form method="GET" action="{% url 'questionary:questionary.main' %}" onsubmit="return validateForm()">
-                                                {% csrf_token %}
-                                                <div class="input-group mb-2">
-                                                    <label class="input-group-text" for="inputGroupSelect01">Cuestionarios disponibles</label>
-                                                    <select class="form-select" id="inputGroupSelect01" name="selected_questionary_id">
-                                                        <option value="" selected>Escoja su opción</option>
-                                                        {% for questionary in questionnaires %}
-                                                            <option for="selected_questionary_id" value="{{ questionary.id }}" 
-                                                            {% if questionary.id == selected_questionary_id %} selected {% endif %}>
-                                                                {{ questionary.questionary }}
-                                                            </option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div> 
-                                                {% if not started_questionary %}
-                                                    <div class="d-grid gap-1">
-                                                        <button type="submit" name="select" class="btn btn-primary">Seleccionar</button>
-                                                    </div>                                       
+                        <div class="col-xxl-3 col-xl-4 col-lg-6 col-md-12 ms-auto">
+                            <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                                <img src="{% static 'images/questionary-img.webp'%}" alt="Product Image" class="img-fluid" style="width: 200%; height: 150%;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card w-100 h-100">
+                <div class="card-header border-0 rounded">
+                    <div class="row g-6 mb-4">
+                        <!-- Panel izquierdo -->
+                        <div class="col-md-4">                                        
+                            {% if not started_questionary %}
+                                <form method="GET" action="{% url 'questionary:questionary.main' %}" onsubmit="return validateForm()">
+                                    {% csrf_token %}
+                                    <div class="input-group mb-2">
+                                        <label class="input-group-text" for="inputGroupSelect01">
+                                            <i class="fa fa-list"></i> Cuestionarios
+                                        </label>
+                                        <select class="form-select" id="inputGroupSelect01" name="selected_questionary_id">
+                                            <option value="">Escoja su opción</option>
+                                            {% for questionary in questionnaires %}
+                                                <option value="{{ questionary.id }}" 
+                                                {% if questionary.id|stringformat:"s" == selected_questionary_id|stringformat:"s" %} selected {% endif %}>
+                                                    {{ questionary.questionary }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div> 
+                                    <div class="d-grid gap-1">
+                                        <button type="submit" name="select" class="btn btn-primary">
+                                            <i class="fa fa-check"></i> Seleccionar
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                {% if selected_questionary_id %}
+                                    <div class="d-grid gap-1 mt-3">
+                                        <form method="POST" action="{% url 'questionary:questionary.main' %}">
+                                            {% csrf_token %}
+                                            <button type="submit" name="start" class="btn btn-success btn-lg w-100">
+                                                <i class="fa fa-play"></i> Iniciar cuestionario
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if started_questionary %}
+                                <div class="card shadow-sm">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fa fa-info-circle"></i> Información del cuestionario
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <dl class="row">
+                                            <dt class="col-sm-4">Nombre:</dt>
+                                            <dd class="col-sm-8">{{ show_questionary.questionary }}</dd>
+                                            
+                                            <dt class="col-sm-4">Producto:</dt>
+                                            <dd class="col-sm-8">{{ show_questionary.fk_product.name }}</dd>
+                                        </dl>
+                                        
+                                        <hr>
+                                        
+                                        <h6><i class="fa fa-question-circle"></i> Instrucciones:</h6>
+                                        <ol class="small">
+                                            <li>Lea cada pregunta cuidadosamente</li>
+                                            <li>Complete todos los campos requeridos</li>
+                                            <li>Para datos históricos, ingrese mínimo 30 valores</li>
+                                            <li>Use "Guardar y continuar" para avanzar</li>
+                                            <li>Puede navegar entre páginas sin perder datos</li>
+                                        </ol>
+                                        
+                                        <!-- Progreso -->
+                                        <div class="progress-info mt-3">
+                                            <h6>Progreso del cuestionario</h6>
+                                            <div class="progress">
+                                                {% if questions_to_answer.paginator.num_pages > 0 %}
+                                                    {% widthratio questions_to_answer.number questions_to_answer.paginator.num_pages 100 as progress %}
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                         style="width: {{ progress }}%" 
+                                                         aria-valuenow="{{ progress }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                        {{ progress }}%
+                                                    </div>
                                                 {% endif %}
-                                            </form>
-                                            {% if selected_questionary_id == None %}
-                                                
-                                            {% else %}
-                                                <div class="d-grid gap-1 mt-auto">
-                                                    <form method="POST" action="{% url 'questionary:questionary.main' %}">
-                                                        {% csrf_token %}
-                                                        <button type="submit" name="start" class="btn btn-primary">Iniciar cuestionario</button>
-                                                    </form>
-                                                </div>
-                                            {% endif %}
-                                        {% endif %}
-                                        {% if started_questionary %}
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h3 class="card-title">Información del cuestionario seleccionado:</h3>
-                                                </div>
-                                                <div class="card-body">
-                                                    <p><strong>Nombre del cuestionario:</strong> {{ show_questionary.questionary }}</p>
-                                                    <p><strong>Llenara datos para generar simulaciones con el producto:</strong> {{ show_questionary.fk_product.name }}</p>
-                                                    <hr>
-                                                    <h5>Instrucciones:</h5>
-                                                    <ol>
-                                                        <li>Lea cada pregunta cuidadosamente.</li>
-                                                        <li>Seleccione la respuesta que mejor se ajuste a su situación.</li>
-                                                        <li>Haga clic en "Próxima pregunta" para continuar con el cuestionario.</li>
-                                                        <li>Si desea cambiar su respuesta a una pregunta, puede navegar hacia atrás usando el botón "Pregunta anterior".</li>
-                                                        <li>Una vez que haya respondido todas las preguntas, haga clic en "Finalizar cuestionario" para ver sus resultados.</li>
-                                                    </ol>
+                                            </div>
+                                            <small class="text-muted">
+                                                Página {{ questions_to_answer.number }} de {{ questions_to_answer.paginator.num_pages }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <form method="POST" action="{% url 'questionary:questionary.main' %}">
+                                            {% csrf_token %}
+                                            <button type="submit" name="cancel" class="btn btn-danger btn-sm w-100">
+                                                <i class="fa fa-times"></i> Cancelar cuestionario
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Panel derecho -->
+                        <div class="col-md-8">
+                            {% if not started_questionary %}
+                                {% if questions %}
+                                    <h5 class="mb-3">
+                                        <i class="fa fa-list-alt"></i> Preguntas del cuestionario
+                                    </h5>
+                                    {% for question in questions %}
+                                        <div class="card questionlist-card mb-2 shadow-sm">
+                                            <div class="card-body">
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-1">
+                                                        <span class="question-number">{{ forloop.counter }}</span>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <span class="variable-badge">
+                                                            <i class="fa fa-tag"></i> {{ question.fk_variable.name }}
+                                                        </span>
+                                                        <p class="text-muted mb-0 mt-1">
+                                                            <small>Unidad: <strong>{{ question.fk_variable.unit }}</strong></small>
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p class="mb-0">{{ question.question }}</p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        {% endif %}
+                                        </div>                                                    
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                                        <h5 class="mt-2">No hay preguntas disponibles</h5>
+                                        <p class="text-muted">Seleccione un cuestionario para ver las preguntas</p>
                                     </div>
-                                    <div class="col-md-6">
-                                        {% if not started_questionary %}
-                                            {% if questions %}
-                                                {% for question in questions %}
-                                                    <div class="card questionlist-card mb-2">
+                                {% endif %}
+                                
+                                <!-- Paginación -->
+                                {% if questions.has_other_pages %}
+                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                    <div class="text-muted">
+                                        Página <span class="fw-semibold">{{ questions.number }}</span>
+                                        de <span class="fw-semibold">{{ questions.paginator.num_pages }}</span>
+                                    </div>
+                                    <nav>
+                                        <ul class="pagination pagination-sm mb-0">
+                                            {% if questions.has_previous %}
+                                            <li class="page-item">
+                                                <a href="?page={{ questions.previous_page_number }}" class="page-link">
+                                                    <i class="fa fa-chevron-left"></i>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            
+                                            {% for i in questions.paginator.page_range %}
+                                                {% if i > questions.number|add:'-3' and i < questions.number|add:'3' %}
+                                                <li class="page-item {% if i == questions.number %}active{% endif %}">
+                                                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                                                </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if questions.has_next %}
+                                            <li class="page-item">
+                                                <a href="?page={{ questions.next_page_number }}" class="page-link">
+                                                    <i class="fa fa-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if started_questionary %}
+                                <div class="card mb-3 shadow">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">
+                                            <i class="fa fa-edit"></i> Responder preguntas
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if questions_to_answer %}
+                                            <form method="POST" action="{% url 'questionary:questionary.main' %}" id="questionForm" onsubmit="return validateAnswers()">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="current_page" value="{{ questions_to_answer.number }}">
+                                                
+                                                {% for question in questions_to_answer %}
+                                                    <div class="question-card card mb-3">
                                                         <div class="card-body">
-                                                            <div class="row">
-                                                                <div class="col-md-6">
-                                                                    <h5 class="question">Relación variable {{ question.fk_variable.name }}</h5>
-                                                                    <p class="text-muted">Unidad:{{ question.fk_variable.unit }}</p>
-                                                                </div>
-                                                                <div class="col-md-6">
-                                                                    <label for="{{ question.id }}" class="form-label">
-                                                                        <span data-key="t-home">{{ question.question }}</span>
-                                                                    </label>
+                                                            <div class="d-flex align-items-start mb-2">
+                                                                <span class="question-number me-3">{{ forloop.counter0|add:questions_to_answer.start_index }}</span>
+                                                                <div class="flex-grow-1">
+                                                                    <h6 class="card-title mb-2">
+                                                                        Variable: <span class="variable-badge">{{ question.fk_variable.name }}</span>
+                                                                    </h6>
+                                                                    <input type="hidden" name="question_{{ question.id }}" value="{{ question.id }}">
+                                                                    <p class="card-text mb-3">{{ question.question }}</p>
+                                                                    
+                                                                    {% if question.type == 1 %}
+                                                                        <!-- Tipo numérico -->
+                                                                        <div class="input-group">
+                                                                            <input type="number" 
+                                                                                   value="{% if existing_answers %}{{ existing_answers|get_item:question.id|default:'' }}{% endif %}"
+                                                                                   class="form-control" 
+                                                                                   name="answer_{{ question.id }}"
+                                                                                   id="answer_{{ question.id }}"
+                                                                                   placeholder="Ingrese un valor numérico"
+                                                                                   required 
+                                                                                   min="0" 
+                                                                                   step="0.01">
+                                                                            <span class="input-group-text">{{ question.fk_variable.unit }}</span>
+                                                                        </div>
+                                                                        
+                                                                    {% elif question.type == 2 %}
+                                                                        <!-- Tipo selección -->
+                                                                        <div class="form-group">
+                                                                            <select class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" required>
+                                                                                <option value="">-- Seleccione una opción --</option>
+                                                                                {% for option in question.possible_answers %}
+                                                                                    <option value="{{ option }}" 
+                                                                                            {% if existing_answers and existing_answers|get_item:question.id == option %}selected{% endif %}>
+                                                                                        {{ option }}
+                                                                                    </option>
+                                                                                {% endfor %}
+                                                                            </select>
+                                                                        </div>
+                                                                        
+                                                                    {% elif question.type == 3 %}
+                                                                        <!-- Tipo datos históricos -->
+                                                                        <div class="form-group">
+                                                                            <div class="alert alert-info">
+                                                                                <i class="fa fa-info-circle"></i> Ingrese al menos 30 datos históricos de demanda
+                                                                            </div>
+                                                                            <div class="historical-data-table mb-2">
+                                                                                <table class="table table-sm" id="numberTable_{{ question.id }}">
+                                                                                    <thead class="table-light">
+                                                                                        <tr>
+                                                                                            <th width="60">Nro</th>
+                                                                                            <th>Valor</th>
+                                                                                            <th width="100">Unidad</th>
+                                                                                            <th width="100">Acción</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody id="tbody_{{ question.id }}">
+                                                                                        <!-- Filas dinámicas aquí -->
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                            <div class="btn-group" role="group">
+                                                                                <button type="button" onclick="agregarFila({{ question.id }})" class="btn btn-sm btn-primary">
+                                                                                    <i class="fa fa-plus"></i> Agregar Fila
+                                                                                </button>
+                                                                                <button type="button" onclick="agregarMultiplesFila({{ question.id }}, 10)" class="btn btn-sm btn-info">
+                                                                                    <i class="fa fa-plus-circle"></i> Agregar 10 Filas
+                                                                                </button>
+                                                                                <button type="button" onclick="guardarDatosHistoricos({{ question.id }})" class="btn btn-sm btn-success">
+                                                                                    <i class="fa fa-save"></i> Validar Datos
+                                                                                </button>
+                                                                            </div>
+                                                                            <div class="mt-2">
+                                                                                <span class="badge bg-secondary" id="contador_{{ question.id }}">0 datos ingresados</span>
+                                                                            </div>
+                                                                            <input type="hidden" name="historicalData_{{ question.id }}" id="historicalData_{{ question.id }}" 
+                                                                                   value="{% if existing_answers %}{{ existing_answers|get_item:question.id|default:'' }}{% endif %}">
+                                                                        </div>
+                                                                    {% endif %}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>                                                    
+                                                    </div>
                                                 {% endfor %}
-                                            {% else %}
-                                                <div class="text-center py-4">
-                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                    <h5 class="mt-2">Lo sentimos, no hay ninguna pregunta en el cuestionario seleccionado</h5>
-                                                </div>
-                                            {% endif %}
-                                            <!-- Pagination -->
-                                                    <div class="align-items-center mt-2 row text-center text-sm-start">
-                                                        <div class="col-sm">
-                                                        <div class="text-muted">
-                                                            Mostrar
-                                                            <span class="fw-semibold">{{ questions_to_answer.number }}</span>
-                                                            de
-                                                            <span class="fw-semibold">
-                                                            {{ questions_to_answer.paginator.num_pages }}
-                                                            </span>
-                                                            Resultados
-                                                        </div>
-                                                        </div>
-                                                        <div class="col-sm-auto">
-                                                        <ul
-                                                            class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                                            {% if questions_to_answer.has_Anterior %}
-                                                            <li class="page-item">
-                                                            <a href="?page={{ questions_to_answer.Anterior_page_number }}" class="page-link">
-                                                                ←
-                                                            </a>
-                                                            </li>
-                                                            {% endif %} 
-                                                            {% for i in questions_to_answer.paginator.page_range %}
-                                                            <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
-                                                            <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                            </li>
-                                                            {% endfor %} 
-                                                            {% if questions_to_answer.has_next %}
-                                                            <li class="page-item">
-                                                            <a href="?page={{ questions_to_answer.next_page_number }}" class="page-link">
-                                                                →
-                                                            </a>
-                                                            </li>
-                                                            {% endif %}
-                                                        </ul>
-                                                        </div>
-                                                    </div>
-                                                    <!-- end row -->
-                                        {% endif %}
-                                        {% if started_questionary %}
-                                            <div class="card mb-3">
-                                                <div class="card-body">
-                                                    {% if questions_to_answer %}
-                                                        <form method="POST" action="{% url 'questionary:questionary.main' %}" onsubmit="return validateForm2()">
-                                                            {% csrf_token %}
-                                                            {% for question in questions_to_answer %}
-                                                                <h5 class="card-title">
-                                                                    {% if question.fk_variable %}
-                                                                        Pregunta para llenar la informacion para la variable: {{ question.fk_variable.name }}
-                                                                    {% else %}
-                                                                        No se encontro una relacion con alguna variable
-                                                                    {% endif %}
-                                                                </h5>
-                                                                <input type="hidden" name="question_{{ question.id }}" value="{{ question.id }}">
-                                                                <input type="hidden" name="next_question_id" value="{{ next_question_id }}">
-                                                                <p class="card-text" name="question_id" id="question_id" value="{{ question.id }}"><i class="fa fa-id-badge" aria-hidden="true"></i> {{ question.question }}</p>
-                                                                {% if question.type == 1 %}
-                                                                    <div class="input-group">
-                                                                        <input type="number" value="{{ question.fk_answer.answer }}"
-                                                                        class="form-control" name="answer_{{ question.id }}"
-                                                                        id="answer_{{ question.id }}"
-                                                                        placeholder="Responda la pregunta solo con números"
-                                                                        required min="0" max="10000">
-
-                                                                        <span class="input-group-text">{{ question.fk_variable.unit }}</span>
-                                                                    </div>
-                                                                {% elif  question.type == 2 %}
-                                                                    <div class="form-group">
-                                                                        <label for="answer">Seleccione una opción:</label>
-                                                                        {% comment %} {% set question.posible_answers = ["Si", "No"] %} {% endcomment %}
-                                                                        <select class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" required>
-                                                                            <option value="">Seleccione una opción</option>
-                                                                            {% for option in question.possible_answers %}
-                                                                                <option value="{{ option }}">{{ option }}</option>
-                                                                            {% endfor %}
-                                                                        </select>
-                                                                    </div>
-                                                                {% comment %} aqui tiene que validar que los 30 datos que se subiran como demandas historicas deben seguir una distribucion adecuada y no ser tan disparados {% endcomment %}
-                                                                {% elif  question.type == 3 %}
-                                                                <div class="form-group">
-                                                                    <table class="table" id="numberTable">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th>Nro</th>
-                                                                                <th>Dato</th>
-                                                                                <th>Unidad</th>
-                                                                                <th>Acción</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            <!-- Aquí puedes tener filas predefinidas si es necesario -->
-                                                                        </tbody>
-                                                                    </table>
-                                                                    <button type="button" onclick="agregarFila()" class="btn btn-primary">Agregar Fila</button>
-                                                                </div>
-                                                                
-                                                                <script>
-                                                                    function agregarFila() {
-                                                                        var table = document.getElementById("numberTable").getElementsByTagName('tbody')[0];
-                                                                        var newRow = table.insertRow(table.rows.length);
-                                                                        
-                                                                        var cell1 = newRow.insertCell(0);
-                                                                        var cell2 = newRow.insertCell(1);
-                                                                        var cell3 = newRow.insertCell(2);
-                                                                        var cell4 = newRow.insertCell(3);
-                                                                        
-                                                                        // Obtén el número actual de filas
-                                                                        var rowCount = table.rows.length;
-                                                                
-                                                                        cell1.innerHTML = rowCount; // Número de fila
-                                                                        cell2.innerHTML = '<input type="text" name="numero[]" class="form-control">';
-                                                                        cell4.innerHTML = '<p>litros</p>';
-                                                                        cell3.innerHTML = '<button type="button" onclick="eliminarFila(this)" class="btn btn-danger">Eliminar</button>';
-                                                                        // Actualiza los números de las filas existentes
-                                                                        actualizarNumeros();
-                                                                    }
-                                                                
-                                                                    function eliminarFila(button) {
-                                                                        // Obtén la fila actual y elimínala
-                                                                        var row = button.parentNode.parentNode;
-                                                                        row.parentNode.removeChild(row);
-                                                                
-                                                                        // Actualiza los números de las filas existentes
-                                                                        actualizarNumeros();
-                                                                    }
-                                                                
-                                                                    function actualizarNumeros() {
-                                                                        var rows = document.getElementById("numberTable").getElementsByTagName('tbody')[0].rows;
-                                                                
-                                                                        for (var i = 0; i < rows.length; i++) {
-                                                                            var row = rows[i];
-                                                                            var cell = row.cells[0];
-                                                                            cell.innerHTML = i + 1; // Actualiza el número de fila
-                                                                        }
-                                                                    }
-                                                                </script>
-                                                                {% endif %}
-                                                            {% endfor %}
-                                                            {% if not questions_to_answer.last %}
-                                                                {% if questions_to_answer.has_next %}
-                                                                    <button type="submit" name="save" formaction="?page={{ questions_to_answer.next_page_number }}" class="btn btn-dark">Siguiente Pagina</button>
-                                                                {% else %}
-                                                                <li class="page-item">
-                                                                    {% comment %} <form method="GET" action="{% url 'questionary:questionary.result' questionary_result_id %}"> {% endcomment %}
-                                                                        {% csrf_token %}
-                                                                        <div class="alert alert-info" role="alert">
-                                                                            ¡Es la última página de preguntas!
-                                                                        </div>
-                                                                        {% if request.session.questionary_result_id %}
-                                                                            <a href="{% url 'questionary:questionary.result' request.session.questionary_result_id %}" class="btn btn-primary">Mostrar Resultados</a>
-                                                                        {% else %}
-                                                                            <!-- Handle the case where questionary_result_id is empty -->
-                                                                            <p>No questionary result ID available.</p>
-                                                                        {% endif %}                                                                        {% comment %} esto mostrara el ultimo questionary result {% endcomment %}
-                                                                        {% comment %} <button type="submit" name="next" class="btn btn-primary">Mostrar Resultados</button> {% endcomment %}
-                                                                        {% comment %} esto mostrara el ultimo questionary result {% endcomment %}
-                                                                    {% comment %} </form> {% endcomment %}
-                                                                </li>
-                                                                {% endif %}                                                                
-                                                            {% endif %}
-                                                        </form>
+                                                
+                                                <div class="d-flex justify-content-between mt-4">
+                                                    {% if questions_to_answer.has_previous %}
+                                                        <a href="?page={{ questions_to_answer.previous_page_number }}" class="btn btn-outline-secondary">
+                                                            <i class="fa fa-arrow-left"></i> Página anterior
+                                                        </a>
                                                     {% else %}
-                                                        <p>No hay preguntas que responder.</p>
+                                                        <span></span>
                                                     {% endif %}
-                                                </div>
-                                                <div class="card-footer">
-                                                    <form method="POST" action="{% url 'questionary:questionary.main' %}">
-                                                        {% csrf_token %}
-                                                        <button type="submit" name="cancel" class="btn btn-danger">Cancelar cuestionario</button>
-                                                    </form>
                                                     
-                                                </div>
-                                            </div>
-                                            <!-- Pagination -->
-                                            <div class="align-items-center mt-2 row text-center text-sm-start">
-                                                <div class="col-sm">
-                                                    <div class="text-muted">
-                                                        Mostrar
-                                                        <span class="fw-semibold"> Pagina: {{ questions_to_answer.number }}</span>
-                                                        de
-                                                        <span class="fw-semibold">
-                                                        {{ questions_to_answer.paginator.num_pages }} paginas
-                                                        </span>
+                                                    <div>
+                                                        <button type="submit" name="save" class="btn btn-primary">
+                                                            <i class="fa fa-save"></i> Guardar respuestas
+                                                        </button>
+                                                        
+                                                        {% if not questions_to_answer.has_next %}
+                                                            <button type="submit" name="finish" class="btn btn-success">
+                                                                <i class="fa fa-check-circle"></i> Finalizar cuestionario
+                                                            </button>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
-                                                <div class="col-sm-auto">
-                                                    <ul
-                                                        class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0"  >   
-                                                    </ul>
-                                                </div>
+                                            </form>
+                                        {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="fa fa-exclamation-triangle"></i> No hay preguntas que responder.
                                             </div>
-                                            <!-- end row -->
-                                        {% endif %} 
+                                        {% endif %}
                                     </div>
                                 </div>
-                            </div>
-                        </div>        
+                                
+                                <!-- Navegación de páginas -->
+                                {% if questions_to_answer.has_other_pages %}
+                                <div class="card">
+                                    <div class="card-body">
+                                        <nav aria-label="Navegación del cuestionario">
+                                            <ul class="pagination justify-content-center mb-0">
+                                                {% if questions_to_answer.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ questions_to_answer.previous_page_number }}">
+                                                        <i class="fa fa-chevron-left"></i> Anterior
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% for i in questions_to_answer.paginator.page_range %}
+                                                    {% if i > questions_to_answer.number|add:'-5' and i < questions_to_answer.number|add:'5' %}
+                                                    <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
+                                                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                                    </li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                
+                                                {% if questions_to_answer.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ questions_to_answer.next_page_number }}">
+                                                        Siguiente <i class="fa fa-chevron-right"></i>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endif %} 
+                        </div>
                     </div>
-                    <!-- container-fluid -->
                 </div>
-                <!-- End Page-content -->
+            </div>        
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
 
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
-            </div>
-            <!-- end main content-->
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+<!-- end main content-->
 {% endblock content %}
+
 {% block extra_js %}
-
 <script>
-    function validateForm() {
-        var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
-        // Validate if a questionary is selected
-        if (selectedQuestionary === 'Choose...') {
-            alert('Please select a questionary.');
-            return false;
-        }
-
-        // Add more validations if needed
-
-        return true; // Submit the form if all validations pass
+// Validación del formulario de selección
+function validateForm() {
+    var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
+    if (selectedQuestionary === '') {
+        showAlert('Por favor seleccione un cuestionario.', 'warning');
+        return false;
     }
-</script>
-<script>
-    function validateForm2() {
-        var answer = document.getElementById('answer').value;
+    return true;
+}
 
-        // Verificar si la respuesta no está vacía
-        if (answer.trim() === "") {
-            alert('Por favor, proporciona una respuesta.');
-            return false; // Prevenir el envío del formulario
+// Mostrar mensajes de alerta
+function showAlert(message, type = 'success') {
+    var alertDiv = document.querySelector('.success-message');
+    alertDiv.className = 'alert alert-' + type + ' success-message';
+    document.getElementById('success-text').textContent = message;
+    alertDiv.style.display = 'block';
+    
+    setTimeout(function() {
+        alertDiv.style.display = 'none';
+    }, 3000);
+}
+
+// Validar respuestas antes de enviar
+function validateAnswers() {
+    var form = document.getElementById('questionForm');
+    var historicalInputs = form.querySelectorAll('[id^="historicalData_"]');
+    
+    for (var i = 0; i < historicalInputs.length; i++) {
+        var input = historicalInputs[i];
+        if (input.value) {
+            var values = input.value.split(',').filter(v => v.trim() !== '');
+            if (values.length < 30) {
+                var questionId = input.id.replace('historicalData_', '');
+                showAlert('Los datos históricos deben contener al menos 30 valores. Pregunta con ' + values.length + ' valores.', 'danger');
+                document.getElementById('tbody_' + questionId).scrollIntoView({ behavior: 'smooth' });
+                return false;
+            }
         }
-
-        // Ejemplo: Verificar si la respuesta es un número válido
-        if (isNaN(answer)) {
-            alert('Por favor, introduce un número válido para la respuesta.');
-            return false;
-        }
-
-        // Ejemplo: Verificar si la respuesta está dentro de un rango específico
-        var min = 0;
-        var max = 1000;
-        if (answer < min || answer > max) {
-            alert('Por favor, introduce un número entre ' + min + ' y ' + max + ' para la respuesta.');
-            return false;
-        }
-
-        // Ejemplo: Verificar si la respuesta es una opción válida del menú desplegable
-        var selectAnswer = document.getElementById('answer');
-        if (selectAnswer.selectedIndex === 0) {
-            alert('Por favor, selecciona una opción.');
-            return false;
-        }
-
-        // Agregar más validaciones para otros campos según sea necesario
-
-        // Si todas las validaciones pasan, devolver true para permitir el envío del formulario
-        return true;
     }
-</script>
+    
+    return true;
+}
 
+// Manejo de datos históricos
+var historicalData = {};
+
+function agregarFila(questionId) {
+    var tbody = document.getElementById('tbody_' + questionId);
+    var rowCount = tbody.rows.length + 1;
+    
+    var newRow = tbody.insertRow(-1);
+    newRow.className = 'data-input-row';
+    newRow.innerHTML = `
+        <td class="text-center">${rowCount}</td>
+        <td><input type="number" class="form-control form-control-sm" step="0.01" 
+                   placeholder="Valor ${rowCount}" 
+                   onchange="actualizarContador(${questionId})"
+                   id="data_${questionId}_${rowCount}"></td>
+        <td class="text-center">{{ question.fk_variable.unit|default:"unidades" }}</td>
+        <td class="text-center">
+            <button type="button" onclick="eliminarFila(this, ${questionId})" 
+                    class="btn btn-sm btn-danger">
+                <i class="fa fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    actualizarNumeros(questionId);
+    actualizarContador(questionId);
+}
+
+function agregarMultiplesFila(questionId, cantidad) {
+    for (var i = 0; i < cantidad; i++) {
+        agregarFila(questionId);
+    }
+    showAlert(`Se agregaron ${cantidad} filas`, 'info');
+}
+
+function eliminarFila(button, questionId) {
+    var row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+    actualizarNumeros(questionId);
+    actualizarContador(questionId);
+}
+
+function actualizarNumeros(questionId) {
+    var tbody = document.getElementById('tbody_' + questionId);
+    var rows = tbody.rows;
+    
+    for (var i = 0; i < rows.length; i++) {
+        rows[i].cells[0].innerHTML = i + 1;
+        // Actualizar IDs de inputs
+        var input = rows[i].cells[1].querySelector('input');
+        if (input) {
+            input.id = `data_${questionId}_${i + 1}`;
+            input.placeholder = `Valor ${i + 1}`;
+        }
+    }
+}
+
+function actualizarContador(questionId) {
+    var tbody = document.getElementById('tbody_' + questionId);
+    var inputs = tbody.querySelectorAll('input[type="number"]');
+    var count = 0;
+    
+    inputs.forEach(function(input) {
+        if (input.value && input.value.trim() !== '') {
+            count++;
+        }
+    });
+    
+    var badge = document.getElementById('contador_' + questionId);
+    if (badge) {
+        badge.textContent = count + ' datos ingresados';
+        badge.className = count >= 30 ? 'badge bg-success' : 'badge bg-secondary';
+    }
+}
+
+function guardarDatosHistoricos(questionId) {
+    var tbody = document.getElementById('tbody_' + questionId);
+    var rows = tbody.rows;
+    var data = [];
+    
+    for (var i = 0; i < rows.length; i++) {
+        var input = rows[i].cells[1].querySelector('input');
+        if (input && input.value && input.value.trim() !== '') {
+            data.push(parseFloat(input.value));
+        }
+    }
+    
+    if (data.length < 30) {
+        showAlert(`Debe ingresar al menos 30 datos históricos. Actualmente tiene: ${data.length}`, 'danger');
+        return;
+    }
+    
+    // Guardar en campo oculto
+    document.getElementById('historicalData_' + questionId).value = data.join(',');
+    showAlert(`Datos validados correctamente. Total: ${data.length} valores`, 'success');
+}
+
+// Cargar datos existentes al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Buscar todos los campos de datos históricos
+    var historicalFields = document.querySelectorAll('[id^="historicalData_"]');
+    
+    historicalFields.forEach(function(field) {
+        if (field.value) {
+            var questionId = field.id.replace('historicalData_', '');
+            var data = field.value.split(',').filter(v => v.trim() !== '');
+            
+            data.forEach(function(value, index) {
+                agregarFila(questionId);
+                var tbody = document.getElementById('tbody_' + questionId);
+                var lastRow = tbody.rows[tbody.rows.length - 1];
+                var input = lastRow.cells[1].querySelector('input');
+                if (input) {
+                    input.value = value;
+                }
+            });
+            
+            actualizarContador(questionId);
+        }
+    });
+    
+    // Auto-guardar cada 30 segundos (opcional)
+    setInterval(function() {
+        var forms = document.querySelectorAll('form');
+        forms.forEach(function(form) {
+            var formData = new FormData(form);
+            // Aquí podrías implementar auto-guardado via AJAX
+        });
+    }, 30000);
+});
+
+// Prevenir pérdida de datos al salir
+window.addEventListener('beforeunload', function (e) {
+    var confirmationMessage = '¿Está seguro de que desea salir? Los cambios no guardados se perderán.';
+    
+    if (document.querySelector('#questionForm')) {
+        e.preventDefault();
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+    }
+});
+</script>
 {% endblock extra_js %}

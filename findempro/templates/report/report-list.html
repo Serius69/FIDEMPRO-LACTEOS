@@ -1,83 +1,403 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Lista de Informes{% endblock title %}
+{% block title %}Lista de Reportes{% endblock title %}
 {% block extra_css %}
+<style>
+.report-status-badge {
+    font-size: 0.8rem;
+}
+.report-actions {
+    white-space: nowrap;
+}
+.search-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    color: white;
+}
+.stat-card {
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+</style>
 {% endblock extra_css %}
+
 {% block content %}
-    <div class="main-content">
-        <div class="page-content">
-            <div class="container-fluid">
-                {% block pagetitle %}
-                    {% include "partials/page-title.html" with pagetitle="Informes" title="Lista" %}
-                {% endblock pagetitle %}
-                <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-                    <div class="px-4">
-                        <div class="row">
-                            <div class="col-xxl-9 align-self-center">
-                                <div class="py-4">
-                                    <h4 class="display-6 -text">Lista de informes</h4>
-                                    <div class="container">                      
-                                        <p>Esta es la página de lista de informes. Aquí puedes ver todos los informes registrados en la base de datos.</p>
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            {% block pagetitle %}
+                {% include "partials/page-title.html" with pagetitle="Reportes" title="Lista de Reportes" %}
+            {% endblock pagetitle %}
+
+            <!-- Header Section -->
+            <div class="search-section">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="mb-1">📊 Gestión de Reportes</h2>
+                        <p class="mb-0 opacity-75">Administra y visualiza todos los reportes de simulación y análisis</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <img src="{% static 'images/report-img.webp'%}" alt="Reports" class="img-fluid" style="max-height: 100px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <span class="avatar-title rounded-circle bg-primary text-white">
+                                    <i class="ri-file-text-line font-size-16"></i>
+                                </span>
+                            </div>
+                            <h5 class="font-size-15 mb-1">{{ total_reports }}</h5>
+                            <p class="text-muted mb-0">Total Reportes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <span class="avatar-title rounded-circle bg-success text-white">
+                                    <i class="ri-check-line font-size-16"></i>
+                                </span>
+                            </div>
+                            <h5 class="font-size-15 mb-1">{{ reports.paginator.count }}</h5>
+                            <p class="text-muted mb-0">En esta página</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <span class="avatar-title rounded-circle bg-info text-white">
+                                    <i class="ri-time-line font-size-16"></i>
+                                </span>
+                            </div>
+                            <h5 class="font-size-15 mb-1">Hoy</h5>
+                            <p class="text-muted mb-0">Fecha actual</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <span class="avatar-title rounded-circle bg-warning text-white">
+                                    <i class="ri-line-chart-line font-size-16"></i>
+                                </span>
+                            </div>
+                            <h5 class="font-size-15 mb-1">Análisis</h5>
+                            <p class="text-muted mb-0">Disponible</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Card -->
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-bottom">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h4 class="card-title mb-0">
+                                        <i class="ri-file-list-3-line me-2"></i>
+                                        Lista de Reportes
+                                    </h4>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <!-- Search Form -->
+                                        <form method="GET" class="d-flex">
+                                            <div class="input-group">
+                                                <input 
+                                                    type="text" 
+                                                    class="form-control" 
+                                                    placeholder="Buscar reportes..." 
+                                                    name="search" 
+                                                    value="{{ search_query }}"
+                                                >
+                                                <button class="btn btn-outline-secondary" type="submit">
+                                                    <i class="ri-search-line"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                        
+                                        <!-- Action Buttons -->
+                                        <a href="{% url 'report:report.create' %}" class="btn btn-primary">
+                                            <i class="ri-add-line me-1"></i>Nuevo Reporte
+                                        </a>
+                                        <a href="{% url 'report:simulation.create' %}" class="btn btn-success">
+                                            <i class="ri-line-chart-line me-1"></i>Nueva Simulación
+                                        </a>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xxl-3 ms-auto">
-                                <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                                    <img src="{% static 'images/report-img.webp'%}" alt="" class="img-fluid">
-                                </div>
-                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xl-12">
-                        <div class="card">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Lista de Informes</h4>
-                                <div class="input-group mb-3">
-                                    <input type="text" class="form-control" placeholder="Buscar informe">
-                                    <button class="btn btn-outline-secondary" type="button">Buscar</button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-middle table-nowrap mb-0">
-                                        <thead class="table-light">
+
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="border-0">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="selectAll">
+                                                </div>
+                                            </th>
+                                            <th class="border-0">Reporte</th>
+                                            <th class="border-0">Producto</th>
+                                            <th class="border-0">Tipo</th>
+                                            <th class="border-0">Fecha</th>
+                                            <th class="border-0">Estado</th>
+                                            <th class="border-0 text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for report in reports %}
                                             <tr>
-                                                <th scope="col">Nombre del Informe</th>
-                                                <th scope="col">Fecha</th>
-                                                <th scope="col">Estado</th>
-                                                <th scope="col">Acciones</th>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input report-checkbox" type="checkbox" value="{{ report.id }}">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="avatar-xs">
+                                                                <span class="avatar-title rounded bg-primary-subtle text-primary">
+                                                                    <i class="ri-file-text-line"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-3">
+                                                            <h6 class="mb-1">
+                                                                <a href="{% url 'report:report.detail' report.pk %}" class="text-dark text-decoration-none">
+                                                                    {{ report.title }}
+                                                                </a>
+                                                                {% if report.is_recent %}
+                                                                    <span class="badge bg-success-subtle text-success ms-1">Nuevo</span>
+                                                                {% endif %}
+                                                            </h6>
+                                                            <p class="text-muted mb-0 small">{{ report.content_summary }}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {% if report.fk_product %}
+                                                        <span class="badge bg-info-subtle text-info">
+                                                            {{ report.fk_product.name }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="text-muted">Sin producto</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary-subtle text-secondary">
+                                                        {{ report.get_report_type_display }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="small">
+                                                        <div>{{ report.date_created|date:"d/m/Y" }}</div>
+                                                        <div class="text-muted">{{ report.date_created|date:"H:i" }}</div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="{{ report.status_class }} report-status-badge">
+                                                        {{ report.status_display }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center report-actions">
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{% url 'report:report.detail' report.pk %}" 
+                                                           class="btn btn-sm btn-outline-primary" 
+                                                           title="Ver detalles">
+                                                            <i class="ri-eye-line"></i>
+                                                        </a>
+                                                        <a href="{% url 'report:report.update' report.pk %}" 
+                                                           class="btn btn-sm btn-outline-secondary" 
+                                                           title="Editar">
+                                                            <i class="ri-edit-line"></i>
+                                                        </a>
+                                                        <a href="{% url 'report:generar_reporte_pdf' report.pk %}" 
+                                                           class="btn btn-sm btn-outline-success" 
+                                                           title="Descargar PDF">
+                                                            <i class="ri-download-line"></i>
+                                                        </a>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-warning toggle-status" 
+                                                                data-id="{{ report.pk }}" 
+                                                                title="Cambiar estado">
+                                                            <i class="ri-toggle-line"></i>
+                                                        </button>
+                                                        <a href="{% url 'report:report.delete' report.pk %}" 
+                                                           class="btn btn-sm btn-outline-danger" 
+                                                           title="Eliminar"
+                                                           onclick="return confirm('¿Está seguro de eliminar este reporte?')">
+                                                            <i class="ri-delete-bin-line"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for report in reports %}
-                                                <tr>
-                                                    <td>{{ report.name }}</td>
-                                                    <td>{{ report.date }}</td>
-                                                    <td>{{ report.status }}</td>
-                                                    <td>
-                                                        <a href="{% url 'report.detail' report.pk %}" class="btn btn-primary">Ver</a>
-                                                        <a href="{% url 'report.edit' report.pk %}" class="btn btn-secondary">Editar</a>
-                                                        <a href="{% url 'report.delete' report.pk %}" class="btn btn-danger">Eliminar</a>
-                                                    </td>
-                                                </tr>
-                                            {% empty %}
-                                                <tr>
-                                                    <td colspan="4" class="text-center py-4">
-                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                        <h5 class="mt-2">Lo sentimos, no hay ningún informe registrado en la base de datos</h5>
-                                                        <p class="text-muted mb-0">Tienes que "Agregar Producto".</p>
-                                                    </td>
-                                                </tr>                                                
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="text-center py-5">
+                                                    <div class="empty-state">
+                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                                                   trigger="loop" 
+                                                                   colors="primary:#405189,secondary:#0ab39c" 
+                                                                   style="width:75px;height:75px">
+                                                        </lord-icon>
+                                                        <h5 class="mt-3 mb-2">No hay reportes disponibles</h5>
+                                                        <p class="text-muted mb-3">
+                                                            {% if search_query %}
+                                                                No se encontraron reportes que coincidan con "{{ search_query }}"
+                                                            {% else %}
+                                                                Aún no has creado ningún reporte.
+                                                            {% endif %}
+                                                        </p>
+                                                        <div class="d-flex gap-2 justify-content-center">
+                                                            <a href="{% url 'report:report.create' %}" class="btn btn-primary">
+                                                                <i class="ri-add-line me-1"></i>Crear Primer Reporte
+                                                            </a>
+                                                            <a href="{% url 'report:simulation.create' %}" class="btn btn-success">
+                                                                <i class="ri-line-chart-line me-1"></i>Crear Simulación
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
+
+                            <!-- Pagination -->
+                            {% if reports.has_other_pages %}
+                                <div class="card-footer bg-transparent border-top-0">
+                                    <nav aria-label="Pagination">
+                                        <ul class="pagination justify-content-center mb-0">
+                                            {% if reports.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ reports.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                                        <i class="ri-arrow-left-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+
+                                            {% for num in reports.paginator.page_range %}
+                                                {% if reports.number == num %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ num }}</span>
+                                                    </li>
+                                                {% elif num > reports.number|add:'-3' and num < reports.number|add:'3' %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% if reports.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ reports.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                                        <i class="ri-arrow-right-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
 {% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const reportCheckboxes = document.querySelectorAll('.report-checkbox');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            reportCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+    
+    // Individual checkbox change
+    reportCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkedBoxes = document.querySelectorAll('.report-checkbox:checked').length;
+            const totalBoxes = reportCheckboxes.length;
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = checkedBoxes === totalBoxes;
+                selectAllCheckbox.indeterminate = checkedBoxes > 0 && checkedBoxes < totalBoxes;
+            }
+        });
+    });
+    
+    // Toggle status functionality
+    const toggleButtons = document.querySelectorAll('.toggle-status');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const reportId = this.getAttribute('data-id');
+            
+            fetch(`{% url 'report:toggle_status' 0 %}`.replace('0', reportId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to show updated status
+                    location.reload();
+                } else {
+                    alert('Error al cambiar el estado: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cambiar el estado');
+            });
+        });
+    });
+    
+    // Search functionality enhancement
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 3 || this.value.length === 0) {
+                    this.form.submit();
+                }
+            }, 500);
+        });
+    }
+});
+</script>
 {% endblock extra_js %}

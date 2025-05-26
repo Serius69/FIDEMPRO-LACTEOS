@@ -1,561 +1,1089 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Simulate Result{% endblock title %}
+
+{% block title %}Resultados de Simulación{% endblock title %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/joint.css' %}"> 
-<!-- dropzone css -->
 <link rel="stylesheet" href="{% static 'libs/dropzone/dist/dropzone.css'%}" type="text/css" />
-
-<!-- Filepond css -->
 <link rel="stylesheet" href="{% static 'libs/filepond/dist/filepond.min.css'%}" type="text/css" />
-<link rel="stylesheet" href="{% static 'libs/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css'%}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" integrity="sha512-Xr6mUq4Wt5T7Bw6FQPhZcY6wPo6nqmFTfZyU+7xFCTk3mAFLqvcgdbBj+Pf+v+KqDkIXwXQxCVeLwBl+KZ8k4g==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
+<style>
+    .results-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .chart-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4CAF50, #2196F3, #FF9800);
+    }
+    .chart-image {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+    .chart-image:hover {
+        transform: scale(1.02);
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-item {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+    }
+    .stat-item:hover {
+        transform: translateY(-2px);
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2196F3;
+        margin-bottom: 0.5rem;
+    }
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .data-table-container {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    .table td {
+        vertical-align: middle;
+        border-color: #f0f0f0;
+    }
+    .table tbody tr:hover {
+        background-color: #f8f9ff;
+    }
+    .pagination-controls {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0 0 15px 15px;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        gap: 1rem;
+    }
+    .btn-pagination {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-pagination:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .recommendation-card {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        border: none;
+        border-radius: 15px;
+        color: #8B4513;
+    }
+    .export-section {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .loading-chart {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #2196F3;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .chart-tabs {
+        margin-bottom: 2rem;
+    }
+    .nav-tabs .nav-link {
+        border-radius: 10px 10px 0 0;
+        border: none;
+        background: #f8f9fa;
+        color: #666;
+        font-weight: 600;
+        margin-right: 0.5rem;
+    }
+    .nav-tabs .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .tooltip-info {
+        position: relative;
+        cursor: help;
+    }
+    .tooltip-info:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+    .fullscreen-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .fullscreen-content {
+        max-width: 90%;
+        max-height: 90%;
+        position: relative;
+    }
+    .close-fullscreen {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        z-index: 10000;
+    }
+</style>
 {% endblock extra_css %}
-{% block content %}
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
-                <div class="page-content">
-                    <div class="container-fluid">
-                        {% block pagetitle %}
-                            {% include "partials/page-title.html" with pagetitle="Simulacion" title="Resultado de la simulacion" %}
-                        {% endblock pagetitle %}
-                        <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-                            <div class="px-4">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <!-- Simulation Parameters Summary -->
-                                        <div class="card mb-4">
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-lg-4">
-                                                        <img src="{{ product_instance.get_photo_url }}" class="img-fluid" alt="{{ product_instance.name }}">
-                                                    </div>
-                                                    <div class="col-lg-8">
-                                                        <h5 class="card-title">Parámetros</h5>
-                                                        <dl class="row">
-                                                            <dt class="col-sm-4">Negocio:</dt>
-                                                            <dd class="col-sm-8">{{ business_instance.name }}</dd>
-                                        
-                                                            <dt class="col-sm-4">Producto:</dt>
-                                                            <dd class="col-sm-8">{{ product_instance.name }}</dd>
-                                        
-                                                            <dt class="col-sm-4">Demanda inicial:</dt>
-                                                            <dd class="col-sm-8">{{ demand_initial.quantity }} litros</dd>
-                                        
-                                                            <dt class="col-sm-4">Demanda predecida:</dt>
-                                                            <dd class="col-sm-8">{{ demand_predicted.quantity }} litros</dd>
 
-                                                            <dt class="col-sm-4">Porcentaje de error:</dt>
-                                                            <dd class="col-sm-8">{{ error_permisible|floatformat:"5" }}%</dd>
-                                        
-                                                            <dt class="col-sm-4">Horizonte de tiempo:</dt>
-                                                            <dd class="col-sm-8">{{ simulation_instance.quantity_time }} {{simulation_instance.unit_time}}</dd>
-                                                            
-                                                            <dt class="col-sm-4">Fecha de inicio:</dt>
-                                                            <dd class="col-sm-8">{{ simulation_instance.date_created|date:"Y-m-d" }}</dd>
-                                                        </dl>
-                                                        <button class="btn btn-primary" onclick="exportReport()">Exportar Reporte</button>
-                                                        <script>
-                                                            function exportReport(reportId) {
-                                                                // You can use AJAX to send a request to the server for generating the PDF
-                                                                // Example using fetch API:
-                                                                fetch(`/generar_reporte_pdf/${reportId}/`)
-                                                                    .then(response => {
-                                                                        if (!response.ok) {
-                                                                            throw new Error(`HTTP error! Status: ${response.status}`);
-                                                                        }
-                                                                        return response.blob();
-                                                                    })
-                                                                    .then(blob => {
-                                                                        // Create a link element to trigger the download
-                                                                        const url = window.URL.createObjectURL(blob);
-                                                                        const a = document.createElement('a');
-                                                                        a.href = url;
-                                                                        a.download = 'reporte.pdf';
-                                                                        document.body.appendChild(a);
-                                                                        a.click();
-                                                                        document.body.removeChild(a);
-                                                                    })
-                                                                    .catch(error => {
-                                                                        console.error('Error exporting report:', error);
-                                                                        // Handle error (e.g., show an alert to the user)
-                                                                    });
-                                                            }
-                                                        </script>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="card" id="results-container">
-                                                <div class="card-header">
-                                                    <h4 class="card-title mb-0">Resultado 
-                                                        <span class="currentday"></span>
-                                                    
-                                                    </h4>
-                                                    <p class="card-text">Los resultados de cada variable por día se muestran en la siguiente tabla:</p>
-                                                    
-                                                </div>
-                                                <div class="card-body">
-                                                    {% for item in all_variables_extracted %}
-                                                    
-                                                        <table class="table table-striped" id="dataTable-{{ forloop.counter }}">
-                                                            
-                                                            <thead>
-                                                                <th colspan="3">Fecha de Simulación: {{ item.date_simulation }}</th>
-                                                                <tr>
-                                                                    <th>Variable</th>
-                                                                    <th>Total</th>
-                                                                    <th>Unidades</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {% for variable, data in item.totales_por_variable.items %}
-                                                                    <tr>
-                                                                        <td>{{ variable }}</td>
-                                                                        <td>{{ data.total|floatformat:2 }}</td>
-                                                                        <td>
-                                                                            {% if data.unit == 'L' %}
-                                                                                Litros
-                                                                            {% elif data.unit == 'BS' %}
-                                                                                Pesos bolivianos
-                                                                            {% elif data.unit == '[0.1,0.3,0.5]' %}
-                                                                                %
-                                                                            {% elif data.unit == 'L/BS' %}
-                                                                                Litros / Pesos Bolivianos
-                                                                            {% else %}
-                                                                                {{ data.unit }}
-                                                                            {% endif %}
-                                                                        </td>
-                                                                    </tr>
-                                                                {% endfor %}
-                                                            </tbody>
-                                                        </table>
-                                                    {% endfor %}
-                                                </div>
-                                                <div class="card-footer">
-                                                    <div class="d-flex justify-content-end">
-                                                        <div class="pagination-wrap hstack gap-2">
-                                                            <button id="prevPage2" class="btn btn-primary">Anterior</button>
-                                                            <span class="currentday"></span>
-                                                            <button id="nextPage2" class="btn btn-primary">Próxima</button>
-                                                        </div><!-- end card -->
-                                                    </div><!-- end col -->
-                                                </div>
-                                            </div>                                                                                   
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Simulación" title="Resultados" %}
+            {% endblock pagetitle %}
+
+            <!-- Results Header -->
+            <div class="results-header">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h1 class="mb-3">
+                            <i class="bx bx-bar-chart-alt-2 me-3"></i>
+                            Resultados de Simulación
+                        </h1>
+                        <p class="fs-5 mb-0">
+                            Análisis completo para {{ product_instance.name }} - {{ business_instance.name }}
+                        </p>
+                        <p class="opacity-75 mb-0">
+                            Simulación ejecutada el {{ simulation_instance.date_created|date:"d/m/Y H:i" }}
+                        </p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <div class="export-section">
+                            <h5 class="mb-3">
+                                <i class="bx bx-download me-2"></i>
+                                Exportar Resultados
+                            </h5>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="exportToPDF()">
+                                    <i class="bx bx-file-pdf me-2"></i>
+                                    Exportar PDF
+                                </button>
+                                <button class="btn btn-success" onclick="exportToExcel()">
+                                    <i class="bx bx-file me-2"></i>
+                                    Exportar Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Statistics -->
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{ demand_initial.quantity|floatformat:"0" }}</div>
+                    <div class="stat-label">Demanda Inicial (L)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ demand_predicted.quantity|floatformat:"0" }}</div>
+                    <div class="stat-label">Demanda Predicha (L)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ growth_rate|floatformat:"2" }}%</div>
+                    <div class="stat-label">Tasa de Crecimiento</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ error_permisible|floatformat:"2" }}%</div>
+                    <div class="stat-label">Error Permisible</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ simulation_instance.quantity_time }}</div>
+                    <div class="stat-label">Días Simulados</div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="row">
+                <!-- Sidebar with Parameters and Controls -->
+                <div class="col-lg-3">
+                    <!-- Simulation Parameters -->
+                    <div class="metric-card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bx bx-cog me-2"></i>
+                                Parámetros de Simulación
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-4">
+                                    <img src="{{ product_instance.get_photo_url }}" 
+                                         class="img-fluid rounded" 
+                                         alt="{{ product_instance.name }}"
+                                         loading="lazy">
+                                </div>
+                                <div class="col-8">
+                                    <h6 class="mb-1">{{ business_instance.name }}</h6>
+                                    <p class="text-muted mb-0">{{ product_instance.name }}</p>
+                                </div>
+                            </div>
+                            
+                            <dl class="row mb-0">
+                                <dt class="col-6">Horizonte:</dt>
+                                <dd class="col-6">{{ simulation_instance.quantity_time }} {{ simulation_instance.unit_time }}</dd>
+                                
+                                <dt class="col-6">Inicio:</dt>
+                                <dd class="col-6">{{ simulation_instance.date_created|date:"d/m/Y" }}</dd>
+                                
+                                <dt class="col-6">Estado:</dt>
+                                <dd class="col-6">
+                                    <span class="badge bg-success">Completada</span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Financial Recommendations -->
+                    {% if financial_recommendations_to_show %}
+                    <div class="recommendation-card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bx bx-lightbulb me-2"></i>
+                                Recomendaciones Financieras
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for recommendation in financial_recommendations_to_show %}
+                            <div class="mb-3 p-3 bg-white rounded">
+                                <h6 class="fw-bold text-primary">{{ recommendation.name }}</h6>
+                                <p class="mb-2">{{ recommendation.recommendation }}</p>
+                                <small class="text-muted">
+                                    <i class="bx bx-info-circle me-1"></i>
+                                    Variable: {{ recommendation.variable_name }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Daily Results Navigation -->
+                    <div class="data-table-container">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bx bx-calendar me-2"></i>
+                                Resultados Diarios
+                                <span class="badge bg-info ms-2" id="currentDayIndicator">Día 1</span>
+                            </h5>
+                        </div>
+                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                            <div id="dailyResultsContainer">
+                                {% for item in all_variables_extracted %}
+                                <div class="daily-result-item" 
+                                     data-day="{{ forloop.counter }}" 
+                                     style="{% if not forloop.first %}display: none;{% endif %}">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="bx bx-calendar-event me-2"></i>
+                                        {{ item.date_simulation|date:"d/m/Y" }}
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Variable</th>
+                                                    <th>Valor</th>
+                                                    <th>Unidad</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for variable, data in item.totales_por_variable.items %}
+                                                <tr>
+                                                    <td class="small">{{ variable|truncatechars:20 }}</td>
+                                                    <td class="fw-bold">{{ data.total|floatformat:2 }}</td>
+                                                    <td class="small text-muted">
+                                                        {% if data.unit == 'L' %}Litros
+                                                        {% elif data.unit == 'BS' %}Bs.
+                                                        {% elif data.unit == '[0.1,0.3,0.5]' %}%
+                                                        {% elif data.unit == 'L/BS' %}L/Bs.
+                                                        {% elif data.unit == 'Horas' %}Hrs.
+                                                        {% else %}{{ data.unit }}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="pagination-controls">
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevDayBtn">
+                                <i class="bx bx-chevron-left me-1"></i>
+                                Anterior
+                            </button>
+                            <span class="flex-grow-1 text-center small text-muted" id="dayCounter">
+                                Día 1 de {{ all_variables_extracted|length }}
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextDayBtn">
+                                Siguiente
+                                <i class="bx bx-chevron-right ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Charts and Analysis -->
+                <div class="col-lg-9">
+                    <!-- Chart Tabs -->
+                    <div class="chart-tabs">
+                        <ul class="nav nav-tabs" id="chartTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#overview" type="button" role="tab">
+                                    <i class="bx bx-line-chart me-2"></i>
+                                    Resumen General
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="financial-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#financial" type="button" role="tab">
+                                    <i class="bx bx-dollar me-2"></i>
+                                    Análisis Financiero
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="operations-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#operations" type="button" role="tab">
+                                    <i class="bx bx-cog me-2"></i>
+                                    Operaciones
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="demand-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#demand" type="button" role="tab">
+                                    <i class="bx bx-trending-up me-2"></i>
+                                    Demanda
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="chartTabsContent">
+                        <!-- Overview Tab -->
+                        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-bar-chart me-2"></i>
+                                            Ingresos vs Ganancias
+                                            <i class="bx bx-fullscreen float-end cursor-pointer" 
+                                               onclick="openFullscreen('{{ image_data_0 }}', 'Ingresos vs Ganancias')"></i>
+                                        </h6>
+                                        {% if image_data_0 %}
+                                        <img src="data:image/png;base64,{{ image_data_0 }}" 
+                                             class="chart-image" 
+                                             alt="Gráfico de Ingresos vs Ganancias"
+                                             loading="lazy">
+                                        {% else %}
+                                        <div class="loading-chart">
+                                            <div class="spinner"></div>
                                         </div>
-                                        
-                                        <!-- Key Metrics Table -->
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <h5 class="card-title">Recomendaciones Financieras</h5>
-                                                <p>Las recomendaciones financieras se muestran en la siguiente tabla:</p>
-                                                <table class="table">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-line-chart me-2"></i>
+                                            Tendencia de Demanda
+                                            <i class="bx bx-fullscreen float-end cursor-pointer" 
+                                               onclick="openFullscreen('{{ image_data_line }}', 'Tendencia de Demanda')"></i>
+                                        </h6>
+                                        {% if image_data_line %}
+                                        <img src="data:image/png;base64,{{ image_data_line }}" 
+                                             class="chart-image" 
+                                             alt="Gráfico de tendencia de demanda"
+                                             loading="lazy">
+                                        {% else %}
+                                        <div class="loading-chart">
+                                            <div class="spinner"></div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Tab -->
+                        <div class="tab-pane fade" id="financial" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-money me-2"></i>
+                                            Ventas vs Demanda Insatisfecha
+                                        </h6>
+                                        {% if image_data_1 %}
+                                        <img src="data:image/png;base64,{{ image_data_1 }}" 
+                                             class="chart-image" 
+                                             alt="Ventas vs Demanda Insatisfecha"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-trending-down me-2"></i>
+                                            Análisis de Gastos
+                                        </h6>
+                                        {% if image_data_2 %}
+                                        <img src="data:image/png;base64,{{ image_data_2 }}" 
+                                             class="chart-image" 
+                                             alt="Análisis de gastos"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-calculator me-2"></i>
+                                            Costos de Producción
+                                        </h6>
+                                        {% if image_data_3 %}
+                                        <img src="data:image/png;base64,{{ image_data_3 }}" 
+                                             class="chart-image" 
+                                             alt="Costos de producción"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-stats me-2"></i>
+                                            ROI y Ganancias
+                                        </h6>
+                                        {% if image_data_8 %}
+                                        <img src="data:image/png;base64,{{ image_data_8 }}" 
+                                             class="chart-image" 
+                                             alt="ROI y Ganancias"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Operations Tab -->
+                        <div class="tab-pane fade" id="operations" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-package me-2"></i>
+                                            Costos Operativos
+                                        </h6>
+                                        {% if image_data_5 %}
+                                        <img src="data:image/png;base64,{{ image_data_5 }}" 
+                                             class="chart-image" 
+                                             alt="Costos operativos"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-box me-2"></i>
+                                            Producción vs Ventas
+                                        </h6>
+                                        {% if image_data_6 %}
+                                        <img src="data:image/png;base64,{{ image_data_6 }}" 
+                                             class="chart-image" 
+                                             alt="Producción vs Ventas"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-dollar-circle me-2"></i>
+                                            Costos Promedio
+                                        </h6>
+                                        {% if image_data_7 %}
+                                        <img src="data:image/png;base64,{{ image_data_7 }}" 
+                                             class="chart-image" 
+                                             alt="Costos promedio"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Demand Tab -->
+                        <div class="tab-pane fade" id="demand" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- Demand Table -->
+                                    <div class="data-table-container">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">
+                                                <i class="bx bx-table me-2"></i>
+                                                Tabla de Demanda Diaria
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive" style="max-height: 400px;">
+                                                <table class="table table-striped" id="demandTable">
                                                     <thead>
                                                         <tr>
-                                                            <th>Nombre</th>
-                                                            <th>Recomendacion</th>
-                                                            <th>Variable analizada</th>
+                                                            <th>Día</th>
+                                                            <th>Fecha</th>
+                                                            <th>Demanda (L)</th>
+                                                            <th>Desviación (%)</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {% for recommendation in financial_recommendations_to_show %}
-                                                            <tr>
-                                                                <td>{{ recommendation.name }}</td>
-                                                                <td>{{ recommendation.recommendation }}</td>
-                                                                <td>{{ recommendation.variable_name }}</td>
-                                                            </tr>
+                                                        {% for simulate in results %}
+                                                        <tr>
+                                                            <td>{{ forloop.counter }}</td>
+                                                            <td>{{ simulate.date|date:"d/m/Y" }}</td>
+                                                            <td class="fw-bold">{{ simulate.demand_mean|floatformat:"2" }}</td>
+                                                            <td>
+                                                                <span class="badge bg-info">
+                                                                    {{ simulate.demand_std_deviation|floatformat:"2" }}%
+                                                                </span>
+                                                            </td>
+                                                        </tr>
                                                         {% endfor %}
                                                     </tbody>
                                                 </table>
                                             </div>
                                         </div>
+                                        <div class="pagination-controls">
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevTablePage">
+                                                <i class="bx bx-chevron-left me-1"></i>Anterior
+                                            </button>
+                                            <span class="flex-grow-1 text-center small text-muted" id="tablePageInfo">
+                                                Página 1
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextTablePage">
+                                                Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    
-                                    <div class="col-md-9">
-                                        <div class="card mb-4">
-                                            <div class="card-body">
-                                                <h5 class="card-title">Gráficos</h5>
-                                                <p>Los gráficos de la simulación se muestran a continuación:</p>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_0 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_1 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <hr>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_2 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_3 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_5 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_6 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_7 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_8 }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <h4 class="card-title mb-0">Tabla Demanda</h4>
-                                                                
-                                                            </div>
-                                                            <div class="card-body">
-                                                                <div id="resultSimulationrList">
-                                                                    <div class="table-responsive table-card mt-3 mb-1">
-                                                                        <table class="table table-striped table-hover align-middle table-nowrap" id="simulateTable">
-                                                                            <thead class="thead-light">
-                                                                                <tr>
-                                                                                    <th class="sort" data-sort="day">Día</th>
-                                                                                    <th class="sort" data-sort="date">Fecha [AA-MM-DD]</th>
-                                                                                    <th class="sort" data-sort="demand">Demanda [Litros]</th>
-                                                                                    <th class="sort" data-sort="demand_std">Desviacion de la demanda [%]</th>
-                                                                                </tr>
-                                                                            </thead>
-                                                                            <tbody>
-                                                                                {% for simulate in results %}
-                                                                                    <tr>
-                                                                                        <td>{{ forloop.counter }}</td>
-                                                                                        <td class="date">{{ simulate.date|date:"Y-m-d" }}</td>
-                                                                                        <td class="demand">{{ simulate.demand_mean }}</td>
-                                                                                        <td class="demand_std">{{ simulate.demand_std_deviation }}</td>
-                                                                                    </tr>
-                                                                                {% endfor %}
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
-                                                                    <div class="d-flex justify-content-end">
-                                                                        <div class="pagination-wrap hstack gap-2">
-                                                                            <button id="prevPage" class="btn btn-primary">Anterior</button>
-                                                                            <span class="current">Página</span>
-                                                                            <button id="nextPage" class="btn btn-primary">Próxima</button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex justify-content-center align-items-center mt-4">
-                                                            <div class="chart-container">
-                                                                <img src="data:image/png;base64,{{ image_data_line }}" class="img-fluid my-3" alt="PDF Chart" style="max-width: 100%;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Key Metrics Table -->
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <h3 class="card-title fs-5 fw-bold">Valores Totales</h3>
-                                                <p>Valores totales de las variables analizadas</p>
-                                                <p>Los valores totales de las variables analizadas se muestran en la siguiente tabla:</p>
-                                                <div class="row">
-                                                    <div class="col-xl-12">
-                                                        <div class="card crm-widget">
-                                                            <div class="card-body p-0">
-                                                                <div class="row row-cols-md-3 row-cols-1">
-                                                                    {% for name_variable, info_variable in totales_acumulativos.items %}
-                                                                    <div class="card card-height-100">
-                                                                        <div class="card-body">
-                                                                            <div class="d-flex align-items-center">
-                                                                                <div class="avatar-sm flex-shrink-0">
-                                                                                    {% if info_variable.unit == "BS" %}
-                                                                                    <span class="avatar-title bg-danger text-white rounded-2 fs-2 shadow">
-                                                                                        <i class="bx bxs-badge-dollar"></i>
-                                                                                    </span>
-                                                                                    {% elif info_variable.unit == "CLIENTES" %}
-                                                                                    <span class="avatar-title bg-warning text-white rounded-2 fs-2 shadow">
-                                                                                        <i class="bx bxs-user-account"></i>
-                                                                                    </span>
-                                                                                    {% elif info_variable.unit == "L" %}
-                                                                                    <span class="avatar-title bg-info text-white rounded-2 fs-2 shadow">
-                                                                                        <i class="bx bx-store-alt"></i>
-                                                                                    </span>
-                                                                                    {% elif info_variable.unit == "%" %}
-                                                                                    <span class="avatar-title bg-info text-white rounded-2 fs-2 shadow">
-                                                                                        <i class="bx bx-store-alt"></i>
-                                                                                    </span>
-                                                                                    {% elif info_variable.unit == "Horas" %}
-                                                                                    <span class="avatar-title bg-light text-success rounded-2 fs-2 shadow">
-                                                                                        <i class="bx bx-alarm"></i>
-                                                                                    </span>
-                                                                                    {% elif info_variable.unit == "L/BS" %}
-                                                                                    <span class="avatar-title bg-light text-success rounded-2 fs-2 shadow">
-                                                                                        <i class="bx bx-adjust"></i>
-                                                                                    </span>
-                                                                                    {% elif info_variable.unit == "[0.1,0.3,0.5]" %}
-                                                                                    <span class="avatar-title bg-light text-success rounded-2 fs-2 shadow">
-                                                                                        <i class="bx bx-adjust"></i>
-                                                                                    </span>
-                                                                                    {% endif %}
-                                                                                </div>
-                                                                                <div class="flex-grow-1 ms-3">
-                                                                                    <p class="text-uppercase fw-medium text-muted mb-3" style="font-size: medium;">{{ name_variable }} </p>
-                                                                                    <p style="font-size: medium;">{{ info_variable.total|floatformat:2}} {% if info_variable.unit == "BS" %} Pesos Bolivianos {% elif info_variable.unit == "CLIENTES" %} Clientes {% elif info_variable.unit == "L" %} Litros {% elif info_variable.unit == "%" %} Porcentaje {% elif info_variable.unit == "Horas" %} Horas {% elif info_variable.unit == "L/BS" %} Litros/Pesos Bolivianos {% elif info_variable.unit == "[0.1,0.3,0.5]" %} Porcentaje {% endif %}</p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div><!-- end card body -->
-                                                                    </div><!-- end card -->
-                                                                    {% endfor %}
-                                                                </div><!-- end row -->
-                                                            </div><!-- end card body -->
-                                                        </div><!-- end card -->
-                                                    </div><!-- end col -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-line-chart-down me-2"></i>
+                                            Análisis de Demanda con Tendencias
+                                        </h6>
+                                        {% if image_data_line %}
+                                        <img src="data:image/png;base64,{{ image_data_line }}" 
+                                             class="chart-image" 
+                                             alt="Análisis de demanda"
+                                             loading="lazy">
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Summary Statistics -->
+                    <div class="metric-card mt-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bx bx-calculator me-2"></i>
+                                Resumen de Variables Totales
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for name_variable, info_variable in totales_acumulativos.items %}
+                                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                                    <div class="metric-card">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                {% if info_variable.unit == "BS" %}
+                                                <div class="avatar-lg mx-auto">
+                                                    <span class="avatar-title rounded-circle bg-danger text-white">
+                                                        <i class="bx bxs-badge-dollar"></i>
+                                                    </span>
+                                                </div>
+                                                {% elif info_variable.unit == "CLIENTES" %}
+                                                <div class="avatar-lg mx-auto">
+                                                    <span class="avatar-title rounded-circle bg-warning text-white">
+                                                        <i class="bx bxs-user-account"></i>
+                                                    </span>
+                                                </div>
+                                                {% elif info_variable.unit == "L" %}
+                                                <div class="avatar-lg mx-auto">
+                                                    <span class="avatar-title rounded-circle bg-info text-white">
+                                                        <i class="bx bx-droplet"></i>
+                                                    </span>
+                                                </div>
+                                                {% elif info_variable.unit == "Horas" %}
+                                                <div class="avatar-lg mx-auto">
+                                                    <span class="avatar-title rounded-circle bg-success text-white">
+                                                        <i class="bx bx-time"></i>
+                                                    </span>
+                                                </div>
+                                                {% else %}
+                                                <div class="avatar-lg mx-auto">
+                                                    <span class="avatar-title rounded-circle bg-primary text-white">
+                                                        <i class="bx bx-stats"></i>
+                                                    </span>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <h5 class="text-truncate tooltip-info" 
+                                                data-tooltip="{{ name_variable }}">
+                                                {{ name_variable|truncatechars:25 }}
+                                            </h5>
+                                            <h4 class="text-primary mb-1">{{ info_variable.total|floatformat:2 }}</h4>
+                                            <p class="text-muted mb-0">
+                                                {% if info_variable.unit == "BS" %}Pesos Bolivianos
+                                                {% elif info_variable.unit == "CLIENTES" %}Clientes
+                                                {% elif info_variable.unit == "L" %}Litros
+                                                {% elif info_variable.unit == "%" %}Porcentaje
+                                                {% elif info_variable.unit == "Horas" %}Horas
+                                                {% elif info_variable.unit == "L/BS" %}Litros/Bs.
+                                                {% elif info_variable.unit == "[0.1,0.3,0.5]" %}Porcentaje
+                                                {% else %}{{ info_variable.unit }}
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            <!-- ============================================================== -->
-            <!-- End Page content -->
-            <!-- ============================================================== -->
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
+            </div>
         </div>
-            <!-- End Page-content -->
-            
+    </div>
+
+    <!-- Fullscreen Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
+        <div class="fullscreen-content">
+            <img id="fullscreenImage" src="" alt="" class="img-fluid">
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
 </div>
-            <!-- end main content-->
 {% endblock %}
+
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Configuración inicial
-        var itemsPerPage = 10;
-        var currentPage = 1;
-        var totalItems = {{ results | length }};
-        var totalPages = Math.ceil(totalItems / itemsPerPage);
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize pagination for daily results
+    initializeDailyResultsPagination();
+    
+    // Initialize table pagination
+    initializeTablePagination();
+    
+    // Initialize fullscreen functionality
+    initializeFullscreen();
+    
+    // Initialize export functions
+    initializeExportFunctions();
+    
+    // Initialize tooltips
+    initializeTooltips();
+});
 
-        // Función para actualizar la página
-        function updatePage() {
-            // Oculta todas las filas de la tabla
-            $('#simulateTable tbody tr').hide();
-            
-            // Muestra solo las filas de la página actual
-            for (var i = (currentPage - 1) * itemsPerPage; i < currentPage * itemsPerPage; i++) {
-                var row = $('#simulateTable tbody tr:eq(' + i + ')');
-                row.find('.day').text(i + 1); // Agrega el número empezando desde 1
-                row.show();
-            }
-            
-            // Actualiza el texto de la paginación
-            $('.current').text('Página ' + currentPage + ' de ' + totalPages + '.');
+// Daily Results Pagination
+function initializeDailyResultsPagination() {
+    const totalDays = {{ all_variables_extracted|length }};
+    let currentDay = 1;
+    
+    const prevBtn = document.getElementById('prevDayBtn');
+    const nextBtn = document.getElementById('nextDayBtn');
+    const dayCounter = document.getElementById('dayCounter');
+    const currentDayIndicator = document.getElementById('currentDayIndicator');
+    
+    function updateDayDisplay() {
+        // Hide all items
+        document.querySelectorAll('.daily-result-item').forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        // Show current item
+        const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
+        if (currentItem) {
+            currentItem.style.display = 'block';
+            currentItem.style.animation = 'fadeIn 0.3s ease';
         }
-
-        // Botón Anterior
-        $('#prevPage').on('click', function () {
-            if (currentPage > 1) {
-                currentPage--;
-                updatePage();
-            }
-        });
-
-        // Botón Siguiente
-        $('#nextPage').on('click', function () {
-            if (currentPage < totalPages) {
-                currentPage++;
-                updatePage();
-            }
-        });
-
-        // Mostrar la página inicial
-        updatePage();
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Configuración inicial
-        var itemsPerPage = 1;
-        var currentPage = 1;
-        var totalItems = {{ all_variables_extracted | length }};
-        var totalPages = Math.ceil(totalItems / itemsPerPage);
-
-        // Función para actualizar la página
-        function updatePage() {
-            // Oculta todas las tablas
-            $('[id^="dataTable"]').hide();
-
-            // Muestra solo la tabla de la página actual
-            for (var i = (currentPage - 1) * itemsPerPage; i < currentPage * itemsPerPage; i++) {
-                $('#dataTable-' + (i + 1)).show();
-            }
-
-            // Actualiza el texto de la paginación
-            $('.current2').text('Página ' + currentPage + ' de ' + totalPages + '.');
+        
+        // Update counters
+        dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
+        currentDayIndicator.textContent = `Día ${currentDay}`;
+        
+        // Update button states
+        prevBtn.disabled = currentDay === 1;
+        nextBtn.disabled = currentDay === totalDays;
+        
+        // Add/remove button classes
+        prevBtn.classList.toggle('btn-outline-secondary', currentDay === 1);
+        prevBtn.classList.toggle('btn-outline-primary', currentDay > 1);
+        nextBtn.classList.toggle('btn-outline-secondary', currentDay === totalDays);
+        nextBtn.classList.toggle('btn-outline-primary', currentDay < totalDays);
+    }
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentDay > 1) {
+            currentDay--;
+            updateDayDisplay();
         }
-
-        // Botón Anterior
-        $('#prevPage2').on('click', function () {
-            if (currentPage > 1) {
-                currentPage--;
-                updatePage();
-            }
-        });
-
-        // Botón Siguiente
-        $('#nextPage2').on('click', function () {
-            if (currentPage < totalPages) {
-                currentPage++;
-                updatePage();
-            }
-        });
-
-        // Mostrar la página inicial
-        updatePage();
     });
-</script>
+    
+    nextBtn.addEventListener('click', function() {
+        if (currentDay < totalDays) {
+            currentDay++;
+            updateDayDisplay();
+        }
+    });
+    
+    // Initialize display
+    updateDayDisplay();
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'ArrowLeft' && currentDay > 1) {
+                e.preventDefault();
+                currentDay--;
+                updateDayDisplay();
+            } else if (e.key === 'ArrowRight' && currentDay < totalDays) {
+                e.preventDefault();
+                currentDay++;
+                updateDayDisplay();
+            }
+        }
+    });
+}
 
-<script>
-    // Obtén una referencia al elemento canvas
-    var ctx = document.getElementById('myChart').getContext('2d');
+// Table Pagination
+function initializeTablePagination() {
+    const table = document.getElementById('demandTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(rows.length / itemsPerPage);
+    let currentPage = 1;
+    
+    const prevBtn = document.getElementById('prevTablePage');
+    const nextBtn = document.getElementById('nextTablePage');
+    const pageInfo = document.getElementById('tablePageInfo');
+    
+    function updateTableDisplay() {
+        // Hide all rows
+        rows.forEach(row => row.style.display = 'none');
+        
+        // Show current page rows
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, rows.length);
+        
+        for (let i = startIndex; i < endIndex; i++) {
+            if (rows[i]) {
+                rows[i].style.display = 'table-row';
+                rows[i].style.animation = 'fadeIn 0.2s ease';
+            }
+        }
+        
+        // Update page info
+        pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+        
+        // Update button states
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+    }
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            updateTableDisplay();
+        }
+    });
+    
+    nextBtn.addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updateTableDisplay();
+        }
+    });
+    
+    // Initialize display
+    updateTableDisplay();
+}
 
-    // Define los datos para el gráfico
-    var data = {
-        labels: {{ demand_data|safe }},
-        datasets: [{
-            label: 'Demand',
-            data: {{ demand_data|safe }},
-            backgroundColor: 'rgba(0, 123, 255, 0.5)',  // Blue background
-            borderColor: 'rgba(0, 123, 255, 1)',        // Blue border
-            borderWidth: 1
-        }]
+// Fullscreen functionality
+function initializeFullscreen() {
+    window.openFullscreen = function(imageData, title) {
+        const overlay = document.getElementById('fullscreenOverlay');
+        const image = document.getElementById('fullscreenImage');
+        
+        image.src = `data:image/png;base64,${imageData}`;
+        image.alt = title;
+        overlay.style.display = 'flex';
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
     };
-
-    // Configura las opciones del gráfico
-    var options = {
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
+    
+    window.closeFullscreen = function() {
+        const overlay = document.getElementById('fullscreenOverlay');
+        overlay.style.display = 'none';
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
     };
-
-    // Crea el gráfico lineal
-    var myChart = new Chart(ctx, {
-        type: 'line',
-        data: data,
-        options: options
+    
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeFullscreen();
+        }
     });
+    
+    // Close on overlay click
+    document.getElementById('fullscreenOverlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeFullscreen();
+        }
+    });
+}
 
-    // Function to update the chart with data
-    function updateChart(data) {
-        var ctx = document.getElementById('myChart').getContext('2d');
-        var myChart = new Chart(ctx, {
-            type: 'line',
-            data: data,
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+// Export functionality
+function initializeExportFunctions() {
+    window.exportToPDF = function() {
+        // Show loading state
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando PDF...';
+        btn.disabled = true;
+        
+        // Simulate export process
+        setTimeout(() => {
+            // Here you would make an AJAX call to your Django view
+            fetch('/simulate/export/pdf/{{ simulation_instance.id }}/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
                 }
-            }
-        });
-    }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('Error al generar PDF');
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `simulacion_{{ simulation_instance.id }}_resultados.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('PDF generado exitosamente', 'success');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al generar PDF', 'error');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }, 1000);
+    };
+    
+    window.exportToExcel = function() {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando Excel...';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            // Here you would make an AJAX call to your Django view
+            showNotification('Funcionalidad de Excel en desarrollo', 'info');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 1000);
+    };
+}
 
-    // Function to update the table with data
-    function updateTable(data) {
-        var tableBody = document.querySelector("#simulateTable tbody");
-        tableBody.innerHTML = ""; // Clear the existing table rows
-        for (var i = 0; i < data.length; i++) {
-            var row = data[i];
-            var newRow = tableBody.insertRow();
-            newRow.innerHTML = "<td>" + row.date + "</td><td>" + row.variable + "</td><td>" + row.unit + "</td><td>" + row.unit_time + "</td><td>" + row.result + "</td>";
+// Tooltips
+function initializeTooltips() {
+    // Add CSS for fade animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-    }
+        .cursor-pointer { cursor: pointer; }
+    `;
+    document.head.appendChild(style);
+}
 
-    // Add a click event listener to the "Init" button
-    document.getElementById("initButton").addEventListener("click", function () {
-        // Make an AJAX request to your Django view to fetch data
-        $.ajax({
-            type: "GET",
-            url: "{% url 'simulate:simulate.show' %}", // Replace with the actual URL of your Django view
-            success: function (data) {
-                // Update the chart and table with the retrieved data
-                updateChart(data.chartData);
-                updateTable(data.tableData);
-            },
-            error: function () {
-                alert("Error fetching data from the server.");
-            }
-        });
-    });
-    document.getElementById('clearButton').addEventListener('click', function() {
-        document.getElementById('simulateForm').reset();
-    });
-    // Agregar un evento de cambio al elemento select
-    document.getElementById("ForminputState").addEventListener("change", function () {
-        // Obtener el elemento seleccionado
-        var selectedOption = this.options[this.selectedIndex];
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
+    
+    const icon = type === 'success' ? 'bx-check-circle' : 
+                 type === 'error' ? 'bx-error' : 
+                 'bx-info-circle';
+    
+    notification.innerHTML = `
+        <i class="bx ${icon} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
 
-        // Obtener los detalles del elemento seleccionado
-        var details = selectedOption.getAttribute("data-details");
-
-        // Mostrar los detalles en un área específica
-        var selectedDetails = document.getElementById("selectedDetails");
-        selectedDetails.innerHTML = details;
+// Chart loading states
+document.querySelectorAll('.chart-image').forEach(img => {
+    img.addEventListener('load', function() {
+        this.style.opacity = '0';
+        this.style.animation = 'fadeIn 0.5s ease forwards';
     });
+});
+
+// Smooth tab transitions
+document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function(e) {
+        const targetPane = document.querySelector(this.getAttribute('data-bs-target'));
+        if (targetPane) {
+            targetPane.style.animation = 'fadeIn 0.3s ease';
+        }
+    });
+});
 </script>
 {% endblock extra_js %}

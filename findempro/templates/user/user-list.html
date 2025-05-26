@@ -1,9 +1,12 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Users List{% endblock title %}
+{% block title %}Lista de Usuarios{% endblock title %}
 {% block extra_css %}
 <!-- Sweet Alert css-->
 <link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+<!-- DataTables CSS -->
+<link href="{% static 'libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'libs/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css' %}" rel="stylesheet" type="text/css" />
 {% endblock extra_css %}
 {% block content %}
             <!-- ============================================================== -->
@@ -15,37 +18,42 @@
                     <div class="container-fluid">
 
                         {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Administrator" title="Users" %}
+                        {% include "partials/page-title.html" with pagetitle="Administrador" title="Usuarios" %}
                         {% endblock pagetitle %}
 
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="card" id="userList">
                                     <div class="card-header border-bottom-dashed">
-    
                                         <div class="row g-4 align-items-center">
                                             <div class="col-sm">
                                                 <div>
                                                     <h5 class="card-title mb-0">Lista de usuarios</h5>
+                                                    <p class="text-muted mb-0">Gestiona todos los usuarios del sistema</p>
                                                 </div>
                                             </div>
                                             <div class="col-sm-auto">
                                                 <div class="d-flex flex-wrap align-items-start gap-2">
-                                                    <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
-                                                    <button type="button" class="btn btn-success add-btn"
-                                                        data-bs-toggle="modal" id="create-btn"
-                                                        data-bs-target="#showModal"><i
-                                                            class="ri-add-line align-bottom me-1"></i> Agregar usuario</button>
+                                                    <button class="btn btn-soft-danger" id="remove-actions" onclick="deleteMultiple()" style="display: none;">
+                                                        <i class="ri-delete-bin-2-line me-1"></i>Eliminar seleccionados
+                                                    </button>
+                                                    <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn" data-bs-target="#showModal">
+                                                        <i class="ri-add-line align-bottom me-1"></i> Agregar usuario
+                                                    </button>
+                                                    <button type="button" class="btn btn-info" onclick="exportData()">
+                                                        <i class="ri-download-line align-bottom me-1"></i> Exportar
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="card-body border-bottom-dashed border-bottom">
-                                        <form>
+                                        <form id="searchForm">
                                             <div class="row g-3">
                                                 <div class="col-xl-6">
                                                     <div class="search-box">
-                                                        <input type="text" class="form-control search"
-                                                            placeholder="Search for user, email, phone, status or something...">
+                                                        <input type="text" class="form-control search" id="searchInput"
+                                                            placeholder="Buscar por nombre, email, teléfono, estado...">
                                                         <i class="ri-search-line search-icon"></i>
                                                     </div>
                                                 </div>
@@ -54,32 +62,29 @@
                                                     <div class="row g-3">
                                                         <div class="col-sm-4">
                                                             <div class="">
-                                                                <input type="text" class="form-control"
-                                                                    id="datepicker-range" data-provider="flatpickr"
-                                                                    data-date-format="d M, Y" data-range-date="true"
-                                                                    placeholder="Select date">
+                                                                <input type="text" class="form-control" id="datepicker-range" 
+                                                                    data-provider="flatpickr" data-date-format="d M, Y" 
+                                                                    data-range-date="true" placeholder="Rango de fechas">
                                                             </div>
                                                         </div>
                                                         <!--end col-->
                                                         <div class="col-sm-4">
                                                             <div>
-                                                                <select class="form-control" data-plugin="choices"
-                                                                    data-choices data-choices-search-false
-                                                                    name="choices-single-default" id="idStatus">
+                                                                <select class="form-control" data-plugin="choices" data-choices 
+                                                                    data-choices-search-false name="choices-single-default" id="idStatus">
                                                                     <option value="">Estado</option>
                                                                     <option value="all" selected>Todos</option>
-                                                                    <option value="Active">Activa</option>
-                                                                    <option value="Deactived">Desactivado</option>
+                                                                    <option value="active">Activo</option>
+                                                                    <option value="inactive">Inactivo</option>
                                                                 </select>
                                                             </div>
                                                         </div>
                                                         <!--end col-->
-    
                                                         <div class="col-sm-4">
                                                             <div>
-                                                                <button type="button" class="btn btn-primary w-100"
-                                                                    onclick="SearchData();"> <i
-                                                                        class="ri-equalizer-fill me-2 align-bottom"></i>Filtros</button>
+                                                                <button type="button" class="btn btn-primary w-100" onclick="applyFilters()">
+                                                                    <i class="ri-equalizer-fill me-2 align-bottom"></i>Filtrar
+                                                                </button>
                                                             </div>
                                                         </div>
                                                         <!--end col-->
@@ -97,60 +102,99 @@
                                                         <tr>
                                                             <th scope="col" style="width: 50px;">
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        id="checkAll" value="option">
+                                                                    <input class="form-check-input" type="checkbox" id="checkAll" value="option">
                                                                 </div>
                                                             </th>
-    
-                                                            <th class="sort" data-sort="user_name">Usuaria</th>
+                                                            <th class="sort" data-sort="user_name">Usuario</th>
                                                             <th class="sort" data-sort="email">Correo electrónico</th>
-                                                            <th class="sort" data-sort="date">Dia de ingreso</th>
+                                                            <th class="sort" data-sort="date">Fecha de ingreso</th>
+                                                            <th class="sort" data-sort="last_login">Último acceso</th>
                                                             <th class="sort" data-sort="status">Estado</th>
-                                                            <th class="sort" data-sort="action">Acción</th>
+                                                            <th class="sort" data-sort="action">Acciones</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody class="list form-check-all">
                                                         {% for user in users %}
-                                                        <tr>
+                                                        <tr data-user-id="{{ user.id }}">
                                                             <th scope="row">
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        name="chk_child" value="option1">
+                                                                    <input class="form-check-input" type="checkbox" name="chk_child" value="{{ user.id }}">
                                                                 </div>
                                                             </th>
-                                                            <td class="id" style="display:none;"><a
-                                                                    href="javascript:void(0);"
-                                                                    class="fw-medium link-primary">{{ user.id }}</a></td>
-                                                            <td class="user_name">{{ user.username }}</td>
-                                                            <td class="email">{{ user.email }}</td>
-                                                            <td class="date">{{ user.date_joined|date:"d M,Y" }}</td>
-                                                            <td class="status">
-                                                                {% if user.is_active == 1 %}
-                                                                <span class="badge bg-success-subtle text-success text-uppercase">Activa</span>
+                                                            <td class="user_name">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="avatar-sm me-3">
+                                                                        {% if user.userprofile.image_src %}
+                                                                            <img src="{{ user.userprofile.get_photo_url }}" alt="" class="img-fluid rounded-circle">
+                                                                        {% else %}
+                                                                            <div class="avatar-title bg-soft-primary text-primary rounded-circle">
+                                                                                {{ user.first_name.0|default:user.username.0|upper }}
+                                                                            </div>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    <div>
+                                                                        <h6 class="mb-1">
+                                                                            {% if user.first_name and user.last_name %}
+                                                                                {{ user.first_name }} {{ user.last_name }}
+                                                                            {% else %}
+                                                                                {{ user.username }}
+                                                                            {% endif %}
+                                                                        </h6>
+                                                                        <p class="text-muted mb-0">@{{ user.username }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="email">{{ user.email|default:"Sin email" }}</td>
+                                                            <td class="date">{{ user.date_joined|date:"d M, Y" }}</td>
+                                                            <td class="last_login">
+                                                                {% if user.last_login %}
+                                                                    {{ user.last_login|date:"d M, Y" }}
+                                                                    <small class="text-muted d-block">{{ user.last_login|timesince }} ago</small>
                                                                 {% else %}
-                                                                <span class="badge bg-danger-subtle text-danger text-uppercase">Desactivada</span>
+                                                                    <span class="text-muted">Nunca</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td class="status">
+                                                                {% if user.is_active %}
+                                                                    <span class="badge bg-success-subtle text-success text-uppercase">Activo</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-danger-subtle text-danger text-uppercase">Inactivo</span>
+                                                                {% endif %}
+                                                                {% if user.is_staff %}
+                                                                    <span class="badge bg-info-subtle text-info text-uppercase ms-1">Admin</span>
                                                                 {% endif %}
                                                             </td>
                                                             <td>
-                                                                <ul class="list-inline hstack gap-2 mb-0">
-                                                                    <li class="list-inline-item edit"
-                                                                        data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                                                        data-bs-placement="top" title="Edit">
-                                                                        <a href="#showModal-{{ forloop.counter }}" data-bs-toggle="modal"
-                                                                            class="text-primary d-inline-block edit-item-btn">
-                                                                            <i class="ri-pencil-fill fs-16"></i>
-                                                                        </a>
-                                                                    </li>
-                                                                    <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                                        data-bs-trigger="hover" data-bs-placement="top"
-                                                                        title="Remove">
-                                                                        <a class="text-danger d-inline-block remove-item-btn"
-                                                                            data-bs-toggle="modal"
-                                                                            href="#deleteRecordModal-{{ forloop.counter }}">
-                                                                            <i class="ri-delete-bin-5-fill fs-16"></i>
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
+                                                                <div class="dropdown">
+                                                                    <a class="btn btn-soft-secondary btn-sm dropdown" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                        <i class="ri-more-fill"></i>
+                                                                    </a>
+                                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                                        <li><a class="dropdown-item" href="{% url 'user:user.profile' %}?user={{ user.id }}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> Ver perfil</a></li>
+                                                                        <li><a class="dropdown-item edit-item-btn" href="#" data-bs-toggle="modal" data-bs-target="#showModal" data-user-id="{{ user.id }}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Editar</a></li>
+                                                                        {% if user != request.user %}
+                                                                            <li><hr class="dropdown-divider"></li>
+                                                                            {% if user.is_active %}
+                                                                                <li><a class="dropdown-item text-warning" href="#" onclick="toggleUserStatus({{ user.id }}, false)"><i class="ri-forbid-line align-bottom me-2"></i> Desactivar</a></li>
+                                                                            {% else %}
+                                                                                <li><a class="dropdown-item text-success" href="#" onclick="toggleUserStatus({{ user.id }}, true)"><i class="ri-checkbox-circle-line align-bottom me-2"></i> Activar</a></li>
+                                                                            {% endif %}
+                                                                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteUser({{ user.id }})"><i class="ri-delete-bin-fill align-bottom me-2"></i> Eliminar</a></li>
+                                                                        {% endif %}
+                                                                    </ul>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {% empty %}
+                                                        <tr>
+                                                            <td colspan="7" class="text-center py-4">
+                                                                <div>
+                                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                                                        colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                                                                    </lord-icon>
+                                                                    <h5 class="mt-2">No hay usuarios registrados</h5>
+                                                                    <p class="text-muted">Comienza agregando el primer usuario al sistema</p>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                         {% endfor %}
@@ -158,157 +202,93 @@
                                                 </table>
                                                 <div class="noresult" style="display: none">
                                                     <div class="text-center">
-                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json"
-                                                            trigger="loop" colors="primary:#121331,secondary:#08a88a"
-                                                            style="width:75px;height:75px">
+                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                                            colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
                                                         </lord-icon>
-                                                        <h5 class="mt-2">¡Lo siento!No se han encontrado resultados</h5>
+                                                        <h5 class="mt-2">¡Lo siento! No se encontraron resultados</h5>
+                                                        <p class="text-muted mb-0">Intenta ajustar tus filtros de búsqueda</p>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="d-flex justify-content-end">
-                                                <div class="pagination-wrap hstack gap-2">
-                                                    <a class="page-item pagination-prev disabled" href="#">
-                                                        Anterior
-                                                    </a>
-                                                    <ul class="pagination listjs-pagination mb-0"></ul>
-                                                    <a class="page-item pagination-next" href="#">
-                                                        Próxima
-                                                    </a>
-                                                </div>
-                                            </div>
                                         </div>
+                                        
+                                        <!-- Modal para crear/editar usuario -->
                                         <div class="modal fade" id="showModal" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
                                                     <div class="modal-header bg-light p-3">
-                                                        <h5 class="modal-title" id="exampleModalLabel"></h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close" id="close-modal"></button>
+                                                        <h5 class="modal-title" id="exampleModalLabel">Crear Usuario</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
                                                     </div>
-                                                    <form action="{% url 'user:user.list' %}" method="POST" enctype="multipart/form-data">
+                                                    <form id="userForm" class="needs-validation" novalidate>
                                                         {% csrf_token %}
                                                         <div class="modal-body">
-                                                            <input type="hidden" id="id-field" />
-    
-                                                            <div class="mb-3" id="modal-id" style="display: none;">
-                                                                <label for="id-field1" class="form-label">ID</label>
-                                                                <input type="text" id="id-field1" class="form-control"
-                                                                    placeholder="ID" readonly />
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="username-field" class="form-label">Nombre de usuario</label>
-                                                                <input type="text" name="name"
-                                                                    class="form-control" placeholder="Enter name"
-                                                                    required />
+                                                            <input type="hidden" id="user-id" name="user_id" />
+                                                            
+                                                            <div class="row">
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="username-field" class="form-label">Nombre de usuario <span class="text-danger">*</span></label>
+                                                                    <input type="text" name="username" class="form-control" placeholder="Ingresa nombre de usuario" required />
                                                                     <div class="invalid-feedback">Por favor, ingrese un nombre de usuario.</div>
+                                                                </div>
+                                                                
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="email-field" class="form-label">Email <span class="text-danger">*</span></label>
+                                                                    <input type="email" name="email" class="form-control" placeholder="Ingresa email" required />
+                                                                    <div class="invalid-feedback">Ingrese un correo electrónico válido.</div>
+                                                                </div>
                                                             </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="email-field" class="form-label">Email</label>
-                                                                <input type="email" name="email_id" class="form-control"
-                                                                    placeholder="Enter email" required />
-                                                                <div class="invalid-feedback">Ingrese un correo electrónico.</div>
+                                                            
+                                                            <div class="row">
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="first-name-field" class="form-label">Nombre</label>
+                                                                    <input type="text" name="first_name" class="form-control" placeholder="Ingresa nombre" />
+                                                                </div>
+                                                                
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="last-name-field" class="form-label">Apellido</label>
+                                                                    <input type="text" name="last_name" class="form-control" placeholder="Ingresa apellido" />
+                                                                </div>
                                                             </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="phone-field" class="form-label">Password</label>
-                                                                <input type="text" name="phone" class="form-control"
-                                                                    placeholder="Enter phone no." required />
-                                                                <div class="invalid-feedback">Ingrese una contrasenia.</div>
+                                                            
+                                                            <div class="row" id="password-fields">
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="password-field" class="form-label">Contraseña <span class="text-danger">*</span></label>
+                                                                    <input type="password" name="password" class="form-control" placeholder="Ingresa contraseña" required />
+                                                                    <div class="invalid-feedback">Ingrese una contraseña.</div>
+                                                                </div>
+                                                                
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="confirm-password-field" class="form-label">Confirmar Contraseña <span class="text-danger">*</span></label>
+                                                                    <input type="password" name="confirm_password" class="form-control" placeholder="Confirma contraseña" required />
+                                                                    <div class="invalid-feedback">Las contraseñas no coinciden.</div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <div class="hstack gap-2 justify-content-end">
-                                                                <button type="button" class="btn btn-light"
-                                                                    data-bs-dismiss="modal">Close</button>
-                                                                <button type="submit" class="btn btn-success"
-                                                                    id="add-btn">Add User</button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-    
-                                        {% for user in users %}
-                                        <div class="modal fade" id="showModal-{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content">
-                                                    <div class="modal-header bg-light p-3">
-                                                        <h5 class="modal-title" id="exampleModalLabel">Edit User</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close" id="close-modal"></button>
-                                                    </div>
-                                                    <form action="{% url 'user:user.edit' user.id %}" method="POST" enctype="multipart/form-data">
-                                                        {% csrf_token %}
-                                                        <div class="modal-body">
-                                                            <input type="hidden" id="id-field" />
-    
-                                                            <div class="mb-3" id="modal-id" style="display: none;">
-                                                                <label for="id-field1" class="form-label">ID</label>
-                                                                <input type="text" id="id-field1" class="form-control"
-                                                                    placeholder="ID" readonly />
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="username-field" class="form-label">User
-                                                                    Name</label>
-                                                                <input type="text" name="name" value="{{ user.name }}"
-                                                                    class="form-control" placeholder="Enter name"
-                                                                    required />
-                                                                    <div class="invalid-feedback">Please enter a user name.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="email-field" class="form-label">Email</label>
-                                                                <input type="email" name="email_id" class="form-control" value="{{ user.email_id }}"
-                                                                    placeholder="Enter email" required />
-                                                                <div class="invalid-feedback">Please enter an email.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="phone-field" class="form-label">Phone</label>
-                                                                <input type="text" name="phone" class="form-control" value="{{ user.phone }}"
-                                                                    placeholder="Enter phone no." required />
-                                                                <div class="invalid-feedback">Please enter a phone.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="date-field" class="form-label">Joining
-                                                                    Date</label>
-                                                                <input type="date" name="joining_date" class="form-control"
-                                                                    data-provider="flatpickr" data-date-format="Y-m-d" value="{{ user.joining_date|date:"Y-m-d" }}"
-                                                                    required placeholder="Select date" />
-                                                                <div class="invalid-feedback">Please select a date.</div>
-                                                            </div>
-    
-                                                            <div>
-                                                                <label for="status-field" class="form-label">Status</label>
-                                                                <select class="form-control" data-trigger
-                                                                    name="status" id="status-field" required>
-                                                                    <option value="">Status</option>
-                                                                    {% if user.status == "Active" %}
-                                                                    <option value="Active" selected>Active</option>
-                                                                    {% else %}
-                                                                    <option value="Active">Active</option>
-                                                                    {% endif %}
-                                                                    {% if user.status == "Block" %}
-                                                                    <option value="Block" selected>Block</option>
-                                                                    {% else %}
-                                                                    <option value="Block">Block</option>
-                                                                    {% endif %}
-                                                                    
-                                                                </select>
+                                                            
+                                                            <div class="row">
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="is-staff-field" class="form-label">Tipo de usuario</label>
+                                                                    <select class="form-control" name="is_staff">
+                                                                        <option value="false">Usuario regular</option>
+                                                                        <option value="true">Administrador</option>
+                                                                    </select>
+                                                                </div>
+                                                                
+                                                                <div class="col-lg-6 mb-3">
+                                                                    <label for="is-active-field" class="form-label">Estado</label>
+                                                                    <select class="form-control" name="is_active">
+                                                                        <option value="true">Activo</option>
+                                                                        <option value="false">Inactivo</option>
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer">
                                                             <div class="hstack gap-2 justify-content-end">
-                                                                <button type="button" class="btn btn-light"
-                                                                    data-bs-dismiss="modal">Close</button>
-                                                                <button type="submit" class="btn btn-success"
-                                                                    id="add-btn">Update</button>
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                                                <button type="submit" class="btn btn-success" id="add-btn">
+                                                                    <i class="ri-save-line align-bottom me-1"></i> Guardar Usuario
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </form>
@@ -316,46 +296,37 @@
                                             </div>
                                         </div>
 
-                                        <!-- Modal -->
-                                        <div class="modal fade zoomIn" id="deleteRecordModal-{{ forloop.counter }}" tabindex="-1"
-                                            aria-hidden="true">
+                                        <!-- Modal de confirmación para eliminar -->
+                                        <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close" id="deleteRecord-close"></button>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
                                                         <div class="mt-2 text-center">
-                                                            <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json"
-                                                                trigger="loop" colors="primary:#f7b84b,secondary:#f06548"
-                                                                style="width:100px;height:100px"></lord-icon>
+                                                            <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
+                                                                colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
                                                             <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                                                                <h4>Are you sure ?</h4>
-                                                                <p class="text-muted mx-4 mb-0">Are you sure you want to
-                                                                    remove this record ?</p>
+                                                                <h4>¿Estás seguro?</h4>
+                                                                <p class="text-muted mx-4 mb-0">¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.</p>
                                                             </div>
                                                         </div>
                                                         <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                                                            <button type="button" class="btn w-sm btn-light"
-                                                                data-bs-dismiss="modal">Close</button>
-                                                            <a type="button" class="btn w-sm btn-danger "
-                                                                id="delete-record" href="{% url 'user:user.delete' user.id %}">Yes, Delete It!</a>
+                                                            <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="button" class="btn w-sm btn-danger" id="delete-record">¡Sí, eliminar!</button>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        {% endfor %}
                                         <!--end modal -->
                                     </div>
                                 </div>
-    
                             </div>
                             <!--end col-->
                         </div>
                         <!--end row-->
-    
                     </div>
                     <!-- container-fluid -->
                 </div>
@@ -368,5 +339,421 @@
             <!-- end main content-->
 {% endblock content %}
 {% block extra_js %}
+<!-- Sweet Alerts js -->
+<script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+<!-- DataTables JS -->
+<script src="{% static 'libs/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
+<script src="{% static 'libs/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
 
+<script>
+// Variables globales
+let userTable;
+let currentUserId = null;
+
+// Función para obtener CSRF token
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// Inicializar DataTable
+document.addEventListener('DOMContentLoaded', function() {
+    userTable = $('#userTable').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+        },
+        columnDefs: [
+            { orderable: false, targets: [0, 6] } // Deshabilitar ordenamiento en checkbox y acciones
+        ]
+    });
+    
+    // Inicializar eventos
+    initializeEvents();
+});
+
+function initializeEvents() {
+    // Checkbox select all
+    document.getElementById('checkAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="chk_child"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        toggleDeleteButton();
+    });
+    
+    // Individual checkboxes
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'chk_child') {
+            toggleDeleteButton();
+        }
+    });
+    
+    // Formulario de usuario
+    document.getElementById('userForm').addEventListener('submit', handleUserSubmit);
+    
+    // Modal events
+    document.getElementById('showModal').addEventListener('show.bs.modal', function() {
+        resetUserForm();
+    });
+    
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        userTable.search(this.value).draw();
+    });
+}
+
+function toggleDeleteButton() {
+    const checkedBoxes = document.querySelectorAll('input[name="chk_child"]:checked');
+    const deleteButton = document.getElementById('remove-actions');
+    
+    if (checkedBoxes.length > 0) {
+        deleteButton.style.display = 'inline-block';
+    } else {
+        deleteButton.style.display = 'none';
+    }
+}
+
+function resetUserForm() {
+    const form = document.getElementById('userForm');
+    const modalTitle = document.getElementById('exampleModalLabel');
+    const submitBtn = document.getElementById('add-btn');
+    
+    form.reset();
+    form.classList.remove('was-validated');
+    
+    // Limpiar errores
+    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    
+    // Resetear a modo crear
+    currentUserId = null;
+    document.getElementById('user-id').value = '';
+    modalTitle.textContent = 'Crear Usuario';
+    submitBtn.innerHTML = '<i class="ri-save-line align-bottom me-1"></i> Guardar Usuario';
+    
+    // Mostrar campos de contraseña
+    document.getElementById('password-fields').style.display = 'block';
+    form.querySelectorAll('input[name="password"], input[name="confirm_password"]').forEach(input => {
+        input.required = true;
+    });
+}
+
+function editUser(userId) {
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!row) return;
+    
+    currentUserId = userId;
+    const modalTitle = document.getElementById('exampleModalLabel');
+    const submitBtn = document.getElementById('add-btn');
+    const form = document.getElementById('userForm');
+    
+    modalTitle.textContent = 'Editar Usuario';
+    submitBtn.innerHTML = '<i class="ri-save-line align-bottom me-1"></i> Actualizar Usuario';
+    
+    // Ocultar campos de contraseña en modo edición
+    document.getElementById('password-fields').style.display = 'none';
+    form.querySelectorAll('input[name="password"], input[name="confirm_password"]').forEach(input => {
+        input.required = false;
+    });
+    
+    document.getElementById('user-id').value = userId;
+    
+    // Aquí deberías hacer una llamada AJAX para obtener los datos del usuario
+    // Por ahora, usaremos los datos del DOM
+    fetchUserData(userId);
+}
+
+async function fetchUserData(userId) {
+    try {
+        const response = await fetch(`/user/api/${userId}/`, {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        });
+        
+        if (response.ok) {
+            const userData = await response.json();
+            populateUserForm(userData);
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        showAlert('error', 'Error al cargar los datos del usuario');
+    }
+}
+
+function populateUserForm(userData) {
+    const form = document.getElementById('userForm');
+    Object.keys(userData).forEach(key => {
+        const input = form.querySelector(`[name="${key}"]`);
+        if (input) {
+            input.value = userData[key];
+        }
+    });
+}
+
+async function handleUserSubmit(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const form = e.target;
+    const submitBtn = document.getElementById('add-btn');
+    const originalBtnText = submitBtn.innerHTML;
+    
+    // Validación del lado del cliente
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+    
+    // Validar contraseñas coincidentes
+    const password = form.querySelector('[name="password"]').value;
+    const confirmPassword = form.querySelector('[name="confirm_password"]').value;
+    
+    if (password && password !== confirmPassword) {
+        form.querySelector('[name="confirm_password"]').classList.add('is-invalid');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    submitBtn.innerHTML = '<i class="ri-loader-2-line me-1 spin"></i> Guardando...';
+    submitBtn.disabled = true;
+    
+    try {
+        const formData = new FormData(form);
+        const url = currentUserId ? 
+            `{% url 'user:user.edit' 0 %}`.replace('0', currentUserId) : 
+            '{% url "user:user.create" %}';
+            
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+        });
+        
+        if (response.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('showModal'));
+            modal.hide();
+            
+            showAlert('success', `Usuario ${currentUserId ? 'actualizado' : 'creado'} correctamente`);
+            
+            // Recargar la tabla
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            const responseData = await response.json();
+            handleFormErrors(responseData.errors || {});
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'Error de conexión. Inténtalo de nuevo.');
+    } finally {
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+    }
+}
+
+function handleFormErrors(errors) {
+    Object.keys(errors).forEach(field => {
+        const input = document.querySelector(`[name="${field}"]`);
+        if (input) {
+            input.classList.add('is-invalid');
+            const feedback = input.parentNode.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.textContent = errors[field][0];
+            }
+        }
+    });
+}
+
+async function toggleUserStatus(userId, activate) {
+    const action = activate ? 'activar' : 'desactivar';
+    
+    const result = await Swal.fire({
+        title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} usuario?`,
+        text: `¿Estás seguro de que quieres ${action} este usuario?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: activate ? '#28a745' : '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: `Sí, ${action}`,
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/user/toggle-status/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ active: activate })
+            });
+            
+            if (response.ok) {
+                showAlert('success', `Usuario ${action}do correctamente`);
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showAlert('error', `Error al ${action} el usuario`);
+            }
+        } catch (error) {
+            showAlert('error', 'Error de conexión');
+        }
+    }
+}
+
+async function deleteUser(userId) {
+    const result = await Swal.fire({
+        title: '¿Eliminar usuario?',
+        text: '¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`{% url 'user:user.delete' 0 %}`.replace('0', userId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            });
+            
+            if (response.ok) {
+                showAlert('success', 'Usuario eliminado correctamente');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showAlert('error', 'Error al eliminar el usuario');
+            }
+        } catch (error) {
+            showAlert('error', 'Error de conexión');
+        }
+    }
+}
+
+async function deleteMultiple() {
+    const checkedBoxes = document.querySelectorAll('input[name="chk_child"]:checked');
+    const userIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (userIds.length === 0) return;
+    
+    const result = await Swal.fire({
+        title: `¿Eliminar ${userIds.length} usuarios?`,
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar todos',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch('{% url "user:user.bulk_delete" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ user_ids: userIds })
+            });
+            
+            if (response.ok) {
+                showAlert('success', `${userIds.length} usuarios eliminados correctamente`);
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showAlert('error', 'Error al eliminar los usuarios');
+            }
+        } catch (error) {
+            showAlert('error', 'Error de conexión');
+        }
+    }
+}
+
+function applyFilters() {
+    // Aquí puedes implementar filtros personalizados
+    const status = document.getElementById('idStatus').value;
+    const dateRange = document.getElementById('datepicker-range').value;
+    
+    if (status && status !== 'all') {
+        userTable.column(5).search(status === 'active' ? 'Activo' : 'Inactivo').draw();
+    } else {
+        userTable.column(5).search('').draw();
+    }
+}
+
+function exportData() {
+    // Implementar exportación de datos
+    const data = userTable.data().toArray();
+    console.log('Exporting data:', data);
+    showAlert('info', 'Función de exportación en desarrollo');
+}
+
+function showAlert(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+    const icon = type === 'success' ? 'ri-check-circle-line' : type === 'error' ? 'ri-error-warning-line' : 'ri-information-line';
+    
+    const alertContainer = document.createElement('div');
+    alertContainer.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alertContainer.style.zIndex = '9999';
+    alertContainer.innerHTML = `
+        <i class="${icon} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertContainer);
+    
+    setTimeout(() => {
+        if (alertContainer.parentNode) {
+            alertContainer.remove();
+        }
+    }, 5000);
+}
+
+// Event delegation para botones dinámicos
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.edit-item-btn')) {
+        e.preventDefault();
+        const userId = e.target.closest('.edit-item-btn').dataset.userId;
+        editUser(userId);
+    }
+});
+
+// Animación para el spinner
+const style = document.createElement('style');
+style.textContent = `
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .alert {
+        animation: slideInRight 0.5s ease-out;
+    }
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock extra_js %}

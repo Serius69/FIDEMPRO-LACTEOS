@@ -49,11 +49,11 @@
               <form method="GET" action="{% url 'variable:variable.list' %}">
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label for="business-select" class="form-label">Seleccione el producto</label>
-                    <select class="form-control" id="business-select" name="business_id">
+                    <label for="product-select" class="form-label">Seleccione el producto</label>
+                    <select class="form-control" id="product-select" name="product_id">
                       <option value="All">Todos los productos</option>
                       {% for product in products %}
-                      <option value="{{ product.id }}" {% if request.GET.type == "{{ product.id }}" %}selected{% endif %}>
+                      <option value="{{ product.id }}" {% if request.GET.product_id == product.id|stringformat:"s" %}selected{% endif %}>
                         {{ product.name }}
                       </option>
                       {% empty %}
@@ -65,9 +65,9 @@
                     <label for="type-select" class="form-label">Seleccione el tipo</label>
                     <select class="form-control" id="type-select" name="type">
                       <option value="All">Todos los tipos</option>
-                      <option value="Endogena">Endógena</option>
-                      <option value="Exogena">Exógena</option>
-                      <option value="Estado">Estado</option>
+                      <option value="1" {% if request.GET.type == "1" %}selected{% endif %}>Exógena</option>
+                      <option value="2" {% if request.GET.type == "2" %}selected{% endif %}>Estado</option>
+                      <option value="3" {% if request.GET.type == "3" %}selected{% endif %}>Endógena</option>
                     </select>
                   </div>
                   <div class="col-md-4">
@@ -113,7 +113,7 @@
                                             <p class="company-name text-muted mb-0">{{variable.fk_product.name}}</p>
                                         </div>
                                     </div>
-                                    <p class="text-muted job-description">{{variable.description}}</p>
+                                    <p class="text-muted job-description">{{variable.description|truncatechars:80}}</p>
                                 </div>
                             </div>
                         </div>
@@ -123,11 +123,11 @@
                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                                         <div>
                                             <i class="ri-briefcase-2-line align-bottom me-1"></i>
-                                            <span class="job-type">{{variable.fk_product.name}}</span>
+                                            <span class="job-type">{{variable.fk_product.name|truncatechars:15}}</span>
                                         </div>
                                         <div>
                                             <i class="ri-function-line align-bottom me-1"></i>
-                                            <span class="job-location">{{variable.unit}}</span>
+                                            <span class="job-location">{{variable.unit|default:"N/A"}}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -135,7 +135,11 @@
                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                                       <div>
                                         <i class="ri-battery-fill align-bottom me-1"></i>
-                                        
+                                        <span class="badge 
+                                        {% if variable.type == 1 %}bg-success-subtle text-success
+                                        {% elif variable.type == 2 %}bg-info-subtle text-info
+                                        {% elif variable.type == 3 %}bg-warning-subtle text-warning
+                                        {% else %}bg-primary-subtle text-primary{% endif %}">
                                         {% if variable.type == 1 %}
                                             Exógena
                                         {% elif variable.type == 2 %}
@@ -145,16 +149,17 @@
                                         {% else %}
                                             Otro Tipo
                                         {% endif %}
+                                        </span>
                                       </div>
                                       <div>
                                           <i class="ri-time-line align-bottom me-1"></i>
-                                          <span class="job-postdate">{{ variable.date_created|date:"F j, Y" }}</span>
+                                          <span class="job-postdate">{{ variable.date_created|date:"M j, Y" }}</span>
                                       </div>
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="dropdown">
-                                        <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                        <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <i data-feather="more-horizontal" class="icon-sm"></i>
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-end">
@@ -169,7 +174,7 @@
                                               Editar
                                             </a>
                                             <div class="dropdown-divider"></div>
-                                            <a id="delete-variable-link" class="dropdown-item delete-variable" 
+                                            <a href="#" class="dropdown-item delete-variable" 
                                               data-bs-toggle="modal" data-bs-target="#removeVariableModal" 
                                               data-variable-id="{{ variable.id }}">
                                               <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
@@ -183,29 +188,30 @@
                     </div>
                 </div>
                 {% empty %}
-              <div class="text-center py-4">
-                <lord-icon
-                  src="https://cdn.lordicon.com/msoeawqm.json"
-                  trigger="loop"
-                  colors="primary:#405189,secondary:#0ab39c"
-                  style="width: 75px; height: 75px"
-                ></lord-icon>
-                <h5 class="mt-2"
-                  >Lo siento, no hay ningún registro variable en la base de datos</h5
-                >
-                <p class="text-muted mb-0">Tienes que "agregar producto".</p>
+              <div class="col-12">
+                <div class="text-center py-4">
+                  <lord-icon
+                    src="https://cdn.lordicon.com/msoeawqm.json"
+                    trigger="loop"
+                    colors="primary:#405189,secondary:#0ab39c"
+                    style="width: 75px; height: 75px"
+                  ></lord-icon>
+                  <h5 class="mt-2">Lo siento, no hay ningún registro variable en la base de datos</h5>
+                  <p class="text-muted mb-0">Tienes que "agregar variable".</p>
+                </div>
               </div>
             {% endfor %}
         </div>
+          
           <!-- Pagination -->
+          {% if variables.has_other_pages %}
           <div class="align-items-center mt-2 row text-center text-sm-start">
             <div class="col-sm">
-              <div class="text-muted"
-                >Mostrar
-                <span class="fw-semibold">{{ variables.number }}</span> de
-                <span class="fw-semibold"
-                  >{{ variables.paginator.num_pages }}</span
-                >
+              <div class="text-muted">
+                Mostrar
+                <span class="fw-semibold">{{ variables.start_index }}</span> a
+                <span class="fw-semibold">{{ variables.end_index }}</span> de
+                <span class="fw-semibold">{{ variables.paginator.count }}</span>
                 Resultados
               </div>
             </div>
@@ -213,13 +219,13 @@
               <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
                 {% if variables.has_previous %}
                   <li class="page-item">
-                    <a href="?page={{ variables.previous_page_number }}" class="page-link">←</a>
+                    <a href="?page={{ variables.previous_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">←</a>
                   </li>
                 {% endif %}
 
                 {% if variables.number|add:"-3" > 1 %}
                   <li class="page-item">
-                    <a href="?page=1" class="page-link">1</a>
+                    <a href="?page=1{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">1</a>
                   </li>
                   <li class="page-item disabled">
                     <span class="page-link">...</span>
@@ -229,7 +235,7 @@
                 {% for i in variables.paginator.page_range %}
                   {% if variables.number|add:"-3" <= i <= variables.number|add:"3" %}
                     <li class="page-item {% if i == variables.number %}active{% endif %}">
-                      <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+                      <a href="?page={{ i }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ i }}</a>
                     </li>
                   {% endif %}
                 {% endfor %}
@@ -239,18 +245,19 @@
                     <span class="page-link">...</span>
                   </li>
                   <li class="page-item">
-                    <a href="?page={{ variables.paginator.num_pages }}" class="page-link">{{ variables.paginator.num_pages }}</a>
+                    <a href="?page={{ variables.paginator.num_pages }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ variables.paginator.num_pages }}</a>
                   </li>
                 {% endif %}
 
                 {% if variables.has_next %}
                   <li class="page-item">
-                    <a href="?page={{ variables.next_page_number }}" class="page-link">→</a>
+                    <a href="?page={{ variables.next_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">→</a>
                   </li>
                 {% endif %}
               </ul>
             </div>            
           </div>
+          {% endif %}
           <!-- end row -->
         </div>
     </div>

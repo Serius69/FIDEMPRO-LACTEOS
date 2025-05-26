@@ -1,0 +1,988 @@
+ERROR 2025-05-23 23:39:21,545 views 3756 35216 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:40:50,710 views 3756 35216 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:40:55,143 views 3756 35216 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:40:55,200 views 3756 35216 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:40:57,714 views 3756 35216 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:41:01,660 views 3756 35216 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:41:01,712 views 3756 35216 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:41:08,865 views 3756 35216 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-23 23:41:11,979 views 3756 35216 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-23 23:43:43,338 views 4236 6900 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:46:28,041 views 4236 37100 Error en index view: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-23 23:53:27,363 views 4236 30764 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-24 09:27:46,658 views 18996 21580 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-25 11:43:24,612 views 30352 32016 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-25 11:48:17,620 views 16032 28700 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-25 12:23:48,820 views 32312 26312 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-25 12:30:37,444 views 33932 29620 Error in dashboard_user: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 248, in dashboard_user
+    totals = DashboardService.calculate_totals(metrics['simulations'])
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 111, in calculate_totals
+    for simulation in simulations:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 398, in __iter__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'simulate_simulation.confidence_level' in 'field list'")
+ERROR 2025-05-25 18:50:36,560 views 34108 39672 Error in dashboard_user: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 321, in render
+    return nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 471, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-25 18:53:04,237 views 34108 33212 Error in dashboard_user: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 321, in render
+    return nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 471, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-25 18:54:31,631 views 34108 9272 Error in dashboard_user: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 321, in render
+    return nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 471, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'simulate.create' not found. 'simulate.create' is not a valid view function or pattern name.
+ERROR 2025-05-25 18:55:41,814 views 34108 9272 Error in dashboard_user: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 320, in render
+    if match:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 412, in __bool__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+ERROR 2025-05-25 18:56:03,249 views 34108 39552 Error in dashboard_user: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 320, in render
+    if match:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 412, in __bool__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+ERROR 2025-05-25 18:56:17,306 views 34108 39552 Error in dashboard_user: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 320, in render
+    if match:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 412, in __bool__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+ERROR 2025-05-25 18:56:23,390 views 34108 39552 Error in dashboard_user: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 320, in render
+    if match:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 412, in __bool__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+ERROR 2025-05-25 18:56:28,989 views 34108 33636 Error in dashboard_user: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\dashboards\views.py", line 287, in dashboard_user
+    return render(request, 'dashboards/dashboard-user.html', context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 1005, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\template\defaulttags.py", line 320, in render
+    if match:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 412, in __bool__
+    self._fetch_all()
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 1881, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\models\sql\compiler.py", line 1562, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "C:\Users\serio\FIDEMPRO-LACTEOS\findempro\venv\lib\site-packages\MySQLdb\connections.py", line 255, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'user_activitylog.ip_address' in 'field list'")

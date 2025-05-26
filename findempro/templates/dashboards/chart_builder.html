@@ -1,0 +1,840 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Constructor de Gráficos{% endblock title %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .chart-preview {
+        min-height: 400px;
+        border: 2px dashed #dee2e6;
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        position: relative;
+    }
+    
+    .chart-preview.has-chart {
+        border-style: solid;
+        border-color: #0ab39c;
+    }
+    
+    .dataset-item {
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .dataset-item .remove-dataset {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+    
+    .color-picker {
+        width: 50px;
+        height: 35px;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        cursor: pointer;
+    }
+    
+    .code-preview {
+        background-color: #2d3748;
+        color: #e2e8f0;
+        padding: 1rem;
+        border-radius: 0.375rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+    }
+    
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+    
+    .step-indicator .step {
+        flex: 1;
+        text-align: center;
+        padding: 0.5rem;
+        border-bottom: 3px solid #dee2e6;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+    
+    .step-indicator .step.active {
+        border-color: #0ab39c;
+        color: #0ab39c;
+        font-weight: 600;
+    }
+    
+    .step-indicator .step.completed {
+        border-color: #0ab39c;
+        color: #0ab39c;
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Constructor de Gráficos</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Constructor de Gráficos</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator mb-4">
+                <div class="step active" id="step-1">
+                    <i class="ri-settings-3-line"></i> Configuración Básica
+                </div>
+                <div class="step" id="step-2">
+                    <i class="ri-database-2-line"></i> Datos
+                </div>
+                <div class="step" id="step-3">
+                    <i class="ri-palette-line"></i> Estilo
+                </div>
+                <div class="step" id="step-4">
+                    <i class="ri-eye-line"></i> Vista Previa
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Configuration Panel -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Configuración del Gráfico</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="chartBuilderForm">
+                                {% csrf_token %}
+                                
+                                <!-- Step 1: Basic Configuration -->
+                                <div class="step-content" id="step-1-content">
+                                    <div class="mb-3">
+                                        <label for="chartTitle" class="form-label">Título del Gráfico</label>
+                                        <input type="text" class="form-control" id="chartTitle" 
+                                               placeholder="Ej: Ventas Mensuales 2024" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="productSelect" class="form-label">Producto</label>
+                                        <select class="form-select" id="productSelect" required>
+                                            <option value="">Seleccione un producto</option>
+                                            {% for product in products %}
+                                                <option value="{{ product.id }}">{{ product.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="chartType" class="form-label">Tipo de Gráfico</label>
+                                        <select class="form-select" id="chartType" required>
+                                            <option value="">Seleccione un tipo</option>
+                                            {% for value, label in chart_types %}
+                                                <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-primary" onclick="nextStep(2)">
+                                        Siguiente <i class="ri-arrow-right-line"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Step 2: Data Configuration -->
+                                <div class="step-content d-none" id="step-2-content">
+                                    <div class="mb-3">
+                                        <label for="labels" class="form-label">Etiquetas (separadas por coma)</label>
+                                        <input type="text" class="form-control" id="labels" 
+                                               placeholder="Ene, Feb, Mar, Abr, May, Jun">
+                                        <small class="text-muted">Eje X para gráficos de línea/barra</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Conjuntos de Datos</label>
+                                        <div id="datasets-container">
+                                            <div class="dataset-item" data-index="0">
+                                                <button type="button" class="btn btn-sm btn-danger remove-dataset" 
+                                                        onclick="removeDataset(0)" style="display: none;">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>
+                                                
+                                                <div class="mb-2">
+                                                    <label class="form-label">Nombre del Dataset</label>
+                                                    <input type="text" class="form-control dataset-label" 
+                                                           placeholder="Ej: Ventas 2024">
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <label class="form-label">Valores (separados por coma)</label>
+                                                    <input type="text" class="form-control dataset-values" 
+                                                           placeholder="100, 200, 150, 300, 250, 400">
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <label class="form-label">Color</label>
+                                                    <input type="color" class="form-control color-picker dataset-color" 
+                                                           value="#0ab39c">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="addDataset()">
+                                            <i class="ri-add-line"></i> Agregar Dataset
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <button type="button" class="btn btn-light" onclick="previousStep(1)">
+                                            <i class="ri-arrow-left-line"></i> Anterior
+                                        </button>
+                                        <button type="button" class="btn btn-primary" onclick="nextStep(3)">
+                                            Siguiente <i class="ri-arrow-right-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Step 3: Style Configuration -->
+                                <div class="step-content d-none" id="step-3-content">
+                                    <div class="mb-3">
+                                        <label for="xLabel" class="form-label">Etiqueta Eje X</label>
+                                        <input type="text" class="form-control" id="xLabel" placeholder="Meses">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="yLabel" class="form-label">Etiqueta Eje Y</label>
+                                        <input type="text" class="form-control" id="yLabel" placeholder="Ventas (Bs)">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Opciones de Estilo</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="showLegend" checked>
+                                            <label class="form-check-label" for="showLegend">
+                                                Mostrar Leyenda
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="showGrid" checked>
+                                            <label class="form-check-label" for="showGrid">
+                                                Mostrar Cuadrícula
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enableAnimation" checked>
+                                            <label class="form-check-label" for="enableAnimation">
+                                                Habilitar Animaciones
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="chartHeight" class="form-label">Altura del Gráfico</label>
+                                        <input type="range" class="form-range" id="chartHeight" 
+                                               min="200" max="600" value="400" 
+                                               oninput="document.getElementById('heightValue').textContent = this.value + 'px'">
+                                        <small class="text-muted">Altura: <span id="heightValue">400px</span></small>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <button type="button" class="btn btn-light" onclick="previousStep(2)">
+                                            <i class="ri-arrow-left-line"></i> Anterior
+                                        </button>
+                                        <button type="button" class="btn btn-primary" onclick="generatePreview()">
+                                            Generar Vista Previa <i class="ri-eye-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Step 4: Preview and Save -->
+                                <div class="step-content d-none" id="step-4-content">
+                                    <div class="alert alert-info">
+                                        <i class="ri-information-line"></i> 
+                                        Revise la vista previa del gráfico. Si está satisfecho, puede guardarlo.
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Código de Configuración</label>
+                                        <div class="code-preview" id="configCode">
+                                            // La configuración aparecerá aquí
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <button type="button" class="btn btn-light" onclick="previousStep(3)">
+                                            <i class="ri-arrow-left-line"></i> Modificar
+                                        </button>
+                                        <div>
+                                            <button type="button" class="btn btn-secondary me-2" onclick="downloadChart()">
+                                                <i class="ri-download-2-line"></i> Descargar
+                                            </button>
+                                            <button type="button" class="btn btn-success" onclick="saveChart()">
+                                                <i class="ri-save-line"></i> Guardar Gráfico
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Panel -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Vista Previa</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-preview" id="chartPreview">
+                                <div class="text-center text-muted">
+                                    <i class="ri-bar-chart-2-line" style="font-size: 4rem;"></i>
+                                    <p class="mt-2">Configure el gráfico para ver la vista previa</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 d-none" id="chartStats">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <h6 class="mb-0">Datasets</h6>
+                                        <p class="text-muted mb-0" id="datasetCount">0</p>
+                                    </div>
+                                    <div class="col-4">
+                                        <h6 class="mb-0">Puntos de Datos</h6>
+                                        <p class="text-muted mb-0" id="dataPointCount">0</p>
+                                    </div>
+                                    <div class="col-4">
+                                        <h6 class="mb-0">Tipo</h6>
+                                        <p class="text-muted mb-0" id="chartTypeDisplay">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Templates Gallery -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Plantillas Rápidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-secondary w-100" 
+                                            onclick="loadTemplate('sales')">
+                                        <i class="ri-line-chart-line"></i> Ventas
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-secondary w-100" 
+                                            onclick="loadTemplate('inventory')">
+                                        <i class="ri-stack-line"></i> Inventario
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-secondary w-100" 
+                                            onclick="loadTemplate('costs')">
+                                        <i class="ri-money-dollar-circle-line"></i> Costos
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-secondary w-100" 
+                                            onclick="loadTemplate('comparison')">
+                                        <i class="ri-bar-chart-grouped-line"></i> Comparación
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+let currentStep = 1;
+let chart = null;
+let datasetIndex = 1;
+
+// Initialize Select2
+$(document).ready(function() {
+    $('#productSelect').select2({
+        placeholder: 'Seleccione un producto',
+        allowClear: true
+    });
+    
+    $('#chartType').select2({
+        placeholder: 'Seleccione un tipo de gráfico',
+        allowClear: true
+    });
+});
+
+// Step Navigation
+function nextStep(step) {
+    if (validateStep(currentStep)) {
+        document.getElementById(`step-${currentStep}-content`).classList.add('d-none');
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        document.getElementById(`step-${currentStep}`).classList.add('completed');
+        
+        currentStep = step;
+        
+        document.getElementById(`step-${currentStep}-content`).classList.remove('d-none');
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+    }
+}
+
+function previousStep(step) {
+    document.getElementById(`step-${currentStep}-content`).classList.add('d-none');
+    document.getElementById(`step-${currentStep}`).classList.remove('active');
+    
+    currentStep = step;
+    
+    document.getElementById(`step-${currentStep}-content`).classList.remove('d-none');
+    document.getElementById(`step-${currentStep}`).classList.add('active');
+}
+
+function validateStep(step) {
+    switch(step) {
+        case 1:
+            const title = document.getElementById('chartTitle').value;
+            const product = document.getElementById('productSelect').value;
+            const type = document.getElementById('chartType').value;
+            
+            if (!title || !product || !type) {
+                alert('Por favor complete todos los campos requeridos');
+                return false;
+            }
+            break;
+        case 2:
+            const labels = document.getElementById('labels').value;
+            const datasets = document.querySelectorAll('.dataset-item');
+            
+            if (!labels && ['line', 'bar', 'area'].includes(document.getElementById('chartType').value)) {
+                alert('Por favor ingrese las etiquetas del eje X');
+                return false;
+            }
+            
+            let hasValidDataset = false;
+            datasets.forEach(dataset => {
+                const values = dataset.querySelector('.dataset-values').value;
+                if (values) hasValidDataset = true;
+            });
+            
+            if (!hasValidDataset) {
+                alert('Por favor ingrese al menos un conjunto de datos');
+                return false;
+            }
+            break;
+    }
+    return true;
+}
+
+// Dataset Management
+function addDataset() {
+    const container = document.getElementById('datasets-container');
+    const newDataset = document.createElement('div');
+    newDataset.className = 'dataset-item';
+    newDataset.setAttribute('data-index', datasetIndex);
+    
+    newDataset.innerHTML = `
+        <button type="button" class="btn btn-sm btn-danger remove-dataset" 
+                onclick="removeDataset(${datasetIndex})">
+            <i class="ri-delete-bin-line"></i>
+        </button>
+        
+        <div class="mb-2">
+            <label class="form-label">Nombre del Dataset</label>
+            <input type="text" class="form-control dataset-label" 
+                   placeholder="Ej: Ventas 2025">
+        </div>
+        
+        <div class="mb-2">
+            <label class="form-label">Valores (separados por coma)</label>
+            <input type="text" class="form-control dataset-values" 
+                   placeholder="100, 200, 150, 300, 250, 400">
+        </div>
+        
+        <div class="mb-2">
+            <label class="form-label">Color</label>
+            <input type="color" class="form-control color-picker dataset-color" 
+                   value="#${Math.floor(Math.random()*16777215).toString(16)}">
+        </div>
+    `;
+    
+    container.appendChild(newDataset);
+    datasetIndex++;
+    
+    // Show remove button on first dataset if there's more than one
+    if (container.children.length > 1) {
+        container.querySelector('.remove-dataset').style.display = 'block';
+    }
+}
+
+function removeDataset(index) {
+    const dataset = document.querySelector(`[data-index="${index}"]`);
+    dataset.remove();
+    
+    const container = document.getElementById('datasets-container');
+    if (container.children.length === 1) {
+        container.querySelector('.remove-dataset').style.display = 'none';
+    }
+}
+
+// Chart Generation
+function generatePreview() {
+    if (!validateStep(2)) return;
+    
+    nextStep(4);
+    
+    const chartType = document.getElementById('chartType').value;
+    const labels = document.getElementById('labels').value.split(',').map(l => l.trim());
+    const datasets = [];
+    
+    document.querySelectorAll('.dataset-item').forEach(item => {
+        const label = item.querySelector('.dataset-label').value;
+        const values = item.querySelector('.dataset-values').value
+            .split(',')
+            .map(v => parseFloat(v.trim()))
+            .filter(v => !isNaN(v));
+        const color = item.querySelector('.dataset-color').value;
+        
+        if (label && values.length > 0) {
+            datasets.push({
+                name: label,
+                data: values,
+                color: color
+            });
+        }
+    });
+    
+    // Update stats
+    document.getElementById('datasetCount').textContent = datasets.length;
+    document.getElementById('dataPointCount').textContent = 
+        datasets.reduce((sum, ds) => sum + ds.data.length, 0);
+    document.getElementById('chartTypeDisplay').textContent = 
+        document.querySelector('#chartType option:checked').textContent;
+    document.getElementById('chartStats').classList.remove('d-none');
+    
+    // Generate config code
+    const config = {
+        title: document.getElementById('chartTitle').value,
+        type: chartType,
+        labels: labels,
+        datasets: datasets,
+        x_label: document.getElementById('xLabel').value,
+        y_label: document.getElementById('yLabel').value,
+        options: {
+            showLegend: document.getElementById('showLegend').checked,
+            showGrid: document.getElementById('showGrid').checked,
+            enableAnimation: document.getElementById('enableAnimation').checked,
+            height: document.getElementById('chartHeight').value
+        }
+    };
+    
+    document.getElementById('configCode').textContent = JSON.stringify(config, null, 2);
+    
+    // Render chart
+    renderChart(config);
+}
+
+function renderChart(config) {
+    const chartDiv = document.getElementById('chartPreview');
+    chartDiv.innerHTML = '';
+    chartDiv.classList.add('has-chart');
+    
+    let options = {
+        series: config.datasets.map(ds => ({
+            name: ds.name,
+            data: ds.data
+        })),
+        chart: {
+            type: config.type,
+            height: parseInt(config.options.height),
+            animations: {
+                enabled: config.options.enableAnimation
+            },
+            toolbar: {
+                show: true,
+                tools: {
+                    download: true,
+                    selection: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
+                }
+            }
+        },
+        colors: config.datasets.map(ds => ds.color),
+        xaxis: {
+            categories: config.labels,
+            title: {
+                text: config.x_label
+            }
+        },
+        yaxis: {
+            title: {
+                text: config.y_label
+            }
+        },
+        legend: {
+            show: config.options.showLegend
+        },
+        grid: {
+            show: config.options.showGrid
+        },
+        title: {
+            text: config.title,
+            align: 'center'
+        }
+    };
+    
+    // Adjust options for pie/donut charts
+    if (['pie', 'donut'].includes(config.type)) {
+        options.labels = config.labels;
+        options.series = config.datasets[0].data;
+        delete options.xaxis;
+        delete options.yaxis;
+    }
+    
+    chart = new ApexCharts(chartDiv, options);
+    chart.render();
+}
+
+// Save Chart
+function saveChart() {
+    const config = JSON.parse(document.getElementById('configCode').textContent);
+    
+    const data = {
+        product_id: document.getElementById('productSelect').value,
+        title: config.title,
+        chart_type: config.type,
+        chart_data: {
+            labels: config.labels,
+            datasets: config.datasets,
+            x_label: config.x_label,
+            y_label: config.y_label
+        }
+    };
+    
+    fetch('{% url "dashboard:chart_builder" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: 'El gráfico se ha guardado correctamente',
+                confirmButtonText: 'Ver Dashboard'
+            }).then(() => {
+                window.location.href = '{% url "dashboard:dashboard.user" %}';
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.error || 'No se pudo guardar el gráfico'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al guardar el gráfico'
+        });
+    });
+}
+
+// Download Chart
+function downloadChart() {
+    if (chart) {
+        chart.dataURI().then(({ imgURI }) => {
+            const a = document.createElement('a');
+            a.href = imgURI;
+            a.download = document.getElementById('chartTitle').value + '.png';
+            a.click();
+        });
+    }
+}
+
+// Load Templates
+function loadTemplate(type) {
+    const templates = {
+        sales: {
+            title: 'Ventas Mensuales 2024',
+            type: 'line',
+            labels: 'Ene, Feb, Mar, Abr, May, Jun',
+            datasets: [{
+                label: 'Ventas 2024',
+                values: '15000, 18000, 16500, 22000, 21000, 25000',
+                color: '#0ab39c'
+            }],
+            xLabel: 'Meses',
+            yLabel: 'Ventas (Bs)'
+        },
+        inventory: {
+            title: 'Niveles de Inventario',
+            type: 'bar',
+            labels: 'Producto A, Producto B, Producto C, Producto D',
+            datasets: [{
+                label: 'Stock Actual',
+                values: '450, 320, 180, 520',
+                color: '#405189'
+            }],
+            xLabel: 'Productos',
+            yLabel: 'Unidades'
+        },
+        costs: {
+            title: 'Distribución de Costos',
+            type: 'pie',
+            labels: 'Materia Prima, Mano de Obra, Gastos Generales, Marketing',
+            datasets: [{
+                label: 'Costos',
+                values: '45, 25, 20, 10',
+                color: '#0ab39c'
+            }],
+            xLabel: '',
+            yLabel: ''
+        },
+        comparison: {
+            title: 'Comparación Trimestral',
+            type: 'bar',
+            labels: 'Q1, Q2, Q3, Q4',
+            datasets: [
+                {
+                    label: '2023',
+                    values: '45000, 52000, 48000, 61000',
+                    color: '#405189'
+                },
+                {
+                    label: '2024',
+                    values: '51000, 58000, 55000, 68000',
+                    color: '#0ab39c'
+                }
+            ],
+            xLabel: 'Trimestres',
+            yLabel: 'Ingresos (Bs)'
+        }
+    };
+    
+    const template = templates[type];
+    if (template) {
+        // Fill basic info
+        document.getElementById('chartTitle').value = template.title;
+        document.getElementById('chartType').value = template.type;
+        $('#chartType').trigger('change');
+        
+        // Fill data
+        document.getElementById('labels').value = template.labels;
+        document.getElementById('xLabel').value = template.xLabel;
+        document.getElementById('yLabel').value = template.yLabel;
+        
+        // Clear existing datasets
+        document.getElementById('datasets-container').innerHTML = '';
+        datasetIndex = 0;
+        
+        // Add template datasets
+        template.datasets.forEach((dataset, index) => {
+            if (index === 0) {
+                // Use first dataset container
+                const container = document.getElementById('datasets-container');
+                container.innerHTML = `
+                    <div class="dataset-item" data-index="0">
+                        <button type="button" class="btn btn-sm btn-danger remove-dataset" 
+                                onclick="removeDataset(0)" style="display: none;">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                        
+                        <div class="mb-2">
+                            <label class="form-label">Nombre del Dataset</label>
+                            <input type="text" class="form-control dataset-label" 
+                                   value="${dataset.label}">
+                        </div>
+                        
+                        <div class="mb-2">
+                            <label class="form-label">Valores (separados por coma)</label>
+                            <input type="text" class="form-control dataset-values" 
+                                   value="${dataset.values}">
+                        </div>
+                        
+                        <div class="mb-2">
+                            <label class="form-label">Color</label>
+                            <input type="color" class="form-control color-picker dataset-color" 
+                                   value="${dataset.color}">
+                        </div>
+                    </div>
+                `;
+                datasetIndex = 1;
+            } else {
+                // Add additional datasets
+                addDataset();
+                const lastDataset = document.querySelector(`[data-index="${datasetIndex-1}"]`);
+                lastDataset.querySelector('.dataset-label').value = dataset.label;
+                lastDataset.querySelector('.dataset-values').value = dataset.values;
+                lastDataset.querySelector('.dataset-color').value = dataset.color;
+            }
+        });
+        
+        // Show success message
+        const toast = new bootstrap.Toast(document.getElementById('templateToast') || createToast());
+        toast.show();
+    }
+}
+
+function createToast() {
+    const toastHtml = `
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div id="templateToast" class="toast" role="alert">
+                <div class="toast-header">
+                    <strong class="me-auto">Plantilla Cargada</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    La plantilla se ha cargado correctamente. Puede modificarla según sus necesidades.
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
+    return document.getElementById('templateToast');
+}
+</script>
+{% endblock extra_js %}
