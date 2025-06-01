@@ -1,422 +1,621 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Dashboard{% endblock title %}
+{% block title %}Dashboard - {{ business.name }}{% endblock title %}
 {% block extra_css %}
-    <!-- jsvectormap css -->
-    <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css'%}" rel="stylesheet" type="text/css" />
-    <!--Swiper slider css-->
-    <link href="{% static 'libs/swiper/swiper-bundle.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
+    <style>
+        .metric-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            min-height: 300px;
+            position: relative;
+        }
+        .chart-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .business-selector {
+            min-width: 250px;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 {% endblock extra_css %}
 
 {% block content %}
-        <!-- ============================================================== -->
-        <!-- Start right Content here -->
-        <!-- ============================================================== -->
-        <div class="main-content">
-
-            <div class="page-content">
-                <div class="container-fluid">
-                    {% block pagetitle %}
-                    {% endblock pagetitle %}
-                    {% if businesses %}
-                    {% else %}
-                    <p> Agregue datos comerciales </p>
-                    {% endif %}
-                  
-                    <div class="row">
-                        <div class="col">
-                            <div class="h-100">
-                                <div class="row mb-3 pb-1">
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-lg-center flex-lg-row flex-column">
-                                            <div class="flex-grow-1">
-                                                <h4 class="fs-16 mb-1">{{ greeting }}, {{user.username}}</h4>
-                                                <p class="text-muted mb-0">Los siguientes datos son en base a datos historicos y en caso se tuviera una simulacion registrada en el sistema de algun producto de la empresa</p>
-                                            </div>
-                                            <div class="mt-3 mt-lg-0">
-                                                <form method="GET" action="{% url 'dashboard:dashboard.user' %}">
-                                                    <div class="row g-3 mb-0 align-items-center">
-                                                        <div class="col-sm-auto">
-                                                            <label for="business_id" class="form-label">Elija el negocio:</label>
-                                                        </div>                                               
-                                                        <div class="col-sm-auto">
-                                                            <select id="business_id" name="business_id" class="form-select" data-choices data-choices-sorting="true" >
-                                                                <option selected>Elija el negocio:</option>
-                                                                {% for business in businesses %}
-                                                                <option value="{{ business.id }}" {% if request.GET.business_id == business.id %}selected{% endif %} >
-                                                                    {{ business.name }}</option>
-                                                                {% empty %}
-                                                                <option>...</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-auto">
-                                                            <button type="submit" class="btn btn-primary">Generar Dashboard</button>
-                                                        </div>
-                                                    </div>
-                                                </form>                                                
-                                            </div>
-                                            <div class="col-auto">
-                                                <button type="button" class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn">
-                                                    <i class="ri-pulse-line"></i>
-                                                </button>
-                                            </div> 
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end row-->
-                                <div class="row">
-                                    <div class="col-xl-2 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Ingresos totales </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-success fs-14 mb-0">
-                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{total_revenue_percentage}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
-                                                            <i class="bx bx-dollar-circle text-success"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xl-2 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Costos Totales </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-success fs-14 mb-0">
-                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{total_revenue_percentage}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-danger text-white rounded-2 fs-2 shadow">
-                                                            <i class="bx bxs-badge-dollar"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xl-2 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Margen de Beneficio </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-success fs-14 mb-0">
-                                                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> {{total_revenue_percentage}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
-                                                            <i class="las la-money-bill-wave-alt"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xl-2 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Inventario </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-success fs-14 mb-0">
-                                                            <i class="las la-layer-group"></i> {{total_revenue_percentage}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
-                                                            <i class="bx bx-dollar-circle text-success"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col --> 
-                                    <div class="col-xl-2 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Demanda Total </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-success fs-14 mb-0">
-                                                            <i class="las la-layer-group"></i> {{total_demand}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
-                                                            <i class="bx bx-dollar-circle text-success"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col --> 
-                                    <div class="col-xl-2 col-md-6">
-                                        <!-- card -->
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">  </p>
-                                                    </div>
-                                                    <div class="flex-shrink-0">
-                                                        <h5 class="text-success fs-14 mb-0">
-                                                            <i class="las la-layer-group"></i> {{total_demand}}
-                                                        </h5>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-end justify-content-between mt-4">
-                                                    <div>
-                                                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span
-                                                                class="counter-value" data-target="{{total_revenue}}">0</span>Bs</h4>
-                                                        {% comment %} <a href="" class="text-decoration-underline"> Ver ganancias netas</a> {% endcomment %}
-                                                    </div>
-                                                    <div class="avatar-sm flex-shrink-0">
-                                                        <span class="avatar-title bg-success-subtle rounded fs-3">
-                                                            <i class="bx bx-dollar-circle text-success"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->                        
-                                </div> <!-- end row-->
-                                <div class="row">
-                                    {% if business %}
-                                    <div class="col-xxl-3 col-md-6">
-                                        <div class="card shadow-sm" id="business-view-detail">
-                                            <div class="card-body text-center">
-                                                <div class="position-relative d-inline-block">
-                                                    <img src="{{ business.get_photo_url }}" alt="" class="rounded-rectangule img-fluid">
-                                                </div>
-                                                <h5 class="mt-3 mb-1">{{ business.name }}</h5>
-                                                <p class="text-muted">{{ business.fk_user_id.name }}</p>
-                                            </div>
-                                            <div class="card-body">
-                                                <h6 class="text-muted text-uppercase fw-semibold mb-3"> Información </h6>
-                                                <p class="text-muted mb-4">{{ business.description }}</p>
-                                                <div class="table-responsive table-card">
-                                                    <table class="table table-borderless mb-0">
-                                                        <tbody>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row"> Tipo de industria</td>
-                                                                <td>
-                                                                    {% if business.type == 1 %}
-                                                                        Lacteos
-                                                                    {% else %}
-                                                                        Otros
-                                                                    {% endif %}
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row">Ubicación</td>
-                                                                <td>{{ business.location }}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row">Correo electronico </td>
-                                                                <td>{{business.fk_user.email}}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td class="fw-medium" scope="row">Desde </td>
-                                                                <td>{{ business.date_created|date:"F j, Y" }}</td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--end card-->
-                                    </div>
-                                    {% else %}
-                                    <div class="col-12 text-center mt-4">
-                                        <p class="text-muted">No hay datos de negocio en la base de datos.</p>
-                                    </div>
-                                    {% endif %}
-                                    <div class="col-xl-9">
-                                        <div class="card">
-                                            <div class="card-header align-items-center d-flex">
-                                                <h4 class="card-title mb-0 flex-grow-1">Recomendaciones Financieras</h4>
-                                            </div><!-- end card header -->
-                                            <div class="card-body">
-                                                <div class="table-responsive table-card">
-                                                    <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Porcentaje</th>
-                                                                <th>Fecha de simulacion</th>
-                                                                <th>Recomendación</th>
-                                                                <th>Producto</th>
-                                                                <th>Valor Umbral</th>
-                                                                <th>Nombre de Variable</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {% for recommendation in page_obj %}
-                                                            <tr>
-                                                                <td>{{ recommendation.data|floatformat:"2" }}%</td>
-                                                                <td>{{ recommendation.fk_simulation__date_created }}</td>
-                                                                <td>{{ recommendation.fk_finance_recommendation__recommendation }}</td>
-                                                                <td>{{ recommendation.fk_simulation__fk_questionary_result__fk_questionary__fk_product__name }}</td>
-                                                                <td>{{ recommendation.fk_finance_recommendation__threshold_value}}</td>
-                                                                <td>{{ recommendation.fk_finance_recommendation__variable_name }}</td>
-                                                            </tr>
-                                                            {% empty %}
-                                                            <div class="text-center py-4">
-                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                <h5 class="mt-2">No hay recomendaciones para {{business.name}} en la base de datos</h5>
-                                                            </div>
-                                                            {% endfor %}
-                                                        </tbody>
-                                                    </table>                                                    
-                                                    <nav aria-label="Page navigation example">
-                                                        <ul class="pagination justify-content-center">
-                                                            {% if page_obj.has_previous %}
-                                                                <li class="page-item"><a class="page-link" href="?page=1">Primera</a></li>
-                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
-                                                            {% endif %}
-                                                            <li class="page-item disabled"><a class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</a></li>
-                                                            {% if page_obj.has_next %}
-                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>
-                                                                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
-                                                            {% endif %}
-                                                        </ul>
-                                                    </nav>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                </div>
-                                <!-- Asegúrate de incluir la biblioteca ApexCharts en tu proyecto -->
-
-                                <div class="row">
-                                    {% for chart in charts %}
-                                        <div class="col-xl-4">
-                                            <div class="card h-100">
-                                                <div class="card-header">
-                                                    <h4 class="card-title mb-0">{{ chart.title }}</h4>
-                                                </div>
-                                                <div class="card-body">
-                                                    <img src="{{ chart.get_photo_url }}" alt="{{ chart.title }}" class="img-fluid">                                                
-                                                </div>
-                                                <div class="card-footer">
-                                                    <p class="text-muted">Fecha de creación: {{ chart.date_created|date:"F j, Y" }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Header Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="page-title-box d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-1">{{ greeting }}, {{ user.first_name|default:user.username }}</h4>
+                            <p class="text-muted mb-0">
+                                Dashboard de análisis para <strong>{{ business.name }}</strong>
+                            </p>
+                        </div>
+                        
+                        <!-- Business Selector -->
+                        <div class="d-flex align-items-center gap-3">
+                            <form method="GET" action="{% url 'dashboard:dashboard.user' %}" id="businessForm">
+                                <select name="business_id" class="form-select business-selector" 
+                                        onchange="document.getElementById('businessForm').submit()">
+                                    {% for biz in businesses %}
+                                        <option value="{{ biz.id }}" {% if biz.id == business.id %}selected{% endif %}>
+                                            {{ biz.name }}
+                                        </option>
                                     {% empty %}
-                                    <div class="text-center py-4">
-                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                        <h5 class="mt-2">Lo siento, no hay graficos relacionador a algun producto del negocio {{business.name}} en la base de datos</h5>
-                                    </div>
+                                        <option>No hay negocios disponibles</option>
                                     {% endfor %}
+                                </select>
+                            </form>
+                            
+                            <button type="button" class="btn btn-primary" onclick="refreshDashboard()">
+                                <i class="ri-refresh-line"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div class="dashboard-grid mb-4">
+                <!-- Revenue Card -->
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-muted text-uppercase mb-0">Ingresos Totales</h6>
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-success-subtle rounded">
+                                    <i class="bx bx-dollar-circle text-success fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <h3 class="mb-2">
+                            Bs. <span class="counter-value" data-target="{{ total_revenue|floatformat:2 }}">0</span>
+                        </h3>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success-subtle text-success">
+                                <i class="ri-arrow-up-line"></i> +12.5%
+                            </span>
+                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Costs Card -->
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-muted text-uppercase mb-0">Costos Totales</h6>
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-danger-subtle rounded">
+                                    <i class="bx bxs-badge-dollar text-danger fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <h3 class="mb-2">
+                            Bs. <span class="counter-value" data-target="{{ total_costs|floatformat:2 }}">0</span>
+                        </h3>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-danger-subtle text-danger">
+                                <i class="ri-arrow-up-line"></i> +8.3%
+                            </span>
+                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profit Margin Card -->
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-muted text-uppercase mb-0">Margen de Beneficio</h6>
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-primary-subtle rounded">
+                                    <i class="las la-chart-line text-primary fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <h3 class="mb-2">
+                            Bs. <span class="counter-value" data-target="{{ total_profit_margin|floatformat:2 }}">0</span>
+                        </h3>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary-subtle text-primary">
+                                <i class="ri-arrow-up-line"></i> +4.2%
+                            </span>
+                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Card -->
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-muted text-uppercase mb-0">Inventario</h6>
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-info-subtle rounded">
+                                    <i class="las la-layer-group text-info fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <h3 class="mb-2">
+                            <span class="counter-value" data-target="{{ total_inventory_levels|floatformat:0 }}">0</span> unidades
+                        </h3>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-info-subtle text-info">
+                                <i class="ri-arrow-down-line"></i> -2.1%
+                            </span>
+                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demand Card -->
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-muted text-uppercase mb-0">Demanda Total</h6>
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-warning-subtle rounded">
+                                    <i class="las la-chart-bar text-warning fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <h3 class="mb-2">
+                            <span class="counter-value" data-target="{{ total_demand|floatformat:0 }}">0</span>
+                        </h3>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-warning-subtle text-warning">
+                                <i class="ri-arrow-up-line"></i> +15.7%
+                            </span>
+                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Production Card -->
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-muted text-uppercase mb-0">Producción</h6>
+                            <div class="avatar-sm">
+                                <span class="avatar-title bg-secondary-subtle rounded">
+                                    <i class="las la-industry text-secondary fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <h3 class="mb-2">
+                            <span class="counter-value" data-target="{{ total_production_output|floatformat:0 }}">0</span>
+                        </h3>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary-subtle text-secondary">
+                                <i class="ri-arrow-up-line"></i> +9.8%
+                            </span>
+                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Row -->
+            <div class="row">
+                <!-- Business Info Card -->
+                <div class="col-lg-3 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <img src="{{ business.get_photo_url }}" alt="{{ business.name }}" 
+                                 class="img-fluid rounded mb-3" style="max-height: 150px;">
+                            <h5 class="mb-1">{{ business.name }}</h5>
+                            <p class="text-muted small">{{ business.fk_user.get_full_name|default:business.fk_user.username }}</p>
+                            
+                            <hr>
+                            
+                            <div class="text-start">
+                                <h6 class="text-muted text-uppercase fw-semibold mb-3">Información</h6>
+                                <p class="text-muted mb-3">{{ business.description|truncatewords:20 }}</p>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-medium">Industria:</td>
+                                                <td class="text-end">
+                                                    {% if business.type == 1 %}
+                                                        Lácteos
+                                                    {% else %}
+                                                        {{ business.get_type_display|default:"Otros" }}
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Ubicación:</td>
+                                                <td class="text-end">{{ business.location|default:"No especificada" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Email:</td>
+                                                <td class="text-end text-truncate" style="max-width: 150px;">
+                                                    {{ business.fk_user.email }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Desde:</td>
+                                                <td class="text-end">{{ business.date_created|date:"d/m/Y" }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
+                                
+                                <div class="d-grid mt-3">
+                                    <a href="{% url 'business:business.overview' business.id %}" 
+                                       class="btn btn-sm btn-primary">
+                                        Ver detalles completos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                            </div> <!-- end .h-100-->
-                        </div> <!-- end col -->
+                <!-- Recommendations Table -->
+                <div class="col-lg-9 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Recomendaciones Financieras</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" 
+                                        data-bs-toggle="dropdown">
+                                    <i class="ri-more-2-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="exportRecommendations()">
+                                        <i class="ri-download-2-line me-2"></i>Exportar
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#">
+                                        <i class="ri-printer-line me-2"></i>Imprimir
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if page_obj.object_list %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Producto</th>
+                                                <th>Variable</th>
+                                                <th>Valor</th>
+                                                <th>Umbral</th>
+                                                <th>Recomendación</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for rec in page_obj %}
+                                            <tr>
+                                                <td>{{ rec.fk_simulation__date_created|date:"d/m/Y" }}</td>
+                                                <td>
+                                                    <span class="badge bg-info-subtle text-info">
+                                                        {{ rec.fk_simulation__fk_questionary_result__fk_questionary__fk_product__name|truncatechars:20 }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ rec.fk_finance_recommendation__variable_name|truncatechars:15 }}</td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar" role="progressbar" 
+                                                             style="width: {{ rec.data|floatformat:0 }}%"
+                                                             aria-valuenow="{{ rec.data|floatformat:0 }}" 
+                                                             aria-valuemin="0" aria-valuemax="100">
+                                                            {{ rec.data|floatformat:1 }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ rec.fk_finance_recommendation__threshold_value|floatformat:2 }}</td>
+                                                <td>
+                                                    <span class="text-wrap" style="max-width: 200px; display: inline-block;">
+                                                        {{ rec.fk_finance_recommendation__recommendation|truncatechars:50 }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-light" 
+                                                            onclick="viewRecommendationDetails({{ rec.id }})">
+                                                        <i class="ri-eye-line"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                {% if page_obj.has_other_pages %}
+                                <nav class="mt-3">
+                                    <ul class="pagination justify-content-center mb-0">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1&business_id={{ business.id }}">
+                                                    <i class="ri-arrow-left-s-line"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&business_id={{ business.id }}">
+                                                    Anterior
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        
+                                        <li class="page-item active">
+                                            <span class="page-link">
+                                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                            </span>
+                                        </li>
+                                        
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}&business_id={{ business.id }}">
+                                                    Siguiente
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&business_id={{ business.id }}">
+                                                    <i class="ri-arrow-right-s-line"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                               trigger="loop" 
+                                               colors="primary:#405189,secondary:#0ab39c" 
+                                               style="width:75px;height:75px">
+                                    </lord-icon>
+                                    <h5 class="mt-3">No hay recomendaciones disponibles</h5>
+                                    <p class="text-muted">
+                                        No se encontraron recomendaciones para {{ business.name }}. 
+                                        Ejecuta una simulación para generar recomendaciones.
+                                    </p>
+                                    <a href="{% url 'simulate:simulate.show' %}" class="btn btn-primary mt-2">
+                                        <i class="ri-add-line me-1"></i> Nueva Simulación
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="col-auto layout-rightside-col">
-                            <div class="overlay"></div>
-                            <div class="layout-rightside">
-                                <div class="card h-100 rounded-0">
-                                    <div class="card-body p-0">
-                                        <div class="p-3">
-                                            <h6 class="text-muted mb-0 text-uppercase fw-semibold"> Actividad reciente </h6>
-                                        </div>
-                                        <div data-simplebar class="p-3 pt-0" style="max-height: 100%;">
-                                            <div class="acitivity-timeline acitivity-main">
-                                                {% for log_entry in recent_activity %}
-                                                    <li>
-                                                        <strong>User {{ log_entry.user.username }}</strong> performed the action '{{ log_entry.action }}' on {{ log_entry.timestamp|date:"F j, Y H:i:s" }}.
-                                                        {% if log_entry.details %}
-                                                            <strong>Details:</strong> {{ log_entry.details }}
-                                                        {% endif %}
-                                                    </li>
-                                                {% empty %}
-                                                <div class="text-center py-4">
-                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                    <h5 class="mt-2">Lo siento, no hay ninguna actividad reciente</h5>
-                                                </div>
-                                                {% endfor %}
-                                            </div>
+            <!-- Charts Section -->
+            {% if charts %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3">Análisis Visual</h5>
+                </div>
+                {% for chart in charts %}
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">{{ chart.title }}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" id="chart-{{ chart.id }}">
+                                {% if chart.chart_image %}
+                                    <img src="{{ chart.get_photo_url }}" alt="{{ chart.title }}" 
+                                         class="img-fluid">
+                                {% else %}
+                                    <div class="chart-loading">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
                                         </div>
                                     </div>
-                                </div> <!-- end card-->
-                            </div> <!-- end .rightbar-->
-                        </div> <!-- end col activity -->
-                    </div>                    
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted small">
+                            <i class="ri-time-line"></i> Actualizado: {{ chart.last_updated|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
                 </div>
-                <!-- container-fluid -->
+                {% endfor %}
             </div>
-            <!-- End Page-content -->
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
+            {% endif %}
+
+            <!-- Recent Activity Sidebar -->
+            <div class="position-fixed end-0 top-50 translate-middle-y" style="z-index: 1000;">
+                <button class="btn btn-primary btn-sm rounded-start-0" type="button" 
+                        data-bs-toggle="offcanvas" data-bs-target="#activityOffcanvas">
+                    <i class="ri-history-line"></i>
+                </button>
+            </div>
+
+            <!-- Activity Offcanvas -->
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="activityOffcanvas">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title">Actividad Reciente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="offcanvas-body">
+                    {% if recent_activity %}
+                        <div class="timeline">
+                            {% for activity in recent_activity %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">{{ activity.action }}</h6>
+                                    <p class="text-muted small mb-0">
+                                        {{ activity.timestamp|timesince }} atrás
+                                    </p>
+                                    {% if activity.details %}
+                                        <p class="text-muted small mt-1">{{ activity.details }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="ri-history-line fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">No hay actividad reciente</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <!-- end main content-->
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
 {% endblock content %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+// Counter Animation
+document.addEventListener('DOMContentLoaded', function() {
+    const counters = document.querySelectorAll('.counter-value');
+    const speed = 200;
+    
+    counters.forEach(counter => {
+        const target = parseFloat(counter.getAttribute('data-target'));
+        const increment = target / speed;
+        
+        const updateCounter = () => {
+            const current = parseFloat(counter.innerText);
+            
+            if (current < target) {
+                counter.innerText = (current + increment).toFixed(2);
+                setTimeout(updateCounter, 1);
+            } else {
+                counter.innerText = target.toFixed(2);
+            }
+        };
+        
+        updateCounter();
+    });
+    
+    // Load charts dynamically
+    loadChartsAsync();
+});
 
+// Refresh Dashboard
+function refreshDashboard() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
+    
+    fetch('{% url "dashboard:update_metrics" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'business_id={{ business.id }}'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error al actualizar: ' + data.error);
+        }
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-refresh-line"></i> Actualizar';
+    });
+}
 
+// Load Charts Asynchronously
+function loadChartsAsync() {
+    const chartContainers = document.querySelectorAll('[id^="chart-"]');
+    
+    chartContainers.forEach(container => {
+        const chartId = container.id.split('-')[1];
+        
+        if (!container.querySelector('img')) {
+            fetch(`{% url 'dashboard:get_chart_data' 0 %}`.replace('0', chartId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderChart(container, data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading chart:', error);
+                    container.innerHTML = '<p class="text-danger">Error al cargar el gráfico</p>';
+                });
+        }
+    });
+}
+
+// View Recommendation Details
+function viewRecommendationDetails(recId) {
+    // Implementar modal o navegación a detalles
+    console.log('Ver recomendación:', recId);
+}
+
+// Export Recommendations
+function exportRecommendations() {
+    window.location.href = '{% url "dashboard:export_recommendations" %}?business_id={{ business.id }}';
+}
+
+// Render Chart with ApexCharts
+function renderChart(container, data) {
+    const options = {
+        series: data.data.datasets,
+        chart: {
+            type: data.type,
+            height: 300,
+            toolbar: {
+                show: false
+            }
+        },
+        labels: data.data.labels,
+        title: {
+            text: data.title,
+            align: 'center'
+        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {
+                    width: 200
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }]
+    };
+    
+    const chart = new ApexCharts(container, options);
+    chart.render();
+}
+</script>
 {% endblock extra_js %}

@@ -1,287 +1,769 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Home{% endblock title %}
+{% block title %}Dashboard - Sistema de Análisis{% endblock title %}
+
 {% block extra_css %}
-        <!-- plugin css -->
-        <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css'%}" rel="stylesheet" type="text/css" />
+<link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 60px 0;
+        color: white;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 15s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.3; }
+    }
+    
+    .feature-card {
+        border: none;
+        border-radius: 15px;
+        padding: 30px;
+        height: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #0ab39c, #405189);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    
+    .feature-card:hover::before {
+        transform: translateX(0);
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .feature-icon.primary {
+        background: rgba(10, 179, 156, 0.1);
+        color: #0ab39c;
+    }
+    
+    .feature-icon.info {
+        background: rgba(64, 81, 137, 0.1);
+        color: #405189;
+    }
+    
+    .feature-icon.warning {
+        background: rgba(241, 180, 76, 0.1);
+        color: #f1b44c;
+    }
+    
+    .feature-icon.danger {
+        background: rgba(244, 63, 94, 0.1);
+        color: #f43f5e;
+    }
+    
+    .quick-action-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .quick-action-card::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .quick-action-card:hover {
+        transform: scale(1.05);
+    }
+    
+    .quick-action-card:hover::after {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .stats-widget {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .stats-widget:hover {
+        border-color: #0ab39c;
+        background: #fff;
+    }
+    
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #f43f5e;
+        color: white;
+        border-radius: 10px;
+        padding: 2px 8px;
+        font-size: 11px;
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .tutorial-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 9999;
+        display: none;
+    }
+    
+    .tutorial-highlight {
+        position: relative;
+        z-index: 10000;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 0 4px rgba(10, 179, 156, 0.3);
+    }
+    
+    .welcome-animation {
+        animation: fadeInUp 0.8s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .activity-feed {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-feed::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .activity-feed::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .activity-feed::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+    }
+    
+    .activity-feed::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
 {% endblock extra_css %}
+
 {% block content %}
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
-                <div class="page-content">
-                    <div class="container-fluid">
-                        {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="" title="Home" %}
-                        {% endblock pagetitle %}
-                        <!-- end page title -->
-                        <div class="row"> <div class="col-xxl-12"> <div class="alert alert-success"> <strong>Bienvenido!</strong> 
-                            ¡Bienvenido a la página de inicio del sistema! Aquí encontrarás una vista previa visual con widgets que representan las 
-                            distintas funciones y características que ofrece nuestro sistema. Para aprovechar al máximo todas las funcionalidades, te 
-                            recomendamos iniciar sesión. ¡Iniciar sesión te dará acceso completo a las herramientas y recursos que hacen que nuestro 
-                            sistema sea aún más útil y personalizado para ti! ¡Esperamos que disfrutes utilizando el sistema!    
-                        </div> 
-                        <div class="col-xxl-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h5 class="card-title mb-3">Crear Elementos Predeterminados</h5>
-                                            <p class="card-text">
-                                                Al hacer clic en este botón, se crearán automáticamente los elementos predeterminados necesarios para las simulaciones.
-                                                Estos elementos incluyen negocios, productos, áreas, variables y ecuaciones que son esenciales para realizar simulaciones exitosas.
-                                            </p>
-                                        </div>
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                                            Crear Elementos
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Hero Section -->
+            <div class="row welcome-animation">
+                <div class="col-12">
+                    <div class="hero-section">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h1 class="display-5 fw-bold mb-3">
+                                    Bienvenido{% if user.first_name %}, {{ user.first_name }}{% endif %}
+                                </h1>
+                                <p class="lead mb-4">
+                                    Tu centro de control para análisis de negocio y simulaciones avanzadas.
+                                    {% if not user.is_authenticated %}
+                                        Inicia sesión para acceder a todas las funcionalidades.
+                                    {% else %}
+                                        Explora las herramientas disponibles y optimiza tu negocio.
+                                    {% endif %}
+                                </p>
+                                {% if not user.is_authenticated %}
+                                    <div class="d-flex gap-3">
+                                        <a href="{% url 'account_login' %}" class="btn btn-light btn-lg">
+                                            <i class="ri-login-box-line me-2"></i>Iniciar Sesión
+                                        </a>
+                                        <a href="{% url 'account_signup' %}" class="btn btn-outline-light btn-lg">
+                                            <i class="ri-user-add-line me-2"></i>Registrarse
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex gap-3">
+                                        <a href="{% url 'dashboard:dashboard.user' %}" class="btn btn-light btn-lg">
+                                            <i class="ri-dashboard-line me-2"></i>Ir al Dashboard
+                                        </a>
+                                        <button class="btn btn-outline-light btn-lg" onclick="startTutorial()">
+                                            <i class="ri-play-circle-line me-2"></i>Ver Tutorial
                                         </button>
                                     </div>
-                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-lg-4 text-center d-none d-lg-block">
+                                <img src="{% static 'images/dashboard-illustration.svg' %}" 
+                                     alt="Dashboard" class="img-fluid" style="max-height: 300px;">
                             </div>
                         </div>
-                        <!-- Modal -->
-                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel">Registrar Elementos Predeterminados</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <form method="POST" action="{% url 'pages:pages.register_elements' %}" class="needs-validation" novalidate>
-                                        <div class="modal-body">
-                                            {% csrf_token %}
-                                            <div class="mb-3 form-check">
-                                                <label class="form-check-label">
-                                                    <input type="checkbox" name="create_all_elements" class="form-check-input">
-                                                    Crear todos los elementos automáticamente
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                            <button type="submit" class="btn btn-primary">Registrar</button>
-                                        </div>
-                                    </form>
-                                    <form method="POST" action="{% url 'pages:pages.register_elements_simulation' %}" class="needs-validation" novalidate>
-                                        <div class="modal-body">
-                                            {% csrf_token %}
-                                            <div class="mb-3 form-check">
-                                                <label class="form-check-label">
-                                                    <input type="checkbox" name="create_all_elements" class="form-check-input">
-                                                    Crear elementos de prueba simulacion
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                            <button type="submit" class="btn btn-primary">Registrar</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="row">
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/74pZ.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
-                                                    </div>                                        
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <div class="card-header">
-                                                        <h5 class="card-title mb-0">
-                                                            En el sistema, llevamos a cabo un proceso de revisión y validación de los datos ingresados para garantizar la precisión y confiabilidad en la generación de simulaciones.</h5>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p class="card-text mb-2">                                                            
-                                                            Dentro de nuestra plataforma, implementamos un riguroso proceso de revisión y validación de los datos introducidos. Este procedimiento asegura la integridad y exactitud de
-                                                            la información, proporcionando una base sólida para la generación de simulaciones precisas y confiables. Al garantizar la calidad de los datos, nuestro sistema contribuye a
-                                                            resultados más robustos y a la toma de decisiones informadas en diversos contextos.
-                                                        </p>                                                        
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-8">
-                                                    <div class="card-header">
-                                                        <h5 class="card-title mb-0">En nuestro sistema, implementamos funciones de densidad probabilística para llevar a cabo simulaciones de manera precisa y efectiva.</h5>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p class="card-text mb-2">
-                                                            Nuestra plataforma utiliza funciones de densidad probabilística como base fundamental para la ejecución de simulaciones. Estas funciones permiten modelar 
-                                                            de manera precisa y eficiente diversos escenarios, proporcionando una herramienta robusta y confiable para el análisis y la toma de decisiones.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/ASzm.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
-                                                    </div>                                                
-                                                </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/75ez.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
-                                                    </div> 
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">Análisis de tendencias históricas y futuras</h5>
-                                                        <p class="card-text text-muted mb-0">
-                                                            Analice datos históricos para identificar tendencias pasadas y extrapolar los comportamientos de demanda futuros.Predecir los cambios en el mercado y la estrategia
-                                                            respectivamente.Por qué utilizar: al comprender las tendencias históricas y pronosticar las futuras, las PYME pueden alinear sus estrategias con el mercado cambiante del mercado
-                                                            dinámica, asegurando la viabilidad a largo plazo.rgo plazo.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-8">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">Simulación de escenarios de demanda con datos historicos de su empresa</h5>
-                                                        <p class="card-text text-muted mb-0">
-                                                            Con la asistencia de nuestro sistema, podrá generar simulaciones basadas en datos históricos de su empresa. Esto le proporcionará una visión anticipada de cómo se comportará
-                                                            la demanda de su producto en el futuro. Esta anticipación le permitirá tomar decisiones informadas para mejorar tanto la producción como las ventas de su empresa, optimizando
-                                                            así sus operaciones y estrategias comerciales.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/7WpW.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
-                                                    </div>   
-                                                </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/2mVW.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
-                                                    </div>                                                
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <div class="card-header">
-                                                        <h5 class="card-title mb-0">Importancia del analisis de la demanda</h5>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p class="card-text mb-2">
-                                                            El análisis de la demanda en cualquier mercado proporciona a la empresa un enfoque diferenciado, permitiéndole comprender cómo interactuar con los costos y 
-                                                            procesos internos. Este conocimiento estratégico facilita la producción eficiente de bienes o servicios, evitando gastos innecesarios y maximizando la 
-                                                            capacidad productiva de la empresa.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-8">
-                                                    <div class="card-header">
-                                                        <h5 class="card-title mb-0">Optimizar las fuentes de ingresos</h5>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p class="card-text mb-2">
-                                                            Maximice los ingresos ajustando su enfoque en función de las proyecciones de la demanda.
-                                                            Identificar oportunidades para el crecimiento de los ingresos y la diversificación.Por qué usar: optimización de ingresos
-                                                            es crucial para la sostenibilidad y el crecimiento de las PYME.Comprender los patrones de demanda ayuda
-                                                            Identifique las fuentes de ingresos y capitalice ellas.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/72qy.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
-                                                    </div> 
-                                                </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-4">
-                                                    <div style="position:relative; padding-top:100%; overflow:hidden;">
-                                                        <iframe src="{% static 'images/GIF/Qqdd.gif' %}" width="480" height="320" style="position:absolute; top:0; left:0; border:0;" frameborder="0" allowfullscreen></iframe>
-                                                    </div> 
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">Soporte de decisiones personalizado</h5>
-                                                        <p class="card-text text-muted mb-0">
-                                                            Reciba un apoyo a la decisión personalizada para abordar desafíos financieros específicos dentro de
-                                                            El sector lácteo. Beneficiarse de orientación y recomendaciones personalizadas. Por qué usar: a medida
-                                                            El apoyo reconoce los desafíos únicos que enfrentan las PYME.La guía personalizada ayuda a hacer
-                                                            decisiones que son directamente relevantes para sus circunstancias específicas.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-
-                                    <div class="col-xxl-6">
-                                        <div class="card">
-                                            <div class="row g-0">
-                                                <div class="col-md-8">
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">Administra tus propias variables y productos para realizar simulaciones desde cero, o simplemente utiliza los productos predeterminados disponibles en el sistema.</h5>
-                                                        <p class="card-text text-muted mb-0">
-                                                            Explora el control total sobre tus variables y productos al gestionar tus propias configuraciones para realizar
-                                                            simulaciones desde cero. Personaliza y ajusta cada detalle según tus necesidades específicas. Si prefieres una
-                                                            opción rápida, también puedes utilizar los productos predeterminados que ya se encuentran disponibles en el sistema,
-                                                            proporcionándote una experiencia práctica y eficiente.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div style="padding-top:56.200%;position:relative;"><iframe src="https://gifer.com/embed/VJi" width="100%" height="100%" style='position:absolute;top:0;left:0;' frameBorder="0" allowFullScreen></iframe></div>                                               </div>
-                                            </div>
-                                        </div><!-- end card -->
-                                    </div><!-- end col -->
-                                </div><!-- end row -->
-                            </div><!-- end col -->
-                        </div><!-- end row -->
                     </div>
-                    <!-- container-fluid -->
                 </div>
             </div>
-{% block footer %}
-{% include "partials/footer.html" %}
-{% endblock footer %}
+
+            {% if user.is_authenticated %}
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-3">Acciones Rápidas</h4>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="quick-action-card" onclick="window.location.href='{% url 'simulate:simulate.show' %}'">
+                        <i class="ri-play-circle-line fs-1 mb-2"></i>
+                        <h5>Nueva Simulación</h5>
+                        <p class="mb-0 opacity-75">Ejecutar análisis</p>
+                    </div>
+                </div>
+                {% comment %} <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="quick-action-card" onclick="window.location.href='{% url 'dashboard:chart_builder' %}'">
+                        <i class="ri-bar-chart-box-line fs-1 mb-2"></i>
+                        <h5>Crear Gráfico</h5>
+                        <p class="mb-0 opacity-75">Visualizar datos</p>
+                    </div>
+                </div> {% endcomment %}
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="quick-action-card" onclick="window.location.href='{% url 'product:product.list' %}'">
+                        <i class="ri-shopping-bag-3-line fs-1 mb-2"></i>
+                        <h5>Gestionar Productos</h5>
+                        <p class="mb-0 opacity-75">Administrar catálogo</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="quick-action-card" onclick="generateReport()">
+                        <i class="ri-file-chart-line fs-1 mb-2"></i>
+                        <h5>Generar Reporte</h5>
+                        <p class="mb-0 opacity-75">Exportar análisis</p>
+                        <span class="notification-badge">Nuevo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-3">Resumen General</h4>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-widget">
+                        <i class="ri-briefcase-4-line text-primary fs-2 mb-2"></i>
+                        <h3 class="mb-1">{{ business_count|default:"0" }}</h3>
+                        <p class="text-muted mb-0">Negocios Activos</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-widget">
+                        <i class="ri-box-3-line text-success fs-2 mb-2"></i>
+                        <h3 class="mb-1">{{ product_count|default:"0" }}</h3>
+                        <p class="text-muted mb-0">Productos</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-widget">
+                        <i class="ri-line-chart-line text-info fs-2 mb-2"></i>
+                        <h3 class="mb-1">{{ simulation_count|default:"0" }}</h3>
+                        <p class="text-muted mb-0">Simulaciones</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-widget">
+                        <i class="ri-bar-chart-grouped-line text-warning fs-2 mb-2"></i>
+                        <h3 class="mb-1">{{ chart_count|default:"0" }}</h3>
+                        <p class="text-muted mb-0">Gráficos</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Features Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-3">Características del Sistema</h4>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon primary">
+                            <i class="ri-line-chart-line"></i>
+                        </div>
+                        <h5>Análisis Predictivo</h5>
+                        <p class="text-muted">
+                            Utiliza algoritmos avanzados para predecir tendencias y comportamientos futuros de tu negocio.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon info">
+                            <i class="ri-dashboard-3-line"></i>
+                        </div>
+                        <h5>Dashboard Interactivo</h5>
+                        <p class="text-muted">
+                            Visualiza todos tus datos importantes en tiempo real con gráficos dinámicos e interactivos.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon warning">
+                            <i class="ri-file-excel-2-line"></i>
+                        </div>
+                        <h5>Exportación de Datos</h5>
+                        <p class="text-muted">
+                            Exporta tus análisis y reportes en múltiples formatos incluyendo Excel, PDF y CSV.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon danger">
+                            <i class="ri-shield-check-line"></i>
+                        </div>
+                        <h5>Seguridad Avanzada</h5>
+                        <p class="text-muted">
+                            Tus datos están protegidos con encriptación de nivel empresarial y respaldos automáticos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Feed & Getting Started -->
+            <div class="row">
+                {% if user.is_authenticated %}
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Actividad Reciente</h5>
+                            <a href="#" class="link-secondary">Ver todo</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-feed">
+                                {% for activity in recent_activities %}
+                                <div class="d-flex mb-3 pb-3 border-bottom">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                <i class="ri-user-line"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">{{ activity.action }}</h6>
+                                        <p class="text-muted mb-0">{{ activity.timestamp|timesince }} atrás</p>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-4">
+                                    <i class="ri-history-line fs-1 text-muted"></i>
+                                    <p class="text-muted mt-2">No hay actividad reciente</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-lg-{% if user.is_authenticated %}4{% else %}12{% endif %}">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                {% if user.is_authenticated %}Recursos Útiles{% else %}Comenzar{% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if not user.is_authenticated %}
+                            <div class="text-center py-4">
+                                <i class="ri-rocket-2-line fs-1 text-primary mb-3"></i>
+                                <h5>¡Comienza tu viaje de análisis!</h5>
+                                <p class="text-muted">
+                                    Regístrate ahora para acceder a todas las herramientas de análisis y simulación.
+                                </p>
+                                <a href="{% url 'account_signup' %}" class="btn btn-primary">
+                                    Crear Cuenta Gratis
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="list-group">
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <i class="ri-book-2-line me-2"></i> Guía de Usuario
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <i class="ri-video-line me-2"></i> Video Tutoriales
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <i class="ri-question-line me-2"></i> Preguntas Frecuentes
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <i class="ri-customer-service-2-line me-2"></i> Soporte Técnico
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form %}
+                    <!-- Quick Setup Form -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Configuración Rápida</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" id="quickSetupForm">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="createAll" 
+                                               name="create_all_elements">
+                                        <label class="form-check-label" for="createAll">
+                                            Crear elementos de demostración
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="ri-settings-3-line me-2"></i>Configurar Sistema
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
 </div>
-<!-- end main content-->
+
+<!-- Tutorial Overlay -->
+<div class="tutorial-overlay" id="tutorialOverlay"></div>
+
+<!-- Welcome Modal for New Users -->
+{% if show_welcome %}
+<div class="modal fade" id="welcomeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+                <div class="mb-4">
+                    <lord-icon src="https://cdn.lordicon.com/lupuorrc.json"
+                               trigger="loop"
+                               colors="primary:#0ab39c,secondary:#405189"
+                               style="width:120px;height:120px">
+                    </lord-icon>
+                </div>
+                <h3 class="mb-3">¡Bienvenido al Sistema de Dashboard!</h3>
+                <p class="text-muted mb-4">
+                    Estamos emocionados de tenerte aquí. Este sistema te ayudará a analizar y optimizar tu negocio 
+                    con herramientas avanzadas de simulación y visualización de datos.
+                </p>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="p-3">
+                            <i class="ri-dashboard-line fs-1 text-primary mb-2"></i>
+                            <h6>Dashboard Personalizado</h6>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3">
+                            <i class="ri-line-chart-line fs-1 text-success mb-2"></i>
+                            <h6>Análisis Avanzado</h6>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3">
+                            <i class="ri-file-chart-line fs-1 text-info mb-2"></i>
+                            <h6>Reportes Detallados</h6>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-lg" data-bs-dismiss="modal">
+                    Comenzar a Explorar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock content %}
+
 {% block extra_js %}
-<!-- Vector map-->
-<script src="{% static 'libs/jsvectormap/dist/js/jsvectormap.min.js'%}"></script>
-<script src="{% static 'libs/jsvectormap/dist/maps/world-merc.js'%}"></script>
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+<script>
+// Show welcome modal for new users
+{% if show_welcome %}
+document.addEventListener('DOMContentLoaded', function() {
+    const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+    welcomeModal.show();
+});
+{% endif %}
+
+// Start Tutorial
+function startTutorial() {
+    const overlay = document.getElementById('tutorialOverlay');
+    overlay.style.display = 'block';
+    
+    // Tutorial steps
+    const steps = [
+        {
+            element: '.quick-action-card',
+            message: 'Usa estas acciones rápidas para acceder a las funciones principales'
+        },
+        {
+            element: '.stats-widget',
+            message: 'Aquí puedes ver un resumen de tus estadísticas principales'
+        },
+        {
+            element: '.feature-card',
+            message: 'Explora todas las características disponibles del sistema'
+        }
+    ];
+    
+    let currentStep = 0;
+    
+    function showStep(index) {
+        // Remove previous highlights
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        
+        if (index < steps.length) {
+            const step = steps[index];
+            const element = document.querySelector(step.element);
+            if (element) {
+                element.classList.add('tutorial-highlight');
+                
+                // Show tooltip
+                showTooltip(element, step.message);
+            }
+        } else {
+            // End tutorial
+            overlay.style.display = 'none';
+            Swal.fire({
+                icon: 'success',
+                title: '¡Tutorial Completado!',
+                text: 'Ahora estás listo para usar el sistema',
+                confirmButtonText: 'Genial'
+            });
+        }
+    }
+    
+    function showTooltip(element, message) {
+        // Create and show tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tutorial-tooltip';
+        tooltip.innerHTML = `
+            <p>${message}</p>
+            <button onclick="nextTutorialStep()" class="btn btn-sm btn-primary">Siguiente</button>
+        `;
+        
+        // Position tooltip
+        const rect = element.getBoundingClientRect();
+        tooltip.style.position = 'fixed';
+        tooltip.style.top = rect.bottom + 10 + 'px';
+        tooltip.style.left = rect.left + 'px';
+        tooltip.style.zIndex = '10001';
+        tooltip.style.background = 'white';
+        tooltip.style.padding = '15px';
+        tooltip.style.borderRadius = '10px';
+        tooltip.style.boxShadow = '0 5px 20px rgba(0,0,0,0.2)';
+        
+        document.body.appendChild(tooltip);
+        
+        window.nextTutorialStep = function() {
+            tooltip.remove();
+            currentStep++;
+            showStep(currentStep);
+        };
+    }
+    
+    // Start with first step
+    showStep(currentStep);
+    
+    // Close tutorial on overlay click
+    overlay.onclick = function() {
+        overlay.style.display = 'none';
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        document.querySelectorAll('.tutorial-tooltip').forEach(el => {
+            el.remove();
+        });
+    };
+}
+
+// Generate Report
+function generateReport() {
+    Swal.fire({
+        title: 'Generar Reporte',
+        text: 'Selecciona el tipo de reporte que deseas generar',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Reporte Completo',
+        cancelButtonText: 'Reporte Resumido',
+        showDenyButton: true,
+        denyButtonText: 'Personalizado'
+    }).then((result) => {
+        if (result.isConfirmed || result.isDenied || result.dismiss === Swal.DismissReason.cancel) {
+            // Show loading
+            Swal.fire({
+                title: 'Generando Reporte',
+                html: 'Por favor espera...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Simulate report generation
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Reporte Generado!',
+                    text: 'Tu reporte ha sido generado exitosamente',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }, 2000);
+        }
+    });
+}
+
+// Quick Setup Form
+document.getElementById('quickSetupForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Configurando...';
+    
+    // Submit form
+    fetch(e.target.action, {
+        method: 'POST',
+        body: new FormData(e.target)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Configuración Completada!',
+                text: 'Los elementos de demostración han sido creados',
+                confirmButtonText: 'Ir al Dashboard'
+            }).then(() => {
+                window.location.href = '{% url "dashboard:dashboard.user" %}';
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+});
+
+// Animate numbers on scroll
+const observerOptions = {
+    threshold: 0.5,
+    rootMargin: '0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const statsWidgets = entry.target.querySelectorAll('.stats-widget h3');
+            statsWidgets.forEach(widget => {
+                const target = parseInt(widget.textContent);
+                let current = 0;
+                const increment = target / 50;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        widget.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        widget.textContent = Math.floor(current);
+                    }
+                }, 30);
+            });
+            
+            observer.unobserve(entry.target);
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.row').forEach(row => {
+    if (row.querySelector('.stats-widget')) {
+        observer.observe(row);
+    }
+});
+</script>
 {% endblock extra_js %}

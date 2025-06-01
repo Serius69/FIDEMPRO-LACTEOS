@@ -1,189 +1,614 @@
-{% extends "partials/base.html" %} {% load static %} 
+{% extends "partials/base.html" %} 
+{% load static %} 
 {% load crispy_forms_tags %}
-{% block title %}
-  Lista de negocios
-{% endblock title %}
+
+{% block title %}Lista de negocios - Dashboard{% endblock title %}
+
 {% block extra_css %} 
+<style>
+    /* Estilos mejorados para accesibilidad y responsividad */
+    .business-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
+        height: 100%;
+    }
+    
+    .business-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    
+    .fixed-image {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .card-footer {
+        font-size: 0.875rem;
+    }
+    
+    /* Tutorial Interactivo Estilos */
+    .tutorial-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9998;
+        display: none;
+    }
+    
+    .tutorial-spotlight {
+        position: relative;
+        z-index: 9999;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+    }
+    
+    .tutorial-tooltip {
+        position: absolute;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 300px;
+        z-index: 10000;
+        display: none;
+    }
+    
+    .tutorial-tooltip h5 {
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .tutorial-tooltip p {
+        margin-bottom: 15px;
+        color: #666;
+    }
+    
+    .tutorial-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    .tutorial-step-indicator {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #fff;
+        padding: 10px 20px;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 10001;
+        display: none;
+    }
+    
+    .step-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ddd;
+        margin: 0 5px;
+        transition: background 0.3s;
+    }
+    
+    .step-dot.active {
+        background: #198754;
+    }
+    
+    @media (max-width: 767px) {
+        .tutorial-tooltip {
+            max-width: 250px;
+            padding: 15px;
+        }
+    }
+    
+    /* Mejoras de accesibilidad */
+    .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    
+    /* Focus visible para teclado */
+    .btn:focus-visible,
+    .card:focus-visible {
+        outline: 3px solid #198754;
+        outline-offset: 2px;
+    }
+</style>
 {% endblock extra_css %}
+
 {% block content %}
-<!-- ============================================================== -->
-<!-- Start right Content here -->
-<!-- ============================================================== -->
 <div class="main-content">
-  <div class="page-content">
-    <div class="container-fluid">
-      {% block pagetitle %} 
-        {% include "partials/page-title.html" with pagetitle="Business" title="Business List" %} 
-      {% endblock pagetitle %}
-      <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-        <div class="px-4">
-          <div class="row">
-            <div class="col-xxl-9 align-self-center">
-              <div class="py-4">
-                <h4 class="display-6 -text">Lista de negocios</h4>
-                <div class="container">                      
-                  <p>Pagina de listado de negocios registradas.</p>
-                  <h2>Características clave:</h2>
-                  <ul>
-                    <li><span class="text-success">Editar:</span> Actualice la informacion de sus negocios.</li>
-                    <li><span class="text-danger">Eliminar: </span> Eliminacion de alguno de los negocios que tiene registrado</li>
-                    <li><span class="text-primary">Ver: </span>Ver la informacion de cada elmento.</li>
-                  </ul>
+    <div class="page-content">
+        <div class="container-fluid">
+            {% block pagetitle %} 
+                {% include "partials/page-title.html" with pagetitle="Business" title="Business List" %} 
+            {% endblock pagetitle %}
+            
+            <!-- Tutorial Overlay -->
+            <div class="tutorial-overlay" id="tutorialOverlay"></div>
+            
+            <!-- Step Indicator -->
+            <div class="tutorial-step-indicator" id="stepIndicator">
+                <span class="step-dot active"></span>
+                <span class="step-dot"></span>
+                <span class="step-dot"></span>
+                <span class="step-dot"></span>
+                <span class="step-dot"></span>
+            </div>
+            
+            <!-- Tutorial Tooltip -->
+            <div class="tutorial-tooltip" id="tutorialTooltip">
+                <h5 id="tutorialTitle">Título del paso</h5>
+                <p id="tutorialContent">Contenido del paso</p>
+                <div class="tutorial-buttons">
+                    <button class="btn btn-sm btn-secondary" id="tutorialPrev">Anterior</button>
+                    <button class="btn btn-sm btn-success" id="tutorialNext">Siguiente</button>
                 </div>
-              </div>
             </div>
-            <div class="col-xxl-3 ms-auto">
-              <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                <img src="{% static 'images/business-img.webp'%}" alt="" class="img-fluid" style="max-width: 100%; height: auto;">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    <div class="row">
-      <div class="col">
-          <div class="card">
-              <div class="card-header border-0 rounded">
-                  <div class="col-lg-3 text-end">
-                      <div class="hstack gap-2">
-                          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateBusiness">
-                              <i class="ri-add-fill me-1 align-bottom"></i>Crear nuevo
-                          </button>
-                      </div>
-                  </div>
-                  <!--end row-->
-              </div>
-          </div>
-      </div>
-      <!-- List of Businesess -->          
-      <div class="row" id="business-list">
-        {% for business in businesses %}
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
-                <div class="card h-100">
-                    <div class="card-img-container position-relative">
-                        <img src="{{ business.get_photo_url }}" class="card-img-top fixed-image" alt="{{ business.name }}" />
-                        <div class="dropdown position-absolute top-0 end-0 mt-2 me-2">
-                            <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                <i data-feather="more-horizontal" class="icon-sm"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <a class="dropdown-item" href="{% url 'business:business.overview' business.id %}">
-                                    <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                    Ver
-                                </a>
-                                <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal" 
-                                data-bs-target="#addOrUpdateBusiness" data-variable-id="{{ business.id }}" 
-                                onclick="loadBusinessDetails('{{ business.id }}'); return false;">
-                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                    Editar
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                {{ business.id }}
-                                <a id="delete-business-link" class="dropdown-item delete-variable" 
-                                  data-bs-toggle="modal" data-bs-target="#removeBusinessModal" data-variable-id="{{ business.id }}">
-                                  <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                  Eliminar
-                                </a>
+            
+            <!-- Header Section -->
+            <section class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top" aria-label="Encabezado de la página">
+                <div class="px-4">
+                    <div class="row align-items-center">
+                        <div class="col-xxl-9">
+                            <div class="py-4">
+                                <h1 class="display-6">Lista de negocios</h1>
+                                <p class="lead">Gestiona todos tus negocios registrados en un solo lugar.</p>
+                                
+                                <div class="mt-4">
+                                    <h2 class="h5">Características principales:</h2>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="ri-edit-line text-success me-2"></i>
+                                            <strong>Editar:</strong> Actualiza la información de tus negocios fácilmente.
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="ri-delete-bin-line text-danger me-2"></i>
+                                            <strong>Eliminar:</strong> Gestiona el ciclo de vida de tus negocios.
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="ri-eye-line text-primary me-2"></i>
+                                            <strong>Ver:</strong> Accede a información detallada de cada negocio.
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Tutorial Start Button -->
+                                <button class="btn btn-outline-success mt-3" id="startTutorial">
+                                    <i class="ri-play-circle-line me-2"></i>Iniciar Tutorial
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 d-none d-xxl-block">
+                            <div class="text-center">
+                                <img src="{% static 'images/business-img.webp' %}" 
+                                     alt="Ilustración de negocios" 
+                                     class="img-fluid"
+                                     loading="lazy">
                             </div>
                         </div>
                     </div>
-                    <div class="card-body p-4">
-                        <h5 class="card-title">{{ business.name }}</h5>
-                        <p class="card-text text-truncate">{{ business.description }}</p>
-                    </div>
-                    <div class="card-footer border-top-dashed">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                            <div>
-                                <i class="ri-map-pin-2-line align-bottom me-1"></i>
-                                <span class="business-location">{{business.location}}</span>
+                </div>
+            </section>
+            
+            <!-- Actions Bar -->
+            <div class="row mt-4">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header border-0 rounded">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <h3 class="card-title mb-0">Tus Negocios</h3>
+                                <button class="btn btn-success" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#addOrUpdateBusiness"
+                                        id="createBusinessBtn"
+                                        aria-label="Crear nuevo negocio">
+                                    <i class="ri-add-fill me-1 align-bottom"></i>
+                                    <span>Crear nuevo</span>
+                                </button>
                             </div>
-                            <div>
-                                <i class="ri-user-3-line align-bottom me-1"></i>
-                                {% if business.type == 1 %}
-                                    <span class="badge badge-primary">Lácteos</span>
-                                {% else %}
-                                    <span class="badge badge-primary">Otros</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Business List -->
+            <section aria-label="Lista de negocios" id="businessListSection">
+                <div class="row g-3" id="business-list">
+                    {% for business in businesses %}
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                            <article class="card business-card h-100 position-relative" 
+                                     tabindex="0"
+                                     aria-label="Negocio: {{ business.name }}">
+                                
+                                <!-- Card Actions -->
+                                <div class="position-absolute top-0 end-0 m-2" style="z-index: 3;">
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted p-1 rounded-circle" 
+                                                data-bs-toggle="dropdown" 
+                                                aria-haspopup="true" 
+                                                aria-expanded="false"
+                                                aria-label="Opciones para {{ business.name }}">
+                                            <i class="ri-more-2-fill"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <a class="dropdown-item" 
+                                               href="{% url 'business:business.overview' business.id %}">
+                                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                Ver detalles
+                                            </a>
+                                            <a class="dropdown-item edit-business" 
+                                               href="#" 
+                                               data-bs-toggle="modal" 
+                                               data-bs-target="#addOrUpdateBusiness" 
+                                               data-business-id="{{ business.id }}"
+                                               onclick="loadBusinessDetails('{{ business.id }}'); return false;">
+                                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                Editar
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item delete-business text-danger" 
+                                               href="#"
+                                               data-bs-toggle="modal" 
+                                               data-bs-target="#removeBusinessModal" 
+                                               data-business-id="{{ business.id }}">
+                                                <i class="ri-delete-bin-fill align-bottom me-2"></i>
+                                                Eliminar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Business Image -->
+                                <div class="card-img-container">
+                                    <img src="{{ business.get_photo_url }}" 
+                                         class="card-img-top fixed-image" 
+                                         alt="Imagen de {{ business.name }}"
+                                         loading="lazy">
+                                </div>
+                                
+                                <!-- Business Info -->
+                                <div class="card-body">
+                                    <h4 class="card-title h5">{{ business.name }}</h4>
+                                    <p class="card-text text-muted">
+                                        {% if business.description %}
+                                            {{ business.description|truncatewords:15 }}
+                                        {% else %}
+                                            Sin descripción disponible
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <!-- Business Metadata -->
+                                <div class="card-footer bg-light">
+                                    <div class="d-flex flex-wrap gap-3 small">
+                                        <div>
+                                            <i class="ri-map-pin-2-line me-1" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Ubicación:</span>
+                                            {{ business.location }}
+                                        </div>
+                                        <div>
+                                            <i class="ri-store-2-line me-1" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Tipo:</span>
+                                            {{ business.get_type_display }}
+                                        </div>
+                                        <div>
+                                            <i class="ri-calendar-line me-1" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Creado:</span>
+                                            <time datetime="{{ business.date_created|date:'Y-m-d' }}">
+                                                {{ business.date_created|date:"d M, Y" }}
+                                            </time>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="text-center py-5">
+                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                           trigger="loop" 
+                                           colors="primary:#405189,secondary:#0ab39c" 
+                                           style="width: 75px; height: 75px">
+                                </lord-icon>
+                                <h3 class="mt-3">No hay negocios registrados</h3>
+                                <p class="text-muted">Comienza creando tu primer negocio.</p>
+                                <button class="btn btn-success mt-2" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#addOrUpdateBusiness">
+                                    <i class="ri-add-line me-1"></i>Crear mi primer negocio
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            
+            <!-- Pagination -->
+            {% if businesses.has_other_pages %}
+            <nav aria-label="Paginación de negocios" class="mt-4">
+                <div class="row align-items-center">
+                    <div class="col-sm-6">
+                        <p class="text-muted mb-sm-0">
+                            Mostrando página <strong>{{ businesses.number }}</strong> 
+                            de <strong>{{ businesses.paginator.num_pages }}</strong>
+                        </p>
+                    </div>
+                    <div class="col-sm-6">
+                        <ul class="pagination justify-content-sm-end mb-0">
+                            {% if businesses.has_previous %}
+                                <li class="page-item">
+                                    <a href="?page=1" class="page-link" aria-label="Primera página">
+                                        <i class="ri-arrow-left-double-line"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a href="?page={{ businesses.previous_page_number }}" 
+                                       class="page-link" 
+                                       aria-label="Página anterior">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in businesses.paginator.page_range %}
+                                {% if businesses.number == num %}
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > businesses.number|add:'-3' and num < businesses.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                                    </li>
                                 {% endif %}
-                            </div>
-                            <div>
-                              <i class="ri-time-line align-bottom me-1"></i>
-                              <span class="business-postdate">{{ business.date_created|date:"F d, Y" }}</span>
-                          </div>
-                        </div>
-                    </div>                    
+                            {% endfor %}
+                            
+                            {% if businesses.has_next %}
+                                <li class="page-item">
+                                    <a href="?page={{ businesses.next_page_number }}" 
+                                       class="page-link" 
+                                       aria-label="Página siguiente">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a href="?page={{ businesses.paginator.num_pages }}" 
+                                       class="page-link" 
+                                       aria-label="Última página">
+                                        <i class="ri-arrow-right-double-line"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        {% empty %}
-            <div class="col text-center py-4">
-                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width: 75px; height: 75px"></lord-icon>
-                <h5 class="mt-2">
-                    Lo siento, no hay ningún negocio registrado en la base de datos
-                </h5>
-            </div>
-        {% endfor %}
-    </div>    
-      <!-- End List of Businesess -->
-      <!-- Pagination -->
-      <div class="align-items-center mt-2 row text-center text-sm-start">
-        <div class="col-sm">
-          <div class="text-muted">
-            Mostrar pagina
-            <span class="fw-semibold">{{ businesses.number }}</span>
-            de
-            <span class="fw-semibold">{{ businesses.paginator.num_pages }}</span>
-            paginas
-          </div>
-        </div>
-        <div class="col-sm-auto">
-          <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-            {% if businesses.has_previous %}
-              <li class="page-item">
-                <a href="?page=1" class="page-link" aria-label="First">
-                  ««
-                </a>
-              </li>
-              <li class="page-item">
-                <a href="?page={{ businesses.previous_page_number }}" class="page-link" aria-label="Previous">
-                  «
-                </a>
-              </li>
+            </nav>
             {% endif %}
-            {% for i in businesses.paginator.page_range %}
-              <li class="page-item {% if i == businesses.number %}active{% endif %}">
-                <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-              </li>
-            {% endfor %}
-            {% if businesses.has_next %}
-              <li class="page-item">
-                <a href="?page={{ businesses.next_page_number }}" class="page-link" aria-label="Next">
-                  »
-                </a>
-              </li>
-              <li class="page-item">
-                <a href="?page={{ businesses.paginator.num_pages }}" class="page-link" aria-label="Last">
-                  »»
-                </a>
-              </li>
-            {% endif %}
-          </ul>
         </div>
-      </div> 
-      <!-- End Pagination --> 
     </div>
-  <!-- End Page-content -->
-  {% block footer %} {% include "partials/footer.html" %} {% endblock footer %}
-  </div>
-  <!-- end main content-->
-  {% endblock content %}
-  {% block extra_content %}
-  {% block modals %} 
-  {% include "business/business-modal.html" %} 
-  {% endblock modals %}
-  {% endblock extra_content %} 
-  {% block extra_js %}
-  <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
-  <script src="/static/js/delete.js?v=1"></script>
-  <script src="{% static 'js/edit-add.js' %}"></script>
-  <script src="{% static 'js/common-utils.js' %}"></script>
-  {% endblock extra_js %}
+    
+    {% block footer %} 
+        {% include "partials/footer.html" %} 
+    {% endblock footer %}
 </div>
+{% endblock content %}
+
+{% block extra_content %}
+    {% block modals %} 
+        {% include "business/business-modal.html" %} 
+    {% endblock modals %}
+{% endblock extra_content %}
+
+{% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'js/delete.js' %}"></script>
+<script src="{% static 'js/edit-add.js' %}"></script>
+<script src="{% static 'js/common-utils.js' %}"></script>
+
+<!-- Tutorial Interactivo Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tutorial System
+    const tutorialSteps = [
+        {
+            element: '#createBusinessBtn',
+            title: '¡Bienvenido a tu Dashboard de Negocios!',
+            content: 'Este es el botón principal para crear un nuevo negocio. Haz clic aquí cuando quieras agregar un negocio a tu lista.',
+            position: 'bottom'
+        },
+        {
+            element: '.business-card:first-child',
+            title: 'Tarjetas de Negocio',
+            content: 'Cada negocio se muestra en una tarjeta con su imagen, nombre, descripción y datos importantes.',
+            position: 'top'
+        },
+        {
+            element: '.business-card:first-child .dropdown',
+            title: 'Menú de Opciones',
+            content: 'Haz clic en los tres puntos para ver las opciones disponibles: Ver detalles, Editar o Eliminar.',
+            position: 'left'
+        },
+        {
+            element: '.pagination',
+            title: 'Navegación por Páginas',
+            content: 'Si tienes muchos negocios, puedes navegar entre páginas usando estos controles.',
+            position: 'top'
+        },
+        {
+            element: '#startTutorial',
+            title: '¡Tutorial Completado!',
+            content: 'Has completado el tutorial. Puedes volver a verlo en cualquier momento haciendo clic en "Iniciar Tutorial".',
+            position: 'bottom'
+        }
+    ];
+    
+    let currentStep = 0;
+    const overlay = document.getElementById('tutorialOverlay');
+    const tooltip = document.getElementById('tutorialTooltip');
+    const stepIndicator = document.getElementById('stepIndicator');
+    const prevBtn = document.getElementById('tutorialPrev');
+    const nextBtn = document.getElementById('tutorialNext');
+    
+    // Initialize tutorial
+    document.getElementById('startTutorial').addEventListener('click', startTutorial);
+    prevBtn.addEventListener('click', previousStep);
+    nextBtn.addEventListener('click', nextStep);
+    
+    // Close tutorial on overlay click
+    overlay.addEventListener('click', endTutorial);
+    
+    // Close tutorial on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.style.display === 'block') {
+            endTutorial();
+        }
+    });
+    
+    function startTutorial() {
+        currentStep = 0;
+        overlay.style.display = 'block';
+        stepIndicator.style.display = 'block';
+        showStep(currentStep);
+    }
+    
+    function showStep(step) {
+        const stepData = tutorialSteps[step];
+        const element = document.querySelector(stepData.element);
+        
+        if (!element) {
+            // If element doesn't exist, skip to next step
+            if (step < tutorialSteps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            } else {
+                endTutorial();
+            }
+            return;
+        }
+        
+        // Remove previous spotlight
+        document.querySelectorAll('.tutorial-spotlight').forEach(el => {
+            el.classList.remove('tutorial-spotlight');
+        });
+        
+        // Add spotlight to current element
+        element.classList.add('tutorial-spotlight');
+        
+        // Update tooltip content
+        document.getElementById('tutorialTitle').textContent = stepData.title;
+        document.getElementById('tutorialContent').textContent = stepData.content;
+        
+        // Update step indicators
+        updateStepIndicators();
+        
+        // Position tooltip
+        positionTooltip(element, stepData.position);
+        
+        // Update buttons
+        prevBtn.style.display = step === 0 ? 'none' : 'block';
+        nextBtn.textContent = step === tutorialSteps.length - 1 ? 'Finalizar' : 'Siguiente';
+        
+        // Show tooltip
+        tooltip.style.display = 'block';
+        
+        // Scroll element into view
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    function positionTooltip(element, position) {
+        const rect = element.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        let top, left;
+        
+        switch(position) {
+            case 'top':
+                top = rect.top - tooltipRect.height - 20;
+                left = rect.left + (rect.width - tooltipRect.width) / 2;
+                break;
+            case 'bottom':
+                top = rect.bottom + 20;
+                left = rect.left + (rect.width - tooltipRect.width) / 2;
+                break;
+            case 'left':
+                top = rect.top + (rect.height - tooltipRect.height) / 2;
+                left = rect.left - tooltipRect.width - 20;
+                break;
+            case 'right':
+                top = rect.top + (rect.height - tooltipRect.height) / 2;
+                left = rect.right + 20;
+                break;
+        }
+        
+        // Ensure tooltip stays within viewport
+        top = Math.max(10, Math.min(window.innerHeight - tooltipRect.height - 10, top));
+        left = Math.max(10, Math.min(window.innerWidth - tooltipRect.width - 10, left));
+        
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+    }
+    
+    function updateStepIndicators() {
+        const dots = stepIndicator.querySelectorAll('.step-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentStep);
+        });
+    }
+    
+    function previousStep() {
+        if (currentStep > 0) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    }
+    
+    function nextStep() {
+        if (currentStep < tutorialSteps.length - 1) {
+            currentStep++;
+            showStep(currentStep);
+        } else {
+            endTutorial();
+        }
+    }
+    
+    function endTutorial() {
+        overlay.style.display = 'none';
+        tooltip.style.display = 'none';
+        stepIndicator.style.display = 'none';
+        document.querySelectorAll('.tutorial-spotlight').forEach(el => {
+            el.classList.remove('tutorial-spotlight');
+        });
+        
+        // Save tutorial completion in localStorage
+        localStorage.setItem('businessTutorialCompleted', 'true');
+    }
+    
+    // Show tutorial automatically for first-time users
+    if (!localStorage.getItem('businessTutorialCompleted')) {
+        setTimeout(startTutorial, 1000);
+    }
+    
+    // Business operations
+    document.querySelectorAll('.delete-business').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const businessId = this.dataset.businessId;
+            document.getElementById('delete-business-id').value = businessId;
+        });
+    });
+});
+</script>
+{% endblock extra_js %}

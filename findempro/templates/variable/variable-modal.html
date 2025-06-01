@@ -5,89 +5,141 @@
         <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
             {% csrf_token %}
             <div class="modal-header p-3 ps-4 bg-success-subtle">
-                <h5 class="modal-title" id="addOrUpdateVariablelabel"></h5>
+                <h5 class="modal-title" id="addOrUpdateVariablelabel">Crear Nueva Variable</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="variable-id-field" />
+                <input type="hidden" id="variable-id-field" name="variable_id" />
                 <div class="row g-3">
                     <div class="col-lg-12">
                         <div class="text-center mb-4 mt-n5 pt-2">
                             <div class="position-relative d-inline-block">
                                 <div class="position-absolute bottom-0 end-0">
-                                    <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Select Image">
+                                    <label for="image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Seleccionar Imagen">
                                         <div class="avatar-xs cursor-pointer">
                                             <div class="avatar-title bg-light border rounded-circle text-muted">
                                                 <i class="ri-image-fill"></i>
                                             </div>
                                         </div>
                                     </label>
-                                    <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png, image/jpeg" name="image_src"/>
+                                    <input class="form-control d-none" value="" id="image_src" type="file" accept="image/png, image/jpeg, image/jpg, image/gif" name="image_src"/>
                                 </div>
                                 <div class="avatar-lg p-1">
                                     <div class="avatar-title bg-light rounded-circle">
-                                        <img src="" id="logo-img" name="image_src" class="avatar-md rounded-circle object-fit-cover"/>
+                                        <img src="/media/images/variable/variable-dummy-img.jpg" id="logo-img" class="avatar-md rounded-circle object-fit-cover"/>
                                     </div>
                                 </div>
                             </div>
-                            <h5 class="fs-13 mt-3">Imagen</h5>
+                            <h5 class="fs-13 mt-3">Imagen de la Variable</h5>
+                            <p class="text-muted fs-12 mb-0">PNG, JPG, GIF hasta 10MB</p>
                         </div>
+                        
                         <div>
-                            <label for="name" class="form-label">Nombre de la variable</label>
-                            <input type="text" id="name" class="form-control" placeholder="Ingrese el nombre de la variable" name="name" required/>
-                            <div class="invalid-feedback">Ingrese un nombre de variable.</div>
+                            <label for="name" class="form-label">Nombre de la variable <span class="text-danger">*</span></label>
+                            <input type="text" id="name" class="form-control" placeholder="Ingrese el nombre de la variable" name="name" required maxlength="70"/>
+                            <div class="invalid-feedback">Ingrese un nombre de variable válido.</div>
                         </div>
                     </div>
+                    
                     <div class="col-lg-6">
                         <div>
-                            <label for="fk_product" class="form-label">Producto asociado</label>
+                            <label for="fk_product" class="form-label">Producto asociado <span class="text-danger">*</span></label>
                             <select class="form-select" id="fk_product" name="fk_product" required>
+                                <option value="">Seleccione un producto</option>
                                 {% for product in products %}
                                 <option value="{{ product.id }}">{{ product.name }}</option>
                                 {% empty %}
-                                <option value=".">...</option>
+                                <option value="">No hay productos disponibles</option>
                                 {% endfor %}
                             </select>
                             <div class="invalid-feedback">Seleccione el producto asociado para la variable.</div>
                         </div>
                     </div>
+                    
                     <div class="col-lg-6">
                         <div>
-                            <label for="type" class="form-label">Tipo de variable</label>
+                            <label for="type" class="form-label">Tipo de variable <span class="text-danger">*</span></label>
                             <select class="form-select" id="type" name="type" required>
-                                <option value="1">Endógena</option>
-                                <option value="2">Exógeno</option>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="1">Exógena</option>
                                 <option value="2">Estado</option>
+                                <option value="3">Endógena</option>
                             </select>
                             <div class="invalid-feedback">Seleccione un tipo de variable.</div>
+                            <small class="text-muted">
+                                <strong>Exógena:</strong> Variables externas al sistema<br>
+                                <strong>Estado:</strong> Variables que representan el estado actual<br>
+                                <strong>Endógena:</strong> Variables calculadas internamente
+                            </small>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div>
-                            <label for="unit" class="form-label">Unidad</label>
-                            <select class="form-select" id="unit" name="unit" required>
-                                <option value="L">L</option>
-                                <option value="Bs">Bs</option>
-                                <option value="Lt/Bs">Lt/Bs</option>
-                            </select>
-                        </div>
-                    </div>
+                    
                     <div class="col-lg-12">
                         <div>
-                            <label for="description" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="description" rows="3" placeholder="Enter description" name="description" required></textarea>
+                            <label for="unit" class="form-label">Unidad de medida</label>
+                            <select class="form-select" id="unit" name="unit">
+                                <option value="">Seleccione una unidad</option>
+                                <optgroup label="Volumen">
+                                    <option value="L">L (Litros)</option>
+                                    <option value="mL">mL (Mililitros)</option>
+                                    <option value="m³">m³ (Metros cúbicos)</option>
+                                </optgroup>
+                                <optgroup label="Moneda">
+                                    <option value="Bs">Bs (Bolivianos)</option>
+                                    <option value="USD">USD (Dólares)</option>
+                                </optgroup>
+                                <optgroup label="Peso">
+                                    <option value="Kg">Kg (Kilogramos)</option>
+                                    <option value="g">g (Gramos)</option>
+                                    <option value="t">t (Toneladas)</option>
+                                </optgroup>
+                                <optgroup label="Longitud">
+                                    <option value="m">m (Metros)</option>
+                                    <option value="cm">cm (Centímetros)</option>
+                                    <option value="km">km (Kilómetros)</option>
+                                </optgroup>
+                                <optgroup label="Tiempo">
+                                    <option value="h">h (Horas)</option>
+                                    <option value="min">min (Minutos)</option>
+                                    <option value="s">s (Segundos)</option>
+                                    <option value="días">días</option>
+                                </optgroup>
+                                <optgroup label="Porcentaje y Ratios">
+                                    <option value="%">% (Porcentaje)</option>
+                                    <option value="Lt/Bs">Lt/Bs (Litros por Boliviano)</option>
+                                    <option value="Kg/h">Kg/h (Kilogramos por hora)</option>
+                                </optgroup>
+                                <optgroup label="Otros">
+                                    <option value="unidad">Unidad</option>
+                                    <option value="pieza">Pieza</option>
+                                    <option value="lote">Lote</option>
+                                </optgroup>
+                            </select>
+                            <small class="text-muted">Opcional: Especifique la unidad de medida de la variable</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-12">
+                        <div>
+                            <label for="description" class="form-label">Descripción <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" rows="4" placeholder="Ingrese una descripción detallada de la variable, su propósito y cómo se utiliza..." name="description" required maxlength="500"></textarea>
                             <div class="invalid-feedback">Ingrese una descripción de la variable.</div>
+                            <div class="form-text">
+                                <span id="description-counter">0</span>/500 caracteres
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <div class="hstack gap-2 justify-content-end">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                    <input type="hidden" name="product_id" id="product_id" value="{{ variable.id }}">
-                    <button type="submit" class="btn btn-primary" onclick="variableForm.handleSubmission('{{ variable.id }}' !== '');">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        <i class="ri-close-line me-1"></i>
+                        Cerrar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submit-variable-btn">
                         <i class="ri-save-3-line align-bottom me-1"></i>
-                        Guardar
+                        <span id="submit-btn-text">Guardar Variable</span>
                     </button>
                 </div>
             </div>
@@ -96,6 +148,7 @@
     </div>
 </div>
 <!-- End of Add or Update Variable Modal -->
+
 <!-- removeVariableModal -->
 <div id="removeVariableModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -110,20 +163,21 @@
                     <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                         <h4>¿Está seguro?</h4>
                         <p class="text-muted mx-4 mb-0">
-                            ¿Estás seguro de que quieres eliminar esta variable?
+                            ¿Estás seguro de que quieres eliminar esta variable? Esta acción no se puede deshacer.
                         </p>
                     </div>
                 </div>
                 <!-- Form for deletion -->
-                <form id="deleteVariableForm" method="POST" action="{% url 'variable:variable.delete' 0 %}">
+                <form id="deleteVariableForm" method="POST">
                     {% csrf_token %}
-                    <input type="hidden" id="delete-variable-url" value="{% url 'variable:variable.delete' 0 %}">
                     <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
                         <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-                            Cerrar
+                            <i class="ri-close-line me-1"></i>
+                            Cancelar
                         </button>
                         <button type="submit" class="btn w-sm btn-danger delete-variable-btn">
-                            ¡Sí, borrarlo!
+                            <i class="ri-delete-bin-line me-1"></i>
+                            ¡Sí, eliminar!
                         </button>
                     </div>
                 </form>
@@ -132,73 +186,155 @@
     </div>
 </div>
 
-<!-- addOrUpdateEquationModalModal -->
+<!-- addOrUpdateEquationModal -->
 <div class="modal fade" id="addOrUpdateEquation" tabindex="-1" aria-labelledby="addOrUpdateEquationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0">
-          <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
+          <form id="equationForm" autocomplete="off" class="needs-validation" novalidate>
             {% csrf_token %}
-            <div class="modal-header p-3 ps-4 bg-success-subtle">
-              <h5 class="modal-title" id="addOrUpdateEquationModalLabel"></h5>
+            <div class="modal-header p-3 ps-4 bg-info-subtle">
+              <h5 class="modal-title" id="addOrUpdateEquationModalLabel">
+                <i class="ri-function-line me-2"></i>
+                Crear Nueva Ecuación
+              </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <input type="hidden" id="variable-id-field" />
+              <input type="hidden" id="equation-id-field" name="equation_id" />
               <div class="row g-3">
                 <div class="col-lg-12">
                   <div>
-                    <label for="name" class="form-label">Nombre de la Ecuacion</label>
-                    <input type="text" id="name"  class="form-control"  placeholder="Ingrese el nombre de la variable" name="name"  required/>
-                    <div class="invalid-feedback">Ingrese un nombre de la ecuacion.</div>
+                    <label for="eq_name" class="form-label">Nombre de la Ecuación <span class="text-danger">*</span></label>
+                    <input type="text" id="eq_name" class="form-control" placeholder="Ej: Cálculo de Producción Total" name="name" required maxlength="70"/>
+                    <div class="invalid-feedback">Ingrese un nombre para la ecuación.</div>
                   </div>
                 </div>
+                
                 <div class="col-lg-12">
                   <div>
-                      <label for="expression" class="form-label">Expresion</label>
-                      <div id="expression" class="mathquill-editable"></div>
-                      <input type="hidden" id="equationInput" name="equation">
-                      <div class="invalid-feedback">Ingrese la expresion de la ecucaion</div>
+                      <label for="expression" class="form-label">Expresión Matemática <span class="text-danger">*</span></label>
+                      <input type="text" id="expression" class="form-control" placeholder="Ej: x = y + z, produccion_total = leche_mañana + leche_tarde" name="expression" required/>
+                      <div class="invalid-feedback">Ingrese la expresión matemática de la ecuación.</div>
+                      <small class="text-muted">
+                        <strong>Ejemplos:</strong><br>
+                        • Simple: x = y + z<br>
+                        • Con nombres: produccion_total = leche_mañana + leche_tarde<br>
+                        • Con operaciones: costo_total = (precio * cantidad) + impuestos
+                      </small>
                   </div>
-              </div>
+                </div>
+
+                <div class="col-lg-12">
+                  <h6 class="text-primary mb-3">
+                    <i class="ri-links-line me-2"></i>
+                    Variables Relacionadas
+                  </h6>
+                </div>
+                
+                <div class="col-lg-6">
+                  <div>
+                    <label for="fk_variable1" class="form-label">Variable Principal <span class="text-danger">*</span></label>
+                    <select class="form-select" id="fk_variable1" name="fk_variable1" required>
+                      <option value="">Seleccione la variable principal</option>
+                      {% for variable in variables %}
+                      <option value="{{ variable.id }}" data-product="{{ variable.fk_product.name }}" data-type="{{ variable.get_type_display }}">
+                        {{ variable.name }} - {{ variable.fk_product.name }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Seleccione la variable principal de la ecuación.</div>
+                  </div>
+                </div>
+                
+                <div class="col-lg-6">
+                  <div>
+                    <label for="fk_variable2" class="form-label">Variable 2 (Opcional)</label>
+                    <select class="form-select" id="fk_variable2" name="fk_variable2">
+                      <option value="">Ninguna</option>
+                      {% for variable in variables %}
+                      <option value="{{ variable.id }}">{{ variable.name }} - {{ variable.fk_product.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="col-lg-4">
+                  <div>
+                    <label for="fk_variable3" class="form-label">Variable 3 (Opcional)</label>
+                    <select class="form-select" id="fk_variable3" name="fk_variable3">
+                      <option value="">Ninguna</option>
+                      {% for variable in variables %}
+                      <option value="{{ variable.id }}">{{ variable.name }} - {{ variable.fk_product.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="col-lg-4">
+                  <div>
+                    <label for="fk_variable4" class="form-label">Variable 4 (Opcional)</label>
+                    <select class="form-select" id="fk_variable4" name="fk_variable4">
+                      <option value="">Ninguna</option>
+                      {% for variable in variables %}
+                      <option value="{{ variable.id }}">{{ variable.name }} - {{ variable.fk_product.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="col-lg-4">
+                  <div>
+                    <label for="fk_variable5" class="form-label">Variable 5 (Opcional)</label>
+                    <select class="form-select" id="fk_variable5" name="fk_variable5">
+                      <option value="">Ninguna</option>
+                      {% for variable in variables %}
+                      <option value="{{ variable.id }}">{{ variable.name }} - {{ variable.fk_product.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                
                 <div class="col-lg-12">
                   <div>
-                    <label for="description" class="form-label"
-                      >Descripción</label>
-                    <textarea class="form-control" id="description" rows="3"
-                      placeholder="Ingrese la descripción" name="description" required></textarea>
-                    <div class="invalid-feedback"
-                      >Ingrese una descripción de la variable.</div
-                    >
+                    <label for="fk_area" class="form-label">Área de Aplicación (Opcional)</label>
+                    <select class="form-select" id="fk_area" name="fk_area">
+                      <option value="">Ninguna área específica</option>
+                      {% comment %} Areas will be populated dynamically {% endcomment %}
+                    </select>
+                    <small class="text-muted">Seleccione el área donde se aplica esta ecuación</small>
+                  </div>
+                </div>
+                
+                <div class="col-lg-12">
+                  <div>
+                    <label for="eq_description" class="form-label">Descripción <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="eq_description" rows="4" placeholder="Describa el propósito de la ecuación, qué calcula y cómo se utiliza en el contexto del negocio..." name="description" required maxlength="500"></textarea>
+                    <div class="invalid-feedback">Ingrese una descripción de la ecuación.</div>
+                    <div class="form-text">
+                      <span id="eq-description-counter">0</span>/500 caracteres
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div class="modal-footer">
               <div class="hstack gap-2 justify-content-end">
-                <button type="button"  class="btn btn-light"  data-bs-dismiss="modal" >Cerrar</button>
-                <input type="hidden" name="equation_id" id="equation_id" value="{{ equation.id }}">
-                  <button type="submit" class="btn btn-primary" onclick="variableForm.handleSubmission('{{ equation.id }}' !== '');">
-                      <i class="ri-save-3-line align-bottom me-1"></i>
-                      Guardar
-                  </button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                  <i class="ri-close-line me-1"></i>
+                  Cerrar
+                </button>
+                <button type="submit" class="btn btn-primary" id="submit-equation-btn">
+                    <i class="ri-save-3-line align-bottom me-1"></i>
+                    <span id="eq-submit-btn-text">Guardar Ecuación</span>
+                </button>
               </div>
             </div>
           </form>
         </div>
       </div>
 </div>
-<script>
-  var mathField = MQ.MathField(document.getElementById('equation'), {
-      spaceBehavesLikeTab: true,
-      handlers: {
-          edit: function () {
-              var latex = mathField.latex();
-              $('#equationInput').val(latex);
-          }
-      }
-  });
-</script>
-<!-- removeProductModal -->
+
+<!-- removeEquationModal -->
 <div id="removeEquationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -212,20 +348,21 @@
                     <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
                         <h4>¿Está seguro?</h4>
                         <p class="text-muted mx-4 mb-0">
-                            ¿Estás seguro de que quieres eliminar la ecuacion?
+                            ¿Estás seguro de que quieres eliminar esta ecuación? Esta acción no se puede deshacer.
                         </p>
                     </div>
                 </div>
                 <!-- Form for deletion -->
-                <form id="deleteEquationForm" method="POST" action="{% url 'variable:equation.delete' 0 %}">
+                <form id="deleteEquationForm" method="POST">
                     {% csrf_token %}
-                    <input type="hidden" id="delete-equation-url" value="{% url 'variable:equation.delete' 0 %}">
                     <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
                         <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-                            Cerrar
+                            <i class="ri-close-line me-1"></i>
+                            Cancelar
                         </button>
                         <button type="submit" class="btn w-sm btn-danger delete-equation-btn">
-                            ¡Sí, borrarlo!
+                            <i class="ri-delete-bin-line me-1"></i>
+                            ¡Sí, eliminar!
                         </button>
                     </div>
                 </form>
@@ -233,3 +370,135 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for variable description
+    const descriptionTextarea = document.getElementById('description');
+    const descriptionCounter = document.getElementById('description-counter');
+    
+    if (descriptionTextarea && descriptionCounter) {
+        descriptionTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            descriptionCounter.textContent = length;
+            
+            if (length > 450) {
+                descriptionCounter.style.color = '#dc3545';
+            } else if (length > 400) {
+                descriptionCounter.style.color = '#fd7e14';
+            } else {
+                descriptionCounter.style.color = '#6c757d';
+            }
+        });
+    }
+    
+    // Character counter for equation description
+    const eqDescriptionTextarea = document.getElementById('eq_description');
+    const eqDescriptionCounter = document.getElementById('eq-description-counter');
+    
+    if (eqDescriptionTextarea && eqDescriptionCounter) {
+        eqDescriptionTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            eqDescriptionCounter.textContent = length;
+            
+            if (length > 450) {
+                eqDescriptionCounter.style.color = '#dc3545';
+            } else if (length > 400) {
+                eqDescriptionCounter.style.color = '#fd7e14';
+            } else {
+                eqDescriptionCounter.style.color = '#6c757d';
+            }
+        });
+    }
+    
+    // Image preview functionality
+    const imageInput = document.getElementById('image_src');
+    const logoImg = document.getElementById('logo-img');
+    
+    if (imageInput && logoImg) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Por favor seleccione un archivo de imagen válido (JPG, PNG, GIF)');
+                    return;
+                }
+                
+                // Validate file size (10MB max)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('El archivo es demasiado grande. Máximo 10MB.');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    logoImg.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Reset modals when they are hidden
+    document.getElementById('addOrUpdateVariable').addEventListener('hidden.bs.modal', function() {
+        // Reset variable form
+        const form = document.getElementById('variableForm');
+        if (form) {
+            form.reset();
+            form.classList.remove('was-validated');
+            
+            // Reset image
+            if (logoImg) {
+                logoImg.src = '/media/images/variable/variable-dummy-img.jpg';
+            }
+            
+            // Reset hidden field
+            const variableIdField = document.getElementById('variable-id-field');
+            if (variableIdField) {
+                variableIdField.value = '';
+            }
+            
+            // Reset title and button text
+            const modalTitle = document.getElementById('addOrUpdateVariablelabel');
+            const submitBtnText = document.getElementById('submit-btn-text');
+            if (modalTitle) modalTitle.textContent = 'Crear Nueva Variable';
+            if (submitBtnText) submitBtnText.textContent = 'Guardar Variable';
+            
+            // Reset counter
+            if (descriptionCounter) {
+                descriptionCounter.textContent = '0';
+                descriptionCounter.style.color = '#6c757d';
+            }
+        }
+    });
+    
+    document.getElementById('addOrUpdateEquation').addEventListener('hidden.bs.modal', function() {
+        // Reset equation form
+        const form = document.getElementById('equationForm');
+        if (form) {
+            form.reset();
+            form.classList.remove('was-validated');
+            
+            // Reset hidden field
+            const equationIdField = document.getElementById('equation-id-field');
+            if (equationIdField) {
+                equationIdField.value = '';
+            }
+            
+            // Reset title and button text
+            const modalTitle = document.getElementById('addOrUpdateEquationModalLabel');
+            const submitBtnText = document.getElementById('eq-submit-btn-text');
+            if (modalTitle) modalTitle.innerHTML = '<i class="ri-function-line me-2"></i>Crear Nueva Ecuación';
+            if (submitBtnText) submitBtnText.textContent = 'Guardar Ecuación';
+            
+            // Reset counter
+            if (eqDescriptionCounter) {
+                eqDescriptionCounter.textContent = '0';
+                eqDescriptionCounter.style.color = '#6c757d';
+            }
+        }
+    });
+});
+</script>

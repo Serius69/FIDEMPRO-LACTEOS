@@ -1,83 +1,539 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Lista de Informes{% endblock title %}
+{% block title %}Lista de Cuestionarios{% endblock title %}
 {% block extra_css %}
+<style>
+    .action-buttons .btn {
+        margin: 2px;
+    }
+    .status-badge {
+        font-size: 0.875rem;
+    }
+    /* Estilos para el tutorial */
+    .btn-floating {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        border-radius: 50px;
+        padding: 15px 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .tutorial-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 9998;
+        display: none;
+    }
+    .tutorial-tooltip {
+        position: absolute;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        max-width: 350px;
+        z-index: 9999;
+    }
+    .tutorial-highlight {
+        position: relative;
+        z-index: 9999;
+        box-shadow: 0 0 0 4px #ffc107, 0 0 20px rgba(255, 193, 7, 0.5);
+        border-radius: 4px;
+    }
+</style>
 {% endblock extra_css %}
 {% block content %}
-    <div class="main-content">
-        <div class="page-content">
-            <div class="container-fluid">
-                {% block pagetitle %}
-                    {% include "partials/page-title.html" with pagetitle="Informes" title="Lista" %}
-                {% endblock pagetitle %}
-                <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-                    <div class="px-4">
-                        <div class="row">
-                            <div class="col-xxl-9 align-self-center">
-                                <div class="py-4">
-                                    <h4 class="display-6 -text">Lista de resultados cuestionarios</h4>
-                                    <div class="container">                      
-                                        <p>Esta es la página de lista de resultados cuestionarios. Aquí puedes ver todos los resultados cuestionarios registrados en la base de datos.</p>
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            {% block pagetitle %}
+                {% include "partials/page-title.html" with pagetitle="Cuestionarios" title="Lista de Resultados" %}
+            {% endblock pagetitle %}
+            
+            <!-- Botón de ayuda flotante -->
+            <button class="btn btn-info btn-floating" onclick="showListTutorial()" data-bs-toggle="tooltip" title="Ver tutorial">
+                <i class="fa fa-question-circle"></i> Ayuda
+            </button>
+            
+            <!-- Tutorial Modal -->
+            <div class="modal fade" id="listTutorialModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fa fa-graduation-cap"></i> Tutorial - Lista de Cuestionarios
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="tutorial-content">
+                                <h4>Bienvenido a la Lista de Cuestionarios</h4>
+                                <p>Aquí puede gestionar todos sus cuestionarios completados. Le mostraremos cómo usar cada función:</p>
+                                
+                                <div class="mt-4">
+                                    <h5><i class="fa fa-list"></i> Vista General</h5>
+                                    <ul>
+                                        <li><strong>Tabla principal:</strong> Muestra todos los cuestionarios completados</li>
+                                        <li><strong>Información mostrada:</strong> Nombre, producto, fechas y estado</li>
+                                        <li><strong>Paginación:</strong> Navigate entre páginas si tiene muchos registros</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h5><i class="fa fa-tools"></i> Acciones Disponibles</h5>
+                                    <div class="row">
+                                        <div class="col-md-4 text-center mb-3">
+                                            <button class="btn btn-sm btn-info mb-2"><i class="fa fa-eye"></i></button>
+                                            <p class="small"><strong>Ver:</strong> Visualiza los resultados detallados del cuestionario</p>
+                                        </div>
+                                        <div class="col-md-4 text-center mb-3">
+                                            <button class="btn btn-sm btn-warning mb-2"><i class="fa fa-edit"></i></button>
+                                            <p class="small"><strong>Editar:</strong> Modifica las respuestas del cuestionario</p>
+                                        </div>
+                                        <div class="col-md-4 text-center mb-3">
+                                            <button class="btn btn-sm btn-danger mb-2"><i class="fa fa-trash"></i></button>
+                                            <p class="small"><strong>Eliminar:</strong> Elimina el cuestionario (requiere confirmación)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h5><i class="fa fa-filter"></i> Filtros y Búsqueda</h5>
+                                    <ul>
+                                        <li>Use el switch "Solo activos" para filtrar cuestionarios activos</li>
+                                        <li>Los cuestionarios inactivos se ocultarán automáticamente</li>
+                                        <li>Puede cambiar el filtro en cualquier momento</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h5><i class="fa fa-lightbulb"></i> Consejos Útiles</h5>
+                                    <div class="alert alert-info">
+                                        <ul class="mb-0">
+                                            <li>Haga clic en el nombre del cuestionario para ver detalles rápidamente</li>
+                                            <li>Los badges de estado indican si un cuestionario está activo o no</li>
+                                            <li>Use el botón "Nuevo Cuestionario" para crear uno nuevo</li>
+                                            <li>Los tooltips aparecen al pasar el cursor sobre los botones</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xxl-3 ms-auto">
-                                <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                                    <img src="{% static 'images/questionary-img.webp'%}" alt="" class="img-fluid">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="startListTour()">
+                                <i class="fa fa-play"></i> Tour Guiado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mensajes flash -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+                <div class="px-4">
+                    <div class="row">
+                        <div class="col-xxl-9 align-self-center">
+                            <div class="py-4">
+                                <h4 class="display-6 -text">Lista de Resultados de Cuestionarios</h4>
+                                <div class="container">                      
+                                    <p>Aquí puede ver todos los cuestionarios completados, editarlos o eliminarlos según sea necesario.</p>
+                                    <div class="mt-3">
+                                        <a href="{% url 'questionary:questionary.main' %}" class="btn btn-primary">
+                                            <i class="fa fa-plus"></i> Nuevo Cuestionario
+                                        </a>
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 ms-auto">
+                            <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                                <img src="{% static 'images/questionary-img.webp'%}" alt="" class="img-fluid">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-xl-12">
-                        <div class="card">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Lista de Resultados Cuestionarios</h4>
+            </div>
+            
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">Cuestionarios Completados</h4>
+                            <div class="flex-shrink-0">
+                                <div class="form-check form-switch form-switch-right form-switch-md">
+                                    <label for="filter-active" class="form-label text-muted">Solo activos</label>
+                                    <input class="form-check-input" type="checkbox" id="filter-active" checked>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-middle table-nowrap mb-0">
-                                        <thead class="table-light">
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table align-middle table-nowrap table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col" style="width: 70px;">#</th>
+                                            <th scope="col">Cuestionario</th>
+                                            <th scope="col">Producto</th>
+                                            <th scope="col">Fecha Creación</th>
+                                            <th scope="col">Última Actualización</th>
+                                            <th scope="col">Estado</th>
+                                            <th scope="col" style="width: 200px;">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for questionary in questionary_results %}
                                             <tr>
-                                                <th scope="col">Nro</th>
-                                                <th scope="col">Nombre del cuestionario</th>
-                                                <th scope="col">Producto</th>
-                                                <th scope="col">Fecha Respondido</th>
-                                                <th scope="col">Fecha Actualizado</th>
-                                                <th scope="col">Acciones</th>
+                                                <td>
+                                                    <div class="avatar-xs">
+                                                        <span class="avatar-title rounded-circle bg-soft-primary text-primary">
+                                                            {{ forloop.counter }}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <h5 class="font-size-14 mb-1">
+                                                        <a href="{% url 'questionary:questionary.result' questionary.pk %}" class="text-dark">
+                                                            {{ questionary.fk_questionary.questionary }}
+                                                        </a>
+                                                    </h5>
+                                                </td>
+                                                <td>{{ questionary.fk_questionary.fk_product.name }}</td>
+                                                <td>
+                                                    <i class="fa fa-calendar"></i> {{ questionary.date_created|date:"d/m/Y" }}<br>
+                                                    <small class="text-muted">{{ questionary.date_created|date:"H:i" }}</small>
+                                                </td>
+                                                <td>
+                                                    <i class="fa fa-clock-o"></i> {{ questionary.last_updated|date:"d/m/Y" }}<br>
+                                                    <small class="text-muted">{{ questionary.last_updated|date:"H:i" }}</small>
+                                                </td>
+                                                <td>
+                                                    {% if questionary.is_active %}
+                                                        <span class="badge bg-success status-badge">Activo</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger status-badge">Inactivo</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="action-buttons">
+                                                        <a href="{% url 'questionary:questionary.result' questionary.pk %}" 
+                                                           class="btn btn-sm btn-info" 
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Ver resultados">
+                                                            <i class="fa fa-eye"></i>
+                                                        </a>
+                                                        <a href="{% url 'questionary:questionary.edit' questionary.pk %}" 
+                                                           class="btn btn-sm btn-warning"
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Editar respuestas">
+                                                            <i class="fa fa-edit"></i>
+                                                        </a>
+                                                        <a href="{% url 'questionary:questionary.delete' questionary.pk %}" 
+                                                           class="btn btn-sm btn-danger"
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Eliminar cuestionario">
+                                                            <i class="fa fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for questionary in questionary_results %}
-                                                <tr>
-                                                    <td>{{ forloop.counter }}</td>
-                                                    <td>{{ questionary.fk_questionary.questionary }}</td>
-                                                    <td>{{ questionary.date_created }}</td>
-                                                    <td>{{ questionary.last_updated }}</td>
-                                                    <td>{{ questionary.last_updated }}</td>
-                                                    <td>
-                                                        <a href="{% url 'questionary:questionary.result' questionary.pk %}" class="btn btn-primary">Ver</a>
-                                                        {% comment %} <a href="{% url 'questionary.edit' questionary.pk %}" class="btn btn-secondary">Editar</a> {% endcomment %}
-                                                        <a href="" class="btn btn-danger">Eliminar</a>
-                                                    </td>
-                                                </tr>
-                                            {% empty %}
-                                                <tr>
-                                                    <td colspan="5" class="text-center py-4">
-                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                        <h5 class="mt-2">Lo sentimos, no hay ningún informe registrado en la base de datos</h5>
-                                                        <p class="text-muted mb-0">Tienes que "Agregar Producto".</p>
-                                                    </td>
-                                                </tr>                                                
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="text-center py-5">
+                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                                               trigger="loop" 
+                                                               colors="primary:#405189,secondary:#0ab39c" 
+                                                               style="width:75px;height:75px">
+                                                    </lord-icon>
+                                                    <h5 class="mt-2">No hay cuestionarios completados</h5>
+                                                    <p class="text-muted mb-0">
+                                                        Comience creando un nuevo cuestionario haciendo clic en el botón "Nuevo Cuestionario".
+                                                    </p>
+                                                    <div class="mt-3">
+                                                        <a href="{% url 'questionary:questionary.main' %}" class="btn btn-primary">
+                                                            <i class="fa fa-plus"></i> Crear Cuestionario
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>                                                
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Paginación -->
+                            {% if questionary_results.has_other_pages %}
+                            <div class="row g-0 align-items-center pb-4 mt-4">
+                                <div class="col-sm">
+                                    <div class="text-muted">
+                                        Mostrando <span class="fw-semibold">{{ questionary_results.start_index }}</span>
+                                        a <span class="fw-semibold">{{ questionary_results.end_index }}</span>
+                                        de <span class="fw-semibold">{{ questionary_results.paginator.count }}</span> resultados
+                                    </div>
+                                </div>
+                                <div class="col-sm-auto">
+                                    <ul class="pagination pagination-separated pagination-sm mb-0">
+                                        {% if questionary_results.has_previous %}
+                                            <li class="page-item">
+                                                <a href="?page=1" class="page-link">Primera</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a href="?page={{ questionary_results.previous_page_number }}" class="page-link">
+                                                    <i class="fa fa-chevron-left"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% for num in questionary_results.paginator.page_range %}
+                                            {% if questionary_results.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                            {% elif num > questionary_results.number|add:'-3' and num < questionary_results.number|add:'3' %}
+                                                <li class="page-item">
+                                                    <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if questionary_results.has_next %}
+                                            <li class="page-item">
+                                                <a href="?page={{ questionary_results.next_page_number }}" class="page-link">
+                                                    <i class="fa fa-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a href="?page={{ questionary_results.paginator.num_pages }}" class="page-link">Última</a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
                                 </div>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+    
+    {% block footer %}
+        {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+<!-- end main content-->
 {% endblock %}
+
 {% block extra_js %}
+<script>
+// Inicializar tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+
+// Filtro de activos/inactivos
+document.getElementById('filter-active').addEventListener('change', function() {
+    var rows = document.querySelectorAll('tbody tr');
+    var showOnlyActive = this.checked;
+    
+    rows.forEach(function(row) {
+        if (row.querySelector('.status-badge')) {
+            var isActive = row.querySelector('.status-badge').classList.contains('bg-success');
+            if (showOnlyActive && !isActive) {
+                row.style.display = 'none';
+            } else {
+                row.style.display = '';
+            }
+        }
+    });
+});
+
+// Funciones del tutorial
+function showListTutorial() {
+    var modal = new bootstrap.Modal(document.getElementById('listTutorialModal'));
+    modal.show();
+}
+
+// Tour guiado interactivo
+function startListTour() {
+    // Cerrar el modal
+    bootstrap.Modal.getInstance(document.getElementById('listTutorialModal')).hide();
+    
+    // Crear overlay
+    var overlay = document.createElement('div');
+    overlay.className = 'tutorial-overlay';
+    overlay.id = 'tourOverlay';
+    document.body.appendChild(overlay);
+    overlay.style.display = 'block';
+    
+    var tourSteps = [
+        {
+            element: '.btn-primary:contains("Nuevo Cuestionario")',
+            title: 'Crear Nuevo Cuestionario',
+            content: 'Use este botón para iniciar un nuevo cuestionario cuando lo necesite.',
+            position: 'bottom'
+        },
+        {
+            element: '#filter-active',
+            title: 'Filtrar Cuestionarios',
+            content: 'Active o desactive este switch para mostrar solo cuestionarios activos o todos.',
+            position: 'left'
+        },
+        {
+            element: '.action-buttons:first',
+            title: 'Acciones Disponibles',
+            content: 'Cada cuestionario tiene tres acciones: Ver (azul), Editar (amarillo) y Eliminar (rojo).',
+            position: 'left'
+        },
+        {
+            element: '.status-badge:first',
+            title: 'Estado del Cuestionario',
+            content: 'Los badges indican si un cuestionario está activo (verde) o inactivo (rojo).',
+            position: 'top'
+        },
+        {
+            element: '.pagination:first',
+            title: 'Navegación',
+            content: 'Use estos controles para navegar entre páginas si tiene muchos cuestionarios.',
+            position: 'top'
+        }
+    ];
+    
+    var currentStep = 0;
+    
+    function showStep(index) {
+        // Limpiar pasos anteriores
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        document.querySelectorAll('.tutorial-tooltip').forEach(el => {
+            el.remove();
+        });
+        
+        if (index >= tourSteps.length) {
+            endListTour();
+            return;
+        }
+        
+        var step = tourSteps[index];
+        var element = document.querySelector(step.element);
+        
+        if (element) {
+            element.classList.add('tutorial-highlight');
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Crear tooltip
+            var tooltip = document.createElement('div');
+            tooltip.className = 'tutorial-tooltip';
+            tooltip.innerHTML = `
+                <h5>${step.title}</h5>
+                <p>${step.content}</p>
+                <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-sm btn-secondary" onclick="endListTour()">Salir</button>
+                    <div>
+                        ${index > 0 ? '<button class="btn btn-sm btn-outline-primary me-2" onclick="previousStep()">Anterior</button>' : ''}
+                        <button class="btn btn-sm btn-primary" onclick="nextStep()">
+                            ${index < tourSteps.length - 1 ? 'Siguiente' : 'Finalizar'}
+                        </button>
+                    </div>
+                </div>
+                <div class="text-center mt-2">
+                    <small class="text-muted">Paso ${index + 1} de ${tourSteps.length}</small>
+                </div>
+            `;
+            
+            document.body.appendChild(tooltip);
+            
+            // Posicionar tooltip
+            var rect = element.getBoundingClientRect();
+            var tooltipRect = tooltip.getBoundingClientRect();
+            
+            switch(step.position) {
+                case 'bottom':
+                    tooltip.style.top = (rect.bottom + 10) + 'px';
+                    tooltip.style.left = (rect.left + rect.width/2 - tooltipRect.width/2) + 'px';
+                    break;
+                case 'top':
+                    tooltip.style.top = (rect.top - tooltipRect.height - 10) + 'px';
+                    tooltip.style.left = (rect.left + rect.width/2 - tooltipRect.width/2) + 'px';
+                    break;
+                case 'left':
+                    tooltip.style.top = (rect.top + rect.height/2 - tooltipRect.height/2) + 'px';
+                    tooltip.style.left = (rect.left - tooltipRect.width - 10) + 'px';
+                    break;
+                case 'right':
+                    tooltip.style.top = (rect.top + rect.height/2 - tooltipRect.height/2) + 'px';
+                    tooltip.style.left = (rect.right + 10) + 'px';
+                    break;
+            }
+        }
+    }
+    
+    window.nextStep = function() {
+        currentStep++;
+        showStep(currentStep);
+    };
+    
+    window.previousStep = function() {
+        currentStep--;
+        showStep(currentStep);
+    };
+    
+    window.endListTour = function() {
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        document.querySelectorAll('.tutorial-tooltip').forEach(el => {
+            el.remove();
+        });
+        var overlay = document.getElementById('tourOverlay');
+        if (overlay) {
+            overlay.remove();
+        }
+        
+        // Mostrar mensaje de completado
+        var successAlert = document.createElement('div');
+        successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+        successAlert.style.zIndex = '9999';
+        successAlert.innerHTML = `
+            <i class="fa fa-check-circle"></i> ¡Tour completado! Ya conoce todas las funciones de la lista.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(successAlert);
+        
+        setTimeout(function() {
+            successAlert.remove();
+        }, 5000);
+    };
+    
+    // Iniciar el tour
+    setTimeout(() => showStep(0), 300);
+}
+
+// Mostrar tutorial automáticamente en la primera visita
+document.addEventListener('DOMContentLoaded', function() {
+    if (!localStorage.getItem('listTutorialShown')) {
+        setTimeout(function() {
+            showListTutorial();
+            localStorage.setItem('listTutorialShown', 'true');
+        }, 1000);
+    }
+});
+</script>
 {% endblock extra_js %}

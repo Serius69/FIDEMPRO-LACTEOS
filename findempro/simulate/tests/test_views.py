@@ -6,9 +6,9 @@ from simulate.models import Simulation, ResultSimulation, Demand, ProbabilisticD
 from questionary.models import QuestionaryResult, Answer
 from product.models import Product, Area
 from business.models import Business
-from simulate.views import plot_scatter_and_pdf
+from findempro.simulate.codeall import plot_scatter_and_pdf
 import numpy as np
-from simulate.views import plot_histogram_and_pdf
+from findempro.simulate.codeall import plot_histogram_and_pdf
 import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.by import By

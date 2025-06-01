@@ -1,74 +1,405 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Reporte de Simulación{% endblock title %}
+{% block title %}{{ report.title }}{% endblock title %}
 {% block extra_css %}
+<style>
+.metric-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 15px;
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+}
+.info-badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+}
+.action-buttons .btn {
+    margin: 0 2px;
+}
+.content-section {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.parameter-item {
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 0 5px 5px 0;
+}
+</style>
 {% endblock extra_css %}
+
 {% block content %}
-
-<div class="container">
-    <div class="page-header"> 
-        <h1>Reporte de Simulación</h1> 
-    </div> 
-
-    <div class="row">
-        <div class="col-md-6">
-            <!-- Resumen de parámetros de simulación -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Parámetros</h5>
-                    <p>Demanda inicial: {{ demanda_inicial }}</p>
-                    <p>Tasa de crecimiento: {{ tasa_crecimiento }}%</p>
-                    <p>Horizonte de tiempo: {{ horizonte }} meses</p>
-                    <p>etc...</p>
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-sm-0">{{ report.title }}</h4>
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'report:report.list' %}">Reportes</a>
+                                    </li>
+                                    <li class="breadcrumb-item active">{{ report.title }}</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <a href="{% url 'report:report.update' report.pk %}" class="btn btn-outline-primary">
+                                <i class="ri-edit-line me-1"></i>Editar
+                            </a>
+                            <a href="{% url 'report:generar_reporte_pdf' report.pk %}" class="btn btn-success">
+                                <i class="ri-download-line me-1"></i>Descargar PDF
+                            </a>
+                            <a href="{% url 'report:report.delete' report.pk %}" class="btn btn-outline-danger" 
+                               onclick="return confirm('¿Está seguro de eliminar este reporte?')">
+                                <i class="ri-delete-bin-line me-1"></i>Eliminar
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tabla de métricas clave -->
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Métricas Clave</h5>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Métrica</th>
-                                <th>Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Utilidad Neta</td>
-                                <td>{{ utilidad_neta }}</td>
-                            </tr>
-                            <tr>
-                                <td>Flujo de Caja</td>
-                                <td>{{ flujo_caja }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- Report Info Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-lg">
+                                                <span class="avatar-title rounded bg-primary-subtle text-primary">
+                                                    <i class="ri-file-chart-line font-size-24"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h5 class="mb-1">{{ report.title }}</h5>
+                                            <p class="text-muted mb-2">{{ report.summary|default:"Reporte de análisis y simulación" }}</p>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <span class="badge bg-primary-subtle text-primary info-badge">
+                                                    <i class="ri-bookmark-line me-1"></i>{{ report.get_report_type_display }}
+                                                </span>
+                                                {% if report.fk_product %}
+                                                    <span class="badge bg-info-subtle text-info info-badge">
+                                                        <i class="ri-product-hunt-line me-1"></i>{{ report.fk_product.name }}
+                                                    </span>
+                                                {% endif %}
+                                                <span class="{{ report.status_class }} info-badge">
+                                                    <i class="ri-checkbox-circle-line me-1"></i>{{ report.status_display }}
+                                                </span>
+                                                {% if report.is_recent %}
+                                                    <span class="badge bg-success-subtle text-success info-badge">
+                                                        <i class="ri-time-line me-1"></i>Reciente
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="d-flex flex-column">
+                                        <small class="text-muted">Creado el</small>
+                                        <strong>{{ report.date_created|date:"d/m/Y H:i" }}</strong>
+                                        <small class="text-muted mt-1">Actualizado el</small>
+                                        <span class="text-muted">{{ report.last_updated|date:"d/m/Y H:i" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <!-- Gráfica principal de resultados de simulación -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Resultados de Simulación</h5>
-                    <div id="grafica-principal"></div>
+            <!-- Main Content -->
+            <div class="row">
+                <!-- Left Column - Parameters and Info -->
+                <div class="col-lg-4">
+                    <!-- Parameters Section -->
+                    {% if report.content.parametros %}
+                    <div class="content-section">
+                        <h5 class="mb-3">
+                            <i class="ri-settings-3-line text-primary me-2"></i>
+                            Parámetros de Simulación
+                        </h5>
+                        {% for key, value in report.content.parametros.items %}
+                            <div class="parameter-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-medium">{{ key|title|replace_:"_":" " }}</span>
+                                    <span class="text-primary fw-bold">{{ value }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Key Metrics -->
+                    {% if report.content.resultados_simulacion %}
+                    <div class="content-section">
+                        <h5 class="mb-3">
+                            <i class="ri-line-chart-line text-success me-2"></i>
+                            Métricas Clave
+                        </h5>
+                        <div class="row g-3">
+                            {% for metric, value in report.get_metrics_summary.items %}
+                                <div class="col-6">
+                                    <div class="metric-card text-center p-3">
+                                        <h6 class="mb-1">{{ value }}</h6>
+                                        <small class="opacity-75">{{ metric }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Additional Info -->
+                    <div class="content-section">
+                        <h5 class="mb-3">
+                            <i class="ri-information-line text-info me-2"></i>
+                            Información Adicional
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-medium">ID:</td>
+                                        <td>{{ report.id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Versión:</td>
+                                        <td>{{ report.version }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Antigüedad:</td>
+                                        <td>{{ report.age_days }} días</td>
+                                    </tr>
+                                    {% if report.tags %}
+                                    <tr>
+                                        <td class="fw-medium">Etiquetas:</td>
+                                        <td>
+                                            {% for tag in report.get_tag_list %}
+                                                <span class="badge bg-secondary-subtle text-secondary me-1">{{ tag }}</span>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Charts and Results -->
+                <div class="col-lg-8">
+                    <!-- Results Table -->
+                    {% if report.content.resultados_simulacion %}
+                    <div class="content-section">
+                        <h5 class="mb-3">
+                            <i class="ri-table-line text-warning me-2"></i>
+                            Resultados Detallados
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Métrica</th>
+                                        <th class="text-end">Valor</th>
+                                        <th class="text-center">Unidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, value in report.content.resultados_simulacion.items %}
+                                        <tr>
+                                            <td class="fw-medium">{{ key|title|replace_:"_":" " }}</td>
+                                            <td class="text-end">
+                                                {% if 'utilidad' in key or 'flujo' in key or 'inversion' in key %}
+                                                    ${{ value|floatformat:2 }}
+                                                {% elif 'roi' in key or 'tasa' in key or 'crecimiento' in key %}
+                                                    {{ value|floatformat:2 }}%
+                                                {% else %}
+                                                    {{ value }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if 'utilidad' in key or 'flujo' in key or 'inversion' in key %}
+                                                    <span class="badge bg-success-subtle text-success">USD</span>
+                                                {% elif 'roi' in key or 'tasa' in key or 'crecimiento' in key %}
+                                                    <span class="badge bg-info-subtle text-info">%</span>
+                                                {% elif 'punto' in key or 'equilibrio' in key %}
+                                                    <span class="badge bg-warning-subtle text-warning">Unidades</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary-subtle text-secondary">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Charts Section -->
+                    {% if report.content.graficas %}
+                    <div class="content-section">
+                        <h5 class="mb-3">
+                            <i class="ri-bar-chart-box-line text-info me-2"></i>
+                            Visualizaciones
+                        </h5>
+                        
+                        <!-- Sales Chart -->
+                        {% if report.content.graficas.ventas_proyectadas %}
+                        <div class="mb-4">
+                            <h6 class="mb-2">Ventas Proyectadas</h6>
+                            <div class="chart-container">
+                                <canvas id="salesChart"></canvas>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Revenue Chart -->
+                        {% if report.content.graficas.ingresos_proyectados %}
+                        <div class="mb-4">
+                            <h6 class="mb-2">Ingresos Proyectados</h6>
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Variables Section -->
+                    {% if report.content.variables %}
+                    <div class="content-section">
+                        <h5 class="mb-3">
+                            <i class="ri-function-line text-secondary me-2"></i>
+                            Variables del Producto
+                        </h5>
+                        <div class="row">
+                            {% for variable in report.content.variables %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="border rounded p-3 h-100">
+                                        <h6 class="mb-2 text-primary">{{ variable.nombre }}</h6>
+                                        <p class="mb-1"><strong>Valor:</strong> {{ variable.valor }}</p>
+                                        {% if variable.descripcion %}
+                                            <p class="text-muted mb-0 small">{{ variable.descripcion }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Dashboard adicional -->
-            <div class="card">
-                <div class="card-body">
-                    <!-- Contenido del dashboard adicional -->
+            <!-- Raw Content (for debugging) -->
+            {% if user.is_staff %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="ri-code-line me-2"></i>
+                                Contenido Raw (Solo Admin)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <pre class="bg-light p-3 rounded"><code>{{ report.content|pprint }}</code></pre>
+                        </div>
+                    </div>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
-
 {% endblock %}
-{% block extra_js %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart configuration
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    };
+
+    // Sales Chart
+    {% if report.content.graficas.ventas_proyectadas %}
+    const salesCtx = document.getElementById('salesChart');
+    if (salesCtx) {
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: {{ report.content.graficas.ventas_proyectadas.labels|safe }},
+                datasets: [{
+                    label: 'Ventas Proyectadas',
+                    data: {{ report.content.graficas.ventas_proyectadas.data|safe }},
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: chartOptions
+        });
+    }
+    {% endif %}
+
+    // Revenue Chart
+    {% if report.content.graficas.ingresos_proyectados %}
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ report.content.graficas.ingresos_proyectados.labels|safe }},
+                datasets: [{
+                    label: 'Ingresos Proyectados',
+                    data: {{ report.content.graficas.ingresos_proyectados.data|safe }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        });
+    }
+    {% endif %}
+});
+</script>
 {% endblock extra_js %}

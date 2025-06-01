@@ -1,182 +1,727 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Admin Dashboard{% endblock title %}
+{% block title %}Dashboard Administrativo{% endblock title %}
 {% block extra_css %}
-        <!-- plugin css -->
-        <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css'%}" rel="stylesheet" type="text/css" />
+<link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
+<style>
+    .stats-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .counter-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, #405189, #0ab39c);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .activity-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .activity-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -21px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0ab39c;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #e9ecef;
+    }
+    
+    .chart-container {
+        min-height: 350px;
+    }
+    
+    .user-growth-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .user-growth-indicator.positive {
+        background-color: rgba(10, 179, 156, 0.1);
+        color: #0ab39c;
+    }
+    
+    .user-growth-indicator.negative {
+        background-color: rgba(244, 63, 94, 0.1);
+        color: #f43f5e;
+    }
+    
+    .map-container {
+        height: 400px;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+    
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .quick-stat-item {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-stat-item:hover {
+        background: #e9ecef;
+    }
+    
+    .quick-stat-item h3 {
+        margin: 0;
+        font-size: 2rem;
+        color: #405189;
+    }
+    
+    .quick-stat-item p {
+        margin: 0.5rem 0 0;
+        color: #6c757d;
+    }
+</style>
 {% endblock extra_css %}
+
 {% block content %}
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0 font-size-18">Dashboard Administrativo</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Admin</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <div class="page-content">
-                    <div class="container-fluid">
+            <!-- Welcome Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card bg-primary bg-gradient text-white">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-sm-8">
+                                    <h4 class="text-white mb-2">¡Bienvenido al Panel Administrativo!</h4>
+                                    <p class="text-white-50 mb-0">
+                                        Aquí puedes monitorear el rendimiento general del sistema, 
+                                        gestionar usuarios y analizar métricas clave.
+                                    </p>
+                                </div>
+                                <div class="col-sm-4 text-sm-end">
+                                    <button class="btn btn-light btn-sm" onclick="refreshDashboard()">
+                                        <i class="ri-refresh-line me-1"></i> Actualizar Datos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Dashboards" title="Admin" %}
-                        {% endblock pagetitle %}
+            <!-- Main Stats -->
+            <div class="row">
+                <!-- Total Users Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-uppercase fw-medium text-muted mb-1">
+                                        Usuarios Totales
+                                    </p>
+                                    <h2 class="mb-2">
+                                        <span class="counter-value" data-target="{{ users_count }}">0</span>
+                                    </h2>
+                                    <div class="user-growth-indicator {% if users_change >= 0 %}positive{% else %}negative{% endif %}">
+                                        <i class="ri-arrow-{% if users_change >= 0 %}up{% else %}down{% endif %}-line me-1"></i>
+                                        {% if users_change >= 0 %}+{% endif %}{{ users_change }} ({{ users_change_percentage }}%)
+                                    </div>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-info-subtle rounded-circle">
+                                        <i class="ri-user-3-fill text-info fs-3"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="row">
-                            <div class="col-xxl-5">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between">
-                                                    <div>
-                                                        <p class="fw-medium text-muted mb-0"> Usuarios </p>
-                                                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ users.count }}">0</span> users</h2>
-                                                        <p class="mb-0 text-muted">
-                                                            <span class="badge bg-light text-success mb-0">
-                                                                <i class="ri-arrow-up-line align-middle"></i> 
-                                                                {% if users_change > 0 %}
-                                                                    +{{ users_change }} ({{ users_change_percentage|floatformat:2 }}%)
-                                                                {% elif users_change < 0 %}
-                                                                    {{ users_change }} ({{ users_change_percentage|floatformat:2 }}%)
-                                                                {% else %}
-                                                                    0 (0%)
-                                                                {% endif %}
-                                                               vs. mes anterior
-                                                            </span>
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <div class="avatar-sm flex-shrink-0">
-                                                            <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                                <i data-feather="users" class="text-info"></i>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div> <!-- end card-->
-                                    </div> <!-- end col-->
+                <!-- Active Sessions Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-uppercase fw-medium text-muted mb-1">
+                                        Sesiones Activas
+                                    </p>
+                                    <h2 class="mb-2">
+                                        <span class="counter-value" data-target="247">0</span>
+                                    </h2>
+                                    <div class="user-growth-indicator positive">
+                                        <i class="ri-arrow-up-line me-1"></i>
+                                        +12.5%
+                                    </div>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-success-subtle rounded-circle">
+                                        <i class="ri-pulse-line text-success fs-3"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                    <div class="col-md-6">
-                                        <div class="card card-animate">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between">
-                                                    <div>
-                                                        <p class="fw-medium text-muted mb-0">Sesiones</p>
-                                                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="97.66">0</span>k</h2>
-                                                        <p class="mb-0 text-muted"><span class="badge bg-light text-danger mb-0">
-                                                            <i class="ri-arrow-down-line align-middle"></i>3.96 %
-                                                        </span> vs. mes anterior</p>
-                                                    </div>
-                                                    <div>
-                                                        <div class="avatar-sm flex-shrink-0">
-                                                            <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                                <i data-feather="activity" class="text-info"></i>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div><!-- end card body -->
-                                        </div> <!-- end card-->
-                                    </div> <!-- end col-->
-                                </div> <!-- end row-->
-                            </div> <!-- end col-->
-                        </div> <!-- end row-->
+                <!-- System Health Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-uppercase fw-medium text-muted mb-1">
+                                        Estado del Sistema
+                                    </p>
+                                    <h2 class="mb-2">
+                                        <span class="text-success">Operativo</span>
+                                    </h2>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-success" style="width: 98%"></div>
+                                    </div>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-warning-subtle rounded-circle">
+                                        <i class="ri-server-line text-warning fs-3"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="row">
-                            <div class="col-xl-4">
-                                <div class="card card-height-100">
-                                    <div class="card-header align-items-center d-flex">
-                                        <h4 class="card-title mb-0 flex-grow-1">Usuarios por dispositivo </h4>
+                <!-- Revenue Card -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-uppercase fw-medium text-muted mb-1">
+                                        Ingresos del Mes
+                                    </p>
+                                    <h2 class="mb-2">
+                                        Bs. <span class="counter-value" data-target="125650">0</span>
+                                    </h2>
+                                    <div class="user-growth-indicator positive">
+                                        <i class="ri-arrow-up-line me-1"></i>
+                                        +18.7%
+                                    </div>
+                                </div>
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-primary-subtle rounded-circle">
+                                        <i class="ri-money-dollar-circle-line text-primary fs-3"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Estadísticas Rápidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="quick-stats">
+                                <div class="quick-stat-item">
+                                    <h3>{{ users_last_month_count }}</h3>
+                                    <p>Nuevos usuarios este mes</p>
+                                </div>
+                                <div class="quick-stat-item">
+                                    <h3>1,247</h3>
+                                    <p>Simulaciones ejecutadas</p>
+                                </div>
+                                <div class="quick-stat-item">
+                                    <h3>89</h3>
+                                    <p>Negocios activos</p>
+                                </div>
+                                <div class="quick-stat-item">
+                                    <h3>456</h3>
+                                    <p>Productos registrados</p>
+                                </div>
+                                <div class="quick-stat-item">
+                                    <h3>98.5%</h3>
+                                    <p>Tiempo de actividad</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row">
+                <!-- User Growth Chart -->
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Crecimiento de Usuarios</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-soft-secondary btn-sm dropdown-toggle" 
+                                        type="button" data-bs-toggle="dropdown">
+                                    Últimos 12 meses
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#">Últimos 30 días</a></li>
+                                    <li><a class="dropdown-item" href="#">Últimos 6 meses</a></li>
+                                    <li><a class="dropdown-item active" href="#">Últimos 12 meses</a></li>
+                                    <li><a class="dropdown-item" href="#">Todo el tiempo</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" id="user_growth_chart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Distribution -->
+                <div class="col-xl-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Distribución de Usuarios</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="user_distribution_chart" class="chart-container"></div>
+                            
+                            <div class="mt-4">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <i class="ri-checkbox-blank-circle-fill text-primary me-2"></i>
+                                                    Administradores
+                                                </td>
+                                                <td class="text-end fw-medium">15</td>
+                                                <td class="text-end text-muted">3%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <i class="ri-checkbox-blank-circle-fill text-info me-2"></i>
+                                                    Usuarios Premium
+                                                </td>
+                                                <td class="text-end fw-medium">89</td>
+                                                <td class="text-end text-muted">18%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <i class="ri-checkbox-blank-circle-fill text-success me-2"></i>
+                                                    Usuarios Estándar
+                                                </td>
+                                                <td class="text-end fw-medium">{{ users_count|add:"-104" }}</td>
+                                                <td class="text-end text-muted">79%</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity and Map Row -->
+            <div class="row">
+                <!-- Recent Activity -->
+                <div class="col-xl-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Actividad Reciente</h5>
+                            <a href="#" class="link-secondary">Ver todo</a>
+                        </div>
+                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                            <div class="activity-timeline">
+                                <div class="activity-item">
+                                    <div class="d-flex">
                                         <div class="flex-shrink-0">
-                                            <div class="dropdown card-header-dropdown">
-                                                <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                   <span class="text-muted fs-16"><i class="mdi mdi-dots-vertical align-middle"></i></span>
-                                                </a>
+                                            <img src="{% static 'images/users/avatar-1.jpg' %}" 
+                                                 alt="" class="avatar-xs rounded-circle">
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Nuevo usuario registrado</h6>
+                                            <p class="text-muted mb-0">Juan Pérez se unió a la plataforma</p>
+                                            <small class="text-muted">Hace 5 minutos</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-xs">
+                                                <span class="avatar-title bg-success-subtle text-success rounded-circle">
+                                                    <i class="ri-shopping-cart-2-line"></i>
+                                                </span>
                                             </div>
                                         </div>
-                                    </div><!-- end card header -->
-                                    <div class="card-body">
-                                        <div id="user_device_pie_charts" data-colors='["--vz-primary", "--vz-warning", "--vz-info"]' class="apex-charts" dir="ltr"></div>
-                                        
-                                        <div class="table-responsive mt-3">
-                                            <table class="table table-borderless table-sm table-centered align-middle table-nowrap mb-0">
-                                                <tbody class="border-0">
-                                                    <tr>
-                                                        <td><h4 class="text-truncate fs-14 fs-medium mb-0"><i class="ri-stop-fill align-middle fs-18 text-primary me-2"></i>Usuarios de escritorio </h4></td>
-                                                        <td><p class="text-muted mb-0"><i data-feather="users" class="me-2 icon-sm"></i>78.56k</p></td>
-                                                        <td class="text-end"><p class="text-success fw-medium fs-12 mb-0"><i class="ri-arrow-up-s-fill fs-5 align-middle"></i>2.08%</p></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Nueva suscripción Premium</h6>
+                                            <p class="text-muted mb-0">Plan anual adquirido</p>
+                                            <small class="text-muted">Hace 2 horas</small>
                                         </div>
-                                    </div><!-- end card body -->
-                                </div><!-- end card -->
-                            </div><!-- end col -->
-                        </div><!-- end row -->
-
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-xs">
+                                                <span class="avatar-title bg-warning-subtle text-warning rounded-circle">
+                                                    <i class="ri-error-warning-line"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Mantenimiento programado</h6>
+                                            <p class="text-muted mb-0">Actualización del sistema</p>
+                                            <small class="text-muted">Hace 5 horas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <img src="{% static 'images/users/avatar-2.jpg' %}" 
+                                                 alt="" class="avatar-xs rounded-circle">
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Simulación completada</h6>
+                                            <p class="text-muted mb-0">María García ejecutó una simulación</p>
+                                            <small class="text-muted">Hace 1 día</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- container-fluid -->
                 </div>
-                <!-- End Page-content -->
 
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
+                <!-- Geographic Distribution -->
+                <div class="col-xl-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Distribución Geográfica de Usuarios</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="world-map" class="map-container"></div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h5 class="mb-1">América</h5>
+                                        <p class="text-muted mb-0">45% de usuarios</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h5 class="mb-1">Europa</h5>
+                                        <p class="text-muted mb-0">30% de usuarios</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h5 class="mb-1">Asia</h5>
+                                        <p class="text-muted mb-0">25% de usuarios</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <!-- end main content-->
+
+            <!-- System Performance -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Rendimiento del Sistema</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-4">
+                                        <h6 class="text-muted mb-2">CPU</h6>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-primary" style="width: 45%"></div>
+                                        </div>
+                                        <p class="text-muted mt-1 mb-0">45% de uso</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-4">
+                                        <h6 class="text-muted mb-2">Memoria</h6>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-info" style="width: 62%"></div>
+                                        </div>
+                                        <p class="text-muted mt-1 mb-0">62% de uso</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-4">
+                                        <h6 class="text-muted mb-2">Almacenamiento</h6>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-warning" style="width: 78%"></div>
+                                        </div>
+                                        <p class="text-muted mt-1 mb-0">78% de uso</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-4">
+                                        <h6 class="text-muted mb-2">Ancho de Banda</h6>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" style="width: 35%"></div>
+                                        </div>
+                                        <p class="text-muted mt-1 mb-0">35% de uso</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
 {% endblock content %}
+
 {% block extra_js %}
-    <!-- apexcharts -->
-    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'libs/jsvectormap/dist/js/jsvectormap.min.js' %}"></script>
+<script src="{% static 'libs/jsvectormap/dist/maps/world-merc.js' %}"></script>
 
-    <!-- Vector map-->
-    <script src="{% static 'libs/jsvectormap/dist/js/jsvectormap.min.js'%}"></script>
-    <script src="{% static 'libs/jsvectormap/dist/maps/world-merc.js'%}"></script>
-
-    <!-- Dashboard init -->
-    <script  src="{% static 'js/pages/dashboard-analytics.init.js'%}"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Datos del gráfico
-            var chartData = {
-                series: [78560, 105020],  // Datos de Desktop Users y Mobile Users
-                labels: ['Desktop Users', 'Mobile Users'],
-            };
+<script>
+// Counter Animation
+document.addEventListener('DOMContentLoaded', function() {
+    const counters = document.querySelectorAll('.counter-value');
     
-            // Opciones del gráfico
-            var chartOptions = {
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        
+        let current = 0;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                counter.textContent = target.toLocaleString();
+                clearInterval(timer);
+            } else {
+                counter.textContent = Math.floor(current).toLocaleString();
+            }
+        }, 16);
+    });
+    
+    // Initialize charts
+    initUserGrowthChart();
+    initUserDistributionChart();
+    initWorldMap();
+});
+
+// User Growth Chart
+function initUserGrowthChart() {
+    const options = {
+        series: [{
+            name: 'Usuarios Nuevos',
+            data: [45, 52, 38, 45, 65, 74, 89, 95, 102, 125, 138, {{ users_count }}]
+        }, {
+            name: 'Usuarios Activos',
+            data: [35, 41, 35, 51, 49, 62, 69, 91, 85, 98, 110, 115]
+        }],
+        chart: {
+            type: 'area',
+            height: 350,
+            toolbar: {
+                show: false
+            }
+        },
+        colors: ['#0ab39c', '#405189'],
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.4,
+                opacityTo: 0.1,
+                stops: [0, 90, 100]
+            }
+        },
+        xaxis: {
+            categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+        },
+        yaxis: {
+            title: {
+                text: 'Número de Usuarios'
+            }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false
+        }
+    };
+    
+    const chart = new ApexCharts(document.getElementById('user_growth_chart'), options);
+    chart.render();
+}
+
+// User Distribution Chart
+function initUserDistributionChart() {
+    const options = {
+        series: [15, 89, {{ users_count|add:"-104" }}],
+        chart: {
+            type: 'donut',
+            height: 280
+        },
+        labels: ['Administradores', 'Premium', 'Estándar'],
+        colors: ['#405189', '#0ab39c', '#f1b44c'],
+        legend: {
+            show: false
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function(val) {
+                return val.toFixed(0) + '%';
+            }
+        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
                 chart: {
-                    type: 'donut',
-                },
-                colors: ['var(--vz-primary)', 'var(--vz-warning)'],
-            };
+                    width: 200
+                }
+            }
+        }]
+    };
     
-            // Inicializar el gráfico en el div con el id "user_device_pie_charts"
-            var chart = new ApexCharts(document.querySelector("#user_device_pie_charts"), chartOptions);
-            chart.render();
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Datos del gráfico
-            var chartData = {
-                series: [30, 70],  // Datos de la audiencia o métricas
-                labels: ['Success', 'Light'],
-            };
+    const chart = new ApexCharts(document.getElementById('user_distribution_chart'), options);
+    chart.render();
+}
+
+// World Map
+function initWorldMap() {
+    const map = new jsVectorMap({
+        map: 'world_merc',
+        selector: '#world-map',
+        zoomOnScroll: false,
+        zoomButtons: false,
+        markers: [
+            { name: 'Bolivia', coords: [-16.5, -68.15] },
+            { name: 'Brasil', coords: [-15.78, -47.93] },
+            { name: 'Argentina', coords: [-34.61, -58.38] },
+            { name: 'Chile', coords: [-33.45, -70.67] },
+            { name: 'USA', coords: [40.71, -74.00] },
+            { name: 'España', coords: [40.42, -3.70] }
+        ],
+        markerStyle: {
+            initial: {
+                r: 6,
+                fill: '#0ab39c',
+                fillOpacity: 0.9,
+                stroke: '#fff',
+                strokeWidth: 2
+            }
+        },
+        regionStyle: {
+            initial: {
+                fill: '#e9ecef',
+                'fill-opacity': 1,
+                stroke: 'none',
+                'stroke-width': 0,
+                'stroke-opacity': 0
+            },
+            hover: {
+                'fill-opacity': 0.8,
+                fill: '#0ab39c',
+                cursor: 'pointer'
+            }
+        }
+    });
+}
+
+// Refresh Dashboard
+function refreshDashboard() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Actualizando...';
     
-            // Opciones del gráfico
-            var chartOptions = {
-                chart: {
-                    type: 'donut',
-                },
-                colors: ['var(--vz-success)', 'var(--vz-light)'],
-            };
-    
-            // Inicializar el gráfico en el div con el id "audiences_metrics_charts"
-            var chart = new ApexCharts(document.querySelector("#audiences_metrics_charts"), chartOptions);
-            chart.render();
-        });
-    </script>
+    // Simulate refresh
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+// Auto-refresh every 5 minutes
+setInterval(() => {
+    console.log('Auto-refreshing dashboard data...');
+    // Add your refresh logic here
+}, 300000);
+</script>
 {% endblock extra_js %}

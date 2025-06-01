@@ -1,370 +1,770 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}FinancialDecisions List{% endblock title %}
+
+{% block title %}Decisiones Financieras{% endblock title %}
+
 {% block extra_css %}
 <!-- Sweet Alert css-->
 <link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+<!-- Tutorial styles -->
+<style>
+    .tutorial-highlight {
+        position: relative;
+        z-index: 1000;
+        box-shadow: 0 0 20px rgba(0, 123, 255, 0.6) !important;
+        border: 2px solid #007bff !important;
+    }
+    
+    .tutorial-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+    }
+    
+    .tutorial-tooltip {
+        position: absolute;
+        background: #007bff;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        max-width: 300px;
+        z-index: 1001;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .tutorial-tooltip::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 10px solid #007bff;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .tutorial-buttons {
+        margin-top: 10px;
+        text-align: right;
+    }
+    
+    .tutorial-btn {
+        background: white;
+        color: #007bff;
+        border: none;
+        padding: 5px 15px;
+        margin-left: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+    
+    .tutorial-btn:hover {
+        background: #f8f9fa;
+    }
+    
+    .help-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    
+    .help-button:hover {
+        background: #0056b3;
+        transform: scale(1.1);
+    }
+    
+    .help-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+</style>
 {% endblock extra_css %}
+
 {% block content %}
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
+<!-- Tutorial Overlay -->
+<div class="tutorial-overlay" id="tutorialOverlay"></div>
 
-                <div class="page-content">
-                    <div class="container-fluid">
+<!-- Help Button -->
+<button class="help-button" onclick="startTutorial()" title="Iniciar Tutorial">
+    <i class="ri-question-mark"></i>
+</button>
 
-                        {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Administrator" title="FinancialDecisions" %}
-                        {% endblock pagetitle %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
 
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="card" id="userList">
-                                    <div class="card-header border-bottom-dashed">
-    
-                                        <div class="row g-4 align-items-center">
-                                            <div class="col-sm">
-                                                <div>
-                                                    <h5 class="card-title mb-0">Lista de decisiones financieras</h5>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-auto">
-                                                <div class="d-flex flex-wrap align-items-start gap-2">
-                                                    <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
-                                                    <button type="button" class="btn btn-success add-btn"
-                                                        data-bs-toggle="modal" id="create-btn"
-                                                        data-bs-target="#showModal"><i
-                                                            class="ri-add-line align-bottom me-1"></i> Agregar decisión financiera</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body border-bottom-dashed border-bottom">
-                                        <form>
-                                            <div class="row g-3">
-                                                <div class="col-xl-6">
-                                                    <div class="search-box">
-                                                        <input type="text" class="form-control search"
-                                                            placeholder="Search for user, email, phone, status or something...">
-                                                        <i class="ri-search-line search-icon"></i>
-                                                    </div>
-                                                </div>
-                                                <!--end col-->
-                                                <div class="col-xl-6">
-                                                    <div class="row g-3">
-                                                        <div class="col-sm-4">
-                                                            <div class="">
-                                                                <input type="text" class="form-control"
-                                                                    id="datepicker-range" data-provider="flatpickr"
-                                                                    data-date-format="d M, Y" data-range-date="true"
-                                                                    placeholder="Select date">
-                                                            </div>
-                                                        </div>
-                                                        <!--end col-->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!--end row-->
-                                        </form>
-                                    </div>
-                                    <div class="card-body">
-                                        <div>
-                                            <div class="table-responsive table-card mb-1">
-                                                <table class="table align-middle" id="userTable">
-                                                    <thead class="table-light text-muted">
-                                                        <tr>
-                                                            <th scope="col" style="width: 50px;">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        id="checkAll" value="option">
-                                                                </div>
-                                                            </th>
-    
-                                                            <th class="sort" data-sort="user_name">Decisión financiera</th>
-                                                            <th class="sort" data-sort="email">Email</th>
-                                                            <th class="sort" data-sort="date">Joining Date</th>
-                                                            <th class="sort" data-sort="status">Status</th>
-                                                            <th class="sort" data-sort="action">Action</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="list form-check-all">
-                                                        {% for user in users %}
-                                                        <tr>
-                                                            <th scope="row">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        name="chk_child" value="option1">
-                                                                </div>
-                                                            </th>
-                                                            <td class="id" style="display:none;"><a
-                                                                    href="javascript:void(0);"
-                                                                    class="fw-medium link-primary">{{ user.id }}</a></td>
-                                                            <td class="user_name">{{ user.username }}</td>
-                                                            <td class="email">{{ user.email }}</td>
-                                                            <td class="date">{{ user.date_joined|date:"d M,Y" }}</td>
-                                                            <td class="status">
-                                                                {% if user.is_active == 1 %}
-                                                                <span class="badge bg-success-subtle text-success text-uppercase">Active</span>
-                                                                {% else %}
-                                                                <span class="badge bg-danger-subtle text-danger text-uppercase">Deactived</span>
-                                                                {% endif %}
-                                                            </td>
-                                                            <td>
-                                                                <ul class="list-inline hstack gap-2 mb-0">
-                                                                    <li class="list-inline-item edit"
-                                                                        data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                                                        data-bs-placement="top" title="Edit">
-                                                                        <a href="#showModal-{{ forloop.counter }}" data-bs-toggle="modal"
-                                                                            class="text-primary d-inline-block edit-item-btn">
-                                                                            <i class="ri-pencil-fill fs-16"></i>
-                                                                        </a>
-                                                                    </li>
-                                                                    <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                                        data-bs-trigger="hover" data-bs-placement="top"
-                                                                        title="Remove">
-                                                                        <a class="text-danger d-inline-block remove-item-btn"
-                                                                            data-bs-toggle="modal"
-                                                                            href="#deleteRecordModal-{{ forloop.counter }}">
-                                                                            <i class="ri-delete-bin-5-fill fs-16"></i>
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
-                                                            </td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                                <div class="noresult" style="display: none">
-                                                    <div class="text-center">
-                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json"
-                                                            trigger="loop" colors="primary:#121331,secondary:#08a88a"
-                                                            style="width:75px;height:75px">
-                                                        </lord-icon>
-                                                        <h5 class="mt-2">¡Lo siento!No se han encontrado resultados</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex justify-content-end">
-                                                <div class="pagination-wrap hstack gap-2">
-                                                    <a class="page-item pagination-prev disabled" href="#">
-                                                        Anterior
-                                                    </a>
-                                                    <ul class="pagination listjs-pagination mb-0"></ul>
-                                                    <a class="page-item pagination-next" href="#">
-                                                        Siguiente
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="modal fade" id="showModal" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content">
-                                                    <div class="modal-header bg-light p-3">
-                                                        <h5 class="modal-title" id="exampleModalLabel"></h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close" id="close-modal"></button>
-                                                    </div>
-                                                    <form action="{% url 'user:user.list' %}" method="POST" enctype="multipart/form-data">
-                                                        {% csrf_token %}
-                                                        <div class="modal-body">
-                                                            <input type="hidden" id="id-field" />
-    
-                                                            <div class="mb-3" id="modal-id" style="display: none;">
-                                                                <label for="id-field1" class="form-label">ID</label>
-                                                                <input type="text" id="id-field1" class="form-control"
-                                                                    placeholder="ID" readonly />
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="username-field" class="form-label">Decisión financiera
-                                                                    Nombre</label>
-                                                                <input type="text" name="name"
-                                                                    class="form-control" placeholder="Enter name"
-                                                                    required />
-                                                                    <div class="invalid-feedback">Por favor, ingrese un nombre de usuario.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="email-field" class="form-label">Correo electrónico</label>
-                                                                <input type="email" name="email_id" class="form-control"
-                                                                    placeholder="Enter email" required />
-                                                                <div class="invalid-feedback">Please enter an email.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="phone-field" class="form-label">Password</label>
-                                                                <input type="text" name="phone" class="form-control"
-                                                                    placeholder="Enter phone no." required />
-                                                                <div class="invalid-feedback">Please enter a phone.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="date-field" class="form-label">Joining
-                                                                    Date</label>
-                                                                <input type="date" name="joining_date" class="form-control"
-                                                                    data-provider="flatpickr" data-date-format="Y-m-d"
-                                                                    required placeholder="Select date" />
-                                                                <div class="invalid-feedback">Please select a date.</div>
-                                                            </div>
-    
-                                                            <div>
-                                                                <label for="status-field" class="form-label">Status</label>
-                                                                <select class="form-control" data-trigger
-                                                                    name="status" id="status-field" required>
-                                                                    <option value="">Status</option>
-                                                                    <option value="Active">Active</option>
-                                                                    <option value="Block">Block</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <div class="hstack gap-2 justify-content-end">
-                                                                <button type="button" class="btn btn-light"
-                                                                    data-bs-dismiss="modal">Close</button>
-                                                                <button type="submit" class="btn btn-success"
-                                                                    id="add-btn">Add FinancialDecision</button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-    
-                                        {% for user in users %}
-                                        <div class="modal fade" id="showModal-{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content">
-                                                    <div class="modal-header bg-light p-3">
-                                                        <h5 class="modal-title" id="exampleModalLabel">Edit FinancialDecision</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close" id="close-modal"></button>
-                                                    </div>
-                                                    <form action="{% url 'user:user.edit' user.id %}" method="POST" enctype="multipart/form-data">
-                                                        {% csrf_token %}
-                                                        <div class="modal-body">
-                                                            <input type="hidden" id="id-field" />
-    
-                                                            <div class="mb-3" id="modal-id" style="display: none;">
-                                                                <label for="id-field1" class="form-label">ID</label>
-                                                                <input type="text" id="id-field1" class="form-control"
-                                                                    placeholder="ID" readonly />
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="username-field" class="form-label">FinancialDecision
-                                                                    Name</label>
-                                                                <input type="text" name="name" value="{{ user.name }}"
-                                                                    class="form-control" placeholder="Enter name"
-                                                                    required />
-                                                                    <div class="invalid-feedback">Please enter a user name.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="email-field" class="form-label">Email</label>
-                                                                <input type="email" name="email_id" class="form-control" value="{{ user.email_id }}"
-                                                                    placeholder="Enter email" required />
-                                                                <div class="invalid-feedback">Please enter an email.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="phone-field" class="form-label">Phone</label>
-                                                                <input type="text" name="phone" class="form-control" value="{{ user.phone }}"
-                                                                    placeholder="Enter phone no." required />
-                                                                <div class="invalid-feedback">Please enter a phone.</div>
-                                                            </div>
-    
-                                                            <div class="mb-3">
-                                                                <label for="date-field" class="form-label">Joining
-                                                                    Date</label>
-                                                                <input type="date" name="joining_date" class="form-control"
-                                                                    data-provider="flatpickr" data-date-format="Y-m-d" value="{{ user.joining_date|date:"Y-m-d" }}"
-                                                                    required placeholder="Select date" />
-                                                                <div class="invalid-feedback">Please select a date.</div>
-                                                            </div>
-    
-                                                            <div>
-                                                                <label for="status-field" class="form-label">Status</label>
-                                                                <select class="form-control" data-trigger
-                                                                    name="status" id="status-field" required>
-                                                                    <option value="">Status</option>
-                                                                    {% if user.status == "Active" %}
-                                                                    <option value="Active" selected>Active</option>
-                                                                    {% else %}
-                                                                    <option value="Active">Active</option>
-                                                                    {% endif %}
-                                                                    {% if user.status == "Block" %}
-                                                                    <option value="Block" selected>Block</option>
-                                                                    {% else %}
-                                                                    <option value="Block">Block</option>
-                                                                    {% endif %}
-                                                                    
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <div class="hstack gap-2 justify-content-end">
-                                                                <button type="button" class="btn btn-light"
-                                                                    data-bs-dismiss="modal">Close</button>
-                                                                <button type="submit" class="btn btn-success"
-                                                                    id="add-btn">Update</button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Finanzas" title="Decisiones Financieras" %}
+            {% endblock pagetitle %}
 
-                                        <!-- Modal -->
-                                        <div class="modal fade zoomIn" id="deleteRecordModal-{{ forloop.counter }}" tabindex="-1"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close" id="deleteRecord-close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="mt-2 text-center">
-                                                            <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json"
-                                                                trigger="loop" colors="primary:#f7b84b,secondary:#f06548"
-                                                                style="width:100px;height:100px"></lord-icon>
-                                                            <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                                                                <h4>Are you sure ?</h4>
-                                                                <p class="text-muted mx-4 mb-0">Are you sure you want to
-                                                                    remove this record ?</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                                                            <button type="button" class="btn w-sm btn-light"
-                                                                data-bs-dismiss="modal">Close</button>
-                                                            <a type="button" class="btn w-sm btn-danger "
-                                                                id="delete-record" href="{% url 'user:user.delete' user.id %}">Yes, Delete It!</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                        <!--end modal -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card" id="decisionsList">
+                        <div class="card-header border-bottom-dashed">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-sm">
+                                    <div>
+                                        <h5 class="card-title mb-0">Lista de Decisiones Financieras</h5>
                                     </div>
                                 </div>
-    
+                                <div class="col-sm-auto" id="tutorial-add-button">
+                                    <div class="d-flex flex-wrap align-items-start gap-2">
+                                        <button class="btn btn-soft-danger" id="remove-actions" style="display: none;">
+                                            <i class="ri-delete-bin-2-line"></i> Eliminar Seleccionadas
+                                        </button>
+                                        <button type="button" class="btn btn-success add-btn" 
+                                                data-bs-toggle="modal" id="create-btn" 
+                                                data-bs-target="#crudModal">
+                                            <i class="ri-add-line align-bottom me-1"></i> 
+                                            Agregar Decisión Financiera
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <!--end col-->
                         </div>
-                        <!--end row-->
-    
+                        
+                        <!-- Filtros de búsqueda -->
+                        <div class="card-body border-bottom-dashed border-bottom" id="tutorial-filters">
+                            <form method="GET" id="searchForm">
+                                <div class="row g-3">
+                                    <div class="col-xl-4">
+                                        <div class="search-box">
+                                            <input type="text" class="form-control search" name="search" 
+                                                   value="{{ search_query }}"
+                                                   placeholder="Buscar por nombre, descripción o empresa...">
+                                            <i class="ri-search-line search-icon"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3">
+                                        <select class="form-select" name="status_filter" onchange="this.form.submit()">
+                                            <option value="">Todos los estados</option>
+                                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Activos</option>
+                                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactivos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-xl-3">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-search-line"></i> Buscar
+                                        </button>
+                                        <a href="{% url 'finance:finance.list' %}" class="btn btn-secondary">
+                                            <i class="ri-refresh-line"></i> Limpiar
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="card-body">
+                            <div>
+                                <div class="table-responsive table-card mb-1" id="tutorial-table">
+                                    <table class="table align-middle" id="decisionTable">
+                                        <thead class="table-light text-muted">
+                                            <tr>
+                                                <th scope="col" style="width: 50px;">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="checkAll" value="option">
+                                                    </div>
+                                                </th>
+                                                <th class="sort" data-sort="name">Nombre</th>
+                                                <th class="sort" data-sort="business">Empresa</th>
+                                                <th class="sort" data-sort="amount">Monto</th>
+                                                <th class="sort" data-sort="date">Fecha de Creación</th>
+                                                <th class="sort" data-sort="status">Estado</th>
+                                                <th class="sort" data-sort="action">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="list form-check-all">
+                                            {% for decision in financial_decisions %}
+                                            <tr>
+                                                <th scope="row">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input decision-checkbox" 
+                                                               type="checkbox" name="decision_ids" 
+                                                               value="{{ decision.id }}">
+                                                    </div>
+                                                </th>
+                                                <td class="id" style="display:none;">{{ decision.id }}</td>
+                                                <td class="name">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-grow-1 ms-2 name">{{ decision.name|default:"Sin nombre" }}</div>
+                                                    </div>
+                                                </td>
+                                                <td class="business">{{ decision.fk_business.name|default:"Sin empresa" }}</td>
+                                                <td class="amount">
+                                                    {% if decision.amount %}
+                                                        ${{ decision.amount|floatformat:2 }}
+                                                    {% else %}
+                                                        No especificado
+                                                    {% endif %}
+                                                </td>
+                                                <td class="date">{{ decision.date_created|date:"d M, Y" }}</td>
+                                                <td class="status">
+                                                    {% if decision.is_active %}
+                                                        <span class="badge bg-success-subtle text-success text-uppercase">Activo</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger-subtle text-danger text-uppercase">Inactivo</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <ul class="list-inline hstack gap-2 mb-0">
+                                                        <li class="list-inline-item" data-bs-toggle="tooltip" 
+                                                            data-bs-trigger="hover" data-bs-placement="top" title="Ver">
+                                                            <a href="javascript:void(0);" 
+                                                               class="text-info d-inline-block view-item-btn"
+                                                               onclick="viewDecision({{ decision.id }})">
+                                                                <i class="ri-eye-fill fs-16"></i>
+                                                            </a>
+                                                        </li>
+                                                        <li class="list-inline-item edit" data-bs-toggle="tooltip" 
+                                                            data-bs-trigger="hover" data-bs-placement="top" title="Editar">
+                                                            <a href="javascript:void(0);" 
+                                                               class="text-primary d-inline-block edit-item-btn"
+                                                               onclick="editDecision({{ decision.id }})">
+                                                                <i class="ri-pencil-fill fs-16"></i>
+                                                            </a>
+                                                        </li>
+                                                        <li class="list-inline-item" data-bs-toggle="tooltip" 
+                                                            data-bs-trigger="hover" data-bs-placement="top" title="Eliminar">
+                                                            <a class="text-danger d-inline-block remove-item-btn" 
+                                                               href="javascript:void(0);" 
+                                                               onclick="confirmDelete({{ decision.id }}, '{{ decision.name }}')">
+                                                                <i class="ri-delete-bin-5-fill fs-16"></i>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="text-center py-4">
+                                                    <div class="text-center">
+                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                                                   trigger="loop" colors="primary:#121331,secondary:#08a88a" 
+                                                                   style="width:75px;height:75px"></lord-icon>
+                                                        <h5 class="mt-2">¡No se encontraron decisiones financieras!</h5>
+                                                        <p class="text-muted">Comience agregando su primera decisión financiera.</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Paginación -->
+                                {% if financial_decisions.has_other_pages %}
+                                <div class="d-flex justify-content-end" id="tutorial-pagination">
+                                    <div class="pagination-wrap hstack gap-2">
+                                        {% if financial_decisions.has_previous %}
+                                            <a class="page-item pagination-prev" 
+                                               href="?page={{ financial_decisions.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}">
+                                                Anterior
+                                            </a>
+                                        {% endif %}
+                                        
+                                        <ul class="pagination listjs-pagination mb-0">
+                                            {% for num in financial_decisions.paginator.page_range %}
+                                                {% if financial_decisions.number == num %}
+                                                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                                {% else %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" 
+                                                           href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}">{{ num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                        
+                                        {% if financial_decisions.has_next %}
+                                            <a class="page-item pagination-next" 
+                                               href="?page={{ financial_decisions.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}">
+                                                Siguiente
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <!-- container-fluid -->
                 </div>
-                <!-- End Page-content -->
-
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
             </div>
-            <!-- end main content-->
-{% endblock content %}
-{% block extra_js %}
+        </div>
+    </div>
 
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+
+<!-- Modal CRUD Universal -->
+{% include 'finance/modals.html' %}
+
+{% endblock content %}
+
+{% block extra_js %}
+<!-- Sweet Alerts js -->
+<script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+
+<script>
+// Variables globales
+let currentStep = 0;
+const tutorialSteps = [
+    {
+        target: '#tutorial-add-button',
+        title: '¡Bienvenido!',
+        content: 'Aquí puedes agregar nuevas decisiones financieras. Haz clic en el botón verde para comenzar.',
+        position: 'bottom'
+    },
+    {
+        target: '#tutorial-filters',
+        title: 'Filtros de Búsqueda',
+        content: 'Utiliza estos filtros para buscar decisiones específicas por nombre, empresa o estado.',
+        position: 'bottom'
+    },
+    {
+        target: '#tutorial-table',
+        title: 'Tabla de Decisiones',
+        content: 'Aquí verás todas tus decisiones financieras. Puedes ver, editar o eliminar cada una usando los botones de acción.',
+        position: 'top'
+    },
+    {
+        target: '#tutorial-pagination',
+        title: 'Paginación',
+        content: 'Si tienes muchas decisiones, usa estos controles para navegar entre páginas.',
+        position: 'top'
+    }
+];
+
+// Funciones del tutorial
+function startTutorial() {
+    currentStep = 0;
+    showTutorialStep();
+}
+
+function showTutorialStep() {
+    if (currentStep >= tutorialSteps.length) {
+        endTutorial();
+        return;
+    }
+
+    const step = tutorialSteps[currentStep];
+    const target = document.querySelector(step.target);
+    
+    if (!target) {
+        nextTutorialStep();
+        return;
+    }
+
+    // Mostrar overlay
+    document.getElementById('tutorialOverlay').style.display = 'block';
+    
+    // Highlight del elemento
+    target.classList.add('tutorial-highlight');
+    
+    // Crear tooltip
+    const tooltip = createTutorialTooltip(step, target);
+    document.body.appendChild(tooltip);
+    
+    // Scroll al elemento
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function createTutorialTooltip(step, target) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tutorial-tooltip';
+    tooltip.innerHTML = `
+        <h6 style="margin: 0 0 10px 0; font-weight: bold;">${step.title}</h6>
+        <p style="margin: 0 0 10px 0;">${step.content}</p>
+        <div class="tutorial-buttons">
+            ${currentStep > 0 ? '<button class="tutorial-btn" onclick="prevTutorialStep()">Anterior</button>' : ''}
+            <button class="tutorial-btn" onclick="endTutorial()">Saltar</button>
+            <button class="tutorial-btn" onclick="nextTutorialStep()" style="background: #007bff; color: white;">
+                ${currentStep === tutorialSteps.length - 1 ? 'Finalizar' : 'Siguiente'}
+            </button>
+        </div>
+    `;
+    
+    // Posicionar tooltip
+    const rect = target.getBoundingClientRect();
+    const tooltipHeight = 120; // Altura aproximada del tooltip
+    
+    if (step.position === 'bottom') {
+        tooltip.style.top = (rect.bottom + window.scrollY + 15) + 'px';
+        tooltip.style.left = (rect.left + rect.width/2 - 150) + 'px';
+    } else {
+        tooltip.style.top = (rect.top + window.scrollY - tooltipHeight - 15) + 'px';
+        tooltip.style.left = (rect.left + rect.width/2 - 150) + 'px';
+        tooltip.querySelector('::after').style.transform = 'translateX(-50%) rotate(180deg)';
+    }
+    
+    return tooltip;
+}
+
+function nextTutorialStep() {
+    clearTutorialStep();
+    currentStep++;
+    showTutorialStep();
+}
+
+function prevTutorialStep() {
+    clearTutorialStep();
+    currentStep--;
+    showTutorialStep();
+}
+
+function endTutorial() {
+    clearTutorialStep();
+    document.getElementById('tutorialOverlay').style.display = 'none';
+    
+    Swal.fire({
+        title: '¡Tutorial Completado!',
+        text: 'Ya conoces las funciones básicas. ¡Comienza a gestionar tus decisiones financieras!',
+        icon: 'success',
+        confirmButtonText: 'Entendido'
+    });
+}
+
+function clearTutorialStep() {
+    // Remover highlights
+    document.querySelectorAll('.tutorial-highlight').forEach(el => {
+        el.classList.remove('tutorial-highlight');
+    });
+    
+    // Remover tooltips
+    document.querySelectorAll('.tutorial-tooltip').forEach(el => {
+        el.remove();
+    });
+}
+
+// Funciones CRUD
+function editDecision(id) {
+    fetch(`/finance/details/${id}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const decision = data.data;
+                
+                // Llenar el formulario
+                document.getElementById('decisionId').value = decision.id;
+                document.getElementById('decisionName').value = decision.name || '';
+                document.getElementById('decisionDescription').value = decision.description || '';
+                document.getElementById('decisionAmount').value = decision.amount || '';
+                document.getElementById('decisionBusiness').value = decision.business_id || '';
+                document.getElementById('decisionStatus').checked = decision.is_active;
+                
+                // Cambiar el título y botón del modal
+                document.getElementById('modalTitle').textContent = 'Editar Decisión Financiera';
+                document.getElementById('submitBtn').textContent = 'Actualizar';
+                document.getElementById('crudForm').action = `/finance/update/${id}/`;
+                
+                // Mostrar modal
+                new bootstrap.Modal(document.getElementById('crudModal')).show();
+            } else {
+                showAlert('Error', data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error', 'Error al cargar los datos de la decisión', 'error');
+        });
+}
+
+function viewDecision(id) {
+    fetch(`/finance/details/${id}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const decision = data.data;
+                
+                Swal.fire({
+                    title: decision.name || 'Decisión Financiera',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>Descripción:</strong> ${decision.description || 'No especificada'}</p>
+                            <p><strong>Monto:</strong> ${decision.amount || '0.00'}</p>
+                            <p><strong>Empresa:</strong> ${decision.business_name || 'No asignada'}</p>
+                            <p><strong>Estado:</strong> 
+                                <span class="badge ${decision.is_active ? 'bg-success' : 'bg-danger'}">
+                                    ${decision.is_active ? 'Activo' : 'Inactivo'}
+                                </span>
+                            </p>
+                            <p><strong>Creado:</strong> ${decision.date_created}</p>
+                            <p><strong>Actualizado:</strong> ${decision.last_updated}</p>
+                        </div>
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'Cerrar',
+                    customClass: {
+                        popup: 'swal-wide'
+                    }
+                });
+            } else {
+                showAlert('Error', data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error', 'Error al cargar los detalles', 'error');
+        });
+}
+
+function confirmDelete(id, name) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: `¿Deseas eliminar la decisión "${name}"? Esta acción no se puede deshacer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteDecision(id);
+        }
+    });
+}
+
+function deleteDecision(id) {
+    fetch(`/finance/delete/${id}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('¡Eliminado!', data.message, 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('Error', data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error', 'Error al eliminar la decisión', 'error');
+    });
+}
+
+function deleteSelected() {
+    const checkedBoxes = document.querySelectorAll('.decision-checkbox:checked');
+    const ids = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (ids.length === 0) {
+        showAlert('Atención', 'Selecciona al menos una decisión para eliminar', 'warning');
+        return;
+    }
+    
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: `¿Deseas eliminar ${ids.length} decisión(es) seleccionada(s)?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            ids.forEach(id => formData.append('decision_ids[]', id));
+            
+            fetch('/finance/bulk-delete/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('¡Eliminadas!', data.message, 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Error', 'Error al eliminar las decisiones', 'error');
+            });
+        }
+    });
+}
+
+// Utilidades
+function showAlert(title, text, icon) {
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        confirmButtonText: 'OK'
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Checkbox "Seleccionar todo"
+    const checkAll = document.getElementById('checkAll');
+    const checkboxes = document.querySelectorAll('.decision-checkbox');
+    const removeActions = document.getElementById('remove-actions');
+    
+    checkAll?.addEventListener('change', function() {
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        toggleBulkActions();
+    });
+    
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', toggleBulkActions);
+    });
+    
+    function toggleBulkActions() {
+        const checkedCount = document.querySelectorAll('.decision-checkbox:checked').length;
+        removeActions.style.display = checkedCount > 0 ? 'inline-block' : 'none';
+    }
+    
+    // Botón de eliminar múltiples
+    removeActions?.addEventListener('click', deleteSelected);
+    
+    // Limpiar formulario al abrir modal para crear
+    document.getElementById('create-btn')?.addEventListener('click', function() {
+        document.getElementById('crudForm').reset();
+        document.getElementById('decisionId').value = '';
+        document.getElementById('modalTitle').textContent = 'Agregar Decisión Financiera';
+        document.getElementById('submitBtn').textContent = 'Crear';
+        document.getElementById('crudForm').action = '/finance/create/';
+    });
+    
+    // Envío del formulario
+    document.getElementById('crudForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.textContent;
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Procesando...';
+        
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('crudModal')).hide();
+                showAlert('¡Éxito!', data.message, 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                if (data.errors) {
+                    let errorMsg = 'Errores encontrados:\n';
+                    Object.keys(data.errors).forEach(field => {
+                        errorMsg += `${field}: ${data.errors[field].join(', ')}\n`;
+                    });
+                    showAlert('Error de Validación', errorMsg, 'error');
+                } else {
+                    showAlert('Error', data.message, 'error');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error', 'Error al procesar la solicitud', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        });
+    });
+    
+    // Búsqueda en tiempo real
+    const searchInput = document.querySelector('.search');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('searchForm').submit();
+            }, 500);
+        });
+    }
+});
+
+// Mostrar tutorial automáticamente en la primera visita
+if (!localStorage.getItem('financeDecisionTutorialShown')) {
+    setTimeout(() => {
+        Swal.fire({
+            title: '¡Bienvenido!',
+            text: '¿Te gustaría hacer un recorrido rápido por las funciones principales?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, mostrar tutorial',
+            cancelButtonText: 'No, gracias'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                startTutorial();
+            }
+            localStorage.setItem('financeDecisionTutorialShown', 'true');
+        });
+    }, 1000);
+}
+</script>
+
+<style>
+.swal-wide {
+    width: 600px !important;
+}
+</style>
 {% endblock extra_js %}
