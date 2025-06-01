@@ -410,3 +410,11 @@ class FinanceRecommendationSimulation(models.Model):
     data = models.FloatField(
         verbose_name='Datos',
         help_text='Datos numéricos de la simulación'
+    )
+    fk_simulation = models.ForeignKey(
+        Simulation,
+        on_delete=models.CASCADE,
+        related_name='finance_recommendation_simulations',
+        verbose_name='Simulación',
+        help_text='Simulación asociada a la recomendación financiera'
+    )

@@ -68,9 +68,20 @@
         text-align: center;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
     }
     .stat-item:hover {
         transform: translateY(-2px);
+    }
+    .stat-item::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4CAF50, #2196F3);
     }
     .stat-value {
         font-size: 2rem;
@@ -220,6 +231,180 @@
         cursor: pointer;
         z-index: 10000;
     }
+    
+    /* Tutorial Styles */
+    .results-tutorial {
+        background: #e3f2fd;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 4px solid #2196f3;
+    }
+    
+    .results-tutorial h5 {
+        color: #1976d2;
+        margin-bottom: 15px;
+    }
+    
+    .tutorial-steps {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .tutorial-step {
+        flex: 1;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .tutorial-step:hover {
+        transform: translateY(-2px);
+    }
+    
+    .tutorial-step i {
+        font-size: 2rem;
+        color: #2196f3;
+        margin-bottom: 10px;
+    }
+    
+    /* Animated Counters */
+    .counter {
+        display: inline-block;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    /* Chart Controls */
+    .chart-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chart-control-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ddd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .chart-control-btn:hover {
+        background: white;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Insights Panel */
+    .insights-panel {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .insight-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+    
+    .insight-item:hover {
+        transform: translateX(5px);
+    }
+    
+    .insight-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .insight-icon.positive {
+        background: #c8e6c9;
+        color: #2e7d32;
+    }
+    
+    .insight-icon.warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .insight-icon.negative {
+        background: #ffcdd2;
+        color: #c62828;
+    }
+    
+    /* Interactive Timeline */
+    .timeline-container {
+        position: relative;
+        padding: 20px 0;
+        margin: 20px 0;
+    }
+    
+    .timeline-line {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+        transform: translateX(-50%);
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .timeline-item:nth-child(odd) {
+        justify-content: flex-start;
+        padding-right: 50%;
+    }
+    
+    .timeline-item:nth-child(even) {
+        justify-content: flex-end;
+        padding-left: 50%;
+    }
+    
+    .timeline-content {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 16px;
+        height: 16px;
+        background: #2196f3;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+    }
 </style>
 {% endblock extra_css %}
 
@@ -231,6 +416,37 @@
             {% block pagetitle %}
             {% include "partials/page-title.html" with pagetitle="Simulación" title="Resultados" %}
             {% endblock pagetitle %}
+
+            <!-- Results Tutorial -->
+            <div class="results-tutorial" id="resultsTutorial">
+                <h5><i class="bx bx-bulb me-2"></i>Guía de Interpretación de Resultados</h5>
+                <p>Sus resultados de simulación están listos. Aquí le explicamos cómo interpretarlos:</p>
+                <div class="tutorial-steps">
+                    <div class="tutorial-step">
+                        <i class="bx bx-bar-chart-alt-2"></i>
+                        <h6>Métricas Clave</h6>
+                        <p class="small">Revise los indicadores principales en la parte superior</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <i class="bx bx-line-chart"></i>
+                        <h6>Análisis Visual</h6>
+                        <p class="small">Explore los gráficos interactivos por categoría</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <i class="bx bx-bulb"></i>
+                        <h6>Recomendaciones</h6>
+                        <p class="small">Lea las sugerencias personalizadas basadas en IA</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <i class="bx bx-download"></i>
+                        <h6>Exportar</h6>
+                        <p class="small">Descargue reportes en PDF o Excel</p>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary mt-3" onclick="hideTutorial()">
+                    <i class="bx bx-x me-1"></i>Entendido
+                </button>
+            </div>
 
             <!-- Results Header -->
             <div class="results-header">
@@ -268,26 +484,81 @@
                 </div>
             </div>
 
-            <!-- Key Statistics -->
+            <!-- Key Insights Panel -->
+            <div class="insights-panel">
+                <h5 class="mb-3"><i class="bx bx-bulb me-2"></i>Insights Principales</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="insight-item">
+                            <div class="insight-icon {% if growth_rate > 0 %}positive{% else %}negative{% endif %}">
+                                <i class="bx {% if growth_rate > 0 %}bx-trending-up{% else %}bx-trending-down{% endif %}"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Tendencia de Demanda</h6>
+                                <p class="mb-0">
+                                    La demanda muestra una tendencia 
+                                    {% if growth_rate > 0 %}
+                                        <strong class="text-success">creciente del {{ growth_rate }}%</strong>
+                                    {% else %}
+                                        <strong class="text-danger">decreciente del {{ growth_rate|floatformat:"2" }}%</strong>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="insight-item">
+                            <div class="insight-icon {% if error_permisible < 5 %}positive{% elif error_permisible < 10 %}warning{% else %}negative{% endif %}">
+                                <i class="bx bx-target-lock"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Precisión del Modelo</h6>
+                                <p class="mb-0">
+                                    Error permisible del <strong>{{ error_permisible|floatformat:"2" }}%</strong>
+                                    {% if error_permisible < 5 %}
+                                        <span class="text-success">(Excelente)</span>
+                                    {% elif error_permisible < 10 %}
+                                        <span class="text-warning">(Bueno)</span>
+                                    {% else %}
+                                        <span class="text-danger">(Revisar modelo)</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Statistics with Animation -->
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-value">{{ demand_initial.quantity|floatformat:"0" }}</div>
-                    <div class="stat-label">Demanda Inicial (L)</div>
+                    <div class="stat-value">
+                        <span class="counter" data-target="{{ demand_initial.quantity|floatformat:'0' }}">0</span> L
+                    </div>
+                    <div class="stat-label">Demanda Inicial</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">{{ demand_predicted.quantity|floatformat:"0" }}</div>
-                    <div class="stat-label">Demanda Predicha (L)</div>
+                    <div class="stat-value">
+                        <span class="counter" data-target="{{ demand_predicted.quantity|floatformat:'0' }}">0</span> L
+                    </div>
+                    <div class="stat-label">Demanda Predicha</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">{{ growth_rate|floatformat:"2" }}%</div>
+                    <div class="stat-value">
+                        <span class="counter" data-target="{{ growth_rate|floatformat:'0' }}">0</span>%
+                    </div>
                     <div class="stat-label">Tasa de Crecimiento</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">{{ error_permisible|floatformat:"2" }}%</div>
+                    <div class="stat-value">
+                        <span class="counter" data-target="{{ error_permisible|floatformat:'0' }}">0</span>%
+                    </div>
                     <div class="stat-label">Error Permisible</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">{{ simulation_instance.quantity_time }}</div>
+                    <div class="stat-value">
+                        <span class="counter" data-target="{{ simulation_instance.quantity_time }}">0</span>
+                    </div>
                     <div class="stat-label">Días Simulados</div>
                 </div>
             </div>
@@ -330,6 +601,17 @@
                                     <span class="badge bg-success">Completada</span>
                                 </dd>
                             </dl>
+                            
+                            <!-- Quick Actions -->
+                            <hr>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                                    <i class="bx bx-printer me-1"></i>Imprimir
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="shareResults()">
+                                    <i class="bx bx-share-alt me-1"></i>Compartir
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -411,13 +693,11 @@
                         <div class="pagination-controls">
                             <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevDayBtn">
                                 <i class="bx bx-chevron-left me-1"></i>
-                                Anterior
                             </button>
                             <span class="flex-grow-1 text-center small text-muted" id="dayCounter">
                                 Día 1 de {{ all_variables_extracted|length }}
                             </span>
                             <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextDayBtn">
-                                Siguiente
                                 <i class="bx bx-chevron-right ms-1"></i>
                             </button>
                         </div>
@@ -457,6 +737,13 @@
                                     Demanda
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#timeline" type="button" role="tab">
+                                    <i class="bx bx-time me-2"></i>
+                                    Línea de Tiempo
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
@@ -470,9 +757,15 @@
                                         <h6 class="mb-3">
                                             <i class="bx bx-bar-chart me-2"></i>
                                             Ingresos vs Ganancias
-                                            <i class="bx bx-fullscreen float-end cursor-pointer" 
-                                               onclick="openFullscreen('{{ image_data_0 }}', 'Ingresos vs Ganancias')"></i>
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_0 }}', 'ingresos-ganancias.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_0 }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_0 %}
                                         <img src="data:image/png;base64,{{ image_data_0 }}" 
                                              class="chart-image" 
@@ -490,9 +783,15 @@
                                         <h6 class="mb-3">
                                             <i class="bx bx-line-chart me-2"></i>
                                             Tendencia de Demanda
-                                            <i class="bx bx-fullscreen float-end cursor-pointer" 
-                                               onclick="openFullscreen('{{ image_data_line }}', 'Tendencia de Demanda')"></i>
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_line }}', 'tendencia-demanda.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_line }}', 'Tendencia de Demanda')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_line %}
                                         <img src="data:image/png;base64,{{ image_data_line }}" 
                                              class="chart-image" 
@@ -687,6 +986,39 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Timeline Tab -->
+                        <div class="tab-pane fade" id="timeline" role="tabpanel">
+                            <div class="timeline-container">
+                                <div class="timeline-line"></div>
+                                {% for item in all_variables_extracted|slice:":10" %}
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h6>Día {{ forloop.counter }} - {{ item.date_simulation|date:"d/m/Y" }}</h6>
+                                        <p class="mb-2">
+                                            <strong>Demanda:</strong> 
+                                            {% for variable, data in item.totales_por_variable.items %}
+                                                {% if variable == "DEMANDA INSATISFECHA" %}
+                                                    {{ data.total|floatformat:2 }} L
+                                                {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                        <small class="text-muted">
+                                            Variables clave registradas: {{ item.totales_por_variable|length }}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% if all_variables_extracted|length > 10 %}
+                                <div class="text-center mt-3">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="loadMoreTimeline()">
+                                        Ver más días
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Summary Statistics -->
@@ -740,7 +1072,9 @@
                                                 data-tooltip="{{ name_variable }}">
                                                 {{ name_variable|truncatechars:25 }}
                                             </h5>
-                                            <h4 class="text-primary mb-1">{{ info_variable.total|floatformat:2 }}</h4>
+                                            <h4 class="text-primary mb-1">
+                                                <span class="counter" data-target="{{ info_variable.total|floatformat:'0' }}">0</span>
+                                            </h4>
                                             <p class="text-muted mb-0">
                                                 {% if info_variable.unit == "BS" %}Pesos Bolivianos
                                                 {% elif info_variable.unit == "CLIENTES" %}Clientes
@@ -782,24 +1116,70 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize pagination for daily results
+    // Initialize all interactive features
+    initializeCounters();
     initializeDailyResultsPagination();
-    
-    // Initialize table pagination
     initializeTablePagination();
-    
-    // Initialize fullscreen functionality
     initializeFullscreen();
-    
-    // Initialize export functions
     initializeExportFunctions();
-    
-    // Initialize tooltips
     initializeTooltips();
+    initializeChartInteractions();
+    
+    // Check if first time viewing results
+    if (!localStorage.getItem('resultsViewedBefore')) {
+        localStorage.setItem('resultsViewedBefore', 'true');
+    } else {
+        // Hide tutorial for returning users
+        document.getElementById('resultsTutorial').style.display = 'none';
+    }
 });
+
+// Hide tutorial
+function hideTutorial() {
+    const tutorial = document.getElementById('resultsTutorial');
+    tutorial.style.animation = 'fadeOut 0.5s ease-out';
+    setTimeout(() => {
+        tutorial.style.display = 'none';
+    }, 500);
+}
+
+// Animated Counters
+function initializeCounters() {
+    const counters = document.querySelectorAll('.counter');
+    const speed = 200; // Animation speed
+    
+    const animateCounter = (counter) => {
+        const target = +counter.getAttribute('data-target');
+        const count = +counter.innerText;
+        const increment = target / speed;
+        
+        if (count < target) {
+            counter.innerText = Math.ceil(count + increment);
+            setTimeout(() => animateCounter(counter), 1);
+        } else {
+            counter.innerText = target;
+        }
+    };
+    
+    // Intersection Observer for viewport detection
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    
+    counters.forEach(counter => {
+        observer.observe(counter);
+    });
+}
 
 // Daily Results Pagination
 function initializeDailyResultsPagination() {
@@ -817,7 +1197,7 @@ function initializeDailyResultsPagination() {
             item.style.display = 'none';
         });
         
-        // Show current item
+        // Show current item with animation
         const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
         if (currentItem) {
             currentItem.style.display = 'block';
@@ -967,50 +1347,44 @@ function initializeFullscreen() {
 
 // Export functionality
 function initializeExportFunctions() {
-    window.exportToPDF = function() {
-        // Show loading state
+    window.exportToPDF = async function() {
         const btn = event.target;
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando PDF...';
         btn.disabled = true;
         
-        // Simulate export process
-        setTimeout(() => {
-            // Here you would make an AJAX call to your Django view
-            fetch('/simulate/export/pdf/{{ simulation_instance.id }}/', {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.blob();
-                }
-                throw new Error('Error al generar PDF');
-            })
-            .then(blob => {
-                // Create download link
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `simulacion_{{ simulation_instance.id }}_resultados.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                
-                showNotification('PDF generado exitosamente', 'success');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error al generar PDF', 'error');
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+        try {
+            // Wait for html2canvas to be ready
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Capture the main content
+            const element = document.querySelector('.page-content');
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
             });
-        }, 1000);
+            
+            // Convert to PDF
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jspdf.jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            });
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            pdf.save(`simulacion_${new Date().getTime()}_resultados.pdf`);
+            
+            showNotification('PDF generado exitosamente', 'success');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showNotification('Error al generar PDF', 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     };
     
     window.exportToExcel = function() {
@@ -1019,23 +1393,86 @@ function initializeExportFunctions() {
         btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando Excel...';
         btn.disabled = true;
         
-        setTimeout(() => {
-            // Here you would make an AJAX call to your Django view
-            showNotification('Funcionalidad de Excel en desarrollo', 'info');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }, 1000);
+        // Create CSV content
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Add headers
+        csvContent += "Variable,Valor Total,Unidad\n";
+        
+        // Add data
+        {% for name_variable, info_variable in totales_acumulativos.items %}
+        csvContent += '"{{ name_variable }}","{{ info_variable.total|floatformat:2 }}","{{ info_variable.unit }}"\n';
+        {% endfor %}
+        
+        // Create download link
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `simulacion_${new Date().getTime()}_resultados.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Archivo CSV generado exitosamente', 'success');
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     };
 }
 
+// Chart interactions
+function initializeChartInteractions() {
+    // Download chart
+    window.downloadChart = function(imageData, filename) {
+        const link = document.createElement('a');
+        link.href = `data:image/png;base64,${imageData}`;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Gráfico descargado exitosamente', 'success');
+    };
+    
+    // Share results
+    window.shareResults = function() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Resultados de Simulación',
+                text: 'Mira los resultados de mi simulación de negocio',
+                url: window.location.href
+            }).then(() => {
+                showNotification('Compartido exitosamente', 'success');
+            }).catch((error) => {
+                console.log('Error sharing:', error);
+            });
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showNotification('Enlace copiado al portapapeles', 'success');
+            });
+        }
+    };
+}
+
+// Timeline functionality
+window.loadMoreTimeline = function() {
+    showNotification('Cargando más días...', 'info');
+    // Here you would load more timeline items via AJAX
+};
+
 // Tooltips
 function initializeTooltips() {
-    // Add CSS for fade animations
+    // Add CSS for animations
     const style = document.createElement('style');
     style.textContent = `
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
         }
         .cursor-pointer { cursor: pointer; }
     `;
@@ -1082,6 +1519,23 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
         const targetPane = document.querySelector(this.getAttribute('data-bs-target'));
         if (targetPane) {
             targetPane.style.animation = 'fadeIn 0.3s ease';
+        }
+    });
+});
+
+// Print functionality
+window.addEventListener('beforeprint', function() {
+    // Expand all collapsed sections for printing
+    document.querySelectorAll('.collapse').forEach(el => {
+        el.classList.add('show');
+    });
+});
+
+window.addEventListener('afterprint', function() {
+    // Restore collapsed state after printing
+    document.querySelectorAll('.collapse').forEach(el => {
+        if (!el.classList.contains('show')) {
+            el.classList.remove('show');
         }
     });
 });

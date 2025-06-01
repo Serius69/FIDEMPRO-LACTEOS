@@ -1,13 +1,18 @@
 # utils/chart_generators.py
 import base64
+import logging
 from io import BytesIO
+from typing import Dict, List, Any, Optional, Tuple
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
 
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-from django.shortcuts import get_object_or_404
+from matplotlib.figure import Figure
+from django.core.cache import cache
+from django.db.models import Avg, Sum, Count
 
 from dashboards.models import Chart
 from variable.models import Variable
@@ -15,20 +20,40 @@ from variable.models import Variable
 # Set matplotlib to non-interactive mode
 matplotlib.use('Agg')
 
+# Configure matplotlib for better performance
+plt.rcParams['figure.max_open_warning'] = 0
+plt.rcParams['figure.autolayout'] = True
+
+logger = logging.getLogger(__name__)
+
 
 class ChartGenerator:
-    """Utility class for generating various types of charts and visualizations"""
+    """Optimized utility class for generating charts and visualizations"""
     
     def __init__(self):
         self.iniciales_a_buscar = [
             'CTR', 'CTAI', 'TPV', 'TPPRO', 'DI', 'VPC', 'IT', 'GT', 'TCA', 
-            'NR', 'GO', 'GG', 'GT', 'CTTL', 'CPP', 'CPV', 'CPI', 'CPMO', 
-            'CUP', 'PVR', 'TG', 'IB', 'MB', 'RI', 'RTI', 'RTC', 'PE', 
+            'NR', 'GO', 'GG', 'CTTL', 'CPP', 'CPV', 'CPI', 'CPMO', 
+            'CUP', 'TG', 'IB', 'MB', 'RI', 'RTI', 'RTC', 'PE', 
             'HO', 'CHO', 'CA'
         ]
+        self.cache_timeout = 3600  # 1 hour
+        self._setup_plot_style()
     
-    def generate_all_charts(self, simulation_id, simulation_instance, results_simulation):
-        """Generate all charts and analysis data for simulation results"""
+    def _setup_plot_style(self):
+        """Set up consistent plot styling"""
+        sns.set_style("whitegrid")
+        sns.set_palette("husl")
+    
+    def generate_all_charts(self, simulation_id: int, simulation_instance, 
+                          results_simulation: List) -> Dict[str, Any]:
+        """Generate all charts with parallel processing"""
+        cache_key = f"charts_{simulation_id}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data:
+            return cached_data
+        
         # Extract variables and calculate totals
         all_variables_extracted = self._extract_variables_from_results(results_simulation)
         totales_acumulativos = self._calculate_cumulative_totals(results_simulation)
@@ -37,55 +62,62 @@ class ChartGenerator:
         # Generate chart data
         chart_data = self._create_demand_chart_data(results_simulation)
         
-        # Generate various chart images
-        chart_images = self._generate_chart_images(
+        # Generate charts in parallel
+        chart_images = self._generate_charts_parallel(
             simulation_id, simulation_instance, results_simulation, 
             chart_data, variables_to_graph
         )
         
-        return {
+        result = {
             'all_variables_extracted': all_variables_extracted,
             'totales_acumulativos': totales_acumulativos,
             'chart_images': chart_images
         }
+        
+        # Cache the result
+        cache.set(cache_key, result, self.cache_timeout)
+        
+        return result
     
-    def _extract_variables_from_results(self, results_simulation):
+    @lru_cache(maxsize=128)
+    def _get_variable_mapping(self) -> Dict[str, Dict[str, str]]:
+        """Get cached variable mapping"""
+        variables_db = Variable.objects.filter(
+            initials__in=self.iniciales_a_buscar
+        ).values('initials', 'name', 'unit')
+        
+        return {
+            variable['initials']: {
+                'name': variable['name'], 
+                'unit': variable['unit']
+            } 
+            for variable in variables_db
+        }
+    
+    def _extract_variables_from_results(self, results_simulation: List) -> List[Dict]:
         """Extract and process variables from simulation results"""
         all_variables_extracted = []
-        variables_db = Variable.objects.all()
-        name_variables = {
-            variable.initials: {'name': variable.name, 'unit': variable.unit} 
-            for variable in variables_db
+        name_variables = self._get_variable_mapping()
+        
+        # Create initials to names mapping
+        iniciales_a_nombres = {
+            initial: info['name'] 
+            for initial, info in name_variables.items()
         }
         
         for result_simulation in results_simulation:
             variables_extracted = result_simulation.get_variables()
             date_simulation = result_simulation.date
             
-            # Filter variables that match our criteria
-            filtered_variables = Variable.objects.filter(
-                initials__in=self.iniciales_a_buscar
-            ).values('name', 'initials')
-            
-            iniciales_a_nombres = {
-                variable['initials']: variable['name'] 
-                for variable in filtered_variables
-            }
-            
-            # Calculate totals per variable
+            # Calculate totals per variable efficiently
             totales_por_variable = {}
             for inicial, value in variables_extracted.items():
                 if inicial in iniciales_a_nombres:
                     name_variable = iniciales_a_nombres[inicial]
-                    if name_variable not in totales_por_variable:
-                        totales_por_variable[name_variable] = {
-                            'total': 0,
-                            'unit': name_variables.get(inicial, {}).get('unit', None)
-                        }
-                    totales_por_variable[name_variable]['total'] += value
-                    totales_por_variable[name_variable]['unit'] = name_variables.get(
-                        inicial, {}
-                    ).get('unit', totales_por_variable[name_variable]['unit'])
+                    totales_por_variable[name_variable] = {
+                        'total': value,
+                        'unit': name_variables.get(inicial, {}).get('unit', '')
+                    }
             
             all_variables_extracted.append({
                 'result_simulation': result_simulation,
@@ -95,443 +127,617 @@ class ChartGenerator:
         
         return all_variables_extracted
     
-    def _calculate_cumulative_totals(self, results_simulation):
-        """Calculate cumulative totals for all variables"""
-        variables_db = Variable.objects.all()
-        name_variables = {
-            variable.initials: {'name': variable.name, 'unit': variable.unit} 
-            for variable in variables_db
-        }
-        
+    def _calculate_cumulative_totals(self, results_simulation: List) -> Dict[str, Dict]:
+        """Calculate cumulative totals with optimization"""
+        name_variables = self._get_variable_mapping()
         totales_acumulativos = {}
         
         for result_simulation in results_simulation:
             variables_extracted = result_simulation.get_variables()
-            filtered_variables = {
-                name_variables[inicial]['name']: {
-                    'value': value, 
-                    'unit': name_variables[inicial]['unit']
-                }
-                for inicial, value in variables_extracted.items() 
-                if inicial in self.iniciales_a_buscar
-            }
             
-            # Calculate cumulative totals
-            for name_variable, info_variable in filtered_variables.items():
-                if name_variable not in totales_acumulativos:
-                    totales_acumulativos[name_variable] = {
-                        'total': 0, 
-                        'unit': info_variable['unit']
-                    }
-                totales_acumulativos[name_variable]['total'] += info_variable['value']
+            for inicial, value in variables_extracted.items():
+                if inicial in self.iniciales_a_buscar and inicial in name_variables:
+                    name_variable = name_variables[inicial]['name']
+                    
+                    if name_variable not in totales_acumulativos:
+                        totales_acumulativos[name_variable] = {
+                            'total': 0, 
+                            'unit': name_variables[inicial]['unit']
+                        }
+                    
+                    totales_acumulativos[name_variable]['total'] += value
         
         return totales_acumulativos
     
-    def _prepare_variables_for_graphing(self, results_simulation):
+    def _prepare_variables_for_graphing(self, results_simulation: List) -> List[Dict]:
         """Prepare variables data for chart generation"""
-        variables_db = Variable.objects.all()
-        name_variables = {
-            variable.initials: {'name': variable.name, 'unit': variable.unit} 
-            for variable in variables_db
-        }
-        
+        name_variables = self._get_variable_mapping()
         variables_to_graph = []
         
         for result_simulation in results_simulation:
             variables_extracted = result_simulation.get_variables()
-            filtered_variables = {
-                name_variables[inicial]['name']: {
-                    'value': value, 
-                    'unit': name_variables[inicial]['unit']
-                }
-                for inicial, value in variables_extracted.items() 
-                if inicial in self.iniciales_a_buscar
-            }
+            filtered_variables = {}
+            
+            for inicial, value in variables_extracted.items():
+                if inicial in self.iniciales_a_buscar and inicial in name_variables:
+                    filtered_variables[name_variables[inicial]['name']] = {
+                        'value': value, 
+                        'unit': name_variables[inicial]['unit']
+                    }
+            
             variables_to_graph.append(filtered_variables)
         
         return variables_to_graph
     
-    def _create_demand_chart_data(self, result_simulations):
+    def _create_demand_chart_data(self, result_simulations: List) -> Dict:
         """Create chart data for demand visualization"""
-        all_labels = []
-        all_values = []
+        labels = []
+        values = []
         
         for i, result_simulation in enumerate(result_simulations):
-            data = result_simulation.get_average_demand_by_date()
-            if data:
-                for entry in data:
-                    all_labels.append(i + 1)
-                    all_values.append(entry['average_demand'])
-        
-        # Sort data
-        sorted_data = sorted(zip(all_labels, all_values), key=lambda x: x[0])
-        if sorted_data:
-            all_labels, all_values = zip(*sorted_data)
-        else:
-            all_labels = []
-            all_values = []
+            labels.append(i + 1)
+            values.append(float(result_simulation.demand_mean))
         
         return {
-            'labels': all_labels,
+            'labels': labels,
             'datasets': [
-                {'label': 'Demanda Simulada', 'values': all_values},
+                {'label': 'Demanda Simulada', 'values': values},
             ],
-            'x_label': 'Dias',
+            'x_label': 'Días',
             'y_label': 'Demanda (Litros)',
         }
     
-    def _generate_chart_images(self, simulation_id, simulation_instance, results_simulation, 
-                             chart_data, variables_to_graph):
-        """Generate all chart images"""
-        product_instance = get_object_or_404(
-            Product, 
-            pk=simulation_instance.fk_questionary_result.fk_questionary.fk_product.id
-        )
-        
-        chart_images = {}
-        
-        # Generate main demand charts
-        if len(chart_data['labels']) == len(chart_data['datasets'][0]['values']):
-            try:
-                chart_images['image_data_line'] = self.plot_and_save_chart(
-                    chart_data, 'linedemand', simulation_id, product_instance, 
-                    results_simulation, 'Grafico Lineal', 
-                    'Este grafico muestra como es el comportamiento de la demanda en los dias de simulacion.'
-                )
-                
-                chart_images['image_data_bar'] = self.plot_and_save_chart(
-                    chart_data, 'bar', simulation_id, product_instance, 
-                    results_simulation, 'Gráfico de Barras',
-                    'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
-                )
-                
-                chart_images['image_data_candlestick'] = self.plot_and_save_chart(
-                    chart_data, 'scatter', simulation_id, product_instance, 
-                    results_simulation, 'Gráfico Lineal',
-                    'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
-                )
-                
-                chart_images['image_data_histogram'] = self.plot_and_save_chart(
-                    chart_data, 'histogram', simulation_id, product_instance, 
-                    results_simulation, 'Gráfico Lineal',
-                    'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
-                )
-            except Exception as e:
-                print(f"Error generating chart: {e}")
-        
-        # Generate variable-specific charts
-        chart_images.update(self._generate_variable_charts(
-            simulation_id, product_instance, results_simulation, variables_to_graph
-        ))
-        
-        return chart_images
-    
-    def _generate_variable_charts(self, simulation_id, product_instance, results_simulation, variables_to_graph):
-        """Generate charts for specific variable combinations"""
-        all_labels = list(range(1, len(variables_to_graph) + 1))
+    def _generate_charts_parallel(self, simulation_id: int, simulation_instance, 
+                                results_simulation: List, chart_data: Dict, 
+                                variables_to_graph: List) -> Dict[str, str]:
+        """Generate charts in parallel for better performance"""
         chart_images = {}
         
         # Define chart configurations
-        chart_configs = [
+        chart_configs = self._get_chart_configurations(variables_to_graph)
+        
+        # Generate main charts
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {}
+            
+            # Submit main demand charts
+            if self._validate_chart_data(chart_data):
+                futures['image_data_line'] = executor.submit(
+                    self._generate_single_chart,
+                    chart_data, 'linedemand', simulation_id, simulation_instance,
+                    results_simulation, 'Gráfico Lineal de Demanda',
+                    'Comportamiento de la demanda en los días de simulación'
+                )
+                
+                futures['image_data_bar'] = executor.submit(
+                    self._generate_single_chart,
+                    chart_data, 'bar', simulation_id, simulation_instance,
+                    results_simulation, 'Gráfico de Barras',
+                    'Distribución de demanda por día'
+                )
+            
+            # Submit variable charts
+            for config in chart_configs:
+                chart_data_vars = self._create_variable_chart_data(
+                    chart_data['labels'], variables_to_graph, config['variables']
+                )
+                
+                if self._validate_chart_data(chart_data_vars):
+                    futures[config['key']] = executor.submit(
+                        self._generate_single_chart,
+                        chart_data_vars, config['type'], simulation_id, 
+                        simulation_instance, results_simulation,
+                        config['title'], config['description']
+                    )
+            
+            # Collect results
+            for key, future in futures.items():
+                try:
+                    chart_images[key] = future.result()
+                except Exception as e:
+                    logger.error(f"Error generating chart {key}: {str(e)}")
+                    chart_images[key] = None
+        
+        return chart_images
+    
+    def _get_chart_configurations(self, variables_to_graph: List) -> List[Dict]:
+        """Get chart configurations"""
+        return [
             {
                 'key': 'image_data_0',
                 'type': 'barApilate',
                 'variables': ['INGRESOS TOTALES', 'GANANCIAS TOTALES'],
-                'title': 'Grafico de Barras',
-                'description': 'Este gráfico de barras muestra la relación entre diferentes variables para el producto.'
+                'title': 'Ingresos vs Ganancias',
+                'description': 'Comparación entre ingresos totales y ganancias totales'
             },
             {
                 'key': 'image_data_1',
                 'type': 'bar',
                 'variables': ['VENTAS POR CLIENTE', 'DEMANDA INSATISFECHA'],
-                'title': 'Gráfico de Barras',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'title': 'Ventas vs Demanda Insatisfecha',
+                'description': 'Análisis de satisfacción de demanda'
             },
             {
                 'key': 'image_data_2',
                 'type': 'line',
                 'variables': ['GASTOS GENERALES', 'GASTOS OPERATIVOS', 'Total Gastos'],
-                'title': 'Gráfico Lineal',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'title': 'Análisis de Gastos',
+                'description': 'Evolución de gastos generales y operativos'
             },
             {
                 'key': 'image_data_3',
                 'type': 'bar',
                 'variables': ['Costo Unitario Producción', 'Ingreso Bruto'],
-                'title': 'Gráfico de Barras',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'title': 'Costos vs Ingresos',
+                'description': 'Relación entre costos de producción e ingresos'
             },
             {
                 'key': 'image_data_4',
                 'type': 'line',
                 'variables': ['Ingreso Bruto', 'INGRESOS TOTALES'],
-                'title': 'Gráfico Lineal',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'title': 'Evolución de Ingresos',
+                'description': 'Tendencia de ingresos brutos y totales'
             },
             {
                 'key': 'image_data_5',
                 'type': 'line',
-                'variables': ['COSTO TOTAL TRANSPORTE', 'Costo Promedio Mano Obra', 'Costo Almacenamiento', 'COSTO TOTAL ADQUISICIÓN INSUMOS'],
-                'title': 'Gráfico de Barras',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'variables': ['COSTO TOTAL TRANSPORTE', 'Costo Promedio Mano Obra', 
+                            'Costo Almacenamiento', 'COSTO TOTAL ADQUISICIÓN INSUMOS'],
+                'title': 'Análisis de Costos Operativos',
+                'description': 'Desglose de costos operativos principales'
             },
             {
                 'key': 'image_data_6',
                 'type': 'line',
                 'variables': ['TOTAL PRODUCTOS PRODUCIDOS', 'TOTAL PRODUCTOS VENDIDOS'],
-                'title': 'Gráfico Lineal',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'title': 'Producción vs Ventas',
+                'description': 'Comparación entre producción y ventas'
             },
             {
                 'key': 'image_data_7',
                 'type': 'line',
                 'variables': ['COSTO PROMEDIO PRODUCCION', 'COSTO PROMEDIO VENTA'],
-                'title': 'Gráfico Lineal',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'title': 'Costos Promedio',
+                'description': 'Evolución de costos promedio de producción y venta'
             },
             {
                 'key': 'image_data_8',
                 'type': 'line',
                 'variables': ['Retorno Inversión', 'GANANCIAS TOTALES'],
-                'title': 'Gráfico Lineal',
-                'description': 'Este gráfico de dispersión muestra la relación entre diferentes variables para el producto.'
+                'title': 'ROI y Ganancias',
+                'description': 'Análisis de retorno de inversión y ganancias'
             }
         ]
-        
-        # Generate each chart
-        for config in chart_configs:
-            chart_data = self._create_variable_chart_data(
-                all_labels, variables_to_graph, config['variables']
-            )
-            
-            chart_images[config['key']] = self.plot_and_save_chart(
-                chart_data, config['type'], simulation_id, product_instance,
-                results_simulation, config['title'], config['description']
-            )
-        
-        return chart_images
     
-    def _create_variable_chart_data(self, labels, variables_to_graph, variable_names):
+    def _validate_chart_data(self, chart_data: Dict) -> bool:
+        """Validate chart data before plotting"""
+        if not chart_data or 'labels' not in chart_data or 'datasets' not in chart_data:
+            return False
+        
+        if not chart_data['labels'] or not chart_data['datasets']:
+            return False
+        
+        # Check all datasets have same length as labels
+        labels_len = len(chart_data['labels'])
+        for dataset in chart_data['datasets']:
+            if len(dataset.get('values', [])) != labels_len:
+                return False
+        
+        return True
+    
+    def _create_variable_chart_data(self, labels: List, variables_to_graph: List,
+                                  variable_names: List[str]) -> Dict:
         """Create chart data for specific variables"""
         datasets = []
+        
         for variable_name in variable_names:
             values = self.get_variable_values(variable_name, variables_to_graph)
-            datasets.append({'label': variable_name, 'values': values})
+            if values:  # Only add if we have data
+                datasets.append({'label': variable_name, 'values': values})
         
         return {
-            'labels': labels,
+            'labels': labels[:len(values)] if datasets else [],
             'datasets': datasets,
-            'x_label': 'Dias',
-            'y_label': 'Pesos Bolivianos',
+            'x_label': 'Días',
+            'y_label': 'Valor',
         }
     
-    def get_variable_values(self, variable_to_search, data_list):
+    def get_variable_values(self, variable_to_search: str, 
+                          data_list: List[Dict]) -> List[float]:
         """Extract values for a specific variable from data list"""
         values_for_variable = []
         
         for data in data_list:
             if variable_to_search in data:
                 if isinstance(data[variable_to_search], dict):
-                    value_for_variable = data[variable_to_search]['value']
-                    values_for_variable.append(value_for_variable)
+                    value = data[variable_to_search].get('value', 0)
+                    values_for_variable.append(float(value))
                 else:
-                    print(f"Error: {variable_to_search} is not a dictionary.")
+                    logger.warning(f"{variable_to_search} is not a dictionary")
         
         return values_for_variable
     
-    def plot_and_save_chart(self, chart_data, chart_type, simulation_id, product_instance, 
-                          result_simulations, title, description):
-        """Plot and save chart, returning base64 encoded image"""
-        plt.figure(figsize=(10, 6))
-        
-        # Generate chart based on type
-        if chart_type == 'linedemand':
-            self._plot_line_demand_chart(chart_data)
-        elif chart_type == 'line':
-            self._plot_line_chart(chart_data)
-        elif chart_type == 'bar':
-            self._plot_bar_chart(chart_data)
-        elif chart_type == 'scatter':
-            self._plot_scatter_chart(chart_data)
-        elif chart_type == 'histogram':
-            self._plot_histogram_chart(chart_data)
-        elif chart_type == 'barApilate':
-            self._plot_stacked_bar_chart(chart_data)
-        else:
-            plt.close()
+    def _generate_single_chart(self, chart_data: Dict, chart_type: str, 
+                             simulation_id: int, product_instance,
+                             result_simulations: List, title: str, 
+                             description: str) -> Optional[str]:
+        """Generate a single chart and return base64 encoded image"""
+        try:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Plot based on type
+            plot_methods = {
+                'linedemand': self._plot_line_demand_chart,
+                'line': self._plot_line_chart,
+                'bar': self._plot_bar_chart,
+                'scatter': self._plot_scatter_chart,
+                'histogram': self._plot_histogram_chart,
+                'barApilate': self._plot_stacked_bar_chart,
+            }
+            
+            plot_method = plot_methods.get(chart_type)
+            if plot_method:
+                plot_method(ax, chart_data)
+            else:
+                plt.close(fig)
+                return None
+            
+            # Configure plot
+            self._configure_plot(ax, chart_data, title, description)
+            
+            # Save as base64
+            image_data = self._save_plot_as_base64(fig)
+            
+            # Save to database (optional)
+            # self._save_chart_to_database(...)
+            
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating {chart_type} chart: {str(e)}")
             return None
+    
+    def _plot_histogram_chart(self, ax, chart_data: Dict):
+        """Plot histogram with statistics"""
+        for dataset in chart_data['datasets']:
+            values = dataset['values']
+            
+            # Plot histogram with KDE
+            n, bins, patches = ax.hist(values, bins=20, alpha=0.7, 
+                                      density=True, label=dataset['label'])
+            
+            # Add KDE curve
+            from scipy import stats
+            kde = stats.gaussian_kde(values)
+            x_range = np.linspace(min(values), max(values), 100)
+            ax.plot(x_range, kde(x_range), linewidth=2)
+            
+            # Add statistics
+            mean_val = np.mean(values)
+            std_val = np.std(values)
+            ax.axvline(mean_val, color='red', linestyle='--', 
+                      label=f'Media: {mean_val:.2f}')
+            
+            # Add text box with stats
+            textstr = f'μ={mean_val:.2f}\nσ={std_val:.2f}'
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            ax.text(0.05, 0.95, textstr, transform=ax.transAxes, 
+                   verticalalignment='top', bbox=props)
         
-        # Configure plot appearance
-        self._configure_plot(chart_data, title, description, product_instance)
+        ax.legend()
+        ax.grid(True, axis='y', alpha=0.3)
+    
+    def _plot_stacked_bar_chart(self, ax, chart_data: Dict):
+        """Plot stacked bar chart"""
+        labels = chart_data['labels']
+        x = np.arange(len(labels))
+        bottom = np.zeros(len(labels))
         
-        # Save as base64
-        image_data = self._save_plot_as_base64()
+        for dataset in chart_data['datasets']:
+            values = np.array(dataset['values'])
+            ax.bar(x, values, label=dataset['label'], bottom=bottom, alpha=0.8)
+            bottom += values
         
-        # Save to database
-        self._save_chart_to_database(
-            title, chart_type, chart_data, product_instance, 
-            result_simulations, image_data
-        )
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+        ax.grid(True, axis='y', alpha=0.3)
+    
+    def _configure_plot(self, ax, chart_data: Dict, title: str, description: str):
+        """Configure plot appearance and labels"""
+        # Set labels
+        ax.set_xlabel(chart_data.get('x_label', 'X'), fontsize=12)
+        ax.set_ylabel(chart_data.get('y_label', 'Y'), fontsize=12)
         
+        # Set title
+        ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+        
+        # Rotate x labels if many
+        if len(chart_data['labels']) > 20:
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+        
+        # Add description as subtitle
+        ax.text(0.5, -0.15, description, transform=ax.transAxes, 
+               ha='center', fontsize=10, style='italic', wrap=True)
+        
+        # Improve layout
         plt.tight_layout()
-        plt.close()
-        
+    
+    def _save_plot_as_base64(self, fig: Figure) -> str:
+        """Save matplotlib figure as base64 encoded string"""
+        buffer = BytesIO()
+        fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+        buffer.seek(0)
+        image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
         return image_data
     
-    def _plot_line_demand_chart(self, chart_data):
-        """Plot line chart with regression and trend analysis"""
-        labels = chart_data['labels']
-        values = chart_data['datasets'][0]['values']
-        label = chart_data['datasets'][0]['label']
-        
-        # Calculate regression line
-        reg_line = np.polyfit(labels, values, 1)
-        regression_values = np.polyval(reg_line, labels)
-        
-        # Plot regression line
-        plt.plot(labels, regression_values, 
-                label=f'{label} Regression Line', linestyle='--')
-        
-        # Plot demand line
-        sns.lineplot(x=labels, y=values, marker='o', 
-                    label='Demanda Simulada', palette='viridis')
-        
-        plt.grid(True)
-        
-        # Calculate and plot trend line
-        coefficients = np.polyfit(labels, values, 1)
-        polynomial = np.poly1d(coefficients)
-        trendline_values = polynomial(labels)
-        plt.plot(labels, trendline_values, 
-                label=f'Línea de tendencia: {coefficients[0]:.2f}x + {coefficients[1]:.2f}', 
-                linestyle='--')
-        
-        # Fill area between demand and trend lines
-        plt.fill_between(labels, values, trendline_values, 
-                        color='skyblue', alpha=0.3)
+    def _save_chart_to_database(self, title: str, chart_type: str, 
+                              chart_data: Dict, product_instance, 
+                              result_simulations: List, image_data: str):
+        """Save chart information to database (optional)"""
+        try:
+            chart, created = Chart.objects.update_or_create(
+                fk_product=product_instance,
+                chart_type=chart_type,
+                defaults={
+                    'title': title,
+                    'chart_data': chart_data,
+                }
+            )
+            
+            # Save image
+            chart.save_chart_image(image_data)
+            
+        except Exception as e:
+            logger.error(f"Error saving chart to database: {str(e)}")
     
-    def _plot_line_chart(self, chart_data):
+    # Additional utility methods for specific chart types
+    
+    def generate_demand_forecast_chart(self, results: List, periods: int = 30) -> str:
+        """Generate demand forecast chart with predictions"""
+        try:
+            # Extract historical data
+            dates = [r.date for r in results]
+            demands = [float(r.demand_mean) for r in results]
+            
+            fig, ax = plt.subplots(figsize=(12, 6))
+            
+            # Plot historical data
+            ax.plot(dates, demands, 'b-', label='Histórico', linewidth=2)
+            
+            # Generate forecast
+            if len(demands) > 7:
+                from statsmodels.tsa.holtwinters import ExponentialSmoothing
+                
+                model = ExponentialSmoothing(demands, seasonal_periods=7, 
+                                           trend='add', seasonal='add')
+                fitted_model = model.fit()
+                
+                # Predict
+                forecast = fitted_model.forecast(periods)
+                forecast_dates = [dates[-1] + timedelta(days=i+1) 
+                                for i in range(periods)]
+                
+                ax.plot(forecast_dates, forecast, 'r--', 
+                       label=f'Pronóstico ({periods} días)', linewidth=2)
+                
+                # Add confidence intervals
+                std_error = np.std(fitted_model.resid)
+                lower_bound = forecast - 1.96 * std_error
+                upper_bound = forecast + 1.96 * std_error
+                
+                ax.fill_between(forecast_dates, lower_bound, upper_bound, 
+                              alpha=0.2, color='red', label='IC 95%')
+            
+            ax.set_xlabel('Fecha')
+            ax.set_ylabel('Demanda (L)')
+            ax.set_title('Pronóstico de Demanda')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            
+            # Format dates
+            fig.autofmt_xdate()
+            
+            return self._save_plot_as_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating forecast chart: {str(e)}")
+            return None
+        finally:
+            plt.close(fig)
+    
+    def generate_correlation_heatmap(self, variables_data: Dict[str, List[float]]) -> str:
+        """Generate correlation heatmap for variables"""
+        try:
+            # Create correlation matrix
+            import pandas as pd
+            
+            df = pd.DataFrame(variables_data)
+            corr_matrix = df.corr()
+            
+            # Create heatmap
+            fig, ax = plt.subplots(figsize=(12, 10))
+            
+            sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', 
+                       center=0, square=True, linewidths=0.5,
+                       cbar_kws={"shrink": 0.8}, ax=ax)
+            
+            ax.set_title('Matriz de Correlación de Variables', fontsize=16, pad=20)
+            
+            plt.tight_layout()
+            
+            return self._save_plot_as_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating correlation heatmap: {str(e)}")
+            return None
+        finally:
+            plt.close(fig)
+    
+    def generate_dashboard_summary(self, simulation_data: Dict) -> Dict[str, str]:
+        """Generate a complete dashboard summary with multiple charts"""
+        summary_charts = {}
+        
+        try:
+            # Create figure with subplots
+            fig = plt.figure(figsize=(16, 10))
+            
+            # Create grid
+            gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
+            
+            # Add different chart types
+            ax1 = fig.add_subplot(gs[0, :2])  # Top left - wide
+            ax2 = fig.add_subplot(gs[0, 2])   # Top right
+            ax3 = fig.add_subplot(gs[1, :])   # Middle - full width
+            ax4 = fig.add_subplot(gs[2, 0])   # Bottom left
+            ax5 = fig.add_subplot(gs[2, 1])   # Bottom middle
+            ax6 = fig.add_subplot(gs[2, 2])   # Bottom right
+            
+            # Plot different visualizations
+            # ... (add specific plots based on simulation_data)
+            
+            fig.suptitle('Resumen de Simulación', fontsize=16, fontweight='bold')
+            
+            summary_charts['dashboard'] = self._save_plot_as_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating dashboard summary: {str(e)}")
+        finally:
+            plt.close('all')
+        
+        return summary_charts
+    
+    # Performance monitoring methods
+    
+    def get_chart_generation_stats(self) -> Dict[str, Any]:
+        """Get statistics about chart generation performance"""
+        stats = cache.get('chart_generation_stats', {})
+        return {
+            'total_generated': stats.get('total', 0),
+            'average_time': stats.get('avg_time', 0),
+            'cache_hits': stats.get('cache_hits', 0),
+            'errors': stats.get('errors', 0),
+        }
+    
+    def _update_generation_stats(self, generation_time: float, success: bool = True):
+        """Update chart generation statistics"""
+        stats = cache.get('chart_generation_stats', {
+            'total': 0,
+            'total_time': 0,
+            'cache_hits': 0,
+            'errors': 0
+        })
+        
+        stats['total'] += 1
+        stats['total_time'] += generation_time
+        stats['avg_time'] = stats['total_time'] / stats['total']
+        
+        if not success:
+            stats['errors'] += 1
+        
+        cache.set('chart_generation_stats', stats, 86400)  # 24 hours_line_demand_chart(self, ax, chart_data: Dict):
+        """Plot enhanced line chart with regression and trend analysis"""
+        labels = np.array(chart_data['labels'])
+        values = np.array(chart_data['datasets'][0]['values'])
+        
+        # Plot main line
+        ax.plot(labels, values, marker='o', label='Demanda Simulada', 
+               linewidth=2, markersize=6)
+        
+        # Add regression line
+        if len(labels) > 1:
+            z = np.polyfit(labels, values, 1)
+            p = np.poly1d(z)
+            ax.plot(labels, p(labels), "--", alpha=0.8, 
+                   label=f'Tendencia: {z[0]:.2f}x + {z[1]:.2f}')
+        
+        # Add confidence interval
+        if len(values) > 3:
+            from scipy import stats
+            confidence = 0.95
+            mean = np.mean(values)
+            sem = stats.sem(values)
+            h = sem * stats.t.ppf((1 + confidence) / 2., len(values)-1)
+            
+            ax.fill_between(labels, mean - h, mean + h, alpha=0.2, 
+                          label=f'IC {confidence*100:.0f}%')
+        
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+    
+    def _plot_line_chart(self, ax, chart_data: Dict):
         """Plot standard line chart"""
         labels = chart_data['labels']
-        datasets = chart_data['datasets']
-        custom_palette = sns.color_palette("husl", len(datasets))
-        
-        for i, dataset in enumerate(datasets):
-            plt.plot(labels, dataset['values'], label=dataset['label'], 
-                    color=custom_palette[i], linewidth=2)
-            plt.fill_between(labels, dataset['values'], 
-                           alpha=0.3, color=custom_palette[i])
-        
-        plt.grid(True)
-    
-    def _plot_bar_chart(self, chart_data):
-        """Plot bar chart"""
-        num_colors = len(chart_data['datasets'])
-        color_palette = self._generate_random_color_palette(num_colors)
-        
-        for i, variable_data in enumerate(chart_data['datasets']):
-            label = variable_data.get('label', f'Default Label {i+1}')
-            values = variable_data['values']
-            color = color_palette[i]
-            sns.barplot(x=chart_data['labels'], y=values, 
-                       label=label, color=color, alpha=0.7)
-        
-        plt.grid(True)
-        plt.legend(loc='upper right')
-    
-    def _plot_scatter_chart(self, chart_data):
-        """Plot scatter chart with regression lines"""
-        for i, variable_data in enumerate(chart_data['datasets']):
-            label = variable_data['label']
-            values = variable_data['values']
-            color = sns.color_palette('Set3', len(chart_data['labels']))[i]
-            
-            sns.scatterplot(x=chart_data['labels'], y=values, 
-                          label=label, color=color, marker='o')
-            
-            # Add regression line
-            reg_line = np.polyfit(chart_data['labels'], values, 1)
-            plt.plot(chart_data['labels'], 
-                    np.polyval(reg_line, chart_data['labels']), 
-                    label=f'{label} Regression Line', linestyle='--')
-    
-    def _plot_histogram_chart(self, chart_data):
-        """Plot histogram with statistics"""
-        for i, variable_data in enumerate(chart_data['datasets']):
-            values = variable_data['values']
-            color = sns.color_palette('Set3', len(chart_data['labels']))[i]
-            
-            sns.histplot(values, bins=20, color=color, alpha=0.7, kde=True)
-            
-            mean_value = np.mean(values)
-            plt.axvline(x=mean_value, color='red', linestyle='--', 
-                       label=f'Mean: {mean_value:.2f}')
-            
-            stats_text = f'Mean: {mean_value:.2f}\nStd Dev: {np.std(values):.2f}'
-            plt.text(0.05, 0.95, stats_text, transform=plt.gca().transAxes, 
-                    fontsize=8, verticalalignment='top', 
-                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-    
-    def _plot_stacked_bar_chart(self, chart_data):
-        """Plot stacked bar chart"""
-        num_groups = len(chart_data['labels'])
-        x = np.arange(num_groups)
-        bottom = np.zeros(num_groups)
         
         for i, dataset in enumerate(chart_data['datasets']):
-            values = dataset['values']
-            label = dataset['label']
-            color = sns.color_palette('Set1')[i]
+            ax.plot(labels, dataset['values'], label=dataset['label'], 
+                   linewidth=2, marker='o', markersize=4)
+        
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+    
+    def _plot_bar_chart(self, ax, chart_data: Dict):
+        """Plot bar chart"""
+        labels = chart_data['labels']
+        x = np.arange(len(labels))
+        width = 0.8 / len(chart_data['datasets'])
+        
+        for i, dataset in enumerate(chart_data['datasets']):
+            offset = (i - len(chart_data['datasets'])/2) * width + width/2
+            ax.bar(x + offset, dataset['values'], width, 
+                  label=dataset['label'], alpha=0.8)
+        
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+        ax.grid(True, axis='y', alpha=0.3)
+    
+    def _plot_scatter_chart(self, ax, chart_data: Dict):
+        """Plot scatter chart with regression lines"""
+        labels = chart_data['labels']
+        
+        for i, dataset in enumerate(chart_data['datasets']):
+            ax.scatter(labels, dataset['values'], label=dataset['label'], 
+                      s=50, alpha=0.7)
             
-            plt.bar(x, values, label=label, color=color, 
-                   alpha=0.7, bottom=bottom)
-            bottom += values
-    
-    def _configure_plot(self, chart_data, title, description, product_instance):
-        """Configure plot appearance and labels"""
-        plt.subplots_adjust(bottom=0.2)
-        plt.xticks(chart_data['labels'], rotation=90, ha='center')
-        plt.xlabel(chart_data['x_label'])
-        plt.ylabel(chart_data['y_label'])
-        plt.legend()
+            # Add regression line
+            if len(labels) > 1:
+                z = np.polyfit(labels, dataset['values'], 1)
+                p = np.poly1d(z)
+                ax.plot(labels, p(labels), '--', alpha=0.8)
         
-        # Add variable names to title
-        variable_names = [dataset['label'] for dataset in chart_data['datasets']]
-        title += f' ({", ".join(variable_names)})'
-        plt.title(title)
-        
-        # Add description at bottom
-        plt.figtext(0.5, 0.01, description, ha='center', va='center')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
     
-    def _save_plot_as_base64(self):
-        """Save current plot as base64 encoded string"""
-        with BytesIO() as buffer:
-            plt.savefig(buffer, format='png')
-            buffer.seek(0)
-            return base64.b64encode(buffer.getvalue()).decode('utf-8')
-    
-    def _save_chart_to_database(self, title, chart_type, chart_data, product_instance, 
-                              result_simulations, image_data):
-        """Save chart information to database"""
-        chart = Chart.objects.filter(
-            fk_product_id=product_instance, 
-            chart_type=chart_type
-        ).first()
+    def _plot_line_demand_chart(self, ax, chart_data: Dict):
+        """Plot enhanced line chart with regression and trend analysis"""
+        labels = np.array(chart_data['labels'])
+        values = np.array(chart_data['datasets'][0]['values'])
         
-        if chart:
-            chart.title = title
-            chart.chart_data = chart_data
-        else:
-            chart = Chart.objects.create(
-                title=title,
-                chart_type=chart_type,
-                chart_data=chart_data,
-                fk_product=result_simulations[0].fk_simulation.fk_questionary_result.fk_questionary.fk_product,
-            )
+        # Plot main line
+        ax.plot(labels, values, marker='o', label='Demanda Simulada', 
+               linewidth=2, markersize=6)
         
-        chart.save_chart_image(image_data)
-        chart.save()
-    
-    def _generate_random_color_palette(self, num_colors):
-        """Generate random color palette"""
-        return sns.color_palette("husl", num_colors)
+        # Add regression line
+        if len(labels) > 1:
+            z = np.polyfit(labels, values, 1)
+            p = np.poly1d(z)
+            ax.plot(labels, p(labels), "--", alpha=0.8, 
+                   label=f'Tendencia: {z[0]:.2f}x + {z[1]:.2f}')
+        
+        # Add confidence interval
+        if len(values) > 3:
+            from scipy import stats
+            confidence = 0.95
+            mean = np.mean(values)
+            sem = stats.sem(values)
+            h = sem * stats.t.ppf((1 + confidence) / 2., len(values)-1)
+            
+            ax.fill_between(labels, mean - h, mean + h, alpha=0.2, 
+                          label=f'IC {confidence*100:.0f}%')
+        
+        ax.grid(True, alpha=0.3)
+        ax.legend()

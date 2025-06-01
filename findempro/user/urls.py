@@ -149,39 +149,39 @@ webhook_patterns = [
 ]
 
 # URLs para testing y desarrollo (solo en DEBUG)
-# from django.conf import settings
-# if settings.DEBUG:
-#     debug_patterns = [
-#         path("debug/profile/", TemplateView.as_view(template_name='user/debug_profile.html'), name='user.debug_profile'),
-#         path("debug/permissions/", TemplateView.as_view(template_name='user/debug_permissions.html'), name='user.debug_permissions'),
-#         path("debug/sessions/", TemplateView.as_view(template_name='user/debug_sessions.html'), name='user.debug_sessions'),
-#         path("test/email/", TemplateView.as_view(template_name='user/test_email.html'), name='user.test_email'),
-#         path("test/notifications/", TemplateView.as_view(template_name='user/test_notifications.html'), name='user.test_notifications'),
-#     ]
-#     urlpatterns.extend(debug_patterns)
+from django.conf import settings
+if settings.DEBUG:
+    debug_patterns = [
+        path("debug/profile/", TemplateView.as_view(template_name='user/debug_profile.html'), name='user.debug_profile'),
+        path("debug/permissions/", TemplateView.as_view(template_name='user/debug_permissions.html'), name='user.debug_permissions'),
+        path("debug/sessions/", TemplateView.as_view(template_name='user/debug_sessions.html'), name='user.debug_sessions'),
+        path("test/email/", TemplateView.as_view(template_name='user/test_email.html'), name='user.test_email'),
+        path("test/notifications/", TemplateView.as_view(template_name='user/test_notifications.html'), name='user.test_notifications'),
+    ]
+    urlpatterns.extend(debug_patterns)
 
-# # Agregar webhooks
-# urlpatterns.extend(webhook_patterns)
+# Agregar webhooks
+urlpatterns.extend(webhook_patterns)
 
-# # Handler personalizado para errores 404 en URLs de usuario
-# handler404 = 'user.views.custom_404'
+# Handler personalizado para errores 404 en URLs de usuario
+handler404 = 'user.views.custom_404'
 
-# # Metadata para documentación automática
-# urlpatterns_metadata = {
-#     'version': '2.0',
-#     'description': 'Sistema completo de gestión de usuarios',
-#     'endpoints': {
-#         'profile': 'Gestión del perfil de usuario',
-#         'admin': 'Administración de usuarios',
-#         'api': 'Endpoints de API',
-#         'auth': 'Autenticación y seguridad',
-#         'settings': 'Configuraciones del usuario',
-#         'utils': 'Utilidades y helpers',
-#     },
-#     'permissions': {
-#         'user.profile': 'Requiere login',
-#         'user.list': 'Requiere permisos de administrador',
-#         'user.admin_*': 'Requiere permisos de super usuario',
-#         'api.*': 'Requiere autenticación API',
-#     }
-# }
+# Metadata para documentación automática
+urlpatterns_metadata = {
+    'version': '2.0',
+    'description': 'Sistema completo de gestión de usuarios',
+    'endpoints': {
+        'profile': 'Gestión del perfil de usuario',
+        'admin': 'Administración de usuarios',
+        'api': 'Endpoints de API',
+        'auth': 'Autenticación y seguridad',
+        'settings': 'Configuraciones del usuario',
+        'utils': 'Utilidades y helpers',
+    },
+    'permissions': {
+        'user.profile': 'Requiere login',
+        'user.list': 'Requiere permisos de administrador',
+        'user.admin_*': 'Requiere permisos de super usuario',
+        'api.*': 'Requiere autenticación API',
+    }
+}
