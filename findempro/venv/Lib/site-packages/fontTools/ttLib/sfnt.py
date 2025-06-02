@@ -1,8 +1,9 @@
 """ttLib/sfnt.py -- low-level module to deal with the sfnt file format.
 
 Defines two public classes:
-	SFNTReader
-	SFNTWriter
+
+- SFNTReader
+- SFNTWriter
 
 (Normally you don't have to use these classes explicitly; they are
 used automatically by ttLib.TTFont.)
@@ -524,13 +525,11 @@ class DirectoryEntry(object):
 
 
 class SFNTDirectoryEntry(DirectoryEntry):
-
     format = sfntDirectoryEntryFormat
     formatSize = sfntDirectoryEntrySize
 
 
 class WOFFDirectoryEntry(DirectoryEntry):
-
     format = woffDirectoryEntryFormat
     formatSize = woffDirectoryEntrySize
 
@@ -571,7 +570,6 @@ class WOFFDirectoryEntry(DirectoryEntry):
 
 
 class WOFFFlavorData:
-
     Flavor = "woff"
 
     def __init__(self, reader=None):

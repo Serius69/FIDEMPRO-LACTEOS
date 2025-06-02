@@ -7,7 +7,6 @@ urlpatterns = [
     path("signup/", views.signup, name="account_signup"),
     path("login/", views.login, name="account_login"),
     path("logout/", views.logout, name="account_logout"),
-    path("reauthenticate/", views.reauthenticate, name="account_reauthenticate"),
     path(
         "password/change/",
         views.password_change,
@@ -15,7 +14,7 @@ urlpatterns = [
     ),
     path("password/set/", views.password_set, name="account_set_password"),
     path("inactive/", views.account_inactive, name="account_inactive"),
-    # Email
+    # E-mail
     path("email/", views.email, name="account_email"),
     path(
         "confirm-email/",

@@ -6,15 +6,14 @@ from django.urls import reverse
 from django.utils.http import urlencode
 
 from allauth.socialaccount.models import SocialAccount
-from allauth.socialaccount.tests import OAuth2TestsMixin
-from allauth.tests import MockedResponse, TestCase, mocked_response
+from allauth.socialaccount.providers import registry
+from allauth.socialaccount.tests import create_oauth2_tests
+from allauth.tests import MockedResponse, mocked_response
 
 from .provider import ShopifyProvider
 
 
-class ShopifyTests(OAuth2TestsMixin, TestCase):
-    provider_id = ShopifyProvider.id
-
+class ShopifyTests(create_oauth2_tests(registry.by_id(ShopifyProvider.id))):
     def _complete_shopify_login(self, q, resp, resp_mock, with_refresh_token):
         complete_url = reverse(self.provider.id + "_callback")
         self.assertGreater(q["redirect_uri"][0].find(complete_url), 0)

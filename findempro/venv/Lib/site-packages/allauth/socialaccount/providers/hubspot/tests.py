@@ -5,6 +5,7 @@ from .provider import HubspotProvider
 
 
 class HubspotTests(OAuth2TestsMixin, TestCase):
+
     provider_id = HubspotProvider.id
 
     def get_mocked_response(self):

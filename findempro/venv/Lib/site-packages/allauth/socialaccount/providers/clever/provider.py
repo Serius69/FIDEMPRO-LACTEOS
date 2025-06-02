@@ -22,7 +22,7 @@ class CleverProvider(OAuth2Provider):
     account_class = CleverAccount
 
     def extract_uid(self, data):
-        return data["data"]["id"]
+        return data.get("data", {}).get("id")
 
     def get_user_type(self, data):
         return list(data.get("data", {}).get("roles", {}).keys())[0]

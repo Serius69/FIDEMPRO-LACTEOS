@@ -66,6 +66,13 @@ codeOffsetPairSize = struct.calcsize(codeOffsetPairFormat)
 
 
 class table_E_B_L_C_(DefaultTable.DefaultTable):
+    """Embedded Bitmap Location table
+
+    The ``EBLC`` table contains the locations of monochrome or grayscale
+    bitmaps for glyphs. It must be used in concert with the ``EBDT`` table.
+
+    See also https://learn.microsoft.com/en-us/typography/opentype/spec/eblc
+    """
 
     dependencies = ["EBDT"]
 
@@ -76,7 +83,6 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
         return eblc_sub_table_classes[indexFormat]
 
     def decompile(self, data, ttFont):
-
         # Save the original data because offsets are from the start of the table.
         origData = data
         i = 0
@@ -138,7 +144,6 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
                 curStrike.indexSubTables.append(indexSubTable)
 
     def compile(self, ttFont):
-
         dataList = []
         self.numSizes = len(self.strikes)
         dataList.append(sstruct.pack(eblcHeaderFormat, self))
@@ -297,14 +302,13 @@ class Strike(object):
 
 
 class BitmapSizeTable(object):
-
     # Returns all the simple metric names that bitmap size table
     # cares about in terms of XML creation.
     def _getXMLMetricNames(self):
         dataNames = sstruct.getformat(bitmapSizeTableFormatPart1)[1]
-        dataNames = dataNames + sstruct.getformat(bitmapSizeTableFormatPart2)[1]
+        dataNames = {**dataNames, **sstruct.getformat(bitmapSizeTableFormatPart2)[1]}
         # Skip the first 3 data names because they are byte offsets and counts.
-        return dataNames[3:]
+        return list(dataNames.keys())[3:]
 
     def toXML(self, writer, ttFont):
         writer.begintag("bitmapSizeTable")
@@ -476,14 +480,12 @@ class EblcIndexSubTable(object):
 # are very similar. The only difference between them is the size per offset
 # value. Code put in here should handle both cases generally.
 def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
-
     # Prep the data size for the offset array data format.
     dataFormat = ">" + formatStringForDataType
     offsetDataSize = struct.calcsize(dataFormat)
 
     class OffsetArrayIndexSubTableMixin(object):
         def decompile(self):
-
             numGlyphs = self.lastGlyphIndex - self.firstGlyphIndex + 1
             indexingOffsets = [
                 glyphIndex * offsetDataSize for glyphIndex in range(numGlyphs + 2)
@@ -625,7 +627,6 @@ class eblc_index_sub_table_3(
 
 class eblc_index_sub_table_4(EblcIndexSubTable):
     def decompile(self):
-
         (numGlyphs,) = struct.unpack(">L", self.data[:4])
         data = self.data[4:]
         indexingOffsets = [

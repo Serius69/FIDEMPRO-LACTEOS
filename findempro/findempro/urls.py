@@ -8,6 +8,7 @@ from .views import MyPasswordChangeView, MyPasswordSetView
 from django.conf.urls.static import static
 from django.conf import settings
 from django.shortcuts import render
+from .health import health_check
 
 # Define la vista personalizada para errores 404
 def error_404(request, exception):
@@ -19,62 +20,37 @@ def error_500(request):
 # Define the schema view for the API
 schema_view = get_schema_view(
     openapi.Info(
-        title="Findempro",
+        title="Findempro API",
         default_version='v1',
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-)
-
-# Define the schema view for the Swagger UI
-swagger_view = get_schema_view(
-    openapi.Info(
-        title="Findempro Swagger",
-        default_version='v1',
-        description="Findempro API Swagger documentation",
+        description="Findempro API documentation",
         terms_of_service="https://www.findempro.com/terms/",
-        contact=openapi.Contact(email="contact@yourapp.com"),
-        license=openapi.License(name="Your License"),
+        contact=openapi.Contact(email="contact@findempro.com"),
+        license=openapi.License(name="Proprietary"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
-
-# Define the schema view for the Redoc UI
-redoc_view = get_schema_view(
-    openapi.Info(
-        title="Findempro Redoc",
-        default_version='v1',
-        description="Findempro API Redoc documentation",
-        terms_of_service="https://www.findempro.com/terms/",
-        contact=openapi.Contact(email="contact@yourapp.com"),
-        license=openapi.License(name="Your License"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-)
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Health check endpoint
+    path('health/', health_check, name='health_check'),
+    
     # Dashboard
     path('', include('dashboards.urls')),
-    # Pages
+    
+    # Apps
     path('pages/', include('pages.urls')),
-    # Business
     path('business/', include('business.urls')),    
-    # Products    
     path('product/', include('product.urls')),
-    # Variables
     path('variable/', include('variable.urls')),
-    # Question
     path('questionary/', include('questionary.urls')),
-    # Simulates
     path('simulate/', include('simulate.urls')),
-    # Report
     path('report/', include('report.urls')),
-    # User
     path('user/', include('user.urls')),
+    
+    # Authentication
     path(
         "account/password/change/",
         login_required(MyPasswordChangeView.as_view()),
@@ -85,19 +61,26 @@ urlpatterns = [
         login_required(MyPasswordSetView.as_view()),
         name="account_set_password",
     ),
-    # All Auth 
     path('account/', include('allauth.urls')),
     path('social-auth/', include('social_django.urls', namespace='social')),
-    # path('api/', include('your_app.urls')),  # Include your app's URLs
+    
+    # API Documentation
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0),
             name='schema-json'),
-    path('swagger/', swagger_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', redoc_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
-# Maneja todos los errores 404
+# Error handlers
 handler404 = 'findempro.urls.error_404'
 handler500 = 'findempro.urls.error_500'
 
+# Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
+    # Debug toolbar
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
