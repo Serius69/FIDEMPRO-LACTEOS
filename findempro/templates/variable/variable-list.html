@@ -10,39 +10,44 @@
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} {% include "partials/page-title.html" with pagetitle="Variable" title="Lista de variables" %} {% endblock pagetitle %}
+      {% block pagetitle %} 
+        {% include "partials/page-title.html" with pagetitle="Variable" title="Lista de variables" %} 
+      {% endblock pagetitle %}
+      
       <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
         <div class="px-4">
-            <div class="row">
-                <div class="col-xxl-9 align-self-center">
-                    <div class="py-4">
-                        <h4 class="display-6 -text">Lista de variables</h4>
-                        <div class="container">                      
-                            <p>Pagina de listado de variables registradas en la base de datos.</p>
-                        
-                            <h2>Características clave:</h2>
-                        
-                            <ul>
-                                <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles de las variables, modifique los parámetros y refine los escenarios.Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite ajustar simulaciones con solo unos pocos clics.</li>
-                        
-                                <li><span class="text-danger">Eliminar: </span> ¿Necesita eliminar una variable?La función Eliminar le permite eliminar de manera rápida y segura escenarios que ya no son necesarios.Agilice su biblioteca de simulación sin esfuerzo.</li>
-                        
-                                <li><span class="text-primary">Ver: </span>Sumérgete profundamente en los detalles de cada variable con la opción Vista.Explore los parámetros, resultados y más.Esta característica es perfecta para analizar los resultados de la simulación y tomar decisiones informadas.</li>
-                            </ul>
-                        </div>
-                    </div>
+          <div class="row">
+            <div class="col-xxl-9 align-self-center">
+              <div class="py-4">
+                <h4 class="display-6 text-dark">Lista de variables</h4>
+                <div class="container">                      
+                  <p>Página de listado de variables registradas en la base de datos.</p>
+                
+                  <h2>Características clave:</h2>
+                
+                  <ul>
+                    <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles de las variables, modifique los parámetros y refine los escenarios. Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite ajustar simulaciones con solo unos pocos clics.</li>
+                
+                    <li><span class="text-danger">Eliminar:</span> ¿Necesita eliminar una variable? La función Eliminar le permite eliminar de manera rápida y segura escenarios que ya no son necesarios. Agilice su biblioteca de simulación sin esfuerzo.</li>
+                
+                    <li><span class="text-primary">Ver:</span> Sumérgete profundamente en los detalles de cada variable con la opción Vista. Explore los parámetros, resultados y más. Esta característica es perfecta para analizar los resultados de la simulación y tomar decisiones informadas.</li>
+                  </ul>
                 </div>
-                <div class="col-xxl-3 ms-auto">
-                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                        <img src="{% static 'images/variable-img.webp'%}" alt="" class="img-fluid" style="max-width: 60%; height: auto;">                    </div>
-                </div>
+              </div>
             </div>
+            <div class="col-xxl-3 ms-auto">
+              <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                <img src="{% static 'images/variable-img.webp' %}" alt="Variables" class="img-fluid" style="max-width: 60%; height: auto;">                    
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
+      
       <div class="row">
         <div class="col-lg-12">
           <div class="card">
-            <div class="card-title">
+            <div class="card-header">
               <h6 class="card-title mb-0">Filtrar Resultados</h6>
             </div>
             <div class="card-body">
@@ -51,20 +56,21 @@
                   <div class="col-md-4">
                     <label for="product-select" class="form-label">Seleccione el producto</label>
                     <select class="form-control" id="product-select" name="product_id">
-                      <option value="All">Todos los productos</option>
+                      <option value="">Todos los productos</option>
                       {% for product in products %}
-                      <option value="{{ product.id }}" {% if request.GET.product_id == product.id|stringformat:"s" %}selected{% endif %}>
-                        {{ product.name }}
-                      </option>
+                        <option value="{{ product.id }}" 
+                          {% if request.GET.product_id == product.id|stringformat:"s" %}selected{% endif %}>
+                          {{ product.name }}
+                        </option>
                       {% empty %}
-                      <option value="All">Todos los productos</option>
+                        <option value="">No hay productos disponibles</option>
                       {% endfor %}
                     </select>
                   </div>
                   <div class="col-md-4">
                     <label for="type-select" class="form-label">Seleccione el tipo</label>
                     <select class="form-control" id="type-select" name="type">
-                      <option value="All">Todos los tipos</option>
+                      <option value="">Todos los tipos</option>
                       <option value="1" {% if request.GET.type == "1" %}selected{% endif %}>Exógena</option>
                       <option value="2" {% if request.GET.type == "2" %}selected{% endif %}>Estado</option>
                       <option value="3" {% if request.GET.type == "3" %}selected{% endif %}>Endógena</option>
@@ -90,176 +96,176 @@
           </div>
         </div>
       </div>
-          <div class="row">
-            {% for variable in variables %}
-                <div class="col-md-3 mb-4">
-                    <div class="card variablelist-card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-lg-4 col-md-3">
-                                    <div class="avatar-lg">
-                                        <div class="avatar-title bg-light rounded">
-                                            <img src="{{ variable.get_photo_url }}" alt="" class="avatar-md companyLogo-img" style="object-fit: cover; width: 100%; height: 100%;" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-8 col-md-9">
-                                    <div class="d-flex mb-4">
-                                        <div class="ms-3 flex-grow-1">
-                                            <img src="{{ variable.fk_product.get_photo_url }}" alt="" class="d-none cover-img" />
-                                            <a href="{% url 'variable:variable.overview' variable.id %}">
-                                                <h5 class="job-title">{{variable.name}}</h5>
-                                            </a>
-                                            <p class="company-name text-muted mb-0">{{variable.fk_product.name}}</p>
-                                        </div>
-                                    </div>
-                                    <p class="text-muted job-description">{{variable.description|truncatechars:80}}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer border-top-dashed">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                        <div>
-                                            <i class="ri-briefcase-2-line align-bottom me-1"></i>
-                                            <span class="job-type">{{variable.fk_product.name|truncatechars:15}}</span>
-                                        </div>
-                                        <div>
-                                            <i class="ri-function-line align-bottom me-1"></i>
-                                            <span class="job-location">{{variable.unit|default:"N/A"}}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                      <div>
-                                        <i class="ri-battery-fill align-bottom me-1"></i>
-                                        <span class="badge 
-                                        {% if variable.type == 1 %}bg-success-subtle text-success
-                                        {% elif variable.type == 2 %}bg-info-subtle text-info
-                                        {% elif variable.type == 3 %}bg-warning-subtle text-warning
-                                        {% else %}bg-primary-subtle text-primary{% endif %}">
-                                        {% if variable.type == 1 %}
-                                            Exógena
-                                        {% elif variable.type == 2 %}
-                                            Estado
-                                        {% elif variable.type == 3 %}
-                                            Endógena
-                                        {% else %}
-                                            Otro Tipo
-                                        {% endif %}
-                                        </span>
-                                      </div>
-                                      <div>
-                                          <i class="ri-time-line align-bottom me-1"></i>
-                                          <span class="job-postdate">{{ variable.date_created|date:"M j, Y" }}</span>
-                                      </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="dropdown">
-                                        <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i data-feather="more-horizontal" class="icon-sm"></i>
-                                        </button>
-                                        <div class="dropdown-menu dropdown-menu-end">
-                                            <a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}">
-                                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                                Vista
-                                            </a>
-                                            <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
-                                              data-bs-target="#addOrUpdateVariable" data-variable-id="{{ variable.id }}"
-                                              onclick="loadVariableDetails('{{ variable.id }}'); return false;">
-                                              <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                              Editar
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="#" class="dropdown-item delete-variable" 
-                                              data-bs-toggle="modal" data-bs-target="#removeVariableModal" 
-                                              data-variable-id="{{ variable.id }}">
-                                              <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                              Eliminar
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
+      <div class="row">
+        {% for variable in variables %}
+          <div class="col-md-3 mb-4">
+            <div class="card variablelist-card">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-lg-4 col-md-3">
+                    <div class="avatar-lg">
+                      <div class="avatar-title bg-light rounded">
+                        <img src="{{ variable.get_photo_url }}" alt="{{ variable.name }}" class="avatar-md companyLogo-img" style="object-fit: cover; width: 100%; height: 100%;" />
+                      </div>
                     </div>
-                </div>
-                {% empty %}
-              <div class="col-12">
-                <div class="text-center py-4">
-                  <lord-icon
-                    src="https://cdn.lordicon.com/msoeawqm.json"
-                    trigger="loop"
-                    colors="primary:#405189,secondary:#0ab39c"
-                    style="width: 75px; height: 75px"
-                  ></lord-icon>
-                  <h5 class="mt-2">Lo siento, no hay ningún registro variable en la base de datos</h5>
-                  <p class="text-muted mb-0">Tienes que "agregar variable".</p>
+                  </div>
+                  <div class="col-lg-8 col-md-9">
+                    <div class="d-flex mb-4">
+                      <div class="ms-3 flex-grow-1">
+                        <img src="{{ variable.fk_product.get_photo_url }}" alt="{{ variable.fk_product.name }}" class="d-none cover-img" />
+                        <a href="{% url 'variable:variable.overview' variable.id %}">
+                          <h5 class="job-title">{{ variable.name }}</h5>
+                        </a>
+                        <p class="company-name text-muted mb-0">{{ variable.fk_product.name }}</p>
+                      </div>
+                    </div>
+                    <p class="text-muted job-description">{{ variable.description|truncatechars:80 }}</p>
+                  </div>
                 </div>
               </div>
-            {% endfor %}
-        </div>
-          
-          <!-- Pagination -->
-          {% if variables.has_other_pages %}
-          <div class="align-items-center mt-2 row text-center text-sm-start">
-            <div class="col-sm">
-              <div class="text-muted">
-                Mostrar
-                <span class="fw-semibold">{{ variables.start_index }}</span> a
-                <span class="fw-semibold">{{ variables.end_index }}</span> de
-                <span class="fw-semibold">{{ variables.paginator.count }}</span>
-                Resultados
+              <div class="card-footer border-top-dashed">
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                      <div>
+                        <i class="ri-briefcase-2-line align-bottom me-1"></i>
+                        <span class="job-type">{{ variable.fk_product.name|truncatechars:15 }}</span>
+                      </div>
+                      <div>
+                        <i class="ri-function-line align-bottom me-1"></i>
+                        <span class="job-location">{{ variable.unit|default:"N/A" }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                      <div>
+                        <i class="ri-battery-fill align-bottom me-1"></i>
+                        <span class="badge 
+                          {% if variable.type == 1 %}bg-success-subtle text-success
+                          {% elif variable.type == 2 %}bg-info-subtle text-info
+                          {% elif variable.type == 3 %}bg-warning-subtle text-warning
+                          {% else %}bg-primary-subtle text-primary{% endif %}">
+                          {% if variable.type == 1 %}
+                            Exógena
+                          {% elif variable.type == 2 %}
+                            Estado
+                          {% elif variable.type == 3 %}
+                            Endógena
+                          {% else %}
+                            Otro Tipo
+                          {% endif %}
+                        </span>
+                      </div>
+                      <div>
+                        <i class="ri-time-line align-bottom me-1"></i>
+                        <span class="job-postdate">{{ variable.date_created|date:"M j, Y" }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="dropdown">
+                      <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i data-feather="more-horizontal" class="icon-sm"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}">
+                          <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                          Vista
+                        </a>
+                        <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
+                          data-bs-target="#addOrUpdateVariable" data-variable-id="{{ variable.id }}"
+                          onclick="loadVariableDetails('{{ variable.id }}'); return false;">
+                          <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                          Editar
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item delete-variable" 
+                          data-bs-toggle="modal" data-bs-target="#removeVariableModal" 
+                          data-variable-id="{{ variable.id }}">
+                          <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                          Eliminar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="col-sm-auto">
-              <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                {% if variables.has_previous %}
-                  <li class="page-item">
-                    <a href="?page={{ variables.previous_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">←</a>
-                  </li>
-                {% endif %}
-
-                {% if variables.number|add:"-3" > 1 %}
-                  <li class="page-item">
-                    <a href="?page=1{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">1</a>
-                  </li>
-                  <li class="page-item disabled">
-                    <span class="page-link">...</span>
-                  </li>
-                {% endif %}
-
-                {% for i in variables.paginator.page_range %}
-                  {% if variables.number|add:"-3" <= i <= variables.number|add:"3" %}
-                    <li class="page-item {% if i == variables.number %}active{% endif %}">
-                      <a href="?page={{ i }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ i }}</a>
-                    </li>
-                  {% endif %}
-                {% endfor %}
-
-                {% if variables.number|add:"3" < variables.paginator.num_pages %}
-                  <li class="page-item disabled">
-                    <span class="page-link">...</span>
-                  </li>
-                  <li class="page-item">
-                    <a href="?page={{ variables.paginator.num_pages }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ variables.paginator.num_pages }}</a>
-                  </li>
-                {% endif %}
-
-                {% if variables.has_next %}
-                  <li class="page-item">
-                    <a href="?page={{ variables.next_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">→</a>
-                  </li>
-                {% endif %}
-              </ul>
-            </div>            
           </div>
-          {% endif %}
-          <!-- end row -->
+        {% empty %}
+          <div class="col-12">
+            <div class="text-center py-4">
+              <lord-icon
+                src="https://cdn.lordicon.com/msoeawqm.json"
+                trigger="loop"
+                colors="primary:#405189,secondary:#0ab39c"
+                style="width: 75px; height: 75px">
+              </lord-icon>
+              <h5 class="mt-2">Lo siento, no hay ningún registro de variable en la base de datos</h5>
+              <p class="text-muted mb-0">Tienes que "agregar variable".</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+          
+      <!-- Pagination -->
+      {% if variables.has_other_pages %}
+        <div class="align-items-center mt-2 row text-center text-sm-start">
+          <div class="col-sm">
+            <div class="text-muted">
+              Mostrar
+              <span class="fw-semibold">{{ variables.start_index }}</span> a
+              <span class="fw-semibold">{{ variables.end_index }}</span> de
+              <span class="fw-semibold">{{ variables.paginator.count }}</span>
+              Resultados
+            </div>
+          </div>
+          <div class="col-sm-auto">
+            <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
+              {% if variables.has_previous %}
+                <li class="page-item">
+                  <a href="?page={{ variables.previous_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">←</a>
+                </li>
+              {% endif %}
+
+              {% if variables.number|add:"-3" > 1 %}
+                <li class="page-item">
+                  <a href="?page=1{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">1</a>
+                </li>
+                <li class="page-item disabled">
+                  <span class="page-link">...</span>
+                </li>
+              {% endif %}
+
+              {% for i in variables.paginator.page_range %}
+                {% if variables.number|add:"-3" <= i <= variables.number|add:"3" %}
+                  <li class="page-item {% if i == variables.number %}active{% endif %}">
+                    <a href="?page={{ i }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ i }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+
+              {% if variables.number|add:"3" < variables.paginator.num_pages %}
+                <li class="page-item disabled">
+                  <span class="page-link">...</span>
+                </li>
+                <li class="page-item">
+                  <a href="?page={{ variables.paginator.num_pages }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ variables.paginator.num_pages }}</a>
+                </li>
+              {% endif %}
+
+              {% if variables.has_next %}
+                <li class="page-item">
+                  <a href="?page={{ variables.next_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">→</a>
+                </li>
+              {% endif %}
+            </ul>
+          </div>            
         </div>
+      {% endif %}
+      <!-- end row -->
     </div>
     <!-- container-fluid -->
   </div>
@@ -270,14 +276,16 @@
 </div>
 <!-- end main content-->
 {% endblock content %} 
+
 {% block extra_content %}
-{% block modals %} 
-{% include "partials/modals.html" %}
-{% include "variable/variable-modal.html" %}
-{% endblock modals %}
+  {% block modals %} 
+    {% include "partials/modals.html" %}
+    {% include "variable/variable-modal.html" %}
+  {% endblock modals %}
 {% endblock extra_content %}
+
 {% block extra_js %}
-<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
-<script src="{% static 'js/edit-add.js' %}"></script>
-<script src="{% static 'js/delete.js' %}"></script>
+  <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+  <script src="{% static 'js/edit-add.js' %}"></script>
+  <script src="{% static 'js/delete.js' %}"></script>
 {% endblock extra_js %}

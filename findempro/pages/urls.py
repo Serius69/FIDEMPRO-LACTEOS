@@ -8,8 +8,7 @@ from pages.views import (
     pages_terms_conditions,
     register_elements,
     register_elements_simulation,
-    pagina_error_404,
-    pagina_error_500,
+    register_elements_create
 )
 
 app_name = "pages"
@@ -23,11 +22,12 @@ urlpatterns = [
     path("terms-conditions/", pages_terms_conditions, name="pages.terms_conditions"),
     
     # Registro de elementos
-    path('register-elements/', register_elements, name='pages.register_elements'),
-    path('register-simulation/', register_elements_simulation, name='pages.register_elements_simulation'),
-    
+    path("register-elements/", register_elements, name="pages.register_elements"),
+    path("register-simulation/", register_elements_simulation, name="pages.register_elements_simulation"),
+    path("register-elements/create/", register_elements_create, name="pages.register_elements_create"), 
+
     # Redirecciones para URLs antiguas (compatibilidad hacia atrás)
-    path("coming_soon/", RedirectView.as_view(pattern_name='pages:coming_soon', permanent=True)),
-    path("privacy-policy", RedirectView.as_view(pattern_name='pages:privacy_policy', permanent=True)),
-    path("terms-conditions", RedirectView.as_view(pattern_name='pages:terms_conditions', permanent=True)),
+    path("coming_soon/", RedirectView.as_view(pattern_name="pages:coming_soon", permanent=True)),
+    path("privacy-policy", RedirectView.as_view(pattern_name="pages:privacy_policy", permanent=True)),
+    path("terms-conditions", RedirectView.as_view(pattern_name="pages:terms_conditions", permanent=True)),
 ]

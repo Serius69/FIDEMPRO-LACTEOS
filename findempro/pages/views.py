@@ -38,28 +38,36 @@ class PagesView(TemplateView):
     """Vista base para páginas estáticas"""
     pass
 
-
 @login_required
-@transaction.atomic
 def register_elements(request):
     """
-    Registra elementos del negocio para el usuario actual.
-    Usa transacción atómica para asegurar consistencia de datos.
+    Vista para mostrar el formulario de registro de elementos.
+    Redirige a la función que realiza la creación si es POST y válido.
     """
     if request.method == 'POST':
         form = RegisterElementsForm(request.POST)
         if form.is_valid():
-            try:
-                create_and_save_business(request.user)
-                messages.success(request, _('Elementos registrados correctamente.'))
-                return redirect("dashboard:index")  # Redirige a la url 'dashboard:index'
-            except Exception as e:
-                logger.error(f"Error creating business for user {request.user.id}: {str(e)}")
-                messages.error(request, _('Error al crear el negocio. Por favor, intente nuevamente.'))
-                form.add_error(None, str(e))
+            return redirect('register_elements_create')
     else:
         form = RegisterElementsForm()
-        logger.error(f"Error creating elements {request.user.id}: {str(e)}")
+    return render(request, 'pages/register_elements.html', {
+        'form': form,
+        'title': 'Registrar Elementos'
+    })
+
+
+@login_required
+@transaction.atomic
+def register_elements_create(request):
+    """
+    Realiza la creación de los elementos del negocio para el usuario actual.
+    """
+    try:
+        create_and_save_business(request.user)
+        messages.success(request, _('Elementos registrados correctamente.'))
+    except Exception as e:
+        logger.error(f"Error creating business for user {request.user.id}: {str(e)}")
+        messages.error(request, _('Error al crear el negocio. Por favor, intente nuevamente.'))
     return redirect("dashboard:index")
 
 
@@ -89,6 +97,7 @@ def create_and_save_business(user: User) -> Business:
         # Construir la ruta de la imagen
         image_filename = f"pyme_lactea_default.jpg"
         image_src = os.path.join(settings.MEDIA_URL, "business", image_filename)
+        print(f"Creating business with image: {image_src}")
 
         business = Business.objects.create(
             name=name,
@@ -121,13 +130,25 @@ def create_and_save_products(business: Business) -> None:
         created_products = []
         
         for data in products_data:
-            # Validar datos requeridos
             if not data.get('name') or not data.get('type'):
                 logger.warning(f"Skipping product with incomplete data: {data}")
                 continue
-                
+
             image_filename = f"{data.get('name', 'default')}.jpg"
             image_src = os.path.join(settings.MEDIA_URL, "product", image_filename)
+            # image_src = f"product/{image_filename}"
+
+            # Asegura que la carpeta exista
+            image_dir = os.path.join(settings.MEDIA_ROOT, "product")
+            os.makedirs(image_dir, exist_ok=True)
+
+            # Asegura que el archivo exista (puedes copiar un placeholder si lo tienes)
+            image_path = os.path.join(settings.MEDIA_ROOT, image_src)
+            if not os.path.exists(image_path):
+                with open(image_path, "wb") as f:
+                    pass  # crea archivo vacío
+
+            print(f"Creating product with image: {image_src}")
 
             product = Product.objects.create(
                 name=data['name'],
@@ -166,7 +187,7 @@ def create_and_save_areas(product: Product) -> None:
                 continue
                 
             image_filename = f"{data.get('name', 'default')}.jpg"
-            image_src = os.path.join(settings.MEDIA_URL, "area", image_filename)
+            image_src = f"area/{image_filename}"
 
             area = Area.objects.create(
                 name=data['name'],
@@ -201,7 +222,7 @@ def create_variables_and_equations(product: Product) -> None:
                 continue
                 
             image_filename = f"{data.get('initials', 'default')}.jpg"
-            image_src = os.path.join(settings.MEDIA_URL, "variable", image_filename)
+            image_src = f"variable/{image_filename}"
             
             variable = Variable.objects.create(
                 name=data.get('name'),

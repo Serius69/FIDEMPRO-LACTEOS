@@ -402,7 +402,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Action Buttons -->
             <div class="row">
                 <div class="col-lg-12">
@@ -414,7 +413,7 @@
                                     Al continuar, se creará automáticamente toda esta configuración para su empresa.
                                     <br>Podrá personalizar todos los valores después de la creación inicial.
                                 </p>
-                                <form method="post" id="confirmForm">
+                                <form method="post" id="confirmForm" action="{% url 'pages:pages.register_elements_create' %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="confirm_setup" value="true">
                                     <div class="d-flex gap-2 justify-content-center">
