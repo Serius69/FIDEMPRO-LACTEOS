@@ -6,11 +6,16 @@ from pathlib import Path
 from django.contrib.messages import constants as messages
 from dotenv import load_dotenv
 
-load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+print("BASE_DIR:", BASE_DIR)
+load_dotenv(os.path.join(BASE_DIR, '/findempro/.env.development'))
+if not os.path.exists(os.path.join(BASE_DIR, '.env.development')):
+    raise FileNotFoundError("El archivo .env.development no se encuentra en la ruta esperada.")
+else:
+    print("Archivo .env.development encontrado y cargado correctamente.")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-j%^*y0krq5^-#3lggoecxw!d7ad_gqkab3t5w17&0w06+qf8+8'
 
@@ -128,6 +133,7 @@ DATABASES = {
         },
     }
 }
+print("DATABASES:", DATABASES)
 
 
 # Internationalization
@@ -139,11 +145,17 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+# IMPORTANTE: Esta línea debe apuntar a tu carpeta static
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+# Para producción (no lo necesitas ahora pero es bueno tenerlo)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -158,13 +170,13 @@ MESSAGE_TAGS = {
 }
 
 # Para usar Gmail en desarrollo (opcional)
-# EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-# EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-# EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-# EMAIL_USE_TLS = True
-# EMAIL_USE_SSL = False
-# EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-# EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 # Authentication settings
 LOGIN_REDIRECT_URL = "/"
@@ -186,9 +198,9 @@ ACCOUNT_FORMS = {
 
 SOCIALACCOUNT_QUERY_EMAIL = True
 
-# Social auth google key and secret key
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+#Social auth google key and secret key
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY="328835751262-3trsdta49tep5gkm4h35vs9mb25npojr.apps.googleusercontent.com"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET="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"
 
 SITE_ID = 2
 

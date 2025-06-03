@@ -1,3 +1,4 @@
+# findempro/urls.py
 from django.contrib import admin
 from django.urls import path, re_path, include
 from rest_framework import permissions
@@ -8,8 +9,7 @@ from .views import MyPasswordChangeView, MyPasswordSetView
 from django.conf.urls.static import static
 from django.conf import settings
 from django.shortcuts import render
-from .health import health_check
-
+import debug_toolbar
 # Define la vista personalizada para errores 404
 def error_404(request, exception):
     return render(request, 'pages/404.html', status=404)
@@ -22,10 +22,10 @@ schema_view = get_schema_view(
     openapi.Info(
         title="Findempro API",
         default_version='v1',
-        description="Findempro API documentation",
+        description="API para el sistema de apoyo a decisiones financieras",
         terms_of_service="https://www.findempro.com/terms/",
         contact=openapi.Contact(email="contact@findempro.com"),
-        license=openapi.License(name="Proprietary"),
+        license=openapi.License(name="MIT"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
@@ -33,9 +33,6 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    # Health check endpoint
-    path('health/', health_check, name='health_check'),
     
     # Dashboard
     path('', include('dashboards.urls')),
@@ -75,12 +72,8 @@ urlpatterns = [
 handler404 = 'findempro.urls.error_404'
 handler500 = 'findempro.urls.error_500'
 
-# Serve media files in development
+# IMPORTANTE: Servir archivos estáticos y media en desarrollo
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
-    # Debug toolbar
-    import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+    urlpatterns = [path('__debug__/', include(debug_toolbar.urls))] + urlpatterns
