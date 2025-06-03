@@ -1,6 +1,30 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}FAQs{% endblock title %}
+{% block title %}Preguntas Frecuentes - FindEMPro{% endblock title %}
+{% block extra_css %}
+<style>
+    .faq-category-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--vz-success-bg-subtle);
+        border-radius: 8px;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: var(--vz-success-bg-subtle);
+        color: var(--vz-success);
+    }
+    .contact-btn {
+        transition: all 0.3s ease;
+    }
+    .contact-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock extra_css %}
 {% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
@@ -16,23 +40,41 @@
                             <div class="row">
                                 <div class="col-xxl-5 align-self-center">
                                     <div class="py-4">
-                                        <h4 class="display-6 -text">Preguntas frecuentes</h4>
-                                        <p class="text-success fs-15 mt-3">Si no puede encontrar la respuesta a su pregunta en nuestras preguntas frecuentes, no dude en contactarnos.Le proporcionaremos la información que necesita.</p>
+                                        <h1 class="display-6 fw-bold">Preguntas Frecuentes</h1>
+                                        <p class="text-success fs-15 mt-3">
+                                            Encuentre respuestas rápidas a las preguntas más comunes sobre FindEMPro. 
+                                            Si necesita ayuda adicional, nuestro equipo está aquí para asistirle.
+                                        </p>
                                         <div class="hstack flex-wrap gap-2">
-                                            <button type="button" class="btn btn-primary btn-label rounded-pill" onclick="openMailTo()">
-                                                <i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Contáctenos
+                                            <button type="button" class="btn btn-primary btn-label rounded-pill contact-btn" 
+                                                    data-bs-toggle="modal" data-bs-target="#contactModal">
+                                                <i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> 
+                                                Contáctenos
                                             </button>                                            
-                                            <button type="button" class="btn btn-info btn-label rounded-pill" onclick="openTwitterFollow()">
-                                                <i class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> Síganos en Twitter
-                                            </button>
+                                            <a href="https://twitter.com/findempro" target="_blank" 
+                                               class="btn btn-info btn-label rounded-pill contact-btn">
+                                                <i class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> 
+                                                Síguenos en Twitter
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xxl-3 ms-auto">
                                     <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                                        <img src="{% static 'images/faq-img.webp'%}" alt="" class="img-fluid">
+                                        <img src="{% static 'images/faq-img.webp'%}" alt="FAQ" class="img-fluid">
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="row mt-4 mb-4">
+                        <div class="col-lg-8 mx-auto">
+                            <div class="search-box">
+                                <input type="text" class="form-control search" id="faqSearch" 
+                                       placeholder="Buscar en las preguntas frecuentes...">
+                                <i class="ri-search-line search-icon"></i>
                             </div>
                         </div>
                     </div>
@@ -41,88 +83,335 @@
                         <!-- Category: Financial Decision Making -->
                         <div class="col-lg-6">
                             <div class="mt-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="flex-shrink-0 me-1">
-                                        <i class="ri-calculator-line fs-24 align-middle text-success me-1"></i>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="faq-category-icon me-3">
+                                        <i class="ri-calculator-line fs-24 text-success"></i>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <h5 class="fs-16 mb-0 fw-semibold">Toma de decisiones financieras</h5>
+                                        <h5 class="fs-18 mb-0 fw-semibold">Toma de Decisiones Financieras</h5>
                                     </div>
                                 </div>
 
                                 <div class="accordion accordion-border-box" id="financial-decision-accordion">
-                                    <!-- Question 1: How does the system assist with financial decision making? -->
+                                    <!-- Question 1 -->
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="financial-decision-headingOne">
-                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#financial-decision-collapseOne" aria-expanded="true" aria-controls="financial-decision-collapseOne">
-                                                ¿Cómo ayuda el sistema con la toma de decisiones financieras para las PYME en el sector lácteo?
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#financial-decision-collapseOne" 
+                                                    aria-expanded="true" aria-controls="financial-decision-collapseOne">
+                                                ¿Cómo ayuda el sistema con la toma de decisiones financieras para las PYME lácteas?
                                             </button>
                                         </h2>
-                                        <div id="financial-decision-collapseOne" class="accordion-collapse collapse show" aria-labelledby="financial-decision-headingOne" data-bs-parent="#financial-decision-accordion">
+                                        <div id="financial-decision-collapseOne" class="accordion-collapse collapse show" 
+                                             aria-labelledby="financial-decision-headingOne" 
+                                             data-bs-parent="#financial-decision-accordion">
                                             <div class="accordion-body">
-                                                El sistema utiliza funciones de densidad probabilística y simulación para analizar el comportamiento de la demanda.Ayuda a las PYME en el sector lácteo a tomar decisiones financieras informadas al proporcionar información sobre los patrones y pronósticos de demanda.
+                                                FindEMPro utiliza algoritmos avanzados de análisis predictivo y simulación 
+                                                basados en funciones de densidad probabilística para:
+                                                <ul class="mt-2">
+                                                    <li>Analizar patrones históricos de demanda</li>
+                                                    <li>Predecir comportamientos futuros del mercado</li>
+                                                    <li>Optimizar inventarios y producción</li>
+                                                    <li>Generar reportes financieros detallados</li>
+                                                    <li>Simular diferentes escenarios de negocio</li>
+                                                </ul>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Question 2: What are probabilistic density functions? -->
+                                    <!-- Question 2 -->
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="financial-decision-headingTwo">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#financial-decision-collapseTwo" aria-expanded="false" aria-controls="financial-decision-collapseTwo">
-                                                ¿Cuáles son las funciones de densidad probabilística?
+                                            <button class="accordion-button collapsed" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#financial-decision-collapseTwo" 
+                                                    aria-expanded="false" aria-controls="financial-decision-collapseTwo">
+                                                ¿Qué son las funciones de densidad probabilística?
                                             </button>
                                         </h2>
-                                        <div id="financial-decision-collapseTwo" class="accordion-collapse collapse" aria-labelledby="financial-decision-headingTwo" data-bs-parent="#financial-decision-accordion">
+                                        <div id="financial-decision-collapseTwo" class="accordion-collapse collapse" 
+                                             aria-labelledby="financial-decision-headingTwo" 
+                                             data-bs-parent="#financial-decision-accordion">
                                             <div class="accordion-body">
-                                                Las funciones de densidad probabilística son herramientas matemáticas utilizadas para modelar y describir la distribución de probabilidad de variables aleatorias.En nuestro sistema, se aplican para analizar y predecir variaciones de demanda en el sector lácteo.
+                                                Las funciones de densidad probabilística (FDP) son herramientas matemáticas 
+                                                que nos permiten modelar la incertidumbre en los datos. En FindEMPro:
+                                                <ul class="mt-2">
+                                                    <li>Modelamos las variaciones naturales de la demanda</li>
+                                                    <li>Calculamos probabilidades de diferentes escenarios</li>
+                                                    <li>Estimamos rangos de confianza para las predicciones</li>
+                                                    <li>Identificamos patrones estacionales y tendencias</li>
+                                                </ul>
                                             </div>
                                         </div>
                                     </div>
-                                </div><!--end accordion-->
+
+                                    <!-- Question 3 -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="financial-decision-headingThree">
+                                            <button class="accordion-button collapsed" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#financial-decision-collapseThree" 
+                                                    aria-expanded="false" aria-controls="financial-decision-collapseThree">
+                                                ¿Qué tipo de decisiones puedo tomar con FindEMPro?
+                                            </button>
+                                        </h2>
+                                        <div id="financial-decision-collapseThree" class="accordion-collapse collapse" 
+                                             aria-labelledby="financial-decision-headingThree" 
+                                             data-bs-parent="#financial-decision-accordion">
+                                            <div class="accordion-body">
+                                                FindEMPro le ayuda a tomar decisiones informadas sobre:
+                                                <ul class="mt-2">
+                                                    <li><strong>Producción:</strong> Cuánto producir basado en la demanda esperada</li>
+                                                    <li><strong>Inventario:</strong> Niveles óptimos de stock para evitar quiebres o excesos</li>
+                                                    <li><strong>Precios:</strong> Estrategias de precio basadas en elasticidad de demanda</li>
+                                                    <li><strong>Inversión:</strong> Cuándo expandir capacidad o adquirir equipos</li>
+                                                    <li><strong>Personal:</strong> Planificación de recursos humanos según demanda</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Category: Privacy & Security -->
                         <div class="col-lg-6">
                             <div class="mt-3">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="flex-shrink-0 me-1">
-                                        <i class="ri-shield-keyhole-line fs-24 align-middle text-success me-1"></i>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="faq-category-icon me-3">
+                                        <i class="ri-shield-keyhole-line fs-24 text-success"></i>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <h5 class="fs-16 mb-0 fw-semibold">Privacidad &amSeguridadity</h5>
+                                        <h5 class="fs-18 mb-0 fw-semibold">Privacidad y Seguridad</h5>
                                     </div>
                                 </div>
 
                                 <div class="accordion accordion-border-box" id="privacy-accordion">
-                                    <!-- Question 3: How is user data protected? -->
+                                    <!-- Question 1 -->
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="privacy-headingOne">
-                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#privacy-collapseOne" aria-expanded="true" aria-controls="privacy-collapseOne">
-                                               ¿Cómo se protegen los datos del usuario en el sistema?
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#privacy-collapseOne" aria-expanded="true" 
+                                                    aria-controls="privacy-collapseOne">
+                                                ¿Cómo se protegen los datos de mi empresa?
                                             </button>
                                         </h2>
-                                        <div id="privacy-collapseOne" class="accordion-collapse collapse show" aria-labelledby="privacy-headingOne" data-bs-parent="#privacy-accordion">
+                                        <div id="privacy-collapseOne" class="accordion-collapse collapse show" 
+                                             aria-labelledby="privacy-headingOne" data-bs-parent="#privacy-accordion">
                                             <div class="accordion-body">
-                                                Nos tomamos en serio la privacidad y la seguridad.Los datos del usuario están encriptados y el acceso está restringido solo al personal autorizado.Nuestro sistema cumple con los estándares de la industria para salvaguardar la información confidencial.
+                                                Implementamos múltiples capas de seguridad:
+                                                <ul class="mt-2">
+                                                    <li><strong>Encriptación:</strong> Todos los datos se encriptan con AES-256</li>
+                                                    <li><strong>Acceso restringido:</strong> Control de acceso basado en roles</li>
+                                                    <li><strong>Auditoría:</strong> Registro de todas las actividades del sistema</li>
+                                                    <li><strong>Backups:</strong> Respaldos automáticos diarios</li>
+                                                    <li><strong>Cumplimiento:</strong> Adherencia a estándares ISO 27001</li>
+                                                </ul>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Question 4: Is my data used for any other purpose? -->
+                                    <!-- Question 2 -->
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="privacy-headingTwo">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#privacy-collapseTwo" aria-expanded="false" aria-controls="privacy-collapseTwo">
-                                               ¿Se usan mis datos para cualquier otro propósito?
+                                            <button class="accordion-button collapsed" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#privacy-collapseTwo" 
+                                                    aria-expanded="false" aria-controls="privacy-collapseTwo">
+                                                ¿Mis datos se comparten con terceros?
                                             </button>
                                         </h2>
-                                        <div id="privacy-collapseTwo" class="accordion-collapse collapse" aria-labelledby="privacy-headingTwo" data-bs-parent="#privacy-accordion">
+                                        <div id="privacy-collapseTwo" class="accordion-collapse collapse" 
+                                             aria-labelledby="privacy-headingTwo" data-bs-parent="#privacy-accordion">
                                             <div class="accordion-body">
-                                                Sus datos se usan únicamente para el análisis de la toma de decisiones financieras en el sector lácteo.No compartimos ni usamos sus datos para ningún otro propósito sin su consentimiento.
+                                                <strong>No.</strong> Sus datos son estrictamente confidenciales:
+                                                <ul class="mt-2">
+                                                    <li>No vendemos ni compartimos información con terceros</li>
+                                                    <li>Los datos se usan exclusivamente para mejorar su experiencia</li>
+                                                    <li>Puede solicitar la eliminación de sus datos en cualquier momento</li>
+                                                    <li>Cumplimos con las regulaciones de protección de datos</li>
+                                                </ul>
                                             </div>
                                         </div>
                                     </div>
-                                </div><!--end accordion-->
+
+                                    <!-- Question 3 -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="privacy-headingThree">
+                                            <button class="accordion-button collapsed" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#privacy-collapseThree" 
+                                                    aria-expanded="false" aria-controls="privacy-collapseThree">
+                                                ¿Puedo exportar mis datos?
+                                            </button>
+                                        </h2>
+                                        <div id="privacy-collapseThree" class="accordion-collapse collapse" 
+                                             aria-labelledby="privacy-headingThree" data-bs-parent="#privacy-accordion">
+                                            <div class="accordion-body">
+                                                Sí, tiene control total sobre sus datos:
+                                                <ul class="mt-2">
+                                                    <li>Exporte en formatos CSV, Excel o PDF</li>
+                                                    <li>Descargue reportes históricos completos</li>
+                                                    <li>Realice backups locales cuando lo desee</li>
+                                                    <li>Integre con sistemas externos vía API</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Category: Getting Started -->
+                        <div class="col-lg-6 mt-4">
+                            <div class="mt-3">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="faq-category-icon me-3">
+                                        <i class="ri-rocket-line fs-24 text-success"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="fs-18 mb-0 fw-semibold">Comenzando con FindEMPro</h5>
+                                    </div>
+                                </div>
+
+                                <div class="accordion accordion-border-box" id="getting-started-accordion">
+                                    <!-- Question 1 -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="getting-started-headingOne">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#getting-started-collapseOne" 
+                                                    aria-expanded="true" aria-controls="getting-started-collapseOne">
+                                                ¿Cómo empiezo a usar FindEMPro?
+                                            </button>
+                                        </h2>
+                                        <div id="getting-started-collapseOne" class="accordion-collapse collapse show" 
+                                             aria-labelledby="getting-started-headingOne" 
+                                             data-bs-parent="#getting-started-accordion">
+                                            <div class="accordion-body">
+                                                Es muy sencillo comenzar:
+                                                <ol class="mt-2">
+                                                    <li>Regístrese con su correo electrónico</li>
+                                                    <li>Complete el perfil de su empresa</li>
+                                                    <li>Ingrese datos históricos (opcional)</li>
+                                                    <li>Configure sus productos lácteos</li>
+                                                    <li>¡Comience a analizar y simular!</li>
+                                                </ol>
+                                                <p class="mt-2 mb-0">
+                                                    <a href="#" class="link-success">Ver tutorial completo →</a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Question 2 -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="getting-started-headingTwo">
+                                            <button class="accordion-button collapsed" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#getting-started-collapseTwo" 
+                                                    aria-expanded="false" aria-controls="getting-started-collapseTwo">
+                                                ¿Necesito conocimientos técnicos?
+                                            </button>
+                                        </h2>
+                                        <div id="getting-started-collapseTwo" class="accordion-collapse collapse" 
+                                             aria-labelledby="getting-started-headingTwo" 
+                                             data-bs-parent="#getting-started-accordion">
+                                            <div class="accordion-body">
+                                                No se requieren conocimientos técnicos avanzados:
+                                                <ul class="mt-2">
+                                                    <li>Interfaz intuitiva y amigable</li>
+                                                    <li>Asistentes paso a paso</li>
+                                                    <li>Videos tutoriales incluidos</li>
+                                                    <li>Soporte técnico disponible</li>
+                                                    <li>Documentación en español</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Category: Pricing & Plans -->
+                        <div class="col-lg-6 mt-4">
+                            <div class="mt-3">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="faq-category-icon me-3">
+                                        <i class="ri-price-tag-3-line fs-24 text-success"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="fs-18 mb-0 fw-semibold">Precios y Planes</h5>
+                                    </div>
+                                </div>
+
+                                <div class="accordion accordion-border-box" id="pricing-accordion">
+                                    <!-- Question 1 -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="pricing-headingOne">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#pricing-collapseOne" aria-expanded="true" 
+                                                    aria-controls="pricing-collapseOne">
+                                                ¿Cuáles son los planes disponibles?
+                                            </button>
+                                        </h2>
+                                        <div id="pricing-collapseOne" class="accordion-collapse collapse show" 
+                                             aria-labelledby="pricing-headingOne" data-bs-parent="#pricing-accordion">
+                                            <div class="accordion-body">
+                                                Ofrecemos planes flexibles para cada necesidad:
+                                                <ul class="mt-2">
+                                                    <li><strong>Básico:</strong> Ideal para microempresas (hasta 5 usuarios)</li>
+                                                    <li><strong>Profesional:</strong> Para PYME en crecimiento (hasta 20 usuarios)</li>
+                                                    <li><strong>Empresarial:</strong> Solución completa (usuarios ilimitados)</li>
+                                                    <li><strong>Prueba gratis:</strong> 30 días sin compromiso</li>
+                                                </ul>
+                                                <p class="mt-2 mb-0">
+                                                    <a href="#" class="link-success">Ver tabla de precios →</a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Question 2 -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="pricing-headingTwo">
+                                            <button class="accordion-button collapsed" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#pricing-collapseTwo" 
+                                                    aria-expanded="false" aria-controls="pricing-collapseTwo">
+                                                ¿Puedo cambiar de plan?
+                                            </button>
+                                        </h2>
+                                        <div id="pricing-collapseTwo" class="accordion-collapse collapse" 
+                                             aria-labelledby="pricing-headingTwo" data-bs-parent="#pricing-accordion">
+                                            <div class="accordion-body">
+                                                Sí, con total flexibilidad:
+                                                <ul class="mt-2">
+                                                    <li>Actualice o cambie de plan en cualquier momento</li>
+                                                    <li>Sin penalidades por cambios</li>
+                                                    <li>Prorrateo automático del pago</li>
+                                                    <li>Mantenga todos sus datos al cambiar</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Still have questions section -->
+                    <div class="row mt-5">
+                        <div class="col-lg-12">
+                            <div class="text-center">
+                                <div class="mb-4">
+                                    <i class="ri-question-line display-4 text-success"></i>
+                                </div>
+                                <h5 class="mb-3">¿Aún tiene preguntas?</h5>
+                                <p class="text-muted mb-4">No puede encontrar la respuesta que busca? 
+                                   Estamos aquí para ayudar.</p>
+                                <div class="hstack gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-soft-success" 
+                                            data-bs-toggle="modal" data-bs-target="#contactModal">
+                                        <i class="ri-mail-line align-middle me-1"></i> Enviar un mensaje
+                                    </button>
+                                    <a href="tel:+59112345678" class="btn btn-soft-info">
+                                        <i class="ri-phone-line align-middle me-1"></i> Llamar al soporte
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -138,31 +427,111 @@
     {% endblock footer %}
 </div>
 <!-- end main content-->
+
+<!-- Contact Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalLabel">Contáctenos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactForm">
+                    <div class="mb-3">
+                        <label for="contactName" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="contactName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactEmail" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="contactEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactSubject" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="contactSubject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactMessage" class="form-label">Mensaje</label>
+                        <textarea class="form-control" id="contactMessage" rows="4" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="sendContactForm()">Enviar Mensaje</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
 {% block extra_js %}
-<!-- Agrega el script JavaScript para abrir la ventana de correo electrónico -->
 <script>
-    function openMailTo() {
-        // Cambia 'developer@example.com' con la dirección de correo electrónico del desarrollador
-        var email = 'developer@example.com';
-        var subject = 'Consulta sobre el sistema';
-        var body = 'Hola, me gustaría hacer una consulta sobre el sistema.';
-
-        var mailtoLink = 'mailto:' + email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-
-        // Abre la ventana de correo electrónico
-        window.location.href = mailtoLink;
+// Search functionality
+document.getElementById('faqSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    
+    accordionItems.forEach(item => {
+        const question = item.querySelector('.accordion-button').textContent.toLowerCase();
+        const answer = item.querySelector('.accordion-body').textContent.toLowerCase();
+        
+        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+            item.style.display = 'block';
+            // Highlight search term
+            if (searchTerm.length > 2) {
+                const button = item.querySelector('.accordion-button');
+                const body = item.querySelector('.accordion-body');
+                // Add highlighting logic here if needed
+            }
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Show all if search is empty
+    if (searchTerm === '') {
+        accordionItems.forEach(item => {
+            item.style.display = 'block';
+        });
     }
-</script>
-    <!-- Agrega el script JavaScript para abrir la ventana de Twitter -->
-<script>
-    function openTwitterFollow() {
-        // Cambia 'nombredeusuario' con el nombre de usuario real de Twitter
-        var twitterUsername = 'nombredeusuario';
-        var twitterFollowLink = 'https://twitter.com/intent/follow?screen_name=' + encodeURIComponent(twitterUsername);
+});
 
-        // Abre la ventana de Twitter
-        window.open(twitterFollowLink, '_blank');
+// Contact form submission
+function sendContactForm() {
+    const form = document.getElementById('contactForm');
+    if (form.checkValidity()) {
+        // Get form values
+        const name = document.getElementById('contactName').value;
+        const email = document.getElementById('contactEmail').value;
+        const subject = document.getElementById('contactSubject').value;
+        const message = document.getElementById('contactMessage').value;
+        
+        // Here you would normally send the data to your backend
+        // For now, we'll just show a success message
+        alert('Mensaje enviado exitosamente. Nos pondremos en contacto pronto.');
+        
+        // Close modal and reset form
+        const modal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+        modal.hide();
+        form.reset();
+    } else {
+        form.reportValidity();
     }
+}
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
 </script>
 {% endblock extra_js %}

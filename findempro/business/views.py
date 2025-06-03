@@ -151,7 +151,7 @@ def create_or_update_business_view(request, pk=None):
             'form': form,
             'business': business_instance if pk else None
         }
-        return render(request, 'business/business_form.html', context)
+        return render(request, 'business/business-list.html', context)
     
     else:
         raise Http404("Método de request inválido")

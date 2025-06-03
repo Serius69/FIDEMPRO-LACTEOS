@@ -6,14 +6,13 @@ from pathlib import Path
 from django.contrib.messages import constants as messages
 from dotenv import load_dotenv
 
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-print("BASE_DIR:", BASE_DIR)
-load_dotenv(os.path.join(BASE_DIR, '/findempro/.env.development'))
-if not os.path.exists(os.path.join(BASE_DIR, '.env.development')):
-    raise FileNotFoundError("El archivo .env.development no se encuentra en la ruta esperada.")
+ENV_PATH = os.path.join(BASE_DIR, '.env.development')
+load_dotenv(ENV_PATH)
+print("ENV_PATH:", ENV_PATH)
+if not os.path.exists(ENV_PATH):
+    raise FileNotFoundError(f"El archivo .env.development no se encuentra en la ruta esperada: {ENV_PATH}")
 else:
     print("Archivo .env.development encontrado y cargado correctamente.")
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -123,17 +122,17 @@ WSGI_APPLICATION = 'findempro.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv("MYSQL_DATABASE", "findempro2"),
-        'USER': os.getenv("MYSQL_USER", "mysql"),
-        'PASSWORD': os.getenv("MYSQL_PASSWORD", "mysql"),
-        'HOST': os.getenv("DB_HOST", "localhost"),
-        'PORT': os.getenv("DB_PORT", "3306"),
+        'NAME': os.getenv("MYSQL_DATABASE"),
+        'USER': os.getenv("MYSQL_USER"),
+        'PASSWORD': os.getenv("MYSQL_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
     }
 }
-print("DATABASES:", DATABASES)
+print("MYSQL_DATABASE:", os.getenv("MYSQL_DATABASE"))
 
 
 # Internationalization

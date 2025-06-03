@@ -466,31 +466,63 @@
                         </div>
                     </div>
                     
-                    {% if form %}
-                    <!-- Quick Setup Form -->
                     <div class="card mt-3">
                         <div class="card-header">
                             <h5 class="card-title mb-0">Configuración Rápida</h5>
                         </div>
                         <div class="card-body">
-                            <form method="POST" id="quickSetupForm">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="createAll" 
-                                               name="create_all_elements">
-                                        <label class="form-check-label" for="createAll">
-                                            Crear elementos de demostración
-                                        </label>
+                            <div class="col-xxl-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="card-title mb-3">Crear Elementos Predeterminados</h5>
+                                            <p class="card-text">
+                                                Al hacer clic en este botón, se crearán automáticamente los elementos predeterminados necesarios para las simulaciones.
+                                                Estos elementos incluyen negocios, productos, áreas, variables y ecuaciones que son esenciales para realizar simulaciones exitosas.
+                                            </p>
+                                        </div>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                            Crear Elementos
+                                        </button>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="ri-settings-3-line me-2"></i>Configurar Sistema
-                                </button>
-                            </form>
+                            </div>
+                        </div>
                         </div>
                     </div>
-                    {% endif %}
+                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Registrar Elementos Predeterminados</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="{% url 'pages:pages.register_elements' %}" class="needs-validation" novalidate>
+                                        <div class="modal-body">
+                                            {% csrf_token %}
+                                            <div class="mb-3 form-check">
+                                                <label class="form-check-label">
+                                                    <input type="checkbox" name="create_all_elements" class="form-check-input">
+                                                    Crear todos los elementos automáticamente
+                                                </label>
+                                                </label>
+                                            </div>
+                                            <div class="mb-3 form-check">
+                                                <label class="form-check-label">
+                                                    <input type="checkbox" name="create_simulation_elements" class="form-check-input">
+                                                    Crear elementos de prueba simulacion
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                            <button type="submit" class="btn btn-primary">Registrar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                 </div>
             </div>
         </div>
