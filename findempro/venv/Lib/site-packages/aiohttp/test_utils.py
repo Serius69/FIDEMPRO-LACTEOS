@@ -15,31 +15,40 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Generic,
     Iterator,
     List,
     Optional,
     Type,
-    Union,
+    TypeVar,
     cast,
+    overload,
 )
-from unittest import mock
+from unittest import IsolatedAsyncioTestCase, mock
 
 from aiosignal import Signal
 from multidict import CIMultiDict, CIMultiDictProxy
 from yarl import URL
 
 import aiohttp
-from aiohttp.client import _RequestContextManager, _WSRequestContextManager
+from aiohttp.client import (
+    _RequestContextManager,
+    _RequestOptions,
+    _WSRequestContextManager,
+)
 
 from . import ClientSession, hdrs
 from .abc import AbstractCookieJar
 from .client_reqrep import ClientResponse
 from .client_ws import ClientWebSocketResponse
-from .helpers import PY_38, sentinel
+from .helpers import sentinel
 from .http import HttpVersion, RawRequestMessage
+from .streams import EMPTY_PAYLOAD, StreamReader
+from .typedefs import StrOrURL
 from .web import (
     Application,
     AppRunner,
+    BaseRequest,
     BaseRunner,
     Request,
     Server,
@@ -49,15 +58,21 @@ from .web import (
 )
 from .web_protocol import _RequestHandler
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from ssl import SSLContext
 else:
     SSLContext = None
 
-if PY_38:
-    from unittest import IsolatedAsyncioTestCase as TestCase
+if sys.version_info >= (3, 11) and TYPE_CHECKING:
+    from typing import Unpack
+
+if sys.version_info >= (3, 11):
+    from typing import Self
 else:
-    from asynctest import TestCase  # type: ignore[no-redef]
+    Self = Any
+
+_ApplicationNone = TypeVar("_ApplicationNone", Application, None)
+_Request = TypeVar("_Request", bound=BaseRequest)
 
 REUSE_ADDRESS = os.name == "posix" and sys.platform != "cygwin"
 
@@ -94,7 +109,7 @@ class BaseTestServer(ABC):
     def __init__(
         self,
         *,
-        scheme: Union[str, object] = sentinel,
+        scheme: str = "",
         loop: Optional[asyncio.AbstractEventLoop] = None,
         host: str = "127.0.0.1",
         port: Optional[int] = None,
@@ -121,14 +136,17 @@ class BaseTestServer(ABC):
             return
         self._loop = loop
         self._ssl = kwargs.pop("ssl", None)
-        self.runner = await self._make_runner(**kwargs)
+        self.runner = await self._make_runner(handler_cancellation=True, **kwargs)
         await self.runner.setup()
         if not self.port:
             self.port = 0
+        absolute_host = self.host
         try:
             version = ipaddress.ip_address(self.host).version
         except ValueError:
             version = 4
+        if version == 6:
+            absolute_host = f"[{self.host}]"
         family = socket.AF_INET6 if version == 6 else socket.AF_INET
         _sock = self.socket_factory(self.host, self.port, family)
         self.host, self.port = _sock.getsockname()[:2]
@@ -136,29 +154,25 @@ class BaseTestServer(ABC):
         await site.start()
         server = site._server
         assert server is not None
-        sockets = server.sockets
+        sockets = server.sockets  # type: ignore[attr-defined]
         assert sockets is not None
         self.port = sockets[0].getsockname()[1]
-        if self.scheme is sentinel:
-            if self._ssl:
-                scheme = "https"
-            else:
-                scheme = "http"
-            self.scheme = scheme
-        self._root = URL(f"{self.scheme}://{self.host}:{self.port}")
+        if not self.scheme:
+            self.scheme = "https" if self._ssl else "http"
+        self._root = URL(f"{self.scheme}://{absolute_host}:{self.port}")
 
     @abstractmethod  # pragma: no cover
     async def _make_runner(self, **kwargs: Any) -> BaseRunner:
         pass
 
-    def make_url(self, path: str) -> URL:
+    def make_url(self, path: StrOrURL) -> URL:
         assert self._root is not None
         url = URL(path)
         if not self.skip_url_asserts:
-            assert not url.is_absolute()
+            assert not url.absolute
             return self._root.join(url)
         else:
-            return URL(str(self._root) + path)
+            return URL(str(self._root) + str(path))
 
     @property
     def started(self) -> bool:
@@ -226,7 +240,7 @@ class TestServer(BaseTestServer):
         self,
         app: Application,
         *,
-        scheme: Union[str, object] = sentinel,
+        scheme: str = "",
         host: str = "127.0.0.1",
         port: Optional[int] = None,
         **kwargs: Any,
@@ -243,7 +257,7 @@ class RawTestServer(BaseTestServer):
         self,
         handler: _RequestHandler,
         *,
-        scheme: Union[str, object] = sentinel,
+        scheme: str = "",
         host: str = "127.0.0.1",
         port: Optional[int] = None,
         **kwargs: Any,
@@ -256,7 +270,7 @@ class RawTestServer(BaseTestServer):
         return ServerRunner(srv, debug=debug, **kwargs)
 
 
-class TestClient:
+class TestClient(Generic[_Request, _ApplicationNone]):
     """
     A test client implementation.
 
@@ -266,6 +280,22 @@ class TestClient:
 
     __test__ = False
 
+    @overload
+    def __init__(
+        self: "TestClient[Request, Application]",
+        server: TestServer,
+        *,
+        cookie_jar: Optional[AbstractCookieJar] = None,
+        **kwargs: Any,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: "TestClient[_Request, None]",
+        server: BaseTestServer,
+        *,
+        cookie_jar: Optional[AbstractCookieJar] = None,
+        **kwargs: Any,
+    ) -> None: ...
     def __init__(
         self,
         server: BaseTestServer,
@@ -276,13 +306,14 @@ class TestClient:
     ) -> None:
         if not isinstance(server, BaseTestServer):
             raise TypeError(
-                "server must be TestServer " "instance, found type: %r" % type(server)
+                "server must be TestServer instance, found type: %r" % type(server)
             )
         self._server = server
         self._loop = loop
         if cookie_jar is None:
             cookie_jar = aiohttp.CookieJar(unsafe=True, loop=loop)
         self._session = ClientSession(loop=loop, cookie_jar=cookie_jar, **kwargs)
+        self._session._retry_connection = False
         self._closed = False
         self._responses: List[ClientResponse] = []
         self._websockets: List[ClientWebSocketResponse] = []
@@ -303,8 +334,8 @@ class TestClient:
         return self._server
 
     @property
-    def app(self) -> Optional[Application]:
-        return cast(Optional[Application], getattr(self._server, "app", None))
+    def app(self) -> _ApplicationNone:
+        return getattr(self._server, "app", None)  # type: ignore[return-value]
 
     @property
     def session(self) -> ClientSession:
@@ -317,54 +348,114 @@ class TestClient:
         """
         return self._session
 
-    def make_url(self, path: str) -> URL:
+    def make_url(self, path: StrOrURL) -> URL:
         return self._server.make_url(path)
 
-    async def _request(self, method: str, path: str, **kwargs: Any) -> ClientResponse:
+    async def _request(
+        self, method: str, path: StrOrURL, **kwargs: Any
+    ) -> ClientResponse:
         resp = await self._session.request(method, self.make_url(path), **kwargs)
         # save it to close later
         self._responses.append(resp)
         return resp
 
-    def request(self, method: str, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Routes a request to tested http server.
+    if sys.version_info >= (3, 11) and TYPE_CHECKING:
 
-        The interface is identical to aiohttp.ClientSession.request,
-        except the loop kwarg is overridden by the instance used by the
-        test server.
+        def request(
+            self, method: str, path: StrOrURL, **kwargs: Unpack[_RequestOptions]
+        ) -> _RequestContextManager: ...
 
-        """
-        return _RequestContextManager(self._request(method, path, **kwargs))
+        def get(
+            self,
+            path: StrOrURL,
+            **kwargs: Unpack[_RequestOptions],
+        ) -> _RequestContextManager: ...
 
-    def get(self, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Perform an HTTP GET request."""
-        return _RequestContextManager(self._request(hdrs.METH_GET, path, **kwargs))
+        def options(
+            self,
+            path: StrOrURL,
+            **kwargs: Unpack[_RequestOptions],
+        ) -> _RequestContextManager: ...
 
-    def post(self, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Perform an HTTP POST request."""
-        return _RequestContextManager(self._request(hdrs.METH_POST, path, **kwargs))
+        def head(
+            self,
+            path: StrOrURL,
+            **kwargs: Unpack[_RequestOptions],
+        ) -> _RequestContextManager: ...
 
-    def options(self, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Perform an HTTP OPTIONS request."""
-        return _RequestContextManager(self._request(hdrs.METH_OPTIONS, path, **kwargs))
+        def post(
+            self,
+            path: StrOrURL,
+            **kwargs: Unpack[_RequestOptions],
+        ) -> _RequestContextManager: ...
 
-    def head(self, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Perform an HTTP HEAD request."""
-        return _RequestContextManager(self._request(hdrs.METH_HEAD, path, **kwargs))
+        def put(
+            self,
+            path: StrOrURL,
+            **kwargs: Unpack[_RequestOptions],
+        ) -> _RequestContextManager: ...
 
-    def put(self, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Perform an HTTP PUT request."""
-        return _RequestContextManager(self._request(hdrs.METH_PUT, path, **kwargs))
+        def patch(
+            self,
+            path: StrOrURL,
+            **kwargs: Unpack[_RequestOptions],
+        ) -> _RequestContextManager: ...
 
-    def patch(self, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Perform an HTTP PATCH request."""
-        return _RequestContextManager(self._request(hdrs.METH_PATCH, path, **kwargs))
+        def delete(
+            self,
+            path: StrOrURL,
+            **kwargs: Unpack[_RequestOptions],
+        ) -> _RequestContextManager: ...
 
-    def delete(self, path: str, **kwargs: Any) -> _RequestContextManager:
-        """Perform an HTTP PATCH request."""
-        return _RequestContextManager(self._request(hdrs.METH_DELETE, path, **kwargs))
+    else:
 
-    def ws_connect(self, path: str, **kwargs: Any) -> _WSRequestContextManager:
+        def request(
+            self, method: str, path: StrOrURL, **kwargs: Any
+        ) -> _RequestContextManager:
+            """Routes a request to tested http server.
+
+            The interface is identical to aiohttp.ClientSession.request,
+            except the loop kwarg is overridden by the instance used by the
+            test server.
+
+            """
+            return _RequestContextManager(self._request(method, path, **kwargs))
+
+        def get(self, path: StrOrURL, **kwargs: Any) -> _RequestContextManager:
+            """Perform an HTTP GET request."""
+            return _RequestContextManager(self._request(hdrs.METH_GET, path, **kwargs))
+
+        def post(self, path: StrOrURL, **kwargs: Any) -> _RequestContextManager:
+            """Perform an HTTP POST request."""
+            return _RequestContextManager(self._request(hdrs.METH_POST, path, **kwargs))
+
+        def options(self, path: StrOrURL, **kwargs: Any) -> _RequestContextManager:
+            """Perform an HTTP OPTIONS request."""
+            return _RequestContextManager(
+                self._request(hdrs.METH_OPTIONS, path, **kwargs)
+            )
+
+        def head(self, path: StrOrURL, **kwargs: Any) -> _RequestContextManager:
+            """Perform an HTTP HEAD request."""
+            return _RequestContextManager(self._request(hdrs.METH_HEAD, path, **kwargs))
+
+        def put(self, path: StrOrURL, **kwargs: Any) -> _RequestContextManager:
+            """Perform an HTTP PUT request."""
+            return _RequestContextManager(self._request(hdrs.METH_PUT, path, **kwargs))
+
+        def patch(self, path: StrOrURL, **kwargs: Any) -> _RequestContextManager:
+            """Perform an HTTP PATCH request."""
+            return _RequestContextManager(
+                self._request(hdrs.METH_PATCH, path, **kwargs)
+            )
+
+        def delete(self, path: StrOrURL, **kwargs: Any) -> _RequestContextManager:
+            """Perform an HTTP PATCH request."""
+            return _RequestContextManager(
+                self._request(hdrs.METH_DELETE, path, **kwargs)
+            )
+
+    def ws_connect(self, path: StrOrURL, **kwargs: Any) -> _WSRequestContextManager:
         """Initiate websocket connection.
 
         The api corresponds to aiohttp.ClientSession.ws_connect.
@@ -372,7 +463,9 @@ class TestClient:
         """
         return _WSRequestContextManager(self._ws_connect(path, **kwargs))
 
-    async def _ws_connect(self, path: str, **kwargs: Any) -> ClientWebSocketResponse:
+    async def _ws_connect(
+        self, path: StrOrURL, **kwargs: Any
+    ) -> ClientWebSocketResponse:
         ws = await self._session.ws_connect(self.make_url(path), **kwargs)
         self._websockets.append(ws)
         return ws
@@ -410,7 +503,7 @@ class TestClient:
         # __exit__ should exist in pair with __enter__ but never executed
         pass  # pragma: no cover
 
-    async def __aenter__(self) -> "TestClient":
+    async def __aenter__(self) -> Self:
         await self.start_server()
         return self
 
@@ -423,7 +516,7 @@ class TestClient:
         await self.close()
 
 
-class AioHTTPTestCase(TestCase):
+class AioHTTPTestCase(IsolatedAsyncioTestCase):
     """A base class to allow for unittest web applications using aiohttp.
 
     Provides the following:
@@ -454,16 +547,8 @@ class AioHTTPTestCase(TestCase):
         """
         raise RuntimeError("Did you forget to define get_application()?")
 
-    def setUp(self) -> None:
-        if not PY_38:
-            asyncio.get_event_loop().run_until_complete(self.asyncSetUp())
-
     async def asyncSetUp(self) -> None:
-        try:
-            self.loop = asyncio.get_running_loop()
-        except (AttributeError, RuntimeError):  # AttributeError->py36
-            self.loop = asyncio.get_event_loop_policy().get_event_loop()
-
+        self.loop = asyncio.get_running_loop()
         return await self.setUpAsync()
 
     async def setUpAsync(self) -> None:
@@ -472,10 +557,6 @@ class AioHTTPTestCase(TestCase):
         self.client = await self.get_client(self.server)
 
         await self.client.start_server()
-
-    def tearDown(self) -> None:
-        if not PY_38:
-            self.loop.run_until_complete(self.asyncTearDown())
 
     async def asyncTearDown(self) -> None:
         return await self.tearDownAsync()
@@ -487,7 +568,7 @@ class AioHTTPTestCase(TestCase):
         """Return a TestServer instance."""
         return TestServer(app, loop=self.loop)
 
-    async def get_client(self, server: TestServer) -> TestClient:
+    async def get_client(self, server: TestServer) -> TestClient[Request, Application]:
         """Return a TestClient instance."""
         return TestClient(server, loop=self.loop)
 
@@ -531,28 +612,7 @@ def setup_test_loop(
     once they are done with the loop.
     """
     loop = loop_factory()
-    try:
-        module = loop.__class__.__module__
-        skip_watcher = "uvloop" in module
-    except AttributeError:  # pragma: no cover
-        # Just in case
-        skip_watcher = True
     asyncio.set_event_loop(loop)
-    if sys.platform != "win32" and not skip_watcher:
-        policy = asyncio.get_event_loop_policy()
-        watcher: asyncio.AbstractChildWatcher
-        try:  # Python >= 3.8
-            # Refs:
-            # * https://github.com/pytest-dev/pytest-xdist/issues/620
-            # * https://stackoverflow.com/a/58614689/595220
-            # * https://bugs.python.org/issue35621
-            # * https://github.com/python/cpython/pull/14344
-            watcher = asyncio.ThreadedChildWatcher()
-        except AttributeError:  # Python < 3.8
-            watcher = asyncio.SafeChildWatcher()
-        watcher.attach_loop(loop)
-        with contextlib.suppress(NotImplementedError):
-            policy.set_child_watcher(watcher)
     return loop
 
 
@@ -613,7 +673,7 @@ def make_mocked_request(
     writer: Any = sentinel,
     protocol: Any = sentinel,
     transport: Any = sentinel,
-    payload: Any = sentinel,
+    payload: StreamReader = EMPTY_PAYLOAD,
     sslcontext: Optional[SSLContext] = None,
     client_max_size: int = 1024**2,
     loop: Any = ...,
@@ -625,8 +685,15 @@ def make_mocked_request(
     """
     task = mock.Mock()
     if loop is ...:
-        loop = mock.Mock()
-        loop.create_future.return_value = ()
+        # no loop passed, try to get the current one if
+        # its is running as we need a real loop to create
+        # executor jobs to be able to do testing
+        # with a real executor
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = mock.Mock()
+            loop.create_future.return_value = ()
 
     if version < HttpVersion(1, 1):
         closing = True
@@ -663,6 +730,10 @@ def make_mocked_request(
     if protocol is sentinel:
         protocol = mock.Mock()
         protocol.transport = transport
+        type(protocol).peername = mock.PropertyMock(
+            return_value=transport.get_extra_info("peername")
+        )
+        type(protocol).ssl_context = mock.PropertyMock(return_value=sslcontext)
 
     if writer is sentinel:
         writer = mock.Mock()
@@ -674,9 +745,6 @@ def make_mocked_request(
 
     protocol.transport = transport
     protocol.writer = writer
-
-    if payload is sentinel:
-        payload = mock.Mock()
 
     req = Request(
         message, payload, protocol, writer, task, loop, client_max_size=client_max_size

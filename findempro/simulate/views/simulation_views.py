@@ -77,7 +77,7 @@ class SimulateShowView(LoginRequiredMixin, View):
         businesses = Business.objects.filter(
             is_active=True,
             fk_user=request.user
-        ).prefetch_related('products')
+        ).prefetch_related('fk_business_product')
         
         products = Product.objects.filter(
             is_active=True,

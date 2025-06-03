@@ -20,6 +20,7 @@
     z-index: 9999;
     box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
     border-radius: 5px;
+    transition: all 0.3s ease;
 }
 
 .tutorial-tooltip {
@@ -31,15 +32,29 @@
     z-index: 10000;
     max-width: 300px;
     display: none;
+    animation: tooltipFadeIn 0.3s ease-in-out;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .tutorial-tooltip h5 {
     margin-top: 0;
     color: #405189;
+    font-weight: 600;
 }
 
 .tutorial-tooltip .btn {
     margin-top: 10px;
+    margin-right: 5px;
 }
 
 .pulse-animation {
@@ -73,22 +88,83 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(64, 81, 137, 0.3);
     z-index: 1000;
     transition: all 0.3s ease;
+    border: none;
 }
 
 .help-icon:hover {
     transform: scale(1.1);
     background: #364a7d;
+    box-shadow: 0 6px 16px rgba(64, 81, 137, 0.4);
 }
 
 .help-icon i {
     color: white;
     font-size: 24px;
 }
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out forwards;
+    opacity: 0;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.text-truncate-two-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    max-height: 2.8em;
+}
+
+.pagination-wrapper {
+    margin-top: 2rem;
+    padding: 1rem 0;
+}
+
+.dropdown-menu {
+    animation: dropdownFadeIn 0.2s ease-in-out;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-group-item {
+    transition: transform 0.2s ease;
+}
+
+.avatar-group-item:hover {
+    transform: scale(1.1);
+}
 </style>
 {% endblock extra_css %}
+
 {% block content %}
 <!-- Tutorial Overlay -->
 <div class="tutorial-overlay" id="tutorialOverlay"></div>
@@ -97,22 +173,22 @@
 <div class="tutorial-tooltip" id="step1Tooltip">
     <h5>Paso 1: Filtrar por Negocio</h5>
     <p>Use este menú para filtrar los productos por negocio. Puede ver todos los productos o solo los de un negocio específico.</p>
-    <button class="btn btn-primary btn-sm" onclick="nextStep(2)">Siguiente</button>
-    <button class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
+    <button type="button" class="btn btn-primary btn-sm" onclick="nextStep(2)">Siguiente</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
 </div>
 
 <div class="tutorial-tooltip" id="step2Tooltip">
     <h5>Paso 2: Crear Nuevo Producto</h5>
     <p>Haga clic en este botón para crear un nuevo producto. Se abrirá un formulario donde podrá ingresar todos los detalles.</p>
-    <button class="btn btn-primary btn-sm" onclick="nextStep(3)">Siguiente</button>
-    <button class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
+    <button type="button" class="btn btn-primary btn-sm" onclick="nextStep(3)">Siguiente</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
 </div>
 
 <div class="tutorial-tooltip" id="step3Tooltip">
     <h5>Paso 3: Tarjetas de Producto</h5>
     <p>Cada tarjeta muestra información del producto. Puede ver detalles, editar o eliminar usando el menú de tres puntos.</p>
-    <button class="btn btn-primary btn-sm" onclick="nextStep(4)">Siguiente</button>
-    <button class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
+    <button type="button" class="btn btn-primary btn-sm" onclick="nextStep(4)">Siguiente</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
 </div>
 
 <div class="tutorial-tooltip" id="step4Tooltip">
@@ -121,13 +197,13 @@
     <br>• <strong>Vista:</strong> Ver detalles completos
     <br>• <strong>Editar:</strong> Modificar información
     <br>• <strong>Eliminar:</strong> Borrar el producto</p>
-    <button class="btn btn-success btn-sm" onclick="endTutorial()">Finalizar</button>
+    <button type="button" class="btn btn-success btn-sm" onclick="endTutorial()">Finalizar</button>
 </div>
 
 <!-- Help Icon -->
-<div class="help-icon pulse-animation" onclick="startTutorial()" title="Ayuda">
+<button type="button" class="help-icon pulse-animation" onclick="startTutorial()" title="Ayuda" aria-label="Iniciar tutorial">
     <i class="ri-question-line"></i>
-</div>
+</button>
 
 <!-- ============================================================== -->
 <!-- Start right Content here -->
@@ -153,30 +229,31 @@
           <div class="row">
             <div class="col-xxl-9 align-self-center">
               <div class="py-4">
-                <h4 class="display-6 -text">LISTA DE PRODUCTOS</h4>
-                <div class="container">                      
-                  <p>El listado de productos que se tienen para realizar simulaciones.</p>
-                  <h2>Características clave:</h2>
-                  <ul>
-                    <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles del producto como nombre, descripción, precio y cantidad. Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite mantener actualizado la información de su producto con solo unos pocos clics.</li>
-                    <li><span class="text-danger">Borrar:</span> ¿Necesita eliminar un producto de su inventario? La función Eliminar le permite eliminar de forma rápida y segura los elementos que ya no son relevantes. Diga adiós al desorden innecesario en su base de datos.</li>
-                    <li><span class="text-primary">Ver:</span> Sumérjase profundamente en los detalles de cada producto con la opción Vista. Obtenga información sobre las especificaciones, datos históricos y más. Esta característica es perfecta para analizar el rendimiento del producto y tomar decisiones informadas.</li>
+                <h4 class="display-6 text-dark">LISTA DE PRODUCTOS</h4>
+                <div class="container-fluid px-0">                      
+                  <p class="mb-3">El listado de productos que se tienen para realizar simulaciones.</p>
+                  <h5>Características clave:</h5>
+                  <ul class="list-unstyled">
+                    <li class="mb-2"><i class="ri-edit-line text-success me-2"></i><span class="text-success fw-semibold">Editar:</span> Actualice fácilmente los detalles del producto como nombre, descripción, precio y cantidad. Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta.</li>
+                    <li class="mb-2"><i class="ri-delete-bin-line text-danger me-2"></i><span class="text-danger fw-semibold">Borrar:</span> ¿Necesita eliminar un producto de su inventario? La función Eliminar le permite eliminar de forma rápida y segura los elementos que ya no son relevantes.</li>
+                    <li class="mb-2"><i class="ri-eye-line text-primary me-2"></i><span class="text-primary fw-semibold">Ver:</span> Sumérjase profundamente en los detalles de cada producto con la opción Vista. Obtenga información sobre las especificaciones y datos históricos.</li>
                   </ul>
                 </div>
               </div>
             </div>
             <div class="col-xxl-3 ms-auto">
               <div class="mb-n5 pb-1 faq-img d-none d-lg-block">
-                <img src="{% static 'images/product-img.webp'%}" alt="" class="img-fluid" style="max-width: 70%; height: auto;">
+                <img src="{% static 'images/product-img.webp'%}" alt="Imagen de productos" class="img-fluid" style="max-width: 70%; height: auto;">
               </div>
             </div>
           </div>
         </div>
       </div>
+      
       <div class="row">
         <div class="col-lg-12">
           <div class="card" id="filterCard">
-            <div class="card-title">
+            <div class="card-header">
               <h6 class="card-title mb-0">Filtrar Resultados</h6>
             </div>
             <div class="card-body">
@@ -184,19 +261,19 @@
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label for="business-select" class="form-label">Seleccione el negocio</label>
-                    <select class="form-control" id="business-select" name="business_id">
+                    <select class="form-select" id="business-select" name="business_id">
                       <option value="All">Todos los negocios</option>
                       {% for business in businesses %}
                       <option value="{{ business.id }}" {% if request.GET.business_id == business.id|stringformat:"s" %}selected{% endif %}>
                         {{ business.name }}
                       </option>
                       {% empty %}
-                      <option value="All">Todos los negocios</option>
+                      <option value="">No hay negocios disponibles</option>
                       {% endfor %}
                     </select>
                   </div>
-                  <div class="col-md-6">
-                    <button type="submit" class="btn btn-danger mt-4" id="apply-filters">
+                  <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-danger" id="apply-filters">
                       <i class="ri-equalizer-fill me-1 align-bottom"></i>
                       Aplicar Filtros
                     </button>
@@ -205,7 +282,7 @@
               </form>
               <div class="row g-3 mt-3">
                 <div class="col-lg-12">
-                  <button class="btn btn-success" id="createProductBtn" data-bs-toggle="modal" data-bs-target="#addOrUpdateProduct">
+                  <button type="button" class="btn btn-success" id="createProductBtn" data-bs-toggle="modal" data-bs-target="#addOrUpdateProduct">
                     <i class="ri-add-fill me-1 align-bottom"></i>
                     Crear nuevo
                   </button>
@@ -216,220 +293,220 @@
         </div>
       </div>
       <!--end row-->
+      
       <div class="row" id="product-list">
-            {% for product in products %}
-            <div class="col-xxl-4 col-lg-6 col-md-6 product-card" data-business="{{ product.fk_business.id }}">
-              <div class="card card-height-100">
-                <div class="card-body">
-                  <div class="d-flex flex-column h-100">
-                    <div class="d-flex">
-                      <div class="flex-grow-1">
-                        <p class="text-muted mb-4">
-                          Última actualización: {{ product.last_updated|timesince }} atrás
-                         </p>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <div class="d-flex gap-1 align-items-center">
-                          <div class="dropdown">
-                            <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15 product-menu"
-                              data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                              <i data-feather="more-horizontal" class="icon-sm"></i>
-                            </button>
-  
-                            <div class="dropdown-menu dropdown-menu-end">
-                              <a class="dropdown-item"
-                                href="{% url 'product:product.overview' product.id %}">
-                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                Vista
-                              </a>
-                              <a href="#" class="dropdown-item edit-product" data-bs-toggle="modal"
-                                data-bs-target="#addOrUpdateProduct" data-product-id="{{ product.id }}"
-                                onclick="loadProductDetails('{{ product.id }}'); return false;">
-                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                Editar
-                              </a>
-                              <div class="dropdown-divider"></div>
-                              <a class="dropdown-item delete-product" 
-                                  data-bs-toggle="modal" data-bs-target="#removeProductModal" 
-                                  data-product-id="{{ product.id }}">
-                                  <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                  Eliminar
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="d-flex mb-2">
-                      <div class="flex-shrink-0 me-3">
-                        <div class="avatar-md">
-                          <span>
-                            <img
-                              src="{{ product.get_photo_url }}"
-                              alt="{{ product.name }}"
-                              class="img-fluid p-1"
-                            />
-                          </span>
-                        </div>
-                      </div>
-                      <div class="flex-grow-1">
-                        <h5 class="mb-1 fs-15">
-                          <a href="{% url 'product:product.overview' product.id %}" class="text-body">
-                            {{ product.name }}
+        {% for product in products %}
+        <div class="col-xxl-4 col-lg-6 col-md-6 product-card fade-in" data-business="{{ product.fk_business.id }}" style="animation-delay: {{ forloop.counter0|floatformat:1 }}s;">
+          <div class="card card-height-100">
+            <div class="card-body">
+              <div class="d-flex flex-column h-100">
+                <div class="d-flex">
+                  <div class="flex-grow-1">
+                    <p class="text-muted mb-4">
+                      Última actualización: {{ product.last_updated|timesince }} atrás
+                     </p>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <div class="d-flex gap-1 align-items-center">
+                      <div class="dropdown">
+                        <button type="button" class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15 product-menu"
+                          data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Opciones del producto">
+                          <i data-feather="more-horizontal" class="icon-sm"></i>
+                        </button>
+
+                        <div class="dropdown-menu dropdown-menu-end">
+                          <a class="dropdown-item" href="{% url 'product:product.overview' product.id %}">
+                            <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                            Vista
                           </a>
-                        </h5>
-                        <p class="text-muted text-truncate-two-lines mb-3">
-                          {{ product.description|truncatewords:20 }}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div class="mt-auto">
-                      <div class="d-flex mb-2">
-                        <div class="flex-grow-1">
-                          <div style="display: flex; justify-content: space-between;">
-                            <div>
-                              <i class="ri-list-check align-bottom me-1 text-muted"></i>
-                              Áreas: 
-                              <span class="badge bg-info">{{ product.areas_count|default:"0" }}</span>
-                            </div>
-                            <div>
-                              <i class="ri-function-line align-bottom me-1 text-muted"></i>
-                              Variables: 
-                              <span class="badge bg-primary">{{ product.variables_count|default:"0" }}</span>
-                            </div>
-                          </div>
+                          <a href="#" class="dropdown-item edit-product" data-bs-toggle="modal"
+                            data-bs-target="#addOrUpdateProduct" data-product-id="{{ product.id }}"
+                            onclick="loadProductDetails('{{ product.id }}'); return false;">
+                            <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                            Editar
+                          </a>
+                          <div class="dropdown-divider"></div>
+                          <a class="dropdown-item delete-product" 
+                              data-bs-toggle="modal" data-bs-target="#removeProductModal" 
+                              data-product-id="{{ product.id }}">
+                              <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                              Eliminar
+                          </a>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <!-- end card body -->
-                <div class="card-footer bg-transparent border-top-dashed py-2">
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                      <div class="avatar-group">
-                        {% for variable in product.fk_product_variable.all|slice:":5" %}
-                                <a href="javascript:void(0);"
-                                    class="avatar-group-item"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-trigger="hover"
-                                    data-bs-placement="top"
-                                    title="{{ variable.name }}">
-                                    <div class="avatar-xxs">
-                                        <img
-                                            src="{{ variable.get_photo_url }}"
-                                            alt="{{ variable.name }}"
-                                            class="rounded-circle img-fluid"
-                                        />
-                                    </div>
-                                </a>
-                            {% empty %}
-                                <span class="text-muted small">Sin variables</span>
-                            {% endfor %}
-                            {% if product.fk_product_variable.count > 5 %}
-                                <a href="{% url 'product:product.overview' product.id %}"
-                                    class="avatar-group-item"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-trigger="hover"
-                                    data-bs-placement="top"
-                                    title="Ver todas las variables">
-                                    <div class="avatar-xxs">
-                                        <div class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
-                                            +{{ product.fk_product_variable.count|add:"-5" }}
-                                        </div>
-                                    </div>
-                                </a>
-                            {% endif %}
-                      </div>
+                <div class="d-flex mb-2">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-md">
+                      <span>
+                        <img
+                          src="{{ product.get_photo_url }}"
+                          alt="{{ product.name }}"
+                          class="img-fluid p-1 rounded"
+                        />
+                      </span>
                     </div>
-                    <div class="flex-shrink-0">
-                      <div class="text-muted">
-                        <i class="ri-calendar-event-fill me-1 align-bottom"></i>
-                        <span class="text-muted small">{{ product.date_created|date:"d/m/Y" }}</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="mb-1 fs-15">
+                      <a href="{% url 'product:product.overview' product.id %}" class="text-body text-decoration-none">
+                        {{ product.name }}
+                      </a>
+                    </h5>
+                    <p class="text-muted text-truncate-two-lines mb-3">
+                      {{ product.description|truncatewords:20 }}
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="mt-auto">
+                  <div class="d-flex mb-2">
+                    <div class="flex-grow-1">
+                      <div class="d-flex justify-content-between">
+                        <div>
+                          <i class="ri-list-check align-bottom me-1 text-muted"></i>
+                          Áreas: 
+                          <span class="badge bg-info">{{ product.areas_count|default:"0" }}</span>
+                        </div>
+                        <div>
+                          <i class="ri-function-line align-bottom me-1 text-muted"></i>
+                          Variables: 
+                          <span class="badge bg-primary">{{ product.variables_count|default:"0" }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <!-- end card footer -->
               </div>
-              <!-- end card -->
             </div>
-            <!-- end col -->
-             {% empty %}
-            <div class="text-center py-4">
-              <lord-icon
-                src="https://cdn.lordicon.com/msoeawqm.json"
-                trigger="loop"
-                colors="primary:#405189,secondary:#0ab39c"
-                style="width: 75px; height: 75px"
-              ></lord-icon>
-              <h5 class="mt-2">
-                No hay productos registrados
-              </h5>
-              <p class="text-muted mb-0">
-                Haga clic en "Crear nuevo" para agregar su primer producto.
-              </p>
-              <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addOrUpdateProduct">
-                <i class="ri-add-fill me-1 align-bottom"></i>
-                Crear mi primer producto
-              </button>
-            </div>
-            {% endfor %}
-          </div>
-          
-          <!-- Pagination -->
-          {% if products.has_other_pages %}
-          <div class="row">
-            <div class="col-12">
-              <div class="pagination-wrapper">
-                <nav aria-label="Navegación de páginas">
-                  <ul class="pagination justify-content-center">
-                    {% if products.has_previous %}
-                    <li class="page-item">
-                      <a class="page-link" href="?page={{ products.previous_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}" aria-label="Anterior">
-                        <span aria-hidden="true">&laquo;</span>
-                      </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for num in products.paginator.page_range %}
-                      {% if products.number == num %}
-                        <li class="page-item active" aria-current="page">
-                          <span class="page-link">{{ num }}</span>
-                        </li>
-                      {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
-                        <li class="page-item">
-                          <a class="page-link" href="?page={{ num }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}">{{ num }}</a>
-                        </li>
-                      {% endif %}
-                    {% endfor %}
-                    
-                    {% if products.has_next %}
-                    <li class="page-item">
-                      <a class="page-link" href="?page={{ products.next_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}" aria-label="Siguiente">
-                        <span aria-hidden="true">&raquo;</span>
-                      </a>
-                    </li>
-                    {% endif %}
-                  </ul>
-                </nav>
-                <div class="text-center text-muted mt-2">
-                  Página {{ products.number }} de {{ products.paginator.num_pages }}
-                  ({{ products.paginator.count }} producto{{ products.paginator.count|pluralize }})
+            <!-- end card body -->
+            <div class="card-footer bg-transparent border-top-dashed py-2">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                  <div class="avatar-group">
+                    {% for variable in product.fk_product_variable.all|slice:":5" %}
+                            <a href="javascript:void(0);"
+                                class="avatar-group-item"
+                                data-bs-toggle="tooltip"
+                                data-bs-trigger="hover"
+                                data-bs-placement="top"
+                                title="{{ variable.name }}">
+                                <div class="avatar-xxs">
+                                    <img
+                                        src="{{ variable.get_photo_url }}"
+                                        alt="{{ variable.name }}"
+                                        class="rounded-circle img-fluid"
+                                    />
+                                </div>
+                            </a>
+                        {% empty %}
+                            <span class="text-muted small">Sin variables</span>
+                        {% endfor %}
+                        {% if product.fk_product_variable.count > 5 %}
+                            <a href="{% url 'product:product.overview' product.id %}"
+                                class="avatar-group-item"
+                                data-bs-toggle="tooltip"
+                                data-bs-trigger="hover"
+                                data-bs-placement="top"
+                                title="Ver todas las variables">
+                                <div class="avatar-xxs">
+                                    <div class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
+                                        +{{ product.fk_product_variable.count|add:"-5" }}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endif %}
+                  </div>
+                </div>
+                <div class="flex-shrink-0">
+                  <div class="text-muted">
+                    <i class="ri-calendar-event-fill me-1 align-bottom"></i>
+                    <span class="text-muted small">{{ product.date_created|date:"d/m/Y" }}</span>
+                  </div>
                 </div>
               </div>
             </div>
+            <!-- end card footer -->
           </div>
-          {% endif %}
-          <!-- end pagination -->
-        <!-- end row -->
+          <!-- end card -->
+        </div>
+        <!-- end col -->
+         {% empty %}
+        <div class="col-12">
+          <div class="text-center py-5">
+            <lord-icon
+              src="https://cdn.lordicon.com/msoeawqm.json"
+              trigger="loop"
+              colors="primary:#405189,secondary:#0ab39c"
+              style="width: 75px; height: 75px"
+            ></lord-icon>
+            <h5 class="mt-3">No hay productos registrados</h5>
+            <p class="text-muted mb-0">
+              Haga clic en "Crear nuevo" para agregar su primer producto.
+            </p>
+            <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addOrUpdateProduct">
+              <i class="ri-add-fill me-1 align-bottom"></i>
+              Crear mi primer producto
+            </button>
+          </div>
+        </div>
+        {% endfor %}
       </div>
-      {% block modals %} 
-        {% include "product/product-modal.html" %} 
-      {% endblock modals %}
+      
+      <!-- Pagination -->
+      {% if products.has_other_pages %}
+      <div class="row">
+        <div class="col-12">
+          <div class="pagination-wrapper">
+            <nav aria-label="Navegación de páginas">
+              <ul class="pagination justify-content-center">
+                {% if products.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ products.previous_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                {% endif %}
+                
+                {% for num in products.paginator.page_range %}
+                  {% if products.number == num %}
+                    <li class="page-item active" aria-current="page">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                
+                {% if products.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ products.next_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+            <div class="text-center text-muted mt-2">
+              Página {{ products.number }} de {{ products.paginator.num_pages }}
+              ({{ products.paginator.count }} producto{{ products.paginator.count|pluralize }})
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      <!-- end pagination -->
+    <!-- end row -->
     </div>
-    <!-- container-fluid -->
+    {% block modals %} 
+      {% include "product/product-modal.html" %} 
+    {% endblock modals %}
+  </div>
+  <!-- container-fluid -->
   </div>
   <!-- End Page-content -->
   {% block footer %} 
@@ -438,18 +515,19 @@
 </div>
 <!-- end main content-->
 {% endblock content %} 
-{% block extra_content %}
 
+{% block extra_content %}
 {% endblock extra_content %} 
+
 {% block extra_js %}
 <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
-<script src="{% static 'js/crud.js' %}"></script>
 <script src="{% static 'js/common-utils.js' %}"></script>
 
 <!-- Tutorial Script -->
 <script>
 let currentStep = 1;
 let tutorialActive = false;
+let originalDropdownState = null;
 
 function startTutorial() {
     // Check if user has seen tutorial before
@@ -509,7 +587,15 @@ function showStep(step) {
             // Highlight product menu
             const firstMenu = document.querySelector('.product-menu');
             if (firstMenu) {
-                firstMenu.click(); // Open dropdown
+                // Store original state
+                const dropdown = firstMenu.nextElementSibling;
+                originalDropdownState = dropdown.classList.contains('show');
+                
+                // Open dropdown if not already open
+                if (!originalDropdownState) {
+                    firstMenu.click();
+                }
+                
                 firstMenu.classList.add('tutorial-spotlight');
                 positionTooltip('step4Tooltip', firstMenu);
             }
@@ -523,20 +609,27 @@ function positionTooltip(tooltipId, targetElement) {
     
     tooltip.style.display = 'block';
     
-    // Position tooltip
-    if (rect.top > window.innerHeight / 2) {
-        // Element is in bottom half, show tooltip above
-        tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
-    } else {
-        // Element is in top half, show tooltip below
-        tooltip.style.top = (rect.bottom + 10) + 'px';
-    }
-    
-    // Center horizontally
-    tooltip.style.left = Math.max(10, Math.min(
-        rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2),
-        window.innerWidth - tooltip.offsetWidth - 10
-    )) + 'px';
+    // Wait for tooltip to be rendered to get its dimensions
+    setTimeout(() => {
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        // Position tooltip
+        if (rect.top > window.innerHeight / 2) {
+            // Element is in bottom half, show tooltip above
+            tooltip.style.top = (rect.top + window.scrollY - tooltipRect.height - 10) + 'px';
+        } else {
+            // Element is in top half, show tooltip below
+            tooltip.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+        }
+        
+        // Center horizontally
+        const leftPosition = Math.max(10, Math.min(
+            rect.left + (rect.width / 2) - (tooltipRect.width / 2),
+            window.innerWidth - tooltipRect.width - 10
+        ));
+        
+        tooltip.style.left = leftPosition + 'px';
+    }, 10);
 }
 
 function nextStep(step) {
@@ -547,39 +640,87 @@ function nextStep(step) {
 function endTutorial() {
     tutorialActive = false;
     document.getElementById('tutorialOverlay').style.display = 'none';
+    
     document.querySelectorAll('.tutorial-tooltip').forEach(tooltip => {
         tooltip.style.display = 'none';
     });
+    
     document.querySelectorAll('.tutorial-spotlight').forEach(el => {
         el.classList.remove('tutorial-spotlight');
     });
     
-    // Mark tutorial as completed
-    localStorage.setItem('productListTutorialCompleted', 'true');
-    
-    // Close any open dropdowns
-    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-        menu.classList.remove('show');
-    });
-}
-
-// Start tutorial automatically for new users
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if this is the first visit
-    if (!localStorage.getItem('productListTutorialCompleted')) {
-        setTimeout(() => {
-            const hasProducts = document.querySelectorAll('.product-card').length > 0;
-            if (!hasProducts) {
-                // Automatically start tutorial for new users
-                startTutorial();
+    // Close any open dropdowns that were opened by tutorial
+    if (originalDropdownState === false) {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            const dropdownToggle = menu.previousElementSibling;
+            if (dropdownToggle && dropdownToggle.classList.contains('product-menu')) {
+                dropdownToggle.click();
             }
-        }, 1000);
+        });
     }
     
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    // Reset state
+    originalDropdownState = null;
+    
+    // Mark tutorial as completed
+    localStorage.setItem('productListTutorialCompleted', 'true');
+}
+
+// Enhanced delete functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-product')) {
+        e.preventDefault();
+        const productId = e.target.closest('.delete-product').dataset.productId;
+        const deleteForm = document.getElementById('deleteProductForm');
+        if (deleteForm) {
+            deleteForm.action = `/product/delete/${productId}/`;
+        }
+    }
+});
+
+// Auto-submit form on filter change (optional - remove if not desired)
+document.getElementById('business-select').addEventListener('change', function() {
+    // Uncomment the next line to auto-submit the form
+    // this.closest('form').submit();
+});
+
+// Handle form submission loading state
+document.getElementById('apply-filters').addEventListener('click', function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Aplicando...';
+    btn.disabled = true;
+    
+    // Re-enable button after form is submitted (fallback)
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 3000);
+});
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if this is the first visit and no products exist
+    if (!localStorage.getItem('productListTutorialCompleted')) {
+        const hasProducts = document.querySelectorAll('.product-card').length > 0;
+        if (!hasProducts) {
+            // Automatically start tutorial for new users without products
+            setTimeout(() => {
+                startTutorial();
+            }, 1500);
+        }
+    }
+    
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize card animations
+    document.querySelectorAll('.product-card').forEach((card, index) => {
+        card.style.setProperty('--animation-delay', `${index * 0.1}s`);
     });
 });
 
@@ -590,69 +731,11 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Enhanced delete functionality
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.delete-product')) {
-        e.preventDefault();
-        const productId = e.target.closest('.delete-product').dataset.productId;
-        const deleteForm = document.getElementById('deleteProductForm');
-        deleteForm.action = `/product/delete/${productId}/`;
+// Prevent tutorial from breaking when clicking outside
+document.getElementById('tutorialOverlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+        endTutorial();
     }
-});
-
-// Auto-refresh on filter change
-document.getElementById('business-select').addEventListener('change', function() {
-    // Show loading indicator
-    const btn = document.getElementById('apply-filters');
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Aplicando...';
-    btn.disabled = true;
-});
-
-// Improve product card animations
-document.querySelectorAll('.product-card').forEach((card, index) => {
-    card.style.animationDelay = `${index * 0.1}s`;
-    card.classList.add('fade-in');
 });
 </script>
-
-<style>
-.fade-in {
-    animation: fadeIn 0.5s ease-in-out forwards;
-    opacity: 0;
-}
-
-@keyframes fadeIn {
-    to {
-        opacity: 1;
-    }
-}
-
-.text-truncate-two-lines {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pagination-wrapper {
-    margin-top: 2rem;
-    padding: 1rem 0;
-}
-
-.dropdown-menu {
-    animation: dropdownFadeIn 0.2s ease-in-out;
-}
-
-@keyframes dropdownFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
 {% endblock extra_js %}

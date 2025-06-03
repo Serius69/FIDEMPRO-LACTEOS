@@ -2,15 +2,10 @@
 
 # After changing the file content call ./tools/gen.py
 # to regenerate the headers parser
-import sys
-from typing import Set
+import itertools
+from typing import Final, Set
 
 from multidict import istr
-
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
 
 METH_ANY: Final[str] = "*"
 METH_CONNECT: Final[str] = "CONNECT"
@@ -112,3 +107,15 @@ WWW_AUTHENTICATE: Final[istr] = istr("WWW-Authenticate")
 X_FORWARDED_FOR: Final[istr] = istr("X-Forwarded-For")
 X_FORWARDED_HOST: Final[istr] = istr("X-Forwarded-Host")
 X_FORWARDED_PROTO: Final[istr] = istr("X-Forwarded-Proto")
+
+# These are the upper/lower case variants of the headers/methods
+# Example: {'hOst', 'host', 'HoST', 'HOSt', 'hOsT', 'HosT', 'hoSt', ...}
+METH_HEAD_ALL: Final = frozenset(
+    map("".join, itertools.product(*zip(METH_HEAD.upper(), METH_HEAD.lower())))
+)
+METH_CONNECT_ALL: Final = frozenset(
+    map("".join, itertools.product(*zip(METH_CONNECT.upper(), METH_CONNECT.lower())))
+)
+HOST_ALL: Final = frozenset(
+    map("".join, itertools.product(*zip(HOST.upper(), HOST.lower())))
+)

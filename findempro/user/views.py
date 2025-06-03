@@ -646,3 +646,6 @@ class UserActivityLogView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             'date_to': self.request.GET.get('date_to', ''),
         })
         return context
+    
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)

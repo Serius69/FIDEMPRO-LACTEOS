@@ -27,31 +27,30 @@ class Merger(object):
 
     This class merges multiple files into a single OpenType font, taking into
     account complexities such as OpenType layout (``GSUB``/``GPOS``) tables and
-    cross-font metrics (e.g. ``hhea.ascent`` is set to the maximum value across
-    all the fonts).
+    cross-font metrics (for example ``hhea.ascent`` is set to the maximum value
+    across all the fonts).
 
     If multiple glyphs map to the same Unicode value, and the glyphs are considered
     sufficiently different (that is, they differ in any of paths, widths, or
     height), then subsequent glyphs are renamed and a lookup in the ``locl``
     feature will be created to disambiguate them. For example, if the arguments
     are an Arabic font and a Latin font and both contain a set of parentheses,
-    the Latin glyphs will be renamed to ``parenleft#1`` and ``parenright#1``,
+    the Latin glyphs will be renamed to ``parenleft.1`` and ``parenright.1``,
     and a lookup will be inserted into the to ``locl`` feature (creating it if
     necessary) under the ``latn`` script to substitute ``parenleft`` with
-    ``parenleft#1`` etc.
+    ``parenleft.1`` etc.
 
     Restrictions:
 
     - All fonts must have the same units per em.
     - If duplicate glyph disambiguation takes place as described above then the
-            fonts must have a ``GSUB`` table.
+      fonts must have a ``GSUB`` table.
 
     Attributes:
             options: Currently unused.
     """
 
     def __init__(self, options=None):
-
         if not options:
             options = Options()
 
@@ -140,6 +139,7 @@ class Merger(object):
             *(vars(table).keys() for table in tables if table is not NotImplemented),
         )
         for key in allKeys:
+            log.info(" %s", key)
             try:
                 mergeLogic = logic[key]
             except KeyError:
@@ -182,17 +182,50 @@ def main(args=None):
         args = sys.argv[1:]
 
     options = Options()
-    args = options.parse_opts(args, ignore_unknown=["output-file"])
-    outfile = "merged.ttf"
+    args = options.parse_opts(args)
     fontfiles = []
+    if options.input_file:
+        with open(options.input_file) as inputfile:
+            fontfiles = [
+                line.strip()
+                for line in inputfile.readlines()
+                if not line.lstrip().startswith("#")
+            ]
     for g in args:
-        if g.startswith("--output-file="):
-            outfile = g[14:]
-            continue
         fontfiles.append(g)
 
-    if len(args) < 1:
-        print("usage: pyftmerge font...", file=sys.stderr)
+    if len(fontfiles) < 1:
+        print(
+            "usage: pyftmerge [font1 ... fontN] [--input-file=filelist.txt] [--output-file=merged.ttf] [--import-file=tables.ttx]",
+            file=sys.stderr,
+        )
+        print(
+            "                                   [--drop-tables=tags] [--verbose] [--timing]",
+            file=sys.stderr,
+        )
+        print("", file=sys.stderr)
+        print(" font1 ... fontN              Files to merge.", file=sys.stderr)
+        print(
+            " --input-file=<filename>      Read files to merge from a text file, each path new line. # Comment lines allowed.",
+            file=sys.stderr,
+        )
+        print(
+            " --output-file=<filename>     Specify output file name (default: merged.ttf).",
+            file=sys.stderr,
+        )
+        print(
+            " --import-file=<filename>     TTX file to import after merging. This can be used to set metadata.",
+            file=sys.stderr,
+        )
+        print(
+            " --drop-tables=<table tags>   Comma separated list of table tags to skip, case sensitive.",
+            file=sys.stderr,
+        )
+        print(
+            " --verbose                    Output progress information.",
+            file=sys.stderr,
+        )
+        print(" --timing                     Output progress timing.", file=sys.stderr)
         return 1
 
     configLogger(level=logging.INFO if options.verbose else logging.WARNING)
@@ -203,8 +236,12 @@ def main(args=None):
 
     merger = Merger(options=options)
     font = merger.merge(fontfiles)
+
+    if options.import_file:
+        font.importXML(options.import_file)
+
     with timer("compile and save font"):
-        font.save(outfile)
+        font.save(options.output_file)
 
 
 if __name__ == "__main__":

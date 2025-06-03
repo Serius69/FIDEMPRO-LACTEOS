@@ -1,9 +1,10 @@
+# mypy: allow-untyped-defs
 """Interactive debugging with PDB, the Python Debugger."""
+
 import argparse
 import functools
 import sys
 import types
-import unittest
 from typing import Any
 from typing import Callable
 from typing import Generator
@@ -13,6 +14,7 @@ from typing import Tuple
 from typing import Type
 from typing import TYPE_CHECKING
 from typing import Union
+import unittest
 
 from _pytest import outcomes
 from _pytest._code import ExceptionInfo
@@ -24,6 +26,7 @@ from _pytest.config.argparsing import Parser
 from _pytest.config.exceptions import UsageError
 from _pytest.nodes import Node
 from _pytest.reports import BaseReport
+
 
 if TYPE_CHECKING:
     from _pytest.capture import CaptureManager
@@ -152,9 +155,7 @@ class pytestPDB:
     def _get_pdb_wrapper_class(cls, pdb_cls, capman: Optional["CaptureManager"]):
         import _pytest.config
 
-        # Type ignored because mypy doesn't support "dynamic"
-        # inheritance like this.
-        class PytestPdbWrapper(pdb_cls):  # type: ignore[valid-type,misc]
+        class PytestPdbWrapper(pdb_cls):
             _pytest_capman = capman
             _continued = False
 
@@ -263,8 +264,7 @@ class pytestPDB:
                     elif capturing:
                         tw.sep(
                             ">",
-                            "PDB %s (IO-capturing turned off for %s)"
-                            % (method, capturing),
+                            f"PDB {method} (IO-capturing turned off for {capturing})",
                         )
                     else:
                         tw.sep(">", f"PDB {method}")
@@ -304,10 +304,10 @@ class PdbInvoke:
 
 
 class PdbTrace:
-    @hookimpl(hookwrapper=True)
-    def pytest_pyfunc_call(self, pyfuncitem) -> Generator[None, None, None]:
+    @hookimpl(wrapper=True)
+    def pytest_pyfunc_call(self, pyfuncitem) -> Generator[None, object, object]:
         wrap_pytest_function_for_tracing(pyfuncitem)
-        yield
+        return (yield)
 
 
 def wrap_pytest_function_for_tracing(pyfuncitem):
@@ -377,7 +377,8 @@ def _postmortem_traceback(excinfo: ExceptionInfo[BaseException]) -> types.Traceb
     elif isinstance(excinfo.value, ConftestImportFailure):
         # A config.ConftestImportFailure is not useful for post_mortem.
         # Use the underlying exception instead:
-        return excinfo.value.excinfo[2]
+        assert excinfo.value.cause.__traceback__ is not None
+        return excinfo.value.cause.__traceback__
     else:
         assert excinfo._excinfo is not None
         return excinfo._excinfo[2]

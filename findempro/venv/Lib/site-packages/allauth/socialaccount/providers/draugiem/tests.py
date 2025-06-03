@@ -1,4 +1,5 @@
 from hashlib import md5
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
 from django.test import RequestFactory
@@ -6,8 +7,8 @@ from django.urls import reverse
 from django.utils.http import urlencode
 
 from allauth import app_settings
-from allauth.socialaccount.models import SocialApp, SocialToken
-from allauth.tests import Mock, TestCase, patch
+from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
+from allauth.tests import TestCase
 
 from . import views
 from .provider import DraugiemProvider
@@ -134,3 +135,12 @@ class DraugiemTests(TestCase):
             self.assertRedirects(
                 response, "/accounts/profile/", fetch_redirect_response=False
             )
+            socialaccount = SocialAccount.objects.filter(
+                provider=DraugiemProvider.id
+            ).last()
+            pacc = socialaccount.get_provider_account()
+            assert (
+                pacc.get_avatar_url()
+                == "http://cdn.memegenerator.net/instances/500x/23395689.jpg"
+            )
+            assert pacc.to_str() == "Draugiem"

@@ -303,7 +303,10 @@ class ActivityLog(models.Model):
     )
     
     user_agent = models.TextField(
-        blank=True,
+        max_length=500, 
+        null=True, 
+        blank=True, 
+        default='',
         verbose_name="User Agent",
         help_text="Información del navegador/cliente"
     )
@@ -344,8 +347,18 @@ class ActivityLog(models.Model):
         return f"{username} - {self.action} ({self.timestamp.strftime('%Y-%m-%d %H:%M')})"
     
     @classmethod
-    def log_activity(cls, user, action, details=None, ip_address=None, user_agent=None, priority='medium', category=''):
-        """Método helper para registrar actividades"""
+    def log_activity(cls, user, action, details=None,request=None, ip_address=None, user_agent=None, priority='medium', category=''):
+        """
+        Método mejorado para registrar actividad del usuario
+        """
+        # Obtener user_agent de forma segura
+        user_agent = ''
+        if request and hasattr(request, 'META'):
+            user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]  # Truncar si es muy largo
+        
+        # Si no hay request, usar un valor por defecto
+        if not user_agent:
+            user_agent = 'Unknown'
         try:
             return cls.objects.create(
                 user=user,

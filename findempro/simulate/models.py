@@ -6,7 +6,7 @@ import math
 import random
 
 import numpy as np
-from scipy.stats import expon, lognorm, norm
+from scipy.stats import expon, lognorm, norm, gamma, uniform
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -28,6 +28,8 @@ class ProbabilisticDensityFunction(models.Model):
         (1, 'Normal'),
         (2, 'Exponential'),
         (3, 'Log-Norm'),
+        (4, 'Gamma'),  # Nueva distribución Gamma
+        (5, 'Uniform'),  # Nueva distribución Uniforme
     ]
     
     name = models.CharField(
@@ -40,17 +42,12 @@ class ProbabilisticDensityFunction(models.Model):
         default=1, 
         help_text='The type of the distribution'
     )
+    # Parámetros para diferentes distribuciones
     lambda_param = models.FloatField(
         null=True, 
         blank=True, 
         validators=[MinValueValidator(0.001)], 
         help_text='Lambda parameter for exponential distribution'
-    )
-    cumulative_distribution_function = models.FloatField(
-        null=True, 
-        blank=True,
-        validators=[MinValueValidator(0), MaxValueValidator(1)],
-        help_text='Cumulative distribution function value'
     )
     mean_param = models.FloatField(
         null=True, 
@@ -62,6 +59,37 @@ class ProbabilisticDensityFunction(models.Model):
         blank=True, 
         validators=[MinValueValidator(0.001)], 
         help_text='Standard deviation parameter'
+    )
+    # Nuevos parámetros para Gamma
+    shape_param = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0.001)],
+        help_text='Shape parameter (α) for gamma distribution'
+    )
+    scale_param = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0.001)],
+        help_text='Scale parameter (β) for gamma distribution'
+    )
+    # Parámetros para Uniforme
+    min_param = models.FloatField(
+        null=True,
+        blank=True,
+        help_text='Minimum value for uniform distribution'
+    )
+    max_param = models.FloatField(
+        null=True,
+        blank=True,
+        help_text='Maximum value for uniform distribution'
+    )
+    
+    cumulative_distribution_function = models.FloatField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(1)],
+        help_text='Cumulative distribution function value'
     )
     fk_business = models.ForeignKey(
         Business, 
@@ -92,18 +120,54 @@ class ProbabilisticDensityFunction(models.Model):
         return f"{self.name} - {self.fk_business.name}"
     
     def clean(self):
-        """Validate model data"""
+        """Validar datos del modelo según el tipo de distribución"""
         super().clean()
         
+        errors = {}
+        
         if self.distribution_type == 1:  # Normal
-            if self.mean_param is None or self.std_dev_param is None:
-                raise ValidationError("Normal distribution requires mean and std_dev parameters")
+            if self.mean_param is None:
+                errors['mean_param'] = "La distribución Normal requiere el parámetro de media"
+            if self.std_dev_param is None:
+                errors['std_dev_param'] = "La distribución Normal requiere el parámetro de desviación estándar"
+            elif self.std_dev_param <= 0:
+                errors['std_dev_param'] = "La desviación estándar debe ser mayor que 0"
+                
         elif self.distribution_type == 2:  # Exponential
             if self.lambda_param is None:
-                raise ValidationError("Exponential distribution requires lambda parameter")
+                errors['lambda_param'] = "La distribución Exponencial requiere el parámetro lambda"
+            elif self.lambda_param <= 0:
+                errors['lambda_param'] = "Lambda debe ser mayor que 0"
+                
         elif self.distribution_type == 3:  # Log-Normal
-            if self.mean_param is None or self.std_dev_param is None:
-                raise ValidationError("Log-Normal distribution requires mean and std_dev parameters")
+            if self.mean_param is None:
+                errors['mean_param'] = "La distribución Log-Normal requiere el parámetro de media"
+            if self.std_dev_param is None:
+                errors['std_dev_param'] = "La distribución Log-Normal requiere el parámetro de desviación estándar"
+            elif self.std_dev_param <= 0:
+                errors['std_dev_param'] = "La desviación estándar debe ser mayor que 0"
+                
+        elif self.distribution_type == 4:  # Gamma
+            if self.shape_param is None:
+                errors['shape_param'] = "La distribución Gamma requiere el parámetro de forma (α)"
+            elif self.shape_param <= 0:
+                errors['shape_param'] = "El parámetro de forma debe ser mayor que 0"
+            if self.scale_param is None:
+                errors['scale_param'] = "La distribución Gamma requiere el parámetro de escala (β)"
+            elif self.scale_param <= 0:
+                errors['scale_param'] = "El parámetro de escala debe ser mayor que 0"
+                
+        elif self.distribution_type == 5:  # Uniform
+            if self.min_param is None:
+                errors['min_param'] = "La distribución Uniforme requiere el valor mínimo"
+            if self.max_param is None:
+                errors['max_param'] = "La distribución Uniforme requiere el valor máximo"
+            elif self.min_param is not None and self.max_param is not None:
+                if self.min_param >= self.max_param:
+                    errors['max_param'] = "El valor máximo debe ser mayor que el valor mínimo"
+        
+        if errors:
+            raise ValidationError(errors)
     
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -144,15 +208,23 @@ class ProbabilisticDensityFunction(models.Model):
         }
     
     def get_scipy_distribution(self):
-        """Get scipy distribution object based on parameters"""
-        if self.distribution_type == 1:  # Normal
-            return norm(loc=self.mean_param, scale=self.std_dev_param)
-        elif self.distribution_type == 2:  # Exponential
-            return expon(scale=1/self.lambda_param)
-        elif self.distribution_type == 3:  # Log-Normal
-            return lognorm(s=self.std_dev_param, scale=np.exp(self.mean_param))
-        else:
-            raise ValueError(f"Unknown distribution type: {self.distribution_type}")
+        """Obtener objeto de distribución scipy según los parámetros"""
+        try:
+            if self.distribution_type == 1:  # Normal
+                return norm(loc=self.mean_param, scale=self.std_dev_param)
+            elif self.distribution_type == 2:  # Exponential
+                return expon(scale=1/self.lambda_param)
+            elif self.distribution_type == 3:  # Log-Normal
+                return lognorm(s=self.std_dev_param, scale=np.exp(self.mean_param))
+            elif self.distribution_type == 4:  # Gamma
+                # En scipy, gamma usa 'a' para shape y 'scale' para scale
+                return gamma(a=self.shape_param, scale=self.scale_param)
+            elif self.distribution_type == 5:  # Uniform
+                return uniform(loc=self.min_param, scale=self.max_param - self.min_param)
+            else:
+                raise ValueError(f"Tipo de distribución desconocido: {self.distribution_type}")
+        except Exception as e:
+            raise ValidationError(f"Error creando distribución: {str(e)}")
     
     def calculate_pdf(self, x_values):
         """Calculate probability density function values"""
@@ -163,8 +235,85 @@ class ProbabilisticDensityFunction(models.Model):
         """Calculate cumulative distribution function values"""
         distribution = self.get_scipy_distribution()
         return distribution.cdf(x_values)
+    
+    def generate_random_samples(self, n_samples):
+        """Generar muestras aleatorias de la distribución"""
+        try:
+            distribution = self.get_scipy_distribution()
+            return distribution.rvs(size=n_samples)
+        except Exception as e:
+            raise ValidationError(f"Error generando muestras: {str(e)}")
+    def get_distribution_info(self):
+        """Obtener información detallada sobre la distribución"""
+        info = {
+            'name': self.name,
+            'type': self.get_distribution_type_display(),
+            'parameters': {}
+        }
+        
+        if self.distribution_type == 1:  # Normal
+            info['parameters'] = {
+                'mean': self.mean_param,
+                'std_dev': self.std_dev_param
+            }
+            info['theoretical_mean'] = self.mean_param
+            info['theoretical_variance'] = self.std_dev_param ** 2
+            
+        elif self.distribution_type == 2:  # Exponential
+            info['parameters'] = {'lambda': self.lambda_param}
+            info['theoretical_mean'] = 1 / self.lambda_param
+            info['theoretical_variance'] = 1 / (self.lambda_param ** 2)
+            
+        elif self.distribution_type == 3:  # Log-Normal
+            info['parameters'] = {
+                'log_mean': self.mean_param,
+                'log_std_dev': self.std_dev_param
+            }
+            # Media y varianza de la distribución log-normal
+            info['theoretical_mean'] = np.exp(self.mean_param + (self.std_dev_param ** 2) / 2)
+            info['theoretical_variance'] = (np.exp(self.std_dev_param ** 2) - 1) * np.exp(2 * self.mean_param + self.std_dev_param ** 2)
+            
+        elif self.distribution_type == 4:  # Gamma
+            info['parameters'] = {
+                'shape': self.shape_param,
+                'scale': self.scale_param
+            }
+            info['theoretical_mean'] = self.shape_param * self.scale_param
+            info['theoretical_variance'] = self.shape_param * (self.scale_param ** 2)
+            
+        elif self.distribution_type == 5:  # Uniform
+            info['parameters'] = {
+                'min': self.min_param,
+                'max': self.max_param
+            }
+            info['theoretical_mean'] = (self.min_param + self.max_param) / 2
+            info['theoretical_variance'] = ((self.max_param - self.min_param) ** 2) / 12
+        
+        return info
 
-
+    def validate_sample_data(self, data):
+        """Validar si los datos de muestra son apropiados para esta distribución"""
+        if not isinstance(data, (list, np.ndarray)):
+            raise ValidationError("Los datos deben ser una lista o array numpy")
+        
+        if len(data) < 10:
+            raise ValidationError("Se requieren al menos 10 puntos de datos")
+        
+        data_array = np.array(data)
+        
+        # Validaciones específicas por distribución
+        if self.distribution_type in [2, 3, 4]:  # Exponential, Log-Normal, Gamma
+            if np.any(data_array <= 0):
+                dist_name = self.get_distribution_type_display()
+                raise ValidationError(f"La distribución {dist_name} requiere valores positivos")
+        
+        # Validar rango razonable
+        data_range = np.max(data_array) - np.min(data_array)
+        if data_range == 0:
+            raise ValidationError("Los datos no tienen variabilidad")
+        
+        return True
+    
 class Simulation(models.Model):
     """Model for storing simulation configurations and metadata"""
     
@@ -529,54 +678,57 @@ class DemandBehavior(models.Model):
         return max(0, future_demand)  # Ensure non-negative
 
 
-# Signal handlers
+# Signal handlers actualizados
 @receiver(post_save, sender=Business)
 def create_probabilistic_density_functions(sender, instance, created, **kwargs):
-    """Create default probability distributions when a business is created"""
+    """Crear distribuciones de probabilidad por defecto cuando se crea un negocio"""
     if not created:
         return
     
     distribution_configs = [
         {
-            'name': 'Normal Distribution',
+            'name': 'Distribución Normal',
             'distribution_type': 1,
-            'lambda_param': 1.0,
             'mean_param': 2500.0,
             'std_dev_param': 10.0
         },
         {
-            'name': 'Exponential Distribution', 
+            'name': 'Distribución Exponencial', 
             'distribution_type': 2,
             'lambda_param': 0.5,
-            'mean_param': 2.0,
-            'std_dev_param': 2.0
         },
         {
-            'name': 'Log-Normal Distribution',
+            'name': 'Distribución Log-Normal',
             'distribution_type': 3,
-            'lambda_param': 0.0,
             'mean_param': 50.0,
             'std_dev_param': 0.2
+        },
+        {
+            'name': 'Distribución Gamma',
+            'distribution_type': 4,
+            'shape_param': 2.0,  # α = 2
+            'scale_param': 1000.0  # β = 1000
+        },
+        {
+            'name': 'Distribución Uniforme',
+            'distribution_type': 5,
+            'min_param': 1000.0,
+            'max_param': 4000.0
         }
     ]
     
     for config in distribution_configs:
-        # Calculate CDF for x=2.0 as example
-        if config['distribution_type'] == 1:  # Normal
-            config['cumulative_distribution_function'] = norm.cdf(
-                2.0, loc=config['mean_param'], scale=config['std_dev_param']
-            )
-        elif config['distribution_type'] == 2:  # Exponential
-            config['cumulative_distribution_function'] = expon.cdf(
-                2.0, scale=1/config['lambda_param']
-            )
-        elif config['distribution_type'] == 3:  # Log-Normal
-            config['cumulative_distribution_function'] = lognorm.cdf(
-                2.0, s=config['std_dev_param'], scale=np.exp(config['mean_param'])
-            )
-        
+        # Calcular CDF para x=2.0 como ejemplo
         config['fk_business'] = instance
         config['is_active'] = True
+        
+        # Calcular CDF inicial
+        try:
+            pdf_instance = ProbabilisticDensityFunction(**config)
+            distribution = pdf_instance.get_scipy_distribution()
+            config['cumulative_distribution_function'] = distribution.cdf(2.0)
+        except:
+            config['cumulative_distribution_function'] = 0.5  # Valor por defecto
         
         ProbabilisticDensityFunction.objects.get_or_create(
             distribution_type=config['distribution_type'],

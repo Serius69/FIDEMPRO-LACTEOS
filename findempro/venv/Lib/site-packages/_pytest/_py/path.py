@@ -1,16 +1,14 @@
+# mypy: allow-untyped-defs
 """local path implementation."""
+
 from __future__ import annotations
 
 import atexit
+from contextlib import contextmanager
 import fnmatch
 import importlib.util
 import io
 import os
-import posixpath
-import sys
-import uuid
-import warnings
-from contextlib import contextmanager
 from os.path import abspath
 from os.path import dirname
 from os.path import exists
@@ -19,19 +17,22 @@ from os.path import isdir
 from os.path import isfile
 from os.path import islink
 from os.path import normpath
+import posixpath
 from stat import S_ISDIR
 from stat import S_ISLNK
 from stat import S_ISREG
+import sys
 from typing import Any
 from typing import Callable
 from typing import cast
+from typing import Literal
 from typing import overload
 from typing import TYPE_CHECKING
+import uuid
+import warnings
 
 from . import error
 
-if TYPE_CHECKING:
-    from typing import Literal
 
 # Moved from local.py.
 iswin32 = sys.platform == "win32" or (getattr(os, "_name", False) == "nt")
@@ -205,12 +206,10 @@ class Stat:
     if TYPE_CHECKING:
 
         @property
-        def size(self) -> int:
-            ...
+        def size(self) -> int: ...
 
         @property
-        def mtime(self) -> float:
-            ...
+        def mtime(self) -> float: ...
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._osstatresult, "st_" + name)
@@ -225,7 +224,7 @@ class Stat:
             raise NotImplementedError("XXX win32")
         import pwd
 
-        entry = error.checked_call(pwd.getpwuid, self.uid)  # type:ignore[attr-defined]
+        entry = error.checked_call(pwd.getpwuid, self.uid)  # type:ignore[attr-defined,unused-ignore]
         return entry[0]
 
     @property
@@ -235,7 +234,7 @@ class Stat:
             raise NotImplementedError("XXX win32")
         import grp
 
-        entry = error.checked_call(grp.getgrgid, self.gid)  # type:ignore[attr-defined]
+        entry = error.checked_call(grp.getgrgid, self.gid)  # type:ignore[attr-defined,unused-ignore]
         return entry[0]
 
     def isdir(self):
@@ -253,7 +252,7 @@ def getuserid(user):
     import pwd
 
     if not isinstance(user, int):
-        user = pwd.getpwnam(user)[2]  # type:ignore[attr-defined]
+        user = pwd.getpwnam(user)[2]  # type:ignore[attr-defined,unused-ignore]
     return user
 
 
@@ -261,7 +260,7 @@ def getgroupid(group):
     import grp
 
     if not isinstance(group, int):
-        group = grp.getgrnam(group)[2]  # type:ignore[attr-defined]
+        group = grp.getgrnam(group)[2]  # type:ignore[attr-defined,unused-ignore]
     return group
 
 
@@ -318,7 +317,7 @@ class LocalPath:
         def readlink(self) -> str:
             """Return value of a symbolic link."""
             # https://github.com/python/mypy/issues/12278
-            return error.checked_call(os.readlink, self.strpath)  # type: ignore[arg-type,return-value]
+            return error.checked_call(os.readlink, self.strpath)  # type: ignore[arg-type,return-value,unused-ignore]
 
         def mklinkto(self, oldname):
             """Posix style hard link to another name."""
@@ -452,7 +451,7 @@ class LocalPath:
 
     def ensure_dir(self, *args):
         """Ensure the path joined with args is a directory."""
-        return self.ensure(*args, **{"dir": True})
+        return self.ensure(*args, dir=True)
 
     def bestrelpath(self, dest):
         """Return a string which is a relative path from self
@@ -677,7 +676,7 @@ class LocalPath:
         else:
             kw.setdefault("dirname", dirname)
         kw.setdefault("sep", self.sep)
-        obj.strpath = normpath("%(dirname)s%(sep)s%(basename)s" % kw)
+        obj.strpath = normpath("{dirname}{sep}{basename}".format(**kw))
         return obj
 
     def _getbyspec(self, spec: str) -> list[str]:
@@ -757,7 +756,12 @@ class LocalPath:
         if ensure:
             self.dirpath().ensure(dir=1)
         if encoding:
-            return error.checked_call(io.open, self.strpath, mode, encoding=encoding)
+            return error.checked_call(
+                io.open,
+                self.strpath,
+                mode,
+                encoding=encoding,
+            )
         return error.checked_call(open, self.strpath, mode)
 
     def _fastjoin(self, name):
@@ -775,11 +779,11 @@ class LocalPath:
 
         valid checkers::
 
-            file=1    # is a file
-            file=0    # is not a file (may not even exist)
-            dir=1     # is a dir
-            link=1    # is a link
-            exists=1  # exists
+            file = 1  # is a file
+            file = 0  # is not a file (may not even exist)
+            dir = 1  # is a dir
+            link = 1  # is a link
+            exists = 1  # exists
 
         You can specify multiple checker definitions, for example::
 
@@ -832,7 +836,7 @@ class LocalPath:
     def copy(self, target, mode=False, stat=False):
         """Copy path to target.
 
-        If mode is True, will copy copy permission from path to target.
+        If mode is True, will copy permission from path to target.
         If stat is True, copy permission, last modification
         time, last access time, and flags from path to target.
         """
@@ -957,12 +961,10 @@ class LocalPath:
             return p
 
     @overload
-    def stat(self, raising: Literal[True] = ...) -> Stat:
-        ...
+    def stat(self, raising: Literal[True] = ...) -> Stat: ...
 
     @overload
-    def stat(self, raising: Literal[False]) -> Stat | None:
-        ...
+    def stat(self, raising: Literal[False]) -> Stat | None: ...
 
     def stat(self, raising: bool = True) -> Stat | None:
         """Return an os.stat() tuple."""
@@ -1045,7 +1047,7 @@ class LocalPath:
     def pypkgpath(self):
         """Return the Python package path by looking for the last
         directory upwards which still contains an __init__.py.
-        Return None if a pkgpath can not be determined.
+        Return None if a pkgpath cannot be determined.
         """
         pkgpath = None
         for parent in self.parts(reverse=True):
@@ -1096,9 +1098,7 @@ class LocalPath:
                 modname = self.purebasename
             spec = importlib.util.spec_from_file_location(modname, str(self))
             if spec is None or spec.loader is None:
-                raise ImportError(
-                    f"Can't find module {modname} at location {str(self)}"
-                )
+                raise ImportError(f"Can't find module {modname} at location {self!s}")
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
             return mod
@@ -1163,7 +1163,8 @@ class LocalPath:
         where the 'self' path points to executable.
         The process is directly invoked and not through a system shell.
         """
-        from subprocess import Popen, PIPE
+        from subprocess import PIPE
+        from subprocess import Popen
 
         popen_opts.pop("stdout", None)
         popen_opts.pop("stderr", None)
@@ -1263,13 +1264,14 @@ class LocalPath:
     @classmethod
     def mkdtemp(cls, rootdir=None):
         """Return a Path object pointing to a fresh new temporary directory
-        (which we created ourself).
+        (which we created ourselves).
         """
         import tempfile
 
         if rootdir is None:
             rootdir = cls.get_temproot()
-        return cls(error.checked_call(tempfile.mkdtemp, dir=str(rootdir)))
+        path = error.checked_call(tempfile.mkdtemp, dir=str(rootdir))
+        return cls(path)
 
     @classmethod
     def make_numbered_dir(

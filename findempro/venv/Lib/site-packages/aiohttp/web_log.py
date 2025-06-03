@@ -3,6 +3,7 @@ import functools
 import logging
 import os
 import re
+import time as time_mod
 from collections import namedtuple
 from typing import Any, Callable, Dict, Iterable, List, Tuple  # noqa
 
@@ -142,9 +143,10 @@ class AccessLogger(AbstractAccessLogger):
 
     @staticmethod
     def _format_t(request: BaseRequest, response: StreamResponse, time: float) -> str:
-        now = datetime.datetime.utcnow()
+        tz = datetime.timezone(datetime.timedelta(seconds=-time_mod.timezone))
+        now = datetime.datetime.now(tz)
         start_time = now - datetime.timedelta(seconds=time)
-        return start_time.strftime("[%d/%b/%Y:%H:%M:%S +0000]")
+        return start_time.strftime("[%d/%b/%Y:%H:%M:%S %z]")
 
     @staticmethod
     def _format_P(request: BaseRequest, response: StreamResponse, time: float) -> str:
@@ -185,6 +187,12 @@ class AccessLogger(AbstractAccessLogger):
         self, request: BaseRequest, response: StreamResponse, time: float
     ) -> Iterable[Tuple[str, Callable[[BaseRequest, StreamResponse, float], str]]]:
         return [(key, method(request, response, time)) for key, method in self._methods]
+
+    @property
+    def enabled(self) -> bool:
+        """Check if logger is enabled."""
+        # Avoid formatting the log line if it will not be emitted.
+        return self.logger.isEnabledFor(logging.INFO)
 
     def log(self, request: BaseRequest, response: StreamResponse, time: float) -> None:
         try:

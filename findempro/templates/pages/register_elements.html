@@ -1,6 +1,129 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}FAQs{% endblock title %}
+{% block title %}Vista Previa de Configuración - FindEMPro{% endblock title %}
+{% block extra_css %}
+<style>
+    .preview-card {
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        min-height: 200px;
+    }
+    
+    .preview-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-color: var(--vz-primary);
+    }
+    
+    .preview-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(45deg);
+    }
+    
+    .data-preview-table {
+        font-size: 0.875rem;
+    }
+    
+    .data-preview-table th {
+        background-color: var(--vz-light);
+        font-weight: 600;
+    }
+    
+    .demo-indicator {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.6;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--vz-primary-bg-subtle);
+        border-radius: 12px;
+        font-size: 24px;
+    }
+    
+    .info-tooltip {
+        cursor: help;
+        color: var(--vz-info);
+    }
+    
+    .config-summary {
+        background-color: var(--vz-light);
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 40px;
+        padding-bottom: 30px;
+    }
+    
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 5px;
+        height: calc(100% - 5px);
+        width: 2px;
+        background-color: var(--vz-border-color);
+    }
+    
+    .timeline-item:last-child:before {
+        display: none;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: 10px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--vz-primary);
+        border: 2px solid white;
+        box-shadow: 0 0 0 3px var(--vz-primary-bg-subtle);
+    }
+</style>
+{% endblock extra_css %}
 {% block content %}
 <!-- ============================================================== -->
 <!-- Start right Content here -->
@@ -8,64 +131,306 @@
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
-
+            <!-- Page Title -->
             <div class="row">
-                <div class="col-lg-12">
-                    <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-                        <div class="px-4">
-                            <div class="row">
-                                <div class="col-xxl-5 align-self-center">
-                                    <div class="py-4">
-                                        <h4 class="display-6 -text">Preguntas frecuentes</h4>
-                                        <p class="text-success fs-15 mt-3">Si no puede encontrar la respuesta a su pregunta en nuestras preguntas frecuentes, no dude en contactarnos.Le proporcionaremos la información que necesita.</p>
-                                        <div class="hstack flex-wrap gap-2">
-                                            <button type="button" class="btn btn-primary btn-label rounded-pill" onclick="openMailTo()">
-                                                <i class="ri-mail-line label-icon align-middle rounded-pill fs-16 me-2"></i> Contáctenos
-                                            </button>                                            
-                                            <button type="button" class="btn btn-info btn-label rounded-pill" onclick="openTwitterFollow()">
-                                                <i class="ri-twitter-line label-icon align-middle rounded-pill fs-16 me-2"></i> Síganos en Twitter
-                                            </button>
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Vista Previa de Configuración Inicial</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Vista Previa</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Banner -->
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="ri-information-line fs-3 me-3"></i>
+                    <div>
+                        <h5 class="alert-heading">Configuración de Demostración</h5>
+                        <p class="mb-0">Esta es una vista previa de la configuración que se creará automáticamente para su empresa láctea. 
+                        Todos los valores mostrados son datos de ejemplo que podrá personalizar posteriormente.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-1 text-white">7</h3>
+                                <p class="mb-0 text-white-50">Productos Lácteos</p>
+                            </div>
+                            <div class="feature-icon bg-white bg-opacity-25">
+                                <i class="ri-store-2-line text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-1 text-white">12</h3>
+                                <p class="mb-0 text-white-50">Áreas Operativas</p>
+                            </div>
+                            <div class="feature-icon bg-white bg-opacity-25">
+                                <i class="ri-dashboard-line text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-1 text-white">30+</h3>
+                                <p class="mb-0 text-white-50">Variables Financieras</p>
+                            </div>
+                            <div class="feature-icon bg-white bg-opacity-25">
+                                <i class="ri-line-chart-line text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="metric-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-1 text-white">30 días</h3>
+                                <p class="mb-0 text-white-50">Simulación Inicial</p>
+                            </div>
+                            <div class="feature-icon bg-white bg-opacity-25">
+                                <i class="ri-calendar-line text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row mt-4">
+                <!-- Products Preview -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-store-2-line me-2"></i>Productos que se Configurarán
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                {% for product in products_preview %}
+                                <div class="col-md-6">
+                                    <div class="preview-card card h-100">
+                                        <span class="preview-badge badge bg-success">Por defecto</span>
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ product.name }}</h6>
+                                            <p class="text-muted small mb-2">{{ product.short_description }}</p>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <span class="badge bg-primary-subtle text-primary">
+                                                    Margen: {{ product.margin }}%
+                                                </span>
+                                                <small class="text-muted">
+                                                    <i class="ri-flask-line"></i> {{ product.unit }}
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-xxl-3 ms-auto">
-                                    <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                                        <img src="{% static 'images/faq-img.webp'%}" alt="" class="img-fluid">
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    <i class="ri-information-line"></i> 
+                                    Estos productos se crearán automáticamente. Podrá agregar más después.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Areas Preview -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-dashboard-line me-2"></i>Áreas Operativas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                {% for area in areas_preview %}
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div>
+                                        <h6 class="mb-1">{{ area.name }}</h6>
+                                        <p class="text-muted small mb-0">{{ area.description }}</p>
                                     </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation Preview -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-bar-chart-2-line me-2"></i>Vista Previa de Simulación
+                                </h5>
+                                <span class="badge bg-warning demo-indicator">
+                                    <i class="ri-flask-line me-1"></i>Datos de Ejemplo
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <div class="config-summary">
+                                        <h6 class="text-muted text-uppercase mb-3">Configuración Inicial</h6>
+                                        <div class="mb-3">
+                                            <label class="text-muted small">Período de Simulación</label>
+                                            <p class="mb-0 fw-semibold">30 días</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small">Demanda Base</label>
+                                            <p class="mb-0 fw-semibold">2,500 litros/día</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small">Distribución</label>
+                                            <p class="mb-0 fw-semibold">Normal (μ=2500, σ=250)</p>
+                                        </div>
+                                        <div>
+                                            <label class="text-muted small">Nivel de Confianza</label>
+                                            <p class="mb-0 fw-semibold">95%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-8">
+                                    <h6 class="text-muted text-uppercase mb-3">Proyección de Demanda (Ejemplo)</h6>
+                                    <canvas id="demandChart" height="100"></canvas>
+                                    <p class="text-muted text-center mt-3 small">
+                                        <i class="ri-information-line"></i> 
+                                        Gráfica ilustrativa. Los datos reales se generarán con sus parámetros específicos.
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="row justify-content-evenly mb-4">
-                        <div class="col-12">
-                            <h2 class="text-center mb-4">Registro con Elementos</h2>
-                            <form method="post" class="needs-validation" novalidate>
-                                {% csrf_token %}
-                                {% for element, label, image_url in form.elements.field.choices %}
-                                    <div class="mb-3 form-check">
-                                        <label class="form-check-label">
-                                            <img src="{{ image_url }}" alt="{{ label }}" class="img-thumbnail">
-                                            {{ label }}
-                                            <input type="checkbox" name="{{ form.elements.name }}" value="{{ element }}" class="form-check-input" id="{{ element }}" {% if element in form.elements.value %}checked{% endif %}>
-                                            {% if form.elements.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ form.elements.errors.0 }}
-                                                </div>
-                                            {% endif %}
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary">Registrar</button>
-                                </div>
-                            </form>
+            <!-- Key Variables Preview -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-calculator-line me-2"></i>Variables Clave del Sistema
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table data-preview-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Variable</th>
+                                            <th>Descripción</th>
+                                            <th>Tipo</th>
+                                            <th>Unidad</th>
+                                            <th>Valor Ejemplo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>IT</code></td>
+                                            <td>Ingresos Totales</td>
+                                            <td><span class="badge bg-success-subtle text-success">Endógena</span></td>
+                                            <td>Bs</td>
+                                            <td class="fw-semibold">36,750</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>GT</code></td>
+                                            <td>Ganancias Totales</td>
+                                            <td><span class="badge bg-success-subtle text-success">Endógena</span></td>
+                                            <td>Bs</td>
+                                            <td class="fw-semibold">8,150</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>CPROD</code></td>
+                                            <td>Capacidad de Producción</td>
+                                            <td><span class="badge bg-info-subtle text-info">Estado</span></td>
+                                            <td>L/día</td>
+                                            <td class="fw-semibold">3,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>DE</code></td>
+                                            <td>Demanda Esperada</td>
+                                            <td><span class="badge bg-warning-subtle text-warning">Exógena</span></td>
+                                            <td>L</td>
+                                            <td class="fw-semibold">2,600</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>NR</code></td>
+                                            <td>Nivel de Rentabilidad</td>
+                                            <td><span class="badge bg-success-subtle text-success">Endógena</span></td>
+                                            <td>%</td>
+                                            <td class="fw-semibold">22%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <button class="btn btn-soft-primary btn-sm" data-bs-toggle="modal" data-bs-target="#allVariablesModal">
+                                    <i class="ri-eye-line me-1"></i> Ver todas las variables (30+)
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    
-                    
-                </div><!--end col-->
-            </div><!--end row-->
+                </div>
+            </div>
+            <!-- Action Buttons -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card bg-primary-subtle border-0">
+                        <div class="card-body">
+                            <div class="text-center py-3">
+                                <h5 class="mb-3">¿Listo para comenzar?</h5>
+                                <p class="text-muted mb-4">
+                                    Al continuar, se creará automáticamente toda esta configuración para su empresa.
+                                    <br>Podrá personalizar todos los valores después de la creación inicial.
+                                </p>
+                                <form method="post" id="confirmForm" action="{% url 'pages:pages.register_elements_create' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="confirm_setup" value="true">
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a href="{% url 'dashboard:index' %}" class="btn btn-light">
+                                            <i class="ri-arrow-left-line me-1"></i> Volver
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ri-check-line me-1"></i> Crear Configuración
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
         <!-- container-fluid -->
     </div>
@@ -76,31 +441,274 @@
     {% endblock footer %}
 </div>
 <!-- end main content-->
+
+<!-- All Variables Modal -->
+<div class="modal fade" id="allVariablesModal" tabindex="-1" aria-labelledby="allVariablesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="allVariablesModalLabel">Todas las Variables del Sistema</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="accordion" id="variablesAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#exogenas">
+                                <i class="ri-input-method-line me-2"></i> Variables Exógenas (Entrada)
+                            </button>
+                        </h2>
+                        <div id="exogenas" class="accordion-collapse collapse show">
+                            <div class="accordion-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Variable</th>
+                                            <th>Descripción</th>
+                                            <th>Unidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for var in exogenous_vars %}
+                                        <tr>
+                                            <td><code>{{ var.name }}</code></td>
+                                            <td>{{ var.description }}</td>
+                                            <td>{{ var.unit }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#endogenas">
+                                <i class="ri-input-method-line me-2"></i> Variables Endógenas (Salida)
+                            </button>
+                        </h2>
+                        <div id="endogenas" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Variable</th>
+                                            <th>Descripción</th>
+                                            <th>Unidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for var in endogenous_vars %}
+                                        <tr>
+                                            <td><code>{{ var.name }}</code></td>
+                                            <td>{{ var.description }}</td>
+                                            <td>{{ var.unit }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#estado">
+                                <i class="ri-input-method-line me-2"></i> Variables de Estado
+                            </button>
+                        </h2>
+                        <div id="estado" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Variable</th>
+                                            <th>Descripción</th>
+                                            <th>Unidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for var in state_vars %}
+                                        <tr>
+                                            <td><code>{{ var.name }}</code></td>
+                                            <td>{{ var.description }}</td>
+                                            <td>{{ var.unit }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#auxiliares">
+                                <i class="ri-input-method-line me-2"></i> Variables Auxiliares
+                            </button>
+                        </h2>
+                        <div id="auxiliares" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Variable</th>
+                                            <th>Descripción</th>
+                                            <th>Unidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for var in auxiliary_vars %}
+                                        <tr>
+                                            <td><code>{{ var.name }}</code></td>
+                                            <td>{{ var.description }}</td>
+                                            <td>{{ var.unit }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 {% block extra_js %}
-<!-- Agrega el script JavaScript para abrir la ventana de correo electrónico -->
+<script src="{% static 'js/chart.min.js' %}"></script>
 <script>
-    function openMailTo() {
-        // Cambia 'developer@example.com' con la dirección de correo electrónico del desarrollador
-        var email = 'developer@example.com';
-        var subject = 'Consulta sobre el sistema';
-        var body = 'Hola, me gustaría hacer una consulta sobre el sistema.';
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialize the demand chart
+        var ctx = document.getElementById('demandChart').getContext('2d');
+        var demandChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Día 1', 'Día 2', 'Día 3', 'Día 4', 'Día 5', 'Día 6', 'Día 7'],
+                datasets: [{
+                    label: 'Demanda Proyectada',
+                    data: [2500, 2600, 2550, 2700, 2650, 2800, 2750],
+                    borderColor: '#4facfe',
+                    backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Días'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Litros'
+                        }
+                    }
+                }
+            }
+        });
+    });
 
-        var mailtoLink = 'mailto:' + email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    // Handle form submission
+    document.getElementById('confirmForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        // Here you can add any additional confirmation logic if needed
+        this.submit(); // Submit the form
+    });
+    // Handle delete notification button
+    document.getElementById('delete-notification').addEventListener('click', function() {
+        // Logic to delete the notification
+        // For example, you can make an AJAX call to delete the notification from the server
+        console.log('Notification deleted');
+        $('#removeNotificationModal').modal('hide'); // Hide the modal after deletion
+    });
 
-        // Abre la ventana de correo electrónico
-        window.location.href = mailtoLink;
-    }
-</script>
-    <!-- Agrega el script JavaScript para abrir la ventana de Twitter -->
-<script>
-    function openTwitterFollow() {
-        // Cambia 'nombredeusuario' con el nombre de usuario real de Twitter
-        var twitterUsername = 'nombredeusuario';
-        var twitterFollowLink = 'https://twitter.com/intent/follow?screen_name=' + encodeURIComponent(twitterUsername);
+    // Handle modal close button
+    document.getElementById('NotificationModalbtn-close').addEventListener('click', function() {
+        $('#removeNotificationModal').modal('hide'); // Hide the modal
+    });
 
-        // Abre la ventana de Twitter
-        window.open(twitterFollowLink, '_blank');
-    }
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialize popovers
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+
+    var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+    });
+
+    // Initialize dropdowns
+
+    var dropdownTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+
+    var dropdownList = dropdownTriggerList.map(function(dropdownTriggerEl) {
+        return new bootstrap.Dropdown(dropdownTriggerEl);
+    });
+    // Initialize modals
+    var modalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="modal"]'));
+    var modalList = modalTriggerList.map(function(modalTriggerEl) {
+        return new bootstrap.Modal(modalTriggerEl);
+    });
+    // Initialize tooltips for the demo indicator
+    var demoTooltipTriggerList = [].slice.call(document.querySelectorAll('.demo-indicator'));
+    var demoTooltipList = demoTooltipTriggerList.map(function(demoTooltipTriggerEl) {
+        return new bootstrap.Tooltip(demoTooltipTriggerEl, {
+            title: 'Datos de ejemplo para demostración',
+            placement: 'top'
+        });
+    });
+    // Initialize the remove notification modal
+    var removeNotificationModal = new bootstrap.Modal(document.getElementById('removeNotificationModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    // Show the remove notification modal when the delete button is clicked
+    document.getElementById('delete-notification').addEventListener('click', function() {
+        removeNotificationModal.show();
+    });
+    // Close the remove notification modal when the close button is clicked
+    document.getElementById('NotificationModalbtn-close').addEventListener('click', function() {
+        removeNotificationModal.hide();
+    });
+
+    // Initialize the data preview table
+    $(document).ready(function() {
+        $('.data-preview-table').DataTable({
+            responsive: true,
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false,
+            columnDefs: [
+                { orderable: false, targets: 0 }, // Disable sorting for the first column
+                { className: 'dt-body-center', targets: '_all' } // Center align all columns
+            ]
+        });
+
+        // Add hover effect to table rows
+        $('.data-preview-table tbody').on('mouseenter', 'tr', function() {
+            $(this).addClass('table-active');
+        }).on('mouseleave', 'tr', function() {
+            $(this).removeClass('table-active');
+        });
+    });
 </script>
 {% endblock extra_js %}

@@ -2,6 +2,7 @@
 Steam OpenId backend, docs at:
     https://python-social-auth.readthedocs.io/en/latest/backends/steam.html
 """
+
 from ..exceptions import AuthFailed
 from .open_id import OpenIdAuth
 
@@ -45,6 +46,8 @@ class SteamOpenId(OpenIdAuth):
         return self._consumer
 
     def _user_id(self, response):
+        if not response.identity_url.startswith(self.URL):
+            raise AuthFailed(self, "Openid identifier mismatch")
         user_id = response.identity_url.rsplit("/", 1)[-1]
         if not user_id.isdigit():
             raise AuthFailed(self, "Missing Steam Id")
