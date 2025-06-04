@@ -3,6 +3,11 @@
 {% block title %}Vista Previa de Configuración - FindEMPro{% endblock title %}
 {% block extra_css %}
 <style>
+    #demandChart {
+    max-height: 320px;
+    min-height: 220px;
+    height: 320px !important;
+    }
     .preview-card {
         border: 2px solid transparent;
         transition: all 0.3s ease;
@@ -165,12 +170,12 @@
                     <div class="metric-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h3 class="mb-1 text-white">7</h3>
+                                <h3 class="mb-1 text-white">{{ preview_data.products_preview|length }}</h3>
                                 <p class="mb-0 text-white-50">Productos Lácteos</p>
                             </div>
                             <div class="feature-icon bg-white bg-opacity-25">
                                 <i class="ri-store-2-line text-white"></i>
-                            </div>
+                            </div>        
                         </div>
                     </div>
                 </div>
@@ -178,7 +183,7 @@
                     <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h3 class="mb-1 text-white">12</h3>
+                                <h3 class="mb-1 text-white">{{ preview_data.areas_preview|length }}</h3>
                                 <p class="mb-0 text-white-50">Áreas Operativas</p>
                             </div>
                             <div class="feature-icon bg-white bg-opacity-25">
@@ -191,7 +196,7 @@
                     <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h3 class="mb-1 text-white">30+</h3>
+                                <h3 class="mb-1 text-white">{{ preview_data.variable_preview|length }}</h3>
                                 <p class="mb-0 text-white-50">Variables Financieras</p>
                             </div>
                             <div class="feature-icon bg-white bg-opacity-25">
@@ -227,7 +232,7 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                {% for product in products_preview %}
+                                {% for product in preview_data.products_preview %}
                                 <div class="col-md-6">
                                     <div class="preview-card card h-100">
                                         <span class="preview-badge badge bg-success">Por defecto</span>
@@ -267,13 +272,104 @@
                         </div>
                         <div class="card-body">
                             <div class="timeline">
-                                {% for area in areas_preview %}
+                                {% for area in preview_data.areas_preview %}
                                 <div class="timeline-item">
                                     <div class="timeline-dot"></div>
                                     <div>
                                         <h6 class="mb-1">{{ area.name }}</h6>
                                         <p class="text-muted small mb-0">{{ area.description }}</p>
                                     </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row mt-4">
+                <!-- Products Preview -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-function-line me-2"></i>Ecuaciones del Modelo
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                {% for equation in preview_data.equation_preview %}
+                                <div class="col-12">
+                                    <div class="preview-card card h-100">
+                                        <span class="preview-badge badge bg-info">Modelo</span>
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ equation.name }}</h6>
+                                            <p class="text-muted small mb-2">{{ equation.description }}</p>
+                                            <div class="mt-2">
+                                                <code class="d-block mb-1">{{ equation.formula|safe }}</code>
+                                                <small class="text-muted">
+                                                    <i class="ri-lightbulb-flash-line"></i> {{ equation.type }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    <i class="ri-information-line"></i>
+                                    Estas ecuaciones definen el comportamiento inicial del sistema. Puede editarlas luego.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questionnaires Preview -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-question-answer-line me-2"></i>Cuestionarios Iniciales
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="accordion" id="questionnaireAccordion">
+                                {% for questionnaire in preview_data.questionarie_preview %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                                            {{ questionnaire.questionary }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#questionnaireAccordion">
+                                        <div class="accordion-body">
+                                            <p class="text-muted small mb-3">{{ questionnaire.description }}</p>
+                                            <ul class="list-group list-group-flush">
+                                                {% for question in preview_data.question_preview %}
+                                                    {% if question.questionnaire_id == questionnaire.id %}
+                                                    <li class="list-group-item">
+                                                        <strong>{{ question.question }}</strong>
+                                                        {% if question.type %}
+                                                            <span class="badge bg-info ms-2">{{ question.type }}</span>
+                                                        {% endif %}
+                                                        {% if question.initials_variable %}
+                                                            <span class="text-muted small d-block">{{ question.initials_variable }}</span>
+                                                        {% endif %}
+                                                    </li>
+                                                    {% endif %}
+                                                {% empty %}
+                                                    <li class="list-group-item text-muted">No hay preguntas para este cuestionario.</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center text-muted py-4">
+                                    No hay cuestionarios de ejemplo configurados.
                                 </div>
                                 {% endfor %}
                             </div>
@@ -303,25 +399,55 @@
                                         <h6 class="text-muted text-uppercase mb-3">Configuración Inicial</h6>
                                         <div class="mb-3">
                                             <label class="text-muted small">Período de Simulación</label>
-                                            <p class="mb-0 fw-semibold">30 días</p>
+                                            <p class="mb-0 fw-semibold">{{ preview_data.simulate_preview.quantity_time }} {{ preview_data.simulate_preview.unit_time }}</p>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="text-muted small">Demanda Base</label>
-                                            <p class="mb-0 fw-semibold">2,500 litros/día</p>
+                                            <label class="text-muted small">Demanda Real</label>
+                                            <p class="mb-0 fw-semibold">{{ preview_data.simulate_preview.demand_history }}</p>
                                         </div>
                                         <div class="mb-3">
                                             <label class="text-muted small">Distribución</label>
-                                            <p class="mb-0 fw-semibold">Normal (μ=2500, σ=250)</p>
+                                            <p class="mb-0 fw-semibold">
+                                                {% if preview_data.simulate_preview.fk_fdp == 1 %}
+                                                    Normal
+                                                {% elif preview_data.simulate_preview.fk_fdp == 2 %}
+                                                    Exponencial
+                                                {% elif preview_data.simulate_preview.fk_fdp == 3 %}
+                                                    Log-Norm
+                                                {% elif preview_data.simulate_preview.fk_fdp == 4 %}
+                                                    Gamma
+                                                {% elif preview_data.simulate_preview.fk_fdp == 5 %}
+                                                    Uniforme
+                                                {% else %}
+                                                    Desconocida
+                                                {% endif %}
+                                            </p>
                                         </div>
-                                        <div>
+                                        <div class="mb-3">
                                             <label class="text-muted small">Nivel de Confianza</label>
-                                            <p class="mb-0 fw-semibold">95%</p>
+                                            <p class="mb-0 fw-semibold">{{ preview_data.simulate_preview.confidence_level }}</p>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="text-muted small">Configuración de Demanda por Producto</label>
+                                            <ul class="list-group list-group-flush">
+                                                {% for key, config in preview_data.demand_configurations_preview.items %}
+                                                <li class="list-group-item px-0 py-1">
+                                                    <strong>{{ key|capfirst }}:</strong>
+                                                    <span class="text-muted small">
+                                                        Base: {{ config.base_demand }},
+                                                        {% if config.seasonality %} estacionalidad: Sí, {% else %} estacionalidad: No, {% endif %}
+                                                        crecimiento: {{ config.growth_rate }},
+                                                        volatilidad: {{ config.volatility }}
+                                                    </span>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-8">
                                     <h6 class="text-muted text-uppercase mb-3">Proyección de Demanda (Ejemplo)</h6>
-                                    <canvas id="demandChart" height="100"></canvas>
+                                    <canvas id="demandChart"></canvas>
                                     <p class="text-muted text-center mt-3 small">
                                         <i class="ri-information-line"></i> 
                                         Gráfica ilustrativa. Los datos reales se generarán con sus parámetros específicos.
@@ -355,41 +481,31 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {% for variable in preview_data.variable_preview %}
                                         <tr>
-                                            <td><code>IT</code></td>
-                                            <td>Ingresos Totales</td>
-                                            <td><span class="badge bg-success-subtle text-success">Endógena</span></td>
-                                            <td>Bs</td>
-                                            <td class="fw-semibold">36,750</td>
+                                            <td><code>{{ variable.name }}</code></td>
+                                            <td>{{ variable.description }}</td>
+                                            <td>
+                                                {% if variable.type == 1 %}
+                                                    <span class="badge bg-success-subtle text-success">Endógena</span>
+                                                {% elif variable.type == 2 %}
+                                                    <span class="badge bg-info-subtle text-info">Estado</span>
+                                                {% elif variable.type == 3 %}
+                                                    <span class="badge bg-warning-subtle text-warning">Exógena</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary-subtle text-secondary">{{ variable.type }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ variable.unit }}</td>
+                                            <td class="fw-semibold">
+                                                {% for key, value in preview_data.result_simulation_preview.items %}
+                                                    {% if key == variable.initials %}
+                                                        <span class="ms-2 badge bg-primary-subtle text-primary">{{ value }}</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
                                         </tr>
-                                        <tr>
-                                            <td><code>GT</code></td>
-                                            <td>Ganancias Totales</td>
-                                            <td><span class="badge bg-success-subtle text-success">Endógena</span></td>
-                                            <td>Bs</td>
-                                            <td class="fw-semibold">8,150</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>CPROD</code></td>
-                                            <td>Capacidad de Producción</td>
-                                            <td><span class="badge bg-info-subtle text-info">Estado</span></td>
-                                            <td>L/día</td>
-                                            <td class="fw-semibold">3,000</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>DE</code></td>
-                                            <td>Demanda Esperada</td>
-                                            <td><span class="badge bg-warning-subtle text-warning">Exógena</span></td>
-                                            <td>L</td>
-                                            <td class="fw-semibold">2,600</td>
-                                        </tr>
-                                        <tr>
-                                            <td><code>NR</code></td>
-                                            <td>Nivel de Rentabilidad</td>
-                                            <td><span class="badge bg-success-subtle text-success">Endógena</span></td>
-                                            <td>%</td>
-                                            <td class="fw-semibold">22%</td>
-                                        </tr>
+                                        {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
@@ -402,6 +518,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- Action Buttons -->
             <div class="row">
                 <div class="col-lg-12">
@@ -413,7 +530,7 @@
                                     Al continuar, se creará automáticamente toda esta configuración para su empresa.
                                     <br>Podrá personalizar todos los valores después de la creación inicial.
                                 </p>
-                                <form method="post" id="confirmForm" action="{% url 'pages:pages.register_elements_create' %}">
+                                <form method="post" id="confirmForm">
                                     {% csrf_token %}
                                     <input type="hidden" name="confirm_setup" value="true">
                                     <div class="d-flex gap-2 justify-content-center">
@@ -452,6 +569,7 @@
             </div>
             <div class="modal-body">
                 <div class="accordion" id="variablesAccordion">
+                    <!-- Exógenas -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#exogenas">
@@ -460,255 +578,360 @@
                         </h2>
                         <div id="exogenas" class="accordion-collapse collapse show">
                             <div class="accordion-body">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Variable</th>
-                                            <th>Descripción</th>
-                                            <th>Unidad</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for var in exogenous_vars %}
-                                        <tr>
-                                            <td><code>{{ var.name }}</code></td>
-                                            <td>{{ var.description }}</td>
-                                            <td>{{ var.unit }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Nombre</th>
+                                                <th>Unidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for variable in preview_data.variable_preview %}
+                                                {% if variable.type == 3 %}
+                                                <tr>
+                                                    <td>{{ variable.code }}</td>
+                                                    <td>{{ variable.name }}</td>
+                                                    <td>{{ variable.unit }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#endogenas">
-                                <i class="ri-input-method-line me-2"></i> Variables Endógenas (Salida)
-                            </button>
-                        </h2>
-                        <div id="endogenas" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Variable</th>
-                                            <th>Descripción</th>
-                                            <th>Unidad</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for var in endogenous_vars %}
-                                        <tr>
-                                            <td><code>{{ var.name }}</code></td>
-                                            <td>{{ var.description }}</td>
-                                            <td>{{ var.unit }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Estado -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#estado">
-                                <i class="ri-input-method-line me-2"></i> Variables de Estado
+                                <i class="ri-refresh-line me-2"></i> Variables de Estado
                             </button>
                         </h2>
                         <div id="estado" class="accordion-collapse collapse">
                             <div class="accordion-body">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Variable</th>
-                                            <th>Descripción</th>
-                                            <th>Unidad</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for var in state_vars %}
-                                        <tr>
-                                            <td><code>{{ var.name }}</code></td>
-                                            <td>{{ var.description }}</td>
-                                            <td>{{ var.unit }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Nombre</th>
+                                                <th>Unidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for variable in preview_data.variable_preview %}
+                                                {% if variable.type == 2 %}
+                                                <tr>
+                                                    <td>{{ variable.code }}</td>
+                                                    <td>{{ variable.name }}</td>
+                                                    <td>{{ variable.unit }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <!-- Endógenas -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#auxiliares">
-                                <i class="ri-input-method-line me-2"></i> Variables Auxiliares
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#endogenas">
+                                <i class="ri-output-line me-2"></i> Variables Endógenas (Salida)
                             </button>
                         </h2>
-                        <div id="auxiliares" class="accordion-collapse collapse">
+                        <div id="endogenas" class="accordion-collapse collapse">
                             <div class="accordion-body">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Variable</th>
-                                            <th>Descripción</th>
-                                            <th>Unidad</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for var in auxiliary_vars %}
-                                        <tr>
-                                            <td><code>{{ var.name }}</code></td>
-                                            <td>{{ var.description }}</td>
-                                            <td>{{ var.unit }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Nombre</th>
+                                                <th>Unidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for variable in preview_data.variable_preview %}
+                                                {% if variable.type == 1 %}
+                                                <tr>
+                                                    <td>{{ variable.code }}</td>
+                                                    <td>{{ variable.name }}</td>
+                                                    <td>{{ variable.unit }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock content %}
 {% block extra_js %}
-<script src="{% static 'js/chart.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Initialize the demand chart
-        var ctx = document.getElementById('demandChart').getContext('2d');
-        var demandChart = new Chart(ctx, {
+// Demand Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const demandChartElem = document.getElementById('demandChart');
+    if (!demandChartElem) return;
+    const ctx = demandChartElem.getContext('2d');
+    
+    // Función para procesar los datos recibidos
+    function processData(data) {
+        const simulatePreview = data.simulate_preview;
+        const demandConfigs = data.demand_configurations_preview;
+        const resultSimulation = data.result_simulation_preview;
+        
+        // Obtener historial de demanda
+        const demandHistory = simulatePreview.demand_history;
+        const quantityTime = simulatePreview.quantity_time;
+        
+        // Generar etiquetas para los días
+        const days = Array.from({length: quantityTime}, (_, i) => i + 1);
+        
+        // Calcular demanda base promedio de las configuraciones
+        const baseDemandTotal = Object.values(demandConfigs).reduce((sum, config) => {
+            return sum + config.base_demand;
+        }, 0);
+        
+        // O usar la media de simulación si está disponible
+        const baseDemandValue = resultSimulation.demand_mean || baseDemandTotal;
+        const baselineDemand = Array(quantityTime).fill(baseDemandValue);
+        
+        // Obtener intervalos de confianza si están disponibles
+        const confidenceIntervals = resultSimulation.confidence_intervals?.demand_mean;
+        let upperBound = null;
+        let lowerBound = null;
+        
+        if (confidenceIntervals) {
+            upperBound = Array(quantityTime).fill(confidenceIntervals.upper);
+            lowerBound = Array(quantityTime).fill(confidenceIntervals.lower);
+        }
+        
+        return {
+            days,
+            demandHistory,
+            baselineDemand,
+            upperBound,
+            lowerBound,
+            unit: resultSimulation.unit?.measurement || 'L',
+            unitTime: resultSimulation.unit_time?.time_unit || 'día'
+        };
+    }
+    
+    // Función para crear el gráfico
+    function createChart(processedData) {
+        const { days, demandHistory, baselineDemand, upperBound, lowerBound, unit, unitTime } = processedData;
+        
+        // Configurar datasets base
+        const datasets = [{
+            label: 'Demanda Real',
+            data: demandHistory,
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.4,
+            fill: false,
+            pointRadius: 3,
+            pointHoverRadius: 5
+        }, {
+            label: 'Demanda Base',
+            data: baselineDemand,
+            borderColor: 'rgb(255, 99, 132)',
+            borderDash: [5, 5],
+            fill: false,
+            pointRadius: 0
+        }];
+        
+        // Agregar intervalos de confianza si están disponibles
+        if (upperBound && lowerBound) {
+            datasets.push({
+                label: 'Límite Superior (95% confianza)',
+                data: upperBound,
+                borderColor: 'rgba(255, 206, 86, 0.8)',
+                borderDash: [2, 2],
+                fill: false,
+                pointRadius: 0
+            }, {
+                label: 'Límite Inferior (95% confianza)',
+                data: lowerBound,
+                borderColor: 'rgba(255, 206, 86, 0.8)',
+                borderDash: [2, 2],
+                fill: '-1',
+                backgroundColor: 'rgba(255, 206, 86, 0.1)',
+                pointRadius: 0
+            });
+        }
+        
+        return new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Día 1', 'Día 2', 'Día 3', 'Día 4', 'Día 5', 'Día 6', 'Día 7'],
-                datasets: [{
-                    label: 'Demanda Proyectada',
-                    data: [2500, 2600, 2550, 2700, 2650, 2800, 2750],
-                    borderColor: '#4facfe',
-                    backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
+                labels: days.map(d => `${unitTime.charAt(0).toUpperCase() + unitTime.slice(1)} ${d}`),
+                datasets: datasets
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Análisis de Demanda - Histórico vs Proyección'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} ${unit}`;
+                            }
+                        }
                     }
                 },
                 scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' ' + unit;
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Demanda (${unit})`
+                        }
+                    },
                     x: {
                         title: {
                             display: true,
-                            text: 'Días'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Litros'
+                            text: 'Período de Tiempo'
                         }
                     }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
                 }
             }
         });
-    });
+    }
+    
+    // Función principal para inicializar el gráfico con datos
+    function initializeChart(data) {
+        try {
+            const processedData = processData(data);
+            return createChart(processedData);
+        } catch (error) {
+            console.error('Error al procesar los datos:', error);
+            
+            // Fallback con datos de ejemplo si hay error
+            const fallbackData = {
+                days: Array.from({length: 30}, (_, i) => i + 1),
+                demandHistory: Array.from({length: 30}, () => Math.floor(Math.random() * 1000) + 2000),
+                baselineDemand: Array(30).fill(2500),
+                upperBound: null,
+                lowerBound: null,
+                unit: 'L',
+                unitTime: 'día'
+            };
+            
+            return createChart(fallbackData);
+        }
+    }
+    
+    // Ejemplo de uso con los datos proporcionados
+    const sampleData = {
+        'simulate_preview': {
+            'unit_time': 'day', 
+            'quantity_time': 30, 
+            'confidence_level': 0.95, 
+            'random_seed': 42, 
+            'fk_fdp': 1, 
+            'demand_history': [2912, 2343, 2667, 2889, 2703, 2957, 3288, 2458, 2277, 2659, 2410, 2665, 3098, 2435, 1851, 2271, 2288, 2623, 2574, 2706, 3301, 2242, 3612, 2203, 2426, 2849, 3516, 3049, 2165, 2373], 
+            'fk_questionary_result': null
+        }, 
+        'demand_configurations_preview': {
+            'leche': {'base_demand': 3000, 'seasonality': true, 'growth_rate': 0.02, 'volatility': 0.1}, 
+            'yogurt': {'base_demand': 1500, 'seasonality': true, 'growth_rate': 0.05, 'volatility': 0.15}, 
+            'queso': {'base_demand': 800, 'seasonality': false, 'growth_rate': 0.01, 'volatility': 0.08}
+        }, 
+        'result_simulation_preview': {
+            'demand_mean': 2500.0, 
+            'demand_std_deviation': 250.0, 
+            'confidence_intervals': {
+                'demand_mean': {'lower': 2400.0, 'upper': 2600.0}
+            }, 
+            'unit': {'measurement': 'litros', 'value': 1}, 
+            'unit_time': {'time_unit': 'día', 'value': 1}
+        }
+    };
+    
+    // Inicializar el gráfico
+    // Para usar datos reales, reemplaza sampleData con tu objeto de datos
+    const chart = initializeChart(sampleData);
+    
+    // Exponer función globalmente para uso externo
+    window.updateDemandChart = function(newData) {
+        chart.destroy();
+        return initializeChart(newData);
+    };
+});
 
-    // Handle form submission
-    document.getElementById('confirmForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        // Here you can add any additional confirmation logic if needed
-        this.submit(); // Submit the form
+// Form submission confirmation
+document.getElementById('confirmForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    Swal.fire({
+        title: '¿Confirmar creación?',
+        html: `
+            <p>Se creará la siguiente configuración inicial:</p>
+            <ul class="text-start">
+                <li>7 productos lácteos predefinidos</li>
+                <li>12 áreas operativas</li>
+                <li>30+ variables financieras</li>
+                <li>Simulación de 30 días</li>
+            </ul>
+            <p class="mt-3"><strong>Podrá personalizar todo después de la creación.</strong></p>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, crear configuración',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Creando configuración...',
+                html: 'Por favor espere mientras configuramos su sistema.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Submit form
+            this.submit();
+        }
     });
-    // Handle delete notification button
-    document.getElementById('delete-notification').addEventListener('click', function() {
-        // Logic to delete the notification
-        // For example, you can make an AJAX call to delete the notification from the server
-        console.log('Notification deleted');
-        $('#removeNotificationModal').modal('hide'); // Hide the modal after deletion
-    });
-
-    // Handle modal close button
-    document.getElementById('NotificationModalbtn-close').addEventListener('click', function() {
-        $('#removeNotificationModal').modal('hide'); // Hide the modal
-    });
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Initialize popovers
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-
-    var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
-    });
-
-    // Initialize dropdowns
-
-    var dropdownTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
-
-    var dropdownList = dropdownTriggerList.map(function(dropdownTriggerEl) {
-        return new bootstrap.Dropdown(dropdownTriggerEl);
-    });
-    // Initialize modals
-    var modalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="modal"]'));
-    var modalList = modalTriggerList.map(function(modalTriggerEl) {
-        return new bootstrap.Modal(modalTriggerEl);
-    });
-    // Initialize tooltips for the demo indicator
-    var demoTooltipTriggerList = [].slice.call(document.querySelectorAll('.demo-indicator'));
-    var demoTooltipList = demoTooltipTriggerList.map(function(demoTooltipTriggerEl) {
-        return new bootstrap.Tooltip(demoTooltipTriggerEl, {
-            title: 'Datos de ejemplo para demostración',
-            placement: 'top'
-        });
-    });
-    // Initialize the remove notification modal
-    var removeNotificationModal = new bootstrap.Modal(document.getElementById('removeNotificationModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-    // Show the remove notification modal when the delete button is clicked
-    document.getElementById('delete-notification').addEventListener('click', function() {
-        removeNotificationModal.show();
-    });
-    // Close the remove notification modal when the close button is clicked
-    document.getElementById('NotificationModalbtn-close').addEventListener('click', function() {
-        removeNotificationModal.hide();
-    });
-
-    // Initialize the data preview table
-    $(document).ready(function() {
-        $('.data-preview-table').DataTable({
-            responsive: true,
-            paging: false,
-            searching: false,
-            info: false,
-            ordering: false,
-            columnDefs: [
-                { orderable: false, targets: 0 }, // Disable sorting for the first column
-                { className: 'dt-body-center', targets: '_all' } // Center align all columns
-            ]
-        });
-
-        // Add hover effect to table rows
-        $('.data-preview-table tbody').on('mouseenter', 'tr', function() {
-            $(this).addClass('table-active');
-        }).on('mouseleave', 'tr', function() {
-            $(this).removeClass('table-active');
-        });
-    });
+});
 </script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% endblock extra_js %}

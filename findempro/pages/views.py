@@ -22,6 +22,7 @@ from questionary.questionary_data import questionary_data, question_data
 from questionary.questionary_result_data import questionary_result_data, answer_data
 from variable.variables_data import variables_data
 from variable.equations_data import equations_data
+from simulate.simulate_data import simulation_data, demand_configurations, result_simulation_data
 
 import random
 import numpy as np
@@ -42,17 +43,31 @@ class PagesView(TemplateView):
 def register_elements(request):
     """
     Vista para mostrar el formulario de registro de elementos.
-    Redirige a la función que realiza la creación si es POST y válido.
+    Muestra un preview de los datos a crear antes de confirmar.
     """
-    if request.method == 'POST':
-        form = RegisterElementsForm(request.POST)
-        if form.is_valid():
-            return redirect('register_elements_create')
-    else:
-        form = RegisterElementsForm()
+    preview_data = {
+        'business': {
+            'name': "Pyme Láctea",
+            'location': "La Paz",
+            'image_src': "business/pyme_lactea_default.jpg",
+        },
+        'products_preview': products_data,
+        'areas_preview': areas_data,
+        'variable_preview': variables_data,
+        'equation_preview': equations_data,
+        'questionarie_preview': questionary_data,
+        'question_preview': question_data,
+        'simulate_preview': simulation_data,
+        'demand_configurations_preview': demand_configurations,
+        'result_simulation_preview': result_simulation_data,
+    }
+    print(f"Preview data: {preview_data}")
+    
+    form = RegisterElementsForm()
     return render(request, 'pages/register_elements.html', {
         'form': form,
-        'title': 'Registrar Elementos'
+        'preview_data': preview_data,
+        'title': 'Previsualización de Elementos'
     })
 
 
@@ -122,38 +137,47 @@ def create_and_save_business(user: User) -> Business:
 def create_and_save_products(business: Business) -> None:
     """
     Crear y guardar productos para un business
-    
+
     Args:
         business: Instancia del negocio
     """
     try:
         created_products = []
-        
+
         for data in products_data:
             if not data.get('name') or not data.get('type'):
                 logger.warning(f"Skipping product with incomplete data: {data}")
                 continue
 
-            image_filename = f"{data.get('name', 'default')}.jpg"
-            image_src = os.path.join(settings.MEDIA_URL, "product", image_filename)
-            # image_src = f"product/{image_filename}"
+            # Crear nombre de archivo seguro
+            safe_filename = data.get('name', 'default').replace(' ', '_').lower()
+            image_filename = f"{safe_filename}.jpg"
 
-            # Asegura que la carpeta exista
+            # Ruta relativa para guardar en la base de datos (NO incluir MEDIA_URL)
+            image_src = f"product/{image_filename}"
+
+            # Construir ruta absoluta para verificar/crear archivo físico
             image_dir = os.path.join(settings.MEDIA_ROOT, "product")
-            os.makedirs(image_dir, exist_ok=True)
+            image_path = os.path.join(image_dir, image_filename)
 
-            # Asegura que el archivo exista (puedes copiar un placeholder si lo tienes)
-            image_path = os.path.join(settings.MEDIA_ROOT, image_src)
+            # Solo crear la carpeta si no existe
+            if not os.path.isdir(image_dir):
+                os.makedirs(image_dir, exist_ok=True)
+
+            # Crear archivo placeholder si no existe
             if not os.path.exists(image_path):
-                with open(image_path, "wb") as f:
-                    pass  # crea archivo vacío
-
-            print(f"Creating product with image: {image_src}")
+                try:
+                    create_placeholder_image(image_path, data.get('name', 'Producto'))
+                except Exception as e:
+                    logger.warning(f"Could not create placeholder image for {image_filename}: {str(e)}")
+                    # Crear archivo vacío como último recurso
+                    with open(image_path, "wb") as f:
+                        pass
 
             product = Product.objects.create(
                 name=data['name'],
                 description=data.get('description', ''),
-                image_src=image_src,
+                image_src=image_src,  # Solo la ruta relativa
                 type=data['type'],
                 is_active=True,
                 fk_business=business,
@@ -171,23 +195,39 @@ def create_and_save_products(business: Business) -> None:
         logger.error(f"Error creating products for business {business.id}: {str(e)}")
         raise
 
-
 def create_and_save_areas(product: Product) -> None:
     """
     Crear y guardar áreas para un producto
-    
+
     Args:
         product: Instancia del producto
     """
     try:
         created_areas = []
-        
+
         for data in areas_data:
             if not data.get('name'):
                 continue
-                
-            image_filename = f"{data.get('name', 'default')}.jpg"
+
+            # Crear nombre de archivo seguro
+            safe_filename = data.get('name', 'default').replace(' ', '_').lower()
+            image_filename = f"{safe_filename}.jpg"
+
+            # Ruta relativa para la base de datos
             image_src = f"area/{image_filename}"
+
+            # Construir ruta absoluta para verificar/crear archivo
+            image_dir = os.path.join(settings.MEDIA_ROOT, "area")
+            image_path = os.path.join(image_dir, image_filename)
+
+            # Solo crear archivo si no existe, NO crear carpeta si ya existe
+            if os.path.isdir(image_dir) and not os.path.exists(image_path):
+                try:
+                    create_placeholder_image(image_path, data.get('name', 'Area'))
+                except Exception as e:
+                    logger.warning(f"Could not create placeholder image for {image_filename}: {str(e)}")
+                    with open(image_path, "wb") as f:
+                        pass
 
             area = Area.objects.create(
                 name=data['name'],
@@ -221,8 +261,26 @@ def create_variables_and_equations(product: Product) -> None:
                 logger.warning(f"Skipping variable with incomplete data: {data}")
                 continue
                 
-            image_filename = f"{data.get('initials', 'default')}.jpg"
+            # Crear nombre de archivo seguro basado en iniciales
+            safe_filename = data.get('initials', 'default').replace(' ', '_').lower()
+            image_filename = f"{safe_filename}.jpg"
+            
+            # Ruta relativa para la base de datos
             image_src = f"variable/{image_filename}"
+            
+            # Construir ruta absoluta para verificar/crear archivo
+            image_dir = os.path.join(settings.MEDIA_ROOT, "variable")
+            image_path = os.path.join(image_dir, image_filename)
+            
+            # Asegurar que la carpeta y archivo existen
+            os.makedirs(image_dir, exist_ok=True)
+            if not os.path.exists(image_path):
+                try:
+                    create_placeholder_image(image_path, data.get('initials', 'VAR'))
+                except Exception as e:
+                    logger.warning(f"Could not create placeholder image for {image_filename}: {str(e)}")
+                    with open(image_path, "wb") as f:
+                        pass
             
             variable = Variable.objects.create(
                 name=data.get('name'),
@@ -910,3 +968,48 @@ pages_maintenance = PagesMaintenanceView.as_view()
 pages_coming_soon = PagesComingSoonView.as_view()
 pages_privacy_policy = PagesPrivacyPolicyView.as_view()
 pages_terms_conditions = PagesTermsConditionsView.as_view()
+
+
+
+# Función auxiliar para crear archivos de imagen placeholder
+def create_placeholder_image(image_path: str, text: str = "Placeholder"):
+    """
+    Crear una imagen placeholder simple
+    
+    Args:
+        image_path: Ruta donde crear la imagen
+        text: Texto a mostrar en la imagen
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        
+        # Crear imagen
+        img = Image.new('RGB', (300, 200), color='lightgray')
+        draw = ImageDraw.Draw(img)
+        
+        # Intentar cargar fuente
+        try:
+            font = ImageFont.truetype("arial.ttf", 16)
+        except:
+            font = ImageFont.load_default()
+        
+        # Agregar texto centrado
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = (300 - text_width) // 2
+        y = (200 - text_height) // 2
+        
+        draw.text((x, y), text, fill='black', font=font)
+        img.save(image_path, 'JPEG')
+        
+    except ImportError:
+        # Si PIL no está disponible, crear archivo JPEG mínimo
+        with open(image_path, "wb") as f:
+            f.write(b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444\x1f\'9=82<.342\xff\xc0\x00\x11\x08\x00\xc8\x01,\x03\x01"\x00\x02\x11\x01\x03\x11\x01\xff\xc4\x00\x14\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\xff\xc4\x00\x14\x10\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xda\x00\x0c\x03\x01\x00\x02\x11\x03\x11\x00\x3f\x00\xaa\xff\xd9')
+    except Exception as e:
+        logger.warning(f"Could not create placeholder image: {str(e)}")
+        # Crear archivo vacío como último recurso
+        with open(image_path, "wb") as f:
+            pass
