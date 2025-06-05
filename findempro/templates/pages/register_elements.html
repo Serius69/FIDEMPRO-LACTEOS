@@ -232,7 +232,7 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                {% for product in preview_data.products_preview %}
+                                {% for product in preview_data.products_preview|slice:":4" %}
                                 <div class="col-md-6">
                                     <div class="preview-card card h-100">
                                         <span class="preview-badge badge bg-success">Por defecto</span>
@@ -251,6 +251,50 @@
                                     </div>
                                 </div>
                                 {% endfor %}
+                                {% if preview_data.products_preview|length > 4 %}
+                                <div class="col-12 text-center mt-2">
+                                    <button class="btn btn-soft-primary btn-sm" data-bs-toggle="modal" data-bs-target="#allProductsModal">
+                                        <i class="ri-eye-line me-1"></i> Ver todos los productos ({{ preview_data.products_preview|length }})
+                                    </button>
+                                </div>
+                                <!-- Modal para ver todos los productos -->
+                                <div class="modal fade" id="allProductsModal" tabindex="-1" aria-labelledby="allProductsModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="allProductsModalLabel">Todos los Productos Lácteos</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row g-3">
+                                                    {% for product in preview_data.products_preview %}
+                                                    <div class="col-md-6">
+                                                        <div class="preview-card card h-100">
+                                                            <span class="preview-badge badge bg-success">Por defecto</span>
+                                                            <div class="card-body">
+                                                                <h6 class="card-title">{{ product.name }}</h6>
+                                                                <p class="text-muted small mb-2">{{ product.short_description }}</p>
+                                                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                                                    <span class="badge bg-primary-subtle text-primary">
+                                                                        Margen: {{ product.margin }}%
+                                                                    </span>
+                                                                    <small class="text-muted">
+                                                                        <i class="ri-flask-line"></i> {{ product.unit }}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                             <div class="mt-3 text-center">
                                 <small class="text-muted">
@@ -263,8 +307,8 @@
                 </div>
 
                 <!-- Areas Preview -->
-                <div class="col-lg-6">
-                    <div class="card">
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100">
                         <div class="card-header">
                             <h5 class="card-title mb-0">
                                 <i class="ri-dashboard-line me-2"></i>Áreas Operativas
@@ -272,15 +316,62 @@
                         </div>
                         <div class="card-body">
                             <div class="timeline">
-                                {% for area in preview_data.areas_preview %}
-                                <div class="timeline-item">
-                                    <div class="timeline-dot"></div>
-                                    <div>
-                                        <h6 class="mb-1">{{ area.name }}</h6>
+                                {% for area in preview_data.areas_preview|slice:":3" %}
+                                <div class="timeline-item d-flex align-items-start">
+                                    <div class="timeline-dot mt-2"></div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-1">{{ area.name }}</h6>
+                                            {% if area.manager %}
+                                                <span class="badge bg-primary-subtle text-primary ms-2">
+                                                    <i class="ri-user-3-line me-1"></i> {{ area.manager }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
                                         <p class="text-muted small mb-0">{{ area.description }}</p>
+                                        {% if area.extra_info %}
+                                            <div class="mt-1">
+                                                <span class="badge bg-info-subtle text-info">{{ area.extra_info }}</span>
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
+                            </div>
+                            {% if preview_data.areas_preview|length > 3 %}
+                            <div class="col-12 text-center mt-2">
+                                <button class="btn btn-soft-primary btn-sm" data-bs-toggle="modal" data-bs-target="#allAreasModal">
+                                    <i class="ri-eye-line me-1"></i> Ver todas las áreas ({{ preview_data.areas_preview|length }})
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para ver todas las áreas -->
+                <div class="modal fade" id="allAreasModal" tabindex="-1" aria-labelledby="allAreasModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="allAreasModalLabel">Todas las Áreas Operativas</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="timeline">
+                                    {% for area in preview_data.areas_preview %}
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot"></div>
+                                        <div>
+                                            <h6 class="mb-1">{{ area.name }}</h6>
+                                            <p class="text-muted small mb-0">{{ area.description }}</p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
                             </div>
                         </div>
                     </div>
@@ -299,7 +390,7 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                {% for equation in preview_data.equation_preview %}
+                                {% for equation in preview_data.equation_preview|slice:":8" %}
                                 <div class="col-12">
                                     <div class="preview-card card h-100">
                                         <span class="preview-badge badge bg-info">Modelo</span>
@@ -316,6 +407,48 @@
                                     </div>
                                 </div>
                                 {% endfor %}
+                                {% if preview_data.equation_preview|length > 10 %}
+                                <div class="col-12 text-center mt-2">
+                                    <button class="btn btn-soft-primary btn-sm" data-bs-toggle="modal" data-bs-target="#allEquationsModal">
+                                        <i class="ri-eye-line me-1"></i> Ver todas las ecuaciones ({{ preview_data.equation_preview|length }})
+                                    </button>
+                                </div>
+                                <!-- Modal para ver todas las ecuaciones -->
+                                <div class="modal fade" id="allEquationsModal" tabindex="-1" aria-labelledby="allEquationsModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="allEquationsModalLabel">Todas las Ecuaciones del Modelo</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row g-3">
+                                                    {% for equation in preview_data.equation_preview %}
+                                                    <div class="col-12">
+                                                        <div class="preview-card card h-100">
+                                                            <span class="preview-badge badge bg-info">Modelo</span>
+                                                            <div class="card-body">
+                                                                <h6 class="card-title">{{ equation.name }}</h6>
+                                                                <p class="text-muted small mb-2">{{ equation.description }}</p>
+                                                                <div class="mt-2">
+                                                                    <code class="d-block mb-1">{{ equation.formula|safe }}</code>
+                                                                    <small class="text-muted">
+                                                                        <i class="ri-lightbulb-flash-line"></i> {{ equation.type }}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                             <div class="mt-3 text-center">
                                 <small class="text-muted">
@@ -353,7 +486,15 @@
                                                     <li class="list-group-item">
                                                         <strong>{{ question.question }}</strong>
                                                         {% if question.type %}
-                                                            <span class="badge bg-info ms-2">{{ question.type }}</span>
+                                                            {% if question.type == 1 %}
+                                                                <span class="badge bg-success-subtle text-success ms-2">Endógena</span>
+                                                            {% elif question.type == 2 %}
+                                                                <span class="badge bg-info-subtle text-info ms-2">Estado</span>
+                                                            {% elif question.type == 3 %}
+                                                                <span class="badge bg-warning-subtle text-warning ms-2">Exógena</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary-subtle text-secondary ms-2">{{ question.type }}</span>
+                                                            {% endif %}
                                                         {% endif %}
                                                         {% if question.initials_variable %}
                                                             <span class="text-muted small d-block">{{ question.initials_variable }}</span>
@@ -481,7 +622,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for variable in preview_data.variable_preview %}
+                                        {% for variable in preview_data.variable_preview|slice:":10" %}
                                         <tr>
                                             <td><code>{{ variable.name }}</code></td>
                                             <td>{{ variable.description }}</td>
@@ -511,7 +652,7 @@
                             </div>
                             <div class="text-center mt-3">
                                 <button class="btn btn-soft-primary btn-sm" data-bs-toggle="modal" data-bs-target="#allVariablesModal">
-                                    <i class="ri-eye-line me-1"></i> Ver todas las variables (30+)
+                                    <i class="ri-eye-line me-1"></i> Ver todas las variables
                                 </button>
                             </div>
                         </div>
@@ -530,14 +671,17 @@
                                     Al continuar, se creará automáticamente toda esta configuración para su empresa.
                                     <br>Podrá personalizar todos los valores después de la creación inicial.
                                 </p>
-                                <form method="post" id="confirmForm">
+                                
+                                <!-- Form that triggers the confirmation modal -->
+                                <form method="post" id="confirmForm" action="{% url 'pages:pages.register_elements_create' %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="confirm_setup" value="true">
+                                    
                                     <div class="d-flex gap-2 justify-content-center">
                                         <a href="{% url 'dashboard:index' %}" class="btn btn-light">
                                             <i class="ri-arrow-left-line me-1"></i> Volver
                                         </a>
-                                        <button type="submit" class="btn btn-primary">
+                                        <button type="submit" class="btn btn-primary" id="createConfigBtn">
                                             <i class="ri-check-line me-1"></i> Crear Configuración
                                         </button>
                                     </div>
@@ -892,43 +1036,91 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Form submission confirmation
-document.getElementById('confirmForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the form element
+    const confirmForm = document.getElementById('confirmForm');
     
-    Swal.fire({
-        title: '¿Confirmar creación?',
-        html: `
-            <p>Se creará la siguiente configuración inicial:</p>
-            <ul class="text-start">
-                <li>7 productos lácteos predefinidos</li>
-                <li>12 áreas operativas</li>
-                <li>30+ variables financieras</li>
-                <li>Simulación de 30 días</li>
-            </ul>
-            <p class="mt-3"><strong>Podrá personalizar todo después de la creación.</strong></p>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, crear configuración',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading
+    if (confirmForm) {
+        confirmForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show confirmation modal
             Swal.fire({
-                title: 'Creando configuración...',
-                html: 'Por favor espere mientras configuramos su sistema.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+                title: '¿Confirmar creación?',
+                html: `
+                    <div class="text-start">
+                        <p class="mb-3">Se creará la siguiente configuración inicial:</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="ri-check-circle-fill text-success me-2"></i>
+                                <strong>7 productos lácteos</strong> predefinidos
+                            </li>
+                            <li class="mb-2">
+                                <i class="ri-check-circle-fill text-success me-2"></i>
+                                <strong>12 áreas operativas</strong> del negocio
+                            </li>
+                            <li class="mb-2">
+                                <i class="ri-check-circle-fill text-success me-2"></i>
+                                <strong>30+ variables financieras</strong> configuradas
+                            </li>
+                            <li class="mb-2">
+                                <i class="ri-check-circle-fill text-success me-2"></i>
+                                <strong>Simulación de 30 días</strong> inicializada
+                            </li>
+                        </ul>
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="ri-information-line me-2"></i>
+                            <strong>Nota:</strong> Podrá personalizar todo después de la creación.
+                        </div>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="ri-check-line me-1"></i> Sí, crear configuración',
+                cancelButtonText: '<i class="ri-close-line me-1"></i> Cancelar',
+                buttonsStyling: true,
+                customClass: {
+                    popup: 'swal2-popup-custom',
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading modal
+                    Swal.fire({
+                        title: 'Creando configuración...',
+                        html: `
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mb-0">Por favor espere mientras configuramos su sistema.</p>
+                                <small class="text-muted">Este proceso puede tomar unos segundos.</small>
+                            </div>
+                        `,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            // Disable the confirm button during loading
+                            const createBtn = document.getElementById('createConfigBtn');
+                            if (createBtn) {
+                                createBtn.disabled = true;
+                            }
+                        }
+                    });
+                    
+                    // Submit the form after a short delay for better UX
+                    setTimeout(() => {
+                        confirmForm.submit();
+                    }, 500);
                 }
             });
-            
-            // Submit form
-            this.submit();
-        }
-    });
+        });
+    }
 });
 </script>
 

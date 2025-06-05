@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_protect
 
 from .forms import RegisterElementsForm
 from user.models import UserProfile
@@ -61,7 +63,7 @@ def register_elements(request):
         'demand_configurations_preview': demand_configurations,
         'result_simulation_preview': result_simulation_data,
     }
-    print(f"Preview data: {preview_data}")
+    # print(f"Preview data: {preview_data}")
     
     form = RegisterElementsForm()
     return render(request, 'pages/register_elements.html', {
@@ -72,17 +74,55 @@ def register_elements(request):
 
 
 @login_required
+@require_http_methods(["POST"])
+@csrf_protect
 @transaction.atomic
 def register_elements_create(request):
     """
     Realiza la creación de los elementos del negocio para el usuario actual.
+    Solo acepta métodos POST y requiere confirmación.
     """
+    # Verificar que se envió la confirmación
+    if not request.POST.get('confirm_setup'):
+        messages.error(request, _('Solicitud inválida. Por favor, intente nuevamente.'))
+        return redirect("dashboard:index")
+    
     try:
-        create_and_save_business(request.user)
-        messages.success(request, _('Elementos registrados correctamente.'))
+        # Verificar si el usuario ya tiene un negocio configurado
+        if hasattr(request.user, 'business') and request.user.business.exists():
+            messages.warning(request, _('Ya tiene una configuración de negocio existente.'))
+            return redirect("dashboard:index")
+        
+        # Crear el negocio y sus elementos
+        logger.info(f"Iniciando creación de negocio para usuario {request.user.id}")
+        
+        business = create_and_save_business(request.user)
+        logger.info(f"Negocio creado con ID: {business.id}")
+        
+        # Registrar elementos de simulación
+        register_elements_simulation(request)
+        logger.info(f"Elementos de simulación registrados para usuario {request.user.id}")
+        
+        messages.success(
+            request, 
+            _(
+                'Configuración creada exitosamente. '
+                'Su negocio lácteo ha sido configurado con todos los elementos iniciales. '
+                'Puede personalizar la información desde el panel de control.'
+            )
+        )
+        
     except Exception as e:
         logger.error(f"Error creating business for user {request.user.id}: {str(e)}")
-        messages.error(request, _('Error al crear el negocio. Por favor, intente nuevamente.'))
+        messages.error(
+            request, 
+            _(
+                'Error al crear la configuración del negocio. '
+                'Por favor, contacte al soporte técnico si el problema persiste.'
+            )
+        )
+        return redirect("dashboard:index")
+    
     return redirect("dashboard:index")
 
 
@@ -501,48 +541,35 @@ def create_and_save_questions(questionary: Questionary) -> None:
         raise
 
 
-@login_required
-@transaction.atomic
-def register_elements_simulation(request):
+def register_elements_simulation(request, user=None):
     """
-    Registrar elementos de simulación para el usuario actual
+    Registrar elementos de simulación para el usuario actual o especificado.
+    Si user es None, usa request.user.
     """
-    if request.method == 'POST':
-        form = RegisterElementsForm(request.POST)
-        if form.is_valid():
-            try:
-                questionaries = Questionary.objects.filter(
-                    is_active=True, 
-                    fk_product__fk_business__fk_user=request.user
-                ).select_related('fk_product__fk_business')
+    if user is None:
+        user = request.user
 
-                if not questionaries.exists():
-                    messages.warning(request, _('No se encontraron cuestionarios activos.'))
-                    return redirect("dashboard:index")
+    try:
+        questionaries = Questionary.objects.filter(
+            is_active=True, 
+            fk_product__fk_business__fk_user=user
+        ).select_related('fk_product__fk_business')
 
-                simulations_created = 0
-                for questionary in questionaries:
-                    if create_and_save_questionary_result(questionary):
-                        simulations_created += 1
+        if not questionaries.exists():
+            logger.warning(f"No active questionaries found for user {user.id}")
+            return 0
 
-                messages.success(
-                    request, 
-                    _(f'{simulations_created} simulaciones creadas exitosamente.')
-                )
-                return redirect("dashboard:index")
-                    
-            except Exception as e:
-                logger.error(f"Error in simulation registration: {str(e)}")
-                messages.error(request, _('Error al procesar la simulación.'))
-                form.add_error(None, str(e))
+        simulations_created = 0
+        for questionary in questionaries:
+            if create_and_save_questionary_result(questionary):
+                simulations_created += 1
 
-    else:
-        form = RegisterElementsForm()
+        logger.info(f"{simulations_created} simulations created for user {user.id}")
+        return simulations_created
 
-    return render(request, 'pages/register_elements.html', {
-        'form': form,
-        'title': 'Registrar Simulación'
-    })
+    except Exception as e:
+        logger.error(f"Error in simulation registration for user {user.id}: {str(e)}")
+        return 0
 
 
 def create_and_save_questionary_result(questionary: Questionary) -> bool:
