@@ -1,5 +1,5 @@
+# equations_data.py - Versión Final
 equations_data = [
-  
   {
     "name": "Total clientes atendidos en el dia",
     "description": "Ecuación para la cantidad total de clientes que se tiene por dia",
@@ -31,7 +31,7 @@ equations_data = [
 
   {
     "name": "Demanda Insatisfecha",
-    "description": "Ecuación para calcular la demanda insatisfecha restando la demanda estimada menos los productos vendidos ",
+    "description": "Ecuación para calcular la demanda insatisfecha restando la demanda estimada menos los productos vendidos",
     "expression": "DI = DE - TPV",
     "variable1": "DI",
     "variable2": "DE",
@@ -68,120 +68,129 @@ equations_data = [
     "variable3": "GT",
     "area": "Contabilidad"
   },
+  
   {
-  "name": "NIVEL DE COMPETENCIA EN EL MERCADO",
-  "description": "Ecuación para medir el nivel de competencia en el mercado basado en la diferencia entre la participación en el mercado y el precio de la competencia.",
-  "expression": "NCM = PM - PC",
-  "variable1": "NCM",
-  "variable2": "PM",
-  "variable3": "PC",
-  "area": "Competencia"
-},
-{
-   "name": "Tiempo Formulación Pedido",
-   "description": "Tiempo necesario para crear y procesar una orden de compra de materia prima (leche)",
-   "expression": "DF = NPD * TMP",
-   "variable1": "DF",
-   "variable2": "NPD",  
-   "variable3": "TMP",
-   "area": "Abastecimiento"
-},
-
-{
-   "name": "Pedido Reabastecimiento Leche",
-   "description": "Cantidad de litros de leche requeridos en el próximo pedido de compra para reabastecer inventarios",
-   "expression": "PRL = NIL - DE",
-   "variable1": "PRL",
-   "variable2": "NIL",
-   "variable3": "DE",
-   "area": "Abastecimiento"   
-},
-
-{
-  "name": "Nivel Ideal Inventario Leche",
-  "description": "Nivel óptimo de inventario de materia prima (leche) que se debe mantener para evitar roturas de stock",
-  "expression": "NIL = (CTL * DPL) + SI",
-  "variable1": "NIL",
-  "variable2": "CTL",
-  "variable3": "DPL",
-  "variable4": "SI",
-  "area": "Abastecimiento" 
-},
-
-{
-"name": "Gastos Operativos",
-"description": "Ecuación para calcular los gastos operativos sumando costos fijos diarios, sueldos y salarios y costos de adquisición de insumos",
-"expression": "GO = CFD + SE + CTAI",
-"variable1": "GO",
-"variable2": "CFD",
-"variable3": "SE",
-"variable4": "CTAI",
-"area": "Contabilidad"
-},
-{
-"name": "Gastos Generales",
-"description": "Ecuación para calcular los gastos generales sumando los gastos operativos más los gastos de mercadeo y manejo",
-"expression": "GG = GO + GMM",
-"variable1": "GG",
-"variable2": "GO",
-"variable3": "GMM",
-"area": "Contabilidad"
-},
-{
-"name": "Costo Total Adquisición Insumos",
-"description": "Ecuación para calcular el costo total de adquisición de insumos sumando el consumo unitario por insumo multiplicado por el costo unitario de cada insumo",
-"expression": "CTAI = ∑ CUIP * CIP",
-"variable1": "CTAI",
-"variable2": "CUIP",
-"variable3": "CIP",
-"area": "Contabilidad"
-},
-{
-"name": "Costo Total Reorden",
-"description": "Ecuación para calcular el costo total de reorden de insumos sumando el costo de adquisición más los costos de preparación y entrega",
-
-"expression": "CTR = CTAI + CUP",
-"variable1": "CTR",
-"variable2": "CTAI",
-"variable3": "CUP",
-"area": "Contabilidad"
-},
-{
-"name": "Pedido Insumos",
-"description": "Ecuación para calcular el monto total en dinero de cada pedido de insumos multiplicando el costo unitario por la cantidad solicitada",
-"expression": "PI = CIP * CPROD",
-"variable1": "PI",
-"variable2": "CIP",
-"variable3": "CPROD",
-"area": "Contabilidad"
-},
-{
-"name": "Uso de Inventario Insumos",
-"description": "Ecuación para calcular el consumo de insumos del inventario multiplicando el consumo unitario del insumo por los productos producidos",
-"expression": "UII = CIP * PPL",
-"variable1": "UII",
-"variable2": "CIP",
-"variable3": "PPL",
-"area": "Inventario Insumos"
-},
+    "name": "NIVEL DE COMPETENCIA EN EL MERCADO",
+    "description": "Ecuación para medir el nivel de competencia en el mercado basado en la diferencia entre la participación en el mercado y el precio de la competencia",
+    "expression": "NCM = PM - PC",
+    "variable1": "NCM",
+    "variable2": "PM",
+    "variable3": "PC",
+    "area": "Competencia"
+  },
+  
   {
-  "name": "Inventario Insumos",
-  "description": "Ecuación para calcular el saldo de inventario de insumos sumando el inventario anterior más entradas menos salidas",
-  "expression": "II = II + PI - UII",
-  "variable1": "II",
-  "variable2": "PI",
-  "variable3": "UII",
-  "area": "Inventario Insumos"
+    "name": "Tiempo Formulación Pedido",
+    "description": "Tiempo necesario para crear y procesar una orden de compra de materia prima (leche)",
+    "expression": "DF = NPD * TMP",
+    "variable1": "DF",
+    "variable2": "NPD",  
+    "variable3": "TMP",
+    "area": "Abastecimiento"
   },
-{
-  "name": "Inventario Productos Finales",
-  "description": "Ecuación para calcular el saldo de inventario de productos finales sumando el inventario anterior más entradas de producción menos salidas por ventas",
-  "expression": "IPF = IPF + PPL - VPC",
-  "variable1": "IPF",
-  "variable2": "PPL",
-  "variable3": "VPC",
-  "area": "Inventario Productos Finales"
+
+  {
+    "name": "Pedido Reabastecimiento Leche",
+    "description": "Cantidad de litros de leche requeridos en el próximo pedido de compra para reabastecer inventarios",
+    "expression": "PRL = NIL - DE",
+    "variable1": "PRL",
+    "variable2": "NIL",
+    "variable3": "DE",
+    "area": "Abastecimiento"   
   },
+
+  {
+    "name": "Nivel Ideal Inventario Leche",
+    "description": "Nivel óptimo de inventario de materia prima (leche) que se debe mantener para evitar roturas de stock",
+    "expression": "NIL = (CTL * DPL) + SI",
+    "variable1": "NIL",
+    "variable2": "CTL",
+    "variable3": "DPL",
+    "variable4": "SI",
+    "area": "Abastecimiento" 
+  },
+
+  {
+    "name": "Gastos Operativos",
+    "description": "Ecuación para calcular los gastos operativos sumando costos fijos diarios, sueldos y salarios y costos de adquisición de insumos",
+    "expression": "GO = CFD + SE + CTAI",
+    "variable1": "GO",
+    "variable2": "CFD",
+    "variable3": "SE",
+    "variable4": "CTAI",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Gastos Generales",
+    "description": "Ecuación para calcular los gastos generales sumando los gastos operativos más los gastos de mercadeo y manejo",
+    "expression": "GG = GO + GMM",
+    "variable1": "GG",
+    "variable2": "GO",
+    "variable3": "GMM",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Costo Total Adquisición Insumos",
+    "description": "Ecuación para calcular el costo total de adquisición de insumos sumando el consumo unitario por insumo multiplicado por el costo unitario de cada insumo",
+    "expression": "CTAI = ∑ CUIP * CIP",
+    "variable1": "CTAI",
+    "variable2": "CUIP",
+    "variable3": "CIP",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Costo Total Reorden",
+    "description": "Ecuación para calcular el costo total de reorden de insumos sumando el costo de adquisición más los costos de preparación y entrega",
+    "expression": "CTR = CTAI + CUP",
+    "variable1": "CTR",
+    "variable2": "CTAI",
+    "variable3": "CUP",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Pedido Insumos",
+    "description": "Ecuación para calcular el monto total en dinero de cada pedido de insumos multiplicando el costo unitario por la cantidad solicitada",
+    "expression": "PI = CIP * CPROD",
+    "variable1": "PI",
+    "variable2": "CIP",
+    "variable3": "CPROD",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Uso de Inventario Insumos",
+    "description": "Ecuación para calcular el consumo de insumos del inventario multiplicando el consumo unitario del insumo por los productos producidos",
+    "expression": "UII = CIP * PPL",
+    "variable1": "UII",
+    "variable2": "CIP",
+    "variable3": "PPL",
+    "area": "Inventario Insumos"
+  },
+  
+  {
+    "name": "Inventario Insumos",
+    "description": "Ecuación para calcular el saldo de inventario de insumos sumando el inventario anterior más entradas menos salidas",
+    "expression": "II = II + PI - UII",
+    "variable1": "II",
+    "variable2": "PI",
+    "variable3": "UII",
+    "area": "Inventario Insumos"
+  },
+  
+  {
+    "name": "Inventario Productos Finales",
+    "description": "Ecuación para calcular el saldo de inventario de productos finales sumando el inventario anterior más entradas de producción menos salidas por ventas",
+    "expression": "IPF = IPF + PPL - VPC",
+    "variable1": "IPF",
+    "variable2": "PPL",
+    "variable3": "VPC",
+    "area": "Inventario Productos Finales"
+  },
+  
   {
     "name": "Nivel de Rentabilidad",
     "description": "Ecuación para calcular el nivel de rentabilidad, que es el porcentaje de utilidad sobre los ingresos totales",
@@ -191,6 +200,7 @@ equations_data = [
     "variable3": "GT",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Total Clientes Atendidos", 
     "description": "Ecuación para calcular el total de clientes atendidos multiplicando el número medio de clientes diarios por el número de días",
@@ -200,6 +210,7 @@ equations_data = [
     "variable3": "NMD",
     "area": "Ventas"
   },
+  
   {
     "name": "Costo Unitario Inventario",
     "description": "Ecuación para calcular el costo unitario del inventario, que es el costo total de producción dividido por el inventario de productos finales",
@@ -209,6 +220,7 @@ equations_data = [
     "variable3": "IPF",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Costo Fijo Diario",
     "description": "Ecuación para calcular el costo fijo diario, que es el total de gastos operativos dividido por el número medio de días",
@@ -218,15 +230,17 @@ equations_data = [
     "variable3": "NMD",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Costo Total Transporte Lácteos",
-    "description": "Ecuación para calcular el costo total de transporte de productos lácteos multiplicando el costo unitario de transporte lácteos para transpoerte por la cantidad transportada por vehículo",
+    "description": "Ecuación para calcular el costo total de transporte de productos lácteos multiplicando el costo unitario de transporte lácteos para transporte por la cantidad transportada por vehículo",
     "expression": "CTTL = CUTRANS * CTPLV",
     "variable1": "CTTL",
     "variable2": "CUTRANS",  
     "variable3": "CTPLV",
     "area": "Distribución"
   },
+  
   {
     "name": "Costo Promedio Producción",
     "description": "Ecuación para calcular el costo promedio de producción, que es el costo total de producción dividido por el tonelaje por producto",
@@ -236,6 +250,7 @@ equations_data = [
     "variable3": "CPL",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Costo Promedio Venta",
     "description": "Ecuación para calcular el costo promedio de venta, que es el costo total de producción dividido por el tonelaje por venta",
@@ -245,6 +260,7 @@ equations_data = [
     "variable3": "TPV",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Costo Promedio Insumos",
     "description": "Ecuación para calcular el costo promedio de insumos, que es el costo total de insumos dividido por el tonelaje por venta",
@@ -254,6 +270,7 @@ equations_data = [
     "variable3": "TPV",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Costo Promedio Mano Obra",
     "description": "Ecuación para calcular el costo promedio de mano de obra, que es el salario total de empleados dividido por el tonelaje por producto",
@@ -263,6 +280,7 @@ equations_data = [
     "variable3": "CPL",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Costo Unitario Producción",
     "description": "Ecuación para calcular el costo unitario de producción, que es la suma del costo promedio de producción, el costo promedio de insumos y el costo promedio de mano de obra",
@@ -273,6 +291,7 @@ equations_data = [
     "variable4": "CPMO",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Precio Venta Recomendado",
     "description": "Ecuación para calcular el precio de venta recomendado, que es el costo unitario de producción multiplicado por un factor de recargo",
@@ -282,7 +301,8 @@ equations_data = [
     "variable3": "NR",
     "area": "Ventas"
   },
-{
+  
+  {
     "name": "Capacidad Producción",
     "description": "Ecuación para calcular la capacidad de producción, que es el número medio de días multiplicado por la cantidad producida de productos lácteos multiplicado por el número de empleados en producción",
     "expression": "CPROD = NMD * QPL * NEPP",
@@ -291,7 +311,8 @@ equations_data = [
     "variable3": "QPL", 
     "variable4": "NEPP",
     "area": "Producción"
-}, 
+  },
+  
   {
     "name": "Factor Utilización",
     "description": "Ecuación para calcular el factor de utilización, que es el tonelaje por producto dividido por la capacidad de producción",
@@ -301,15 +322,17 @@ equations_data = [
     "variable3": "CPROD",
     "area": "Producción"
   },
+  
   {
-      "name": "Productos Producidos",
-      "description": "Ecuación para calcular la cantidad de productos lácteos producidos, que es la capacidad de producción multiplicada por la cantidad promedio producida por lote",
-      "expression": "PPL = CPROD * CPPL",
-      "variable1": "PPL",
-      "variable2": "CPROD",
-      "variable3": "CPPL",  
-      "area": "Producción"
+    "name": "Productos Producidos",
+    "description": "Ecuación para calcular la cantidad de productos lácteos producidos, que es la capacidad de producción multiplicada por la cantidad promedio producida por lote",
+    "expression": "PPL = CPROD * CPPL",
+    "variable1": "PPL",
+    "variable2": "CPROD",
+    "variable3": "CPPL",  
+    "area": "Producción"
   },
+  
   {
     "name": "Total Gastos",
     "description": "Ecuación para calcular el total de gastos, que es la suma del costo total de producción, los gastos operativos y los gastos generales",
@@ -320,6 +343,7 @@ equations_data = [
     "variable4": "GG",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Ingreso Bruto",
     "description": "Ecuación para calcular el ingreso bruto, que es la diferencia entre los ingresos totales y el total de gastos",
@@ -329,6 +353,7 @@ equations_data = [
     "variable3": "TG",
     "area": "Contabilidad" 
   },
+  
   {
     "name": "Margen Bruto",
     "description": "Ecuación para calcular el margen bruto, que es el ingreso bruto dividido por los ingresos totales",
@@ -338,6 +363,7 @@ equations_data = [
     "variable3": "IT",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Retorno Inversión",
     "description": "Ecuación para calcular el retorno de inversión, que es el ingreso bruto dividido por el costo total de producción",
@@ -347,6 +373,7 @@ equations_data = [
     "variable3": "GT",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Rotación Inventario",
     "description": "Ecuación para calcular la rotación de inventario, que es el costo promedio de producción dividido por el inventario de productos finales",
@@ -356,6 +383,7 @@ equations_data = [
     "variable3": "IPF",
     "area": "Inventario Productos Finales" 
   },
+  
   {
     "name": "Rotación Clientes",
     "description": "Ecuación para calcular la rotación de clientes, que es el total de ventas a crédito dividido por el total de cuentas por cobrar",
@@ -365,6 +393,7 @@ equations_data = [
     "variable3": "TCA",
     "area": "Marketing"
   },
+  
   {
     "name": "Participación Mercado",
     "description": "Ecuación para calcular la participación de mercado, que es el total de ventas a crédito dividido por el tamaño del mercado",
@@ -374,6 +403,7 @@ equations_data = [
     "variable3": "DH",
     "area": "Competencia"
   },
+  
   {
     "name": "FRECUENCIA DE COMPRA",
     "description": "Ecuación para medir la frecuencia de compra de los clientes de la empresa",
@@ -391,6 +421,7 @@ equations_data = [
     "variable3": "CPD",
     "area": "Marketing"
   },
+  
   {
     "name": "Productividad Empleados",
     "description": "Ecuación para calcular la productividad de los empleados, que es el total de ventas a crédito dividido por el número de empleados",
@@ -400,6 +431,7 @@ equations_data = [
     "variable3": "SE",
     "area": "Recursos Humanos"
   },
+  
   {
     "name": "Horas Ociosas",
     "description": "Ecuación para calcular las horas ociosas en producción de lácteos, que es el número medio de días multiplicado por los minutos laborables, menos la cantidad producida de productos lácteos multiplicada por el tiempo de producción por empleado",
@@ -410,6 +442,7 @@ equations_data = [
     "variable4": "TPE",  
     "area": "Recursos Humanos" 
   },
+  
   {
     "name": "Costo Horas Ociosas",
     "description": "Ecuación para calcular el costo de las horas ociosas, que es el número de horas ociosas multiplicado por el costo por minuto de ociosidad",
@@ -419,6 +452,7 @@ equations_data = [
     "variable3": "CPMO",
     "area": "Contabilidad"
   },
+  
   {
     "name": "Costo Almacenamiento",
     "description": "Ecuación para calcular el costo de almacenamiento, que es el inventario de productos finales multiplicado por el costo unitario de almacenamiento",
@@ -428,6 +462,7 @@ equations_data = [
     "variable3": "CUI",
     "area": "Inventario Productos Finales"
   },
+  
   {
     "name": "Demanda Total",
     "description": "Ecuación para calcular la demanda total sumando TPV, DI, TCA y PM",
@@ -438,6 +473,162 @@ equations_data = [
     "variable4": "TCA",
     "variable5": "PM",
     "area": "Ventas"
-  }
+  },
   
+  # NUEVAS ECUACIONES AGREGADAS
+  {
+    "name": "Eficiencia Operativa",
+    "description": "Ecuación para calcular la eficiencia operativa comparando la producción real con la capacidad instalada",
+    "expression": "EO = (TPPRO / CPROD) * 100",
+    "variable1": "EO",
+    "variable2": "TPPRO",
+    "variable3": "CPROD",
+    "area": "Producción"
+  },
+  
+  {
+    "name": "Índice de Satisfacción Cliente",
+    "description": "Ecuación para calcular el índice de satisfacción basado en clientes atendidos versus demanda esperada",
+    "expression": "ISC = (TCAE / DE) * 100",
+    "variable1": "ISC",
+    "variable2": "TCAE",
+    "variable3": "DE",
+    "area": "Ventas"
+  },
+  
+  {
+    "name": "Costo de Oportunidad",
+    "description": "Ecuación para calcular el costo de oportunidad de la demanda insatisfecha",
+    "expression": "CO = DI * PVP",
+    "variable1": "CO",
+    "variable2": "DI",
+    "variable3": "PVP",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Tiempo de Ciclo Total",
+    "description": "Ecuación para calcular el tiempo total del ciclo de producción y entrega",
+    "expression": "TCT = DF + TR + TPE",
+    "variable1": "TCT",
+    "variable2": "DF",
+    "variable3": "TR",
+    "variable4": "TPE",
+    "area": "Producción"
+  },
+  
+  {
+    "name": "Índice de Rotación de Capital",
+    "description": "Ecuación para calcular cuántas veces se recupera el capital invertido",
+    "expression": "IRC = IT / (II + IPF)",
+    "variable1": "IRC",
+    "variable2": "IT",
+    "variable3": "II",
+    "variable4": "IPF",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Punto de Equilibrio",
+    "description": "Ecuación para calcular el punto de equilibrio en unidades",
+    "expression": "PE = CFD / (PVP - CUP)",
+    "variable1": "PE",
+    "variable2": "CFD",
+    "variable3": "PVP",
+    "variable4": "CUP",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Índice de Calidad",
+    "description": "Ecuación para medir la calidad basada en productos devueltos versus vendidos",
+    "expression": "IC = (TPV - PD) / TPV",
+    "variable1": "IC",
+    "variable2": "TPV",
+    "variable3": "PD",
+    "area": "Inspección"
+  },
+  
+  {
+    "name": "Eficiencia de Distribución",
+    "description": "Ecuación para calcular la eficiencia en la distribución de productos",
+    "expression": "ED = TPV / (CTTL * CTPLV)",
+    "variable1": "ED",
+    "variable2": "TPV",
+    "variable3": "CTTL",
+    "variable4": "CTPLV",
+    "area": "Distribución"
+  },
+  
+  {
+    "name": "Tasa de Conversión",
+    "description": "Ecuación para calcular la tasa de conversión de clientes potenciales a ventas",
+    "expression": "TC = TCAE / LC",
+    "variable1": "TC",
+    "variable2": "TCAE",
+    "variable3": "LC",
+    "area": "Marketing"
+  },
+  
+  {
+    "name": "Costo por Litro Producido",
+    "description": "Ecuación para calcular el costo total por cada litro producido",
+    "expression": "CLP = TG / TPPRO",
+    "variable1": "CLP",
+    "variable2": "TG",
+    "variable3": "TPPRO",
+    "area": "Contabilidad"
+  },
+  
+  {
+    "name": "Índice de Productividad Total",
+    "description": "Ecuación para medir la productividad total del sistema",
+    "expression": "IPT = IT / (SE + GO)",
+    "variable1": "IPT",
+    "variable2": "IT",
+    "variable3": "SE",
+    "variable4": "GO",
+    "area": "Recursos Humanos"
+  },
+  
+  {
+    "name": "Capacidad de Respuesta",
+    "description": "Ecuación para medir la capacidad de respuesta ante cambios en la demanda",
+    "expression": "CR = CPROD / (DE * ED)",
+    "variable1": "CR",
+    "variable2": "CPROD",
+    "variable3": "DE",
+    "variable4": "ED",
+    "area": "Producción"
+  },
+  
+  {
+    "name": "Índice de Mantenimiento Preventivo",
+    "description": "Ecuación para calcular la efectividad del mantenimiento preventivo",
+    "expression": "IMP = (HTP - HM) / HTP",
+    "variable1": "IMP",
+    "variable2": "HTP",
+    "variable3": "HM",
+    "area": "Mantenimiento"
+  },
+  
+  {
+    "name": "Costo de Mantenimiento por Unidad",
+    "description": "Ecuación para calcular el costo de mantenimiento por unidad producida",
+    "expression": "CMU = CM / TPPRO",
+    "variable1": "CMU",
+    "variable2": "CM",
+    "variable3": "TPPRO",
+    "area": "Mantenimiento"
+  },
+  
+  {
+    "name": "Índice de Desperdicio",
+    "description": "Ecuación para calcular el porcentaje de desperdicio en producción",
+    "expression": "ID = (MP - TPPRO) / MP",
+    "variable1": "ID",
+    "variable2": "MP",
+    "variable3": "TPPRO",
+    "area": "Producción"
+  }
 ]

@@ -18,13 +18,13 @@ from variable.models import Variable, Equation
 from questionary.models import Questionary, Question, QuestionaryResult, Answer
 from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
 
-from findempro.product.data.products_data import products_data
-from findempro.product.data.areas_data import areas_data
-from findempro.questionary.data.questionary_data import questionary_data, question_data
-from findempro.questionary.data.questionary_result_data import questionary_result_data, answer_data
+from product.data.products_data import products_data
+from product.data.areas_data import areas_data
+from questionary.data.questionary_data import questionary_data, question_data
+from questionary.data.questionary_result_data import questionary_result_data, answer_data
 from variable.variables_data import variables_data
 from variable.equations_data import equations_data
-from findempro.simulate.data.simulate_data import simulation_data, demand_configurations, result_simulation_data
+from simulate.data.simulate_data import simulation_data_leche,simulation_data_queso,simulation_data_yogur, pdf_config_by_product, result_simulation_data_by_product
 
 import random
 import numpy as np
@@ -59,9 +59,11 @@ def register_elements(request):
         'equation_preview': equations_data,
         'questionarie_preview': questionary_data,
         'question_preview': question_data,
-        'simulate_preview': simulation_data,
-        'demand_configurations_preview': demand_configurations,
-        'result_simulation_preview': result_simulation_data,
+        'simulate_leche_preview': simulation_data_leche,
+        'simulate_queso_preview': simulation_data_queso,
+        'simulate_yogur_preview': simulation_data_yogur,
+        'demand_configurations_preview': pdf_config_by_product,
+        'result_simulation_preview': result_simulation_data_by_product,
     }
     # print(f"Preview data: {preview_data}")
     
