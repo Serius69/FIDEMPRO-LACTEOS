@@ -18,13 +18,13 @@ from variable.models import Variable, Equation
 from questionary.models import Questionary, Question, QuestionaryResult, Answer
 from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
 
-from product.products_data import products_data
-from product.areas_data import areas_data
-from questionary.questionary_data import questionary_data, question_data
-from questionary.questionary_result_data import questionary_result_data, answer_data
+from findempro.product.data.products_data import products_data
+from findempro.product.data.areas_data import areas_data
+from findempro.questionary.data.questionary_data import questionary_data, question_data
+from findempro.questionary.data.questionary_result_data import questionary_result_data, answer_data
 from variable.variables_data import variables_data
 from variable.equations_data import equations_data
-from simulate.simulate_data import simulation_data, demand_configurations, result_simulation_data
+from findempro.simulate.data.simulate_data import simulation_data, demand_configurations, result_simulation_data
 
 import random
 import numpy as np

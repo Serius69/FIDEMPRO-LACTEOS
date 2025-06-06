@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from user.models import User
-from .data_instructions import data_instructions
+from .data.data_instructions import data_instructions
 import logging
 
 logger = logging.getLogger(__name__)
