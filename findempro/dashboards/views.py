@@ -138,7 +138,13 @@ def index(request):
 
         business = DashboardService.get_user_business(request.user)
         if not business:
-            messages.warning(request, "No tienes un negocio activo. Por favor crea uno primero.")
+            messages.warning(request, "No tienes un negocio activo. Por favor crea uno primero.", extra_tags='timeout-30s')
+            # Agregar variable para mostrar el botón en la plantilla
+            context = {
+                'form': form,
+                'show_create_elements_button': True,
+            }
+            return render(request, 'dashboards/index.html', context)
             return redirect('business:business.create')
 
         request.session['business_id'] = business.id

@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_protect
 
 from .forms import RegisterElementsForm
 from user.models import UserProfile
@@ -16,12 +18,13 @@ from variable.models import Variable, Equation
 from questionary.models import Questionary, Question, QuestionaryResult, Answer
 from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior
 
-from product.products_data import products_data
-from product.areas_data import areas_data
-from questionary.questionary_data import questionary_data, question_data
-from questionary.questionary_result_data import questionary_result_data, answer_data
+from product.data.products_data import products_data
+from product.data.areas_data import areas_data
+from questionary.data.questionary_data import questionary_data, question_data
+from questionary.data.questionary_result_data import questionary_result_data, answer_data
 from variable.variables_data import variables_data
 from variable.equations_data import equations_data
+from simulate.data.simulate_data import simulation_data_leche,simulation_data_queso,simulation_data_yogur, pdf_config_by_product, result_simulation_data_by_product
 
 import random
 import numpy as np
@@ -42,32 +45,86 @@ class PagesView(TemplateView):
 def register_elements(request):
     """
     Vista para mostrar el formulario de registro de elementos.
-    Redirige a la función que realiza la creación si es POST y válido.
+    Muestra un preview de los datos a crear antes de confirmar.
     """
-    if request.method == 'POST':
-        form = RegisterElementsForm(request.POST)
-        if form.is_valid():
-            return redirect('register_elements_create')
-    else:
-        form = RegisterElementsForm()
+    preview_data = {
+        'business': {
+            'name': "Pyme Láctea",
+            'location': "La Paz",
+            'image_src': "business/pyme_lactea_default.jpg",
+        },
+        'products_preview': products_data,
+        'areas_preview': areas_data,
+        'variable_preview': variables_data,
+        'equation_preview': equations_data,
+        'questionarie_preview': questionary_data,
+        'question_preview': question_data,
+        'simulate_leche_preview': simulation_data_leche,
+        'simulate_queso_preview': simulation_data_queso,
+        'simulate_yogur_preview': simulation_data_yogur,
+        'demand_configurations_preview': pdf_config_by_product,
+        'result_simulation_preview': result_simulation_data_by_product,
+    }
+    # print(f"Preview data: {preview_data}")
+    
+    form = RegisterElementsForm()
     return render(request, 'pages/register_elements.html', {
         'form': form,
-        'title': 'Registrar Elementos'
+        'preview_data': preview_data,
+        'title': 'Previsualización de Elementos'
     })
 
 
 @login_required
+@require_http_methods(["POST"])
+@csrf_protect
 @transaction.atomic
 def register_elements_create(request):
     """
     Realiza la creación de los elementos del negocio para el usuario actual.
+    Solo acepta métodos POST y requiere confirmación.
     """
+    # Verificar que se envió la confirmación
+    if not request.POST.get('confirm_setup'):
+        messages.error(request, _('Solicitud inválida. Por favor, intente nuevamente.'))
+        return redirect("dashboard:index")
+    
     try:
-        create_and_save_business(request.user)
-        messages.success(request, _('Elementos registrados correctamente.'))
+        # Verificar si el usuario ya tiene un negocio configurado
+        if hasattr(request.user, 'business') and request.user.business.exists():
+            messages.warning(request, _('Ya tiene una configuración de negocio existente.'))
+            return redirect("dashboard:index")
+        
+        # Crear el negocio y sus elementos
+        logger.info(f"Iniciando creación de negocio para usuario {request.user.id}")
+        
+        business = create_and_save_business(request.user)
+        logger.info(f"Negocio creado con ID: {business.id}")
+        
+        # Registrar elementos de simulación
+        register_elements_simulation(request)
+        logger.info(f"Elementos de simulación registrados para usuario {request.user.id}")
+        
+        messages.success(
+            request, 
+            _(
+                'Configuración creada exitosamente. '
+                'Su negocio lácteo ha sido configurado con todos los elementos iniciales. '
+                'Puede personalizar la información desde el panel de control.'
+            )
+        )
+        
     except Exception as e:
         logger.error(f"Error creating business for user {request.user.id}: {str(e)}")
-        messages.error(request, _('Error al crear el negocio. Por favor, intente nuevamente.'))
+        messages.error(
+            request, 
+            _(
+                'Error al crear la configuración del negocio. '
+                'Por favor, contacte al soporte técnico si el problema persiste.'
+            )
+        )
+        return redirect("dashboard:index")
+    
     return redirect("dashboard:index")
 
 
@@ -122,38 +179,47 @@ def create_and_save_business(user: User) -> Business:
 def create_and_save_products(business: Business) -> None:
     """
     Crear y guardar productos para un business
-    
+
     Args:
         business: Instancia del negocio
     """
     try:
         created_products = []
-        
+
         for data in products_data:
             if not data.get('name') or not data.get('type'):
                 logger.warning(f"Skipping product with incomplete data: {data}")
                 continue
 
-            image_filename = f"{data.get('name', 'default')}.jpg"
-            image_src = os.path.join(settings.MEDIA_URL, "product", image_filename)
-            # image_src = f"product/{image_filename}"
+            # Crear nombre de archivo seguro
+            safe_filename = data.get('name', 'default').replace(' ', '_').lower()
+            image_filename = f"{safe_filename}.jpg"
 
-            # Asegura que la carpeta exista
+            # Ruta relativa para guardar en la base de datos (NO incluir MEDIA_URL)
+            image_src = f"product/{image_filename}"
+
+            # Construir ruta absoluta para verificar/crear archivo físico
             image_dir = os.path.join(settings.MEDIA_ROOT, "product")
-            os.makedirs(image_dir, exist_ok=True)
+            image_path = os.path.join(image_dir, image_filename)
 
-            # Asegura que el archivo exista (puedes copiar un placeholder si lo tienes)
-            image_path = os.path.join(settings.MEDIA_ROOT, image_src)
+            # Solo crear la carpeta si no existe
+            if not os.path.isdir(image_dir):
+                os.makedirs(image_dir, exist_ok=True)
+
+            # Crear archivo placeholder si no existe
             if not os.path.exists(image_path):
-                with open(image_path, "wb") as f:
-                    pass  # crea archivo vacío
-
-            print(f"Creating product with image: {image_src}")
+                try:
+                    create_placeholder_image(image_path, data.get('name', 'Producto'))
+                except Exception as e:
+                    logger.warning(f"Could not create placeholder image for {image_filename}: {str(e)}")
+                    # Crear archivo vacío como último recurso
+                    with open(image_path, "wb") as f:
+                        pass
 
             product = Product.objects.create(
                 name=data['name'],
                 description=data.get('description', ''),
-                image_src=image_src,
+                image_src=image_src,  # Solo la ruta relativa
                 type=data['type'],
                 is_active=True,
                 fk_business=business,
@@ -171,23 +237,39 @@ def create_and_save_products(business: Business) -> None:
         logger.error(f"Error creating products for business {business.id}: {str(e)}")
         raise
 
-
 def create_and_save_areas(product: Product) -> None:
     """
     Crear y guardar áreas para un producto
-    
+
     Args:
         product: Instancia del producto
     """
     try:
         created_areas = []
-        
+
         for data in areas_data:
             if not data.get('name'):
                 continue
-                
-            image_filename = f"{data.get('name', 'default')}.jpg"
+
+            # Crear nombre de archivo seguro
+            safe_filename = data.get('name', 'default').replace(' ', '_').lower()
+            image_filename = f"{safe_filename}.jpg"
+
+            # Ruta relativa para la base de datos
             image_src = f"area/{image_filename}"
+
+            # Construir ruta absoluta para verificar/crear archivo
+            image_dir = os.path.join(settings.MEDIA_ROOT, "area")
+            image_path = os.path.join(image_dir, image_filename)
+
+            # Solo crear archivo si no existe, NO crear carpeta si ya existe
+            if os.path.isdir(image_dir) and not os.path.exists(image_path):
+                try:
+                    create_placeholder_image(image_path, data.get('name', 'Area'))
+                except Exception as e:
+                    logger.warning(f"Could not create placeholder image for {image_filename}: {str(e)}")
+                    with open(image_path, "wb") as f:
+                        pass
 
             area = Area.objects.create(
                 name=data['name'],
@@ -221,8 +303,26 @@ def create_variables_and_equations(product: Product) -> None:
                 logger.warning(f"Skipping variable with incomplete data: {data}")
                 continue
                 
-            image_filename = f"{data.get('initials', 'default')}.jpg"
+            # Crear nombre de archivo seguro basado en iniciales
+            safe_filename = data.get('initials', 'default').replace(' ', '_').lower()
+            image_filename = f"{safe_filename}.jpg"
+            
+            # Ruta relativa para la base de datos
             image_src = f"variable/{image_filename}"
+            
+            # Construir ruta absoluta para verificar/crear archivo
+            image_dir = os.path.join(settings.MEDIA_ROOT, "variable")
+            image_path = os.path.join(image_dir, image_filename)
+            
+            # Asegurar que la carpeta y archivo existen
+            os.makedirs(image_dir, exist_ok=True)
+            if not os.path.exists(image_path):
+                try:
+                    create_placeholder_image(image_path, data.get('initials', 'VAR'))
+                except Exception as e:
+                    logger.warning(f"Could not create placeholder image for {image_filename}: {str(e)}")
+                    with open(image_path, "wb") as f:
+                        pass
             
             variable = Variable.objects.create(
                 name=data.get('name'),
@@ -443,48 +543,35 @@ def create_and_save_questions(questionary: Questionary) -> None:
         raise
 
 
-@login_required
-@transaction.atomic
-def register_elements_simulation(request):
+def register_elements_simulation(request, user=None):
     """
-    Registrar elementos de simulación para el usuario actual
+    Registrar elementos de simulación para el usuario actual o especificado.
+    Si user es None, usa request.user.
     """
-    if request.method == 'POST':
-        form = RegisterElementsForm(request.POST)
-        if form.is_valid():
-            try:
-                questionaries = Questionary.objects.filter(
-                    is_active=True, 
-                    fk_product__fk_business__fk_user=request.user
-                ).select_related('fk_product__fk_business')
+    if user is None:
+        user = request.user
 
-                if not questionaries.exists():
-                    messages.warning(request, _('No se encontraron cuestionarios activos.'))
-                    return redirect("dashboard:index")
+    try:
+        questionaries = Questionary.objects.filter(
+            is_active=True, 
+            fk_product__fk_business__fk_user=user
+        ).select_related('fk_product__fk_business')
 
-                simulations_created = 0
-                for questionary in questionaries:
-                    if create_and_save_questionary_result(questionary):
-                        simulations_created += 1
+        if not questionaries.exists():
+            logger.warning(f"No active questionaries found for user {user.id}")
+            return 0
 
-                messages.success(
-                    request, 
-                    _(f'{simulations_created} simulaciones creadas exitosamente.')
-                )
-                return redirect("dashboard:index")
-                    
-            except Exception as e:
-                logger.error(f"Error in simulation registration: {str(e)}")
-                messages.error(request, _('Error al procesar la simulación.'))
-                form.add_error(None, str(e))
+        simulations_created = 0
+        for questionary in questionaries:
+            if create_and_save_questionary_result(questionary):
+                simulations_created += 1
 
-    else:
-        form = RegisterElementsForm()
+        logger.info(f"{simulations_created} simulations created for user {user.id}")
+        return simulations_created
 
-    return render(request, 'pages/register_elements.html', {
-        'form': form,
-        'title': 'Registrar Simulación'
-    })
+    except Exception as e:
+        logger.error(f"Error in simulation registration for user {user.id}: {str(e)}")
+        return 0
 
 
 def create_and_save_questionary_result(questionary: Questionary) -> bool:
@@ -910,3 +997,48 @@ pages_maintenance = PagesMaintenanceView.as_view()
 pages_coming_soon = PagesComingSoonView.as_view()
 pages_privacy_policy = PagesPrivacyPolicyView.as_view()
 pages_terms_conditions = PagesTermsConditionsView.as_view()
+
+
+
+# Función auxiliar para crear archivos de imagen placeholder
+def create_placeholder_image(image_path: str, text: str = "Placeholder"):
+    """
+    Crear una imagen placeholder simple
+    
+    Args:
+        image_path: Ruta donde crear la imagen
+        text: Texto a mostrar en la imagen
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        
+        # Crear imagen
+        img = Image.new('RGB', (300, 200), color='lightgray')
+        draw = ImageDraw.Draw(img)
+        
+        # Intentar cargar fuente
+        try:
+            font = ImageFont.truetype("arial.ttf", 16)
+        except:
+            font = ImageFont.load_default()
+        
+        # Agregar texto centrado
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = (300 - text_width) // 2
+        y = (200 - text_height) // 2
+        
+        draw.text((x, y), text, fill='black', font=font)
+        img.save(image_path, 'JPEG')
+        
+    except ImportError:
+        # Si PIL no está disponible, crear archivo JPEG mínimo
+        with open(image_path, "wb") as f:
+            f.write(b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444\x1f\'9=82<.342\xff\xc0\x00\x11\x08\x00\xc8\x01,\x03\x01"\x00\x02\x11\x01\x03\x11\x01\xff\xc4\x00\x14\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\xff\xc4\x00\x14\x10\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xda\x00\x0c\x03\x01\x00\x02\x11\x03\x11\x00\x3f\x00\xaa\xff\xd9')
+    except Exception as e:
+        logger.warning(f"Could not create placeholder image: {str(e)}")
+        # Crear archivo vacío como último recurso
+        with open(image_path, "wb") as f:
+            pass

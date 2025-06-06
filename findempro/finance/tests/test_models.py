@@ -4,7 +4,7 @@ from django.test import TestCase
 from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
 from business.models import Business
 from simulate.models import Simulation
-from finance.finance_data import recommendation_data
+from findempro.finance.data.finance_data import recommendation_data
 
 # UNIT TESTS
 @pytest.mark.django_db

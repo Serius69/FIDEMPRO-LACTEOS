@@ -189,7 +189,7 @@ product_metrics = {
     'Leche Entera': {
         'market_share': 0.35,
         'growth_rate': 0.05,
-        'customer_satisfaction': 0.92,
+        'customer_satisfaction': 0.92,                                                                                 
         'production_efficiency': 0.88
     },
     'Yogurt Natural': {

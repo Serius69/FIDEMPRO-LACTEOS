@@ -556,3 +556,35 @@ def simulate_add_view(request):
     """Function-based view wrapper for compatibility"""
     view = SimulateAddView.as_view()
     return view(request)
+
+class SimulateListView(LoginRequiredMixin, View):
+    """View to list all simulations for the current user"""
+
+    def get(self, request, *args, **kwargs):
+        # Get all businesses for the user
+        businesses = Business.objects.filter(is_active=True, fk_user=request.user)
+        # Get all products for those businesses
+        products = Product.objects.filter(is_active=True, fk_business__in=businesses)
+        # Get all simulations related to those products via questionary results
+        simulations = Simulation.objects.filter(
+            is_active=True,
+            fk_questionary_result__fk_questionary__fk_product__in=products
+        ).select_related(
+            'fk_questionary_result__fk_questionary__fk_product__fk_business',
+            'fk_fdp'
+        ).order_by('-date_created')
+
+        # Paginate results
+        page = request.GET.get('page', 1)
+        paginator = Paginator(simulations, 20)
+        try:
+            simulations_page = paginator.page(page)
+        except PageNotAnInteger:
+            simulations_page = paginator.page(1)
+        except EmptyPage:
+            simulations_page = paginator.page(paginator.num_pages)
+
+        context = {
+            'simulations': simulations_page,
+        }
+        return render(request, 'simulate/simulate-list.html', context)

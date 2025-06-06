@@ -1,4 +1,6 @@
+# variables_data.py - Versión Final
 variables_data = [
+# VARIABLES EXÓGENAS (TIPO 1)
 {'name': 'PRECIO DE VENTA DEL PRODUCTO',
 'initials': 'PVP',
 'type': 1,
@@ -174,6 +176,56 @@ variables_data = [
 'unit': 'L',
 'description': 'Consumo diario promedio'},
 
+# NUEVAS VARIABLES EXÓGENAS AGREGADAS
+{'name': 'MINUTOS LABORABLES POR DÍA',
+'initials': 'MLP',
+'type': 1,
+'unit': 'MINUTOS',
+'description': 'TOTAL DE MINUTOS LABORABLES EN UN DÍA DE TRABAJO'},
+
+{'name': 'PRODUCTOS DEVUELTOS',
+'initials': 'PD',
+'type': 1,
+'unit': 'L',
+'description': 'CANTIDAD DE PRODUCTOS DEVUELTOS POR PROBLEMAS DE CALIDAD'},
+
+{'name': 'HORAS TOTALES PLANIFICADAS',
+'initials': 'HTP',
+'type': 1,
+'unit': 'HORAS',
+'description': 'HORAS TOTALES PLANIFICADAS PARA OPERACIÓN'},
+
+{'name': 'HORAS DE MANTENIMIENTO',
+'initials': 'HM',
+'type': 1,
+'unit': 'HORAS',
+'description': 'HORAS DEDICADAS A MANTENIMIENTO PREVENTIVO Y CORRECTIVO'},
+
+{'name': 'COSTO DE MANTENIMIENTO',
+'initials': 'CM',
+'type': 1,
+'unit': 'BS',
+'description': 'COSTO TOTAL DE MANTENIMIENTO DE EQUIPOS'},
+
+{'name': 'MATERIA PRIMA UTILIZADA',
+'initials': 'MP',
+'type': 1,
+'unit': 'L',
+'description': 'CANTIDAD TOTAL DE MATERIA PRIMA UTILIZADA EN PRODUCCIÓN'},
+
+{'name': 'TASA DE INTERÉS BANCARIA',
+'initials': 'TIB',
+'type': 1,
+'unit': '%',
+'description': 'TASA DE INTERÉS PARA FINANCIAMIENTO BANCARIO'},
+
+{'name': 'INFLACIÓN MENSUAL',
+'initials': 'IM',
+'type': 1,
+'unit': '%',
+'description': 'TASA DE INFLACIÓN MENSUAL DEL MERCADO'},
+
+# VARIABLES DE ESTADO (TIPO 2)
 {'name': 'Cantidad producida de productos lácteos',
 'initials': 'QPL',
 'type': 2,
@@ -203,7 +255,6 @@ variables_data = [
 'type': 2,
 'unit': 'BS',
 'description': 'TOTAL DE INGRESOS OBTENIDOS ANTES DE DEDUCIR LOS GASTOS Y LOS IMPUESTOS, MEDIDA FINANCIERA UTILIZADA PARA EVALUAR LA RENTABILIDAD.'},
-
 
 {'name': 'LLEGADA DE CLIENTES',
 'initials': 'LC',
@@ -247,6 +298,32 @@ variables_data = [
 'unit': 'L',
 'description': 'CANTIDAD TOTAL DE PRODUCTOS LÁCTEOS FABRICADOS'},
 
+# NUEVAS VARIABLES DE ESTADO AGREGADAS
+{'name': 'EFICIENCIA OPERATIVA',
+'initials': 'EO',
+'type': 2,
+'unit': '%',
+'description': 'PORCENTAJE DE EFICIENCIA EN LA OPERACIÓN PRODUCTIVA'},
+
+{'name': 'ÍNDICE DE SATISFACCIÓN CLIENTE',
+'initials': 'ISC',
+'type': 2,
+'unit': '%',
+'description': 'MEDIDA DE SATISFACCIÓN DE LOS CLIENTES ATENDIDOS'},
+
+{'name': 'TIEMPO DE CICLO TOTAL',
+'initials': 'TCT',
+'type': 2,
+'unit': 'DÍAS',
+'description': 'TIEMPO TOTAL DEL CICLO DE PRODUCCIÓN Y ENTREGA'},
+
+{'name': 'COSTO DE OPORTUNIDAD',
+'initials': 'CO',
+'type': 2,
+'unit': 'BS',
+'description': 'COSTO ASOCIADO A LA DEMANDA NO SATISFECHA'},
+
+# VARIABLES ENDÓGENAS (TIPO 3)
 {'name': 'COSTO TOTAL REORDEN',
 'initials': 'CTR',
 'type': 3,
@@ -317,8 +394,7 @@ variables_data = [
 'initials': 'GG',
 'type': 3,
 'unit': 'BS',
-'description': 'COSTOS OPERATIVOS Y ADMINISTRATIVOS EN LAS PYMES DEL SECTOR LÁ'
-},
+'description': 'COSTOS OPERATIVOS Y ADMINISTRATIVOS EN LAS PYMES DEL SECTOR LÁCTEO'},
 
 {'name': 'COSTO TOTAL TRANSPORTE',
 'initials': 'CTTL',
@@ -469,4 +545,71 @@ variables_data = [
 'type': 3,
 'unit': 'DIAS',
 'description': 'CAPACIDAD MAXIMA DE INSUMOS DEL PRODUCTO FINAL'},
+
+# NUEVAS VARIABLES ENDÓGENAS AGREGADAS
+{'name': 'ÍNDICE DE ROTACIÓN DE CAPITAL',
+'initials': 'IRC',
+'type': 3,
+'unit': 'VECES',
+'description': 'NÚMERO DE VECES QUE SE RECUPERA EL CAPITAL INVERTIDO EN UN PERÍODO'},
+
+{'name': 'PUNTO DE EQUILIBRIO',
+'initials': 'PE',
+'type': 3,
+'unit': 'UNIDADES',
+'description': 'CANTIDAD MÍNIMA DE UNIDADES A VENDER PARA CUBRIR COSTOS'},
+
+{'name': 'ÍNDICE DE CALIDAD',
+'initials': 'IC',
+'type': 3,
+'unit': '%',
+'description': 'PORCENTAJE DE PRODUCTOS QUE CUMPLEN ESTÁNDARES DE CALIDAD'},
+
+{'name': 'EFICIENCIA DE DISTRIBUCIÓN',
+'initials': 'ED',
+'type': 3,
+'unit': '%',
+'description': 'EFICIENCIA EN EL PROCESO DE DISTRIBUCIÓN DE PRODUCTOS'},
+
+{'name': 'TASA DE CONVERSIÓN',
+'initials': 'TC',
+'type': 3,
+'unit': '%',
+'description': 'PORCENTAJE DE CLIENTES POTENCIALES CONVERTIDOS EN VENTAS'},
+
+{'name': 'COSTO POR LITRO PRODUCIDO',
+'initials': 'CLP',
+'type': 3,
+'unit': 'BS/L',
+'description': 'COSTO TOTAL POR CADA LITRO DE PRODUCTO LÁCTEO PRODUCIDO'},
+
+{'name': 'ÍNDICE DE PRODUCTIVIDAD TOTAL',
+'initials': 'IPT',
+'type': 3,
+'unit': 'ÍNDICE',
+'description': 'MEDIDA INTEGRAL DE LA PRODUCTIVIDAD DEL SISTEMA'},
+
+{'name': 'CAPACIDAD DE RESPUESTA',
+'initials': 'CR',
+'type': 3,
+'unit': 'ÍNDICE',
+'description': 'CAPACIDAD DE ADAPTACIÓN A CAMBIOS EN LA DEMANDA'},
+
+{'name': 'ÍNDICE DE MANTENIMIENTO PREVENTIVO',
+'initials': 'IMP',
+'type': 3,
+'unit': '%',
+'description': 'EFECTIVIDAD DEL PROGRAMA DE MANTENIMIENTO PREVENTIVO'},
+
+{'name': 'COSTO DE MANTENIMIENTO POR UNIDAD',
+'initials': 'CMU',
+'type': 3,
+'unit': 'BS/L',
+'description': 'COSTO DE MANTENIMIENTO POR LITRO PRODUCIDO'},
+
+{'name': 'ÍNDICE DE DESPERDICIO',
+'initials': 'ID',
+'type': 3,
+'unit': '%',
+'description': 'PORCENTAJE DE MATERIA PRIMA DESPERDICIADA EN PRODUCCIÓN'},
 ]

@@ -669,4 +669,177 @@ function nextStep() {
     }
 }
 
-function previousStep
+function previousStep() {
+    if (currentStep > 0) {
+        currentStep--;
+        showStep(currentStep);
+    }
+}
+function skipTutorial() {
+    endTutorial();
+}
+function endTutorial() {
+    document.getElementById('tutorialOverlay').style.display = 'none';
+    document.getElementById('tutorialPopup').style.display = 'none';
+    localStorage.setItem('areaOverviewTutorialCompleted', 'true');
+}
+// Highlight element for tutorial
+document.querySelectorAll('.highlight-element').forEach(el => {
+    el.classList.remove('highlight-element');
+});
+// Initialize tutorial on page load
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('areaOverviewTutorialCompleted') !== 'true') {
+        startTutorial();
+    }
+});
+// Update variable and relation counts
+function updateCounts() {
+    const variableCount = document.querySelectorAll('.variable-tag').length;
+    const relationCount = document.querySelectorAll('.equation-card').length; // Assuming each equation represents a relation
+    
+    document.getElementById('variableCount').textContent = variableCount;
+    document.getElementById('relationCount').textContent = relationCount;
+}
+// Call updateCounts on page load
+document.addEventListener('DOMContentLoaded', () => {
+    updateCounts();
+});
+// Function to print the area overview
+function printArea() {
+    const printContent = document.querySelector('.main-content').innerHTML;
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write('<html><head><title>Imprimir Área</title>');
+    printWindow.document.write('<link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}">');
+    printWindow.document.write('<link rel="stylesheet" href="{% static "css/style.css" %}">');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+}
+// Function to export data (example: download as CSV)
+function exportData() {
+    const equations = Array.from(document.querySelectorAll('.equation-card')).map(card => {
+        const title = card.querySelector('.card-title').textContent;
+        const expression = card.querySelector('.equation-expression').textContent;
+        const variables = Array.from(card.querySelectorAll('.variable-tag')).map(tag => tag.textContent.trim());
+        return { title, expression, variables };
+    });
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Título,Ecuación,Variables\n";
+    equations.forEach(eq => {
+        csvContent += `"${eq.title}","${eq.expression}","${eq.variables.join(';')}"\n`;
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "area_equations.csv");
+    document.body.appendChild(link);
+    link.click();
+}
+// Function to reset the graph view
+function resetGraph() {
+    // Logic to reset the graph view
+    // This could involve reloading the graph data or resetting the zoom/pan state
+    console.log("Graph view reset");
+    // Example: reload the graph with initial data
+    loadGraphData();
+}
+// Function to download the graph as an image
+function downloadGraph() {
+    // Assuming you have a function to get the graph SVG or canvas
+    const svg = document.getElementById('variablesGraph').innerHTML;
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'variables_graph.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+// Function to load equation details for editing
+function loadEquationDetails(equationId) {
+    // Fetch equation details from the server
+    fetch(`/api/equations/${equationId}/`)
+        .then(response => response.json())
+        .then(data => {
+            // Populate the modal fields with the fetched data
+            document.getElementById('equationName').value = data.name;
+            document.getElementById('equationExpression').value = data.expression;
+            // Load variables into the modal (assuming you have a function for this)
+            loadVariablesIntoModal(data.variables);
+        })
+        .catch(error => {
+            console.error('Error loading equation details:', error);
+        });
+}
+// Function to load variables into the modal (example)
+
+function loadVariablesIntoModal(variables) {
+    const variableList = document.getElementById('variableList');
+    variableList.innerHTML = ''; // Clear previous variables
+    variables.forEach(variable => {
+        const li = document.createElement('li');
+        li.textContent = variable.name;
+        li.className = 'list-group-item';
+        variableList.appendChild(li);
+    });
+}
+
+// Function to initialize the graph
+
+function initializeGraph() {
+    // Example: Create a simple D3 graph
+    const svg = d3.select("#variablesGraph")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", "400px");
+    
+    // Add some example nodes and links (replace with actual data)
+    const nodes = [
+        { id: "Variable 1", type: "variable" },
+        { id: "Variable 2", type: "variable" },
+        { id: "Equation 1", type: "equation" }
+    ];
+    
+    const links = [
+        { source: "Variable 1", target: "Equation 1" },
+        { source: "Variable 2", target: "Equation 1" }
+    ];
+    
+    // Draw nodes
+    svg.selectAll("circle")
+        .data(nodes)
+        .enter()
+        .append("circle")
+        .attr("cx", (d, i) => (i + 1) * 100)
+        .attr("cy", 200)
+        .attr("r", 20)
+        .attr("fill", d => d.type === "variable" ? "#4facfe" : "#ffd700");
+    
+    // Draw links
+    svg.selectAll("line")
+        .data(links)
+        .enter()
+        .append("line")
+        .attr("x1", d => nodes.find(n => n.id === d.source).cx)
+        .attr("y1", d => nodes.find(n => n.id === d.source).cy)
+        .attr("x2", d => nodes.find(n => n.id === d.target).cx)
+        .attr("y2", d => nodes.find(n => n.id === d.target).cy)
+        .attr("stroke", "#999");
+}
+// Call initializeGraph on page load
+document.addEventListener('DOMContentLoaded', () => {
+    initializeGraph();
+    // Update counts after the graph is initialized
+    updateCounts();
+});
+</script>
+{% endblock extra_js %}
+
+
