@@ -1,4 +1,6 @@
+# variables_data.py - Versión Final
 variables_data = [
+# VARIABLES EXÓGENAS (TIPO 1)
 {'name': 'PRECIO DE VENTA DEL PRODUCTO',
 'initials': 'PVP',
 'type': 1,
@@ -174,6 +176,8 @@ variables_data = [
 'unit': 'L',
 'description': 'Consumo diario promedio'},
 
+
+# VARIABLES DE ESTADO (TIPO 2)
 {'name': 'Cantidad producida de productos lácteos',
 'initials': 'QPL',
 'type': 2,
@@ -203,7 +207,6 @@ variables_data = [
 'type': 2,
 'unit': 'BS',
 'description': 'TOTAL DE INGRESOS OBTENIDOS ANTES DE DEDUCIR LOS GASTOS Y LOS IMPUESTOS, MEDIDA FINANCIERA UTILIZADA PARA EVALUAR LA RENTABILIDAD.'},
-
 
 {'name': 'LLEGADA DE CLIENTES',
 'initials': 'LC',
@@ -247,6 +250,7 @@ variables_data = [
 'unit': 'L',
 'description': 'CANTIDAD TOTAL DE PRODUCTOS LÁCTEOS FABRICADOS'},
 
+# VARIABLES ENDÓGENAS (TIPO 3)
 {'name': 'COSTO TOTAL REORDEN',
 'initials': 'CTR',
 'type': 3,
@@ -317,8 +321,7 @@ variables_data = [
 'initials': 'GG',
 'type': 3,
 'unit': 'BS',
-'description': 'COSTOS OPERATIVOS Y ADMINISTRATIVOS EN LAS PYMES DEL SECTOR LÁ'
-},
+'description': 'COSTOS OPERATIVOS Y ADMINISTRATIVOS EN LAS PYMES DEL SECTOR LÁCTEO'},
 
 {'name': 'COSTO TOTAL TRANSPORTE',
 'initials': 'CTTL',

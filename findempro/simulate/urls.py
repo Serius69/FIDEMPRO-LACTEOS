@@ -7,6 +7,13 @@ from .views.simulation_views import (
     simulate_add_view,
     AppsView
 )
+from .views.api_views import (
+    SimulationProgressView,
+    SimulationRetryView,
+    SimulationDuplicateView,
+    SimulationStartView,
+    SimulationDeleteView
+)
 
 app_name = 'simulate'
 
@@ -20,8 +27,11 @@ urlpatterns = [
     path("result/<int:simulation_id>/delete/", view=simulate_add_view, name="simulate.delete"),
     path("result/<int:simulation_id>/view/", view=simulate_result_simulation_view, name="simulate.view"),
     path("list/", view=SimulateListView.as_view(), name="simulate.list"),
-    # Additional endpoints for future expansion
-    # path("api/validate/", view=validate_simulation_data, name="simulate.validate"),
-    # path("api/charts/<int:simulation_id>/", view=get_simulation_charts, name="simulate.charts"),
-    # path("export/<int:simulation_id>/", view=export_simulation_results, name="simulate.export"),
+    
+    # API endpoints
+    path("api/progress/<int:simulation_id>/", view=SimulationProgressView.as_view(), name="api.progress"),
+    path("api/retry/<int:simulation_id>/", view=SimulationRetryView.as_view(), name="api.retry"),
+    path("api/duplicate/<int:simulation_id>/", view=SimulationDuplicateView.as_view(), name="api.duplicate"),
+    path("api/start/<int:simulation_id>/", view=SimulationStartView.as_view(), name="api.start"),
+    path("api/delete/<int:simulation_id>/", view=SimulationDeleteView.as_view(), name="api.delete"),
 ]

@@ -75,7 +75,7 @@ class DashboardService:
             'fk_questionary_result__fk_questionary__fk_product'
         ).prefetch_related(
             Prefetch(
-                'resultsimulation_set',
+                'result_simulations',  # Use the correct related_name from ResultSimulation model
                 queryset=ResultSimulation.objects.filter(is_active=True)
             )
         ).order_by('-id')[:10]  # Limitar resultados

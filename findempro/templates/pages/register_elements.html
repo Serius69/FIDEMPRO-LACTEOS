@@ -543,8 +543,26 @@
                                             <p class="mb-0 fw-semibold">{{ preview_data.simulate_preview.quantity_time }} {{ preview_data.simulate_preview.unit_time }}</p>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="text-muted small">Demanda Real</label>
-                                            <p class="mb-0 fw-semibold">{{ preview_data.simulate_preview.demand_history }}</p>
+                                            <label class="text-muted small">Demanda Real Total</label>
+                                            <p class="mb-0 fw-semibold">
+                                                {{ preview_data.simulate_preview.demand_history }}
+                                            </p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small">Demanda por Producto</label>
+                                            <ul class="list-group list-group-flush">
+                                                {% for key, config in preview_data.demand_configurations_preview.items %}
+                                                <li class="list-group-item px-0 py-1">
+                                                    <strong>{{ key|capfirst }}:</strong>
+                                                    <span class="text-muted small">
+                                                        Base: {{ config.base_demand }},
+                                                        {% if config.seasonality %} estacionalidad: Sí, {% else %} estacionalidad: No, {% endif %}
+                                                        crecimiento: {{ config.growth_rate }},
+                                                        volatilidad: {{ config.volatility }}
+                                                    </span>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
                                         </div>
                                         <div class="mb-3">
                                             <label class="text-muted small">Distribución</label>
@@ -568,30 +586,31 @@
                                             <label class="text-muted small">Nivel de Confianza</label>
                                             <p class="mb-0 fw-semibold">{{ preview_data.simulate_preview.confidence_level }}</p>
                                         </div>
-                                        <div class="mb-2">
-                                            <label class="text-muted small">Configuración de Demanda por Producto</label>
-                                            <ul class="list-group list-group-flush">
-                                                {% for key, config in preview_data.demand_configurations_preview.items %}
-                                                <li class="list-group-item px-0 py-1">
-                                                    <strong>{{ key|capfirst }}:</strong>
-                                                    <span class="text-muted small">
-                                                        Base: {{ config.base_demand }},
-                                                        {% if config.seasonality %} estacionalidad: Sí, {% else %} estacionalidad: No, {% endif %}
-                                                        crecimiento: {{ config.growth_rate }},
-                                                        volatilidad: {{ config.volatility }}
-                                                    </span>
-                                                </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-8">
-                                    <h6 class="text-muted text-uppercase mb-3">Proyección de Demanda (Ejemplo)</h6>
+                                    <h6 class="text-muted text-uppercase mb-3">Proyección de Demanda por Producto (Ejemplo)</h6>
                                     <canvas id="demandChart"></canvas>
+                                    <div class="row mt-3">
+                                        {% for key, config in preview_data.demand_configurations_preview.items %}
+                                        <div class="col-md-4">
+                                            <div class="card bg-light mb-2">
+                                                <div class="card-body py-2 px-3">
+                                                    <strong>{{ key|capfirst }}</strong><br>
+                                                    <span class="text-muted small">
+                                                        Base: {{ config.base_demand }}<br>
+                                                        {% if config.seasonality %}Estacionalidad: Sí{% else %}Estacionalidad: No{% endif %}<br>
+                                                        Crecimiento: {{ config.growth_rate }}<br>
+                                                        Volatilidad: {{ config.volatility }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
                                     <p class="text-muted text-center mt-3 small">
                                         <i class="ri-information-line"></i> 
-                                        Gráfica ilustrativa. Los datos reales se generarán con sus parámetros específicos.
+                                        Gráfica ilustrativa. Los datos reales se generarán con sus parámetros específicos de cada producto.
                                     </p>
                                 </div>
                             </div>

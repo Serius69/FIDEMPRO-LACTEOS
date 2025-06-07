@@ -393,13 +393,13 @@
                                 <div class="col-lg-8">
                                     <div class="d-flex align-items-start gap-3">
                                         <div>
-                                            <span class="timeline-dot {{ simulation.status|default:'pending' }}"></span>
+                                            <span class="timeline-dot {{ simulation.status }}"></span>
                                         </div>
                                         <div class="flex-grow-1">
                                             <h5 class="mb-2">
                                                 Simulación #{{ simulation.id }}
-                                                <span class="simulation-status status-{{ simulation.status|default:'pending' }} ms-2">
-                                                    {{ simulation.get_status_display|default:'Pendiente' }}
+                                                <span class="simulation-status status-{{ simulation.status }} ms-2">
+                                                    {{ simulation.get_status_display }}
                                                 </span>
                                             </h5>
                                             
@@ -426,13 +426,6 @@
                                                     {{ simulation.fk_fdp.get_distribution_type_display }}
                                                 </div>
                                             </div>
-                                            
-                                            {% if simulation.error_message %}
-                                            <div class="alert alert-danger mt-2 mb-0">
-                                                <i class="bx bx-error-circle me-2"></i>
-                                                {{ simulation.error_message }}
-                                            </div>
-                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -441,20 +434,10 @@
                                     <div class="action-buttons justify-content-lg-end mt-3 mt-lg-0">
                                         {% if simulation.status == 'completed' %}
                                         <a href="{% url 'simulate:simulate.result' simulation.id %}" 
-                                           class="btn btn-primary">
+                                        class="btn btn-primary">
                                             <i class="bx bx-show me-2"></i>
                                             Ver Resultados
                                         </a>
-                                        {% elif simulation.status == 'processing' %}
-                                        <button class="btn btn-warning" onclick="checkProgress({{ simulation.id }})">
-                                            <i class="bx bx-loader-alt bx-spin me-2"></i>
-                                            Procesando...
-                                        </button>
-                                        {% elif simulation.status == 'failed' %}
-                                        <button class="btn btn-danger" onclick="retrySimulation({{ simulation.id }})">
-                                            <i class="bx bx-refresh me-2"></i>
-                                            Reintentar
-                                        </button>
                                         {% else %}
                                         <button class="btn btn-info" onclick="startSimulation({{ simulation.id }})">
                                             <i class="bx bx-play me-2"></i>
@@ -660,11 +643,11 @@ function checkProgress(simulationId) {
 // Retry failed simulation
 function retrySimulation(simulationId) {
     Swal.fire({
-        title: '¿Reintentar simulación?',
-        text: 'Se volverá a ejecutar la simulación',
+        title: '¿Reiniciar simulación?',
+        text: 'Se eliminarán los resultados actuales y se volverá a ejecutar',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Reintentar',
+        confirmButtonText: 'Reiniciar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -680,7 +663,7 @@ function retrySimulation(simulationId) {
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Reintentando',
+                        title: 'Reiniciando',
                         text: 'La simulación se está ejecutando nuevamente'
                     });
                     setTimeout(() => location.reload(), 2000);
@@ -688,17 +671,9 @@ function retrySimulation(simulationId) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: data.message || 'No se pudo reintentar la simulación'
+                        text: data.message || 'No se pudo reiniciar la simulación'
                     });
                 }
-            })
-            .catch(error => {
-                console.error('Error retrying simulation:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo reintentar la simulación. Inténtalo de nuevo más tarde.'
-                });
             });
         }
     });
@@ -755,13 +730,23 @@ function duplicateSimulation(simulationId) {
 function startSimulation(simulationId) {
     Swal.fire({
         title: '¿Iniciar simulación?',
-        text: 'La simulación se ejecutará en segundo plano',
+        text: 'La simulación se ejecutará y generará los resultados',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Iniciar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Ejecutando simulación',
+                html: 'Por favor espere...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
             fetch(`/simulate/api/start/${simulationId}/`, {
                 method: 'POST',
                 headers: {
@@ -774,8 +759,8 @@ function startSimulation(simulationId) {
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Simulación iniciada',
-                        text: 'La simulación se está ejecutando en segundo plano',
+                        title: 'Simulación completada',
+                        text: 'La simulación se ha ejecutado correctamente',
                     });
                     setTimeout(() => location.reload(), 2000);
                 } else {
@@ -787,17 +772,54 @@ function startSimulation(simulationId) {
                 }
             })
             .catch(error => {
-                console.error('Error starting simulation:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'No se pudo iniciar la simulación. Inténtalo de nuevo más tarde.'
+                    text: 'Ocurrió un error al ejecutar la simulación'
                 });
             });
         }
     });
 }
-
+// Delete simulation
+function deleteSimulation(simulationId) {
+    Swal.fire({
+        title: '¿Eliminar simulación?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/simulate/api/delete/${simulationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminada',
+                        text: 'La simulación ha sido eliminada'
+                    });
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'No se pudo eliminar la simulación'
+                    });
+                }
+            });
+        }
+    });
+}
 // Helper function to get CSRF token
 function getCookie(name) {
     let cookieValue = null;

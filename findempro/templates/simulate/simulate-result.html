@@ -533,13 +533,13 @@
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-value">
-                        <span class="counter" data-target="{{ demand_initial.quantity|floatformat:'0' }}">0</span> L
+                        <span class="counter" data-target="{{ demand_initial.quantity|default:0|floatformat:'0' }}">0</span> L
                     </div>
                     <div class="stat-label">Demanda Inicial</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">
-                        <span class="counter" data-target="{{ demand_predicted.quantity|floatformat:'0' }}">0</span> L
+                        <span class="counter" data-target="{{ demand_predicted.quantity|default:0|floatformat:'0' }}">0</span> L
                     </div>
                     <div class="stat-label">Demanda Predicha</div>
                 </div>
