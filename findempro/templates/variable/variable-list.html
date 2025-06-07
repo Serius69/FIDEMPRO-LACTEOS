@@ -2,8 +2,74 @@
 {% load static %} 
 {% block title %}Lista de variables{% endblock title %}
 {% block extra_css %}
+<style>
+    .variable-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        height: 100%;
+    }
+    
+    .variable-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: #dee2e6;
+    }
+    
+    .variable-dependencies {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    
+    .variable-impact-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .search-highlight {
+        background-color: #fff3cd;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .variable-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .variable-type-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.2rem;
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+</style>
 {% endblock extra_css %} 
 {% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+</div>
+
 <!-- ============================================================== -->
 <!-- Start right Content here -->
 <!-- ============================================================== -->
@@ -21,17 +87,27 @@
               <div class="py-4">
                 <h4 class="display-6 text-dark">Lista de variables</h4>
                 <div class="container">                      
-                  <p>Página de listado de variables registradas en la base de datos.</p>
+                  <p>Gestione las variables que componen su modelo de simulación empresarial.</p>
                 
-                  <h2>Características clave:</h2>
+                  <h2>Características mejoradas:</h2>
                 
                   <ul>
-                    <li><span class="text-success">Editar:</span> Actualice fácilmente los detalles de las variables, modifique los parámetros y refine los escenarios. Nuestra interfaz intuitiva garantiza una experiencia de edición perfecta, lo que le permite ajustar simulaciones con solo unos pocos clics.</li>
+                    <li><span class="text-primary fw-bold">Vista Inteligente:</span> Visualice las dependencias y el impacto de cada variable en el sistema de simulación.</li>
+                    
+                    <li><span class="text-success fw-bold">Edición Segura:</span> Actualice variables con validación automática de dependencias y prevención de cambios que puedan romper el modelo.</li>
                 
-                    <li><span class="text-danger">Eliminar:</span> ¿Necesita eliminar una variable? La función Eliminar le permite eliminar de manera rápida y segura escenarios que ya no son necesarios. Agilice su biblioteca de simulación sin esfuerzo.</li>
+                    <li><span class="text-warning fw-bold">Análisis de Impacto:</span> Antes de eliminar, vea qué ecuaciones y variables dependen del elemento seleccionado.</li>
                 
-                    <li><span class="text-primary">Ver:</span> Sumérgete profundamente en los detalles de cada variable con la opción Vista. Explore los parámetros, resultados y más. Esta característica es perfecta para analizar los resultados de la simulación y tomar decisiones informadas.</li>
+                    <li><span class="text-info fw-bold">Búsqueda Avanzada:</span> Encuentre variables por nombre, tipo, producto o ecuaciones relacionadas.</li>
                   </ul>
+                  
+                  <div class="alert alert-warning d-flex align-items-center mt-3" role="alert">
+                    <i class="ri-alert-line me-2 fs-4"></i>
+                    <div>
+                        <strong>Importante:</strong> Las variables y ecuaciones son elementos críticos del modelo de simulación. 
+                        La eliminación de cualquier elemento puede afectar la integridad del sistema.
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -44,17 +120,21 @@
         </div>
       </div>
       
+      <!-- Enhanced Filters Section -->
       <div class="row">
         <div class="col-lg-12">
-          <div class="card">
+          <div class="card shadow-sm">
             <div class="card-header">
-              <h6 class="card-title mb-0">Filtrar Resultados</h6>
+              <h6 class="card-title mb-0">
+                <i class="ri-filter-3-line me-2"></i>
+                Filtros Avanzados
+              </h6>
             </div>
             <div class="card-body">
-              <form method="GET" action="{% url 'variable:variable.list' %}">
+              <form method="GET" action="{% url 'variable:variable.list' %}" id="filterForm">
                 <div class="row g-3">
-                  <div class="col-md-4">
-                    <label for="product-select" class="form-label">Seleccione el producto</label>
+                  <div class="col-md-3">
+                    <label for="product-select" class="form-label">Producto</label>
                     <select class="form-control" id="product-select" name="product_id">
                       <option value="">Todos los productos</option>
                       {% for product in products %}
@@ -67,8 +147,9 @@
                       {% endfor %}
                     </select>
                   </div>
-                  <div class="col-md-4">
-                    <label for="type-select" class="form-label">Seleccione el tipo</label>
+                  
+                  <div class="col-md-3">
+                    <label for="type-select" class="form-label">Tipo de Variable</label>
                     <select class="form-control" id="type-select" name="type">
                       <option value="">Todos los tipos</option>
                       <option value="1" {% if request.GET.type == "1" %}selected{% endif %}>Exógena</option>
@@ -76,196 +157,227 @@
                       <option value="3" {% if request.GET.type == "3" %}selected{% endif %}>Endógena</option>
                     </select>
                   </div>
-                  <div class="col-md-4">
-                    <button type="submit" class="btn btn-danger mt-4" id="apply-filters">
-                      <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                      Aplicar Filtros
+                  
+                  <div class="col-md-3">
+                    <label for="search-input" class="form-label">Buscar</label>
+                    <input type="text" class="form-control" id="search-input" name="search" 
+                           placeholder="Nombre, iniciales o descripción..." 
+                           value="{{ request.GET.search }}">
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <label for="sort-select" class="form-label">Ordenar por</label>
+                    <select class="form-control" id="sort-select" name="sort">
+                      <option value="-date_created" {% if request.GET.sort == "-date_created" %}selected{% endif %}>Más recientes</option>
+                      <option value="date_created" {% if request.GET.sort == "date_created" %}selected{% endif %}>Más antiguos</option>
+                      <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>Nombre (A-Z)</option>
+                      <option value="-name" {% if request.GET.sort == "-name" %}selected{% endif %}>Nombre (Z-A)</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                  <div class="col-md-6">
+                    <div class="btn-group" role="group">
+                      <button type="submit" class="btn btn-primary">
+                        <i class="ri-search-line me-1"></i>
+                        Buscar
+                      </button>
+                      <a href="{% url 'variable:variable.list' %}" class="btn btn-light">
+                        <i class="ri-refresh-line me-1"></i>
+                        Limpiar
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6 text-end">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
+                      <i class="ri-add-fill me-1 align-bottom"></i>
+                      Nueva Variable
+                    </button>
+                    
+                    <button type="button" class="btn btn-info ms-2" id="btnExportVariables">
+                      <i class="ri-download-2-line me-1"></i>
+                      Exportar
                     </button>
                   </div>
                 </div>
               </form>
-              <div class="row g-3 mt-3">
-                <div class="col-lg-12">
-                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
-                    <i class="ri-add-fill me-1 align-bottom"></i>
-                    Crear nuevo
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="row">
+      <!-- Variables Grid -->
+      <div class="variable-grid mt-4">
         {% for variable in variables %}
-          <div class="col-md-3 mb-4">
-            <div class="card variablelist-card">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-lg-4 col-md-3">
-                    <div class="avatar-lg">
-                      <div class="avatar-title bg-light rounded">
-                        <img src="{{ variable.get_photo_url }}" alt="{{ variable.name }}" class="avatar-md companyLogo-img" style="object-fit: cover; width: 100%; height: 100%;" />
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-8 col-md-9">
-                    <div class="d-flex mb-4">
-                      <div class="ms-3 flex-grow-1">
-                        <img src="{{ variable.fk_product.get_photo_url }}" alt="{{ variable.fk_product.name }}" class="d-none cover-img" />
-                        <a href="{% url 'variable:variable.overview' variable.id %}">
-                          <h5 class="job-title">{{ variable.name }}</h5>
-                        </a>
-                        <p class="company-name text-muted mb-0">{{ variable.fk_product.name }}</p>
-                      </div>
-                    </div>
-                    <p class="text-muted job-description">{{ variable.description|truncatechars:80 }}</p>
+          <div class="card variable-card">
+            <!-- Impact Badge -->
+            {% if variable.equation_count > 0 %}
+              <span class="variable-impact-badge badge bg-danger">
+                <i class="ri-links-line"></i> {{ variable.equation_count }} ecuaciones
+              </span>
+            {% endif %}
+            
+            <div class="card-body">
+              <div class="d-flex align-items-start mb-3">
+                <div class="variable-type-icon 
+                  {% if variable.type == 1 %}bg-success-subtle text-success
+                  {% elif variable.type == 2 %}bg-info-subtle text-info
+                  {% elif variable.type == 3 %}bg-warning-subtle text-warning
+                  {% endif %} me-3">
+                  {% if variable.type == 1 %}
+                    <i class="ri-input-method-line"></i>
+                  {% elif variable.type == 2 %}
+                    <i class="ri-git-repository-line"></i>
+                  {% elif variable.type == 3 %}
+                    <i class="ri-function-line"></i>
+                  {% endif %}
+                </div>
+                
+                <div class="flex-grow-1">
+                  <h5 class="card-title mb-1">
+                    <a href="{% url 'variable:variable.overview' variable.id %}" class="text-dark">
+                      {{ variable.name }}
+                    </a>
+                  </h5>
+                  <p class="text-muted mb-0">
+                    <span class="badge bg-light text-dark">{{ variable.initials }}</span>
+                    {% if variable.unit %}
+                      <span class="ms-2">{{ variable.unit }}</span>
+                    {% endif %}
+                  </p>
+                </div>
+                
+                <div class="dropdown">
+                  <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                    <i class="ri-more-2-fill"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}">
+                      <i class="ri-eye-line me-2"></i> Ver detalles
+                    </a>
+                    <a class="dropdown-item edit-variable" href="#" 
+                       data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable" 
+                       data-variable-id="{{ variable.id }}"
+                       onclick="loadVariableDetails('{{ variable.id }}'); return false;">
+                      <i class="ri-pencil-line me-2"></i> Editar
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger delete-variable" href="#" 
+                       data-variable-id="{{ variable.id }}"
+                       data-variable-name="{{ variable.name }}"
+                       data-equation-count="{{ variable.equation_count }}">
+                      <i class="ri-delete-bin-line me-2"></i> Eliminar
+                    </a>
                   </div>
                 </div>
               </div>
-              <div class="card-footer border-top-dashed">
-                <div class="row">
-                  <div class="col-md-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                      <div>
-                        <i class="ri-briefcase-2-line align-bottom me-1"></i>
-                        <span class="job-type">{{ variable.fk_product.name|truncatechars:15 }}</span>
-                      </div>
-                      <div>
-                        <i class="ri-function-line align-bottom me-1"></i>
-                        <span class="job-location">{{ variable.unit|default:"N/A" }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                      <div>
-                        <i class="ri-battery-fill align-bottom me-1"></i>
-                        <span class="badge 
-                          {% if variable.type == 1 %}bg-success-subtle text-success
-                          {% elif variable.type == 2 %}bg-info-subtle text-info
-                          {% elif variable.type == 3 %}bg-warning-subtle text-warning
-                          {% else %}bg-primary-subtle text-primary{% endif %}">
-                          {% if variable.type == 1 %}
-                            Exógena
-                          {% elif variable.type == 2 %}
-                            Estado
-                          {% elif variable.type == 3 %}
-                            Endógena
-                          {% else %}
-                            Otro Tipo
-                          {% endif %}
-                        </span>
-                      </div>
-                      <div>
-                        <i class="ri-time-line align-bottom me-1"></i>
-                        <span class="job-postdate">{{ variable.date_created|date:"M j, Y" }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="dropdown">
-                      <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i data-feather="more-horizontal" class="icon-sm"></i>
-                      </button>
-                      <div class="dropdown-menu dropdown-menu-end">
-                        <a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}">
-                          <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                          Vista
-                        </a>
-                        <a href="#" class="dropdown-item edit-variable" data-bs-toggle="modal"
-                          data-bs-target="#addOrUpdateVariable" data-variable-id="{{ variable.id }}"
-                          onclick="loadVariableDetails('{{ variable.id }}'); return false;">
-                          <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                          Editar
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item delete-variable" 
-                          data-bs-toggle="modal" data-bs-target="#removeVariableModal" 
-                          data-variable-id="{{ variable.id }}">
-                          <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                          Eliminar
-                        </a>
-                      </div>
-                    </div>
-                  </div>
+              
+              <p class="card-text text-muted small mb-3">
+                {{ variable.description|truncatechars:100 }}
+              </p>
+              
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="text-muted small">
+                  <i class="ri-building-line me-1"></i>
+                  {{ variable.fk_product.name|truncatechars:20 }}
+                </div>
+                <div class="text-muted small">
+                  <i class="ri-calendar-line me-1"></i>
+                  {{ variable.date_created|date:"d/m/Y" }}
                 </div>
               </div>
+              
+              {% if variable.related_variables %}
+                <div class="variable-dependencies mt-2 pt-2 border-top">
+                  <i class="ri-git-branch-line me-1"></i>
+                  Relacionada con: {{ variable.related_variables|join:", " }}
+                </div>
+              {% endif %}
             </div>
           </div>
         {% empty %}
           <div class="col-12">
-            <div class="text-center py-4">
-              <lord-icon
-                src="https://cdn.lordicon.com/msoeawqm.json"
-                trigger="loop"
-                colors="primary:#405189,secondary:#0ab39c"
-                style="width: 75px; height: 75px">
-              </lord-icon>
-              <h5 class="mt-2">Lo siento, no hay ningún registro de variable en la base de datos</h5>
-              <p class="text-muted mb-0">Tienes que "agregar variable".</p>
+            <div class="card">
+              <div class="card-body text-center py-5">
+                <lord-icon
+                  src="https://cdn.lordicon.com/msoeawqm.json"
+                  trigger="loop"
+                  colors="primary:#405189,secondary:#0ab39c"
+                  style="width: 120px; height: 120px">
+                </lord-icon>
+                <h5 class="mt-4">No se encontraron variables</h5>
+                <p class="text-muted">
+                  {% if request.GET.search or request.GET.product_id or request.GET.type %}
+                    No hay variables que coincidan con los filtros aplicados.
+                  {% else %}
+                    Comience creando su primera variable para el modelo de simulación.
+                  {% endif %}
+                </p>
+                <button class="btn btn-success mt-3" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
+                  <i class="ri-add-line me-1"></i>
+                  Crear Primera Variable
+                </button>
+              </div>
             </div>
           </div>
         {% endfor %}
       </div>
           
-      <!-- Pagination -->
+      <!-- Enhanced Pagination -->
       {% if variables.has_other_pages %}
-        <div class="align-items-center mt-2 row text-center text-sm-start">
-          <div class="col-sm">
-            <div class="text-muted">
-              Mostrar
-              <span class="fw-semibold">{{ variables.start_index }}</span> a
-              <span class="fw-semibold">{{ variables.end_index }}</span> de
-              <span class="fw-semibold">{{ variables.paginator.count }}</span>
-              Resultados
-            </div>
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <p class="text-muted mb-0">
+              Mostrando <strong>{{ variables.start_index }}</strong> a 
+              <strong>{{ variables.end_index }}</strong> de 
+              <strong>{{ variables.paginator.count }}</strong> variables
+            </p>
           </div>
-          <div class="col-sm-auto">
-            <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-              {% if variables.has_previous %}
-                <li class="page-item">
-                  <a href="?page={{ variables.previous_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">←</a>
-                </li>
-              {% endif %}
-
-              {% if variables.number|add:"-3" > 1 %}
-                <li class="page-item">
-                  <a href="?page=1{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">1</a>
-                </li>
-                <li class="page-item disabled">
-                  <span class="page-link">...</span>
-                </li>
-              {% endif %}
-
-              {% for i in variables.paginator.page_range %}
-                {% if variables.number|add:"-3" <= i <= variables.number|add:"3" %}
-                  <li class="page-item {% if i == variables.number %}active{% endif %}">
-                    <a href="?page={{ i }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ i }}</a>
+          <div class="col-md-6">
+            <nav aria-label="Navegación de variables">
+              <ul class="pagination justify-content-end mb-0">
+                {% if variables.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ variables.previous_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Anterior">
+                      <i class="ri-arrow-left-s-line"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link"><i class="ri-arrow-left-s-line"></i></span>
                   </li>
                 {% endif %}
-              {% endfor %}
 
-              {% if variables.number|add:"3" < variables.paginator.num_pages %}
-                <li class="page-item disabled">
-                  <span class="page-link">...</span>
-                </li>
-                <li class="page-item">
-                  <a href="?page={{ variables.paginator.num_pages }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">{{ variables.paginator.num_pages }}</a>
-                </li>
-              {% endif %}
+                {% for num in variables.paginator.page_range %}
+                  {% if variables.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > variables.number|add:'-3' and num < variables.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
 
-              {% if variables.has_next %}
-                <li class="page-item">
-                  <a href="?page={{ variables.next_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="page-link">→</a>
-                </li>
-              {% endif %}
-            </ul>
-          </div>            
+                {% if variables.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ variables.next_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Siguiente">
+                      <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link"><i class="ri-arrow-right-s-line"></i></span>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          </div>
         </div>
       {% endif %}
-      <!-- end row -->
     </div>
     <!-- container-fluid -->
   </div>
@@ -275,6 +387,63 @@
   {% endblock footer %}
 </div>
 <!-- end main content-->
+
+<!-- Enhanced Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="ri-alert-line me-2"></i>
+          Advertencia: Análisis de Impacto
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <lord-icon
+            src="https://cdn.lordicon.com/gsqxdxog.json"
+            trigger="loop"
+            colors="primary:#f7b84b,secondary:#f06548"
+            style="width: 100px; height: 100px">
+          </lord-icon>
+        </div>
+        
+        <h6 class="text-danger">¿Está seguro de eliminar esta variable?</h6>
+        <p class="mb-3">
+          Variable: <strong id="deleteVariableName"></strong>
+        </p>
+        
+        <div id="impactAnalysis" class="alert alert-warning">
+          <h6 class="alert-heading">
+            <i class="ri-error-warning-line me-2"></i>
+            Impacto en el Sistema
+          </h6>
+          <div id="impactDetails"></div>
+        </div>
+        
+        <div class="alert alert-danger">
+          <i class="ri-alert-line me-2"></i>
+          <strong>¡Advertencia!</strong> Esta acción no se puede deshacer y puede afectar el funcionamiento del modelo de simulación.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form id="deleteVariableForm" method="POST">
+          {% csrf_token %}
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+            <i class="ri-close-line me-1"></i>
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
+            <i class="ri-delete-bin-line me-1"></i>
+            Eliminar de todos modos
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock content %} 
 
 {% block extra_content %}
@@ -287,5 +456,87 @@
 {% block extra_js %}
   <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
   <script src="{% static 'js/edit-add.js' %}"></script>
-  <script src="{% static 'js/delete.js' %}"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Enhanced delete functionality with impact analysis
+      const deleteButtons = document.querySelectorAll('.delete-variable');
+      const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+      const deleteForm = document.getElementById('deleteVariableForm');
+      
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          const variableId = this.dataset.variableId;
+          const variableName = this.dataset.variableName;
+          const equationCount = parseInt(this.dataset.equationCount) || 0;
+          
+          // Set variable name
+          document.getElementById('deleteVariableName').textContent = variableName;
+          
+          // Set form action
+          deleteForm.action = `/variable/delete/${variableId}/`;
+          
+          // Impact analysis
+          const impactDetails = document.getElementById('impactDetails');
+          impactDetails.innerHTML = '';
+          
+          if (equationCount > 0) {
+            impactDetails.innerHTML = `
+              <p class="mb-0">
+                <strong>${equationCount}</strong> ecuación(es) dependen de esta variable.
+                <br>
+                <small>La eliminación de esta variable puede causar errores en el modelo de simulación.</small>
+              </p>
+            `;
+          } else {
+            impactDetails.innerHTML = `
+              <p class="mb-0">
+                Esta variable no tiene ecuaciones dependientes directas, pero puede estar 
+                relacionada con otros elementos del sistema.
+              </p>
+            `;
+          }
+          
+          deleteModal.show();
+        });
+      });
+      
+      // Auto-submit filter form on change
+      const filterInputs = document.querySelectorAll('#filterForm select, #filterForm input');
+      let filterTimeout;
+      
+      filterInputs.forEach(input => {
+        if (input.type === 'text') {
+          input.addEventListener('input', function() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+              document.getElementById('loadingOverlay').style.display = 'flex';
+              document.getElementById('filterForm').submit();
+            }, 500);
+          });
+        } else {
+          input.addEventListener('change', function() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('filterForm').submit();
+          });
+        }
+      });
+      
+      // Export functionality
+      document.getElementById('btnExportVariables').addEventListener('click', function() {
+        const params = new URLSearchParams(window.location.search);
+        params.append('export', 'csv');
+        window.location.href = `${window.location.pathname}?${params.toString()}`;
+      });
+      
+      // Show loading overlay on form submit
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+          document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+      });
+    });
+  </script>
 {% endblock extra_js %}

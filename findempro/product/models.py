@@ -9,8 +9,8 @@ from django.dispatch import receiver
 import os
 from PIL import Image
 from django.core.files.storage import default_storage
-from .products_data import products_data
-from .areas_data import areas_data
+from .data.products_data import products_data
+from .data.areas_data import areas_data
 
 def validate_image_size(image):
     """Validar que la imagen no sea muy grande"""

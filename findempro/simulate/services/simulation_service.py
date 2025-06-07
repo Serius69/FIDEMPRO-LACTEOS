@@ -70,8 +70,8 @@ class SimulationService:
                 is_active=True
             )
             
-            # Create initial demand record
-            self._create_initial_demand(simulation_instance, validated_data['demand_history'])
+            # No crear Demand aquí, es opcional
+            # self._create_initial_demand(simulation_instance, validated_data['demand_history'])
             
             logger.info(f"Simulation {simulation_instance.id} created successfully")
             return simulation_instance
@@ -80,20 +80,37 @@ class SimulationService:
             logger.error(f"Error creating simulation: {str(e)}")
             raise
     
-    def _create_initial_demand(self, simulation_instance: Simulation, demand_history: str) -> Demand:
-        """Create initial demand record from history"""
-        # Parse demand history efficiently
-        demand_history_list = self._parse_demand_history(demand_history)
-        demand_mean = statistics.mean(demand_history_list)
-        
-        product_instance = simulation_instance.fk_questionary_result.fk_questionary.fk_product
-        
-        return Demand.objects.create(
-            quantity=demand_mean,
-            fk_simulation=simulation_instance,
-            fk_product=product_instance,
-            is_predicted=False
-        )
+    def _create_initial_demand(self, simulation_instance: Simulation, demand_history: str) -> Optional[Demand]:
+        """Create initial demand record from history - OPTIONAL"""
+        try:
+            # Check if already exists
+            existing_demand = Demand.objects.filter(
+                fk_simulation=simulation_instance,
+                is_predicted=False
+            ).first()
+            
+            if existing_demand:
+                return existing_demand
+            
+            # Parse demand history efficiently
+            demand_history_list = self._parse_demand_history(demand_history)
+            if not demand_history_list:
+                logger.warning("No demand history to create initial demand")
+                return None
+                
+            demand_mean = statistics.mean(demand_history_list)
+            
+            product_instance = simulation_instance.fk_questionary_result.fk_questionary.fk_product
+            
+            return Demand.objects.create(
+                quantity=demand_mean,
+                fk_simulation=simulation_instance,
+                fk_product=product_instance,
+                is_predicted=False
+            )
+        except Exception as e:
+            logger.warning(f"Could not create initial demand: {str(e)}")
+            return None
     
     def _parse_demand_history(self, demand_history: str) -> List[float]:
         """Parse demand history string to list of floats"""
@@ -133,8 +150,8 @@ class SimulationService:
                 # Bulk save results
                 self._bulk_save_results(simulation_instance, results_to_save)
             
-            # Create predicted demand
-            self._create_predicted_demand(simulation_instance)
+            # No crear predicted demand, es opcional
+            # self._create_predicted_demand(simulation_instance)
             
             logger.info(f"Simulation {simulation_instance.id} executed successfully")
             
@@ -406,14 +423,27 @@ class SimulationService:
         if result_objects:
             ResultSimulation.objects.bulk_create(result_objects)
     
-    def _create_predicted_demand(self, simulation_instance: Simulation) -> None:
-        """Create predicted demand based on simulation results"""
-        # Get the last result
-        last_result = ResultSimulation.objects.filter(
-            fk_simulation=simulation_instance
-        ).order_by('-date').first()
-        
-        if last_result:
+    def _create_predicted_demand(self, simulation_instance: Simulation) -> Optional[Demand]:
+        """Create predicted demand based on simulation results - OPTIONAL"""
+        try:
+            # Check if already exists
+            existing_demand = Demand.objects.filter(
+                fk_simulation=simulation_instance,
+                is_predicted=True
+            ).first()
+            
+            if existing_demand:
+                return existing_demand
+            
+            # Get the last result
+            last_result = ResultSimulation.objects.filter(
+                fk_simulation=simulation_instance
+            ).order_by('-date').first()
+            
+            if not last_result:
+                logger.warning("No results to create predicted demand")
+                return None
+            
             product = simulation_instance.fk_questionary_result.fk_questionary.fk_product
             
             # Create predicted demand
@@ -425,64 +455,110 @@ class SimulationService:
                 confidence_score=0.95 if last_result.demand_std_deviation < 10 else 0.85
             )
             
-            # Create demand behavior analysis
-            initial_demand = Demand.objects.get(
+            # Try to create demand behavior if initial demand exists
+            initial_demand = Demand.objects.filter(
                 fk_simulation=simulation_instance,
                 is_predicted=False
-            )
+            ).first()
             
-            DemandBehavior.objects.create(
-                current_demand=initial_demand,
-                predicted_demand=predicted_demand
-            )
+            if initial_demand:
+                DemandBehavior.objects.create(
+                    current_demand=initial_demand,
+                    predicted_demand=predicted_demand
+                )
+            
+            return predicted_demand
+            
+        except Exception as e:
+            logger.warning(f"Could not create predicted demand: {str(e)}")
+            return None
     
-    def analyze_financial_results(
-        self, simulation_id: int, totales_acumulativos: Dict[str, Dict]
-    ) -> Dict[str, Any]:
+    def analyze_financial_results(self, simulation_id: int, totales_acumulativos: Dict[str, Dict]) -> Dict[str, Any]:
         """Analyze financial results with enhanced insights"""
         try:
-            # Get demands with optimized query
-            demands = Demand.objects.filter(
-                fk_simulation_id=simulation_id
-            ).select_related('fk_simulation__fk_questionary_result__fk_questionary__fk_product__fk_business')
-            
-            demand_initial = demands.get(is_predicted=False)
-            demand_predicted = demands.get(is_predicted=True)
-            
-            # Calculate metrics
-            growth_rate = self._calculate_growth_rate(
-                demand_initial.quantity, demand_predicted.quantity
-            )
-            error_permisible = self._calculate_error(
-                demand_initial.quantity, demand_predicted.quantity
-            )
+            # Get simulation instance
+            simulation = Simulation.objects.select_related(
+                'fk_questionary_result__fk_questionary__fk_product__fk_business'
+            ).get(id=simulation_id)
             
             # Get business instance
-            business_instance = demand_initial.fk_simulation.fk_questionary_result.fk_questionary.fk_product.fk_business
+            business_instance = simulation.fk_questionary_result.fk_questionary.fk_product.fk_business
+            
+            # Get demand data from results
+            results = ResultSimulation.objects.filter(
+                fk_simulation_id=simulation_id,
+                is_active=True
+            ).order_by('date')
+            
+            if results.exists():
+                # Use first and last result for comparison
+                first_result = results.first()
+                last_result = results.last()
+                initial_demand = float(first_result.demand_mean)
+                predicted_demand = float(last_result.demand_mean)
+            else:
+                # Fallback to demand history statistics
+                demand_stats = simulation.get_demand_statistics()
+                initial_demand = demand_stats['mean']
+                predicted_demand = demand_stats['mean']  # Same as initial if no simulation run
+            
+            # Calculate metrics
+            growth_rate = self._calculate_growth_rate(initial_demand, predicted_demand)
+            error_permisible = self._calculate_error(initial_demand, predicted_demand)
             
             # Generate financial recommendations
-            recommendations = self._generate_financial_recommendations_optimized(
-                business_instance, totales_acumulativos, demand_initial.fk_simulation
-            )
+            recommendations = []
+            try:
+                recommendations = self._generate_financial_recommendations_optimized(
+                    business_instance, totales_acumulativos, simulation
+                )
+            except Exception as e:
+                logger.warning(f"Could not generate recommendations: {str(e)}")
             
             # Calculate additional insights
             insights = self._calculate_additional_insights(
                 totales_acumulativos, growth_rate, error_permisible
             )
             
+            # Create simple objects for template compatibility
+            class DemandData:
+                def __init__(self, quantity):
+                    self.quantity = quantity
+            
             return {
-                'demand_initial': demand_initial,
-                'demand_predicted': demand_predicted,
+                'demand_initial': DemandData(initial_demand),
+                'demand_predicted': DemandData(predicted_demand),
                 'growth_rate': growth_rate,
                 'error_permisible': error_permisible,
                 'financial_recommendations_to_show': recommendations,
-                'insights': insights
+                'insights': insights,
+                # Additional data for debugging
+                'has_results': results.exists(),
+                'results_count': results.count(),
             }
             
+        except Simulation.DoesNotExist:
+            logger.error(f"Simulation {simulation_id} not found")
+            raise
         except Exception as e:
             logger.error(f"Error analyzing financial results: {str(e)}")
-            raise
-    
+            # Return safe defaults
+            return {
+                'demand_initial': type('obj', (object,), {'quantity': 0})(),
+                'demand_predicted': type('obj', (object,), {'quantity': 0})(),
+                'growth_rate': 0,
+                'error_permisible': 0,
+                'financial_recommendations_to_show': [],
+                'insights': {
+                    'efficiency_score': 0,
+                    'profitability_index': 0,
+                    'risk_level': 'unknown',
+                    'opportunities': []
+                },
+                'has_results': False,
+                'results_count': 0,
+            }
+
     def _calculate_growth_rate(self, initial: float, predicted: float) -> float:
         """Calculate growth rate with safety checks"""
         if initial == 0:

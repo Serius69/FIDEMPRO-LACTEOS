@@ -1,3 +1,4 @@
+from sqlite3 import NotSupportedError
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.contrib.auth.decorators import login_required
@@ -38,6 +39,12 @@ def paginate(request, queryset, per_page):
         items = paginator.page(1)
     except EmptyPage:
         items = paginator.page(paginator.num_pages)
+    except NotSupportedError:
+        # Fallback: convert queryset to list to avoid count() issues
+        items_list = list(queryset)
+        paginator = Paginator(items_list, per_page)
+        page = request.GET.get('page', 1)
+        return paginator.page(page)
     
     return items
 
@@ -71,8 +78,8 @@ def product_list(request):
                 to_attr='active_areas'
             )
         ).annotate(
-            areas_count=Count('fk_product_area', filter=Q(fk_product_area__is_active=True)),
-            variables_count=Count('fk_product_variable', filter=Q(fk_product_variable__is_active=True))
+            areas_count_db=Count('fk_product_area', filter=Q(fk_product_area__is_active=True)),
+            variables_count_db=Count('fk_product_variable', filter=Q(fk_product_variable__is_active=True))
         )
 
         if business_id != 'All':
@@ -174,7 +181,7 @@ def read_product_view(request, pk):
             'fk_simulation__fk_questionary_result__fk_questionary'
         ).order_by('-id')[:20]
         
-        simulation_ids = results_simulation.values_list('fk_simulation_id', flat=True)
+        simulation_ids = list(results_simulation.values_list('fk_simulation_id', flat=True))
         simulations = Simulation.objects.filter(
             id__in=simulation_ids,
             is_active=True
@@ -370,6 +377,7 @@ def get_product_details(request, pk):
 def area_overview(request, pk):
     """Vista optimizada para mostrar detalles de un área"""
     try:
+        # Use the correct related_name from your Equation model
         area = get_object_or_404(
             Area.objects.select_related(
                 'fk_product',
@@ -377,7 +385,7 @@ def area_overview(request, pk):
                 'fk_product__fk_business__fk_user'
             ).prefetch_related(
                 Prefetch(
-                    'fk_area_equations',
+                    'area_equation',  # This matches the related_name in Equation model
                     queryset=Equation.objects.filter(is_active=True).select_related(
                         'fk_variable1',
                         'fk_variable2',
@@ -397,8 +405,9 @@ def area_overview(request, pk):
             return redirect('product:product.list')
         
         current_datetime = timezone.now()
-        equations_area = area.fk_area_equations.all() if hasattr(area, 'fk_area_equations') else \
-                        Equation.objects.filter(fk_area_id=area.id, is_active=True).order_by('-id')
+        
+        # Use the correct related_name 'area_equation'
+        equations_area = area.area_equation.all()
         
         equations_area = paginate(request, equations_area, 10)
         

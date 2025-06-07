@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
-from django.db.models import Prefetch, Q, Count, Avg, Sum
+from django.db.models import Prefetch, Q, Count, Avg, Sum, Exists, OuterRef
 from django.http import HttpResponseRedirect, HttpResponseNotFound, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -26,7 +26,7 @@ from ..services.simulation_service import SimulationService
 from ..services.statistical_service import StatisticalService
 from ..utils.chart_generators import ChartGenerator
 from ..validators.simulation_validators import SimulationValidator
-from ..tasks import execute_simulation_async  # For async processing if using Celery
+# from ..tasks import execute_simulation_async  # Comentado si no usas Celery
 
 from business.models import Business
 from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
@@ -410,133 +410,146 @@ class SimulateAddView(LoginRequiredMixin, View):
         return redirect('simulate:simulate.show')
 
 
-class SimulateExportView(LoginRequiredMixin, View):
-    """Export simulation results"""
-    
-    def get(self, request, simulation_id, format='pdf', *args, **kwargs):
-        """Export simulation results in specified format"""
-        try:
-            # Get simulation
-            simulation_instance = get_object_or_404(
-                Simulation.objects.select_related(
-                    'fk_questionary_result__fk_questionary__fk_product__fk_business'
-                ),
-                pk=simulation_id
-            )
-            
-            # Check permissions
-            business = simulation_instance.fk_questionary_result.fk_questionary.fk_product.fk_business
-            if business.fk_user != request.user:
-                return JsonResponse({'error': 'Unauthorized'}, status=403)
-            
-            if format == 'pdf':
-                return self._export_pdf(simulation_instance)
-            elif format == 'excel':
-                return self._export_excel(simulation_instance)
-            else:
-                return JsonResponse({'error': 'Invalid format'}, status=400)
-                
-        except Exception as e:
-            logger.error(f"Error exporting simulation: {str(e)}")
-            return JsonResponse({'error': str(e)}, status=500)
-    
-    def _export_pdf(self, simulation_instance):
-        """Export simulation results as PDF"""
-        # This would use a library like ReportLab or WeasyPrint
-        # For now, return a placeholder response
-        return JsonResponse({
-            'message': 'PDF export functionality to be implemented',
-            'simulation_id': simulation_instance.id
-        })
-    
-    def _export_excel(self, simulation_instance):
-        """Export simulation results as Excel"""
-        # This would use openpyxl or xlsxwriter
-        # For now, return a placeholder response
-        return JsonResponse({
-            'message': 'Excel export functionality to be implemented',
-            'simulation_id': simulation_instance.id
-        })
+class SimulateListView(LoginRequiredMixin, View):
+    """View to list all simulations for the current user"""
 
-
-class SimulateValidateView(LoginRequiredMixin, View):
-    """Validate simulation data via AJAX"""
-    
-    def post(self, request, *args, **kwargs):
-        """Validate simulation parameters"""
-        try:
-            # Get data
-            data = json.loads(request.body)
-            
-            # Validate
-            validator = SimulationValidator()
-            errors = validator.validate_simulation_parameters(data)
-            
-            if errors:
-                return JsonResponse({
-                    'valid': False,
-                    'errors': errors
-                })
-            
-            return JsonResponse({
-                'valid': True,
-                'message': 'Datos válidos'
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'valid': False,
-                'errors': [str(e)]
-            }, status=400)
-
-
-class SimulateChartsView(LoginRequiredMixin, View):
-    """Get simulation charts data via AJAX"""
-    
-    def get(self, request, simulation_id, *args, **kwargs):
-        """Get charts data for simulation"""
-        try:
-            # Verify permissions
-            simulation = get_object_or_404(Simulation, pk=simulation_id)
-            business = simulation.fk_questionary_result.fk_questionary.fk_product.fk_business
-            
-            if business.fk_user != request.user:
-                return JsonResponse({'error': 'Unauthorized'}, status=403)
-            
-            # Get chart type
-            chart_type = request.GET.get('type', 'all')
-            
-            # Generate charts data
-            chart_generator = ChartGenerator()
-            results = ResultSimulation.objects.filter(
-                fk_simulation_id=simulation_id
-            ).order_by('date')
-            
-            if chart_type == 'demand':
-                chart_data = chart_generator._create_demand_chart_data(results)
-            elif chart_type == 'financial':
-                # Get financial charts data
-                chart_data = {
-                    'income_expenses': chart_generator._get_income_expenses_data(results),
-                    'roi': chart_generator._get_roi_data(results),
-                }
-            else:
-                # Return all charts data
-                chart_data = chart_generator.generate_all_charts(
-                    simulation_id, simulation, results
+    def get(self, request, *args, **kwargs):
+        # Get all businesses for the user
+        businesses = Business.objects.filter(is_active=True, fk_user=request.user)
+        
+        # Get all products for those businesses
+        products = Product.objects.filter(is_active=True, fk_business__in=businesses)
+        
+        # Get all simulations with filters
+        simulations = Simulation.objects.filter(
+            is_active=True,
+            fk_questionary_result__fk_questionary__fk_product__in=products
+        ).select_related(
+            'fk_questionary_result__fk_questionary__fk_product__fk_business',
+            'fk_fdp'
+        ).annotate(
+            has_results=Exists(
+                ResultSimulation.objects.filter(
+                    fk_simulation=OuterRef('pk'),
+                    is_active=True
                 )
-            
-            return JsonResponse({
-                'success': True,
-                'data': chart_data
+            )
+        )
+        
+        # Apply filters
+        product_filter = request.GET.get('product')
+        if product_filter:
+            simulations = simulations.filter(
+                fk_questionary_result__fk_questionary__fk_product_id=product_filter
+            )
+        
+        status_filter = request.GET.get('status')
+        if status_filter:
+            if status_filter == 'completed':
+                simulations = simulations.filter(has_results=True)
+            elif status_filter == 'pending':
+                simulations = simulations.filter(has_results=False)
+        
+        date_from = request.GET.get('date_from')
+        if date_from:
+            simulations = simulations.filter(date_created__gte=date_from)
+        
+        date_to = request.GET.get('date_to')
+        if date_to:
+            simulations = simulations.filter(date_created__lte=date_to)
+        
+        search = request.GET.get('search')
+        if search:
+            simulations = simulations.filter(
+                Q(id__icontains=search) |
+                Q(fk_questionary_result__fk_questionary__fk_product__name__icontains=search) |
+                Q(fk_questionary_result__fk_questionary__fk_product__fk_business__name__icontains=search)
+            )
+        
+        # Order by date
+        simulations = simulations.order_by('-date_created')
+        
+        # Calculate statistics
+        total_simulations = simulations.count()
+        completed_simulations = simulations.filter(has_results=True).count()
+        
+        # Paginate results
+        page = request.GET.get('page', 1)
+        paginator = Paginator(simulations, 20)
+        
+        try:
+            simulations_page = paginator.page(page)
+        except PageNotAnInteger:
+            simulations_page = paginator.page(1)
+        except EmptyPage:
+            simulations_page = paginator.page(paginator.num_pages)
+        
+        # Calculate average duration
+        avg_duration = simulations.aggregate(
+            avg_duration=Avg('quantity_time')
+        )['avg_duration'] or 0
+        
+        # Add status to each simulation
+        for sim in simulations_page:
+            sim.status = 'completed' if sim.has_results else 'pending'
+            sim.get_status_display = 'Completada' if sim.has_results else 'Pendiente'
+        
+        context = {
+            'simulations': simulations_page,
+            'page_obj': simulations_page,
+            'is_paginated': simulations_page.has_other_pages(),
+            'products': products,
+            'total_simulations': total_simulations,
+            'completed_simulations': completed_simulations,
+            'processing_simulations': 0,  # Ya que no tenemos estado "processing"
+            'avg_duration': avg_duration,
+            'active_filters': self._get_active_filters(request),
+        }
+        
+        return render(request, 'simulate/simulate-list.html', context)
+    
+    def _get_active_filters(self, request):
+        """Get active filters for display"""
+        filters = []
+        
+        if request.GET.get('product'):
+            product = Product.objects.filter(id=request.GET.get('product')).first()
+            if product:
+                filters.append({
+                    'label': 'Producto',
+                    'value': product.name,
+                    'remove_url': self._remove_filter_url(request, 'product')
+                })
+        
+        if request.GET.get('status'):
+            filters.append({
+                'label': 'Estado',
+                'value': request.GET.get('status'),
+                'remove_url': self._remove_filter_url(request, 'status')
             })
-            
-        except Exception as e:
-            logger.error(f"Error getting charts: {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=500)
+        
+        if request.GET.get('date_from'):
+            filters.append({
+                'label': 'Desde',
+                'value': request.GET.get('date_from'),
+                'remove_url': self._remove_filter_url(request, 'date_from')
+            })
+        
+        if request.GET.get('date_to'):
+            filters.append({
+                'label': 'Hasta',
+                'value': request.GET.get('date_to'),
+                'remove_url': self._remove_filter_url(request, 'date_to')
+            })
+        
+        return filters
+    
+    def _remove_filter_url(self, request, param_to_remove):
+        """Generate URL with specific parameter removed"""
+        params = request.GET.copy()
+        if param_to_remove in params:
+            del params[param_to_remove]
+        return f"{request.path}?{params.urlencode()}"
 
 
 # Helper view functions

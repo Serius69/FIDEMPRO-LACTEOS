@@ -5,8 +5,8 @@ from business.models import Business
 from variable.models import Variable
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .questionary_data import questionary_data,question_data
-from .questionary_result_data import questionary_result_data, answer_data
+from .data.questionary_data import questionary_data,question_data
+from .data.questionary_result_data import questionary_result_data
 from django.core.exceptions import MultipleObjectsReturned
 from django.http import Http404
 class Questionary(models.Model):
