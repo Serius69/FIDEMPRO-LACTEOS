@@ -49,7 +49,8 @@ class SimulateShowView(LoginRequiredMixin, View):
         """Handle GET requests for simulation setup"""
         started = request.session.get('started', False)
         
-        if 'select' in request.GET:
+        # Check if questionary parameters are present instead of 'select'
+        if 'selected_questionary_result' in request.GET:
             return self._handle_questionary_selection(request)
         
         if not started:
@@ -114,7 +115,7 @@ class SimulateShowView(LoginRequiredMixin, View):
                     'fk_questionary__fk_product__fk_business'
                 ).prefetch_related(
                     Prefetch(
-                        'answer_set',
+                        'fk_question_result_answer',
                         queryset=Answer.objects.select_related('fk_question__fk_variable')
                     )
                 ),
@@ -179,18 +180,36 @@ class SimulateShowView(LoginRequiredMixin, View):
         }
         
         return context
-    
-    def _handle_simulation_start(self, request):
+    # no se usa el método _handle_questionary_selection en la vista SimulateShowView, ya que se maneja directamente en el método get.
+    def _handle_simulation_start(self, request): 
         """Handle simulation start"""
         try:
-            # Validate form data
+            # Get form data
+            questionary_result_id = request.POST.get('fk_questionary_result')
+            
+            # Get demand history from questionary
+            questionary_result = QuestionaryResult.objects.select_related(
+                'fk_questionary'
+            ).prefetch_related(
+                'fk_question_result_answer__fk_question__fk_variable'
+            ).get(id=questionary_result_id)
+
+            # Find answer with historical demand
+            demand_history = None
+            for answer in questionary_result.all():
+                if answer.fk_question_id.question == 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).':
+                    demand_history = answer.value
+                    break
+
+            # Prepare form data
             form_data = {
-                'fk_questionary_result': request.POST.get('fk_questionary_result'),
+                'fk_questionary_result': questionary_result_id,
                 'quantity_time': request.POST.get('quantity_time'),
                 'unit_time': request.POST.get('unit_time'),
-                'demand_history': request.POST.get('demand_history'),
+                'demand_history': demand_history,
                 'fk_fdp_id': request.POST.get('fk_fdp'),
             }
+            print(f"Form data: {form_data}")  # Debugging line
             
             # Create simulation
             simulation_service = SimulationService()
@@ -370,16 +389,31 @@ class SimulateResultView(LoginRequiredMixin, View):
 class SimulateAddView(LoginRequiredMixin, View):
     """Add/create new simulation"""
     
+    # estes se usa para manejar tanto la creación como la edición de simulaciones
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         """Create new simulation"""
         try:
             # Get form data
+            # Get questionary result for demand history
+            questionary_result = QuestionaryResult.objects.select_related(
+                'fk_questionary'
+            ).prefetch_related(
+                'fk_question_result_answer__fk_question__fk_variable'
+            ).get(id=request.POST.get('fk_questionary_result'))
+            
+            # Find answer with historical demand 
+            demand_history = None
+            for answer in questionary_result.fk_question_result_answer.all():
+                if answer.fk_question.question == 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).':
+                    demand_history = answer.answer # Try answer_text instead of value
+                    break
+
             form_data = {
                 'fk_questionary_result': request.POST.get('fk_questionary_result'),
-                'quantity_time': request.POST.get('quantity_time'),
+                'quantity_time': request.POST.get('quantity_time'), 
                 'unit_time': request.POST.get('unit_time'),
-                'demand_history': request.POST.get('demand_history'),
+                'demand_history': demand_history,
                 'fk_fdp_id': request.POST.get('fk_fdp'),
             }
             
@@ -401,7 +435,7 @@ class SimulateAddView(LoginRequiredMixin, View):
             )
             
         except Exception as e:
-            logger.error(f"Error creating simulation: {str(e)}")
+            logger.error(f"Error creating simulation in SimulateAddView: {str(e)}")
             messages.error(request, f"Error al crear simulación: {str(e)}")
             return redirect('simulate:simulate.show')
     

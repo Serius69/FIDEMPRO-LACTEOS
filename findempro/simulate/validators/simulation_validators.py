@@ -1,7 +1,12 @@
 # validators/simulation_validators.py
 import re
+import logging
 from typing import List, Dict, Any
 from django.core.exceptions import ValidationError
+
+from simulate.models import ProbabilisticDensityFunction
+
+logger = logging.getLogger(__name__)
 
 
 class SimulationValidator:
@@ -44,9 +49,92 @@ class SimulationValidator:
         return data
     
     @staticmethod
-    def validate_simulation_parameters(simulation_data: Dict[str, Any]):
-        """Valida parámetros de simulación."""
+    def validate_fdp_parameters(fdp) -> Dict[str, Any]:
+        """
+        Valida que la FDP tenga los parámetros requeridos según su tipo de distribución.
+        Retorna un diccionario con la validación y los datos de la FDP.
+        """
         errors = []
+        fdp_data = {
+            'id': fdp.id,
+            'name': fdp.name,
+            'distribution_type': fdp.distribution_type,
+            'distribution_name': fdp.get_distribution_type_display()
+        }
+        
+        # Validar parámetros según el tipo de distribución
+        if fdp.distribution_type == 1:  # Normal
+            if fdp.mean_param is None:
+                errors.append("Distribución Normal requiere parámetro de media")
+            else:
+                fdp_data['mean'] = fdp.mean_param
+                
+            if fdp.std_dev_param is None or fdp.std_dev_param <= 0:
+                errors.append("Distribución Normal requiere desviación estándar positiva")
+            else:
+                fdp_data['std_dev'] = fdp.std_dev_param
+                
+        elif fdp.distribution_type == 2:  # Exponential
+            if fdp.lambda_param is None or fdp.lambda_param <= 0:
+                errors.append("Distribución Exponencial requiere parámetro lambda positivo")
+            else:
+                fdp_data['lambda'] = fdp.lambda_param
+                
+        elif fdp.distribution_type == 3:  # Log-Normal
+            if fdp.mean_param is None:
+                errors.append("Distribución Log-Normal requiere parámetro de media")
+            else:
+                fdp_data['mean'] = fdp.mean_param
+                
+            if fdp.std_dev_param is None or fdp.std_dev_param <= 0:
+                errors.append("Distribución Log-Normal requiere desviación estándar positiva")
+            else:
+                fdp_data['std_dev'] = fdp.std_dev_param
+                
+        elif fdp.distribution_type == 4:  # Gamma
+            if fdp.shape_param is None or fdp.shape_param <= 0:
+                errors.append("Distribución Gamma requiere parámetro de forma (α) positivo")
+            else:
+                fdp_data['shape'] = fdp.shape_param
+                
+            if fdp.scale_param is None or fdp.scale_param <= 0:
+                errors.append("Distribución Gamma requiere parámetro de escala (β) positivo")
+            else:
+                fdp_data['scale'] = fdp.scale_param
+                
+        elif fdp.distribution_type == 5:  # Uniform
+            if fdp.min_param is None:
+                errors.append("Distribución Uniforme requiere valor mínimo")
+            else:
+                fdp_data['min'] = fdp.min_param
+                
+            if fdp.max_param is None:
+                errors.append("Distribución Uniforme requiere valor máximo")
+            else:
+                fdp_data['max'] = fdp.max_param
+                
+            # Validar que min < max
+            if fdp.min_param is not None and fdp.max_param is not None:
+                if fdp.min_param >= fdp.max_param:
+                    errors.append("En distribución Uniforme, el valor mínimo debe ser menor que el máximo")
+        else:
+            errors.append(f"Tipo de distribución no soportado: {fdp.distribution_type}")
+        
+        # Añadir CDF si está disponible
+        if fdp.cumulative_distribution_function is not None:
+            fdp_data['cdf'] = fdp.cumulative_distribution_function
+        
+        return {
+            'valid': len(errors) == 0,
+            'errors': errors,
+            'fdp_data': fdp_data if len(errors) == 0 else None
+        }
+    
+    @staticmethod
+    def validate_simulation_parameters(simulation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Valida parámetros de simulación y retorna los datos validados."""
+        errors = []
+        validated_data = {}
         
         # Validar ID de cuestionario
         questionary_id = simulation_data.get('fk_questionary_result')
@@ -57,6 +145,8 @@ class SimulationValidator:
                 questionary_id = int(questionary_id)
                 if questionary_id <= 0:
                     errors.append("ID de cuestionario debe ser positivo")
+                else:
+                    validated_data['fk_questionary_result'] = questionary_id
             except (ValueError, TypeError):
                 errors.append("ID de cuestionario debe ser un número válido")
         
@@ -71,19 +161,42 @@ class SimulationValidator:
                     errors.append("Cantidad de tiempo debe ser al menos 1")
                 elif quantity_time > 365:
                     errors.append("Cantidad de tiempo no puede exceder 365 días")
+                else:
+                    validated_data['quantity_time'] = quantity_time
             except (ValueError, TypeError):
                 errors.append("Cantidad de tiempo debe ser un número válido")
         
-        # Validar unidad de tiempo
+        # Validar unidad de tiempo - con mapeo mejorado
         unit_time = simulation_data.get('unit_time')
-        valid_units = ['días', 'semanas', 'meses']
+        
+        # Mapeo de unidades en inglés a español
+        time_unit_mapping = {
+            'days': 'días',
+            'weeks': 'semanas', 
+            'months': 'meses',
+            'day': 'días',
+            'week': 'semanas',
+            'month': 'meses',
+            'días': 'días',
+            'semanas': 'semanas',
+            'meses': 'meses'
+        }
+        
         if not unit_time:
             errors.append("Unidad de tiempo requerida")
-        elif unit_time not in valid_units:
-            errors.append(f"Unidad de tiempo debe ser una de: {', '.join(valid_units)}")
+        else:
+            # Normalizar la unidad de tiempo
+            normalized_unit = time_unit_mapping.get(unit_time.lower(), unit_time)
+            valid_units = ['días', 'semanas', 'meses']
+            
+            if normalized_unit not in valid_units:
+                errors.append(f"Unidad de tiempo debe ser una de: {', '.join(valid_units)}")
+            else:
+                validated_data['unit_time'] = unit_time  # Mantener el valor original
         
         # Validar datos históricos
         demand_history = simulation_data.get('demand_history')
+        
         if not demand_history:
             errors.append("Datos históricos de demanda requeridos")
         else:
@@ -91,15 +204,25 @@ class SimulationValidator:
                 # Intentar parsear los datos
                 from ..utils.data_parsers import DataParser
                 parser = DataParser()
+                
+                # Si demand_history es string con comas problemáticas, limpiar primero
+                if isinstance(demand_history, str):
+                    # Remover comas al final de números
+                    demand_history = re.sub(r'(\d),(?=\s|$|\])', r'\1', demand_history)
+                
                 parsed_data = parser.parse_demand_history(demand_history)
-                SimulationValidator.validate_demand_data(parsed_data)
+                validated_demand = SimulationValidator.validate_demand_data(parsed_data)
+                validated_data['demand_history'] = validated_demand  # Store parsed data
+                
             except ValidationError as e:
-                errors.append(f"Error en datos históricos: {e}")
+                errors.append(f"Error en datos históricos: {str(e)}")
             except Exception as e:
-                errors.append(f"Formato de datos históricos inválido: {e}")
+                logger.error(f"Error parsing demand history: {str(e)}")
+                errors.append(f"Formato de datos históricos inválido: {str(e)}")
         
         # Validar FDP
-        fdp_id = simulation_data.get('fk_fdp')
+        fdp_id = simulation_data.get('fk_fdp_id')
+        
         if not fdp_id:
             errors.append("Función de densidad probabilística requerida")
         else:
@@ -107,45 +230,36 @@ class SimulationValidator:
                 fdp_id = int(fdp_id)
                 if fdp_id <= 0:
                     errors.append("ID de FDP debe ser positivo")
+                else:
+                    # Validate FDP exists and is active
+                    try:
+                        fdp = ProbabilisticDensityFunction.objects.filter(
+                            id=fdp_id, 
+                            is_active=True
+                        ).first()
+                        
+                        if not fdp:
+                            errors.append("FDP no encontrada o inactiva")
+                        else:
+                            # Validate FDP has required parameters based on distribution type
+                            fdp_validation_result = SimulationValidator.validate_fdp_parameters(fdp)
+                            if fdp_validation_result['valid']:
+                                validated_data['fdp'] = fdp_validation_result['fdp_data']
+                                validated_data['fk_fdp_id'] = fdp_id
+                            else:
+                                errors.extend(fdp_validation_result['errors'])
+                    except Exception as e:
+                        logger.error(f"Error al validar FDP: {str(e)}")
+                        errors.append(f"Error al validar FDP: {str(e)}")
             except (ValueError, TypeError):
                 errors.append("ID de FDP debe ser un número válido")
         
+        # Raise error if any validation failed
         if errors:
             raise ValidationError("; ".join(errors))
-    
-    @staticmethod
-    def validate_equation_variables(equation_expression: str) -> bool:
-        """Valida que una expresión de ecuación sea segura."""
-        try:
-            # Patrones no permitidos para seguridad
-            dangerous_patterns = [
-                r'import\s+',
-                r'exec\s*\(',
-                r'eval\s*\(',
-                r'__.*__',
-                r'open\s*\(',
-                r'file\s*\(',
-                r'input\s*\(',
-                r'raw_input\s*\(',
-            ]
-            
-            for pattern in dangerous_patterns:
-                if re.search(pattern, equation_expression, re.IGNORECASE):
-                    raise ValidationError(
-                        f"Expresión contiene código potencialmente peligroso: {pattern}"
-                    )
-            
-            # Validar que contenga solo caracteres permitidos
-            allowed_chars = re.compile(r'^[a-zA-Z0-9\s\+\-\*/\(\)=\.,_]*$')
-            if not allowed_chars.match(equation_expression):
-                raise ValidationError("Expresión contiene caracteres no permitidos")
-            
-            return True
-            
-        except ValidationError:
-            raise
-        except Exception as e:
-            raise ValidationError(f"Error validando expresión: {e}")
+        
+        # Return validated data
+        return validated_data
     
     @staticmethod
     def validate_numeric_range(value: float, min_val: float, max_val: float, 
@@ -198,7 +312,7 @@ class SimulationValidator:
         except ValidationError:
             raise
         except Exception as e:
-            raise ValidationError(f"Error en validación estadística: {e}")
+            raise ValidationError(f"Error en validación estadística: {str(e)}")
     
     @staticmethod
     def validate_user_input_safety(input_string: str, max_length: int = 10000) -> str:
@@ -235,7 +349,7 @@ class SimulationValidator:
         except json.JSONDecodeError:
             raise ValidationError("Formato JSON inválido")
         except Exception as e:
-            raise ValidationError(f"Error validando formato: {e}")
+            raise ValidationError(f"Error validando formato: {str(e)}")
 
 
 class BusinessRuleValidator:
@@ -264,7 +378,7 @@ class BusinessRuleValidator:
         except ValidationError:
             raise
         except Exception as e:
-            raise ValidationError(f"Error validando frecuencia: {e}")
+            raise ValidationError(f"Error validando frecuencia: {str(e)}")
     
     @staticmethod
     def validate_business_permissions(user, business_id: int):
@@ -278,4 +392,4 @@ class BusinessRuleValidator:
         except ValidationError:
             raise
         except Exception as e:
-            raise ValidationError(f"Error validando permisos: {e}")
+            raise ValidationError(f"Error validando permisos: {str(e)}")

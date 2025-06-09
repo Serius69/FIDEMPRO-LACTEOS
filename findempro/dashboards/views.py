@@ -137,10 +137,20 @@ def index(request):
             form = RegisterElementsForm()
 
         business = DashboardService.get_user_business(request.user)
+        
+        # Si no hay negocio, mostrar valores por defecto
         if not business:
-            messages.warning(request, "No tienes un negocio activo. Por favor crea uno primero.")
-            return redirect('business:business.create')
+            context = {
+                'form': form,
+                'business': None,
+                'business_count': 0,
+                'products_count': 0,
+                'simulations_count': 0,
+                'charts_count': 0,
+            }
+            return render(request, 'dashboards/index.html', context)
 
+        # Si hay negocio, continuar con la lógica normal
         request.session['business_id'] = business.id
 
         # Obtener métricas del negocio para los contadores

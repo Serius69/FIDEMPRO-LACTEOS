@@ -10,6 +10,16 @@ from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
+import random
+from simulate.data.simulate_data import create_complete_simulation
+import numpy as np
+from datetime import datetime, timedelta
+import logging
+from django.conf import settings
+import os
+from typing import Optional, Dict, Any, List
+import shutil
+from pathlib import Path
 
 from .forms import RegisterElementsForm
 from user.models import UserProfile
@@ -19,13 +29,19 @@ from variable.models import Variable, Equation
 from questionary.models import Questionary, Question, QuestionaryResult, Answer
 from simulate.models import Simulation, ResultSimulation, Demand, DemandBehavior, ProbabilisticDensityFunction
 
+from finance.data.finance_data import recommendation_data
+
 # Importar los datos mejorados
 try:
     from product.data.products_data import products_data as enhanced_products_data
+    from product.data.areas_data import areas_data, area_relationships, area_performance_benchmarks
+    from product.data.products_data import product_categories, product_metrics, products_data
 except ImportError:
     from product.data.products_data import products_data as enhanced_products_data
+    from product.data.areas_data import areas_data, area_relationships, area_performance_benchmarks
+    from product.data.products_data import product_categories, product_metrics, products_data
 
-from product.data.areas_data import areas_data
+
 from questionary.data.questionary_data import questionary_data, question_data
 
 # Importar datos mejorados de questionary_result_data
@@ -50,43 +66,40 @@ try:
         simulation_data_leche,
         simulation_data_queso,
         simulation_data_yogur,
-        get_simulations_by_product,
-        pdf_config_by_product,
-        create_complete_simulation
+        get_pdf_config_by_product,
+        generate_simulation_results,
     )
 except ImportError:
     from simulate.data.simulate_data import simulation_data
 
-# Importar utilidades de integración si existen
-try:
-    from .integration_helpers import (
-        load_equations_into_model,
-        load_variables_into_model,
-        load_questionary_answers,
-        create_simulation_from_config,
-        generate_simulation_results,
-        validate_data_coherence
-    )
-except ImportError:
-    pass
-
-import random
-import numpy as np
-from datetime import datetime, timedelta
-import logging
-from django.conf import settings
-import os
-from typing import Optional, Dict, Any, List
-import shutil
-from pathlib import Path
+def validate_data_coherence() -> Dict[str, Any]:
+    """
+    Validar la coherencia entre las diferentes estructuras de datos
+    """
+    errors = []
+    
+    # Validar productos vs variables
+    for product in products_data:
+        product_vars = [v for v in variables_data if v.get('product') == product['name']]
+        if not product_vars:
+            errors.append(f"No variables found for product {product['name']}")
+            
+    # Validar ecuaciones vs variables
+    for equation in equations_data:
+        for var_name in [equation.get('variable1'), equation.get('variable2')]:
+            if var_name and not any(v['initials'] == var_name for v in variables_data):
+                errors.append(f"Variable {var_name} not found for equation {equation.get('name')}")
+    
+    return {
+        'valid': len(errors) == 0,
+        'errors': errors
+    }
 
 logger = logging.getLogger(__name__)
-
 
 class PagesView(TemplateView):
     """Vista base para páginas estáticas"""
     pass
-
 
 def get_media_path(relative_path: str) -> str:
     """
@@ -99,7 +112,6 @@ def get_media_path(relative_path: str) -> str:
         Ruta completa del archivo
     """
     return os.path.join(settings.MEDIA_ROOT, relative_path)
-
 
 def copy_existing_image(source_name: str, dest_folder: str, dest_name: str) -> str:
     """
@@ -188,7 +200,6 @@ def copy_existing_image(source_name: str, dest_folder: str, dest_name: str) -> s
             return os.path.join(dest_folder, dest_name)
 
 
-
 def create_placeholder_image(dest_path: str, filename: str) -> None:
     """
     Crear una imagen placeholder simple si PIL está disponible,
@@ -236,7 +247,6 @@ def create_placeholder_image(dest_path: str, filename: str) -> None:
         logger.warning(f"Error creating PIL placeholder: {str(e)}, creating text placeholder")
         create_text_placeholder(dest_path, filename)
 
-
 def create_text_placeholder(dest_path: str, filename: str) -> None:
     """
     Crear un archivo de texto como placeholder
@@ -261,41 +271,210 @@ Este archivo debe ser reemplazado por la imagen correspondiente.
     except Exception as e:
         logger.error(f"Error creating text placeholder: {str(e)}")
 
-
 @login_required
 def register_elements(request):
     """
-    Vista para mostrar el formulario de registro de elementos.
-    Muestra un preview de los datos mejorados a crear antes de confirmar.
+    Vista mejorada para mostrar TODOS los elementos que se crearán.
+    Incluye una vista previa completa de todos los datos antes de confirmar.
     """
-    # Usar datos mejorados si están disponibles
-    products_preview = enhanced_products_data if 'enhanced_products_data' in globals() else products_data
     
-    preview_data = {
-        'business': {
-            'name': "Pyme Láctea",
-            'location': "La Paz",
-            'image_src': "business/pyme_lactea_default.jpg",
-        },
-        'products_preview': products_preview,
-        'areas_preview': areas_data,
-        'variable_preview': variables_data,  # Mostrar solo las primeras 20 para el preview
-        'equation_preview': equations_data,  # Mostrar solo las primeras 20
-        'questionarie_preview': questionary_data,
-        'question_preview': question_data,  # Mostrar solo las primeras 10
-        'simulate_preview': {
-            'leche': simulation_data_leche if 'simulation_data_leche' in globals() else [],
-            'queso': simulation_data_queso if 'simulation_data_queso' in globals() else [],
-            'yogur': simulation_data_yogur if 'simulation_data_yogur' in globals() else [],
-        },
-        'pdf_preview': pdf_data if 'pdf_data' in globals() else [],
+    # Preparar datos de productos con información adicional
+    products_preview = []
+    for product in products_data:
+        product_info = product.copy()
+        # Agregar métricas si existen
+        if product['name'] in product_metrics:
+            product_info['metrics'] = product_metrics[product['name']]
+        # Agregar categorías
+        product_info['categories'] = [cat for cat, prods in product_categories.items() 
+                                     if product['name'] in prods]
+        products_preview.append(product_info)
+    
+    # Preparar datos de áreas con relaciones
+    areas_preview = []
+    for area in areas_data:
+        area_info = area.copy()
+        # Agregar relaciones
+        if area['name'] in area_relationships:
+            area_info['relationships'] = area_relationships[area['name']]
+        # Agregar benchmarks si existen
+        if area['name'] in area_performance_benchmarks:
+            area_info['benchmarks'] = area_performance_benchmarks[area['name']]
+        areas_preview.append(area_info)
+    
+    # Organizar variables por tipo
+    variables_by_type = {
+        'exogenas': [v for v in variables_data if v['type'] == 1],
+        'estado': [v for v in variables_data if v['type'] == 2],
+        'endogenas': [v for v in variables_data if v['type'] == 3]
     }
     
-    form = RegisterElementsForm()
+    # Preparar simulaciones con configuración completa
+    simulations_preview = {
+        'Leche Entera': {
+            'simulations': simulation_data_leche,
+            'pdf_config': get_pdf_config_by_product('leche'),
+            'result_data': []  # Inicializar como lista vacía
+        },
+        'Queso Fresco': {
+            'simulations': simulation_data_queso,
+            'pdf_config': get_pdf_config_by_product('queso'),
+            'result_data': []  # Inicializar como lista vacía
+        },
+        'Yogurt Natural': {
+            'simulations': simulation_data_yogur,
+            'pdf_config': get_pdf_config_by_product('yogur'),
+            'result_data': []  # Inicializar como lista vacía
+        }
+    }
+    
+    # Procesar preguntas con respuestas de ejemplo
+    questions_with_answers = []
+    for question in question_data:
+        q_info = question.copy()
+        # Buscar respuestas de ejemplo para cada producto
+        q_info['sample_answers'] = {}
+        for product in ['leche', 'queso', 'yogur']:
+            answers = globals().get(f'answer_data_{product}', [])
+            for answer in answers:
+                if answer.get('question') == question['question']:
+                    q_info['sample_answers'][product] = answer
+                    break
+        questions_with_answers.append(q_info)
+    
+    # Datos de ejemplo de demanda para gráfico
+    demand_example = {
+        'leche': simulation_data_leche[0]['demand_history'] if simulation_data_leche else [],
+        'queso': simulation_data_queso[0]['demand_history'] if simulation_data_queso else [],
+        'yogur': simulation_data_yogur[0]['demand_history'] if simulation_data_yogur else []
+    }
+    
+    # Configuraciones de demanda para cada producto
+    demand_configurations_preview = {
+        'leche': {
+            'base_demand': 2500,
+            'seasonality': True,
+            'growth_rate': 0.02,
+            'volatility': 0.1
+        },
+        'queso': {
+            'base_demand': 185,
+            'seasonality': False,
+            'growth_rate': 0.01,
+            'volatility': 0.08
+        },
+        'yogur': {
+            'base_demand': 330,
+            'seasonality': True,
+            'growth_rate': 0.05,
+            'volatility': 0.15
+        }
+    }
+    
+    # Ejemplo de resultado de simulación consolidado
+    result_simulation_preview = {
+        'demand_mean': 2500.0,
+        'demand_std_deviation': 250.0,
+        'confidence_intervals': {
+            'demand_mean': {
+                'lower': 2400.0,
+                'upper': 2600.0
+            }
+        },
+        'unit': {
+            'measurement': 'litros',
+            'value': 1
+        },
+        'unit_time': {
+            'time_unit': 'día',
+            'value': 1
+        },
+        # Variables calculadas de ejemplo
+        'IT': 38750.00,  # Ingresos totales
+        'GT': 9687.50,   # Ganancias totales
+        'MB': 0.25,      # Margen bruto
+        'PE': 166.67,    # Productividad empleados
+        'FU': 0.85,      # Factor utilización
+        'PM': 0.15,      # Participación mercado
+        'DI': 150,       # Demanda insatisfecha
+        'RTI': 0.67,     # Rotación inventario
+        'NR': 0.25,      # Nivel rentabilidad
+        'RI': 0.35       # Retorno inversión
+    }
+    
+    # Usar una simulación de ejemplo
+    simulate_preview = simulation_data_leche[0] if simulation_data_leche else {
+        'unit_time': 'days',
+        'quantity_time': 30,
+        'confidence_level': 0.95,
+        'random_seed': 42,
+        'fk_fdp': 1,  # Normal distribution
+        'demand_history': [random.randint(2000, 3000) for _ in range(30)],
+        'parameters': {}
+    }
+    
+    # Estadísticas resumen
+    summary_stats = {
+        'total_products': len(products_data),
+        'total_areas': len(areas_data),
+        'total_variables': len(variables_data),
+        'variables_by_type': {
+            'exogenas': len(variables_by_type['exogenas']),
+            'estado': len(variables_by_type['estado']),
+            'endogenas': len(variables_by_type['endogenas'])
+        },
+        'total_equations': len(equations_data),
+        'total_questions': len(question_data),
+        'total_simulations': sum(len(sims['simulations']) for sims in simulations_preview.values()),
+        'total_recommendations': len(globals().get('recommendation_data', [])),
+        'total_pdfs': len(pdf_data)
+    }
+    
+    preview_data = {
+        # Información del negocio
+        'business': {
+            'name': "Empresa Láctea Demo",
+            'location': "La Paz, Bolivia",
+            'type': "Pequeña empresa láctea",
+            'employees': 15,
+            'years_in_business': 5,
+            'image_src': "business/pyme_lactea_default.jpg",
+        },
+        
+        # Datos principales
+        'products_preview': products_preview,
+        'areas_preview': areas_preview,
+        'variable_preview': variables_data,
+        'variables_by_type': variables_by_type,
+        'equation_preview': equations_data,
+        'questionary_preview': questionary_data,
+        'question_preview': questions_with_answers,
+        'simulations_preview': simulations_preview,
+        'simulate_preview': simulate_preview,
+        'pdf_preview': pdf_data,
+        'recommendations_preview': recommendation_data,
+        
+        # Datos adicionales para visualización
+        'demand_example': demand_example,
+        'demand_configurations_preview': demand_configurations_preview,
+        'result_simulation_preview': result_simulation_preview,
+        
+        # Estadísticas
+        'summary_stats': summary_stats,
+        
+        # Datos de respuestas por producto
+        'questionary_results_preview': {
+            'leche': answer_data_leche if 'answer_data_leche' in globals() else [],
+            'queso': answer_data_queso if 'answer_data_queso' in globals() else [],
+            'yogur': answer_data_yogur if 'answer_data_yogur' in globals() else []
+        }
+    }
+
+    print(preview_data)
+    
     return render(request, 'pages/register_elements.html', {
-        'form': form,
         'preview_data': preview_data,
-        'title': 'Previsualización de Elementos'
+        'title': 'Vista Previa Completa - Configuración Inicial'
     })
 
 
@@ -354,7 +533,6 @@ def register_elements_create(request):
     
     return redirect("dashboard:index")
 
-
 def create_and_save_business(user: User) -> Business:
     """
     Crear y guardar business para un usuario, permitiendo múltiples negocios con nombres únicos.
@@ -394,7 +572,6 @@ def create_and_save_business(user: User) -> Business:
     except Exception as e:
         logger.error(f"Error creating business: {str(e)}")
         raise
-
 
 def create_and_save_products(business: Business) -> None:
     """
@@ -467,8 +644,6 @@ def create_and_save_products(business: Business) -> None:
         # En lugar de hacer raise, continuar con el proceso
         logger.info("Continuing with business creation despite product errors")
 
-
-
 def create_and_save_areas(product: Product) -> None:
     """
     Crear y guardar áreas para un producto con manejo mejorado de imágenes
@@ -531,18 +706,39 @@ def create_and_save_areas(product: Product) -> None:
         # Continuar con el proceso
         logger.info("Continuing despite area creation errors")
 
+def load_variables_into_model(VariableModel, product: Product) -> List[Any]:
+    """
+    Helper function to load variables into the Variable model
+    """
+    created_variables = []
+    for data in variables_data:
+        if not all([data.get('name'), data.get('initials'), data.get('type')]):
+            logger.warning(f"Skipping variable with incomplete data: {data}")
+            continue
+        
+        variable = VariableModel.objects.create(
+            name=data['name'],
+            initials=data['initials'],
+            type=data['type'],
+            unit=data.get('unit', ''),
+            description=data.get('description', ''),
+            fk_product=product,
+            is_active=True
+        )
+        created_variables.append(variable)
+    
+    return created_variables
 
 def create_variables_and_equations(product: Product) -> None:
     """
     Crear variables y ecuaciones para un producto usando datos mejorados
     """
     try:
-        # Si existe la función helper, usarla
-        if 'load_variables_into_model' in globals():
-            created_variables = load_variables_into_model(Variable, product)
-            logger.info(f"{len(created_variables)} variables created using helper function")
-        else:
-            # Crear variables manualmente
+        created_variables = load_variables_into_model(Variable, product)
+        logger.info(f"{len(created_variables)} variables created using helper function")
+        
+        # Crear variables manualmente si es necesario
+        if not created_variables:
             created_variables = []
             for data in variables_data:
                 if not all([data.get('name'), data.get('initials'), data.get('type')]):
@@ -580,6 +776,44 @@ def create_variables_and_equations(product: Product) -> None:
         logger.error(f"Error creating variables and equations for product {product.id}: {str(e)}")
         raise
 
+def load_equations_into_model(equation_model, variable_model, area_model, product):
+    """
+    Helper function to load equations into the equation model with proper relationships
+    """
+    created_equations = []
+    for data in equations_data:
+        if not all([data.get('name'), data.get('expression'), 
+                   data.get('variable1'), data.get('variable2'), data.get('area')]):
+            logger.warning(f"Skipping equation with incomplete data: {data}")
+            continue
+            
+        try:
+            variable1 = get_variable_by_initials(data['variable1'], product.id)
+            variable2 = get_variable_by_initials(data['variable2'], product.id)
+            variable3 = get_variable_by_initials(data.get('variable3'), product.id)
+            variable4 = get_variable_by_initials(data.get('variable4'), product.id)
+            variable5 = get_variable_by_initials(data.get('variable5'), product.id)
+            area = get_area_by_name(data['area'], product.id)
+            
+            equation = equation_model.objects.create(
+                name=data['name'],
+                description=data.get('description', ''),
+                expression=data['expression'],
+                fk_variable1=variable1,
+                fk_variable2=variable2,
+                fk_variable3=variable3,
+                fk_variable4=variable4,
+                fk_variable5=variable5,
+                fk_area=area,
+                is_active=True
+            )
+            created_equations.append(equation)
+            
+        except Exception as e:
+            logger.error(f"Error creating equation '{data.get('name')}': {str(e)}")
+            continue
+            
+    return created_equations
 
 def create_equations(product: Product) -> None:
     """
@@ -661,25 +895,33 @@ def create_and_save_questionary_result(questionary: Questionary) -> bool:
             fk_questionary=questionary,
             defaults={'is_active': questionary.is_active}
         )
-
+        
         if created:
+            # Initialize created_answers at the beginning
+            created_answers = []
+            
             # Usar respuestas realistas según el producto
             product_name = questionary.fk_product.name.lower()
             
-            if 'get_realistic_answers' in globals():
-                # Usar función helper para obtener respuestas realistas
-                answers_data = get_realistic_answers(product_name)
-                created_answers = []
-                
+            answers_data = []
+            # Determinar qué set de respuestas usar según el producto
+            if product_name == 'leche' and 'answer_data_leche' in globals():
+                answers_data = answer_data_leche
+            elif product_name == 'queso' and 'answer_data_queso' in globals():
+                answers_data = answer_data_queso
+            elif product_name == 'yogur' and 'answer_data_yogur' in globals():
+                answers_data = answer_data_yogur
+            
+            if answers_data:
                 questions = Question.objects.filter(
                     fk_questionary=questionary,
                     is_active=True
                 )
                 
-                for answer_data in answers_data:
-                    question = questions.filter(question=answer_data.get('question')).first()
+                for answer_data_item in answers_data:
+                    question = questions.filter(question=answer_data_item.get('question')).first()
                     if question:
-                        answer_value = answer_data['answer']
+                        answer_value = answer_data_item['answer']
                         if isinstance(answer_value, list):
                             answer_value = str(answer_value)
                         else:
@@ -693,13 +935,14 @@ def create_and_save_questionary_result(questionary: Questionary) -> bool:
                         )
                         created_answers.append(answer)
                 
-                logger.info(f"{len(created_answers)} realistic answers created")
+                logger.info(f"{len(created_answers)} answers created for {product_name}")
             else:
-                # Usar método original
+                # Usar método original si no hay respuestas específicas
                 create_and_save_answers(questionary_result)
             
             # Crear simulación con datos mejorados
-            create_enhanced_simulation(questionary_result)
+            if hasattr(globals(), 'create_enhanced_simulation'):
+                create_enhanced_simulation(questionary_result)
             
             logger.info(f'Questionary result created for questionary {questionary.id}')
             return True
@@ -711,7 +954,6 @@ def create_and_save_questionary_result(questionary: Questionary) -> bool:
         logger.error(f"Error creating questionary result: {str(e)}")
         return False
 
-
 def create_enhanced_simulation(questionary_result: QuestionaryResult) -> None:
     """
     Crear simulación mejorada para un resultado de cuestionario
@@ -721,7 +963,7 @@ def create_enhanced_simulation(questionary_result: QuestionaryResult) -> None:
         
         # Obtener configuración PDF específica del producto
         if 'pdf_config_by_product' in globals():
-            pdf_config = pdf_config_by_product.get(product_name, {})
+            pdf_config = create_complete_simulation.pdf_config.get(product_name, {})
         else:
             pdf_config = {}
         
@@ -774,12 +1016,10 @@ def create_enhanced_simulation(questionary_result: QuestionaryResult) -> None:
                     is_active=True
                 )
                 
-                # Generar resultados de simulación
-                if 'generate_simulation_results' in globals():
-                    results = generate_simulation_results(ResultSimulation, simulation, product_name)
-                    logger.info(f"{len(results)} simulation results generated")
-                else:
-                    create_enhanced_result_simulations(simulation, sim_data)
+                # Ejecutar simulación completa
+                simulate_simulation(simulation)
+                
+                logger.info(f"Enhanced simulation created and executed for scenario {idx + 1}")
         else:
             # Crear simulación por defecto
             create_and_save_simulation(questionary_result)
@@ -788,6 +1028,348 @@ def create_enhanced_simulation(questionary_result: QuestionaryResult) -> None:
         logger.error(f"Error creating enhanced simulation: {str(e)}")
         raise
 
+
+def simulate_demand(simulation: Simulation) -> None:
+    """
+    Simular demanda basada en respuestas del cuestionario
+    """
+    try:
+        questionary_result = simulation.fk_questionary_result
+        product = questionary_result.fk_questionary.fk_product
+        
+        # Obtener respuestas del cuestionario usando el modelo Answer correcto
+        answers = Answer.objects.filter(
+            fk_questionary_result=questionary_result,
+            is_active=True
+        ).select_related('fk_question__fk_variable')
+        
+        # Extraer valores de las respuestas
+        demand_values = {}
+        for answer in answers:
+            if answer.fk_question.fk_variable:
+                var_initials = answer.fk_question.fk_variable.initials
+                
+                # Procesar respuesta según el tipo
+                if answer.fk_question.type == 3:  # Lista de valores
+                    try:
+                        # Convertir string de lista a lista real
+                        import ast
+                        demand_values[var_initials] = ast.literal_eval(answer.answer)
+                    except:
+                        demand_values[var_initials] = [float(answer.answer)]
+                else:
+                    try:
+                        demand_values[var_initials] = float(answer.answer)
+                    except:
+                        demand_values[var_initials] = answer.answer
+        
+        # Obtener demanda histórica si existe
+        historical_demand = demand_values.get('DH', simulation.demand_history)
+        if isinstance(historical_demand, list) and len(historical_demand) > 0:
+            current_demand = historical_demand[-1]  # Último valor
+        else:
+            current_demand = demand_values.get('DE', 2500)  # Demanda esperada o default
+        
+        # Crear demanda actual
+        demand_actual, _ = Demand.objects.update_or_create(
+            fk_simulation=simulation,
+            is_predicted=False,
+            defaults={
+                'quantity': current_demand,
+                'fk_product': product,
+                'is_active': True
+            }
+        )
+        
+        # Calcular demanda predicha usando parámetros
+        growth_rate = demand_values.get('TC', 0.02)  # Tasa de crecimiento
+        seasonality = demand_values.get('ED', 1.0)  # Estacionalidad
+        
+        predicted_demand = current_demand * (1 + growth_rate) * seasonality
+        
+        # Crear demanda predicha
+        demand_predicted, _ = Demand.objects.update_or_create(
+            fk_simulation=simulation,
+            is_predicted=True,
+            defaults={
+                'quantity': predicted_demand,
+                'fk_product': product,
+                'is_active': True
+            }
+        )
+        
+        logger.info(f"Demand simulated for simulation {simulation.id}: current={current_demand}, predicted={predicted_demand}")
+        
+    except Exception as e:
+        logger.error(f"Error in simulate_demand: {str(e)}")
+        raise
+
+
+def simulate_demandbehavior(simulation: Simulation) -> None:
+    """
+    Simular comportamiento de demanda
+    """
+    try:
+        # Obtener demandas actual y predicha
+        demand_actual = Demand.objects.filter(
+            fk_simulation=simulation,
+            is_predicted=False
+        ).first()
+        
+        demand_predicted = Demand.objects.filter(
+            fk_simulation=simulation,
+            is_predicted=True
+        ).first()
+        
+        if demand_actual and demand_predicted:
+            # Crear o actualizar comportamiento de demanda
+            demand_behavior, created = DemandBehavior.objects.update_or_create(
+                current_demand=demand_actual,
+                predicted_demand=demand_predicted,
+                defaults={'is_active': True}
+            )
+            
+            logger.info(f"DemandBehavior {'created' if created else 'updated'} for simulation {simulation.id}")
+        else:
+            logger.warning(f"Missing demand instances for simulation {simulation.id}")
+            
+    except Exception as e:
+        logger.error(f"Error in simulate_demandbehavior: {str(e)}")
+        raise
+
+
+def simulate_resultsimulation(simulation: Simulation) -> None:
+    """
+    Simular resultados basados en respuestas del cuestionario
+    """
+    try:
+        questionary_result = simulation.fk_questionary_result
+        product = questionary_result.fk_questionary.fk_product
+        
+        # Obtener todas las respuestas
+        answers = Answer.objects.filter(
+            fk_questionary_result=questionary_result,
+            is_active=True
+        ).select_related('fk_question__fk_variable')
+        
+        # Crear diccionario de respuestas por variable
+        answer_values = {}
+        for answer in answers:
+            if answer.fk_question.fk_variable:
+                var_initials = answer.fk_question.fk_variable.initials
+                
+                # Procesar valor según tipo
+                try:
+                    if answer.fk_question.type == 3:  # Lista
+                        import ast
+                        value = ast.literal_eval(answer.answer)
+                        if isinstance(value, list):
+                            answer_values[var_initials] = value
+                        else:
+                            answer_values[var_initials] = float(answer.answer)
+                    else:
+                        answer_values[var_initials] = float(answer.answer)
+                except:
+                    answer_values[var_initials] = answer.answer
+        
+        # Obtener datos específicos del producto
+        product_name = product.name.lower()
+        result_data = get_result_simulation_data.get(product_name, {})
+        
+        # Valores base desde respuestas o defaults
+        base_demand = answer_values.get('DE', result_data.get('demand_mean', 2500))
+        price = answer_values.get('PVP', result_data.get('price_per_unit', 15.50))
+        production_cost = answer_values.get('CUIP', 8.0)
+        employees = answer_values.get('NEPP', 15)
+        
+        # Crear resultados para cada día
+        current_date = simulation.date_created
+        result_simulations = []
+        
+        for day in range(int(simulation.quantity_time)):
+            # Variación diaria
+            daily_variation = random.uniform(0.95, 1.05)
+            daily_demand = base_demand * daily_variation
+            
+            # Calcular variables basadas en respuestas
+            variables = calculate_variables_from_answers(
+                answer_values,
+                daily_demand,
+                price,
+                production_cost,
+                employees,
+                product_name
+            )
+            
+            current_date += timedelta(days=1)
+            
+            result_simulation = ResultSimulation(
+                demand_mean=daily_demand,
+                demand_std_deviation=base_demand * 0.1,
+                date=current_date,
+                variables=variables,
+                fk_simulation=simulation,
+                is_active=True
+            )
+            result_simulations.append(result_simulation)
+        
+        # Bulk create
+        ResultSimulation.objects.bulk_create(result_simulations)
+        
+        logger.info(f"Created {len(result_simulations)} result simulations for simulation {simulation.id}")
+        
+    except Exception as e:
+        logger.error(f"Error in simulate_resultsimulation: {str(e)}")
+        raise
+
+
+def calculate_variables_from_answers(answers: dict, demand: float, price: float, 
+                                    production_cost: float, employees: int, product_name: str) -> dict:
+    """
+    Calcular variables basadas en respuestas del cuestionario
+    """
+    # Usar respuestas del cuestionario para calcular variables
+    capacity = answers.get('CPROD', demand * 1.2)
+    inventory = answers.get('CIP', demand * 1.5)
+    marketing = answers.get('GMM', 3500)
+    transport_cost = answers.get('CUTRANS', 0.35)
+    
+    # Calcular ingresos y costos
+    revenue = demand * price
+    total_costs = demand * production_cost
+    gross_profit = revenue - total_costs
+    profit_margin = gross_profit / revenue if revenue > 0 else 0
+    
+    return {
+        # Variables de producción desde respuestas
+        "TPV": demand * (1 - answers.get('waste_percentage', 0.03)),
+        "TPPRO": capacity,
+        "DI": max(0, answers.get('DE', demand) - demand),
+        "VPC": demand / answers.get('CPD', 85),
+        
+        # Variables financieras
+        "IT": revenue,
+        "GT": gross_profit,
+        "NR": profit_margin,
+        "MB": profit_margin * 1.1,
+        "RI": gross_profit / total_costs if total_costs > 0 else 0,
+        
+        # Variables de eficiencia
+        "FU": demand / capacity if capacity > 0 else 0,
+        "PE": demand / employees if employees > 0 else 0,
+        "PM": answers.get('PM', 0.15),
+        
+        # Variables de costos desde respuestas
+        "CTAI": total_costs * 0.6,
+        "GO": answers.get('CFD', 1800) + answers.get('SE', 48000)/30,
+        "GG": marketing / 30,
+        "TG": total_costs * 0.95,
+        "CTTL": demand * transport_cost,
+        
+        # Variables de inventario desde respuestas
+        "CPROD": capacity,
+        "IPF": inventory,
+        "II": answers.get('CMIPF', inventory * 2),
+        "RTI": 30 / answers.get('TR', 3),
+        "CA": inventory * 0.02,
+        
+        # Otras variables importantes
+        "CPL": answers.get('CPL', 500),
+        "SI": answers.get('SI', 3000),
+        "TPC": answers.get('TPC', 2),
+        "FC": 1 / answers.get('TPC', 2),
+    }
+
+
+def simulate_simulation(simulation: Simulation) -> None:
+    """
+    Ejecutar simulación completa con todas las funciones
+    """
+    try:
+        logger.info(f"Starting complete simulation for simulation {simulation.id}")
+        
+        # Verificar que existan respuestas
+        questionary_result = simulation.fk_questionary_result
+        answers_count = Answer.objects.filter(
+            fk_questionary_result=questionary_result,
+            is_active=True
+        ).count()
+        
+        if answers_count == 0:
+            logger.warning(f"No answers found for questionary result {questionary_result.id}")
+            # Crear respuestas realistas si no existen
+            create_realistic_answers_for_simulation(questionary_result)
+        
+        # Ejecutar simulaciones en orden
+        simulate_demand(simulation)
+        simulate_demandbehavior(simulation)
+        simulate_resultsimulation(simulation)
+        
+        logger.info(f"Complete simulation finished for simulation {simulation.id}")
+        
+    except Exception as e:
+        logger.error(f"Error in simulate_simulation: {str(e)}")
+        raise
+
+
+def create_realistic_answers_for_simulation(questionary_result: QuestionaryResult) -> None:
+    """
+    Crear respuestas realistas si no existen
+    """
+    try:
+        product_name = questionary_result.fk_questionary.fk_product.name.lower()
+        
+        # Obtener respuestas realistas según el producto
+        if 'get_realistic_answers' in globals():
+            answers_data = get_realistic_answers(product_name)
+        else:
+            # Usar datos específicos del producto
+            if product_name == 'leche' and 'answer_data_leche' in globals():
+                answers_data = answer_data_leche
+            elif product_name == 'queso' and 'answer_data_queso' in globals():
+                answers_data = answer_data_queso
+            elif product_name == 'yogur' and 'answer_data_yogur' in globals():
+                answers_data = answer_data_yogur
+            else:
+                answers_data = []
+        
+        if not answers_data:
+            logger.warning(f"No answer data found for product {product_name}")
+            return
+        
+        # Obtener preguntas del cuestionario
+        questions = Question.objects.filter(
+            fk_questionary=questionary_result.fk_questionary,
+            is_active=True
+        )
+        
+        created_answers = []
+        for answer_data in answers_data:
+            question = questions.filter(question=answer_data.get('question')).first()
+            
+            if question:
+                answer_value = answer_data.get('answer')
+                if isinstance(answer_value, list):
+                    answer_value = str(answer_value)
+                else:
+                    answer_value = str(answer_value)
+                
+                answer, created = Answer.objects.get_or_create(
+                    fk_question=question,
+                    fk_questionary_result=questionary_result,
+                    defaults={
+                        'answer': answer_value,
+                        'is_active': True
+                    }
+                )
+                
+                if created:
+                    created_answers.append(answer)
+        
+        logger.info(f"Created {len(created_answers)} realistic answers for questionary result {questionary_result.id}")
+        
+    except Exception as e:
+        logger.error(f"Error creating realistic answers: {str(e)}")
 
 def create_enhanced_result_simulations(simulation: Simulation, sim_data: dict) -> None:
     """
@@ -845,7 +1427,6 @@ def create_enhanced_result_simulations(simulation: Simulation, sim_data: dict) -
         logger.error(f"Error creating enhanced result simulations: {str(e)}")
         raise
 
-
 def generate_realistic_variables(demand: float, params: dict, expected: dict, product_name: str) -> dict:
     """
     Generar variables realistas basadas en el tipo de producto y parámetros
@@ -898,7 +1479,6 @@ def generate_realistic_variables(demand: float, params: dict, expected: dict, pr
         "CA": revenue * 0.02,
     }
 
-
 def create_probability_density_functions(business: Business) -> None:
     """
     Crear funciones de densidad probabilística para el negocio
@@ -930,7 +1510,6 @@ def create_probability_density_functions(business: Business) -> None:
             
     except Exception as e:
         logger.error(f"Error creating PDF instances: {str(e)}")
-
 
 # Función principal para registrar todos los datos de ejemplo
 @login_required
@@ -1026,7 +1605,6 @@ def register_all_example_data(request):
             'message': f'Error al registrar datos: {str(e)}'
         })
 
-
 def register_elements_simulation(request, user=None):
     """
     Registrar elementos de simulación para el usuario actual o especificado.
@@ -1055,7 +1633,6 @@ def register_elements_simulation(request, user=None):
     except Exception as e:
         logger.error(f"Error in simulation registration for user {user.id}: {str(e)}")
         return 0
-
 
 def create_and_save_answers(questionary_result: QuestionaryResult) -> None:
     """
@@ -1090,7 +1667,6 @@ def create_and_save_answers(questionary_result: QuestionaryResult) -> None:
     except Exception as e:
         logger.error(f"Error creating answers: {str(e)}")
         raise
-
 
 def create_and_save_simulation(questionary_result: QuestionaryResult) -> None:
     """
@@ -1131,9 +1707,8 @@ def create_and_save_simulation(questionary_result: QuestionaryResult) -> None:
             logger.info(f"Simulation already exists for questionary result {questionary_result.id}")
             
     except Exception as e:
-        logger.error(f"Error creating simulation: {str(e)}")
+        logger.error(f"Error creating simulation in create_and_save_simulation: {str(e)}")
         raise
-
 
 def create_random_result_simulations(simulation: Simulation) -> None:
     """
@@ -1185,7 +1760,6 @@ def create_random_result_simulations(simulation: Simulation) -> None:
         logger.error(f"Error creating result simulations: {str(e)}")
         raise
 
-
 def create_and_save_questions(questionary: Questionary) -> None:
     """
     Crear preguntas para un cuestionario
@@ -1234,7 +1808,6 @@ def create_and_save_questions(questionary: Questionary) -> None:
         logger.error(f"Error creating questions for questionary {questionary.id}: {str(e)}")
         raise
 
-
 # Mantener funciones auxiliares existentes
 def get_variable_by_initials(variable_initials: Optional[str], product_id: int) -> Optional[Variable]:
     """
@@ -1260,7 +1833,6 @@ def get_variable_by_initials(variable_initials: Optional[str], product_id: int) 
             fk_product_id=product_id
         ).first()
 
-
 def get_area_by_name(area_name: str, product_id: int) -> Area:
     """
     Obtener área por nombre y producto
@@ -1278,26 +1850,15 @@ def get_area_by_name(area_name: str, product_id: int) -> Area:
         )
         return Area.objects.filter(name=area_name, fk_product_id=product_id).first()
 
-
-def get_question_by_text(question_text: Optional[str], questions_queryset=None) -> Optional[Question]:
+def get_question_by_text(question_text: str, questions_queryset) -> Question:
     """
-    Obtener pregunta por texto
+    Helper function to get a question by its text from a queryset
     """
-    if question_text is None:
-        return None
-    
     try:
-        if questions_queryset is not None:
-            return questions_queryset.filter(question=question_text).first()
-        else:
-            return Question.objects.get(question=question_text)
-    except Question.DoesNotExist:
-        logger.warning(f"Question '{question_text}' does not exist")
+        return questions_queryset.filter(question=question_text).first()
+    except Exception as e:
+        logger.error(f"Error getting question by text: {str(e)}")
         return None
-    except Question.MultipleObjectsReturned:
-        logger.warning(f"Multiple questions found with text '{question_text}'")
-        return Question.objects.filter(question=question_text).first()
-
 
 def generate_base_values() -> Dict[str, float]:
     """Generar valores base para las variables"""
@@ -1310,14 +1871,12 @@ def generate_base_values() -> Dict[str, float]:
         'efficiency': 0.85
     }
 
-
 def generate_daily_demand(base_demand: float, variation: float) -> List[float]:
     """Generar demanda diaria con variación realista"""
     return [
         base_demand * (1 + random.gauss(0, variation))
         for _ in range(10)
     ]
-
 
 def generate_correlated_variables(base_values: Dict[str, float], 
                                  demand_mean: float, 
@@ -1406,7 +1965,6 @@ def generate_correlated_variables(base_values: Dict[str, float],
                for _ in range(10)],
     }
 
-
 def create_demand_instances(simulation: Simulation, last_demand_mean: float) -> None:
     """
     Crear instancias de demanda actual y predicha
@@ -1459,13 +2017,11 @@ def create_demand_instances(simulation: Simulation, last_demand_mean: float) -> 
         logger.error(f"Error creating demand instances: {str(e)}")
         raise
 
-
 def pages_faqs(request):
     """Vista para página de preguntas frecuentes"""
     return render(request, 'pages/faqs.html', {
         'title': 'Preguntas Frecuentes'
     })
-
 
 def pagina_error_404(request, exception):
     """Vista personalizada para error 404"""
@@ -1473,13 +2029,11 @@ def pagina_error_404(request, exception):
         'title': 'Página no encontrada'
     }, status=404)
 
-
 def pagina_error_500(request):
     """Vista personalizada para error 500"""
     return render(request, 'pages/500.html', {
         'title': 'Error del servidor'
     }, status=500)
-
 
 # Vistas basadas en clase con context mejorado
 class PagesMaintenanceView(PagesView):

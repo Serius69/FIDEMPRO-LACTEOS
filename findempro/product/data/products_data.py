@@ -5,7 +5,7 @@ Define los productos disponibles con sus características y parámetros iniciale
 
 products_data = [
     {
-        'name': 'Leche Entera',
+        'name': 'Leche',
         'description': '''La leche entera es un producto lácteo fundamental con alto valor nutricional. 
         Contiene 3.5% de grasa, proteínas de alta calidad, vitaminas A, D, B12, calcio y otros minerales esenciales. 
         Es la base para la elaboración de otros productos lácteos y tiene alta demanda en el mercado boliviano.
@@ -28,7 +28,7 @@ products_data = [
         }
     },
     {
-        'name': 'Yogurt Natural',
+        'name': 'Yogur',
         'description': '''El yogurt natural es un producto lácteo fermentado con cultivos probióticos vivos. 
         Rico en proteínas, calcio y bacterias beneficiosas para la salud digestiva. 
         Proceso de fermentación controlada que transforma la lactosa en ácido láctico.
@@ -52,7 +52,7 @@ products_data = [
         }
     },
     {
-        'name': 'Queso Fresco',
+        'name': 'Queso',
         'description': '''Queso fresco tradicional, no madurado, de pasta blanda y alto contenido de humedad.
         Elaborado mediante coagulación enzimática de la leche y posterior desuerado.
         Popular en la gastronomía boliviana para consumo directo y preparaciones culinarias.

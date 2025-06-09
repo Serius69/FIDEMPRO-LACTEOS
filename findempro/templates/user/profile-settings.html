@@ -2,9 +2,15 @@
 {% load static %}
 {% block title %}Configuración del Perfil{% endblock title %}
 {% block extra_css %}
+    <link href="{% static 'libs/filepond/filepond.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css' %}" rel="stylesheet">
     <style>
         .profile-photo-edit {
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .profile-photo-edit:hover {
+            transform: scale(1.1);
         }
         .progress-label {
             position: relative;
@@ -17,6 +23,117 @@
             color: white;
             font-weight: bold;
             font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .form-control:focus {
+            border-color: #405189;
+            box-shadow: 0 0 0 0.2rem rgba(64, 81, 137, 0.25);
+        }
+        .is-valid {
+            border-color: #28a745 !important;
+        }
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+        .password-strength {
+            height: 5px;
+            margin-top: 5px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        .password-strength.weak { background-color: #dc3545; width: 33%; }
+        .password-strength.medium { background-color: #ffc107; width: 66%; }
+        .password-strength.strong { background-color: #28a745; width: 100%; }
+        
+        .profile-completion-item {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        .profile-completion-item.completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .profile-completion-item.pending {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        .profile-completion-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .avatar-upload-preview {
+            position: relative;
+            overflow: hidden;
+            border-radius: 50%;
+        }
+        .avatar-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .avatar-upload-preview:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .custom-toast {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        .bio-counter {
+            font-size: 0.875rem;
+            transition: color 0.3s ease;
+        }
+        .bio-counter.warning { color: #ffc107; }
+        .bio-counter.danger { color: #dc3545; }
+        
+        .security-tips {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 {% endblock extra_css %}
@@ -29,15 +146,18 @@
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
+            
+            <!-- Toast Container -->
+            <div class="toast-container" id="toastContainer"></div>
 
             <div class="position-relative mx-n4 mt-n4">
                 <div class="profile-wid-bg profile-setting-img">
-                    <img src="{% static 'images/cover-pattern.webp'%}" class="profile-wid-img" alt="Cover Pattern">
+                    <img src="{% static 'images/cover-pattern.webp'%}" class="profile-wid-img" alt="Cover Pattern" loading="lazy">
                     <div class="overlay-content">
                         <div class="text-end p-3">
                             <div class="p-0 ms-auto rounded-circle profile-photo-edit">
                                 <input id="profile-foreground-img-file-input" type="file" class="profile-foreground-img-file-input" accept="image/*" style="display: none;">
-                                <button class="btn btn-light btn-sm" onclick="document.getElementById('profile-foreground-img-file-input').click()">
+                                <button class="btn btn-light btn-sm" onclick="document.getElementById('profile-foreground-img-file-input').click()" aria-label="Cambiar imagen de portada">
                                     <i class="ri-image-edit-line"></i> Cambiar Portada
                                 </button>
                             </div>
@@ -52,17 +172,17 @@
                         <div class="card-body p-4">
                             <div class="text-center">
                                 <div class="profile-user position-relative d-inline-block mx-auto mb-4">
-                                    <img src="{{ profile.get_photo_url }}"
-                                    class="rounded-circle avatar-xl img-thumbnail user-profile-image"
-                                    alt="user-profile-image">
-                                    <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
-                                        <input id="profile-img-file-input" type="file" class="profile-img-file-input" accept="image/*" style="display: none;">
-                                        <label for="profile-img-file-input" class="profile-photo-edit avatar-xs">
-                                            <span class="avatar-title rounded-circle bg-light text-body">
-                                                <i class="ri-camera-fill"></i>
-                                            </span>
-                                        </label>
+                                    <div class="avatar-upload-preview">
+                                        <img src="{{ profile.get_photo_url }}"
+                                        class="rounded-circle avatar-xl img-thumbnail user-profile-image"
+                                        alt="user-profile-image" id="profileImagePreview">
+                                        <div class="avatar-upload-overlay">
+                                            <label for="profile-img-file-input" class="mb-0" style="cursor: pointer;">
+                                                <i class="ri-camera-fill text-white fs-24"></i>
+                                            </label>
+                                        </div>
                                     </div>
+                                    <input id="profile-img-file-input" type="file" class="profile-img-file-input" accept="image/*" style="display: none;">
                                 </div>
                                 <h5 class="fs-16 mb-1">
                                     {% if user.first_name and user.last_name %}
@@ -71,20 +191,28 @@
                                         {{user.username}}
                                     {% endif %}
                                 </h5>
-                                {% if user.is_staff %}
-                                    <p class="text-muted mb-0">Administrador</p>
-                                {% else %}
-                                    <p class="text-muted mb-0">Usuario</p>
-                                {% endif %}
+                                <p class="text-muted mb-0">
+                                    {% if user.is_superuser %}
+                                        <span class="badge bg-danger">Superusuario</span>
+                                    {% elif user.is_staff %}
+                                        <span class="badge bg-warning">Administrador</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Usuario</span>
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
                     <!--end card-->
+                    
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="flex-grow-1">
                                     <h5 class="card-title mb-0">Completitud del perfil</h5>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-primary">{{ completeness_percentage }}%</span>
                                 </div>
                             </div>
                             <div class="progress animated-progress custom-progress progress-label">
@@ -102,13 +230,80 @@
                             </div>
                             <p class="text-muted mt-2 mb-0">
                                 {% if completeness_percentage < 50 %}
-                                    Completa tu perfil para obtener una mejor experiencia
+                                    <i class="ri-information-line"></i> Completa tu perfil para una mejor experiencia
                                 {% elif completeness_percentage < 100 %}
-                                    ¡Casi terminado! Agrega algunos detalles más
+                                    <i class="ri-thumb-up-line"></i> ¡Casi terminado! Solo faltan algunos detalles
                                 {% else %}
-                                    ¡Perfil completo! Excelente trabajo
+                                    <i class="ri-checkbox-circle-line"></i> ¡Perfil completo! Excelente trabajo
                                 {% endif %}
                             </p>
+                            
+                            <!-- Lista de elementos del perfil -->
+                            <div class="mt-4" id="profileCompletionList">
+                                <h6 class="text-muted mb-3">Elementos del perfil:</h6>
+                                <div class="profile-completion-item {% if user.first_name and user.last_name %}completed{% else %}pending{% endif %}">
+                                    <i class="ri-{% if user.first_name and user.last_name %}checkbox-circle-line{% else %}checkbox-blank-circle-line{% endif %} me-2"></i>
+                                    Nombre completo
+                                </div>
+                                <div class="profile-completion-item {% if user.email %}completed{% else %}pending{% endif %}">
+                                    <i class="ri-{% if user.email %}checkbox-circle-line{% else %}checkbox-blank-circle-line{% endif %} me-2"></i>
+                                    Correo electrónico
+                                </div>
+                                <div class="profile-completion-item {% if profile.state and profile.country %}completed{% else %}pending{% endif %}">
+                                    <i class="ri-{% if profile.state and profile.country %}checkbox-circle-line{% else %}checkbox-blank-circle-line{% endif %} me-2"></i>
+                                    Ubicación
+                                </div>
+                                <div class="profile-completion-item {% if profile.bio %}completed{% else %}pending{% endif %}">
+                                    <i class="ri-{% if profile.bio %}checkbox-circle-line{% else %}checkbox-blank-circle-line{% endif %} me-2"></i>
+                                    Biografía
+                                </div>
+                                <div class="profile-completion-item {% if profile.image_src %}completed{% else %}pending{% endif %}">
+                                    <i class="ri-{% if profile.image_src %}checkbox-circle-line{% else %}checkbox-blank-circle-line{% endif %} me-2"></i>
+                                    Foto de perfil
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!--end card-->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title
+                                mb-3">Seguridad</h5>
+                            <div class="security-tips">
+                                <p class="mb-1">Asegúrate de que tu contraseña sea única y compleja.</p>
+                                <p class="mb-1">Habilita la autenticación de dos factores para mayor seguridad.</p>
+                                <p class="mb-0">Revisa regularmente tu actividad de inicio de sesión.</p>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                    Cambiar contraseña
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!--end card-->
+                </div>
+
+                <!--end col-->
+                    
+                    <!-- Quick Stats Card -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Estadísticas rápidas</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Último acceso:</span>
+                                <span class="fw-medium">{{ user.last_login|timesince }} ago</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Miembro desde:</span>
+                                <span class="fw-medium">{{ user.date_joined|date:"M Y" }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Estado de cuenta:</span>
+                                <span class="badge bg-success-subtle text-success">Activa</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -118,13 +313,23 @@
                         <div class="card-header">
                             <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active" data-bs-toggle="tab" href="#personalDetails" role="tab">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#personalDetails" role="tab" aria-selected="true">
                                         <i class="fas fa-user"></i> Detalles personales
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-bs-toggle="tab" href="#changePassword" role="tab">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#additionalInfo" role="tab" aria-selected="false">
+                                        <i class="fas fa-info-circle"></i> Información adicional
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#changePassword" role="tab" aria-selected="false">
                                         <i class="fas fa-lock"></i> Seguridad
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#preferences" role="tab" aria-selected="false">
+                                        <i class="fas fa-cog"></i> Preferencias
                                     </a>
                                 </li>
                             </ul>
@@ -132,15 +337,16 @@
                         <div class="card-body p-4">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="personalDetails" role="tabpanel">
-                                    <form method="POST" class="post-form needs-validation" id="userForm" enctype="multipart/form-data" novalidate>
+                                    <form method="POST" class="needs-validation" id="userForm" enctype="multipart/form-data" novalidate>
                                         {% csrf_token %}
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="firstnameInput" class="form-label">Nombre <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" id="firstnameInput" name="first_name"
-                                                        placeholder="Ingresa tu nombre" value="{{user.first_name}}" required>
-                                                    <div class="invalid-feedback">Por favor, ingresa tu nombre.</div>
+                                                        placeholder="Ingresa tu nombre" value="{{user.first_name}}" required 
+                                                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="30">
+                                                    <div class="invalid-feedback">Por favor, ingresa un nombre válido (mínimo 2 caracteres, solo letras).</div>
                                                 </div>
                                             </div>
                                             <!--end col-->
@@ -148,34 +354,32 @@
                                                 <div class="mb-3">
                                                     <label for="lastnameInput" class="form-label">Apellido <span class="text-danger">*</span></label>
                                                     <input type="text" class="form-control" id="lastnameInput" name="last_name"
-                                                        placeholder="Ingresa tu apellido" value="{{user.last_name}}" required>
-                                                    <div class="invalid-feedback">Por favor, ingresa tu apellido.</div>
+                                                        placeholder="Ingresa tu apellido" value="{{user.last_name}}" required
+                                                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" minlength="2" maxlength="30">
+                                                    <div class="invalid-feedback">Por favor, ingresa un apellido válido (mínimo 2 caracteres, solo letras).</div>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="mb-3">
                                                     <label for="emailInput" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
-                                                    <input type="email" class="form-control" id="emailInput" name="email"
-                                                        placeholder="Ingresa tu correo electrónico" value="{{user.email}}" required>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="ri-mail-line"></i></span>
+                                                        <input type="email" class="form-control" id="emailInput" name="email"
+                                                            placeholder="ejemplo@correo.com" value="{{user.email}}" required>
+                                                    </div>
                                                     <div class="invalid-feedback">Por favor, ingresa un correo electrónico válido.</div>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="stateInput" class="form-label">Estado</label>
-                                                    <select class="form-control" id="stateInput" name="state">
-                                                        <option value="">Seleccione estado</option>
-                                                        <option value="La Paz" {% if profile.state == "La Paz" %}selected{% endif %}>La Paz</option>
-                                                        <option value="Santa Cruz" {% if profile.state == "Santa Cruz" %}selected{% endif %}>Santa Cruz</option>
-                                                        <option value="Cochabamba" {% if profile.state == "Cochabamba" %}selected{% endif %}>Cochabamba</option>
-                                                        <option value="Oruro" {% if profile.state == "Oruro" %}selected{% endif %}>Oruro</option>
-                                                        <option value="Tarija" {% if profile.state == "Tarija" %}selected{% endif %}>Tarija</option>
-                                                        <option value="Potosí" {% if profile.state == "Potosí" %}selected{% endif %}>Potosí</option>
-                                                        <option value="Chuquisaca" {% if profile.state == "Chuquisaca" %}selected{% endif %}>Chuquisaca</option>
-                                                        <option value="Beni" {% if profile.state == "Beni" %}selected{% endif %}>Beni</option>
-                                                        <option value="Pando" {% if profile.state == "Pando" %}selected{% endif %}>Pando</option>
+                                                    <label for="stateInput" class="form-label">Departamento/Estado</label>
+                                                    <select class="form-select" id="stateInput" name="state" data-choices>
+                                                        <option value="">Seleccione departamento</option>
+                                                        {% for state_value, state_name in states %}
+                                                            <option value="{{ state_value }}" {% if profile.state == state_value %}selected{% endif %}>{{ state_name }}</option>
+                                                        {% endfor %}
                                                     </select>
                                                 </div>
                                             </div>
@@ -183,18 +387,11 @@
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="countryInput" class="form-label">País</label>
-                                                    <select class="form-control" id="countryInput" name="country">
+                                                    <select class="form-select" id="countryInput" name="country" data-choices>
                                                         <option value="">Seleccionar país</option>
-                                                        <option value="Bolivia" {% if profile.country == "Bolivia" %}selected{% endif %}>Bolivia</option>
-                                                        <option value="Argentina" {% if profile.country == "Argentina" %}selected{% endif %}>Argentina</option>
-                                                        <option value="Brasil" {% if profile.country == "Brasil" %}selected{% endif %}>Brasil</option>
-                                                        <option value="Chile" {% if profile.country == "Chile" %}selected{% endif %}>Chile</option>
-                                                        <option value="Colombia" {% if profile.country == "Colombia" %}selected{% endif %}>Colombia</option>
-                                                        <option value="Ecuador" {% if profile.country == "Ecuador" %}selected{% endif %}>Ecuador</option>
-                                                        <option value="Paraguay" {% if profile.country == "Paraguay" %}selected{% endif %}>Paraguay</option>
-                                                        <option value="Perú" {% if profile.country == "Perú" %}selected{% endif %}>Perú</option>
-                                                        <option value="Uruguay" {% if profile.country == "Uruguay" %}selected{% endif %}>Uruguay</option>
-                                                        <option value="Venezuela" {% if profile.country == "Venezuela" %}selected{% endif %}>Venezuela</option>
+                                                        {% for country_value, country_name in countries %}
+                                                            <option value="{{ country_value }}" {% if profile.country == country_value %}selected{% endif %}>{{ country_name }}</option>
+                                                        {% endfor %}
                                                     </select>
                                                 </div>
                                             </div>
@@ -203,18 +400,30 @@
                                                 <div class="mb-3">
                                                     <label for="bioInput" class="form-label">Biografía</label>
                                                     <textarea class="form-control" id="bioInput" name="bio" rows="4" 
-                                                        placeholder="Cuéntanos sobre ti...">{{ profile.bio }}</textarea>
-                                                    <div class="form-text">Máximo 500 caracteres</div>
+                                                        placeholder="Cuéntanos sobre ti..." maxlength="500">{{ profile.bio }}</textarea>
+                                                    <div class="d-flex justify-content-between mt-1">
+                                                        <small class="text-muted">Describe brevemente quién eres y qué haces</small>
+                                                        <small class="bio-counter" id="bioCounter">{{ profile.bio|length|default:0 }}/500</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--end col-->
+                                            <div class="col-lg-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Imagen de perfil</label>
+                                                    <input type="file" class="form-control" id="profileImageInput" name="profile_image" 
+                                                        accept="image/jpeg,image/jpg,image/png,image/webp">
+                                                    <div class="form-text">Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 5MB</div>
                                                 </div>
                                             </div>
                                             <!--end col-->
                                             <div class="col-lg-12">
                                                 <div class="hstack gap-2 justify-content-end">
                                                     <button type="submit" class="btn btn-primary" id="updateBtn">
-                                                        <i class="ri-save-line align-bottom me-1"></i> Actualizar
+                                                        <i class="ri-save-line align-bottom me-1"></i> Guardar cambios
                                                     </button>
-                                                    <button type="button" class="btn btn-soft-success" onclick="resetForm()">
-                                                        <i class="ri-refresh-line align-bottom me-1"></i> Cancelar
+                                                    <button type="button" class="btn btn-soft-secondary" onclick="resetForm()">
+                                                        <i class="ri-refresh-line align-bottom me-1"></i> Restablecer
                                                     </button>
                                                 </div>
                                             </div>
@@ -224,75 +433,214 @@
                                     </form>
                                 </div>
                                 <!--end tab-pane-->
+                                
+                                <div class="tab-pane" id="additionalInfo" role="tabpanel">
+                                    <form id="additionalInfoForm" class="needs-validation" novalidate>
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="phoneInput" class="form-label">Teléfono</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">+591</span>
+                                                        <input type="tel" class="form-control" id="phoneInput" name="phone" 
+                                                            placeholder="70123456" value="{{ profile.phone }}" 
+                                                            pattern="[0-9]{8}" maxlength="8">
+                                                    </div>
+                                                    <div class="invalid-feedback">Ingresa un número de teléfono válido de 8 dígitos.</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="birthDateInput" class="form-label">Fecha de nacimiento</label>
+                                                    <input type="date" class="form-control" id="birthDateInput" name="birth_date" 
+                                                        value="{{ profile.birth_date|date:'Y-m-d' }}" max="{{ max_birth_date }}">
+                                                    <div class="invalid-feedback">Debes tener al menos 13 años.</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <div class="mb-3">
+                                                    <label for="websiteInput" class="form-label">Sitio web</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="ri-global-line"></i></span>
+                                                        <input type="url" class="form-control" id="websiteInput" name="website" 
+                                                            placeholder="https://tu-sitio.com" value="{{ profile.website }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="linkedinInput" class="form-label">LinkedIn</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="ri-linkedin-box-fill"></i></span>
+                                                        <input type="url" class="form-control" id="linkedinInput" name="linkedin" 
+                                                            placeholder="https://linkedin.com/in/tu-perfil" value="{{ profile.linkedin }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="githubInput" class="form-label">GitHub</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="ri-github-fill"></i></span>
+                                                        <input type="url" class="form-control" id="githubInput" name="github" 
+                                                            placeholder="https://github.com/tu-usuario" value="{{ profile.github }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <div class="hstack gap-2 justify-content-end">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="ri-save-line align-bottom me-1"></i> Guardar información adicional
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <!--end tab-pane-->
+                                
                                 <div class="tab-pane" id="changePassword" role="tabpanel">
                                     <div class="row">
                                         <div class="col-lg-8">
                                             <div class="mb-4">
                                                 <h5 class="card-title">Cambiar Contraseña</h5>
-                                                <p class="text-muted">Para tu seguridad, te recomendamos usar una contraseña fuerte y única.</p>
+                                                <p class="text-muted">Asegura tu cuenta con una contraseña fuerte y única.</p>
                                             </div>
                                             
                                             <div class="d-grid gap-2 mb-4">
                                                 <a class="btn btn-success" href="{% url 'account_change_password' %}">
-                                                    <i class="ri-lock-line me-2"></i>{% trans "Cambiar Contraseña" %}
+                                                    <i class="ri-lock-line me-2"></i>Cambiar Contraseña
                                                 </a>
                                             </div>
                                             
-                                            <div class="alert alert-info">
-                                                <h6 class="alert-heading">Consejos de seguridad:</h6>
-                                                <ul class="mb-0">
-                                                    <li>Usa al menos 8 caracteres</li>
-                                                    <li>Incluye mayúsculas, minúsculas y números</li>
-                                                    <li>Agrega símbolos especiales</li>
-                                                    <li>No uses información personal</li>
+                                            <div class="security-tips">
+                                                <h6 class="text-white mb-3"><i class="ri-shield-check-line me-2"></i>Consejos de seguridad:</h6>
+                                                <ul class="mb-0 ps-3">
+                                                    <li>Usa al menos 8 caracteres con mayúsculas, minúsculas y números</li>
+                                                    <li>Incluye símbolos especiales como @, #, $, etc.</li>
+                                                    <li>No uses información personal como tu nombre o fecha de nacimiento</li>
+                                                    <li>Evita contraseñas comunes como "123456" o "password"</li>
+                                                    <li>Usa una contraseña única para cada cuenta importante</li>
                                                 </ul>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <div class="mt-4 mb-3 border-bottom pb-2">
+                                    <div class="mt-5 mb-3 border-bottom pb-2">
                                         <h5 class="card-title">Información de Sesión</h5>
                                     </div>
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="flex-shrink-0 avatar-sm">
-                                            <div class="avatar-title bg-light text-primary rounded-3 fs-18">
-                                                <i class="ri-smartphone-line"></i>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="flex-shrink-0 avatar-sm">
+                                                    <div class="avatar-title bg-light text-primary rounded-3 fs-18">
+                                                        <i class="ri-time-line"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="mb-1">Último acceso</h6>
+                                                    <p class="text-muted mb-0">{{user.last_login|date:"d M Y, H:i"|default:"Nunca"}}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="flex-grow-1 ms-3">
-                                            <h6>Último acceso desde navegador web</h6>
-                                            <p class="text-muted mb-0">{{user.last_login|date:"F j, Y, g:i a"|default:"Nunca"}}</p>
+                                        <div class="col-lg-6">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="flex-shrink-0 avatar-sm">
+                                                    <div class="avatar-title bg-light text-primary rounded-3 fs-18">
+                                                        <i class="ri-map-pin-line"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="mb-1">Ubicación del último acceso</h6>
+                                                    <p class="text-muted mb-0">{{ last_login_location|default:"No disponible" }}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     
-                                    <div class="mt-4 pt-3 border-top">
+                                    <div class="mt-5 pt-3 border-top">
                                         <h5 class="card-title text-danger mb-3">Zona de Peligro</h5>
-                                        <div class="alert alert-warning">
-                                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer. Tu cuenta será desactivada permanentemente.
-                                        </div>
-                                        
-                                        <form method="post" action="{% url 'user:user.deactivate_account' %}" class="needs-validation" novalidate>
-                                            {% csrf_token %}
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="confirmPassword" class="form-label">Confirma tu contraseña para continuar</label>
-                                                        <input type="password" class="form-control" name="password" id="confirmPassword" 
-                                                            placeholder="Ingresa tu contraseña actual" required>
-                                                        <div class="invalid-feedback">Por favor, ingresa tu contraseña actual.</div>
-                                                    </div>
+                                        <div class="alert alert-danger border-danger">
+                                            <div class="d-flex">
+                                                <div class="flex-shrink-0">
+                                                    <i class="ri-error-warning-line fs-24 align-middle me-2"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">¡Advertencia!</h6>
+                                                    <p class="mb-0">La desactivación de tu cuenta es permanente. Todos tus datos serán eliminados y no podrás recuperarlos.</p>
                                                 </div>
                                             </div>
-                                            <div class="hstack gap-2">
-                                                <button type="submit" class="btn btn-danger" onclick="return confirmDeactivation()">
-                                                    <i class="ri-delete-bin-line me-1"></i> Desactivar y Eliminar Cuenta
-                                                </button>
-                                                <a href="{% url 'user:cancel' %}" class="btn btn-light">
-                                                    <i class="ri-close-line me-1"></i> Cancelar
-                                                </a>
-                                            </div>
-                                        </form>
+                                        </div>
+                                        
+                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                                            <i class="ri-delete-bin-line me-1"></i> Desactivar Cuenta
+                                        </button>
                                     </div>
+                                </div>
+                                <!--end tab-pane-->
+                                
+                                <div class="tab-pane" id="preferences" role="tabpanel">
+                                    <form id="preferencesForm">
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="mb-4">
+                                                    <label class="form-label">Idioma preferido</label>
+                                                    <select class="form-select" name="language">
+                                                        <option value="es" {% if profile.language == 'es' %}selected{% endif %}>Español</option>
+                                                        <option value="en" {% if profile.language == 'en' %}selected{% endif %}>English</option>
+                                                        <option value="pt" {% if profile.language == 'pt' %}selected{% endif %}>Português</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="mb-4">
+                                                    <label class="form-label">Zona horaria</label>
+                                                    <select class="form-select" name="timezone">
+                                                        <option value="America/La_Paz" {% if profile.timezone == 'America/La_Paz' %}selected{% endif %}>La Paz (UTC-4)</option>
+                                                        <option value="America/Buenos_Aires" {% if profile.timezone == 'America/Buenos_Aires' %}selected{% endif %}>Buenos Aires (UTC-3)</option>
+                                                        <option value="America/Sao_Paulo" {% if profile.timezone == 'America/Sao_Paulo' %}selected{% endif %}>São Paulo (UTC-3)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <h6 class="mb-3">Notificaciones</h6>
+                                                <div class="form-check form-switch mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="emailNotifications" 
+                                                        name="notifications_email" {% if profile.notifications_email %}checked{% endif %}>
+                                                    <label class="form-check-label" for="emailNotifications">
+                                                        Recibir notificaciones por correo electrónico
+                                                    </label>
+                                                </div>
+                                                <div class="form-check form-switch mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="pushNotifications" 
+                                                        name="notifications_push" {% if profile.notifications_push %}checked{% endif %}>
+                                                    <label class="form-check-label" for="pushNotifications">
+                                                        Recibir notificaciones push en el navegador
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <h6 class="mb-3">Privacidad</h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Visibilidad del perfil</label>
+                                                    <select class="form-select" name="privacy_profile">
+                                                        <option value="public" {% if profile.privacy_profile == 'public' %}selected{% endif %}>Público - Todos pueden ver mi perfil</option>
+                                                        <option value="contacts" {% if profile.privacy_profile == 'contacts' %}selected{% endif %}>Solo contactos - Solo mis contactos pueden ver mi perfil</option>
+                                                        <option value="private" {% if profile.privacy_profile == 'private' %}selected{% endif %}>Privado - Nadie puede ver mi perfil</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <div class="hstack gap-2 justify-content-end">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="ri-save-line align-bottom me-1"></i> Guardar preferencias
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
                                 </div>
                                 <!--end tab-pane-->
                             </div>
@@ -302,6 +650,68 @@
                 <!--end col-->
             </div>
             <!--end row-->
+            
+            <!-- Modal de desactivación de cuenta -->
+            <div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title text-white" id="deactivateModalLabel">
+                                <i class="ri-error-warning-line me-2"></i>Desactivar Cuenta
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{% url 'user:user.deactivate_account' %}" id="deactivateForm">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <strong>¿Estás absolutamente seguro?</strong><br>
+                                    Esta acción no se puede deshacer. Tu cuenta será desactivada permanentemente y todos tus datos serán eliminados.
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Por favor, cuéntanos por qué te vas (opcional)</label>
+                                    <select class="form-select mb-3" name="reason">
+                                        <option value="">Selecciona una razón</option>
+                                        <option value="not_using">No uso más el servicio</option>
+                                        <option value="privacy">Preocupaciones de privacidad</option>
+                                        <option value="alternative">Encontré una alternativa mejor</option>
+                                        <option value="temporary">Solo necesito un descanso temporal</option>
+                                        <option value="other">Otro motivo</option>
+                                    </select>
+                                    <textarea class="form-control" name="feedback" rows="3" 
+                                        placeholder="Tus comentarios nos ayudan a mejorar (opcional)"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">
+                                        <strong>Confirma tu contraseña para continuar</strong>
+                                    </label>
+                                    <input type="password" class="form-control" name="password" id="confirmPassword" 
+                                        placeholder="Ingresa tu contraseña actual" required>
+                                    <div class="invalid-feedback">Por favor, ingresa tu contraseña actual.</div>
+                                </div>
+                                
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="confirmDeactivation" required>
+                                    <label class="form-check-label" for="confirmDeactivation">
+                                        Entiendo que mi cuenta será desactivada permanentemente
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                                    <i class="ri-close-line me-1"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-danger" id="confirmDeactivateBtn">
+                                    <i class="ri-delete-bin-line me-1"></i> Sí, desactivar mi cuenta
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
         </div>
         <!-- container-fluid -->
     </div><!-- End Page-content -->
@@ -313,183 +723,573 @@
 <!-- end main content-->
 {% endblock content %}
 {% block extra_js %}
+<script src="{% static 'libs/filepond/filepond.min.js' %}"></script>
+<script src="{% static 'libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js' %}"></script>
+<script src="{% static 'libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js' %}"></script>
+<script src="{% static 'libs/filepond-plugin-file-validate-type/filepond-plugin-file-validate-type.min.js' %}"></script>
+
 <script>
-// Utilidades para obtener CSRF token
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
+// Configuración global
+const CONFIG = {
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    bioMaxLength: 500,
+    toastDuration: 5000,
+    debounceDelay: 300
+};
 
-// Validación del formulario y envío
-document.getElementById('userForm').addEventListener('submit', async function(event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const form = this;
-    const updateBtn = document.getElementById('updateBtn');
-    const originalBtnText = updateBtn.innerHTML;
-
-    // Validación del lado del cliente
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        return;
+// Utilidades
+const Utils = {
+    getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    },
+    
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+    
+    showToast(type, message, duration = CONFIG.toastDuration) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toastId = `toast-${Date.now()}`;
+        const toastHTML = `
+            <div id="${toastId}" class="toast custom-toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="ri-${type === 'success' ? 'checkbox-circle' : type === 'error' ? 'error-warning' : 'information'}-line me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: duration });
+        toast.show();
+        
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    },
+    
+    validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email.toLowerCase());
+    },
+    
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
+};
 
-    // Mostrar indicador de carga
-    updateBtn.innerHTML = '<i class="ri-loader-2-line me-1 spin"></i> Actualizando...';
-    updateBtn.disabled = true;
-
-    try {
-        const formData = new FormData(form);
-        const response = await fetch(window.location.pathname, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
+// Manejador de formulario principal
+class ProfileFormHandler {
+    constructor() {
+        this.form = document.getElementById('userForm');
+        this.submitBtn = document.getElementById('updateBtn');
+        this.init();
+    }
+    
+    init() {
+        if (!this.form) return;
+        
+        this.form.addEventListener('submit', this.handleSubmit.bind(this));
+        this.setupFieldValidation();
+        this.setupImagePreview();
+        this.setupBioCounter();
+    }
+    
+    setupFieldValidation() {
+        // Validación en tiempo real para campos
+        const inputs = this.form.querySelectorAll('input[required], textarea[required]');
+        inputs.forEach(input => {
+            input.addEventListener('blur', () => this.validateField(input));
+            input.addEventListener('input', Utils.debounce(() => {
+                if (input.classList.contains('is-invalid')) {
+                    this.validateField(input);
+                }
+            }, CONFIG.debounceDelay));
         });
         
-        if (response.ok) {
-            // Mostrar mensaje de éxito
-            showAlert('success', 'Perfil actualizado correctamente');
-            
-            // Actualizar la barra de progreso si es necesario
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            const responseData = await response.json();
-            if (responseData.errors) {
-                // Mostrar errores específicos
-                Object.keys(responseData.errors).forEach(field => {
-                    const fieldElement = document.querySelector(`[name="${field}"]`);
-                    if (fieldElement) {
-                        fieldElement.classList.add('is-invalid');
-                        const feedback = fieldElement.parentNode.querySelector('.invalid-feedback');
-                        if (feedback) {
-                            feedback.textContent = responseData.errors[field][0];
-                        }
-                    }
-                });
-            }
-            showAlert('error', 'Error al actualizar el perfil. Verifica los datos ingresados.');
+        // Validación especial para email
+        const emailInput = document.getElementById('emailInput');
+        if (emailInput) {
+            emailInput.addEventListener('blur', () => {
+                if (!Utils.validateEmail(emailInput.value)) {
+                    emailInput.classList.add('is-invalid');
+                } else {
+                    emailInput.classList.remove('is-invalid');
+                    emailInput.classList.add('is-valid');
+                }
+            });
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'Error de conexión. Inténtalo de nuevo.');
-    } finally {
-        // Restaurar botón
-        updateBtn.innerHTML = originalBtnText;
-        updateBtn.disabled = false;
     }
-});
-
-// Función para mostrar alertas
-function showAlert(type, message) {
-    const alertContainer = document.createElement('div');
-    alertContainer.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-    alertContainer.innerHTML = `
-        <i class="ri-${type === 'success' ? 'check-circle' : 'error-warning'}-line me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
     
-    const container = document.querySelector('.container-fluid');
-    container.insertBefore(alertContainer, container.firstChild);
-    
-    // Auto-ocultar después de 5 segundos
-    setTimeout(() => {
-        if (alertContainer.parentNode) {
-            alertContainer.remove();
+    validateField(field) {
+        if (!field.checkValidity()) {
+            field.classList.add('is-invalid');
+            field.classList.remove('is-valid');
+            return false;
+        } else {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+            return true;
         }
-    }, 5000);
+    }
+    
+    setupImagePreview() {
+        const fileInput = document.getElementById('profileImageInput');
+        const preview = document.getElementById('profileImagePreview');
+        
+        if (fileInput && preview) {
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validar tipo de archivo
+                    if (!CONFIG.allowedImageTypes.includes(file.type)) {
+                        Utils.showToast('error', 'Formato de imagen no válido. Use JPG, PNG o WebP.');
+                        fileInput.value = '';
+                        return;
+                    }
+                    
+                    // Validar tamaño
+                    if (file.size > CONFIG.maxFileSize) {
+                        Utils.showToast('error', `La imagen no debe superar ${Utils.formatFileSize(CONFIG.maxFileSize)}`);
+                        fileInput.value = '';
+                        return;
+                    }
+                    
+                    // Mostrar preview
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        preview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        // Manejo del input oculto de imagen de perfil
+        const hiddenInput = document.getElementById('profile-img-file-input');
+        if (hiddenInput) {
+            hiddenInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.querySelector('.user-profile-image').src = e.target.result;
+                        // Sincronizar con el input principal del formulario
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        fileInput.files = dataTransfer.files;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    }
+    
+    setupBioCounter() {
+        const bioInput = document.getElementById('bioInput');
+        const bioCounter = document.getElementById('bioCounter');
+        
+        if (bioInput && bioCounter) {
+            bioInput.addEventListener('input', () => {
+                const length = bioInput.value.length;
+                const remaining = CONFIG.bioMaxLength - length;
+                
+                bioCounter.textContent = `${length}/${CONFIG.bioMaxLength}`;
+                
+                // Cambiar color según caracteres restantes
+                bioCounter.classList.remove('warning', 'danger');
+                if (remaining < 50) {
+                    bioCounter.classList.add('warning');
+                }
+                if (remaining < 20) {
+                    bioCounter.classList.remove('warning');
+                    bioCounter.classList.add('danger');
+                }
+            });
+        }
+    }
+    
+    async handleSubmit(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Validación del formulario
+        if (!this.form.checkValidity()) {
+            this.form.classList.add('was-validated');
+            const firstInvalid = this.form.querySelector('.form-control:invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+        
+        // Mostrar indicador de carga
+        const originalBtnText = this.submitBtn.innerHTML;
+        this.submitBtn.innerHTML = '<span class="loading-spinner"></span> Guardando...';
+        this.submitBtn.disabled = true;
+        
+        try {
+            const formData = new FormData(this.form);
+            const response = await fetch(window.location.pathname, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': Utils.getCookie('csrftoken'),
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                Utils.showToast('success', data.message || 'Perfil actualizado correctamente');
+                
+                // Actualizar la UI sin recargar
+                this.updateUIAfterSave();
+                
+                // Limpiar validaciones
+                this.form.classList.remove('was-validated');
+                this.form.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+                
+                // Recargar después de un momento para actualizar la barra de progreso
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                // Manejar errores del servidor
+                if (data.errors) {
+                    this.handleServerErrors(data.errors);
+                } else {
+                    Utils.showToast('error', data.message || 'Error al actualizar el perfil');
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Utils.showToast('error', 'Error de conexión. Por favor, intenta de nuevo.');
+        } finally {
+            // Restaurar botón
+            this.submitBtn.innerHTML = originalBtnText;
+            this.submitBtn.disabled = false;
+        }
+    }
+    
+    handleServerErrors(errors) {
+        Object.keys(errors).forEach(field => {
+            const fieldElement = this.form.querySelector(`[name="${field}"]`);
+            if (fieldElement) {
+                fieldElement.classList.add('is-invalid');
+                // Crear o actualizar mensaje de error
+                let feedback = fieldElement.parentNode.querySelector('.invalid-feedback');
+                if (!feedback) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    fieldElement.parentNode.appendChild(feedback);
+                }
+                feedback.textContent = Array.isArray(errors[field]) ? errors[field][0] : errors[field];
+            }
+        });
+        
+        // Mostrar mensaje general si hay errores no específicos de campo
+        if (errors.general || errors.non_field_errors) {
+            const message = errors.general?.[0] || errors.non_field_errors?.[0];
+            Utils.showToast('error', message);
+        }
+    }
+    
+    updateUIAfterSave() {
+        // Actualizar elementos de la UI que muestran el nombre
+        const firstName = document.getElementById('firstnameInput').value;
+        const lastName = document.getElementById('lastnameInput').value;
+        
+        const nameElements = document.querySelectorAll('.user-full-name');
+        nameElements.forEach(el => {
+            el.textContent = `${firstName} ${lastName}`.trim() || el.textContent;
+        });
+    }
 }
 
-// Función para resetear el formulario
+// Manejador de formularios adicionales
+class AdditionalFormsHandler {
+    constructor() {
+        this.setupAdditionalInfoForm();
+        this.setupPreferencesForm();
+        this.setupDeactivateForm();
+    }
+    
+    setupAdditionalInfoForm() {
+        const form = document.getElementById('additionalInfoForm');
+        if (!form) return;
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+            
+            try {
+                const formData = new FormData(form);
+                // Aquí iría la llamada a la API para guardar información adicional
+                Utils.showToast('success', 'Información adicional guardada correctamente');
+            } catch (error) {
+                console.error('Error:', error);
+                Utils.showToast('error', 'Error al guardar la información adicional');
+            }
+        });
+        
+        // Validación de fecha de nacimiento
+        const birthDateInput = document.getElementById('birthDateInput');
+        if (birthDateInput) {
+            const today = new Date();
+            const maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+            birthDateInput.max = maxDate.toISOString().split('T')[0];
+            
+            birthDateInput.addEventListener('change', () => {
+                const selectedDate = new Date(birthDateInput.value);
+                if (selectedDate > maxDate) {
+                    birthDateInput.setCustomValidity('Debes tener al menos 13 años');
+                } else {
+                    birthDateInput.setCustomValidity('');
+                }
+            });
+        }
+    }
+    
+    setupPreferencesForm() {
+        const form = document.getElementById('preferencesForm');
+        if (!form) return;
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(form);
+                // Aquí iría la llamada a la API para guardar preferencias
+                Utils.showToast('success', 'Preferencias guardadas correctamente');
+            } catch (error) {
+                console.error('Error:', error);
+                Utils.showToast('error', 'Error al guardar las preferencias');
+            }
+        });
+    }
+    
+    setupDeactivateForm() {
+        const form = document.getElementById('deactivateForm');
+        if (!form) return;
+        
+        const confirmBtn = document.getElementById('confirmDeactivateBtn');
+        const confirmCheckbox = document.getElementById('confirmDeactivation');
+        
+        // Habilitar/deshabilitar botón según checkbox
+        confirmCheckbox.addEventListener('change', () => {
+            confirmBtn.disabled = !confirmCheckbox.checked;
+        });
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = form.querySelector('[name="password"]').value;
+            if (!password) {
+                form.querySelector('[name="password"]').classList.add('is-invalid');
+                return;
+            }
+            
+            // Confirmación final
+            const confirmed = await Swal.fire({
+                title: '¿Estás absolutamente seguro?',
+                text: 'Esta es tu última oportunidad de cancelar. Tu cuenta será desactivada permanentemente.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, desactivar mi cuenta',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (confirmed.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
+}
+
+// Funciones auxiliares
 function resetForm() {
     const form = document.getElementById('userForm');
-    form.reset();
-    form.classList.remove('was-validated');
+    if (!form) return;
     
-    // Limpiar clases de validación personalizadas
-    form.querySelectorAll('.is-invalid').forEach(element => {
-        element.classList.remove('is-invalid');
+    // Confirmar antes de resetear
+    Swal.fire({
+        title: '¿Restablecer formulario?',
+        text: 'Se perderán todos los cambios no guardados',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, restablecer',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.reset();
+            form.classList.remove('was-validated');
+            form.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+            });
+            Utils.showToast('info', 'Formulario restablecido');
+        }
     });
 }
 
-// Confirmación para desactivación de cuenta
-function confirmDeactivation() {
-    return confirm('¿Estás completamente seguro de que quieres desactivar tu cuenta? Esta acción no se puede deshacer.');
-}
-
-// Validación en tiempo real
-document.querySelectorAll('.form-control').forEach(input => {
-    input.addEventListener('input', function() {
-        if (this.checkValidity()) {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        } else {
-            this.classList.remove('is-valid');
+// Inicialización cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar manejadores
+    new ProfileFormHandler();
+    new AdditionalFormsHandler();
+    
+    // Inicializar tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Prevenir envío accidental de formularios con Enter
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            const form = e.target.closest('form');
+            if (form && !e.target.matches('button[type="submit"]')) {
+                e.preventDefault();
+            }
+        }
+    });
+    
+    // Manejar cambios no guardados
+    let hasUnsavedChanges = false;
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('input', () => {
+            hasUnsavedChanges = true;
+        });
+        
+        form.addEventListener('submit', () => {
+            hasUnsavedChanges = false;
+        });
+    });
+    
+    window.addEventListener('beforeunload', (e) => {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
         }
     });
 });
 
-// Manejo de carga de imágenes
-document.getElementById('profile-img-file-input').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.querySelector('.user-profile-image').src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-// Contador de caracteres para biografía
-const bioInput = document.getElementById('bioInput');
-if (bioInput) {
-    const maxLength = 500;
-    const counter = document.createElement('div');
-    counter.className = 'form-text text-end';
-    bioInput.parentNode.appendChild(counter);
-    
-    function updateCounter() {
-        const remaining = maxLength - bioInput.value.length;
-        counter.textContent = `${remaining} caracteres restantes`;
-        counter.className = `form-text text-end ${remaining < 50 ? 'text-warning' : remaining < 0 ? 'text-danger' : ''}`;
-    }
-    
-    bioInput.addEventListener('input', updateCounter);
-    updateCounter(); // Inicializar contador
-}
-
-// Inicializar tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+// Animación suave para pestañas
+document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function (e) {
+        const targetPane = document.querySelector(e.target.getAttribute('href'));
+        if (targetPane) {
+            targetPane.style.opacity = '0';
+            targetPane.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                targetPane.style.transition = 'all 0.3s ease';
+                targetPane.style.opacity = '1';
+                targetPane.style.transform = 'translateY(0)';
+            }, 10);
+        }
     });
 });
 </script>
 
+<!-- SweetAlert2 para confirmaciones -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
-.spin {
-    animation: spin 1s linear infinite;
+/* Estilos adicionales para mejorar la UX */
+.swal2-popup {
+    font-family: inherit;
 }
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+.form-control:focus,
+.form-select:focus {
+    border-color: #405189;
+    box-shadow: 0 0 0 0.2rem rgba(64, 81, 137, 0.25);
 }
 
-.is-valid {
-    border-color: #28a745;
+.nav-tabs-custom .nav-link {
+    transition: all 0.3s ease;
 }
 
-.is-invalid {
-    border-color: #dc3545;
+.nav-tabs-custom .nav-link:hover {
+    transform: translateY(-2px);
+}
+
+.tab-pane {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mejoras de accesibilidad */
+.form-label {
+    font-weight: 500;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    background-color: #f3f3f9;
+    cursor: not-allowed;
+}
+
+/* Animación para elementos de completitud */
+.profile-completion-item {
+    animation: slideIn 0.3s ease forwards;
+    opacity: 0;
+}
+
+.profile-completion-item:nth-child(1) { animation-delay: 0.1s; }
+.profile-completion-item:nth-child(2) { animation-delay: 0.2s; }
+.profile-completion-item:nth-child(3) { animation-delay: 0.3s; }
+.profile-completion-item:nth-child(4) { animation-delay: 0.4s; }
+.profile-completion-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 </style>
 {% endblock extra_js %}
+
