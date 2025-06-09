@@ -584,23 +584,153 @@
                                             </div>
 
                                             <!-- Statistical Charts -->
-                                            {% if image_data %}
+                                            {% if image_data or image_data_histogram or image_data_qq %}
                                             <div class="mb-4">
                                                 <h6 class="text-muted mb-3">
                                                     <i class="bx bx-chart me-2"></i>
-                                                    Análisis Estadístico
+                                                    Análisis Estadístico de Demanda Histórica
                                                 </h6>
-                                                <div class="demand-chart-container mb-3">
-                                                    <img src="data:image/png;base64,{{ image_data }}" 
-                                                         class="img-fluid" 
-                                                         alt="Gráfico de dispersión de demanda histórica"
-                                                         loading="lazy">
+                                                
+                                                <!-- Demand Statistics Summary -->
+                                                {% if demand_stats %}
+                                                <div class="alert alert-info mb-3">
+                                                    <div class="row">
+                                                        <div class="col-md-3">
+                                                            <strong>Registros:</strong> {{ demand_stats.count }}
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <strong>Media:</strong> {{ demand_stats.mean|floatformat:2 }} L
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <strong>Desv. Est.:</strong> {{ demand_stats.std|floatformat:2 }}
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <strong>CV:</strong> {{ demand_stats.cv|floatformat:3 }}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="demand-chart-container">
-                                                    <img src="data:image/png;base64,{{ image_data_histogram }}" 
-                                                         class="img-fluid" 
-                                                         alt="Histograma y función de densidad"
-                                                         loading="lazy">
+                                                {% endif %}
+                                                
+                                                <!-- Chart Tabs -->
+                                                <ul class="nav nav-tabs mb-3" id="statChartTabs" role="tablist">
+                                                    {% if image_data %}
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link active" id="scatter-tab" data-bs-toggle="tab" 
+                                                                data-bs-target="#scatter-chart" type="button" role="tab">
+                                                            <i class="bx bx-scatter-chart me-1"></i>
+                                                            Dispersión
+                                                        </button>
+                                                    </li>
+                                                    {% endif %}
+                                                    {% if image_data_histogram %}
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link {% if not image_data %}active{% endif %}" 
+                                                                id="histogram-tab" data-bs-toggle="tab" 
+                                                                data-bs-target="#histogram-chart" type="button" role="tab">
+                                                            <i class="bx bx-bar-chart-alt-2 me-1"></i>
+                                                            Histograma
+                                                        </button>
+                                                    </li>
+                                                    {% endif %}
+                                                    {% if image_data_qq %}
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link {% if not image_data and not image_data_histogram %}active{% endif %}" 
+                                                                id="qq-tab" data-bs-toggle="tab" 
+                                                                data-bs-target="#qq-chart" type="button" role="tab">
+                                                            <i class="bx bx-line-chart me-1"></i>
+                                                            Q-Q Plot
+                                                        </button>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                                
+                                                <!-- Tab Content -->
+                                                <div class="tab-content" id="statChartTabContent">
+                                                    {% if image_data %}
+                                                    <div class="tab-pane fade show active" id="scatter-chart" role="tabpanel">
+                                                        <div class="demand-chart-container mb-3">
+                                                            <img src="data:image/png;base64,{{ image_data }}" 
+                                                                class="img-fluid rounded" 
+                                                                alt="Gráfico de dispersión de demanda histórica"
+                                                                style="max-height: 400px; width: 100%; object-fit: contain;"
+                                                                loading="lazy">
+                                                            <div class="text-center mt-2">
+                                                                <small class="text-muted">
+                                                                    Gráfico de dispersión mostrando la tendencia de la demanda histórica
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    
+                                                    {% if image_data_histogram %}
+                                                    <div class="tab-pane fade {% if not image_data %}show active{% endif %}" 
+                                                        id="histogram-chart" role="tabpanel">
+                                                        <div class="demand-chart-container">
+                                                            <img src="data:image/png;base64,{{ image_data_histogram }}" 
+                                                                class="img-fluid rounded" 
+                                                                alt="Histograma y función de densidad"
+                                                                style="max-height: 400px; width: 100%; object-fit: contain;"
+                                                                loading="lazy">
+                                                            <div class="text-center mt-2">
+                                                                <small class="text-muted">
+                                                                    Distribución de frecuencias con curva de densidad ajustada
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    
+                                                    {% if image_data_qq %}
+                                                    <div class="tab-pane fade {% if not image_data and not image_data_histogram %}show active{% endif %}" 
+                                                        id="qq-chart" role="tabpanel">
+                                                        <div class="demand-chart-container">
+                                                            <img src="data:image/png;base64,{{ image_data_qq }}" 
+                                                                class="img-fluid rounded" 
+                                                                alt="Q-Q Plot de validación"
+                                                                style="max-height: 400px; width: 100%; object-fit: contain;"
+                                                                loading="lazy">
+                                                            <div class="text-center mt-2">
+                                                                <small class="text-muted">
+                                                                    Gráfico Q-Q para validar el ajuste de la distribución {{ best_distribution|title }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="bx bx-info-circle me-2"></i>
+                                                No se pudieron generar los gráficos estadísticos. Verifique que los datos históricos sean válidos.
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- Distribution Parameters -->
+                                            {% if best_distribution and distribution_params %}
+                                            <div class="mt-3">
+                                                <h6 class="text-muted mb-2">
+                                                    <i class="bx bx-math me-2"></i>
+                                                    Parámetros de la Distribución {{ best_distribution|title }}
+                                                </h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Parámetro</th>
+                                                                <th>Valor</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for param, value in distribution_params.items %}
+                                                            <tr>
+                                                                <td>{{ param|title }}</td>
+                                                                <td>{{ value|floatformat:4 }}</td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                             {% endif %}
@@ -785,7 +915,24 @@
 <script src="{% static 'js/pages/joint.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
 <script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
-
+<!-- Add JavaScript for chart interactions -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Add zoom functionality to charts
+    document.querySelectorAll('.demand-chart-container img').forEach(img => {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', function() {
+            openFullscreen(this.src.replace('data:image/png;base64,', ''), this.alt);
+        });
+    });
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Tutorial System

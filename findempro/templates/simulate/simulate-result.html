@@ -777,6 +777,21 @@
                                     Línea de Tiempo
                                 </button>
                             </li>
+                            <!-- En la sección de Tab Content, agregar nuevos tabs -->
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="endogenous-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#endogenous" type="button" role="tab">
+                                    <i class="bx bx-scatter-chart me-2"></i>
+                                    Variables Endógenas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#analysis" type="button" role="tab">
+                                    <i class="bx bx-analyse me-2"></i>
+                                    Análisis Estadístico
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
@@ -947,9 +962,173 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                                
                             </div>
                         </div>
-
+                        
+                        <!-- Endogenous Variables Tab -->
+                        <div class="tab-pane fade" id="endogenous" role="tabpanel">
+                            <div class="row">
+                                <!-- Recursos Humanos -->
+                                {% if image_data_9 %}
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-group me-2"></i>
+                                            Análisis de Recursos Humanos
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_9 }}', 'recursos-humanos.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_9 }}', 'Recursos Humanos')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        <img src="data:image/png;base64,{{ image_data_9 }}" 
+                                            class="chart-image" 
+                                            alt="Análisis de Recursos Humanos"
+                                            loading="lazy">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Estructura de Costos -->
+                                {% if image_data_10 %}
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-pie-chart-alt me-2"></i>
+                                            Estructura de Costos
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_10 }}', 'estructura-costos.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_10 }}', 'Estructura de Costos')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        <img src="data:image/png;base64,{{ image_data_10 }}" 
+                                            class="chart-image" 
+                                            alt="Estructura de Costos"
+                                            loading="lazy">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Precio vs Ventas -->
+                                {% if image_data_11 %}
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-scatter-chart me-2"></i>
+                                            Correlación Precio vs Ventas
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_11 }}', 'precio-ventas.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_11 }}', 'Precio vs Ventas')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        <img src="data:image/png;base64,{{ image_data_11 }}" 
+                                            class="chart-image" 
+                                            alt="Correlación Precio vs Ventas"
+                                            loading="lazy">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Indicadores Financieros -->
+                                {% if image_data_12 %}
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-bar-chart-alt me-2"></i>
+                                            Indicadores Financieros Clave
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_12 }}', 'indicadores-financieros.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_12 }}', 'Indicadores Financieros')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        <img src="data:image/png;base64,{{ image_data_12 }}" 
+                                            class="chart-image" 
+                                            alt="Indicadores Financieros"
+                                            loading="lazy">
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Additional Endogenous Variables Table -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="data-table-container">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">
+                                                <i class="bx bx-list-ul me-2"></i>
+                                                Resumen de Variables Endógenas
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Variable</th>
+                                                            <th>Valor Inicial</th>
+                                                            <th>Valor Final</th>
+                                                            <th>Cambio (%)</th>
+                                                            <th>Tendencia</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for name_variable, info_variable in totales_acumulativos.items %}
+                                                        {% if name_variable in "NÚMERO TRABAJADORES,COSTO TOTAL TRANSPORTE,PRECIO ESTIMADO,MARGEN BRUTO" %}
+                                                        <tr>
+                                                            <td>
+                                                                <strong>{{ name_variable }}</strong>
+                                                                <br>
+                                                                <small class="text-muted">{{ info_variable.unit }}</small>
+                                                            </td>
+                                                            <td>{{ info_variable.initial|default:"N/A"|floatformat:2 }}</td>
+                                                            <td>{{ info_variable.final|default:info_variable.total|floatformat:2 }}</td>
+                                                            <td>
+                                                                {% if info_variable.change_pct %}
+                                                                <span class="badge {% if info_variable.change_pct > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                                                    {{ info_variable.change_pct|floatformat:1 }}%
+                                                                </span>
+                                                                {% else %}
+                                                                -
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if info_variable.trend == "increasing" %}
+                                                                <i class="bx bx-trending-up text-success"></i>
+                                                                {% elif info_variable.trend == "decreasing" %}
+                                                                <i class="bx bx-trending-down text-danger"></i>
+                                                                {% else %}
+                                                                <i class="bx bx-minus text-muted"></i>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
                         <!-- Demand Tab -->
                         <div class="tab-pane fade" id="demand" role="tabpanel">
                             <div class="row">
@@ -1053,6 +1232,167 @@
                             </div>
                         </div>
                     </div>
+
+                    
+                    <!-- Analysis Tab -->
+                    <!-- Statistical Analysis Tab -->
+                    <div class="tab-pane fade" id="analysis" role="tabpanel">
+                        <div class="row">
+                            <!-- Demand Statistics Comparison -->
+                            {% if demand_stats %}
+                            <div class="col-md-6">
+                                <div class="metric-card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">
+                                            <i class="bx bx-stats me-2"></i>
+                                            Comparación Estadística de Demanda
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <h6 class="text-primary">Demanda Histórica</h6>
+                                                <dl class="row">
+                                                    <dt class="col-6">Media:</dt>
+                                                    <dd class="col-6">{{ demand_stats.historical.mean|floatformat:2 }} L</dd>
+                                                    <dt class="col-6">Desv. Est.:</dt>
+                                                    <dd class="col-6">{{ demand_stats.historical.std|floatformat:2 }}</dd>
+                                                    <dt class="col-6">CV:</dt>
+                                                    <dd class="col-6">{{ demand_stats.historical.cv|floatformat:3 }}</dd>
+                                                    <dt class="col-6">Mín/Máx:</dt>
+                                                    <dd class="col-6">{{ demand_stats.historical.min|floatformat:0 }} - {{ demand_stats.historical.max|floatformat:0 }}</dd>
+                                                </dl>
+                                            </div>
+                                            <div class="col-6">
+                                                <h6 class="text-success">Demanda Simulada</h6>
+                                                <dl class="row">
+                                                    <dt class="col-6">Media:</dt>
+                                                    <dd class="col-6">{{ demand_stats.simulated.mean|floatformat:2 }} L</dd>
+                                                    <dt class="col-6">Desv. Est.:</dt>
+                                                    <dd class="col-6">{{ demand_stats.simulated.std|floatformat:2 }}</dd>
+                                                    <dt class="col-6">CV:</dt>
+                                                    <dd class="col-6">{{ demand_stats.simulated.cv|floatformat:3 }}</dd>
+                                                    <dt class="col-6">Mín/Máx:</dt>
+                                                    <dd class="col-6">{{ demand_stats.simulated.min|floatformat:0 }} - {{ demand_stats.simulated.max|floatformat:0 }}</dd>
+                                                </dl>
+                                            </div>
+                                        </div>
+                                        {% if demand_stats.comparison %}
+                                        <hr>
+                                        <h6 class="text-muted">Diferencias</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small>Cambio en Media:</small>
+                                                <h5 class="{% if demand_stats.comparison.mean_diff > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                    {{ demand_stats.comparison.mean_diff|floatformat:2 }} L 
+                                                    ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
+                                                </h5>
+                                            </div>
+                                            <div class="col-6">
+                                                <small>Cambio en Variabilidad:</small>
+                                                <h5 class="{% if demand_stats.comparison.cv_diff < 0 %}text-success{% else %}text-warning{% endif %}">
+                                                    {{ demand_stats.comparison.cv_diff|floatformat:3 }}
+                                                </h5>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Demand Boxplot Comparison -->
+                            {% if demand_boxplot %}
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <h6 class="mb-3">
+                                        <i class="bx bx-box me-2"></i>
+                                        Comparación de Distribuciones
+                                    </h6>
+                                    <div class="chart-controls">
+                                        <div class="chart-control-btn" onclick="downloadChart('{{ demand_boxplot }}', 'demand-boxplot.png')" title="Descargar">
+                                            <i class="bx bx-download"></i>
+                                        </div>
+                                        <div class="chart-control-btn" onclick="openFullscreen('{{ demand_boxplot }}', 'Comparación de Distribuciones')" title="Pantalla completa">
+                                            <i class="bx bx-fullscreen"></i>
+                                        </div>
+                                    </div>
+                                    <img src="data:image/png;base64,{{ demand_boxplot }}" 
+                                        class="chart-image" 
+                                        alt="Comparación de Distribuciones de Demanda"
+                                        loading="lazy">
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Autocorrelation Analysis -->
+                            {% if demand_acf %}
+                            <div class="col-12">
+                                <div class="chart-container">
+                                    <h6 class="mb-3">
+                                        <i class="bx bx-pulse me-2"></i>
+                                        Análisis de Autocorrelación
+                                    </h6>
+                                    <div class="chart-controls">
+                                        <div class="chart-control-btn" onclick="downloadChart('{{ demand_acf }}', 'autocorrelation.png')" title="Descargar">
+                                            <i class="bx bx-download"></i>
+                                        </div>
+                                        <div class="chart-control-btn" onclick="openFullscreen('{{ demand_acf }}', 'Análisis de Autocorrelación')" title="Pantalla completa">
+                                            <i class="bx bx-fullscreen"></i>
+                                        </div>
+                                    </div>
+                                    <img src="data:image/png;base64,{{ demand_acf }}" 
+                                        class="chart-image" 
+                                        alt="Análisis de Autocorrelación"
+                                        loading="lazy">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Model Performance Metrics -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="metric-card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">
+                                            <i class="bx bx-target-lock me-2"></i>
+                                            Métricas de Desempeño del Modelo
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row text-center">
+                                            <div class="col-md-3">
+                                                <div class="p-3">
+                                                    <h6 class="text-muted">Distribución Utilizada</h6>
+                                                    <h4 class="text-primary">{{ simulation_instance.fk_fdp.name|default:"Normal" }}</h4>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="p-3">
+                                                    <h6 class="text-muted">Error Cuadrático Medio</h6>
+                                                    <h4 class="text-success">{{ mse|default:"N/A"|floatformat:2 }}</h4>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="p-3">
+                                                    <h6 class="text-muted">Error Absoluto Medio</h6>
+                                                    <h4 class="text-info">{{ mae|default:"N/A"|floatformat:2 }}</h4>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="p-3">
+                                                    <h6 class="text-muted">Coeficiente R²</h6>
+                                                    <h4 class="text-warning">{{ r_squared|default:"N/A"|floatformat:3 }}</h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- Summary Statistics -->
                     <div class="metric-card mt-4">

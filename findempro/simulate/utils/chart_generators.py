@@ -1,5 +1,6 @@
 # utils/chart_generators.py
 import base64
+from datetime import timedelta
 import logging
 from io import BytesIO
 from typing import Dict, List, Any, Optional, Tuple
