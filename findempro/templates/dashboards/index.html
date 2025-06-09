@@ -295,7 +295,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="quick-action-card" onclick="generateReport()">
+                    <div class="quick-action-card" onclick="window.location.href='{% url 'report:simulation.create' %}'">
                         <i class="ri-file-chart-line fs-1 mb-2"></i>
                         <h5>Generar Reporte</h5>
                         <p class="mb-0 opacity-75">Exportar análisis</p>
@@ -330,13 +330,13 @@
                         <p class="text-muted mb-0">Simulaciones</p>
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3">
+                {% comment %} <div class="col-md-3 col-sm-6 mb-3">
                     <div class="stats-widget">
                         <i class="ri-bar-chart-grouped-line text-warning fs-2 mb-2"></i>
                         <h3 class="mb-1">{{ charts_count|default:"0" }}</h3>
                         <p class="text-muted mb-0">Gráficos</p>
                     </div>
-                </div>
+                </div> {% endcomment %}
             </div>
             {% endif %}
 
@@ -363,7 +363,7 @@
                         </div>
                         <h5>Dashboard Interactivo</h5>
                         <p class="text-muted">
-                            Visualiza todos tus datos importantes en tiempo real con gráficos dinámicos e interactivos.
+                            Visualiza todos tus datos importantes con gráficos dinámicos e interactivos.
                         </p>
                     </div>
                 </div>
@@ -378,7 +378,7 @@
                         </p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 mb-4">
+                {% comment %} <div class="col-lg-3 col-md-6 mb-4">
                     <div class="feature-card">
                         <div class="feature-icon danger">
                             <i class="ri-shield-check-line"></i>
@@ -388,7 +388,7 @@
                             Tus datos están protegidos con encriptación de nivel empresarial y respaldos automáticos.
                         </p>
                     </div>
-                </div>
+                </div> {% endcomment %}
             </div>
 
             <!-- Activity Feed & Getting Started -->
@@ -398,11 +398,11 @@
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Actividad Reciente</h5>
-                            <a href="#" class="link-secondary">Ver todo</a>
+                            <a href="#" class="link-secondary" data-bs-toggle="modal" data-bs-target="#allActivitiesModal">Ver todo</a>
                         </div>
                         <div class="card-body">
                             <div class="activity-feed">
-                                {% for activity in recent_activities %}
+                                {% for activity in recent_activities|slice:":10" %}
                                 <div class="d-flex mb-3 pb-3 border-bottom">
                                     <div class="flex-shrink-0">
                                         <div class="avatar-xs">
@@ -422,6 +422,45 @@
                                     <p class="text-muted mt-2">No hay actividad reciente</p>
                                 </div>
                                 {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal for All Activities -->
+                <div class="modal fade" id="allActivitiesModal" tabindex="-1" aria-labelledby="allActivitiesModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="allActivitiesModalLabel">Todas las Actividades</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="activity-feed">
+                                    {% for activity in recent_activities %}
+                                    <div class="d-flex mb-3 pb-3 border-bottom">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-xs">
+                                                <span class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                    <i class="ri-user-line"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">{{ activity.action }}</h6>
+                                            <p class="text-muted mb-0">{{ activity.timestamp|timesince }} atrás</p>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="text-center py-4">
+                                        <i class="ri-history-line fs-1 text-muted"></i>
+                                        <p class="text-muted mt-2">No hay actividades registradas</p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                             </div>
                         </div>
                     </div>
@@ -449,16 +488,16 @@
                             </div>
                             {% else %}
                             <div class="list-group">
-                                <a href="#" class="list-group-item list-group-item-action">
+                                <a href="{% url 'pages:pages.coming_soon' %}" class="list-group-item list-group-item-action">
                                     <i class="ri-book-2-line me-2"></i> Guía de Usuario
                                 </a>
-                                <a href="#" class="list-group-item list-group-item-action">
+                                <a href="{% url 'pages:pages.coming_soon' %}" class="list-group-item list-group-item-action">
                                     <i class="ri-video-line me-2"></i> Video Tutoriales
                                 </a>
-                                <a href="#" class="list-group-item list-group-item-action">
+                                <a href="{% url 'pages:pages.faqs' %}" class="list-group-item list-group-item-action">
                                     <i class="ri-question-line me-2"></i> Preguntas Frecuentes
                                 </a>
-                                <a href="#" class="list-group-item list-group-item-action">
+                                <a href="{% url 'pages:pages.coming_soon' %}" class="list-group-item list-group-item-action">
                                     <i class="ri-customer-service-2-line me-2"></i> Soporte Técnico
                                 </a>
                             </div>

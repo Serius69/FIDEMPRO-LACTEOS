@@ -164,10 +164,48 @@ class SimulateShowView(LoginRequiredMixin, View):
         
         # Perform statistical analysis
         statistical_service = StatisticalService()
+        print(f"Questionary Result ID: {questionary_result_instance.id}")  # Debugging line
         analysis_results = statistical_service.analyze_demand_history(
             questionary_result_instance.id, request.user
         )
+        print(f"Analysis results: {analysis_results}")  # Debugging line
         
+        ## Use this:
+        chart_generator = ChartGenerator()
+
+        # Create chart data for demand analysis with validation
+        demand_data = analysis_results.get('demand_data', [])
+        if not demand_data:
+            # Provide default empty data if no demand data available
+            demand_data = []
+            labels = []
+        else:
+            # Filter out None/invalid values and create labels
+            demand_data = [x for x in demand_data if x is not None]
+            labels = list(range(1, len(demand_data) + 1))
+
+        # Create chart data structure with validation
+        chart_data = {
+            'labels': labels,
+            'datasets': [{'label': 'Demanda', 'values': demand_data}],
+            'x_label': 'Período',
+            'y_label': 'Demanda (Litros)'
+        }
+
+        # Generate scatter plot using existing method
+        scatter_plot = chart_generator._generate_single_chart(
+            chart_data, 'scatter', 0, None, [], 
+            'Análisis de Dispersión de Demanda',
+            'Distribución de puntos de demanda en el tiempo'
+        )
+
+        # Generate histogram using existing method
+        histogram_plot = chart_generator._generate_single_chart(
+            chart_data, 'histogram', 0, None, [], 
+            'Distribución de Demanda',
+            'Análisis de la distribución de frecuencias de demanda'
+        )
+                
         context = {
             'areas': areas,
             'form': SimulationForm(),
@@ -176,6 +214,8 @@ class SimulateShowView(LoginRequiredMixin, View):
             'questionary_result_instance_id': questionary_result_instance.id,
             'selected_unit_time': selected_unit_time,
             'selected_quantity_time': selected_quantity_time,
+            'image_data': scatter_plot,  # Base64 encoded scatter plot
+            'image_data_histogram': histogram_plot,  # Base64 encoded histogram
             **analysis_results  # Spread analysis results
         }
         

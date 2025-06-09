@@ -148,6 +148,30 @@ simulation_data_yogur = [
     generate_simulation_from_questionary("yogur", "pesimista")
 ]
 
+simulation_data_mantequilla = [
+    generate_simulation_from_questionary("mantequilla", "optimista"),
+    generate_simulation_from_questionary("mantequilla", "conservador"),
+    generate_simulation_from_questionary("mantequilla", "pesimista")
+]
+
+simulation_data_crema = [
+    generate_simulation_from_questionary("crema de leche", "optimista"),
+    generate_simulation_from_questionary("crema de leche", "conservador"),
+    generate_simulation_from_questionary("crema de leche", "pesimista")
+]
+
+simulation_data_leche_deslactosada = [
+    generate_simulation_from_questionary("leche deslactosada", "optimista"),
+    generate_simulation_from_questionary("leche deslactosada", "conservador"),
+    generate_simulation_from_questionary("leche deslactosada", "pesimista")
+]
+
+simulation_data_dulce_leche = [
+    generate_simulation_from_questionary("dulce de leche", "optimista"),
+    generate_simulation_from_questionary("dulce de leche", "conservador"),
+    generate_simulation_from_questionary("dulce de leche", "pesimista")
+]
+
 # Función para generar resultados de simulación dinámicos
 def generate_simulation_results(simulation_config, days=30):
     """
@@ -227,8 +251,12 @@ def generate_simulation_results(simulation_config, days=30):
 # Consolidar todas las simulaciones
 all_simulations = {
     "leche": simulation_data_leche,
-    "queso": simulation_data_queso,
-    "yogur": simulation_data_yogur
+    "queso": simulation_data_queso, 
+    "yogur": simulation_data_yogur,
+    "mantequilla": simulation_data_mantequilla,
+    "crema de leche": simulation_data_crema,
+    "leche deslactosada": simulation_data_leche_deslactosada,
+    "dulce de leche": simulation_data_dulce_leche
 }
 
 # Función para obtener simulaciones por producto
@@ -263,6 +291,30 @@ def get_pdf_config_by_product(product_name):
             "name": f"Distribución Gamma - {product_name.title()}"
         },
         "yogur": {
+            "distribution_type": 3,  # Log-Normal
+            "mean_param": np.log(mean_demand / np.sqrt(1 + (std_demand/mean_demand)**2)),
+            "std_dev_param": np.sqrt(np.log(1 + (std_demand/mean_demand)**2)),
+            "name": f"Distribución Log-Normal - {product_name.title()}"
+        },
+        "mantequilla": {
+            "distribution_type": 4,  # Gamma 
+            "shape_param": (mean_demand / std_demand) ** 2,
+            "scale_param": std_demand ** 2 / mean_demand,
+            "name": f"Distribución Gamma - {product_name.title()}"
+        },
+        "crema de leche": {
+            "distribution_type": 1,  # Normal
+            "mean_param": mean_demand,
+            "std_dev_param": std_demand,
+            "name": f"Distribución Normal - {product_name.title()}"
+        },
+        "leche deslactosada": {
+            "distribution_type": 1,  # Normal
+            "mean_param": mean_demand, 
+            "std_dev_param": std_demand,
+            "name": f"Distribución Normal - {product_name.title()}"
+        },
+        "dulce de leche": {
             "distribution_type": 3,  # Log-Normal
             "mean_param": np.log(mean_demand / np.sqrt(1 + (std_demand/mean_demand)**2)),
             "std_dev_param": np.sqrt(np.log(1 + (std_demand/mean_demand)**2)),
@@ -308,8 +360,12 @@ def get_result_simulation_data(product_name):
     # Determinar unidad según producto
     units = {
         "leche": "Litros",
-        "queso": "Kilogramos",
-        "yogur": "Litros"
+        "queso": "Kilogramos", 
+        "yogur": "Litros",
+        "mantequilla": "Kilogramos",
+        "crema de leche": "Litros",
+        "leche deslactosada": "Litros",
+        "dulce de leche": "Kilogramos"
     }
     
     return {

@@ -648,7 +648,7 @@
                                 <span class="badge bg-info ms-2" id="currentDayIndicator">Día 1</span>
                             </h5>
                         </div>
-                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div class="card-body" style="max-height: 600px; overflow-y: auto;">
                             <div id="dailyResultsContainer">
                                 {% for item in all_variables_extracted %}
                                 <div class="daily-result-item" 
@@ -659,18 +659,18 @@
                                         {{ item.date_simulation|date:"d/m/Y" }}
                                     </h6>
                                     <div class="table-responsive">
-                                        <table class="table table-sm">
+                                        <table class="table table-sm table-hover">
                                             <thead>
                                                 <tr>
-                                                    <th>Variable</th>
-                                                    <th>Valor</th>
-                                                    <th>Unidad</th>
+                                                    <th style="width: 40%">Variable</th>
+                                                    <th style="width: 30%">Valor</th>
+                                                    <th style="width: 30%">Unidad</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {% for variable, data in item.totales_por_variable.items %}
                                                 <tr>
-                                                    <td class="small">{{ variable|truncatechars:20 }}</td>
+                                                    <td class="small">{{ variable|truncatechars:30 }}</td>
                                                     <td class="fw-bold">{{ data.total|floatformat:2 }}</td>
                                                     <td class="small text-muted">
                                                         {% if data.unit == 'L' %}Litros
@@ -686,20 +686,53 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                    
+                                    <!-- Additional daily stats -->
+                                    <div class="mt-4">
+                                        <h6 class="text-muted mb-3">Estadísticas del día</h6>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <div class="p-3 bg-light rounded">
+                                                    <small class="d-block text-muted">Total Variables</small>
+                                                    <h5 class="mb-0">{{ item.totales_por_variable|length }}</h5>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="p-3 bg-light rounded">
+                                                    <small class="d-block text-muted">Fecha Simulación</small>
+                                                    <h5 class="mb-0">{{ item.date_simulation|date:"d M" }}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Daily notes section -->
+                                    <div class="mt-4">
+                                        <div class="alert alert-info">
+                                            <h6 class="mb-2"><i class="bx bx-info-circle me-2"></i>Notas del día</h6>
+                                            <small>
+                                                Datos correspondientes a la simulación del día {{ forloop.counter }}. 
+                                                Revise los valores para análisis detallado.
+                                            </small>
+                                        </div>
+                                    </div>
+
                                 </div>
                                 {% endfor %}
                             </div>
                         </div>
-                        <div class="pagination-controls">
-                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevDayBtn">
-                                <i class="bx bx-chevron-left me-1"></i>
-                            </button>
-                            <span class="flex-grow-1 text-center small text-muted" id="dayCounter">
-                                Día 1 de {{ all_variables_extracted|length }}
-                            </span>
-                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextDayBtn">
-                                <i class="bx bx-chevron-right ms-1"></i>
-                            </button>
+                        <div class="pagination-controls p-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevDayBtn">
+                                    <i class="bx bx-chevron-left me-1"></i>Anterior
+                                </button>
+                                <span class="text-center small text-muted" id="dayCounter">
+                                    Día 1 de {{ all_variables_extracted|length }}
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextDayBtn">
+                                    Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -777,7 +810,7 @@
                                         </div>
                                         {% endif %}
                                     </div>
-                                </div>
+                                </div> 
                                 <div class="col-md-6">
                                     <div class="chart-container">
                                         <h6 class="mb-3">

@@ -50,7 +50,11 @@ try:
         get_realistic_answers,
         answer_data_leche,
         answer_data_queso, 
-        answer_data_yogur
+        answer_data_yogur,
+        answer_data_leche_deslactosada,
+        answer_data_dulce_leche,
+        answer_data_mantequilla,
+        answer_data_crema
     )
 except ImportError:
     from questionary.data.questionary_result_data import answer_data
@@ -66,6 +70,10 @@ try:
         simulation_data_leche,
         simulation_data_queso,
         simulation_data_yogur,
+        simulation_data_crema ,
+        simulation_data_mantequilla,
+        simulation_data_leche_deslactosada,
+        simulation_data_dulce_leche,
         get_pdf_config_by_product,
         generate_simulation_results,
     )
@@ -346,7 +354,11 @@ def register_elements(request):
     demand_example = {
         'leche': simulation_data_leche[0]['demand_history'] if simulation_data_leche else [],
         'queso': simulation_data_queso[0]['demand_history'] if simulation_data_queso else [],
-        'yogur': simulation_data_yogur[0]['demand_history'] if simulation_data_yogur else []
+        'yogur': simulation_data_yogur[0]['demand_history'] if simulation_data_yogur else [],
+        'mantequilla': simulation_data_mantequilla[0]['demand_history'] if 'simulation_data_mantequilla' in globals() else [],
+        'crema': simulation_data_crema[0]['demand_history'] if 'simulation_data_crema' in globals() else [],
+        'leche_deslactosada': simulation_data_leche_deslactosada[0]['demand_history'] if 'simulation_data_leche_deslactosada' in globals() else [],
+        'dulce_de_leche': simulation_data_dulce_leche[0]['demand_history'] if 'simulation_data_dulce_leche' in globals() else []
     }
     
     # Configuraciones de demanda para cada producto
@@ -431,12 +443,12 @@ def register_elements(request):
     }
     
     preview_data = {
-        # Información del negocio
+        # Información del negocio 
         'business': {
             'name': "Empresa Láctea Demo",
             'location': "La Paz, Bolivia",
             'type': "Pequeña empresa láctea",
-            'employees': 15,
+            'employees': 15, 
             'years_in_business': 5,
             'image_src': "business/pyme_lactea_default.jpg",
         },
@@ -455,8 +467,26 @@ def register_elements(request):
         'recommendations_preview': recommendation_data,
         
         # Datos adicionales para visualización
-        'demand_example': demand_example,
-        'demand_configurations_preview': demand_configurations_preview,
+        'demand_example': {
+            'leche': simulation_data_leche[0]['demand_history'] if simulation_data_leche else [],
+            'queso': simulation_data_queso[0]['demand_history'] if simulation_data_queso else [], 
+            'yogur': simulation_data_yogur[0]['demand_history'] if simulation_data_yogur else [],
+            'dulce de leche': simulation_data_dulce_leche[0]['demand_history'] if 'simulation_data_dulce_leche' in globals() else [],
+            'leche deslactosada': simulation_data_leche_deslactosada[0]['demand_history'] if 'simulation_data_leche_deslactosada' in globals() else [],
+            'mantequilla': simulation_data_mantequilla[0]['demand_history'] if 'simulation_data_mantequilla' in globals() else [],
+            'crema de leche': simulation_data_crema[0]['demand_history'] if 'simulation_data_crema' in globals() else []
+        },
+        
+        'demand_configurations_preview': {
+            'leche': {'base_demand': 2500, 'seasonality': True, 'growth_rate': 0.02, 'volatility': 0.1},
+            'queso': {'base_demand': 185, 'seasonality': False, 'growth_rate': 0.01, 'volatility': 0.08},
+            'yogur': {'base_demand': 330, 'seasonality': True, 'growth_rate': 0.05, 'volatility': 0.15},
+            'dulce de leche': {'base_demand': 420, 'seasonality': True, 'growth_rate': 0.03, 'volatility': 0.12},
+            'leche deslactosada': {'base_demand': 1800, 'seasonality': True, 'growth_rate': 0.015, 'volatility': 0.12},
+            'mantequilla': {'base_demand': 280, 'seasonality': False, 'growth_rate': 0.01, 'volatility': 0.09},
+            'crema de leche': {'base_demand': 850, 'seasonality': True, 'growth_rate': 0.03, 'volatility': 0.11}
+        },
+        
         'result_simulation_preview': result_simulation_preview,
         
         # Estadísticas
@@ -466,9 +496,13 @@ def register_elements(request):
         'questionary_results_preview': {
             'leche': answer_data_leche if 'answer_data_leche' in globals() else [],
             'queso': answer_data_queso if 'answer_data_queso' in globals() else [],
-            'yogur': answer_data_yogur if 'answer_data_yogur' in globals() else []
+            'yogur': answer_data_yogur if 'answer_data_yogur' in globals() else [],
+            'dulce de leche': answer_data_dulce_leche if 'answer_data_dulce_leche' in globals() else [],
+            'leche deslactosada': answer_data_leche_deslactosada if 'answer_data_leche_deslactosada' in globals() else [],
+            'mantequilla': answer_data_mantequilla if 'answer_data_mantequilla' in globals() else [],
+            'crema de leche': answer_data_crema if 'answer_data_crema' in globals() else []
         }
-    }
+        }
 
     print(preview_data)
     
@@ -1327,9 +1361,17 @@ def create_realistic_answers_for_simulation(questionary_result: QuestionaryResul
             if product_name == 'leche' and 'answer_data_leche' in globals():
                 answers_data = answer_data_leche
             elif product_name == 'queso' and 'answer_data_queso' in globals():
-                answers_data = answer_data_queso
+                answers_data = answer_data_queso 
             elif product_name == 'yogur' and 'answer_data_yogur' in globals():
                 answers_data = answer_data_yogur
+            elif product_name == 'dulce de leche' and 'answer_data_dulce_leche' in globals():
+                answers_data = answer_data_dulce_leche
+            elif product_name == 'mantequilla' and 'answer_data_mantequilla' in globals():
+                answers_data = answer_data_mantequilla
+            elif product_name == 'leche deslactosada' and 'answer_data_leche_deslactosada' in globals():
+                answers_data = answer_data_leche_deslactosada
+            elif product_name == 'crema de Leche' and 'answer_data_crema' in globals():
+                answers_data = answer_data_crema
             else:
                 answers_data = []
         

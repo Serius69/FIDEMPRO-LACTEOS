@@ -549,6 +549,267 @@ class ChartGenerator:
         finally:
             plt.close(fig)
     
+    
+    def generate_demand_scatter_plot(self, demand_data: List[float]) -> str:
+        """Generate scatter plot for demand data analysis"""
+        try:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Create x-axis (time periods)
+            x_values = list(range(1, len(demand_data) + 1))
+            
+            # Create scatter plot
+            ax.scatter(x_values, demand_data, alpha=0.7, s=50, c='blue', 
+                    label='Demanda Observada')
+            
+            # Add regression line
+            if len(demand_data) > 1:
+                z = np.polyfit(x_values, demand_data, 1)
+                p = np.poly1d(z)
+                ax.plot(x_values, p(x_values), "r--", alpha=0.8, 
+                    label=f'Tendencia: {z[0]:.2f}x + {z[1]:.2f}')
+            
+            # Add mean line
+            mean_demand = np.mean(demand_data)
+            ax.axhline(y=mean_demand, color='green', linestyle=':', 
+                    label=f'Media: {mean_demand:.2f}')
+            
+            # Configure plot
+            ax.set_xlabel('Período de Tiempo', fontsize=12)
+            ax.set_ylabel('Demanda (Litros)', fontsize=12)
+            ax.set_title('Análisis de Dispersión de Demanda', fontsize=14, fontweight='bold')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            
+            # Convert to base64
+            image_data = self._save_plot_as_base64(fig)
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating demand scatter plot: {str(e)}")
+            return None
+
+    def generate_demand_histogram(self, demand_data: List[float]) -> str:
+        """Generate histogram for demand data distribution analysis"""
+        try:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Create histogram
+            n, bins, patches = ax.hist(demand_data, bins=15, alpha=0.7, 
+                                    color='skyblue', edgecolor='black', 
+                                    density=True, label='Distribución de Demanda')
+            
+            # Add statistical information
+            mean_val = np.mean(demand_data)
+            std_val = np.std(demand_data)
+            median_val = np.median(demand_data)
+            
+            # Add vertical lines for statistics
+            ax.axvline(mean_val, color='red', linestyle='--', linewidth=2,
+                    label=f'Media: {mean_val:.2f}')
+            ax.axvline(median_val, color='orange', linestyle='--', linewidth=2,
+                    label=f'Mediana: {median_val:.2f}')
+            
+            # Add normal distribution curve if we have enough data
+            if len(demand_data) > 5:
+                try:
+                    from scipy import stats
+                    
+                    # Fit normal distribution
+                    x_range = np.linspace(min(demand_data), max(demand_data), 100)
+                    normal_dist = stats.norm.pdf(x_range, mean_val, std_val)
+                    ax.plot(x_range, normal_dist, 'g-', linewidth=2, 
+                        label='Distribución Normal')
+                    
+                    # Try to fit other distributions
+                    # Lognormal
+                    if all(x > 0 for x in demand_data):
+                        shape, loc, scale = stats.lognorm.fit(demand_data, floc=0)
+                        lognorm_dist = stats.lognorm.pdf(x_range, shape, loc, scale)
+                        ax.plot(x_range, lognorm_dist, 'm--', linewidth=2,
+                            label='Distribución Log-Normal')
+                    
+                except Exception as dist_error:
+                    logger.warning(f"Could not fit distributions: {str(dist_error)}")
+            
+            # Add statistics text box
+            textstr = f'μ = {mean_val:.2f}\nσ = {std_val:.2f}\nMediana = {median_val:.2f}\nRango = {max(demand_data) - min(demand_data):.2f}'
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
+            ax.text(0.75, 0.75, textstr, transform=ax.transAxes, 
+                verticalalignment='top', bbox=props, fontsize=10)
+            
+            # Configure plot
+            ax.set_xlabel('Demanda (Litros)', fontsize=12)
+            ax.set_ylabel('Densidad de Probabilidad', fontsize=12)
+            ax.set_title('Distribución de Demanda', fontsize=14, fontweight='bold')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            
+            # Convert to base64
+            image_data = self._save_plot_as_base64(fig)
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating demand histogram: {str(e)}")
+            return None
+
+    def generate_demand_analysis_charts(self, demand_data: List[float]) -> Dict[str, str]:
+        """Generate comprehensive demand analysis charts"""
+        charts = {}
+        
+        try:
+            # Generate scatter plot
+            scatter_plot = self.generate_demand_scatter_plot(demand_data)
+            if scatter_plot:
+                charts['scatter_plot'] = scatter_plot
+            
+            # Generate histogram
+            histogram_plot = self.generate_demand_histogram(demand_data)
+            if histogram_plot:
+                charts['histogram_plot'] = histogram_plot
+            
+            # Generate box plot for outlier analysis
+            box_plot = self.generate_demand_box_plot(demand_data)
+            if box_plot:
+                charts['box_plot'] = box_plot
+            
+            # Generate time series plot if we have time-ordered data
+            time_series_plot = self.generate_demand_time_series(demand_data)
+            if time_series_plot:
+                charts['time_series_plot'] = time_series_plot
+                
+        except Exception as e:
+            logger.error(f"Error generating demand analysis charts: {str(e)}")
+        
+        return charts
+
+    def generate_demand_box_plot(self, demand_data: List[float]) -> str:
+        """Generate box plot for demand data outlier analysis"""
+        try:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            
+            # Create box plot
+            box_plot = ax.boxplot(demand_data, patch_artist=True, 
+                                boxprops=dict(facecolor='lightblue', alpha=0.7),
+                                medianprops=dict(color='red', linewidth=2))
+            
+            # Add scatter of actual data points
+            ax.scatter([1] * len(demand_data), demand_data, alpha=0.6, s=30)
+            
+            # Calculate and display statistics
+            q1 = np.percentile(demand_data, 25)
+            q3 = np.percentile(demand_data, 75)
+            iqr = q3 - q1
+            lower_fence = q1 - 1.5 * iqr
+            upper_fence = q3 + 1.5 * iqr
+            
+            # Identify outliers
+            outliers = [x for x in demand_data if x < lower_fence or x > upper_fence]
+            
+            # Add statistics text
+            stats_text = f'Q1: {q1:.2f}\nMediana: {np.median(demand_data):.2f}\nQ3: {q3:.2f}\nIQR: {iqr:.2f}\nOutliers: {len(outliers)}'
+            ax.text(1.15, np.median(demand_data), stats_text, 
+                verticalalignment='center', fontsize=10,
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            # Configure plot
+            ax.set_ylabel('Demanda (Litros)', fontsize=12)
+            ax.set_title('Análisis de Outliers - Demanda', fontsize=14, fontweight='bold')
+            ax.set_xticklabels(['Demanda'])
+            ax.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            
+            # Convert to base64
+            image_data = self._save_plot_as_base64(fig)
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating demand box plot: {str(e)}")
+            return None
+
+    def generate_demand_time_series(self, demand_data: List[float]) -> str:
+        """Generate time series plot for demand data"""
+        try:
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+            
+            # Time periods
+            time_periods = list(range(1, len(demand_data) + 1))
+            
+            # Main time series plot
+            ax1.plot(time_periods, demand_data, 'b-', marker='o', 
+                    linewidth=2, markersize=4, label='Demanda')
+            
+            # Add moving average if we have enough data
+            if len(demand_data) >= 7:
+                window_size = min(7, len(demand_data) // 3)
+                moving_avg = []
+                for i in range(len(demand_data)):
+                    start_idx = max(0, i - window_size // 2)
+                    end_idx = min(len(demand_data), i + window_size // 2 + 1)
+                    moving_avg.append(np.mean(demand_data[start_idx:end_idx]))
+                
+                ax1.plot(time_periods, moving_avg, 'r--', linewidth=2,
+                        label=f'Media Móvil ({window_size})')
+            
+            ax1.set_xlabel('Período de Tiempo')
+            ax1.set_ylabel('Demanda (Litros)')
+            ax1.set_title('Serie Temporal de Demanda')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Autocorrelation plot (if we have enough data)
+            if len(demand_data) > 10:
+                try:
+                    from statsmodels.tsa.stattools import acf
+                    
+                    # Calculate autocorrelation
+                    autocorr = acf(demand_data, nlags=min(20, len(demand_data)//2))
+                    lags = range(len(autocorr))
+                    
+                    ax2.bar(lags, autocorr, alpha=0.7)
+                    ax2.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+                    ax2.axhline(y=0.05, color='red', linestyle='--', alpha=0.5, label='Umbral 5%')
+                    ax2.axhline(y=-0.05, color='red', linestyle='--', alpha=0.5)
+                    
+                    ax2.set_xlabel('Rezago')
+                    ax2.set_ylabel('Autocorrelación')
+                    ax2.set_title('Función de Autocorrelación')
+                    ax2.legend()
+                    ax2.grid(True, alpha=0.3)
+                    
+                except ImportError:
+                    # Fallback: simple lag plot
+                    if len(demand_data) > 1:
+                        ax2.scatter(demand_data[:-1], demand_data[1:], alpha=0.7)
+                        ax2.set_xlabel('Demanda (t)')
+                        ax2.set_ylabel('Demanda (t+1)')
+                        ax2.set_title('Gráfico de Rezago')
+                        ax2.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            
+            # Convert to base64
+            image_data = self._save_plot_as_base64(fig)
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating demand time series: {str(e)}")
+            return None
+    
+    
     def generate_correlation_heatmap(self, variables_data: Dict[str, List[float]]) -> str:
         """Generate correlation heatmap for variables"""
         try:
@@ -713,31 +974,52 @@ class ChartGenerator:
         ax.grid(True, alpha=0.3)
     
     def _plot_line_demand_chart(self, ax, chart_data: Dict):
-        """Plot enhanced line chart with regression and trend analysis"""
+        """Plot demand chart showing historical and simulated demand"""
         labels = np.array(chart_data['labels'])
         values = np.array(chart_data['datasets'][0]['values'])
         
-        # Plot main line
-        ax.plot(labels, values, marker='o', label='Demanda Simulada', 
-               linewidth=2, markersize=6)
-        
-        # Add regression line
-        if len(labels) > 1:
-            z = np.polyfit(labels, values, 1)
-            p = np.poly1d(z)
-            ax.plot(labels, p(labels), "--", alpha=0.8, 
-                   label=f'Tendencia: {z[0]:.2f}x + {z[1]:.2f}')
-        
-        # Add confidence interval
-        if len(values) > 3:
-            from scipy import stats
-            confidence = 0.95
-            mean = np.mean(values)
-            sem = stats.sem(values)
-            h = sem * stats.t.ppf((1 + confidence) / 2., len(values)-1)
+        # Get historical demand data from questionnaire
+        try:
+            # Get historical demand from simulation instance if available
+            historical_demand = chart_data.get('historical_demand', [])
+            historical_labels = range(1, len(historical_demand) + 1)
             
-            ax.fill_between(labels, mean - h, mean + h, alpha=0.2, 
-                          label=f'IC {confidence*100:.0f}%')
+            # Plot historical demand
+            ax.plot(historical_labels, historical_demand, 'b-', marker='s', 
+                   label='Demanda Histórica', linewidth=2, markersize=6)
+            
+            # Plot simulated demand with offset starting after historical data
+            simulated_labels = np.array(labels) + len(historical_demand)
+            ax.plot(simulated_labels, values, 'r-', marker='o',
+                   label='Demanda Simulada', linewidth=2, markersize=6)
+            
+            # Add vertical line separating historical from simulated
+            ax.axvline(x=len(historical_demand), color='gray', linestyle='--', alpha=0.5,
+                      label='Inicio Simulación')
+            
+            # Add regression line for simulated data
+            if len(labels) > 1:
+                z = np.polyfit(simulated_labels, values, 1)
+                p = np.poly1d(z)
+                ax.plot(simulated_labels, p(simulated_labels), "--", alpha=0.8,
+                       label=f'Tendencia: {z[0]:.2f}x + {z[1]:.2f}')
+            
+            # Add confidence interval for simulated data
+            if len(values) > 3:
+                from scipy import stats
+                confidence = 0.95
+                mean = np.mean(values)
+                sem = stats.sem(values)
+                h = sem * stats.t.ppf((1 + confidence) / 2., len(values)-1)
+                
+                ax.fill_between(simulated_labels, mean - h, mean + h, alpha=0.2,
+                              label=f'IC {confidence*100:.0f}%')
+        
+        except Exception as e:
+            logger.error(f"Error plotting historical demand: {str(e)}")
+            # Fallback to original plot if historical data not available
+            ax.plot(labels, values, marker='o', label='Demanda Simulada',
+                   linewidth=2, markersize=6)
         
         ax.grid(True, alpha=0.3)
         ax.legend()

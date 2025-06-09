@@ -176,29 +176,29 @@ products_data = [
 
 # Configuración de categorías de productos
 product_categories = {
-    'frescos': ['Leche Entera', 'Queso Fresco', 'Crema de Leche'],
-    'procesados': ['Yogurt Natural', 'Mantequilla', 'Dulce de Leche'],
+    'frescos': ['Leche', 'Queso', 'Crema de Leche'],
+    'procesados': ['Yogurt', 'Mantequilla', 'Dulce de Leche'],
     'especializados': ['Leche Deslactosada'],
     'mayor_margen': ['Dulce de Leche', 'Leche Deslactosada', 'Mantequilla'],
-    'alta_rotacion': ['Leche Entera', 'Yogurt Natural'],
+    'alta_rotacion': ['Leche', 'Yogurt'],
     'larga_vida': ['Dulce de Leche', 'Mantequilla']
 }
 
 # Métricas de rendimiento por producto
 product_metrics = {
-    'Leche Entera': {
+    'Leche': {
         'market_share': 0.35,
         'growth_rate': 0.05,
         'customer_satisfaction': 0.92,                                                                                 
         'production_efficiency': 0.88
     },
-    'Yogurt Natural': {
+    'Yogurt': {
         'market_share': 0.25,
         'growth_rate': 0.12,
         'customer_satisfaction': 0.89,
         'production_efficiency': 0.85
     },
-    'Queso Fresco': {
+    'Queso': {
         'market_share': 0.20,
         'growth_rate': 0.08,
         'customer_satisfaction': 0.91,
