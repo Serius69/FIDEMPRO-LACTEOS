@@ -1528,7 +1528,7 @@ def get_realistic_answers(product_type):
     elif product_type.lower() == 'queso':
         return answer_data_queso
     elif product_type.lower() == 'yogur':
-        return answer_data_yogur
+        return answer_data_yogur 
     elif product_type.lower() == 'mantequilla':
         return answer_data_mantequilla
     elif product_type.lower() == 'crema de Leche':
