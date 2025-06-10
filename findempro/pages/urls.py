@@ -1,15 +1,18 @@
 from django.urls import path
 from django.views.generic import RedirectView
-from pages.views import (
+from .views.preview_data import prepare_preview_data
+from .views.questionary_creator import create_and_save_questions
+from .views.business_creator import create_and_save_business
+from .views.base import (
     pages_faqs,
     pages_maintenance,
     pages_coming_soon,
     pages_privacy_policy,
     pages_terms_conditions,
-    register_elements,
-    register_elements_simulation,
-    register_elements_create
+    
 )
+from .views.create_elements import register_elements_create, register_elements_simulation
+from .views.register_elements import register_elements
 
 app_name = "pages"
 

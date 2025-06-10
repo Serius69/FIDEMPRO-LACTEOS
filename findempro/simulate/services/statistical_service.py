@@ -61,14 +61,21 @@ class StatisticalService:
             if not demand_history:
                 raise ValueError("No se encontró historial de demanda")
             
+            logger.info("Parsing demand data...")
             # Parse and validate demand data
             numbers = self._parse_demand_data(demand_history.answer)
-            validated_numbers = self.validator.validate_demand_data(numbers)
+            logger.info(f"Numbers parsed successfully: {len(numbers)} values")
             
-            # Perform comprehensive analysis
+            logger.info("Validating demand data...")
+            validated_numbers = self.validator.validate_demand_data(numbers.tolist())
+            logger.info(f"Numbers validated successfully: {len(validated_numbers)} values")
+            
+            logger.info("Starting comprehensive analysis...")
+            # Perform comprehensive analysis - AQUÍ ESTÁ EL ERROR
             analysis_results = self._perform_comprehensive_analysis(
-                validated_numbers, user
+                np.array(validated_numbers), user
             )
+            logger.info("Comprehensive analysis completed successfully")
             
             # Cache results
             cache.set(cache_key, analysis_results, self.cache_timeout)
@@ -77,6 +84,8 @@ class StatisticalService:
             
         except Exception as e:
             logger.error(f"Error analyzing demand history: {str(e)}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             raise
     
     def _get_demand_history(self, questionary_result_id: int) -> Optional[Answer]:

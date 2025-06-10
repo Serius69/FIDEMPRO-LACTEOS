@@ -50,7 +50,7 @@ class DashboardService:
         products = Product.objects.filter(
             fk_business=business_id
         ).prefetch_related(
-            Prefetch('area_set', queryset=Area.objects.select_related('fk_product'))
+            Prefetch('fk_product_area', queryset=Area.objects.select_related('fk_product'))
         )
         
         # Obtener IDs de productos para consultas posteriores
@@ -72,14 +72,10 @@ class DashboardService:
         simulations = Simulation.objects.filter(
             fk_questionary_result__fk_questionary__fk_product_id__in=product_ids
         ).select_related(
-            'fk_questionary_result__fk_questionary__fk_product'
-        ).prefetch_related(
-            Prefetch(
-                'result_simulations',  # Use the correct related_name from ResultSimulation model
-                queryset=ResultSimulation.objects.filter(is_active=True)
-            )
-        ).order_by('-id')[:10]  # Limitar resultados
-        
+            'fk_questionary_result__fk_questionary__fk_product',
+            'fk_fdp'  # Added this for better performance
+        ).order_by('-date_created')  # Changed to semantic ordering
+                
         return {
             'products': products,
             'charts': charts,
@@ -109,7 +105,7 @@ class DashboardService:
         }
         
         for simulation in simulations:
-            for result in simulation.resultsimulation_set.all():
+            for result in simulation.results.all():
                 try:
                     variables = result.get_variables()
                     for initial, value in variables.items():
@@ -137,10 +133,20 @@ def index(request):
             form = RegisterElementsForm()
 
         business = DashboardService.get_user_business(request.user)
+        
+        # Si no hay negocio, mostrar valores por defecto
         if not business:
-            messages.warning(request, "No tienes un negocio activo. Por favor crea uno primero.")
-            return redirect('business:business.create')
+            context = {
+                'form': form,
+                'business': None,
+                'business_count': 0,
+                'products_count': 0,
+                'simulations_count': 0,
+                'charts_count': 0,
+            }
+            return render(request, 'dashboards/index.html', context)
 
+        # Si hay negocio, continuar con la lógica normal
         request.session['business_id'] = business.id
 
         # Obtener métricas del negocio para los contadores
@@ -148,7 +154,12 @@ def index(request):
         business_count = Business.objects.filter(fk_user=request.user, is_active=True).count()
         products_count = metrics['products'].count()
         simulations_count = metrics['simulations'].count() if hasattr(metrics['simulations'], 'count') else len(metrics['simulations'])
-        charts_count = metrics['charts'].count() if hasattr(metrics['charts'], 'count') else len(metrics['charts'])
+        # charts_count = metrics['charts'].count() if hasattr(metrics['charts'], 'count') else len(metrics['charts'])
+
+        # Get recent activities for the user
+        recent_activities = ActivityLog.objects.filter(
+            user=request.user
+        ).select_related('user').order_by('-timestamp')[:30]
 
         context = {
             'form': form,
@@ -156,7 +167,8 @@ def index(request):
             'business_count': business_count,
             'products_count': products_count,
             'simulations_count': simulations_count,
-            'charts_count': charts_count,
+            # 'charts_count': charts_count,
+            'recent_activities': recent_activities
         }
         return render(request, 'dashboards/index.html', context)
 
@@ -232,19 +244,23 @@ def dashboard_user(request):
         # Obtener métricas del negocio
         metrics = DashboardService.get_business_metrics(business_id)
         
-        # Obtener recomendaciones con paginación
+        # Obtener recomendaciones con paginación - Compatible with all databases
         recommendations = FinanceRecommendationSimulation.objects.filter(
             fk_simulation__fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
             # is_active=True
         ).select_related(
             'fk_simulation__fk_questionary_result__fk_questionary__fk_product'
-        ).values(
-            'data',
-            'fk_simulation__date_created',
-            'fk_simulation__fk_questionary_result__fk_questionary__fk_product__name',
         ).annotate(
             data_as_percentage=F('data') * 100,
-        ).distinct()
+            product_name=F('fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'),
+            simulation_date=F('fk_simulation__date_created')
+        ).values(
+            'id',  # Include ID to make each row unique
+            'data',
+            'data_as_percentage', 
+            'product_name',
+            'simulation_date',
+        ).order_by('-simulation_date')
         
         # Paginación
         paginator = Paginator(recommendations, 10)
@@ -289,6 +305,7 @@ def dashboard_user(request):
             'total_production_output': totals['Total Production Output'],
             'total_profit_margin': totals['Total Profit Margin'],
         }
+        print(f"Context for dashboard_user: {context}")  # Debugging line
         
         return render(request, 'dashboards/dashboard-user.html', context)
         

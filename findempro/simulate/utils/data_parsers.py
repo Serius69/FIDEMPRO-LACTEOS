@@ -1,4 +1,5 @@
 # utils/data_parsers.py
+import ast
 import re
 import json
 import logging
@@ -14,7 +15,7 @@ class DataParser:
     """Utility class for parsing various data formats"""
     
     @staticmethod
-    def parse_demand_history(data: Union[str, list, dict]) -> List[float]:
+    def parse_demand_history(data: Union[str, list, dict, Any]) -> List[float]:
         """
         Parse demand history from various formats
         
@@ -25,9 +26,41 @@ class DataParser:
             List of float values
         """
         try:
+            # Handle questionary Answer objects
+            if hasattr(data, '__class__') and 'Answer' in str(data.__class__):
+                # Try to get the answer attribute
+                if hasattr(data, 'answer'):
+                    return DataParser.parse_demand_history(data.answer)
+                
+                # Extract from string representation
+                str_repr = str(data)
+                # Pattern: <Answer: [2450, 2380, 2520, ...]>
+                match = re.search(r'<Answer:\s*(\[.*?\])>', str_repr)
+                if match:
+                    list_str = match.group(1)
+                    try:
+                        parsed_list = ast.literal_eval(list_str)
+                        return DataParser.parse_demand_history(parsed_list)
+                    except:
+                        pass
+            
+            # Handle questionary Answer objects - try common attributes
+            if hasattr(data, 'value'):
+                return DataParser.parse_demand_history(data.value)
+            
             # If already a list of numbers, validate and return
             if isinstance(data, list):
-                return [float(x) for x in data if DataParser._is_valid_number(x)]
+                result = []
+                for x in data:
+                    if DataParser._is_valid_number(x):
+                        try:
+                            # Handle string numbers with commas
+                            if isinstance(x, str):
+                                x = x.replace(',', '')
+                            result.append(float(x))
+                        except:
+                            continue
+                return result
             
             # If dict, try to extract values
             if isinstance(data, dict):
@@ -50,19 +83,33 @@ class DataParser:
                 except json.JSONDecodeError:
                     pass
                 
+                # Check if it's a string representation of a list
+                if data.strip().startswith('[') and data.strip().endswith(']'):
+                    try:
+                        parsed_list = ast.literal_eval(data.strip())
+                        return DataParser.parse_demand_history(parsed_list)
+                    except:
+                        pass
+                
                 # Remove brackets and quotes
                 data = data.replace('[', '').replace(']', '')
                 data = data.replace('"', '').replace("'", '')
-                data = data.replace(',', ' ')
                 
-                # Extract numbers
+                # Extract numbers - handle comma-separated values properly
                 numbers = []
-                tokens = data.split()
+                
+                # First try splitting by comma
+                if ',' in data:
+                    tokens = data.split(',')
+                else:
+                    tokens = data.split()
                 
                 for token in tokens:
                     token = token.strip()
                     if DataParser._is_valid_number(token):
                         try:
+                            # Remove any trailing comma
+                            token = token.rstrip(',')
                             num = float(token)
                             if num > 0:  # Demand should be positive
                                 numbers.append(num)
@@ -71,21 +118,30 @@ class DataParser:
                 
                 return numbers
             
+            # Try to convert single number
+            if DataParser._is_valid_number(data):
+                return [float(data)]
+            
             raise ValueError(f"Unsupported data type: {type(data)}")
             
         except Exception as e:
             logger.error(f"Error parsing demand history: {str(e)}")
+            logger.error(f"Data type: {type(data)}")
+            logger.error(f"Data content: {str(data)[:200]}")  # Log first 200 chars
             raise
     
     @staticmethod
     def _is_valid_number(value: Any) -> bool:
-        """Check if value can be converted to a valid number"""
+        """Check if a value can be converted to a number"""
         if isinstance(value, (int, float, Decimal)):
             return True
         
         if isinstance(value, str):
             # Remove common number formatting
             cleaned = value.replace(',', '').replace(' ', '').strip()
+            
+            # Remove trailing comma if present
+            cleaned = cleaned.rstrip(',')
             
             # Check for valid number pattern
             number_pattern = re.compile(r'^-?\d+\.?\d*$')
@@ -269,6 +325,9 @@ class DataParser:
                 cleaned = value.replace(',', '').replace(' ', '').strip()
                 cleaned = cleaned.replace('$', '').replace('€', '')
                 cleaned = cleaned.replace('%', '')
+                
+                # Remove trailing comma
+                cleaned = cleaned.rstrip(',')
                 
                 if cleaned:
                     return float(cleaned)

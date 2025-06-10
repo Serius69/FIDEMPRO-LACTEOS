@@ -5,7 +5,7 @@ Define los productos disponibles con sus características y parámetros iniciale
 
 products_data = [
     {
-        'name': 'Leche Entera',
+        'name': 'Leche',
         'description': '''La leche entera es un producto lácteo fundamental con alto valor nutricional. 
         Contiene 3.5% de grasa, proteínas de alta calidad, vitaminas A, D, B12, calcio y otros minerales esenciales. 
         Es la base para la elaboración de otros productos lácteos y tiene alta demanda en el mercado boliviano.
@@ -28,7 +28,7 @@ products_data = [
         }
     },
     {
-        'name': 'Yogurt Natural',
+        'name': 'Yogur',
         'description': '''El yogurt natural es un producto lácteo fermentado con cultivos probióticos vivos. 
         Rico en proteínas, calcio y bacterias beneficiosas para la salud digestiva. 
         Proceso de fermentación controlada que transforma la lactosa en ácido láctico.
@@ -52,7 +52,7 @@ products_data = [
         }
     },
     {
-        'name': 'Queso Fresco',
+        'name': 'Queso',
         'description': '''Queso fresco tradicional, no madurado, de pasta blanda y alto contenido de humedad.
         Elaborado mediante coagulación enzimática de la leche y posterior desuerado.
         Popular en la gastronomía boliviana para consumo directo y preparaciones culinarias.
@@ -176,29 +176,29 @@ products_data = [
 
 # Configuración de categorías de productos
 product_categories = {
-    'frescos': ['Leche Entera', 'Queso Fresco', 'Crema de Leche'],
-    'procesados': ['Yogurt Natural', 'Mantequilla', 'Dulce de Leche'],
+    'frescos': ['Leche', 'Queso', 'Crema de Leche'],
+    'procesados': ['Yogurt', 'Mantequilla', 'Dulce de Leche'],
     'especializados': ['Leche Deslactosada'],
     'mayor_margen': ['Dulce de Leche', 'Leche Deslactosada', 'Mantequilla'],
-    'alta_rotacion': ['Leche Entera', 'Yogurt Natural'],
+    'alta_rotacion': ['Leche', 'Yogurt'],
     'larga_vida': ['Dulce de Leche', 'Mantequilla']
 }
 
 # Métricas de rendimiento por producto
 product_metrics = {
-    'Leche Entera': {
+    'Leche': {
         'market_share': 0.35,
         'growth_rate': 0.05,
         'customer_satisfaction': 0.92,                                                                                 
         'production_efficiency': 0.88
     },
-    'Yogurt Natural': {
+    'Yogurt': {
         'market_share': 0.25,
         'growth_rate': 0.12,
         'customer_satisfaction': 0.89,
         'production_efficiency': 0.85
     },
-    'Queso Fresco': {
+    'Queso': {
         'market_share': 0.20,
         'growth_rate': 0.08,
         'customer_satisfaction': 0.91,

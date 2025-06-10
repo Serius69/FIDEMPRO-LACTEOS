@@ -1,348 +1,181 @@
-# simulate_data.py - Versión Final
+# simulate_data.py - Versión Actualizada
 """
 Datos de configuración para simulaciones de demanda en el sector lácteo.
-Incluye configuraciones de funciones de densidad probabilística y parámetros de simulación.
+Utiliza los datos del questionary_result_data para generar simulaciones realistas.
 """
 
 from datetime import datetime, timedelta
 import numpy as np
+from questionary.data.questionary_result_data import get_realistic_answers, questionary_result_data
 
-# Datos de funciones de densidad probabilística para análisis de demanda
-pdf_data = [
-    {
-        "name": "Distribución Normal - Demanda Estándar",
-        "distribution_type": 1,  # Normal
-        "mean_param": 2500.0,  # Demanda promedio diaria en litros
-        "std_dev_param": 250.0,  # Desviación estándar
-        "cumulative_distribution_function": 0.5,  # CDF en la media
-        "description": "Modelo de demanda normal para productos lácteos con variación estándar"
-    },
-    {
-        "name": "Distribución Exponencial - Tiempos Entre Pedidos",
-        "distribution_type": 2,  # Exponential
-        "lambda_param": 0.2,  # Tasa de llegada (5 días promedio entre pedidos)
-        "cumulative_distribution_function": 0.63,  # CDF en λ=1
-        "description": "Modela el tiempo entre pedidos de clientes mayoristas"
-    },
-    {
-        "name": "Distribución Log-Normal - Demanda Variable",
-        "distribution_type": 3,  # Log-Normal
-        "mean_param": 7.5,  # Log(media) ≈ 1800 litros
-        "std_dev_param": 0.5,  # Desviación en escala logarítmica
-        "cumulative_distribution_function": 0.5,
-        "description": "Para productos con demanda altamente variable (yogurt premium)"
-    },
-    {
-        "name": "Distribución Gamma - Demanda Estacional",
-        "distribution_type": 4,  # Gamma
-        "shape_param": 3.0,  # Parámetro de forma
-        "scale_param": 800.0,  # Parámetro de escala
-        "cumulative_distribution_function": 0.58,
-        "description": "Modela demanda con estacionalidad marcada"
-    },
-    {
-        "name": "Distribución Uniforme - Demanda Constante",
-        "distribution_type": 5,  # Uniform
-        "min_param": 2000.0,  # Demanda mínima
-        "max_param": 3000.0,  # Demanda máxima
-        "cumulative_distribution_function": 0.5,
-        "description": "Para productos con demanda estable y predecible"
+def extract_answer_value(answers, variable_name):
+    """Extrae el valor de una respuesta específica por nombre de variable"""
+    for answer in answers:
+        if answer.get('variable_name') == variable_name:
+            return answer['answer']
+    return None
+
+def generate_simulation_from_questionary(product_type, scenario_type="optimista"):
+    """
+    Genera configuración de simulación basada en las respuestas del cuestionario
+    
+    Args:
+        product_type: Tipo de producto ('leche', 'queso', 'yogur')
+        scenario_type: Tipo de escenario ('optimista', 'conservador', 'pesimista')
+    
+    Returns:
+        Dict con configuración de simulación
+    """
+    # Obtener respuestas del cuestionario para el producto
+    answers = get_realistic_answers(product_type)
+    
+    # Extraer valores clave
+    precio_actual = extract_answer_value(answers, 'precio_actual')
+    demanda_historica = extract_answer_value(answers, 'demanda_historica')
+    produccion_actual = extract_answer_value(answers, 'produccion_actual')
+    demanda_esperada = extract_answer_value(answers, 'demanda_esperada')
+    capacidad_inventario = extract_answer_value(answers, 'capacidad_inventario')
+    estacionalidad = extract_answer_value(answers, 'estacionalidad')
+    capacidad_produccion = extract_answer_value(answers, 'capacidad_produccion')
+    numero_empleados = extract_answer_value(answers, 'numero_empleados')
+    
+    # Calcular estadísticas de la demanda histórica
+    if demanda_historica:
+        demanda_mean = np.mean(demanda_historica)
+        demanda_std = np.std(demanda_historica)
+    else:
+        demanda_mean = produccion_actual
+        demanda_std = produccion_actual * 0.1  # 10% de variación por defecto
+    
+    # Configurar parámetros según el escenario
+    scenario_params = {
+        "optimista": {
+            "growth_rate": 0.05,
+            "price_elasticity": -0.3,
+            "market_share_growth": 0.02,
+            "customer_retention": 0.95,
+            "production_efficiency": 0.92,
+            "waste_percentage": 0.02,
+            "seasonality_factor": 1.1 if estacionalidad == 'Sí' else 1.0
+        },
+        "conservador": {
+            "growth_rate": 0.02,
+            "price_elasticity": -0.5,
+            "market_share_growth": 0.01,
+            "customer_retention": 0.90,
+            "production_efficiency": 0.88,
+            "waste_percentage": 0.03,
+            "seasonality_factor": 1.05 if estacionalidad == 'Sí' else 1.0
+        },
+        "pesimista": {
+            "growth_rate": -0.02,
+            "price_elasticity": -0.8,
+            "market_share_growth": -0.01,
+            "customer_retention": 0.85,
+            "production_efficiency": 0.82,
+            "waste_percentage": 0.05,
+            "seasonality_factor": 0.95 if estacionalidad == 'Sí' else 1.0
+        }
     }
-]
+    
+    params = scenario_params[scenario_type.lower()]
+    
+    # Generar proyección de demanda según escenario
+    days = 30
+    if scenario_type.lower() == "optimista":
+        # Tendencia creciente
+        demand_projection = [demanda_mean * (1 + params["growth_rate"] * (i/days)) 
+                           for i in range(days)]
+    elif scenario_type.lower() == "conservador":
+        # Tendencia estable con ligero crecimiento
+        demand_projection = [demanda_mean * (1 + params["growth_rate"] * (i/days) * 0.5) 
+                           for i in range(days)]
+    else:  # pesimista
+        # Tendencia decreciente
+        demand_projection = [demanda_mean * (1 + params["growth_rate"] * (i/days)) 
+                           for i in range(days)]
+    
+    # Añadir variabilidad
+    demand_history_sim = [
+        max(0, d + np.random.normal(0, demanda_std * 0.5)) 
+        for d in demand_projection
+    ]
+    
+    return {
+        "name": f"Simulación {scenario_type.title()} - {product_type.title()}",
+        "product": product_type.title(),
+        "scenario": scenario_type.title(),
+        "description": f"Escenario {scenario_type} basado en datos reales del cuestionario",
+        "unit_time": "days",
+        "quantity_time": 30,
+        "confidence_level": 0.95,
+        "random_seed": np.random.randint(1, 100),
+        "demand_history": demand_history_sim,
+        "parameters": params,
+        "expected_results": {
+            "demand_mean": demanda_mean * (1 + params["growth_rate"]),
+            "demand_std_deviation": demanda_std,
+            "revenue_growth": params["growth_rate"] * 3,
+            "profit_margin": 0.25 if scenario_type == "optimista" else (0.20 if scenario_type == "conservador" else 0.15),
+            "roi": 0.35 if scenario_type == "optimista" else (0.25 if scenario_type == "conservador" else 0.18)
+        },
+        "questionary_data": {
+            "precio_actual": precio_actual,
+            "produccion_actual": produccion_actual,
+            "demanda_esperada": demanda_esperada,
+            "capacidad_inventario": capacidad_inventario,
+            "capacidad_produccion": capacidad_produccion,
+            "numero_empleados": numero_empleados
+        }
+    }
 
-# Simulaciones para LECHE
+# Generar simulaciones para cada producto usando datos del cuestionario
 simulation_data_leche = [
-    {
-        "name": "Simulación Optimista - Leche",
-        "product": "Leche",
-        "scenario": "Optimista",
-        "description": "Escenario con crecimiento sostenido y condiciones favorables del mercado",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 42,
-        "demand_history": [2450, 2480, 2520, 2560, 2590, 2610, 2640, 2670, 2690, 2720,
-                          2740, 2760, 2780, 2800, 2820, 2830, 2850, 2870, 2880, 2900,
-                          2910, 2920, 2930, 2940, 2950, 2960, 2970, 2980, 2990, 3000],
-        "parameters": {
-            "growth_rate": 0.05,  # 5% crecimiento mensual
-            "price_elasticity": -0.3,  # Baja elasticidad
-            "market_share_growth": 0.02,  # 2% crecimiento participación
-            "customer_retention": 0.95,  # 95% retención
-            "production_efficiency": 0.92,  # 92% eficiencia
-            "waste_percentage": 0.02,  # 2% desperdicio
-            "seasonality_factor": 1.1  # 10% aumento estacional
-        },
-        "expected_results": {
-            "demand_mean": 2850.0,
-            "demand_std_deviation": 180.0,
-            "revenue_growth": 0.15,
-            "profit_margin": 0.25,
-            "roi": 0.35
-        }
-    },
-    {
-        "name": "Simulación Conservadora - Leche",
-        "product": "Leche",
-        "scenario": "Conservador",
-        "description": "Escenario con crecimiento moderado y condiciones estables",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 43,
-        "demand_history": [2450, 2460, 2470, 2480, 2490, 2500, 2510, 2520, 2530, 2540,
-                          2550, 2560, 2570, 2580, 2590, 2600, 2610, 2620, 2630, 2640,
-                          2650, 2660, 2670, 2680, 2690, 2700, 2710, 2720, 2730, 2740],
-        "parameters": {
-            "growth_rate": 0.02,  # 2% crecimiento mensual
-            "price_elasticity": -0.5,  # Elasticidad moderada
-            "market_share_growth": 0.01,  # 1% crecimiento
-            "customer_retention": 0.90,  # 90% retención
-            "production_efficiency": 0.88,  # 88% eficiencia
-            "waste_percentage": 0.03,  # 3% desperdicio
-            "seasonality_factor": 1.05  # 5% variación estacional
-        },
-        "expected_results": {
-            "demand_mean": 2600.0,
-            "demand_std_deviation": 120.0,
-            "revenue_growth": 0.08,
-            "profit_margin": 0.20,
-            "roi": 0.25
-        }
-    },
-    {
-        "name": "Simulación Pesimista - Leche",
-        "product": "Leche",
-        "scenario": "Pesimista",
-        "description": "Escenario con competencia agresiva y condiciones adversas",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 44,
-        "demand_history": [2450, 2440, 2430, 2420, 2410, 2400, 2390, 2380, 2370, 2360,
-                          2350, 2340, 2330, 2320, 2310, 2300, 2290, 2280, 2270, 2260,
-                          2250, 2240, 2230, 2220, 2210, 2200, 2190, 2180, 2170, 2160],
-        "parameters": {
-            "growth_rate": -0.02,  # -2% decrecimiento
-            "price_elasticity": -0.8,  # Alta elasticidad
-            "market_share_growth": -0.01,  # Pérdida de mercado
-            "customer_retention": 0.85,  # 85% retención
-            "production_efficiency": 0.82,  # 82% eficiencia
-            "waste_percentage": 0.05,  # 5% desperdicio
-            "seasonality_factor": 0.95  # -5% caída estacional
-        },
-        "expected_results": {
-            "demand_mean": 2300.0,
-            "demand_std_deviation": 150.0,
-            "revenue_growth": -0.05,
-            "profit_margin": 0.15,
-            "roi": 0.18
-        }
-    }
+    generate_simulation_from_questionary("leche", "optimista"),
+    generate_simulation_from_questionary("leche", "conservador"),
+    generate_simulation_from_questionary("leche", "pesimista")
 ]
 
-# Simulaciones para QUESO
 simulation_data_queso = [
-    {
-        "name": "Simulación Expansión - Queso",
-        "product": "Queso",
-        "scenario": "Expansión",
-        "description": "Apertura de nuevos mercados y líneas de productos premium",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 45,
-        "demand_history": [180, 185, 190, 195, 200, 205, 210, 215, 220, 225,
-                          230, 235, 240, 245, 250, 255, 260, 265, 270, 275,
-                          280, 285, 290, 295, 300, 305, 310, 315, 320, 325],
-        "parameters": {
-            "growth_rate": 0.08,  # 8% crecimiento por expansión
-            "price_elasticity": -0.4,  # Producto premium
-            "market_share_growth": 0.03,  # 3% nuevos mercados
-            "customer_retention": 0.93,  # Alta fidelidad
-            "production_efficiency": 0.90,  # Buena eficiencia
-            "waste_percentage": 0.025,  # Control de calidad
-            "seasonality_factor": 1.15,  # Demanda festiva
-            "new_product_lines": 3  # 3 nuevas variedades
-        },
-        "expected_results": {
-            "demand_mean": 252.0,
-            "demand_std_deviation": 45.0,
-            "revenue_growth": 0.25,
-            "profit_margin": 0.30,
-            "roi": 0.40
-        }
-    },
-    {
-        "name": "Simulación Estabilidad - Queso",
-        "product": "Queso",
-        "scenario": "Estable",
-        "description": "Mantenimiento de operaciones actuales con mejoras incrementales",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 46,
-        "demand_history": [180, 182, 184, 186, 188, 190, 192, 194, 196, 198,
-                          200, 198, 196, 194, 192, 190, 188, 186, 184, 182,
-                          180, 182, 184, 186, 188, 190, 192, 194, 196, 198],
-        "parameters": {
-            "growth_rate": 0.01,  # 1% crecimiento estable
-            "price_elasticity": -0.6,  # Elasticidad normal
-            "market_share_growth": 0.0,  # Sin cambios
-            "customer_retention": 0.88,  # Retención estable
-            "production_efficiency": 0.85,  # Eficiencia promedio
-            "waste_percentage": 0.04,  # 4% desperdicio
-            "seasonality_factor": 1.0,  # Sin estacionalidad
-            "quality_consistency": 0.95  # 95% consistencia
-        },
-        "expected_results": {
-            "demand_mean": 190.0,
-            "demand_std_deviation": 8.0,
-            "revenue_growth": 0.03,
-            "profit_margin": 0.22,
-            "roi": 0.28
-        }
-    },
-    {
-        "name": "Simulación Crisis - Queso",
-        "product": "Queso",
-        "scenario": "Crisis",
-        "description": "Escasez de materia prima y aumento de costos de producción",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 47,
-        "demand_history": [180, 175, 170, 165, 160, 155, 150, 145, 140, 135,
-                          130, 125, 120, 115, 110, 105, 100, 105, 110, 115,
-                          120, 125, 130, 135, 140, 145, 150, 155, 160, 165],
-        "parameters": {
-            "growth_rate": -0.03,  # -3% contracción
-            "price_elasticity": -1.0,  # Alta sensibilidad al precio
-            "market_share_growth": -0.02,  # Pérdida de mercado
-            "customer_retention": 0.80,  # Baja retención
-            "production_efficiency": 0.75,  # Baja eficiencia
-            "waste_percentage": 0.06,  # Mayor desperdicio
-            "seasonality_factor": 0.90,  # Caída de demanda
-            "raw_material_shortage": 0.20  # 20% escasez
-        },
-        "expected_results": {
-            "demand_mean": 140.0,
-            "demand_std_deviation": 25.0,
-            "revenue_growth": -0.15,
-            "profit_margin": 0.10,
-            "roi": 0.12
-        }
-    }
+    generate_simulation_from_questionary("queso", "optimista"),
+    generate_simulation_from_questionary("queso", "conservador"),
+    generate_simulation_from_questionary("queso", "pesimista")
 ]
 
-# Simulaciones para YOGUR
 simulation_data_yogur = [
-    {
-        "name": "Simulación Innovación - Yogur",
-        "product": "Yogur",
-        "scenario": "Innovación",
-        "description": "Lanzamiento de línea probiótica y sabores exóticos",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 48,
-        "demand_history": [320, 330, 340, 350, 360, 370, 380, 390, 400, 410,
-                          420, 430, 440, 450, 460, 470, 480, 490, 500, 510,
-                          520, 530, 540, 550, 560, 570, 580, 590, 600, 610],
-        "parameters": {
-            "growth_rate": 0.10,  # 10% crecimiento por innovación
-            "price_elasticity": -0.3,  # Premium positioning
-            "market_share_growth": 0.04,  # 4% captura de mercado
-            "customer_retention": 0.92,  # Alta satisfacción
-            "production_efficiency": 0.88,  # Buena eficiencia
-            "waste_percentage": 0.03,  # Control estricto
-            "seasonality_factor": 1.20,  # Alta demanda verano
-            "innovation_index": 0.85,  # Alto nivel innovación
-            "health_trend_factor": 1.15  # Tendencia saludable
-        },
-        "expected_results": {
-            "demand_mean": 465.0,
-            "demand_std_deviation": 80.0,
-            "revenue_growth": 0.35,
-            "profit_margin": 0.28,
-            "roi": 0.45
-        }
-    },
-    {
-        "name": "Simulación Competencia - Yogur",
-        "product": "Yogur",
-        "scenario": "Competitivo",
-        "description": "Mercado saturado con múltiples competidores",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 49,
-        "demand_history": [320, 318, 316, 314, 312, 310, 308, 306, 304, 302,
-                          300, 302, 304, 306, 308, 310, 312, 314, 316, 318,
-                          320, 318, 316, 314, 312, 310, 308, 306, 304, 302],
-        "parameters": {
-            "growth_rate": -0.01,  # Ligera contracción
-            "price_elasticity": -0.9,  # Alta sensibilidad precio
-            "market_share_growth": -0.005,  # Pérdida marginal
-            "customer_retention": 0.85,  # Retención media
-            "production_efficiency": 0.83,  # Eficiencia regular
-            "waste_percentage": 0.04,  # Desperdicio normal
-            "seasonality_factor": 1.05,  # Leve estacionalidad
-            "competition_intensity": 0.80,  # Alta competencia
-            "price_pressure": 0.15  # 15% presión en precios
-        },
-        "expected_results": {
-            "demand_mean": 310.0,
-            "demand_std_deviation": 8.0,
-            "revenue_growth": -0.02,
-            "profit_margin": 0.18,
-            "roi": 0.20
-        }
-    },
-    {
-        "name": "Simulación Nicho - Yogur",
-        "product": "Yogur",
-        "scenario": "Nicho Premium",
-        "description": "Enfoque en segmento premium con productos especializados",
-        "unit_time": "days",
-        "quantity_time": 30,
-        "confidence_level": 0.95,
-        "random_seed": 50,
-        "demand_history": [320, 325, 330, 335, 340, 345, 350, 355, 360, 365,
-                          370, 375, 380, 385, 390, 395, 400, 405, 410, 415,
-                          420, 425, 430, 435, 440, 445, 450, 455, 460, 465],
-        "parameters": {
-            "growth_rate": 0.06,  # 6% crecimiento nicho
-            "price_elasticity": -0.2,  # Baja elasticidad
-            "market_share_growth": 0.02,  # Segmento específico
-            "customer_retention": 0.95,  # Muy alta fidelidad
-            "production_efficiency": 0.85,  # Producción artesanal
-            "waste_percentage": 0.02,  # Mínimo desperdicio
-            "seasonality_factor": 1.10,  # Moderada estacionalidad
-            "premium_factor": 1.40,  # 40% precio premium
-            "exclusivity_index": 0.90  # Alta exclusividad
-        },
-        "expected_results": {
-            "demand_mean": 392.0,
-            "demand_std_deviation": 45.0,
-            "revenue_growth": 0.20,
-            "profit_margin": 0.35,
-            "roi": 0.50
-        }
-    }
+    generate_simulation_from_questionary("yogur", "optimista"),
+    generate_simulation_from_questionary("yogur", "conservador"),
+    generate_simulation_from_questionary("yogur", "pesimista")
+]
+
+simulation_data_mantequilla = [
+    generate_simulation_from_questionary("mantequilla", "optimista"),
+    generate_simulation_from_questionary("mantequilla", "conservador"),
+    generate_simulation_from_questionary("mantequilla", "pesimista")
+]
+
+simulation_data_crema = [
+    generate_simulation_from_questionary("crema de leche", "optimista"),
+    generate_simulation_from_questionary("crema de leche", "conservador"),
+    generate_simulation_from_questionary("crema de leche", "pesimista")
+]
+
+simulation_data_leche_deslactosada = [
+    generate_simulation_from_questionary("leche deslactosada", "optimista"),
+    generate_simulation_from_questionary("leche deslactosada", "conservador"),
+    generate_simulation_from_questionary("leche deslactosada", "pesimista")
+]
+
+simulation_data_dulce_leche = [
+    generate_simulation_from_questionary("dulce de leche", "optimista"),
+    generate_simulation_from_questionary("dulce de leche", "conservador"),
+    generate_simulation_from_questionary("dulce de leche", "pesimista")
 ]
 
 # Función para generar resultados de simulación dinámicos
 def generate_simulation_results(simulation_config, days=30):
     """
     Genera resultados de simulación basados en la configuración proporcionada
-    
-    Args:
-        simulation_config: Diccionario con parámetros de simulación
-        days: Número de días a simular
-    
-    Returns:
-        Lista de resultados diarios con todas las variables calculadas
     """
     np.random.seed(simulation_config.get("random_seed", 42))
     
@@ -350,14 +183,21 @@ def generate_simulation_results(simulation_config, days=30):
     base_demand = simulation_config["expected_results"]["demand_mean"]
     std_dev = simulation_config["expected_results"]["demand_std_deviation"]
     params = simulation_config["parameters"]
+    questionary = simulation_config.get("questionary_data", {})
+    
+    # Extraer datos adicionales del cuestionario
+    precio = questionary.get("precio_actual", 15.5)
+    capacidad_prod = questionary.get("capacidad_produccion", base_demand * 1.2)
+    num_empleados = questionary.get("numero_empleados", 15)
     
     for day in range(days):
         # Calcular demanda con tendencia y variabilidad
         trend = (1 + params["growth_rate"]) ** (day / 30)
         seasonal = params["seasonality_factor"] if (day % 7) in [5, 6] else 1.0
-        daily_demand = base_demand * trend * seasonal + np.random.normal(0, std_dev)
+        daily_demand = base_demand * trend * seasonal + np.random.normal(0, std_dev * 0.3)
+        daily_demand = max(0, daily_demand)  # Asegurar que no sea negativa
         
-        # Calcular otras variables basadas en la demanda
+        # Calcular otras variables basadas en la demanda y datos del cuestionario
         daily_result = {
             "date": datetime.now().date() + timedelta(days=day),
             "demand_mean": daily_demand,
@@ -365,36 +205,42 @@ def generate_simulation_results(simulation_config, days=30):
             "variables": {
                 # Variables de producción y ventas
                 "TPV": daily_demand * (1 - params["waste_percentage"]),
-                "TPPRO": daily_demand * 1.1,  # 10% más producción que demanda
-                "DI": max(0, daily_demand * 0.05),  # 5% demanda insatisfecha
-                "VPC": daily_demand / 85,  # Ventas por cliente
+                "TPPRO": min(daily_demand * 1.1, capacidad_prod),  # Limitado por capacidad
+                "DI": max(0, daily_demand - capacidad_prod) if daily_demand > capacidad_prod else 0,
+                "VPC": daily_demand / max(1, questionary.get("clientes_diarios", 85)),
                 
                 # Variables financieras
-                "IT": daily_demand * simulation_config.get("price", 15.5),
-                "GT": daily_demand * simulation_config.get("price", 15.5) * params["profit_margin"],
+                "IT": daily_demand * precio,
+                "GT": daily_demand * precio * params["profit_margin"],
                 "NR": params["profit_margin"],
                 "MB": params["profit_margin"] * 1.2,
                 "RI": simulation_config["expected_results"]["roi"],
                 
                 # Variables de eficiencia
-                "FU": params["production_efficiency"],
-                "PE": daily_demand / 15,  # Productividad por empleado
+                "FU": min(daily_demand / capacidad_prod, 1.0),  # Utilización de capacidad
+                "PE": daily_demand / num_empleados,
                 "PM": 0.15 + params["market_share_growth"],
                 
                 # Variables de inventario
-                "IPF": daily_demand * 1.5,  # 1.5 días de inventario
-                "RTI": 0.67,  # Rotación cada 1.5 días
+                "IPF": min(daily_demand * 1.5, questionary.get("capacidad_inventario", daily_demand * 2)),
+                "RTI": 365 / (questionary.get("dias_reabastecimiento", 3)),
                 
-                # Otras variables relevantes
-                "CPROD": daily_demand * 1.2,  # Capacidad 20% mayor
+                # Variables operativas
+                "CPROD": capacidad_prod,
                 "ED": params.get("seasonality_factor", 1.0),
                 "NCM": params.get("competition_intensity", 0.5),
+                
+                # Variables de costos (usando datos del cuestionario)
+                "CFD": questionary.get("costo_fijo_diario", 1800),
+                "CUT": questionary.get("costo_transporte", 0.35),
+                "CUI": questionary.get("costo_unitario_insumo", 8.20),
             },
             "efficiency_metrics": {
                 "overall_efficiency": params["production_efficiency"],
                 "waste_reduction": 1 - params["waste_percentage"],
                 "customer_satisfaction": params["customer_retention"],
-                "market_position": 1 + params["market_share_growth"]
+                "market_position": 1 + params["market_share_growth"],
+                "capacity_utilization": min(daily_demand / capacidad_prod, 1.0)
             }
         }
         
@@ -405,8 +251,12 @@ def generate_simulation_results(simulation_config, days=30):
 # Consolidar todas las simulaciones
 all_simulations = {
     "leche": simulation_data_leche,
-    "queso": simulation_data_queso,
-    "yogur": simulation_data_yogur
+    "queso": simulation_data_queso, 
+    "yogur": simulation_data_yogur,
+    "mantequilla": simulation_data_mantequilla,
+    "crema de leche": simulation_data_crema,
+    "leche deslactosada": simulation_data_leche_deslactosada,
+    "dulce de leche": simulation_data_dulce_leche
 }
 
 # Función para obtener simulaciones por producto
@@ -414,46 +264,77 @@ def get_simulations_by_product(product_name):
     """Retorna las 3 simulaciones para un producto específico"""
     return all_simulations.get(product_name.lower(), [])
 
-# Configuración para inicialización de PDF por producto
-pdf_config_by_product = {
-    "leche": {
-        "distribution_type": 1,  # Normal
-        "mean_param": 2500.0,
-        "std_dev_param": 250.0,
-        "name": "Distribución Normal - Leche"
-    },
-    "queso": {
-        "distribution_type": 4,  # Gamma
-        "shape_param": 3.0,
-        "scale_param": 60.0,  # Ajustado para queso
-        "name": "Distribución Gamma - Queso"
-    },
-    "yogur": {
-        "distribution_type": 3,  # Log-Normal
-        "mean_param": 5.8,  # log(330) ≈ 5.8
-        "std_dev_param": 0.15,
-        "name": "Distribución Log-Normal - Yogur"
+# Configuración para inicialización de PDF por producto basada en datos del cuestionario
+def get_pdf_config_by_product(product_name):
+    """Genera configuración PDF basada en datos del cuestionario"""
+    answers = get_realistic_answers(product_name.lower())
+    demanda_historica = extract_answer_value(answers, 'demanda_historica')
+    
+    if demanda_historica:
+        mean_demand = np.mean(demanda_historica)
+        std_demand = np.std(demanda_historica)
+    else:
+        mean_demand = extract_answer_value(answers, 'produccion_actual') or 100
+        std_demand = mean_demand * 0.1
+    
+    configs = {
+        "leche": {
+            "distribution_type": 1,  # Normal
+            "mean_param": mean_demand,
+            "std_dev_param": std_demand,
+            "name": f"Distribución Normal - {product_name.title()}"
+        },
+        "queso": {
+            "distribution_type": 4,  # Gamma
+            "shape_param": (mean_demand / std_demand) ** 2,
+            "scale_param": std_demand ** 2 / mean_demand,
+            "name": f"Distribución Gamma - {product_name.title()}"
+        },
+        "yogur": {
+            "distribution_type": 3,  # Log-Normal
+            "mean_param": np.log(mean_demand / np.sqrt(1 + (std_demand/mean_demand)**2)),
+            "std_dev_param": np.sqrt(np.log(1 + (std_demand/mean_demand)**2)),
+            "name": f"Distribución Log-Normal - {product_name.title()}"
+        },
+        "mantequilla": {
+            "distribution_type": 4,  # Gamma 
+            "shape_param": (mean_demand / std_demand) ** 2,
+            "scale_param": std_demand ** 2 / mean_demand,
+            "name": f"Distribución Gamma - {product_name.title()}"
+        },
+        "crema de leche": {
+            "distribution_type": 1,  # Normal
+            "mean_param": mean_demand,
+            "std_dev_param": std_demand,
+            "name": f"Distribución Normal - {product_name.title()}"
+        },
+        "leche deslactosada": {
+            "distribution_type": 1,  # Normal
+            "mean_param": mean_demand, 
+            "std_dev_param": std_demand,
+            "name": f"Distribución Normal - {product_name.title()}"
+        },
+        "dulce de leche": {
+            "distribution_type": 3,  # Log-Normal
+            "mean_param": np.log(mean_demand / np.sqrt(1 + (std_demand/mean_demand)**2)),
+            "std_dev_param": np.sqrt(np.log(1 + (std_demand/mean_demand)**2)),
+            "name": f"Distribución Log-Normal - {product_name.title()}"
+        }
     }
-}
+    
+    return configs.get(product_name.lower(), configs["leche"])
 
 # Función helper para crear simulación completa
 def create_complete_simulation(product_name, scenario_index=0):
     """
     Crea una configuración completa de simulación para un producto y escenario
-    
-    Args:
-        product_name: Nombre del producto ('leche', 'queso', 'yogur')
-        scenario_index: Índice del escenario (0=optimista/expansión, 1=conservador/estable, 2=pesimista/crisis)
-    
-    Returns:
-        Dict con configuración completa de simulación
     """
     simulations = get_simulations_by_product(product_name)
     if not simulations or scenario_index >= len(simulations):
         return None
     
     simulation = simulations[scenario_index].copy()
-    pdf_config = pdf_config_by_product.get(product_name.lower(), {})
+    pdf_config = get_pdf_config_by_product(product_name)
     
     return {
         "simulation_config": simulation,
@@ -461,27 +342,79 @@ def create_complete_simulation(product_name, scenario_index=0):
         "product": product_name
     }
 
-# Datos de ejemplo para ResultSimulation mejorado por producto
-result_simulation_data_by_product = {
-    "leche": {
-        "demand_mean": 2500.0,
-        "demand_std_deviation": 250.0,
-        "price_per_unit": 15.50,
-        "unit": "Litros",
-        "currency": "Bs"
-    },
-    "queso": {
-        "demand_mean": 185.0,
-        "demand_std_deviation": 20.0,
-        "price_per_unit": 85.00,
-        "unit": "Kilogramos",
-        "currency": "Bs"
-    },
-    "yogur": {
-        "demand_mean": 330.0,
-        "demand_std_deviation": 35.0,
-        "price_per_unit": 22.00,
-        "unit": "Litros",
+# Datos de ejemplo para ResultSimulation basados en el cuestionario
+def get_result_simulation_data(product_name):
+    """Genera datos de resultado basados en respuestas del cuestionario"""
+    answers = get_realistic_answers(product_name.lower())
+    
+    precio = extract_answer_value(answers, 'precio_actual')
+    demanda_historica = extract_answer_value(answers, 'demanda_historica')
+    
+    if demanda_historica:
+        mean_demand = np.mean(demanda_historica)
+        std_demand = np.std(demanda_historica)
+    else:
+        mean_demand = extract_answer_value(answers, 'produccion_actual') or 100
+        std_demand = mean_demand * 0.1
+    
+    # Determinar unidad según producto
+    units = {
+        "leche": "Litros",
+        "queso": "Kilogramos", 
+        "yogur": "Litros",
+        "mantequilla": "Kilogramos",
+        "crema de leche": "Litros",
+        "leche deslactosada": "Litros",
+        "dulce de leche": "Kilogramos"
+    }
+    
+    return {
+        "demand_mean": mean_demand,
+        "demand_std_deviation": std_demand,
+        "price_per_unit": precio,
+        "unit": units.get(product_name.lower(), "Unidades"),
         "currency": "Bs"
     }
-}
+
+# Datos de funciones de densidad probabilística
+pdf_data = [
+    {
+        "name": "Distribución Normal - Demanda Estándar",
+        "distribution_type": 1,
+        "mean_param": 2500.0,
+        "std_dev_param": 250.0,
+        "cumulative_distribution_function": 0.5,
+        "description": "Modelo de demanda normal para productos lácteos con variación estándar"
+    },
+    {
+        "name": "Distribución Exponencial - Tiempos Entre Pedidos",
+        "distribution_type": 2,
+        "lambda_param": 0.2,
+        "cumulative_distribution_function": 0.63,
+        "description": "Modela el tiempo entre pedidos de clientes mayoristas"
+    },
+    {
+        "name": "Distribución Log-Normal - Demanda Variable",
+        "distribution_type": 3,
+        "mean_param": 7.5,
+        "std_dev_param": 0.5,
+        "cumulative_distribution_function": 0.5,
+        "description": "Para productos con demanda altamente variable"
+    },
+    {
+        "name": "Distribución Gamma - Demanda Estacional",
+        "distribution_type": 4,
+        "shape_param": 3.0,
+        "scale_param": 800.0,
+        "cumulative_distribution_function": 0.58,
+        "description": "Modela demanda con estacionalidad marcada"
+    },
+    {
+        "name": "Distribución Uniforme - Demanda Constante",
+        "distribution_type": 5,
+        "min_param": 2000.0,
+        "max_param": 3000.0,
+        "cumulative_distribution_function": 0.5,
+        "description": "Para productos con demanda estable y predecible"
+    }
+]
