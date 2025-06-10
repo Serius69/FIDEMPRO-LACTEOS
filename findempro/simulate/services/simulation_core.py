@@ -1,66 +1,61 @@
-# services/simulation_service.py - VERSIÓN COMPLETA MEJORADA
-import json
+# simulation_core.py
 import logging
 import random
-import statistics
+import json
 import re
+import numpy as np
 from datetime import timedelta
 from typing import Dict, List, Optional, Tuple, Any
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import numpy as np
-import sympy as sp
-from sympy import symbols, Eq, solve
-from scipy import stats
-
-from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 
 from ..models import (
-    Simulation, ResultSimulation, Demand, DemandBehavior,
-    ProbabilisticDensityFunction
+    Simulation, ResultSimulation, ProbabilisticDensityFunction
 )
 from ..validators.simulation_validators import SimulationValidator
 from ..utils.data_parsers import DataParser
-
-from business.models import Business
-from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
-from product.models import Product, Area
-from questionary.models import QuestionaryResult, Answer, Question
+from product.models import Area
+from questionary.models import Answer, QuestionaryResult
 from variable.models import Variable, Equation
 
 logger = logging.getLogger(__name__)
 
-
-class SimulationService:
-    """Enhanced service class for handling simulation business logic"""
-    
+class SimulationCore:
     def __init__(self):
         self.validator = SimulationValidator()
-        self.cache_timeout = 3600  # 1 hour cache
-        self.batch_size = 100  # For bulk operations
+        self.cache_timeout = 3600
+        self.batch_size = 100
         
-        # Mapeo completo de variables desde questionary a variables del sistema
-        self.variable_mapping = {
-            # Mapeo desde respuestas a iniciales de variables
+        # Mapeo mejorado desde respuestas del cuestionario a variables
+        self.question_to_variable_mapping = {
+            # Mapeo desde textos de preguntas a iniciales de variables
             'precio_actual': 'PVP',
+            'precio_venta': 'PVP',
+            'precio_producto': 'PVP',
             'demanda_historica': 'DH',
+            'demanda_promedio': 'DH',
             'produccion_actual': 'QPL',
+            'cantidad_produccion': 'QPL',
             'demanda_esperada': 'DE',
             'capacidad_inventario': 'CIP',
             'estacionalidad': 'ED',
             'costo_unitario_insumo': 'CUIP',
+            'costo_insumos': 'CUIP',
             'tiempo_entre_compras': 'TPC',
             'clientes_diarios': 'CPD',
+            'clientes_por_dia': 'CPD',
             'numero_empleados': 'NEPP',
+            'empleados': 'NEPP',
             'capacidad_produccion': 'CPROD',
             'sueldos_salarios': 'SE',
+            'salarios': 'SE',
             'precio_competencia': 'PC',
             'costo_fijo_diario': 'CFD',
+            'costos_fijos': 'CFD',
             'costo_transporte': 'CUTRANS',
             'gastos_marketing': 'GMM',
+            'marketing': 'GMM',
             'tiempo_reabastecimiento': 'TR',
             'insumos_por_producto': 'CINSP',
             'capacidad_almacenamiento': 'CMIPF',
@@ -75,52 +70,91 @@ class SimulationService:
             'cantidad_promedio_lote': 'CPL'
         }
         
-        # Valores por defecto para variables críticas
+        # Valores por defecto SOLO como respaldo (se deben usar los valores reales del cuestionario)
+        # Initialize empty defaults dictionary
+        self.default_values = {}
         
-        self.default_values = {
-            'PVP': 15.50,
-            'CPD': 85,
-            'VPC': 30,
-            'TCAE': 85,
-            'SE': 48000,
-            'CFD': 1800,
-            'GMM': 3500,
-            'CUIP': 8.20,
-            'CPROD': 3000,
-            'NEPP': 15,
-            'CPPL': 500,
-            'CPL': 2500,
-            'QPL': 2500,
-            'CUTRANS': 0.35,
-            'CTPLV': 1500,
-            'TPE': 45,
-            'ED': 1.0,
-            'PC': 15.80,
-            'TPC': 2,
-            'TR': 3,
-            'CINSP': 1.05,
-            'SI': 3000,
-            'DPL': 3,
-            'TMP': 1,
-            'NPD': 3,
-            'CTL': 2800,
-            'MLP': 480,
-            'DE': 2650,
-            'DH': 2500,
-            'CIP': 15000,
-            'CMIPF': 20000,
-            'II': 5000,
-            'IPF': 1000,
-            'PI': 3000,
-            'UII': 2500,
-            'PPL': 500,
-            'TPPRO': 3000,
-            'TPV': 2550,
-            'DI': 100,
-            'TCA': 2550,
-            'NMD': 30
-        }
+        def get_product_defaults(product_type):
+            """Get default values based on product type"""
+            
+            # Base defaults that apply to all products
+            base = {
+            'ED': 1.0,  # Seasonality factor
+            'NMD': 30,  # Number of days
+            'TPC': 2,   # Time between purchases
+            'TR': 3,    # Restocking time
+            'TMP': 1,   # Order processing time
+            'NPD': 3,   # Number of suppliers
+            }
+            
+            # Product-specific defaults
+            product_defaults = {
+            'MILK': {  # Leche
+                'PVP': 1.50,      # Precio venta
+                'CPD': 200,       # Clientes por día 
+                'VPC': 2,         # Ventas por cliente
+                'CUIP': 0.80,     # Costo unitario insumo
+                'CPROD': 5000,    # Capacidad producción
+                'NEPP': 10,       # Número empleados
+                'SE': 35000,      # Sueldos
+                'CFD': 1200,      # Costos fijos
+                'GMM': 2500,      # Marketing
+                'DH': 4800,       # Demanda histórica
+                'DE': 5000,       # Demanda esperada
+            },
+            'CHEESE': {  # Queso
+                'PVP': 4.50,
+                'CPD': 150,
+                'VPC': 3,
+                'CUIP': 2.20,
+                'CPROD': 3000,
+                'NEPP': 12,
+                'SE': 40000,
+                'CFD': 1500,
+                'GMM': 3000,
+                'DH': 2800,
+                'DE': 3000,
+            },
+            'YOGURT': {  # Yogurt
+                'PVP': 2.50,
+                'CPD': 180,
+                'VPC': 4,
+                'CUIP': 1.20,
+                'CPROD': 4000,
+                'NEPP': 8,
+                'SE': 30000,
+                'CFD': 1000,
+                'GMM': 2000,
+                'DH': 3500,
+                'DE': 3800,
+            },
+            'DEFAULT': {  # Default values if product type not found
+                'PVP': 15.50,
+                'CPD': 85,
+                'VPC': 30,
+                'CUIP': 8.20,
+                'CPROD': 3000,
+                'NEPP': 15,
+                'SE': 48000,
+                'CFD': 1800,
+                'GMM': 3500,
+                'DH': 2500,
+                'DE': 2650,
+            }
+            }
+            
+            # Get specific defaults or use DEFAULT if not found
+            specific = product_defaults.get(product_type, product_defaults['DEFAULT'])
+            
+            # Merge base with specific defaults
+            return {**base, **specific}
+            
+        # Initialize with DEFAULT values, will be updated when simulation runs
+        self.default_values = get_product_defaults('DEFAULT')
         
+        # Store the function to get defaults based on product
+        self.get_product_defaults = get_product_defaults
+
     @transaction.atomic
     def create_simulation(self, form_data: Dict[str, Any]) -> Simulation:
         """Create a new simulation instance with validation and optimization"""
@@ -161,7 +195,7 @@ class SimulationService:
         except Exception as e:
             logger.error(f"Error creating simulation: {str(e)}")
             raise
-    
+
     @transaction.atomic
     def execute_simulation(self, simulation_instance: Simulation) -> None:
         """Execute simulation with complete equation processing"""
@@ -194,19 +228,21 @@ class SimulationService:
         except Exception as e:
             logger.error(f"Error executing simulation {simulation_instance.id}: {str(e)}")
             raise
-    
-    def _simulate_single_day_complete(
-        self, simulation_instance: Simulation, simulation_data: Dict[str, Any], 
-        day_index: int
-    ) -> Dict[str, Any]:
+
+    def _simulate_single_day_complete(self, simulation_instance, simulation_data, day_index):
         """Simulate a single day with complete variable initialization and calculation"""
         
-        # Initialize ALL variables with defaults and answers
-        variable_dict = self._initialize_all_variables(
+        # Initialize ALL variables with REAL data from questionnaire
+        variable_dict = self._initialize_variables_from_questionnaire(
             simulation_data['answers'], 
             simulation_instance, 
             day_index
         )
+        
+        # Log what we actually loaded
+        logger.info(f"Day {day_index}: Loaded {len(variable_dict)} variables from questionnaire")
+        for key, value in list(variable_dict.items())[:10]:  # Log first 10
+            logger.info(f"  {key} = {value}")
         
         # Generate demand prediction
         predicted_demand = self._generate_demand_prediction(
@@ -233,79 +269,140 @@ class SimulationService:
             'variable_initials_dict': variable_dict,
             'predicted_demand': predicted_demand
         }
-    
-    def _initialize_all_variables(
-        self, answers: List[Dict], simulation_instance: Simulation, day_index: int
-    ) -> Dict[str, float]:
-        """Initialize ALL variables with proper values"""
+
+    def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
+        """Initialize variables PRIMARILY from questionnaire data, defaults as fallback"""
         
-        # Start with default values
-        variable_dict = self.default_values.copy()
+        # Start with empty dict - NO defaults initially
+        variable_dict = {}
         
-        # Update NMD with actual simulation days
+        # Add only essential system variables
         variable_dict['NMD'] = float(simulation_instance.quantity_time)
-        
-        # Parse demand history
-        demand_history = self._parse_demand_history(simulation_instance.demand_history)
-        if demand_history:
-            variable_dict['DH'] = float(np.mean(demand_history))
-        
-        # Process answers and update variables
-        for answer_data in answers:
-            var_initials = answer_data.get('fk_question__fk_variable__initials')
-            answer_value = answer_data.get('answer')
-            
-            if not var_initials or answer_value is None:
-                continue
-            
-            # Direct mapping (variable already has correct initials)
-            if var_initials in variable_dict:
-                try:
-                    if var_initials == 'ED':  # Estacionalidad
-                        variable_dict[var_initials] = 1.0 if answer_value == 'Sí' else 0.5
-                    elif isinstance(answer_value, (list, tuple)):
-                        variable_dict[var_initials] = float(np.mean(answer_value))
-                    else:
-                        # Clean string values
-                        if isinstance(answer_value, str):
-                            cleaned = answer_value.replace(',', '').replace('$', '').replace('%', '')
-                            variable_dict[var_initials] = float(cleaned)
-                        else:
-                            variable_dict[var_initials] = float(answer_value)
-                except Exception as e:
-                    logger.warning(f"Could not process {var_initials}={answer_value}: {e}")
-            
-            # Check if it needs mapping
-            elif var_initials in self.variable_mapping.values():
-                # Find the key that maps to this variable
-                for key, mapped_var in self.variable_mapping.items():
-                    if mapped_var == var_initials:
-                        try:
-                            if isinstance(answer_value, str):
-                                cleaned = answer_value.replace(',', '').replace('$', '').replace('%', '')
-                                variable_dict[var_initials] = float(cleaned)
-                            else:
-                                variable_dict[var_initials] = float(answer_value)
-                        except:
-                            pass
-                        break
-        
-        # Add calculated initial values
         variable_dict['DIA'] = float(day_index + 1)
         variable_dict['random'] = lambda: random.random()
         
-        # Initialize state variables if not set
-        if 'TCAE' not in variable_dict or variable_dict['TCAE'] == 0:
-            variable_dict['TCAE'] = variable_dict['CPD'] * 0.95
+        # Parse demand history first
+        demand_history = self._parse_demand_history(simulation_instance.demand_history)
+        if demand_history:
+            variable_dict['DH'] = float(np.mean(demand_history))
+            logger.info(f"Loaded demand history average: {variable_dict['DH']}")
         
-        if 'VPC' not in variable_dict or variable_dict['VPC'] == 0:
-            variable_dict['VPC'] = 30.0
+        # Process ALL answers from questionnaire
+        questionnaire_values_loaded = 0
+        
+        logger.info(f"Processing {len(answers)} answers from questionnaire...")
+        
+        for answer_data in answers:
+            var_initials = answer_data.get('fk_question__fk_variable__initials')
+            answer_value = answer_data.get('answer')
+            question_text = answer_data.get('fk_question__question_text', '')
+            
+            if not answer_value:
+                continue
+            
+            logger.debug(f"Processing answer: {var_initials} = {answer_value} (question: {question_text[:50]}...)")
+            
+            # Method 1: Direct variable mapping (variable already has correct initials)
+            if var_initials:
+                processed_value = self._process_answer_value(answer_value, var_initials)
+                if processed_value is not None:
+                    variable_dict[var_initials] = processed_value
+                    questionnaire_values_loaded += 1
+                    logger.info(f"LOADED from questionnaire: {var_initials} = {processed_value}")
+                    continue
+            
+            # Method 2: Text-based mapping from question content
+            question_lower = question_text.lower() if question_text else ''
+            for key_phrase, mapped_var in self.question_to_variable_mapping.items():
+                if key_phrase in question_lower:
+                    processed_value = self._process_answer_value(answer_value, mapped_var)
+                    if processed_value is not None:
+                        variable_dict[mapped_var] = processed_value
+                        questionnaire_values_loaded += 1
+                        logger.info(f"MAPPED from questionnaire: {mapped_var} = {processed_value} (from '{key_phrase}')")
+                        break
+        
+        logger.info(f"Successfully loaded {questionnaire_values_loaded} values from questionnaire")
+        
+        # Now add defaults ONLY for missing essential variables
+        essential_missing = []
+        for var, default_val in self.default_values.items():
+            if var not in variable_dict:
+                variable_dict[var] = default_val
+                essential_missing.append(var)
+        
+        if essential_missing:
+            logger.warning(f"Used defaults for missing variables: {essential_missing[:10]}...")  # Show first 10
+        
+        # Special calculations for derived variables
+        self._calculate_derived_variables(variable_dict)
         
         return variable_dict
-    
-    def _calculate_all_equations(
-        self, equations: List, variable_dict: Dict[str, float]
-    ) -> Dict[str, float]:
+
+    def _process_answer_value(self, answer_value, variable_name):
+        """Process and clean answer values from questionnaire"""
+        try:
+            # Handle special cases
+            if variable_name == 'ED':  # Estacionalidad
+                if isinstance(answer_value, str):
+                    return 1.0 if answer_value.lower() in ['sí', 'si', 'yes', 'true'] else 0.5
+                return float(answer_value) if answer_value else 1.0
+            
+            # Handle list/array values
+            if isinstance(answer_value, (list, tuple)):
+                if len(answer_value) > 0:
+                    return float(np.mean([float(x) for x in answer_value if x is not None]))
+                return None
+            
+            # Handle string values
+            if isinstance(answer_value, str):
+                # Remove common formatting
+                cleaned = answer_value.replace(',', '').replace('$', '').replace('%', '').replace(' ', '')
+                
+                # Handle empty strings
+                if not cleaned:
+                    return None
+                
+                # Handle boolean-like strings
+                if cleaned.lower() in ['sí', 'si', 'yes', 'true']:
+                    return 1.0
+                elif cleaned.lower() in ['no', 'false']:
+                    return 0.0
+                
+                # Try to convert to float
+                try:
+                    return float(cleaned)
+                except ValueError:
+                    logger.warning(f"Could not convert string '{answer_value}' to number for {variable_name}")
+                    return None
+            
+            # Handle numeric values
+            if isinstance(answer_value, (int, float)):
+                return float(answer_value)
+            
+            logger.warning(f"Unknown answer type {type(answer_value)} for {variable_name}: {answer_value}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error processing answer value {answer_value} for {variable_name}: {e}")
+            return None
+
+    def _calculate_derived_variables(self, variable_dict):
+        """Calculate important derived variables"""
+        
+        # Calculate TCAE if not set (Total Clientes Atendidos Efectivamente)
+        if 'TCAE' not in variable_dict or variable_dict['TCAE'] == 0:
+            cpd = variable_dict.get('CPD', 85)
+            variable_dict['TCAE'] = cpd * 0.95  # 95% of daily clients served effectively
+            logger.info(f"Calculated TCAE = {variable_dict['TCAE']} (from CPD = {cpd})")
+        
+        # Calculate VPC if not set (Ventas Por Cliente)
+        if 'VPC' not in variable_dict or variable_dict['VPC'] == 0:
+            pvp = variable_dict.get('PVP', 15.50)
+            variable_dict['VPC'] = pvp * 2  # Approximate sales per client
+            logger.info(f"Calculated VPC = {variable_dict['VPC']} (from PVP = {pvp})")
+
+    def _calculate_all_equations(self, equations, variable_dict):
         """Calculate all equations in dependency order"""
         
         endogenous_results = {}
@@ -335,6 +432,7 @@ class SimulationService:
         # Process equations by area in order
         for area in area_order:
             if area in equations_by_area:
+                logger.debug(f"Processing {len(equations_by_area[area])} equations for area: {area}")
                 for equation in equations_by_area[area]:
                     self._solve_single_equation(
                         equation, variable_dict, endogenous_results
@@ -343,6 +441,7 @@ class SimulationService:
         # Process any remaining areas
         for area, eqs in equations_by_area.items():
             if area not in area_order:
+                logger.debug(f"Processing {len(eqs)} equations for remaining area: {area}")
                 for equation in eqs:
                     self._solve_single_equation(
                         equation, variable_dict, endogenous_results
@@ -367,12 +466,11 @@ class SimulationService:
         # Calculate critical missing variables manually
         self._calculate_missing_critical_variables(variable_dict, endogenous_results)
         
+        logger.info(f"Calculated {len(endogenous_results)} endogenous variables")
+        
         return endogenous_results
-    
-    def _solve_single_equation(
-        self, equation: Equation, variable_dict: Dict[str, float], 
-        endogenous_results: Dict[str, float]
-    ) -> None:
+
+    def _solve_single_equation(self, equation, variable_dict, endogenous_results):
         """Solve a single equation and update results"""
         
         try:
@@ -405,8 +503,8 @@ class SimulationService:
         
         except Exception as e:
             logger.debug(f"Could not solve equation {equation.expression}: {e}")
-    
-    def _preprocess_expression(self, expression: str) -> str:
+
+    def _preprocess_expression(self, expression):
         """Preprocess expression to handle special cases"""
         
         # Remove summation symbol
@@ -420,8 +518,8 @@ class SimulationService:
         expression = re.sub(r'min\s*\(', 'min(', expression)
         
         return expression
-    
-    def _evaluate_expression(self, expression: str, variables: Dict[str, float]) -> Optional[float]:
+
+    def _evaluate_expression(self, expression, variables):
         """Safely evaluate mathematical expression"""
         
         try:
@@ -452,46 +550,50 @@ class SimulationService:
         except Exception as e:
             logger.debug(f"Could not evaluate expression '{expression}': {e}")
             return None
-    
-    def _calculate_missing_critical_variables(
-        self, variable_dict: Dict[str, float], 
-        endogenous_results: Dict[str, float]
-    ) -> None:
-        """Calculate critical variables that might be missing"""
+
+    def _calculate_missing_critical_variables(self, variable_dict, endogenous_results):
+        """Calculate critical variables that might be missing using REAL questionnaire data"""
+        
+        # Use real values from questionnaire instead of hardcoded defaults
+        cpd = variable_dict.get('CPD', 85)
+        pvp = variable_dict.get('PVP', 15.50)
+        vpc = variable_dict.get('VPC', 30)
+        cuip = variable_dict.get('CUIP', 8.20)
+        cprod = variable_dict.get('CPROD', 3000)
+        cfd = variable_dict.get('CFD', 1800)
+        se = variable_dict.get('SE', 48000)
+        gmm = variable_dict.get('GMM', 3500)
+        nepp = variable_dict.get('NEPP', 15)
         
         # Ensure TCAE is calculated
         if 'TCAE' not in endogenous_results:
-            endogenous_results['TCAE'] = variable_dict.get('CPD', 85) * 0.95
+            endogenous_results['TCAE'] = variable_dict.get('TCAE', cpd * 0.95)
         
         # Calculate TPV if missing
         if 'TPV' not in endogenous_results:
-            tcae = endogenous_results.get('TCAE', variable_dict.get('TCAE', 85))
-            vpc = variable_dict.get('VPC', 30)
+            tcae = endogenous_results.get('TCAE', variable_dict.get('TCAE', cpd * 0.95))
             endogenous_results['TPV'] = tcae * vpc
         
         # Calculate IT if missing
         if 'IT' not in endogenous_results:
             tpv = endogenous_results.get('TPV', 2550)
-            pvp = variable_dict.get('PVP', 15.50)
             endogenous_results['IT'] = tpv * pvp
         
         # Calculate CTAI if missing
         if 'CTAI' not in endogenous_results:
-            cuip = variable_dict.get('CUIP', 8.20)
-            tppro = endogenous_results.get('TPPRO', variable_dict.get('CPROD', 3000))
+            tppro = endogenous_results.get('TPPRO', variable_dict.get('CPROD', cprod))
             endogenous_results['CTAI'] = cuip * tppro
         
         # Calculate GO if missing
         if 'GO' not in endogenous_results:
-            cfd = variable_dict.get('CFD', 1800)
-            se_daily = variable_dict.get('SE', 48000) / 30
-            ctai = endogenous_results.get('CTAI', 24600)
+            se_daily = se / 30
+            ctai = endogenous_results.get('CTAI', cuip * cprod)
             endogenous_results['GO'] = cfd + se_daily + ctai
         
         # Calculate GG if missing
         if 'GG' not in endogenous_results:
             go = endogenous_results.get('GO', 28000)
-            gmm_daily = variable_dict.get('GMM', 3500) / 30
+            gmm_daily = gmm / 30
             endogenous_results['GG'] = go + gmm_daily
         
         # Calculate TG if missing
@@ -506,7 +608,7 @@ class SimulationService:
             tg = endogenous_results.get('TG', 56116)
             endogenous_results['GT'] = it - tg
         
-        # Calculate other important metrics
+        # Calculate other important metrics using real data
         if 'MB' not in endogenous_results and 'IT' in endogenous_results:
             it = endogenous_results['IT']
             gt = endogenous_results.get('GT', 0)
@@ -521,7 +623,6 @@ class SimulationService:
         
         if 'PE' not in endogenous_results:
             tpv = endogenous_results.get('TPV', 2550)
-            nepp = variable_dict.get('NEPP', 15)
             if nepp > 0:
                 endogenous_results['PE'] = tpv / nepp
         
@@ -533,7 +634,6 @@ class SimulationService:
         
         if 'FU' not in endogenous_results:
             tpv = endogenous_results.get('TPV', 2550)
-            cprod = variable_dict.get('CPROD', 3000)
             if cprod > 0:
                 endogenous_results['FU'] = min(tpv / cprod, 1.0)
         
@@ -546,11 +646,8 @@ class SimulationService:
         for var in ['TPPRO', 'IPF', 'II', 'RTI', 'CA', 'CTTL']:
             if var not in endogenous_results:
                 endogenous_results[var] = 0.0
-    
-    def _merge_results(
-        self, variable_dict: Dict[str, float], 
-        endogenous_results: Dict[str, float]
-    ) -> Dict[str, float]:
+
+    def _merge_results(self, variable_dict, endogenous_results):
         """Merge all results ensuring completeness"""
         
         # Start with endogenous results
@@ -567,21 +664,18 @@ class SimulationService:
                 final_results[var] = variable_dict[var]
         
         return final_results
-    
-    def _generate_demand_prediction(
-        self, simulation_instance: Simulation, variable_dict: Dict[str, float], 
-        day_index: int
-    ) -> float:
+
+    def _generate_demand_prediction(self, simulation_instance, variable_dict, day_index):
         """Generate demand prediction using the selected FDP"""
         try:
             fdp = simulation_instance.fk_fdp
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
             
-            # Calculate base statistics
+            # Calculate base statistics from REAL data
             mean_demand = np.mean(demand_history) if demand_history else variable_dict.get('DH', 2500)
             std_demand = np.std(demand_history) if demand_history else mean_demand * 0.1
             
-            # Add seasonality factor
+            # Add seasonality factor from questionnaire
             seasonality = variable_dict.get('ED', 1.0)
             
             # Generate prediction based on distribution type
@@ -629,8 +723,8 @@ class SimulationService:
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
             mean_demand = np.mean(demand_history) if demand_history else 2500
             return max(1.0, mean_demand * (0.9 + random.random() * 0.2))
-    
-    def _get_output_variable(self, equation: Equation) -> Optional[str]:
+
+    def _get_output_variable(self, equation):
         """Get the output variable from an equation"""
         try:
             if hasattr(equation, 'expression') and '=' in equation.expression:
@@ -639,8 +733,8 @@ class SimulationService:
             return None
         except:
             return None
-    
-    def _parse_demand_history(self, demand_history: Any) -> List[float]:
+
+    def _parse_demand_history(self, demand_history):
         """Parse demand history string to list of floats"""
         try:
             parser = DataParser()
@@ -658,8 +752,8 @@ class SimulationService:
                 return [float(x) for x in demand_history]
             else:
                 return []
-    
-    def _prepare_simulation_data(self, simulation_instance: Simulation) -> Dict[str, Any]:
+
+    def _prepare_simulation_data(self, simulation_instance):
         """Prepare all simulation data with optimized queries"""
         product = simulation_instance.fk_questionary_result.fk_questionary.fk_product
         
@@ -681,11 +775,19 @@ class SimulationService:
             fk_product=product
         ).values('id', 'name', 'initials', 'unit')
         
+        # CRITICAL: Get complete answer data including question text
         answers = Answer.objects.filter(
             fk_questionary_result=simulation_instance.fk_questionary_result
-        ).select_related('fk_question__fk_variable').values(
-            'fk_question_id', 'fk_question__fk_variable__initials', 'answer'
+        ).select_related(
+            'fk_question__fk_variable'
+        ).values(
+            'fk_question_id', 
+            'fk_question__fk_variable__initials', 
+            'fk_question__question_text',  # Added question text for mapping
+            'answer'
         )
+        
+        logger.info(f"Loaded {len(list(answers))} answers from questionnaire")
         
         return {
             'areas': list(areas),
@@ -694,10 +796,8 @@ class SimulationService:
             'answers': list(answers),
             'product': product
         }
-    
-    def _bulk_save_results(
-        self, simulation_instance: Simulation, results: List[Tuple[int, Dict]]
-    ) -> None:
+
+    def _bulk_save_results(self, simulation_instance, results):
         """Bulk save simulation results"""
         result_objects = []
         
@@ -740,175 +840,3 @@ class SimulationService:
         
         if result_objects:
             ResultSimulation.objects.bulk_create(result_objects)
-    
-    # Mantener los otros métodos existentes
-    def analyze_financial_results(self, simulation_id: int, totales_acumulativos: Dict[str, Dict]) -> Dict[str, Any]:
-        """Analyze financial results with enhanced insights"""
-        try:
-            simulation = Simulation.objects.select_related(
-                'fk_questionary_result__fk_questionary__fk_product__fk_business'
-            ).get(id=simulation_id)
-            
-            business_instance = simulation.fk_questionary_result.fk_questionary.fk_product.fk_business
-            
-            results = ResultSimulation.objects.filter(
-                fk_simulation_id=simulation_id,
-                is_active=True
-            ).order_by('date')
-            
-            if results.exists():
-                first_result = results.first()
-                last_result = results.last()
-                initial_demand = float(first_result.demand_mean)
-                predicted_demand = float(last_result.demand_mean)
-            else:
-                demand_stats = simulation.get_demand_statistics()
-                initial_demand = demand_stats['mean']
-                predicted_demand = demand_stats['mean']
-            
-            growth_rate = self._calculate_growth_rate(initial_demand, predicted_demand)
-            error_permisible = self._calculate_error(initial_demand, predicted_demand)
-            
-            recommendations = []
-            try:
-                recommendations = self._generate_financial_recommendations_optimized(
-                    business_instance, totales_acumulativos, simulation
-                )
-            except Exception as e:
-                logger.warning(f"Could not generate recommendations: {str(e)}")
-            
-            insights = self._calculate_additional_insights(
-                totales_acumulativos, growth_rate, error_permisible
-            )
-            
-            class DemandData:
-                def __init__(self, quantity):
-                    self.quantity = quantity
-            
-            return {
-                'demand_initial': DemandData(initial_demand),
-                'demand_predicted': DemandData(predicted_demand),
-                'growth_rate': growth_rate,
-                'error_permisible': error_permisible,
-                # 'financial_recommendations_to_show': recommendations,
-                # 'insights': insights,
-                'has_results': results.exists(),
-                'results_count': results.count(),
-            }
-            
-        except Simulation.DoesNotExist:
-            logger.error(f"Simulation {simulation_id} not found")
-            raise
-        except Exception as e:
-            logger.error(f"Error analyzing financial results: {str(e)}")
-            return {
-                'demand_initial': type('obj', (object,), {'quantity': 0})(),
-                'demand_predicted': type('obj', (object,), {'quantity': 0})(),
-                'growth_rate': 0,
-                'error_permisible': 0,
-                'financial_recommendations_to_show': [],
-                'insights': {
-                    'efficiency_score': 0,
-                    'profitability_index': 0,
-                    'risk_level': 'unknown',
-                    'opportunities': []
-                },
-                'has_results': False,
-                'results_count': 0,
-            }
-
-    def _calculate_growth_rate(self, initial: float, predicted: float) -> float:
-        """Calculate growth rate with safety checks"""
-        if initial == 0:
-            return 0.0
-        growth = ((predicted / initial) - 1) * 100
-        return round(abs(growth), 2)
-    
-    def _calculate_error(self, initial: float, predicted: float) -> float:
-        """Calculate permissible error"""
-        if initial == 0:
-            return 0.0
-        error = abs((initial - predicted) / initial) * 100
-        return round(error, 2)
-    
-    def _generate_financial_recommendations_optimized(
-        self, business_instance: Business, totales_acumulativos: Dict[str, Dict],
-        simulation_instance: Simulation
-    ) -> List[Dict[str, Any]]:
-        """Generate financial recommendations with batch processing"""
-        recommendations = FinanceRecommendation.objects.filter(
-            is_active=True,
-            fk_business=business_instance
-        ).select_related('fk_business')
-        
-        recommendations_to_show = []
-        recommendations_to_save = []
-        
-        for recommendation in recommendations:
-            variable_name = recommendation.variable_name
-            
-            if variable_name in totales_acumulativos:
-                variable_value = totales_acumulativos[variable_name]['total']
-                threshold_value = recommendation.threshold_value
-                
-                if threshold_value and variable_value > threshold_value:
-                    recommendations_to_show.append({
-                        'name': recommendation.name,
-                        'recommendation': recommendation.recommendation,
-                        'variable_name': variable_name,
-                        'severity': self._calculate_severity(variable_value, threshold_value)
-                    })
-                    
-                    recommendations_to_save.append(
-                        FinanceRecommendationSimulation(
-                            data=variable_value,
-                            fk_simulation=simulation_instance,
-                        )
-                    )
-        
-        if recommendations_to_save:
-            FinanceRecommendationSimulation.objects.bulk_create(recommendations_to_save)
-        
-        recommendations_to_show.sort(key=lambda x: x['severity'], reverse=True)
-        
-        return recommendations_to_show
-    
-    def _calculate_severity(self, value: float, threshold: float) -> float:
-        if threshold == 0:
-            return 0.0
-        value = float(value)
-        threshold = float(threshold)
-        excess_percentage = ((value - threshold) / threshold) * 100
-        return min(100, excess_percentage)
-    
-    def _calculate_additional_insights(
-        self, totales_acumulativos: Dict[str, Dict], growth_rate: float, 
-        error_permisible: float
-    ) -> Dict[str, Any]:
-        """Calculate additional business insights"""
-        insights = {
-            'efficiency_score': 0,
-            'profitability_index': 0,
-            'risk_level': 'low',
-            'opportunities': []
-        }
-        
-        if 'INGRESOS TOTALES' in totales_acumulativos and 'GASTOS TOTALES' in totales_acumulativos:
-            income = totales_acumulativos['INGRESOS TOTALES']['total']
-            expenses = totales_acumulativos['GASTOS TOTALES']['total']
-            
-            if income > 0:
-                insights['efficiency_score'] = round((1 - expenses / income) * 100, 2)
-                insights['profitability_index'] = round(income / expenses, 2)
-        
-        if error_permisible > 15 or growth_rate < -10:
-            insights['risk_level'] = 'high'
-        elif error_permisible > 10 or growth_rate < 0:
-            insights['risk_level'] = 'medium'
-        
-        if growth_rate > 20:
-            insights['opportunities'].append('Expansión rápida detectada')
-        if insights['efficiency_score'] > 30:
-            insights['opportunities'].append('Alta eficiencia operativa')
-        
-        return insights

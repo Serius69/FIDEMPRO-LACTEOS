@@ -387,11 +387,11 @@ def export_recommendations(request):
     
     # Obtener recomendaciones
     recommendations = FinanceRecommendationSimulation.objects.filter(
-        fk_finance_recommendation__fk_business=business_id,
+        finance_recommendation_simulations__fk_business=business_id,
         is_active=True
     ).select_related(
         'fk_simulation__fk_questionary_result__fk_questionary__fk_product',
-        'fk_finance_recommendation'
+        'finance_recommendation_simulations'
     )
     
     # Crear respuesta CSV
@@ -404,15 +404,15 @@ def export_recommendations(request):
         'Umbral', 'Recomendación'
     ])
     
-    for rec in recommendations:
-        writer.writerow([
-            rec.fk_simulation.date_created.strftime('%Y-%m-%d'),
-            rec.fk_simulation.fk_questionary_result.fk_questionary.fk_product.name,
-            rec.fk_finance_recommendation.variable_name,
-            f"{rec.data * 100:.2f}",
-            rec.fk_finance_recommendation.threshold_value,
-            rec.fk_finance_recommendation.recommendation
-        ])
+    # for rec in recommendations:
+    #     writer.writerow([
+    #         rec.fk_simulation.date_created.strftime('%Y-%m-%d'),
+    #         rec.fk_simulation.fk_questionary_result.fk_questionary.fk_product.name,
+    #         rec.finance_recommendation_simulations.variable_name,
+    #         f"{rec.data * 100:.2f}",
+    #         rec.finance_recommendation_simulations.threshold_value,
+    #         rec.finance_recommendation_simulations.recommendation
+    #     ])
     
     return response
 

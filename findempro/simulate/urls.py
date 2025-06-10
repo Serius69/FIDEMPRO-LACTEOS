@@ -1,12 +1,8 @@
-# urls.py
 from django.urls import path
-from .views.simulation_views import (
-    SimulateListView,
-    simulate_show_view,
-    simulate_result_simulation_view,
-    simulate_add_view,
-    AppsView
-)
+from .views.simulate_show_view import AppsView, simulate_show_view
+from .views.simulate_result_view import simulate_result_simulation_view
+from .views.simulate_list_add_view import SimulateListView, simulate_add_view
+
 from .views.api_views import (
     SimulationProgressView,
     SimulationRetryView,
@@ -27,7 +23,7 @@ urlpatterns = [
     path("result/<int:simulation_id>/delete/", view=simulate_add_view, name="simulate.delete"),
     path("result/<int:simulation_id>/view/", view=simulate_result_simulation_view, name="simulate.view"),
     path("list/", view=SimulateListView.as_view(), name="simulate.list"),
-    
+
     # API endpoints
     path("api/progress/<int:simulation_id>/", view=SimulationProgressView.as_view(), name="api.progress"),
     path("api/retry/<int:simulation_id>/", view=SimulationRetryView.as_view(), name="api.retry"),
