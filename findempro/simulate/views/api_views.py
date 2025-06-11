@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 
 from ..models import Simulation, ResultSimulation
-from ..services.simulation_service import SimulationService
+from ..services.simulation_core import SimulationCore
 
 import logging
 
@@ -68,7 +68,7 @@ class SimulationRetryView(LoginRequiredMixin, View):
             simulation.demands.all().delete()
             
             # Re-execute simulation
-            service = SimulationService()
+            service = SimulationCore()
             service.execute_simulation(simulation)
             
             return JsonResponse({
@@ -138,7 +138,7 @@ class SimulationStartView(LoginRequiredMixin, View):
                 })
             
             # Execute simulation
-            service = SimulationService()
+            service = SimulationCore()
             service.execute_simulation(simulation)
             
             return JsonResponse({

@@ -11,7 +11,7 @@ from .chart_demand import ChartDemand
 
 logger = logging.getLogger(__name__)
 
-class ChartGenerator(ChartBase, ChartDemand):
+class ChartGenerator(ChartDemand):
     """Main chart generator class that combines all chart functionality"""
     
     def __init__(self):

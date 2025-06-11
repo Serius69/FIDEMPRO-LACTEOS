@@ -1,39 +1,16 @@
+import numpy as np
 from django.views.generic import View
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from ..models import Simulation, ResultSimulation
-from ..services.simulation_service import SimulationService
-from ..utils.chart_generators import ChartGenerator
-from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
-
-
-import numpy as np
-from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db import transaction
-from django.db.models import Prefetch, Q, Count, Avg, Sum, Exists, OuterRef
-from django.http import HttpResponseRedirect, HttpResponseNotFound, JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.generic import TemplateView, View
+from django.views.generic import View
 
-from ..forms import SimulationForm
-from ..models import Simulation, ResultSimulation, Demand
-from ..services.simulation_service import SimulationService
-from ..services.statistical_service import StatisticalService
-from ..utils.chart_generators import ChartGenerator
-from ..validators.simulation_validators import SimulationValidator
-
-from business.models import Business
+from ..models import Simulation, ResultSimulation
+from ..services.simulation_core import SimulationCore
+from ..services.simulation_financial import SimulationFinancial
+from ..utils.chart_utils import ChartGenerator
 from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
-from product.models import Product, Area
-from questionary.models import QuestionaryResult, Questionary, Answer, Question
-from variable.models import Variable, Equation, EquationResult
 
 import json
 import logging
@@ -138,7 +115,7 @@ class SimulateResultView(LoginRequiredMixin, View):
         )
         
         # Get financial analysis and recommendations
-        simulation_service = SimulationService()
+        simulation_service = SimulationFinancial()
         financial_results = simulation_service.analyze_financial_results(
             simulation_id, analysis_data['totales_acumulativos']
         )
@@ -324,7 +301,6 @@ class SimulateResultView(LoginRequiredMixin, View):
                         'rmse': 0,
                         'mae': 0
                     }
-        
         return stats
     
     def _calculate_trend(self, data):
@@ -551,8 +527,6 @@ class SimulateResultView(LoginRequiredMixin, View):
             results_page = paginator.page(paginator.num_pages)
         
         return results_page
-
-
 
 def simulate_result_simulation_view(request, simulation_id):
     view = SimulateResultView.as_view()

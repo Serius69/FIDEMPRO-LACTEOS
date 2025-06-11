@@ -2,39 +2,19 @@ from django.views.generic import View
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
+from django.db.models import Q, Count, Avg, Exists, OuterRef
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
 from ..models import Simulation, ResultSimulation
+from ..services.simulation_core import SimulationCore
+
 from business.models import Business
 from product.models import Product
-from questionary.models import QuestionaryResult, Answer
-from ..forms import SimulationForm
-from ..services.simulation_service import SimulationService
-import numpy as np
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db import transaction
-from django.db.models import Prefetch, Q, Count, Avg, Sum, Exists, OuterRef
-from django.http import HttpResponseRedirect, HttpResponseNotFound, JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.generic import TemplateView, View
+from questionary.models import QuestionaryResult
 
-from ..forms import SimulationForm
-from ..models import Simulation, ResultSimulation, Demand
-from ..services.simulation_service import SimulationService
-from ..services.statistical_service import StatisticalService
-from ..utils.chart_generators import ChartGenerator
-from ..validators.simulation_validators import SimulationValidator
-
-from business.models import Business
-from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
-from product.models import Product, Area
-from questionary.models import QuestionaryResult, Questionary, Answer, Question
-from variable.models import Variable, Equation, EquationResult
 import logging
 import json
 
@@ -93,7 +73,7 @@ class SimulateAddView(LoginRequiredMixin, View):
             }
             
             # Create and execute simulation
-            simulation_service = SimulationService()
+            simulation_service = SimulationCore()
             simulation_instance = simulation_service.create_simulation(form_data)
             
             # Execute simulation

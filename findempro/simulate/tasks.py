@@ -8,8 +8,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from .models import Simulation, ResultSimulation
-from .services.simulation_service import SimulationService
-from .utils.chart_generators import ChartGenerator
+from .services.simulation_core import SimulationCore
+from .utils.chart_base import ChartBase
+from .utils.chart_utils import ChartGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def execute_simulation_async(self, simulation_id: int) -> Dict[str, Any]:
         simulation.save()
         
         # Initialize service
-        service = SimulationService()
+        service = SimulationCore()
         
         # Update progress
         self.update_state(

@@ -238,3 +238,5 @@ class ChartBase:
             'cache_hits': stats.get('cache_hits', 0),
             'errors': stats.get('errors', 0),
         }
+        
+    

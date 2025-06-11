@@ -5,7 +5,7 @@ import json
 import re
 import numpy as np
 from datetime import timedelta
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, Any
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
