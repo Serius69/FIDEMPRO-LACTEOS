@@ -76,6 +76,7 @@ class SimulationService:
         }
         
         # Valores por defecto para variables críticas
+        
         self.default_values = {
             'PVP': 15.50,
             'CPD': 85,
@@ -789,8 +790,8 @@ class SimulationService:
                 'demand_predicted': DemandData(predicted_demand),
                 'growth_rate': growth_rate,
                 'error_permisible': error_permisible,
-                'financial_recommendations_to_show': recommendations,
-                'insights': insights,
+                # 'financial_recommendations_to_show': recommendations,
+                # 'insights': insights,
                 'has_results': results.exists(),
                 'results_count': results.count(),
             }
@@ -862,7 +863,6 @@ class SimulationService:
                         FinanceRecommendationSimulation(
                             data=variable_value,
                             fk_simulation=simulation_instance,
-                            fk_finance_recommendation=recommendation,
                         )
                     )
         
@@ -874,9 +874,10 @@ class SimulationService:
         return recommendations_to_show
     
     def _calculate_severity(self, value: float, threshold: float) -> float:
-        """Calculate severity score for recommendations"""
         if threshold == 0:
             return 0.0
+        value = float(value)
+        threshold = float(threshold)
         excess_percentage = ((value - threshold) / threshold) * 100
         return min(100, excess_percentage)
     
