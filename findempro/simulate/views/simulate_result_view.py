@@ -460,7 +460,7 @@ class SimulateResultView(LoginRequiredMixin, View):
         return np.mean(np.abs(actual - predicted))
     
     def _generate_dynamic_recommendations(self, simulation_instance, 
-                                        totales_acumulativos, financial_results):
+                                    totales_acumulativos, financial_results):
         """Generate dynamic recommendations based on simulation results"""
         recommendations = []
         business = simulation_instance.fk_questionary_result.fk_questionary.fk_product.fk_business
@@ -489,66 +489,133 @@ class SimulateResultView(LoginRequiredMixin, View):
                         'value': value,
                         'threshold': threshold,
                         'variable': rec.variable_name,
-                        'priority': 'high' if severity > 50 else 'medium' if severity > 20 else 'low'
+                        'priority': 'high' if severity > 50 else 'medium' if severity > 20 else 'low',
+                        'icon': self._get_recommendation_icon(rec.variable_name),
+                        'color': self._get_recommendation_color(severity)
                     })
         
-        # Add dynamic recommendations based on analysis
-        if 'insights' in financial_results:
-            insights = financial_results['insights']
+        # Add dynamic recommendations based on calculated metrics
+        
+        # 1. Efficiency Analysis
+        if 'TOTAL PRODUCTOS VENDIDOS' in totales_acumulativos and 'TOTAL PRODUCTOS PRODUCIDOS' in totales_acumulativos:
+            vendidos = totales_acumulativos['TOTAL PRODUCTOS VENDIDOS']['total']
+            producidos = totales_acumulativos['TOTAL PRODUCTOS PRODUCIDOS']['total']
+            if producidos > 0:
+                efficiency = (vendidos / producidos) * 100
+                if efficiency < 80:
+                    recommendations.append({
+                        'name': 'Eficiencia de Ventas Baja',
+                        'description': f'Solo se está vendiendo el {efficiency:.1f}% de la producción',
+                        'recommendation': 'Revisar estrategias de ventas y marketing. Considerar promociones o ajustar producción.',
+                        'severity': 90 - efficiency,
+                        'priority': 'high' if efficiency < 60 else 'medium',
+                        'variable': 'EFICIENCIA_VENTAS',
+                        'icon': 'bx-trending-down',
+                        'color': 'danger' if efficiency < 60 else 'warning'
+                    })
+        
+        # 2. Profitability Analysis
+        if 'INGRESOS TOTALES' in totales_acumulativos and 'GASTOS TOTALES' in totales_acumulativos:
+            ingresos = totales_acumulativos['INGRESOS TOTALES']['total']
+            gastos = totales_acumulativos.get('GASTOS TOTALES', {}).get('total', 0) or totales_acumulativos.get('Total Gastos', {}).get('total', 0)
             
-            # Efficiency recommendations
-            if insights.get('efficiency_score', 0) < 20:
+            if ingresos > 0:
+                profit_margin = ((ingresos - gastos) / ingresos) * 100
+                if profit_margin < 10:
+                    recommendations.append({
+                        'name': 'Margen de Ganancia Bajo',
+                        'description': f'El margen de ganancia es solo {profit_margin:.1f}%',
+                        'recommendation': 'Analizar estructura de costos y considerar optimizaciones o ajuste de precios.',
+                        'severity': 80,
+                        'priority': 'high',
+                        'variable': 'MARGEN_GANANCIA',
+                        'icon': 'bx-dollar-circle',
+                        'color': 'danger'
+                    })
+                elif profit_margin > 40:
+                    recommendations.append({
+                        'name': 'Excelente Margen de Ganancia',
+                        'description': f'El margen de ganancia es {profit_margin:.1f}%',
+                        'recommendation': 'Mantener estrategia actual. Considerar expansión o inversión en crecimiento.',
+                        'severity': 20,
+                        'priority': 'low',
+                        'variable': 'MARGEN_GANANCIA',
+                        'icon': 'bx-trophy',
+                        'color': 'success'
+                    })
+        
+        # 3. Inventory Analysis
+        if 'DEMANDA INSATISFECHA' in totales_acumulativos:
+            demanda_insatisfecha = totales_acumulativos['DEMANDA INSATISFECHA']['total']
+            if demanda_insatisfecha > 0:
                 recommendations.append({
-                    'name': 'Eficiencia Operativa Baja',
-                    'description': 'La eficiencia operativa está por debajo del umbral óptimo',
-                    'recommendation': 'Revisar procesos operativos y optimizar costos para mejorar la eficiencia',
-                    'severity': 80,
+                    'name': 'Demanda Insatisfecha Detectada',
+                    'description': f'Se dejó de atender {demanda_insatisfecha:.0f} unidades de demanda',
+                    'recommendation': 'Aumentar capacidad de producción o mejorar gestión de inventarios.',
+                    'severity': min(100, demanda_insatisfecha / 100),
                     'priority': 'high',
-                    'variable': 'EFICIENCIA'
-                })
-            
-            # Profitability recommendations
-            if insights.get('profitability_index', 0) < 1.2:
-                recommendations.append({
-                    'name': 'Índice de Rentabilidad Bajo',
-                    'description': 'El índice de rentabilidad está por debajo del nivel recomendado',
-                    'recommendation': 'Considerar estrategias para aumentar ingresos o reducir gastos',
-                    'severity': 60,
-                    'priority': 'medium',
-                    'variable': 'RENTABILIDAD'
-                })
-            
-            # Risk level recommendations
-            if insights.get('risk_level') == 'high':
-                recommendations.append({
-                    'name': 'Nivel de Riesgo Alto',
-                    'description': 'Se detectó un nivel de riesgo elevado en las operaciones',
-                    'recommendation': 'Implementar medidas de mitigación de riesgos y diversificación',
-                    'severity': 90,
-                    'priority': 'high',
-                    'variable': 'RIESGO'
+                    'variable': 'DEMANDA_INSATISFECHA',
+                    'icon': 'bx-error-circle',
+                    'color': 'danger'
                 })
         
-        # Growth rate recommendations
+        # 4. Cost Structure Analysis
+        if 'GASTOS OPERATIVOS' in totales_acumulativos and 'INGRESOS TOTALES' in totales_acumulativos:
+            gastos_op = totales_acumulativos['GASTOS OPERATIVOS']['total']
+            ingresos = totales_acumulativos['INGRESOS TOTALES']['total']
+            if ingresos > 0:
+                cost_ratio = (gastos_op / ingresos) * 100
+                if cost_ratio > 70:
+                    recommendations.append({
+                        'name': 'Costos Operativos Elevados',
+                        'description': f'Los costos operativos representan el {cost_ratio:.1f}% de los ingresos',
+                        'recommendation': 'Revisar y optimizar procesos operativos. Buscar eficiencias en la cadena de suministro.',
+                        'severity': cost_ratio,
+                        'priority': 'high',
+                        'variable': 'COSTOS_OPERATIVOS',
+                        'icon': 'bx-receipt',
+                        'color': 'warning'
+                    })
+        
+        # 5. Growth Analysis
         if 'growth_rate' in financial_results:
             growth = financial_results['growth_rate']
-            if growth < 0:
+            if growth < -5:
                 recommendations.append({
-                    'name': 'Decrecimiento Detectado',
-                    'description': f'La demanda muestra una tendencia negativa del {abs(growth):.2f}%',
-                   'recommendation': 'Implementar estrategias de marketing y revisar competitividad',
-                   'severity': 70,
-                   'priority': 'high',
-                   'variable': 'CRECIMIENTO'
-               })
-            elif growth > 50:
+                    'name': 'Tendencia Negativa en Demanda',
+                    'description': f'La demanda muestra una caída del {abs(growth):.1f}%',
+                    'recommendation': 'Implementar estrategias de retención y recuperación de clientes. Revisar competitividad.',
+                    'severity': min(100, abs(growth) * 2),
+                    'priority': 'high',
+                    'variable': 'CRECIMIENTO',
+                    'icon': 'bx-down-arrow-alt',
+                    'color': 'danger'
+                })
+            elif growth > 20:
                 recommendations.append({
                     'name': 'Crecimiento Acelerado',
-                    'description': f'La demanda muestra un crecimiento del {growth:.2f}%',
-                    'recommendation': 'Preparar infraestructura para manejar el aumento de demanda',
-                    'severity': 40,
+                    'description': f'La demanda crece al {growth:.1f}%',
+                    'recommendation': 'Preparar infraestructura para expansión. Asegurar capital de trabajo suficiente.',
+                    'severity': 30,
                     'priority': 'medium',
-                    'variable': 'CRECIMIENTO'
+                    'variable': 'CRECIMIENTO',
+                    'icon': 'bx-up-arrow-alt',
+                    'color': 'info'
+                })
+        
+        # 6. ROI Analysis
+        if 'Retorno Inversión' in totales_acumulativos:
+            roi = totales_acumulativos['Retorno Inversión']['total']
+            if roi < 1:
+                recommendations.append({
+                    'name': 'ROI Bajo',
+                    'description': f'El retorno de inversión es {roi:.2f}',
+                    'recommendation': 'Revisar estrategia de inversión y buscar oportunidades de mejora en eficiencia.',
+                    'severity': 70,
+                    'priority': 'medium',
+                    'variable': 'ROI',
+                    'icon': 'bx-line-chart-down',
+                    'color': 'warning'
                 })
         
         # Sort by priority and severity
@@ -562,6 +629,36 @@ class SimulateResultView(LoginRequiredMixin, View):
             self._save_recommendations_to_db(simulation_instance, recommendations[:10])
         
         return recommendations[:10]  # Return top 10 recommendations
+    
+    def _get_recommendation_icon(self, variable_name):
+        """Get appropriate icon for recommendation type"""
+        icon_map = {
+            'EFICIENCIA': 'bx-tachometer',
+            'RENTABILIDAD': 'bx-dollar-circle',
+            'RIESGO': 'bx-error-alt',
+            'CRECIMIENTO': 'bx-trending-up',
+            'COSTOS': 'bx-receipt',
+            'INVENTARIO': 'bx-box',
+            'VENTAS': 'bx-cart',
+            'PRODUCCION': 'bx-factory'
+        }
+        
+        for key, icon in icon_map.items():
+            if key in variable_name.upper():
+                return icon
+        
+        return 'bx-bulb'  # Default icon
+
+    def _get_recommendation_color(self, severity):
+        """Get color class based on severity"""
+        if severity >= 70:
+            return 'danger'
+        elif severity >= 40:
+            return 'warning'
+        elif severity >= 20:
+            return 'info'
+        else:
+            return 'success'
     
     def _save_recommendations_to_db(self, simulation_instance, recommendations):
         """Save generated recommendations to database"""

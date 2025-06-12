@@ -764,14 +764,31 @@ class SimulationCore:
         return final_results
 
     def _generate_demand_prediction(self, simulation_instance, variable_dict, day_index):
-        """Generate demand prediction using the selected FDP"""
+        """Generate demand prediction using the selected FDP with continuity from historical data"""
         try:
             fdp = simulation_instance.fk_fdp
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
             
             # Calculate base statistics from REAL data
-            mean_demand = np.mean(demand_history) if demand_history else variable_dict.get('DH', 2500)
-            std_demand = np.std(demand_history) if demand_history else mean_demand * 0.1
+            if demand_history and len(demand_history) > 0:
+                mean_demand = np.mean(demand_history)
+                std_demand = np.std(demand_history)
+                
+                # Get last historical value for continuity
+                last_historical_value = demand_history[-1]
+                
+                # Calculate trend from historical data
+                if len(demand_history) > 1:
+                    x = np.arange(len(demand_history))
+                    z = np.polyfit(x, demand_history, 1)
+                    historical_trend = z[0]  # Slope of historical trend
+                else:
+                    historical_trend = 0
+            else:
+                mean_demand = variable_dict.get('DH', 2500)
+                std_demand = mean_demand * 0.1
+                last_historical_value = mean_demand
+                historical_trend = 0
             
             # Add seasonality factor from questionnaire
             seasonality = variable_dict.get('ED', 1.0)
@@ -780,37 +797,48 @@ class SimulationCore:
             if fdp.distribution_type == 1:  # Normal
                 mean_param = fdp.mean_param if fdp.mean_param else mean_demand
                 std_param = fdp.std_dev_param if fdp.std_dev_param else std_demand
-                prediction = np.random.normal(mean_param, std_param)
+                base_prediction = np.random.normal(mean_param, std_param)
                 
             elif fdp.distribution_type == 2:  # Exponential
                 lambda_param = fdp.lambda_param if fdp.lambda_param else 1/mean_demand
-                prediction = np.random.exponential(1/lambda_param)
+                base_prediction = np.random.exponential(1/lambda_param)
                 
             elif fdp.distribution_type == 3:  # Log-Normal
                 mean_param = fdp.mean_param if fdp.mean_param else np.log(mean_demand)
                 std_param = fdp.std_dev_param if fdp.std_dev_param else std_demand/mean_demand
-                prediction = np.random.lognormal(mean_param, std_param)
+                base_prediction = np.random.lognormal(mean_param, std_param)
                 
             elif fdp.distribution_type == 4:  # Gamma
                 shape = fdp.shape_param if fdp.shape_param else (mean_demand/std_demand)**2
                 scale = fdp.scale_param if fdp.scale_param else std_demand**2/mean_demand
-                prediction = np.random.gamma(shape, scale)
+                base_prediction = np.random.gamma(shape, scale)
                 
             elif fdp.distribution_type == 5:  # Uniform
                 min_param = fdp.min_param if fdp.min_param else mean_demand - std_demand
                 max_param = fdp.max_param if fdp.max_param else mean_demand + std_demand
-                prediction = np.random.uniform(min_param, max_param)
+                base_prediction = np.random.uniform(min_param, max_param)
                 
             else:
                 # Default to normal distribution
-                prediction = np.random.normal(mean_demand, std_demand)
+                base_prediction = np.random.normal(mean_demand, std_demand)
+            
+            # Apply continuity adjustment for first day of simulation
+            if day_index == 0:
+                # Smooth transition from last historical value
+                continuity_factor = 0.7  # Weight for historical continuity
+                base_prediction = (continuity_factor * last_historical_value + 
+                                (1 - continuity_factor) * base_prediction)
             
             # Apply seasonality
-            prediction *= seasonality
+            prediction = base_prediction * seasonality
             
-            # Add trend component
-            trend_factor = 1 + (day_index * 0.002)  # 0.2% daily growth
+            # Apply trend component with historical continuity
+            trend_factor = 1 + (historical_trend / mean_demand) * (day_index + 1)
             prediction *= trend_factor
+            
+            # Add small random walk component for realism
+            random_walk = np.random.normal(0, std_demand * 0.05)
+            prediction += random_walk
             
             # Ensure positive demand
             return max(1.0, float(prediction))

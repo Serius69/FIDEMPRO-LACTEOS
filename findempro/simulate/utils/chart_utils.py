@@ -84,11 +84,13 @@ class ChartGenerator(ChartDemand):
         return all_variables_extracted
     
     def _calculate_cumulative_totals(self, results_simulation: List) -> Dict[str, Dict]:
-        """Calculate cumulative totals with optimization"""
+        """Calculate cumulative totals with optimization and trend analysis"""
         name_variables = self._get_variable_mapping()
         totales_acumulativos = {}
+        daily_values = {}  # Store daily values for trend calculation
         
-        for result_simulation in results_simulation:
+        # First pass: accumulate totals and store daily values
+        for i, result_simulation in enumerate(results_simulation):
             variables_extracted = result_simulation.get_variables()
             
             for inicial, value in variables_extracted.items():
@@ -98,10 +100,41 @@ class ChartGenerator(ChartDemand):
                     if name_variable not in totales_acumulativos:
                         totales_acumulativos[name_variable] = {
                             'total': 0, 
-                            'unit': name_variables[inicial]['unit']
+                            'unit': name_variables[inicial]['unit'],
+                            'daily_values': []
                         }
                     
                     totales_acumulativos[name_variable]['total'] += value
+                    totales_acumulativos[name_variable]['daily_values'].append(value)
+        
+        # Second pass: calculate trends and statistics
+        for name_variable, data in totales_acumulativos.items():
+            daily_values = data.get('daily_values', [])
+            
+            if daily_values:
+                # Calculate trend
+                if len(daily_values) > 1:
+                    x = np.arange(len(daily_values))
+                    z = np.polyfit(x, daily_values, 1)
+                    trend_slope = z[0]
+                    
+                    if trend_slope > 0.01:
+                        data['trend'] = 'increasing'
+                    elif trend_slope < -0.01:
+                        data['trend'] = 'decreasing'
+                    else:
+                        data['trend'] = 'stable'
+                else:
+                    data['trend'] = 'stable'
+                
+                # Calculate statistics
+                data['mean'] = np.mean(daily_values)
+                data['std'] = np.std(daily_values)
+                data['min'] = np.min(daily_values)
+                data['max'] = np.max(daily_values)
+                
+                # Remove daily_values from final output to save memory
+                del data['daily_values']
         
         return totales_acumulativos
     
@@ -151,14 +184,79 @@ class ChartGenerator(ChartDemand):
         return chart_data
     
     def _generate_charts_parallel(self, simulation_id: int, simulation_instance, 
-                                results_simulation: List, chart_data: Dict, 
-                                variables_to_graph: List, 
-                                historical_demand: List = None) -> Dict[str, str]:
+                            results_simulation: List, chart_data: Dict, 
+                            variables_to_graph: List, 
+                            historical_demand: List = None) -> Dict[str, str]:
         """Generate charts in parallel including demand comparison"""
         chart_images = {}
         
-        # Define chart configurations
-        chart_configs = self._get_chart_configurations(variables_to_graph)
+        # Define chart configurations with proper variable mappings
+        chart_configs = [
+            {
+                'key': 'image_data_0',
+                'type': 'bar',
+                'variables': ['INGRESOS TOTALES', 'GANANCIAS TOTALES'],
+                'title': 'Análisis Financiero: Ingresos vs Ganancias',
+                'description': 'Comparación entre ingresos totales y ganancias totales por período'
+            },
+            {
+                'key': 'image_data_1',
+                'type': 'bar',
+                'variables': ['TOTAL PRODUCTOS VENDIDOS', 'DEMANDA INSATISFECHA'],
+                'title': 'Eficiencia de Ventas',
+                'description': 'Relación entre productos vendidos y demanda no cubierta'
+            },
+            {
+                'key': 'image_data_2',
+                'type': 'line',
+                'variables': ['GASTOS GENERALES', 'GASTOS OPERATIVOS', 'Total Gastos'],
+                'title': 'Estructura de Costos',
+                'description': 'Evolución y composición de los gastos empresariales'
+            },
+            {
+                'key': 'image_data_3',
+                'type': 'bar',
+                'variables': ['Costo Unitario Producción', 'COSTO PROMEDIO PRODUCCION'],
+                'title': 'Análisis de Costos de Producción',
+                'description': 'Comparación de costos unitarios de producción'
+            },
+            {
+                'key': 'image_data_4',
+                'type': 'line',
+                'variables': ['Ingreso Bruto', 'INGRESOS TOTALES'],
+                'title': 'Tendencia de Ingresos',
+                'description': 'Evolución de ingresos brutos y totales en el período'
+            },
+            {
+                'key': 'image_data_5',
+                'type': 'line',
+                'variables': ['COSTO TOTAL TRANSPORTE', 'Costo Promedio Mano Obra', 
+                            'Costo Almacenamiento', 'COSTO TOTAL ADQUISICIÓN INSUMOS'],
+                'title': 'Desglose de Costos Operativos',
+                'description': 'Análisis detallado de los principales componentes de costo'
+            },
+            {
+                'key': 'image_data_6',
+                'type': 'line',
+                'variables': ['TOTAL PRODUCTOS PRODUCIDOS', 'TOTAL PRODUCTOS VENDIDOS'],
+                'title': 'Eficiencia Productiva',
+                'description': 'Relación entre producción y ventas efectivas'
+            },
+            {
+                'key': 'image_data_7',
+                'type': 'line',
+                'variables': ['COSTO PROMEDIO PRODUCCION', 'COSTO PROMEDIO VENTA'],
+                'title': 'Análisis de Costos Promedio',
+                'description': 'Evolución de costos promedio de producción y venta'
+            },
+            {
+                'key': 'image_data_8',
+                'type': 'line',
+                'variables': ['Retorno Inversión', 'GANANCIAS TOTALES'],
+                'title': 'Rentabilidad y ROI',
+                'description': 'Análisis de retorno de inversión y ganancias acumuladas'
+            }
+        ]
         
         # Generate main charts with ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=4) as executor:
@@ -173,18 +271,16 @@ class ChartGenerator(ChartDemand):
             
             # Standard demand charts
             if self._validate_chart_data(chart_data):
+                # Line chart for demand trend
                 futures['image_data_line'] = executor.submit(
-                    self._generate_single_chart,
-                    chart_data, 'linedemand', simulation_id, simulation_instance,
-                    results_simulation, 'Análisis de Demanda',
-                    'Comportamiento de la demanda simulada con tendencias'
+                    self._generate_demand_trend_chart,
+                    chart_data, historical_demand, results_simulation
                 )
                 
+                # Bar chart for demand distribution
                 futures['image_data_bar'] = executor.submit(
-                    self._generate_single_chart,
-                    chart_data, 'bar', simulation_id, simulation_instance,
-                    results_simulation, 'Distribución de Demanda',
-                    'Análisis por período de la demanda simulada'
+                    self._generate_demand_distribution_chart,
+                    chart_data, results_simulation
                 )
             
             # Variable-specific charts
@@ -194,14 +290,11 @@ class ChartGenerator(ChartDemand):
                 )
                 
                 if self._validate_chart_data(chart_data_vars):
-                    totales = self._calculate_cumulative_totals(results_simulation)
                     futures[config['key']] = executor.submit(
-                            self._generate_single_chart,
-                            chart_data_vars, config['type'], simulation_id, 
-                            simulation_instance, results_simulation,
-                            config['title'], config['description'],
-                            totales
-                        )
+                        self.generate_chart,
+                        config['type'], chart_data_vars, 
+                        config['title'], config['description']
+                    )
             
             # Collect results
             for key, future in futures.items():
@@ -212,6 +305,117 @@ class ChartGenerator(ChartDemand):
                     chart_images[key] = None
         
         return chart_images
+    
+    def _generate_demand_distribution_chart(self, chart_data: Dict, 
+                                      results_simulation: List) -> str:
+        """Generate demand distribution bar chart"""
+        try:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Extract demand values
+            demand_values = [float(r.demand_mean) for r in results_simulation]
+            periods = list(range(1, len(demand_values) + 1))
+            
+            # Create bar chart
+            bars = ax.bar(periods, demand_values, alpha=0.7, color='skyblue', 
+                        edgecolor='darkblue')
+            
+            # Color code bars by value
+            mean_demand = np.mean(demand_values)
+            for bar, val in zip(bars, demand_values):
+                if val > mean_demand * 1.1:
+                    bar.set_color('lightgreen')
+                elif val < mean_demand * 0.9:
+                    bar.set_color('lightcoral')
+            
+            # Add mean line
+            ax.axhline(y=mean_demand, color='red', linestyle='--', linewidth=2,
+                    label=f'Media: {mean_demand:.2f}')
+            
+            # Add value labels on bars (show every nth bar if too many)
+            n_bars = len(bars)
+            show_every = max(1, n_bars // 20)
+            for i, (bar, val) in enumerate(zip(bars, demand_values)):
+                if i % show_every == 0:
+                    ax.text(bar.get_x() + bar.get_width()/2., bar.get_height(),
+                        f'{val:.0f}', ha='center', va='bottom', fontsize=8)
+            
+            # Configure plot
+            ax.set_xlabel('Día de Simulación', fontsize=12)
+            ax.set_ylabel('Demanda (Litros)', fontsize=12)
+            ax.set_title('Distribución Diaria de Demanda', fontsize=14, fontweight='bold')
+            ax.legend()
+            ax.grid(True, alpha=0.3, axis='y')
+            
+            plt.tight_layout()
+            return self._save_plot_as_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating demand distribution chart: {str(e)}")
+            return None
+    
+    def _generate_demand_trend_chart(self, chart_data: Dict, historical_demand: List, 
+                                results_simulation: List) -> str:
+        """Generate demand trend analysis chart with historical continuity"""
+        try:
+            fig, ax = plt.subplots(figsize=(12, 7))
+            
+            # Plot historical demand if available
+            if historical_demand and len(historical_demand) > 0:
+                hist_periods = list(range(1, len(historical_demand) + 1))
+                ax.plot(hist_periods, historical_demand, 'b-', marker='s', 
+                    markersize=4, linewidth=2, label='Demanda Histórica', alpha=0.8)
+                
+                # Add historical trend
+                if len(historical_demand) > 1:
+                    z = np.polyfit(hist_periods, historical_demand, 1)
+                    p = np.poly1d(z)
+                    ax.plot(hist_periods, p(hist_periods), 'b--', alpha=0.5,
+                        label=f'Tendencia Histórica (pendiente: {z[0]:.2f})')
+            
+            # Plot simulated demand
+            simulated_values = [float(r.demand_mean) for r in results_simulation]
+            sim_start = len(historical_demand) + 1 if historical_demand else 1
+            sim_periods = list(range(sim_start, sim_start + len(simulated_values)))
+            
+            ax.plot(sim_periods, simulated_values, 'r-', marker='o',
+                markersize=4, linewidth=2, label='Demanda Simulada', alpha=0.8)
+            
+            # Add simulated trend
+            if len(simulated_values) > 1:
+                z = np.polyfit(range(len(simulated_values)), simulated_values, 1)
+                p = np.poly1d(z)
+                ax.plot(sim_periods, p(range(len(simulated_values))), 'r--', alpha=0.5,
+                    label=f'Tendencia Simulada (pendiente: {z[0]:.2f})')
+            
+            # Add transition marker
+            if historical_demand and len(historical_demand) > 0:
+                ax.axvline(x=len(historical_demand), color='gray', linestyle='--', 
+                        alpha=0.5, label='Inicio Simulación')
+            
+            # Configure plot
+            ax.set_xlabel('Período de Tiempo', fontsize=12)
+            ax.set_ylabel('Demanda (Litros)', fontsize=12)
+            ax.set_title('Análisis de Tendencias de Demanda', fontsize=14, fontweight='bold')
+            ax.legend(loc='best')
+            ax.grid(True, alpha=0.3)
+            
+            # Add statistics annotation
+            all_values = (historical_demand if historical_demand else []) + simulated_values
+            stats_text = f'Media Total: {np.mean(all_values):.2f}\n'
+            stats_text += f'Desv. Est.: {np.std(all_values):.2f}\n'
+            stats_text += f'CV: {np.std(all_values)/np.mean(all_values):.3f}'
+            
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
+            ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=10,
+                verticalalignment='top', bbox=props)
+            
+            plt.tight_layout()
+            return self._save_plot_as_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating demand trend chart: {str(e)}")
+            return None
     
     def _get_chart_configurations(self, variables_to_graph: List) -> List[Dict]:
         """Get enhanced chart configurations"""
