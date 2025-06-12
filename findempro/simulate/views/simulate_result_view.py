@@ -1,3 +1,5 @@
+# views/simulate_result_view.py
+from typing import List
 import numpy as np
 from django.views.generic import View
 from django.shortcuts import render, redirect, get_object_or_404
@@ -106,13 +108,15 @@ class SimulateResultView(LoginRequiredMixin, View):
         
         # Generate main analysis charts
         analysis_data = chart_generator.generate_all_charts(
-            simulation_id, simulation_instance, list(results_simulation)
+            simulation_id, simulation_instance, list(results_simulation), historical_demand
         )
         
         # Generate comparison chart: Historical vs Simulated
-        comparison_chart = self._generate_demand_comparison_chart(
-            historical_demand, list(results_simulation)
-        )
+        comparison_chart = None
+        if historical_demand:
+            comparison_chart = self.generate_demand_comparison_chart(
+                historical_demand, list(results_simulation)
+            )
         
         # Get financial analysis and recommendations
         simulation_service = SimulationFinancial()
@@ -148,6 +152,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             'demand_stats': demand_stats,
             'comparison_chart': comparison_chart,
             'financial_recommendations': recommendations,
+            'financial_recommendations_to_show': recommendations,  # Ensure this is included
             **analysis_data['chart_images'],
             **financial_results,
         }
@@ -171,50 +176,130 @@ class SimulateResultView(LoginRequiredMixin, View):
         
         return chart_data
     
-    def _generate_demand_comparison_chart(self, historical_demand, results_simulation):
+    def generate_demand_comparison_chart(self, historical_demand: List[float], 
+                                       results_simulation: List) -> str:
         """Generate comparison chart between historical and simulated demand"""
         try:
             import matplotlib.pyplot as plt
             import matplotlib
             matplotlib.use('Agg')
             
-            fig, ax = plt.subplots(figsize=(12, 6))
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), 
+                                          gridspec_kw={'height_ratios': [3, 1]})
             
-            # Plot historical demand
-            if historical_demand:
-                hist_labels = list(range(1, len(historical_demand) + 1))
-                ax.plot(hist_labels, historical_demand, 'b-', marker='s', 
-                       label='Demanda Histórica', linewidth=2, markersize=6)
+            # Main comparison plot
+            if historical_demand and len(historical_demand) > 0:
+                # Historical demand
+                hist_periods = list(range(1, len(historical_demand) + 1))
+                ax1.plot(hist_periods, historical_demand, 'b-', marker='s', 
+                        markersize=5, linewidth=2, label='Demanda Histórica', 
+                        alpha=0.8)
                 
-                # Add historical mean line
+                # Historical statistics
                 hist_mean = np.mean(historical_demand)
-                ax.axhline(y=hist_mean, color='blue', linestyle=':', alpha=0.5,
-                         label=f'Media Histórica: {hist_mean:.2f}')
+                hist_std = np.std(historical_demand)
+                ax1.axhline(y=hist_mean, color='blue', linestyle=':', alpha=0.5,
+                          label=f'Media Histórica: {hist_mean:.2f}')
+                
+                # Historical confidence interval
+                ax1.fill_between(hist_periods, 
+                               hist_mean - hist_std, 
+                               hist_mean + hist_std,
+                               alpha=0.1, color='blue')
             
-            # Plot simulated demand
+            # Simulated demand
             simulated_values = [float(r.demand_mean) for r in results_simulation]
-            sim_labels = list(range(len(historical_demand) + 1, 
-                                  len(historical_demand) + len(simulated_values) + 1))
-            ax.plot(sim_labels, simulated_values, 'r-', marker='o',
-                   label='Demanda Simulada', linewidth=2, markersize=6)
+            sim_start = len(historical_demand) + 1 if historical_demand else 1
+            sim_periods = list(range(sim_start, sim_start + len(simulated_values)))
             
-            # Add simulated mean line
+            ax1.plot(sim_periods, simulated_values, 'r-', marker='o',
+                    markersize=5, linewidth=2, label='Demanda Simulada',
+                    alpha=0.8)
+            
+            # Simulated statistics
             sim_mean = np.mean(simulated_values)
-            ax.axhline(y=sim_mean, color='red', linestyle=':', alpha=0.5,
-                     label=f'Media Simulada: {sim_mean:.2f}')
+            sim_std = np.std(simulated_values)
+            ax1.axhline(y=sim_mean, color='red', linestyle=':', alpha=0.5,
+                      label=f'Media Simulada: {sim_mean:.2f}')
             
-            # Add vertical separator
-            if historical_demand:
-                ax.axvline(x=len(historical_demand), color='gray', 
-                         linestyle='--', alpha=0.5, label='Inicio Simulación')
+            # Simulated confidence interval
+            ax1.fill_between(sim_periods,
+                           sim_mean - sim_std,
+                           sim_mean + sim_std,
+                           alpha=0.1, color='red')
             
-            # Configure plot
-            ax.set_xlabel('Período de Tiempo', fontsize=12)
-            ax.set_ylabel('Demanda (Litros)', fontsize=12)
-            ax.set_title('Comparación: Demanda Histórica vs Simulada', 
-                        fontsize=14, fontweight='bold')
-            ax.legend()
-            ax.grid(True, alpha=0.3)
+            # Add transition line
+            if historical_demand and len(historical_demand) > 0:
+                ax1.axvline(x=len(historical_demand), color='gray', 
+                          linestyle='--', alpha=0.5, label='Inicio Simulación')
+                
+                # Add trend lines
+                if len(historical_demand) > 1:
+                    z = np.polyfit(hist_periods, historical_demand, 1)
+                    p = np.poly1d(z)
+                    ax1.plot(hist_periods, p(hist_periods), 'b--', alpha=0.5,
+                           label=f'Tendencia Histórica: {z[0]:.2f}')
+                
+                if len(simulated_values) > 1:
+                    z = np.polyfit(range(len(simulated_values)), simulated_values, 1)
+                    p = np.poly1d(z)
+                    ax1.plot(sim_periods, p(range(len(simulated_values))), 'r--', 
+                           alpha=0.5, label=f'Tendencia Simulada: {z[0]:.2f}')
+            
+            # Configure main plot
+            ax1.set_xlabel('Período de Tiempo', fontsize=12)
+            ax1.set_ylabel('Demanda (Litros)', fontsize=12)
+            ax1.set_title('Comparación Completa: Demanda Histórica vs Simulada', 
+                         fontsize=16, fontweight='bold', pad=20)
+            ax1.legend(loc='upper left', bbox_to_anchor=(1, 1))
+            ax1.grid(True, alpha=0.3)
+            
+            # Set x-axis limits
+            total_periods = len(historical_demand) + len(simulated_values) if historical_demand else len(simulated_values)
+            ax1.set_xlim(0, total_periods + 1)
+            
+            # Difference plot (bottom subplot)
+            if historical_demand and len(historical_demand) > 0 and len(simulated_values) > 0:
+                # Calculate percentage differences
+                comparison_length = min(10, len(historical_demand), len(simulated_values))
+                
+                if comparison_length > 0:
+                    hist_last_values = historical_demand[-comparison_length:]
+                    sim_first_values = simulated_values[:comparison_length]
+                    
+                    periods_diff = list(range(1, comparison_length + 1))
+                    differences = []
+                    
+                    for h, s in zip(hist_last_values, sim_first_values):
+                        if h != 0:
+                            diff = ((s - h) / h) * 100
+                        else:
+                            diff = 0
+                        differences.append(diff)
+                    
+                    bars = ax2.bar(periods_diff, differences, alpha=0.7,
+                                  color=['green' if d >= 0 else 'red' for d in differences])
+                    
+                    # Add value labels on bars
+                    for bar, diff in zip(bars, differences):
+                        height = bar.get_height()
+                        ax2.text(bar.get_x() + bar.get_width()/2., height,
+                               f'{diff:.1f}%', ha='center', 
+                               va='bottom' if height >= 0 else 'top',
+                               fontsize=8)
+                    
+                    ax2.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+                    ax2.set_xlabel('Período de Comparación')
+                    ax2.set_ylabel('Diferencia (%)')
+                    ax2.set_title('Diferencia Porcentual entre Últimos Valores Históricos y Primeros Simulados')
+                    ax2.grid(True, alpha=0.3, axis='y')
+            else:
+                # If no comparison possible, show a message
+                ax2.text(0.5, 0.5, 'No hay suficientes datos para comparación detallada', 
+                        transform=ax2.transAxes, ha='center', va='center',
+                        fontsize=12, color='gray')
+                ax2.set_xticks([])
+                ax2.set_yticks([])
             
             plt.tight_layout()
             
@@ -232,7 +317,11 @@ class SimulateResultView(LoginRequiredMixin, View):
             return image_data
             
         except Exception as e:
-            logger.error(f"Error generating comparison chart: {str(e)}")
+            logger.error(f"Error generating demand comparison chart: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            if 'fig' in locals():
+                plt.close(fig)
             return None
     
     def _calculate_comprehensive_statistics(self, historical_demand, results_simulation):
@@ -287,7 +376,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                     'trend_change': stats['simulated']['trend'] - stats['historical']['trend']
                 }
                 
-                # Forecast accuracy metrics - only calculate if we have both datasets
+                # Forecast accuracy metrics
                 try:
                     stats['forecast_accuracy'] = {
                         'mape': self._calculate_mape(historical_demand, simulated_values),
@@ -301,6 +390,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                         'rmse': 0,
                         'mae': 0
                     }
+        
         return stats
     
     def _calculate_trend(self, data):
@@ -387,8 +477,9 @@ class SimulateResultView(LoginRequiredMixin, View):
                 value = totales_acumulativos[rec.variable_name]['total']
                 threshold = float(rec.threshold_value) if rec.threshold_value else 0
                 
-                if value > threshold:
-                    severity = ((value - threshold) / threshold * 100) if threshold > 0 else 100
+                # Check if value exceeds threshold
+                if threshold > 0 and value > threshold:
+                    severity = ((value - threshold) / threshold * 100)
                     
                     recommendations.append({
                         'name': rec.name,
@@ -445,11 +536,11 @@ class SimulateResultView(LoginRequiredMixin, View):
                 recommendations.append({
                     'name': 'Decrecimiento Detectado',
                     'description': f'La demanda muestra una tendencia negativa del {abs(growth):.2f}%',
-                    'recommendation': 'Implementar estrategias de marketing y revisar competitividad',
-                    'severity': 70,
-                    'priority': 'high',
-                    'variable': 'CRECIMIENTO'
-                })
+                   'recommendation': 'Implementar estrategias de marketing y revisar competitividad',
+                   'severity': 70,
+                   'priority': 'high',
+                   'variable': 'CRECIMIENTO'
+               })
             elif growth > 50:
                 recommendations.append({
                     'name': 'Crecimiento Acelerado',
@@ -491,7 +582,6 @@ class SimulateResultView(LoginRequiredMixin, View):
                             FinanceRecommendationSimulation(
                                 data=rec['value'],
                                 fk_simulation=simulation_instance,
-                                # data=db_rec
                             )
                         )
             

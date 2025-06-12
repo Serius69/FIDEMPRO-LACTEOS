@@ -1196,6 +1196,92 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                                {% if comparison_chart %}
+                                <div class="col-12 mb-4">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-git-compare me-2"></i>
+                                            Comparación: Demanda Histórica vs Simulada
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ comparison_chart }}', 'comparacion-demanda.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ comparison_chart }}', 'Comparación de Demanda')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        <img src="data:image/png;base64,{{ comparison_chart }}" 
+                                            class="chart-image" 
+                                            alt="Comparación de Demanda Histórica vs Simulada"
+                                            loading="lazy">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <div class="col-md-6">
+                                    <!-- Demand Table -->
+                                    <div class="data-table-container">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">
+                                                <i class="bx bx-table me-2"></i>
+                                                Tabla de Demanda Diaria
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive" style="max-height: 400px;">
+                                                <table class="table table-striped" id="demandTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Día</th>
+                                                            <th>Fecha</th>
+                                                            <th>Demanda (L)</th>
+                                                            <th>Desviación (%)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for simulate in results %}
+                                                        <tr>
+                                                            <td>{{ forloop.counter }}</td>
+                                                            <td>{{ simulate.date|date:"d/m/Y" }}</td>
+                                                            <td class="fw-bold">{{ simulate.demand_mean|floatformat:"2" }}</td>
+                                                            <td>
+                                                                <span class="badge bg-info">
+                                                                    {{ simulate.demand_std_deviation|floatformat:"2" }}%
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="pagination-controls">
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevTablePage">
+                                                <i class="bx bx-chevron-left me-1"></i>Anterior
+                                            </button>
+                                            <span class="flex-grow-1 text-center small text-muted" id="tablePageInfo">
+                                                Página 1
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextTablePage">
+                                                Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-line-chart-down me-2"></i>
+                                            Análisis de Demanda con Tendencias
+                                        </h6>
+                                        {% if image_data_line %}
+                                        <img src="data:image/png;base64,{{ image_data_line }}" 
+                                            class="chart-image" 
+                                            alt="Análisis de demanda"
+                                            loading="lazy">
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1406,57 +1492,66 @@
                             <div class="row">
                                 {% for name_variable, info_variable in totales_acumulativos.items %}
                                 <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
-                                    <div class="metric-card">
+                                    <div class="metric-card h-100">
                                         <div class="card-body text-center">
                                             <div class="mb-3">
                                                 {% if info_variable.unit == "BS" %}
-                                                <div class="avatar-lg mx-auto">
-                                                    <span class="avatar-title rounded-circle bg-danger text-white">
-                                                        <i class="bx bxs-badge-dollar"></i>
+                                                <div class="avatar-sm mx-auto">
+                                                    <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10">
+                                                        <i class="bx bxs-badge-dollar fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-success{% endif %}"></i>
                                                     </span>
                                                 </div>
                                                 {% elif info_variable.unit == "CLIENTES" %}
-                                                <div class="avatar-lg mx-auto">
-                                                    <span class="avatar-title rounded-circle bg-warning text-white">
-                                                        <i class="bx bxs-user-account"></i>
+                                                <div class="avatar-sm mx-auto">
+                                                    <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-warning{% endif %} bg-opacity-10">
+                                                        <i class="bx bxs-group fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-warning{% endif %}"></i>
                                                     </span>
                                                 </div>
                                                 {% elif info_variable.unit == "L" %}
-                                                <div class="avatar-lg mx-auto">
-                                                    <span class="avatar-title rounded-circle bg-info text-white">
-                                                        <i class="bx bx-droplet"></i>
+                                                <div class="avatar-sm mx-auto">
+                                                    <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-info{% endif %} bg-opacity-10">
+                                                        <i class="bx bx-water fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-info{% endif %}"></i>
                                                     </span>
                                                 </div>
                                                 {% elif info_variable.unit == "Horas" %}
-                                                <div class="avatar-lg mx-auto">
-                                                    <span class="avatar-title rounded-circle bg-success text-white">
-                                                        <i class="bx bx-time"></i>
+                                                <div class="avatar-sm mx-auto">
+                                                    <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10">
+                                                        <i class="bx bx-time-five fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-success{% endif %}"></i>
                                                     </span>
                                                 </div>
                                                 {% else %}
-                                                <div class="avatar-lg mx-auto">
-                                                    <span class="avatar-title rounded-circle bg-primary text-white">
-                                                        <i class="bx bx-stats"></i>
+                                                <div class="avatar-sm mx-auto">
+                                                    <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-primary{% endif %} bg-opacity-10">
+                                                        <i class="bx bx-chart fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-primary{% endif %}"></i>
                                                     </span>
                                                 </div>
                                                 {% endif %}
                                             </div>
-                                            <h5 class="text-truncate tooltip-info" 
+                                            <h5 class="fw-medium text-truncate tooltip-info mb-3" 
                                                 data-tooltip="{{ name_variable }}">
                                                 {{ name_variable|truncatechars:25 }}
                                             </h5>
-                                            <h4 class="text-primary mb-1">
-                                                <span class="counter" data-target="{{ info_variable.total|floatformat:'0' }}">0</span>
-                                            </h4>
+                                            <h3 class="{% if info_variable.total < 0 %}text-danger{% else %}text-primary{% endif %} mb-2">
+                                                <span class="counter" data-target="{{ info_variable.total|floatformat:'0'|stringformat:'s'|slice:'1:' }}">0</span>
+                                                {% if info_variable.total < 0 %}-{% endif %}
+                                                <span class="fs-5">
+                                                    {% if info_variable.unit == "BS" %}Bs.
+                                                    {% elif info_variable.unit == "CLIENTES" %}Clientes
+                                                    {% elif info_variable.unit == "L" %}L
+                                                    {% elif info_variable.unit == "%" %}%
+                                                    {% elif info_variable.unit == "Horas" %}Hrs
+                                                    {% elif info_variable.unit == "L/BS" %}L/Bs
+                                                    {% elif info_variable.unit == "[0.1,0.3,0.5]" %}%
+                                                    {% else %}{{ info_variable.unit }}
+                                                    {% endif %}
+                                                </span>
+                                            </h3>
                                             <p class="text-muted mb-0">
-                                                {% if info_variable.unit == "BS" %}Pesos Bolivianos
-                                                {% elif info_variable.unit == "CLIENTES" %}Clientes
-                                                {% elif info_variable.unit == "L" %}Litros
-                                                {% elif info_variable.unit == "%" %}Porcentaje
-                                                {% elif info_variable.unit == "Horas" %}Horas
-                                                {% elif info_variable.unit == "L/BS" %}Litros/Bs.
-                                                {% elif info_variable.unit == "[0.1,0.3,0.5]" %}Porcentaje
-                                                {% else %}{{ info_variable.unit }}
+                                                {% if info_variable.change_pct %}
+                                                <span class="{% if info_variable.change_pct > 0 %}text-success{% else %}text-danger{% endif %} fs-5">
+                                                    <i class="bx {% if info_variable.change_pct > 0 %}bx-up-arrow-alt{% else %}bx-down-arrow-alt{% endif %}"></i>
+                                                    {{ info_variable.change_pct|floatformat:1 }}%
+                                                </span>
                                                 {% endif %}
                                             </p>
                                         </div>

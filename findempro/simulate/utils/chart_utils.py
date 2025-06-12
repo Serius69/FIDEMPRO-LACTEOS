@@ -19,7 +19,7 @@ class ChartGenerator(ChartDemand):
         self.chart_demand = ChartDemand()
     
     def generate_all_charts(self, simulation_id: int, simulation_instance, 
-                          results_simulation: List, historical_demand: List = None) -> Dict[str, Any]:
+                      results_simulation: List, historical_demand: List = None) -> Dict[str, Any]:
         """Generate all charts including demand comparison"""
         cache_key = f"charts_{simulation_id}_v2"
         cached_data = cache.get(cache_key)

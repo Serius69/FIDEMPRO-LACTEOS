@@ -1,4 +1,4 @@
-# simulation_core.py
+# services/simulation_core.py
 import logging
 import random
 import json
@@ -33,29 +33,37 @@ class SimulationCore:
             'precio_actual': 'PVP',
             'precio_venta': 'PVP',
             'precio_producto': 'PVP',
+            'precio de venta': 'PVP',
             'demanda_historica': 'DH',
             'demanda_promedio': 'DH',
             'produccion_actual': 'QPL',
             'cantidad_produccion': 'QPL',
+            'producción': 'CPROD',
             'demanda_esperada': 'DE',
             'capacidad_inventario': 'CIP',
             'estacionalidad': 'ED',
             'costo_unitario_insumo': 'CUIP',
             'costo_insumos': 'CUIP',
+            'costo unitario': 'CUIP',
             'tiempo_entre_compras': 'TPC',
             'clientes_diarios': 'CPD',
             'clientes_por_dia': 'CPD',
+            'clientes por día': 'CPD',
             'numero_empleados': 'NEPP',
             'empleados': 'NEPP',
+            'número de empleados': 'NEPP',
             'capacidad_produccion': 'CPROD',
+            'capacidad de producción': 'CPROD',
             'sueldos_salarios': 'SE',
             'salarios': 'SE',
             'precio_competencia': 'PC',
             'costo_fijo_diario': 'CFD',
             'costos_fijos': 'CFD',
+            'costos fijos': 'CFD',
             'costo_transporte': 'CUTRANS',
             'gastos_marketing': 'GMM',
             'marketing': 'GMM',
+            'gastos de marketing': 'GMM',
             'tiempo_reabastecimiento': 'TR',
             'insumos_por_producto': 'CINSP',
             'capacidad_almacenamiento': 'CMIPF',
@@ -70,77 +78,74 @@ class SimulationCore:
             'cantidad_promedio_lote': 'CPL'
         }
         
-        # Valores por defecto SOLO como respaldo (se deben usar los valores reales del cuestionario)
-        # Initialize empty defaults dictionary
-        self.default_values = {}
-        
+        # Función para obtener defaults según producto
         def get_product_defaults(product_type):
             """Get default values based on product type"""
             
             # Base defaults that apply to all products
             base = {
-            'ED': 1.0,  # Seasonality factor
-            'NMD': 30,  # Number of days
-            'TPC': 2,   # Time between purchases
-            'TR': 3,    # Restocking time
-            'TMP': 1,   # Order processing time
-            'NPD': 3,   # Number of suppliers
+                'ED': 1.0,  # Seasonality factor
+                'NMD': 30,  # Number of days
+                'TPC': 2,   # Time between purchases
+                'TR': 3,    # Restocking time
+                'TMP': 1,   # Order processing time
+                'NPD': 3,   # Number of suppliers
             }
             
             # Product-specific defaults
             product_defaults = {
-            'MILK': {  # Leche
-                'PVP': 1.50,      # Precio venta
-                'CPD': 200,       # Clientes por día 
-                'VPC': 2,         # Ventas por cliente
-                'CUIP': 0.80,     # Costo unitario insumo
-                'CPROD': 5000,    # Capacidad producción
-                'NEPP': 10,       # Número empleados
-                'SE': 35000,      # Sueldos
-                'CFD': 1200,      # Costos fijos
-                'GMM': 2500,      # Marketing
-                'DH': 4800,       # Demanda histórica
-                'DE': 5000,       # Demanda esperada
-            },
-            'CHEESE': {  # Queso
-                'PVP': 4.50,
-                'CPD': 150,
-                'VPC': 3,
-                'CUIP': 2.20,
-                'CPROD': 3000,
-                'NEPP': 12,
-                'SE': 40000,
-                'CFD': 1500,
-                'GMM': 3000,
-                'DH': 2800,
-                'DE': 3000,
-            },
-            'YOGURT': {  # Yogurt
-                'PVP': 2.50,
-                'CPD': 180,
-                'VPC': 4,
-                'CUIP': 1.20,
-                'CPROD': 4000,
-                'NEPP': 8,
-                'SE': 30000,
-                'CFD': 1000,
-                'GMM': 2000,
-                'DH': 3500,
-                'DE': 3800,
-            },
-            'DEFAULT': {  # Default values if product type not found
-                'PVP': 15.50,
-                'CPD': 85,
-                'VPC': 30,
-                'CUIP': 8.20,
-                'CPROD': 3000,
-                'NEPP': 15,
-                'SE': 48000,
-                'CFD': 1800,
-                'GMM': 3500,
-                'DH': 2500,
-                'DE': 2650,
-            }
+                'MILK': {  # Leche
+                    'PVP': 1.50,      # Precio venta
+                    'CPD': 200,       # Clientes por día 
+                    'VPC': 2,         # Ventas por cliente
+                    'CUIP': 0.80,     # Costo unitario insumo
+                    'CPROD': 5000,    # Capacidad producción
+                    'NEPP': 10,       # Número empleados
+                    'SE': 35000,      # Sueldos
+                    'CFD': 1200,      # Costos fijos
+                    'GMM': 2500,      # Marketing
+                    'DH': 4800,       # Demanda histórica
+                    'DE': 5000,       # Demanda esperada
+                },
+                'CHEESE': {  # Queso
+                    'PVP': 4.50,
+                    'CPD': 150,
+                    'VPC': 3,
+                    'CUIP': 2.20,
+                    'CPROD': 3000,
+                    'NEPP': 12,
+                    'SE': 40000,
+                    'CFD': 1500,
+                    'GMM': 3000,
+                    'DH': 2800,
+                    'DE': 3000,
+                },
+                'YOGURT': {  # Yogurt
+                    'PVP': 2.50,
+                    'CPD': 180,
+                    'VPC': 4,
+                    'CUIP': 1.20,
+                    'CPROD': 4000,
+                    'NEPP': 8,
+                    'SE': 30000,
+                    'CFD': 1000,
+                    'GMM': 2000,
+                    'DH': 3500,
+                    'DE': 3800,
+                },
+                'DEFAULT': {  # Default values if product type not found
+                    'PVP': 15.50,
+                    'CPD': 85,
+                    'VPC': 30,
+                    'CUIP': 8.20,
+                    'CPROD': 3000,
+                    'NEPP': 15,
+                    'SE': 48000,
+                    'CFD': 1800,
+                    'GMM': 3500,
+                    'DH': 2500,
+                    'DE': 2650,
+                }
             }
             
             # Get specific defaults or use DEFAULT if not found
@@ -149,11 +154,10 @@ class SimulationCore:
             # Merge base with specific defaults
             return {**base, **specific}
             
-        # Initialize with DEFAULT values, will be updated when simulation runs
-        self.default_values = get_product_defaults('DEFAULT')
-        
         # Store the function to get defaults based on product
         self.get_product_defaults = get_product_defaults
+        # Initialize with empty defaults
+        self.default_values = {}
 
     @transaction.atomic
     def create_simulation(self, form_data: Dict[str, Any]) -> Simulation:
@@ -229,6 +233,65 @@ class SimulationCore:
             logger.error(f"Error executing simulation {simulation_instance.id}: {str(e)}")
             raise
 
+    def _prepare_simulation_data(self, simulation_instance):
+        """Prepare all simulation data with optimized queries"""
+        product = simulation_instance.fk_questionary_result.fk_questionary.fk_product
+        
+        # Determine product type for defaults
+        product_type = 'DEFAULT'
+        product_name_lower = product.name.lower()
+        if 'leche' in product_name_lower or 'milk' in product_name_lower:
+            product_type = 'MILK'
+        elif 'queso' in product_name_lower or 'cheese' in product_name_lower:
+            product_type = 'CHEESE'
+        elif 'yogur' in product_name_lower or 'yogurt' in product_name_lower:
+            product_type = 'YOGURT'
+        
+        # Update defaults based on product type
+        self.default_values = self.get_product_defaults(product_type)
+        logger.info(f"Using product type: {product_type}")
+        
+        areas = Area.objects.filter(
+            is_active=True,
+            fk_product=product
+        ).order_by('id')
+        
+        equations = Equation.objects.filter(
+            is_active=True,
+            fk_area__fk_product=product
+        ).select_related(
+            'fk_variable1', 'fk_variable2', 'fk_variable3',
+            'fk_variable4', 'fk_variable5', 'fk_area'
+        ).order_by('fk_area__name')
+        
+        variables = Variable.objects.filter(
+            is_active=True,
+            fk_product=product
+        ).values('id', 'name', 'initials', 'unit')
+        
+        # Get complete answer data including question text and variable mapping
+        answers = Answer.objects.filter(
+            fk_questionary_result=simulation_instance.fk_questionary_result
+        ).select_related(
+            'fk_question__fk_variable'
+        ).values(
+            'fk_question_id', 
+            'fk_question__fk_variable__initials', 
+            'fk_question__question',  # Get full question text
+            'answer'
+        )
+        
+        logger.info(f"Loaded {len(list(answers))} answers from questionnaire")
+        
+        return {
+            'areas': list(areas),
+            'equations': list(equations),
+            'variables': {v['initials']: v for v in variables},
+            'answers': list(answers),
+            'product': product,
+            'product_type': product_type
+        }
+
     def _simulate_single_day_complete(self, simulation_instance, simulation_data, day_index):
         """Simulate a single day with complete variable initialization and calculation"""
         
@@ -241,8 +304,6 @@ class SimulationCore:
         
         # Log what we actually loaded
         logger.info(f"Day {day_index}: Loaded {len(variable_dict)} variables from questionnaire")
-        for key, value in list(variable_dict.items())[:10]:  # Log first 10
-            logger.info(f"  {key} = {value}")
         
         # Generate demand prediction
         predicted_demand = self._generate_demand_prediction(
@@ -295,7 +356,7 @@ class SimulationCore:
         for answer_data in answers:
             var_initials = answer_data.get('fk_question__fk_variable__initials')
             answer_value = answer_data.get('answer')
-            question_text = answer_data.get('fk_question__question_text', '')
+            question_text = answer_data.get('fk_question__question', '')
             
             if not answer_value:
                 continue
@@ -313,6 +374,7 @@ class SimulationCore:
             
             # Method 2: Text-based mapping from question content
             question_lower = question_text.lower() if question_text else ''
+            mapped = False
             for key_phrase, mapped_var in self.question_to_variable_mapping.items():
                 if key_phrase in question_lower:
                     processed_value = self._process_answer_value(answer_value, mapped_var)
@@ -320,7 +382,30 @@ class SimulationCore:
                         variable_dict[mapped_var] = processed_value
                         questionnaire_values_loaded += 1
                         logger.info(f"MAPPED from questionnaire: {mapped_var} = {processed_value} (from '{key_phrase}')")
+                        mapped = True
                         break
+            
+            # Method 3: Try to extract variable from question text directly
+            if not mapped and not var_initials:
+                # Look for specific patterns in questions
+                if 'precio' in question_lower and 'venta' in question_lower:
+                    processed_value = self._process_answer_value(answer_value, 'PVP')
+                    if processed_value is not None:
+                        variable_dict['PVP'] = processed_value
+                        questionnaire_values_loaded += 1
+                        logger.info(f"PATTERN MATCHED: PVP = {processed_value}")
+                elif 'clientes' in question_lower and ('día' in question_lower or 'diario' in question_lower):
+                    processed_value = self._process_answer_value(answer_value, 'CPD')
+                    if processed_value is not None:
+                        variable_dict['CPD'] = processed_value
+                        questionnaire_values_loaded += 1
+                        logger.info(f"PATTERN MATCHED: CPD = {processed_value}")
+                elif 'empleados' in question_lower:
+                    processed_value = self._process_answer_value(answer_value, 'NEPP')
+                    if processed_value is not None:
+                        variable_dict['NEPP'] = processed_value
+                        questionnaire_values_loaded += 1
+                        logger.info(f"PATTERN MATCHED: NEPP = {processed_value}")
         
         logger.info(f"Successfully loaded {questionnaire_values_loaded} values from questionnaire")
         
@@ -332,7 +417,7 @@ class SimulationCore:
                 essential_missing.append(var)
         
         if essential_missing:
-            logger.warning(f"Used defaults for missing variables: {essential_missing[:10]}...")  # Show first 10
+            logger.warning(f"Used defaults for missing variables: {essential_missing[:10]}...")
         
         # Special calculations for derived variables
         self._calculate_derived_variables(variable_dict)
@@ -358,6 +443,7 @@ class SimulationCore:
             if isinstance(answer_value, str):
                 # Remove common formatting
                 cleaned = answer_value.replace(',', '').replace('$', '').replace('%', '').replace(' ', '')
+                cleaned = cleaned.replace('Bs', '').replace('bs', '').replace('L', '').replace('litros', '')
                 
                 # Handle empty strings
                 if not cleaned:
@@ -373,6 +459,11 @@ class SimulationCore:
                 try:
                     return float(cleaned)
                 except ValueError:
+                    # Try to extract number from string
+                    import re
+                    numbers = re.findall(r'[-+]?\d*\.?\d+', answer_value)
+                    if numbers:
+                        return float(numbers[0])
                     logger.warning(f"Could not convert string '{answer_value}' to number for {variable_name}")
                     return None
             
@@ -399,7 +490,15 @@ class SimulationCore:
         # Calculate VPC if not set (Ventas Por Cliente)
         if 'VPC' not in variable_dict or variable_dict['VPC'] == 0:
             pvp = variable_dict.get('PVP', 15.50)
-            variable_dict['VPC'] = pvp * 2  # Approximate sales per client
+            # Better calculation based on product type
+            if pvp < 2:  # Likely milk
+                variable_dict['VPC'] = 2
+            elif pvp < 3:  # Likely yogurt
+                variable_dict['VPC'] = 4
+            elif pvp < 5:  # Likely cheese
+                variable_dict['VPC'] = 3
+            else:  # Default
+                variable_dict['VPC'] = 30
             logger.info(f"Calculated VPC = {variable_dict['VPC']} (from PVP = {pvp})")
 
     def _calculate_all_equations(self, equations, variable_dict):
@@ -623,9 +722,8 @@ class SimulationCore:
         
         if 'PE' not in endogenous_results:
             tpv = endogenous_results.get('TPV', 2550)
-            if nepp > 0:
-                endogenous_results['PE'] = tpv / nepp
-        
+            if nepp > 0:endogenous_results['PE'] = tpv / nepp
+       
         if 'PM' not in endogenous_results:
             tpv = endogenous_results.get('TPV', 2550)
             dh = variable_dict.get('DH', 2500)
@@ -752,50 +850,6 @@ class SimulationCore:
                 return [float(x) for x in demand_history]
             else:
                 return []
-
-    def _prepare_simulation_data(self, simulation_instance):
-        """Prepare all simulation data with optimized queries"""
-        product = simulation_instance.fk_questionary_result.fk_questionary.fk_product
-        
-        areas = Area.objects.filter(
-            is_active=True,
-            fk_product=product
-        ).order_by('id')
-        
-        equations = Equation.objects.filter(
-            is_active=True,
-            fk_area__fk_product=product
-        ).select_related(
-            'fk_variable1', 'fk_variable2', 'fk_variable3',
-            'fk_variable4', 'fk_variable5', 'fk_area'
-        ).order_by('fk_area__name')
-        
-        variables = Variable.objects.filter(
-            is_active=True,
-            fk_product=product
-        ).values('id', 'name', 'initials', 'unit')
-        
-        # CRITICAL: Get complete answer data including question text
-        answers = Answer.objects.filter(
-            fk_questionary_result=simulation_instance.fk_questionary_result
-        ).select_related(
-            'fk_question__fk_variable'
-        ).values(
-            'fk_question_id', 
-            'fk_question__fk_variable__initials', 
-            'fk_question__question_text',  # Added question text for mapping
-            'answer'
-        )
-        
-        logger.info(f"Loaded {len(list(answers))} answers from questionnaire")
-        
-        return {
-            'areas': list(areas),
-            'equations': list(equations),
-            'variables': {v['initials']: v for v in variables},
-            'answers': list(answers),
-            'product': product
-        }
 
     def _bulk_save_results(self, simulation_instance, results):
         """Bulk save simulation results"""
