@@ -653,7 +653,7 @@ class SimulationCore:
     def _calculate_missing_critical_variables(self, variable_dict, endogenous_results):
         """Calculate critical variables that might be missing using REAL questionnaire data"""
         
-        # Use real values from questionnaire instead of hardcoded defaults
+        # Use real values from questionnaire
         cpd = variable_dict.get('CPD', 85)
         pvp = variable_dict.get('PVP', 15.50)
         vpc = variable_dict.get('VPC', 30)
@@ -662,89 +662,171 @@ class SimulationCore:
         cfd = variable_dict.get('CFD', 1800)
         se = variable_dict.get('SE', 48000)
         gmm = variable_dict.get('GMM', 3500)
-        nepp = variable_dict.get('NEPP', 15)
+        de = variable_dict.get('DE', 2650)
         
-        # Ensure TCAE is calculated
+        # Ensure TCAE is calculated realistically
         if 'TCAE' not in endogenous_results:
-            endogenous_results['TCAE'] = variable_dict.get('TCAE', cpd * 0.95)
+            # Clients served should be limited by demand
+            max_clients_by_demand = de / vpc if vpc > 0 else cpd
+            endogenous_results['TCAE'] = min(cpd * 0.95, max_clients_by_demand)
         
-        # Calculate TPV if missing
+        # Calculate TPV based on actual demand, not production capacity
         if 'TPV' not in endogenous_results:
-            tcae = endogenous_results.get('TCAE', variable_dict.get('TCAE', cpd * 0.95))
-            endogenous_results['TPV'] = tcae * vpc
+            tcae = endogenous_results.get('TCAE', cpd * 0.95)
+            # Total products sold limited by demand and production
+            tpv = min(tcae * vpc, de, cprod)
+            endogenous_results['TPV'] = tpv
         
-        # Calculate IT if missing
+        # Calculate TPPRO based on demand plus safety stock
+        if 'TPPRO' not in endogenous_results:
+            tpv = endogenous_results.get('TPV', de)
+            # Produce based on demand plus 10% safety
+            endogenous_results['TPPRO'] = min(tpv * 1.1, cprod)
+        
+        # Calculate IT based on actual sales
         if 'IT' not in endogenous_results:
             tpv = endogenous_results.get('TPV', 2550)
             endogenous_results['IT'] = tpv * pvp
         
-        # Calculate CTAI if missing
+        # Calculate CTAI based on actual production
         if 'CTAI' not in endogenous_results:
-            tppro = endogenous_results.get('TPPRO', variable_dict.get('CPROD', cprod))
+            tppro = endogenous_results.get('TPPRO', cprod * 0.85)
             endogenous_results['CTAI'] = cuip * tppro
         
-        # Calculate GO if missing
+        # Calculate GO with realistic costs
         if 'GO' not in endogenous_results:
             se_daily = se / 30
-            ctai = endogenous_results.get('CTAI', cuip * cprod)
+            ctai = endogenous_results.get('CTAI', cuip * cprod * 0.85)
+            # Only include costs for actual production
             endogenous_results['GO'] = cfd + se_daily + ctai
         
-        # Calculate GG if missing
+        # Calculate GG
         if 'GG' not in endogenous_results:
-            go = endogenous_results.get('GO', 28000)
+            go = endogenous_results.get('GO', 10000)
             gmm_daily = gmm / 30
-            endogenous_results['GG'] = go + gmm_daily
+            # Marketing costs proportional to sales
+            marketing_efficiency = endogenous_results.get('TPV', de) / de
+            endogenous_results['GG'] = gmm_daily * marketing_efficiency
         
-        # Calculate TG if missing
+        # Calculate TG - Total costs
         if 'TG' not in endogenous_results:
-            go = endogenous_results.get('GO', 28000)
-            gg = endogenous_results.get('GG', 28116)
+            go = endogenous_results.get('GO', 10000)
+            gg = endogenous_results.get('GG', 116)
             endogenous_results['TG'] = go + gg
         
-        # Calculate GT if missing
+        # Calculate GT - Ensure profits are realistic
         if 'GT' not in endogenous_results:
             it = endogenous_results.get('IT', 39525)
-            tg = endogenous_results.get('TG', 56116)
+            tg = endogenous_results.get('TG', 10116)
+            # Gross profit
             endogenous_results['GT'] = it - tg
-        
-        # Calculate other important metrics using real data
-        if 'MB' not in endogenous_results and 'IT' in endogenous_results:
-            it = endogenous_results['IT']
-            gt = endogenous_results.get('GT', 0)
+            
+            # Validate profit margin
             if it > 0:
-                endogenous_results['MB'] = gt / it
+                margin = endogenous_results['GT'] / it
+                if margin < -0.5:  # If losing more than 50%
+                    logger.warning(f"Unrealistic loss margin: {margin:.2%}. Adjusting costs.")
+                    # Cap losses at 20% of revenue
+                    endogenous_results['TG'] = it * 1.2
+                    endogenous_results['GT'] = it - endogenous_results['TG']
         
-        if 'NR' not in endogenous_results and 'IT' in endogenous_results:
-            it = endogenous_results['IT']
-            gt = endogenous_results.get('GT', 0)
-            if it > 0:
-                endogenous_results['NR'] = gt / it
-        
-        if 'PE' not in endogenous_results:
-            tpv = endogenous_results.get('TPV', 2550)
-            if nepp > 0:endogenous_results['PE'] = tpv / nepp
-       
-        if 'PM' not in endogenous_results:
-            tpv = endogenous_results.get('TPV', 2550)
-            dh = variable_dict.get('DH', 2500)
-            if dh > 0:
-                endogenous_results['PM'] = tpv / dh
-        
+        # Calculate efficiency metrics
         if 'FU' not in endogenous_results:
             tpv = endogenous_results.get('TPV', 2550)
             if cprod > 0:
                 endogenous_results['FU'] = min(tpv / cprod, 1.0)
         
+        if 'PE' not in endogenous_results:
+            tpv = endogenous_results.get('TPV', 2550)
+            nepp = variable_dict.get('NEPP', 15)
+            if nepp > 0:
+                endogenous_results['PE'] = tpv / nepp
+        
+        # Calculate ROI realistically
+        if 'RI' not in endogenous_results:
+            gt = endogenous_results.get('GT', 0)
+            investment = cfd * 30 + se  # Monthly investment approximation
+            if investment > 0:
+                endogenous_results['RI'] = (gt * 30) / investment  # Monthly ROI
+        
+        # Ensure inventory metrics are reasonable
+        if 'IPF' not in endogenous_results:
+            tppro = endogenous_results.get('TPPRO', cprod * 0.85)
+            tpv = endogenous_results.get('TPV', 2550)
+            endogenous_results['IPF'] = max(0, tppro - tpv)
+        
         if 'DI' not in endogenous_results:
             de = variable_dict.get('DE', 2650)
             tpv = endogenous_results.get('TPV', 2550)
             endogenous_results['DI'] = max(0, de - tpv)
-        
-        # Ensure all variables have reasonable values
-        for var in ['TPPRO', 'IPF', 'II', 'RTI', 'CA', 'CTTL']:
-            if var not in endogenous_results:
-                endogenous_results[var] = 0.0
 
+    
+    def _validate_simulation_results(self, endogenous_results, variable_dict):
+        """Validate simulation results for coherence and realism"""
+        validations = []
+        
+        # Get key metrics
+        tpv = endogenous_results.get('TPV', 0)
+        tppro = endogenous_results.get('TPPRO', 0)
+        it = endogenous_results.get('IT', 0)
+        gt = endogenous_results.get('GT', 0)
+        de = variable_dict.get('DE', 0)
+        pvp = variable_dict.get('PVP', 1)
+        
+        # Validation 1: Sales cannot exceed production
+        if tpv > tppro * 1.1:  # Allow 10% tolerance
+            validations.append({
+                'type': 'ERROR',
+                'message': f'Sales ({tpv}) exceed production ({tppro})',
+                'action': 'Capping sales to production'
+            })
+            endogenous_results['TPV'] = tppro
+            tpv = tppro
+        
+        # Validation 2: Sales should align with demand
+        if tpv > de * 1.5:  # 50% over demand is suspicious
+            validations.append({
+                'type': 'WARNING',
+                'message': f'Sales ({tpv}) significantly exceed demand ({de})',
+                'action': 'Review demand prediction model'
+            })
+        
+        # Validation 3: Revenue should match sales
+        expected_revenue = tpv * pvp
+        if abs(it - expected_revenue) > expected_revenue * 0.01:  # 1% tolerance
+            validations.append({
+                'type': 'ERROR',
+                'message': f'Revenue mismatch: {it} vs expected {expected_revenue}',
+                'action': 'Recalculating revenue'
+            })
+            endogenous_results['IT'] = expected_revenue
+        
+        # Validation 4: Profit margins should be realistic
+        if it > 0:
+            margin = gt / it
+            if margin < -0.5:  # Losing more than 50%
+                validations.append({
+                    'type': 'ERROR',
+                    'message': f'Unrealistic loss margin: {margin:.2%}',
+                    'action': 'Review cost structure'
+                })
+            elif margin > 0.8:  # More than 80% profit
+                validations.append({
+                    'type': 'WARNING',
+                    'message': f'Unusually high profit margin: {margin:.2%}',
+                    'action': 'Verify cost calculations'
+                })
+        
+        # Log validations
+        for validation in validations:
+            if validation['type'] == 'ERROR':
+                logger.error(f"Validation: {validation['message']} - {validation['action']}")
+            else:
+                logger.warning(f"Validation: {validation['message']} - {validation['action']}")
+        
+        return validations
+    
+    
     def _merge_results(self, variable_dict, endogenous_results):
         """Merge all results ensuring completeness"""
         
@@ -764,108 +846,120 @@ class SimulationCore:
         return final_results
 
     def _generate_demand_prediction(self, simulation_instance, variable_dict, day_index):
-        """Generate demand prediction using the selected FDP with continuity from last historical value"""
+        """Generate demand prediction using the selected FDP with continuity from historical data"""
         try:
             fdp = simulation_instance.fk_fdp
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
             
-            # Get last historical value and statistics
+            # Calculate base statistics from REAL data
             if demand_history and len(demand_history) > 0:
-                last_historical_value = float(demand_history[-1])  # Use LAST value, not mean
                 mean_demand = np.mean(demand_history)
                 std_demand = np.std(demand_history)
+                cv = std_demand / mean_demand if mean_demand > 0 else 0.1
                 
-                # Calculate trend from last few points
-                if len(demand_history) >= 5:
-                    # Use last 5 points to calculate recent trend
-                    recent_points = demand_history[-5:]
-                    x = np.arange(len(recent_points))
-                    z = np.polyfit(x, recent_points, 1)
-                    recent_trend = z[0]  # Recent slope
+                # Get last historical value for continuity
+                last_historical_value = demand_history[-1]
+                
+                # Calculate trend from historical data
+                if len(demand_history) > 1:
+                    x = np.arange(len(demand_history))
+                    z = np.polyfit(x, demand_history, 1)
+                    historical_trend = z[0]  # Slope of historical trend
                 else:
-                    recent_trend = 0
-                
-                logger.info(f"Day {day_index}: Using last historical value {last_historical_value} as base")
+                    historical_trend = 0
             else:
-                last_historical_value = variable_dict.get('DH', 2500)
-                mean_demand = last_historical_value
+                mean_demand = variable_dict.get('DH', 2500)
                 std_demand = mean_demand * 0.1
-                recent_trend = 0
+                cv = 0.1
+                last_historical_value = mean_demand
+                historical_trend = 0
             
             # Add seasonality factor from questionnaire
             seasonality = variable_dict.get('ED', 1.0)
             
-            # For first day of simulation, start from last historical value
-            if day_index == 0:
-                base_value = last_historical_value
-            else:
-                # For subsequent days, use previous simulated value if available
-                base_value = getattr(self, '_last_simulated_value', last_historical_value)
+            # IMPORTANT: Limit standard deviation to avoid extreme values
+            max_std = mean_demand * 0.3  # Maximum 30% variation
+            std_to_use = min(std_demand, max_std)
             
-            # Generate variation based on distribution type
+            # Generate prediction based on distribution type
             if fdp.distribution_type == 1:  # Normal
-                std_param = fdp.std_dev_param if fdp.std_dev_param else std_demand
-                variation = np.random.normal(0, std_param * 0.1)  # Small variation
+                # Use historical parameters, not FDP parameters
+                base_prediction = np.random.normal(mean_demand, std_to_use)
                 
             elif fdp.distribution_type == 2:  # Exponential
-                lambda_param = fdp.lambda_param if fdp.lambda_param else 1/mean_demand
-                variation = (np.random.exponential(1/lambda_param) - mean_demand) * 0.1
+                # Scale properly to historical mean
+                scale = mean_demand  # Use mean as scale
+                base_prediction = np.random.exponential(scale)
                 
             elif fdp.distribution_type == 3:  # Log-Normal
-                std_param = fdp.std_dev_param if fdp.std_dev_param else std_demand/mean_demand
-                variation = (np.random.lognormal(0, std_param * 0.1) - 1) * base_value * 0.1
-                
+                # Calculate log-normal parameters from historical data
+                if mean_demand > 0 and cv > 0:
+                    sigma = np.sqrt(np.log(1 + cv**2))
+                    mu = np.log(mean_demand) - sigma**2 / 2
+                    base_prediction = np.random.lognormal(mu, sigma)
+                else:
+                    base_prediction = mean_demand
+                    
             elif fdp.distribution_type == 4:  # Gamma
-                shape = fdp.shape_param if fdp.shape_param else 2
-                scale = std_demand * 0.1
-                variation = (np.random.gamma(shape, scale) - shape * scale) * 0.1
-                
+                # Calculate gamma parameters from historical data
+                if std_to_use > 0:
+                    shape = (mean_demand / std_to_use) ** 2
+                    scale = std_to_use ** 2 / mean_demand
+                    base_prediction = np.random.gamma(shape, scale)
+                else:
+                    base_prediction = mean_demand
+                    
             elif fdp.distribution_type == 5:  # Uniform
-                range_val = std_demand * 0.2
-                variation = np.random.uniform(-range_val, range_val)
+                # Use realistic bounds based on historical data
+                min_val = mean_demand - std_to_use
+                max_val = mean_demand + std_to_use
+                base_prediction = np.random.uniform(min_val, max_val)
                 
             else:
-                # Default variation
-                variation = np.random.normal(0, std_demand * 0.1)
+                # Default to normal distribution
+                base_prediction = np.random.normal(mean_demand, std_to_use)
             
-            # Apply trend continuation
-            trend_adjustment = recent_trend * (day_index + 1) * 0.5
-            
-            # Calculate final prediction
-            prediction = base_value + variation + trend_adjustment
+            # Apply continuity adjustment for first days of simulation
+            if day_index < 7:
+                # Smooth transition from last historical value
+                continuity_factor = 0.7 - (day_index * 0.1)  # Decreasing weight
+                base_prediction = (continuity_factor * last_historical_value + 
+                                (1 - continuity_factor) * base_prediction)
             
             # Apply seasonality
-            prediction *= seasonality
+            prediction = base_prediction * seasonality
             
-            # Apply growth factor if specified
-            growth_rate = variable_dict.get('GROWTH_RATE', 0.002)  # 0.2% daily growth default
-            growth_factor = 1 + (growth_rate * day_index)
-            prediction *= growth_factor
+            # Apply trend component with dampening
+            trend_dampening = 0.5  # Reduce trend impact
+            trend_factor = 1 + (historical_trend / mean_demand) * trend_dampening * (day_index / 30)
+            prediction *= trend_factor
             
-            # Ensure positive demand and reasonable bounds
-            prediction = max(1.0, prediction)
+            # Add small random walk component for realism
+            random_walk = np.random.normal(0, std_to_use * 0.05)
+            prediction += random_walk
             
-            # Limit extreme variations (no more than 50% change from base)
-            max_change = base_value * 0.5
-            if abs(prediction - base_value) > max_change:
-                prediction = base_value + np.sign(prediction - base_value) * max_change
+            # CRITICAL: Validate prediction is within reasonable bounds
+            # Maximum 50% deviation from historical mean
+            lower_bound = mean_demand * 0.5
+            upper_bound = mean_demand * 1.5
             
-            # Store for next iteration
-            self._last_simulated_value = prediction
+            prediction = np.clip(prediction, lower_bound, upper_bound)
             
-            logger.debug(f"Day {day_index}: Base={base_value:.2f}, Variation={variation:.2f}, Prediction={prediction:.2f}")
+            # Ensure positive demand
+            prediction = max(1.0, float(prediction))
             
-            return float(prediction)
+            # Log validation warning if prediction seems unrealistic
+            if prediction > mean_demand * 1.3 or prediction < mean_demand * 0.7:
+                logger.warning(f"Day {day_index}: Demand prediction {prediction:.2f} deviates significantly from historical mean {mean_demand:.2f}")
+            
+            return prediction
             
         except Exception as e:
             logger.error(f"Error generating demand prediction: {str(e)}")
-            # Fallback to last known value with small random variation
+            # Fallback to mean with small randomness
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
-            if demand_history:
-                last_value = float(demand_history[-1])
-            else:
-                last_value = 2500
-            return max(1.0, last_value * (0.95 + random.random() * 0.1))
+            mean_demand = np.mean(demand_history) if demand_history else 2500
+            return max(1.0, mean_demand * (0.9 + random.random() * 0.2))
 
     def _get_output_variable(self, equation):
         """Get the output variable from an equation"""
@@ -897,8 +991,9 @@ class SimulationCore:
                 return []
 
     def _bulk_save_results(self, simulation_instance, results):
-        """Bulk save simulation results"""
+        """Bulk save simulation results with validation"""
         result_objects = []
+        validation_summary = []
         
         results.sort(key=lambda x: x[0])
         
@@ -906,22 +1001,50 @@ class SimulationCore:
             simulation_instance.demand_history
         )
         
+        # Calculate historical statistics for validation
+        hist_mean = np.mean(demand_history_numeric) if demand_history_numeric else 0
+        hist_std = np.std(demand_history_numeric) if demand_history_numeric else 0
+        
         for day_index, day_data in results:
             endogenous_results = day_data['endogenous_results']
             predicted_demand = day_data.get('predicted_demand', 0)
+            
+            # Validate results before saving
+            validations = self._validate_simulation_results(endogenous_results, day_data['variable_initials_dict'])
+            if validations:
+                validation_summary.extend(validations)
+            
+            # Check demand prediction validity
+            if hist_mean > 0:
+                demand_deviation = abs(predicted_demand - hist_mean) / hist_mean
+                if demand_deviation > 0.5:  # More than 50% deviation
+                    logger.warning(f"Day {day_index}: Demand {predicted_demand:.2f} deviates {demand_deviation:.2%} from historical mean {hist_mean:.2f}")
             
             demand_total = predicted_demand if predicted_demand > 0 else endogenous_results.get('DE', 2500)
             
             all_demands = demand_history_numeric + [demand_total]
             demand_std_dev = np.std(all_demands)
             
-            # Ensure all values are serializable
+            # Ensure all values are serializable and valid
             serializable_results = {}
             for k, v in endogenous_results.items():
                 try:
-                    serializable_results[k] = float(v) if isinstance(v, (int, float, np.number)) else 0.0
+                    value = float(v) if isinstance(v, (int, float, np.number)) else 0.0
+                    # Validate no extreme values
+                    if abs(value) > 1e9:  # Billion threshold
+                        logger.warning(f"Extreme value detected for {k}: {value}")
+                        value = 0.0
+                    serializable_results[k] = value
                 except:
                     serializable_results[k] = 0.0
+            
+            # Add metadata for tracking
+            serializable_results['_metadata'] = {
+                'day_index': day_index,
+                'demand_prediction': predicted_demand,
+                'validation_errors': len([v for v in validations if v['type'] == 'ERROR']),
+                'validation_warnings': len([v for v in validations if v['type'] == 'WARNING'])
+            }
             
             result_objects.append(
                 ResultSimulation(
@@ -930,6 +1053,10 @@ class SimulationCore:
                     demand_std_deviation=demand_std_dev,
                     date=simulation_instance.date_created + timedelta(days=day_index + 1),
                     variables=serializable_results,
+                    confidence_intervals={
+                        'demand_lower': max(0, demand_total - 2 * demand_std_dev),
+                        'demand_upper': demand_total + 2 * demand_std_dev
+                    }
                 )
             )
             
@@ -939,3 +1066,9 @@ class SimulationCore:
         
         if result_objects:
             ResultSimulation.objects.bulk_create(result_objects)
+        
+        # Log validation summary
+        if validation_summary:
+            error_count = len([v for v in validation_summary if v['type'] == 'ERROR'])
+            warning_count = len([v for v in validation_summary if v['type'] == 'WARNING'])
+            logger.info(f"Simulation completed with {error_count} errors and {warning_count} warnings")

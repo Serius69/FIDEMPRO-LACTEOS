@@ -771,8 +771,8 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" 
-                                        data-bs-target="#timeline" type="button" role="tab">
+                                <button class="nav-link" id="time-line-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#time-line" type="button" role="tab">
                                     <i class="bx bx-time me-2"></i>
                                     Línea de Tiempo
                                 </button>
@@ -800,7 +800,7 @@
                         <!-- Overview Tab -->
                         <div class="tab-pane fade show active" id="overview" role="tabpanel">
                             <div class="row">
-                                 <div class="col-md-6 mb-4">
+                                <div class="col-6 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-dollar me-2"></i>
@@ -827,7 +827,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-6">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-line-chart me-2"></i>
@@ -855,7 +855,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Financial Tab - Actualización completa -->
                         <div class="tab-pane fade" id="financial" role="tabpanel">
                             <div class="row">
@@ -1005,7 +1004,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Operations Tab - Actualización completa -->
                         <div class="tab-pane fade" id="operations" role="tabpanel">
                             <div class="row">
@@ -1096,8 +1094,6 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
-                        
                         <!-- Endogenous Variables Tab -->
                         <div class="tab-pane fade" id="endogenous" role="tabpanel">
                             <div class="row">
@@ -1197,111 +1193,107 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
-
                         <!-- Actualización de la sección Timeline -->
                         <div class="tab-pane fade" id="timeline" role="tabpanel">
-                        <div class="timeline-container">
-                            <div class="timeline-line"></div>
-                            {% for item in all_variables_extracted %}
-                            <div class="timeline-item" data-day="{{ forloop.counter }}">
-                                <div class="timeline-dot"></div>
-                                <div class="timeline-content">
-                                    <h6>
-                                        <i class="bx bx-calendar me-2"></i>
-                                        Día {{ forloop.counter }} - {{ item.date_simulation|date:"d/m/Y" }}
-                                    </h6>
-                                    
-                                    <!-- Key metrics for this day -->
-                                    <div class="row mt-2">
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Demanda del día:</small>
-                                            <p class="mb-1">
-                                                <strong>
-                                                    {% for variable, data in item.totales_por_variable.items %}
-                                                        {% if variable == "DEMANDA ESPERADA" or variable == "DE" %}
-                                                            {{ data.total|floatformat:2 }} L
-                                                        {% endif %}
+                            <div class="timeline-container">
+                                <div class="timeline-line"></div>
+                                {% for item in all_variables_extracted %}
+                                <div class="timeline-item" data-day="{{ forloop.counter }}">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h6>
+                                            <i class="bx bx-calendar me-2"></i>
+                                            Día {{ forloop.counter }} - {{ item.date_simulation|date:"d/m/Y" }}
+                                        </h6>
+                                        
+                                        <!-- Key metrics for this day -->
+                                        <div class="row mt-2">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Demanda del día:</small>
+                                                <p class="mb-1">
+                                                    <strong>
+                                                        {% for variable, data in item.totales_por_variable.items %}
+                                                            {% if variable == "DEMANDA ESPERADA" or variable == "DE" %}
+                                                                {{ data.total|floatformat:2 }} L
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </strong>
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Productos vendidos:</small>
+                                                <p class="mb-1">
+                                                    <strong>
+                                                        {% for variable, data in item.totales_por_variable.items %}
+                                                            {% if variable == "TOTAL PRODUCTOS VENDIDOS" %}
+                                                                {{ data.total|floatformat:0 }} unidades
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </strong>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mt-2">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Ingresos del día:</small>
+                                                <p class="mb-1">
+                                                    <strong>
+                                                        {% for variable, data in item.totales_por_variable.items %}
+                                                            {% if variable == "INGRESOS TOTALES" %}
+                                                                Bs. {{ data.total|floatformat:2 }}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </strong>
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Variables registradas:</small>
+                                                <p class="mb-1">
+                                                    <strong>{{ item.totales_por_variable|length }}</strong>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Show/hide detailed variables -->
+                                        <button class="btn btn-sm btn-outline-primary mt-2" 
+                                                onclick="toggleTimelineDetails({{ forloop.counter }})">
+                                            <i class="bx bx-show me-1"></i>
+                                            Ver detalles
+                                        </button>
+                                        
+                                        <div class="timeline-details mt-3" id="timelineDetails{{ forloop.counter }}" style="display: none;">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Variable</th>
+                                                        <th>Valor</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for variable, data in item.totales_por_variable.items|slice:":10" %}
+                                                    <tr>
+                                                        <td>{{ variable }}</td>
+                                                        <td>{{ data.total|floatformat:2 }} {{ data.unit }}</td>
+                                                    </tr>
                                                     {% endfor %}
-                                                </strong>
-                                            </p>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Productos vendidos:</small>
-                                            <p class="mb-1">
-                                                <strong>
-                                                    {% for variable, data in item.totales_por_variable.items %}
-                                                        {% if variable == "TOTAL PRODUCTOS VENDIDOS" %}
-                                                            {{ data.total|floatformat:0 }} unidades
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </strong>
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row mt-2">
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Ingresos del día:</small>
-                                            <p class="mb-1">
-                                                <strong>
-                                                    {% for variable, data in item.totales_por_variable.items %}
-                                                        {% if variable == "INGRESOS TOTALES" %}
-                                                            Bs. {{ data.total|floatformat:2 }}
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </strong>
-                                            </p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Variables registradas:</small>
-                                            <p class="mb-1">
-                                                <strong>{{ item.totales_por_variable|length }}</strong>
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Show/hide detailed variables -->
-                                    <button class="btn btn-sm btn-outline-primary mt-2" 
-                                            onclick="toggleTimelineDetails({{ forloop.counter }})">
-                                        <i class="bx bx-show me-1"></i>
-                                        Ver detalles
-                                    </button>
-                                    
-                                    <div class="timeline-details mt-3" id="timelineDetails{{ forloop.counter }}" style="display: none;">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Variable</th>
-                                                    <th>Valor</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for variable, data in item.totales_por_variable.items|slice:":10" %}
-                                                <tr>
-                                                    <td>{{ variable }}</td>
-                                                    <td>{{ data.total|floatformat:2 }} {{ data.unit }}</td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
                                     </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                        </div>
-                        
-                        <!-- Load more button -->
-                        {% if all_variables_extracted|length > 10 %}
-                        <div class="text-center mt-4">
-                            <button class="btn btn-outline-primary" onclick="loadMoreTimeline()">
-                                <i class="bx bx-loader-alt me-2"></i>
-                                Cargar más días
-                            </button>
-                        </div>
-                        {% endif %}
-                        </div>
-
+                            <!-- Load more button -->
+                            {% if all_variables_extracted|length > 10 %}
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-primary" onclick="loadMoreTimeline()">
+                                    <i class="bx bx-loader-alt me-2"></i>
+                                    Cargar más días
+                                </button>
+                            </div>
+                            {% endif %}
+                            </div>
                                 <!-- Recursos Humanos -->
                                 {% if image_data_9 %}
                                 <div class="col-md-6">
@@ -1397,71 +1389,8 @@
                                     </div>
                                 </div>
                                 {% endif %}
-                            </div>
-                            
-                            <!-- Additional Endogenous Variables Table -->
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <div class="data-table-container">
-                                        <div class="card-header">
-                                            <h5 class="card-title mb-0">
-                                                <i class="bx bx-list-ul me-2"></i>
-                                                Resumen de Variables Endógenas
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="table-responsive">
-                                                <table class="table table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Variable</th>
-                                                            <th>Valor Inicial</th>
-                                                            <th>Valor Final</th>
-                                                            <th>Cambio (%)</th>
-                                                            <th>Tendencia</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for name_variable, info_variable in totales_acumulativos.items %}
-                                                        {% if name_variable in "NÚMERO TRABAJADORES,COSTO TOTAL TRANSPORTE,PRECIO ESTIMADO,MARGEN BRUTO" %}
-                                                        <tr>
-                                                            <td>
-                                                                <strong>{{ name_variable }}</strong>
-                                                                <br>
-                                                                <small class="text-muted">{{ info_variable.unit }}</small>
-                                                            </td>
-                                                            <td>{{ info_variable.initial|default:"N/A"|floatformat:2 }}</td>
-                                                            <td>{{ info_variable.final|default:info_variable.total|floatformat:2 }}</td>
-                                                            <td>
-                                                                {% if info_variable.change_pct %}
-                                                                <span class="badge {% if info_variable.change_pct > 0 %}bg-success{% else %}bg-danger{% endif %}">
-                                                                    {{ info_variable.change_pct|floatformat:1 }}%
-                                                                </span>
-                                                                {% else %}
-                                                                -
-                                                                {% endif %}
-                                                            </td>
-                                                            <td>
-                                                                {% if info_variable.trend == "increasing" %}
-                                                                <i class="bx bx-trending-up text-success"></i>
-                                                                {% elif info_variable.trend == "decreasing" %}
-                                                                <i class="bx bx-trending-down text-danger"></i>
-                                                                {% else %}
-                                                                <i class="bx bx-minus text-muted"></i>
-                                                                {% endif %}
-                                                            </td>
-                                                        </tr>
-                                                        {% endif %}
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            </div>                            
                         </div>
-                    
                         <!-- Demand Tab -->
                         <div class="tab-pane fade" id="demand" role="tabpanel">
                             <div class="row">
@@ -1523,9 +1452,9 @@
                                         </h6>
                                         {% if image_data_line %}
                                         <img src="data:image/png;base64,{{ image_data_line }}" 
-                                             class="chart-image" 
-                                             alt="Análisis de demanda"
-                                             loading="lazy">
+                                                class="chart-image" 
+                                                alt="Análisis de demanda"
+                                                loading="lazy">
                                         {% endif %}
                                     </div>
                                 </div>
@@ -1553,227 +1482,165 @@
                                 {% endif %}
                             </div>
                         </div>
-
-                        <!-- Timeline Tab -->
-                        <div class="tab-pane fade" id="timeline" role="tabpanel">
-                            <div class="timeline-container">
-                                <div class="timeline-line"></div>
-                                
-                                <!-- Initial timeline items -->
-                                {% for item in all_variables_extracted %}
-                                <div class="timeline-item {% if forloop.counter > 10 %}d-none extra-timeline{% endif %}">
-                                    <div class="timeline-dot"></div>
-                                    <div class="timeline-content">
-                                        <h6>Día {{ forloop.counter }} - {{ item.date_simulation|date:"d/m/Y" }}</h6>
-                                        <p class="mb-2">
-                                            <strong>Demanda:</strong> 
-                                            {% for variable, data in item.totales_por_variable.items %}
-                                                {% if variable == "DEMANDA INSATISFECHA" %}
-                                                    {{ data.total|floatformat:2 }} L
-                                                {% endif %}
-                                            {% endfor %}
-                                        </p>
-                                        <small class="text-muted">
-                                            Variables clave registradas: {{ item.totales_por_variable|length }}
-                                        </small>
+                        <!-- Statistical Analysis Tab -->
+                        <div class="tab-pane fade" id="analysis" role="tabpanel">
+                            <div class="row">
+                                <!-- Demand Statistics Comparison -->
+                                {% if demand_stats %}
+                                <div class="col-md-6">
+                                    <div class="metric-card">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">
+                                                <i class="bx bx-stats me-2"></i>
+                                                Comparación Estadística de Demanda
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <h6 class="text-primary">Demanda Histórica</h6>
+                                                    <dl class="row">
+                                                        <dt class="col-6">Media:</dt>
+                                                        <dd class="col-6">{{ demand_stats.historical.mean|floatformat:2 }} L</dd>
+                                                        <dt class="col-6">Desv. Est.:</dt>
+                                                        <dd class="col-6">{{ demand_stats.historical.std|floatformat:2 }}</dd>
+                                                        <dt class="col-6">CV:</dt>
+                                                        <dd class="col-6">{{ demand_stats.historical.cv|floatformat:3 }}</dd>
+                                                        <dt class="col-6">Mín/Máx:</dt>
+                                                        <dd class="col-6">{{ demand_stats.historical.min|floatformat:0 }} - {{ demand_stats.historical.max|floatformat:0 }}</dd>
+                                                    </dl>
+                                                </div>
+                                                <div class="col-6">
+                                                    <h6 class="text-success">Demanda Simulada</h6>
+                                                    <dl class="row">
+                                                        <dt class="col-6">Media:</dt>
+                                                        <dd class="col-6">{{ demand_stats.simulated.mean|floatformat:2 }} L</dd>
+                                                        <dt class="col-6">Desv. Est.:</dt>
+                                                        <dd class="col-6">{{ demand_stats.simulated.std|floatformat:2 }}</dd>
+                                                        <dt class="col-6">CV:</dt>
+                                                        <dd class="col-6">{{ demand_stats.simulated.cv|floatformat:3 }}</dd>
+                                                        <dt class="col-6">Mín/Máx:</dt>
+                                                        <dd class="col-6">{{ demand_stats.simulated.min|floatformat:0 }} - {{ demand_stats.simulated.max|floatformat:0 }}</dd>
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                            {% if demand_stats.comparison %}
+                                            <hr>
+                                            <h6 class="text-muted">Diferencias</h6>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <small>Cambio en Media:</small>
+                                                    <h5 class="{% if demand_stats.comparison.mean_diff > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                        {{ demand_stats.comparison.mean_diff|floatformat:2 }} L 
+                                                        ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
+                                                    </h5>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small>Cambio en Variabilidad:</small>
+                                                    <h5 class="{% if demand_stats.comparison.cv_diff < 0 %}text-success{% else %}text-warning{% endif %}">
+                                                        {{ demand_stats.comparison.cv_diff|floatformat:3 }}
+                                                    </h5>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
-                                {% endfor %}
-
-                                {% if all_variables_extracted|length > 10 %}
-                                <div class="text-center mt-3">
-                                    <button class="btn btn-outline-primary btn-sm" id="toggleTimelineBtn" onclick="toggleTimeline()">
-                                        <i class="bx bx-chevron-down me-1"></i>
-                                        <span>Ver más días</span>
-                                    </button>
+                                {% endif %}
+                                
+                                <!-- Demand Boxplot Comparison -->
+                                {% if demand_boxplot %}
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-box me-2"></i>
+                                            Comparación de Distribuciones
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ demand_boxplot }}', 'demand-boxplot.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ demand_boxplot }}', 'Comparación de Distribuciones')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        <img src="data:image/png;base64,{{ demand_boxplot }}" 
+                                            class="chart-image" 
+                                            alt="Comparación de Distribuciones de Demanda"
+                                            loading="lazy">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Autocorrelation Analysis -->
+                                {% if demand_acf %}
+                                <div class="col-12">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-pulse me-2"></i>
+                                            Análisis de Autocorrelación
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ demand_acf }}', 'autocorrelation.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ demand_acf }}', 'Análisis de Autocorrelación')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        <img src="data:image/png;base64,{{ demand_acf }}" 
+                                            class="chart-image" 
+                                            alt="Análisis de Autocorrelación"
+                                            loading="lazy">
+                                    </div>
                                 </div>
                                 {% endif %}
                             </div>
-
-                            <script>
-                            function toggleTimeline() {
-                                const extraItems = document.querySelectorAll('.extra-timeline');
-                                const btn = document.getElementById('toggleTimelineBtn');
-                                const btnText = btn.querySelector('span');
-                                const btnIcon = btn.querySelector('i');
-
-                                extraItems.forEach(item => {
-                                    if (item.classList.contains('d-none')) {
-                                        item.classList.remove('d-none');
-                                        btnText.textContent = 'Ver menos días';
-                                        btnIcon.classList.replace('bx-chevron-down', 'bx-chevron-up');
-                                    } else {
-                                        item.classList.add('d-none');
-                                        btnText.textContent = 'Ver más días';
-                                        btnIcon.classList.replace('bx-chevron-up', 'bx-chevron-down');
-                                    }
-                                });
-                            }
-                            </script>
+                            
+                            <!-- Model Performance Metrics -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="metric-card">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">
+                                                <i class="bx bx-target-lock me-2"></i>
+                                                Métricas de Desempeño del Modelo
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-md-3">
+                                                    <div class="p-3">
+                                                        <h6 class="text-muted">Distribución Utilizada</h6>
+                                                        <h4 class="text-primary">{{ simulation_instance.fk_fdp.name|default:"Normal" }}</h4>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="p-3">
+                                                        <h6 class="text-muted">Error Cuadrático Medio</h6>
+                                                        <h4 class="text-success">{{ mse|default:"N/A"|floatformat:2 }}</h4>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="p-3">
+                                                        <h6 class="text-muted">Error Absoluto Medio</h6>
+                                                        <h4 class="text-info">{{ mae|default:"N/A"|floatformat:2 }}</h4>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="p-3">
+                                                        <h6 class="text-muted">Coeficiente R²</h6>
+                                                        <h4 class="text-warning">{{ r_squared|default:"N/A"|floatformat:3 }}</h4>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
                     
-                    <!-- Analysis Tab -->
-                    <!-- Statistical Analysis Tab -->
-                    <div class="tab-pane fade" id="analysis" role="tabpanel">
-                        <div class="row">
-                            <!-- Demand Statistics Comparison -->
-                            {% if demand_stats %}
-                            <div class="col-md-6">
-                                <div class="metric-card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">
-                                            <i class="bx bx-stats me-2"></i>
-                                            Comparación Estadística de Demanda
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <h6 class="text-primary">Demanda Histórica</h6>
-                                                <dl class="row">
-                                                    <dt class="col-6">Media:</dt>
-                                                    <dd class="col-6">{{ demand_stats.historical.mean|floatformat:2 }} L</dd>
-                                                    <dt class="col-6">Desv. Est.:</dt>
-                                                    <dd class="col-6">{{ demand_stats.historical.std|floatformat:2 }}</dd>
-                                                    <dt class="col-6">CV:</dt>
-                                                    <dd class="col-6">{{ demand_stats.historical.cv|floatformat:3 }}</dd>
-                                                    <dt class="col-6">Mín/Máx:</dt>
-                                                    <dd class="col-6">{{ demand_stats.historical.min|floatformat:0 }} - {{ demand_stats.historical.max|floatformat:0 }}</dd>
-                                                </dl>
-                                            </div>
-                                            <div class="col-6">
-                                                <h6 class="text-success">Demanda Simulada</h6>
-                                                <dl class="row">
-                                                    <dt class="col-6">Media:</dt>
-                                                    <dd class="col-6">{{ demand_stats.simulated.mean|floatformat:2 }} L</dd>
-                                                    <dt class="col-6">Desv. Est.:</dt>
-                                                    <dd class="col-6">{{ demand_stats.simulated.std|floatformat:2 }}</dd>
-                                                    <dt class="col-6">CV:</dt>
-                                                    <dd class="col-6">{{ demand_stats.simulated.cv|floatformat:3 }}</dd>
-                                                    <dt class="col-6">Mín/Máx:</dt>
-                                                    <dd class="col-6">{{ demand_stats.simulated.min|floatformat:0 }} - {{ demand_stats.simulated.max|floatformat:0 }}</dd>
-                                                </dl>
-                                            </div>
-                                        </div>
-                                        {% if demand_stats.comparison %}
-                                        <hr>
-                                        <h6 class="text-muted">Diferencias</h6>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small>Cambio en Media:</small>
-                                                <h5 class="{% if demand_stats.comparison.mean_diff > 0 %}text-success{% else %}text-danger{% endif %}">
-                                                    {{ demand_stats.comparison.mean_diff|floatformat:2 }} L 
-                                                    ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
-                                                </h5>
-                                            </div>
-                                            <div class="col-6">
-                                                <small>Cambio en Variabilidad:</small>
-                                                <h5 class="{% if demand_stats.comparison.cv_diff < 0 %}text-success{% else %}text-warning{% endif %}">
-                                                    {{ demand_stats.comparison.cv_diff|floatformat:3 }}
-                                                </h5>
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            <!-- Demand Boxplot Comparison -->
-                            {% if demand_boxplot %}
-                            <div class="col-md-6">
-                                <div class="chart-container">
-                                    <h6 class="mb-3">
-                                        <i class="bx bx-box me-2"></i>
-                                        Comparación de Distribuciones
-                                    </h6>
-                                    <div class="chart-controls">
-                                        <div class="chart-control-btn" onclick="downloadChart('{{ demand_boxplot }}', 'demand-boxplot.png')" title="Descargar">
-                                            <i class="bx bx-download"></i>
-                                        </div>
-                                        <div class="chart-control-btn" onclick="openFullscreen('{{ demand_boxplot }}', 'Comparación de Distribuciones')" title="Pantalla completa">
-                                            <i class="bx bx-fullscreen"></i>
-                                        </div>
-                                    </div>
-                                    <img src="data:image/png;base64,{{ demand_boxplot }}" 
-                                        class="chart-image" 
-                                        alt="Comparación de Distribuciones de Demanda"
-                                        loading="lazy">
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            <!-- Autocorrelation Analysis -->
-                            {% if demand_acf %}
-                            <div class="col-12">
-                                <div class="chart-container">
-                                    <h6 class="mb-3">
-                                        <i class="bx bx-pulse me-2"></i>
-                                        Análisis de Autocorrelación
-                                    </h6>
-                                    <div class="chart-controls">
-                                        <div class="chart-control-btn" onclick="downloadChart('{{ demand_acf }}', 'autocorrelation.png')" title="Descargar">
-                                            <i class="bx bx-download"></i>
-                                        </div>
-                                        <div class="chart-control-btn" onclick="openFullscreen('{{ demand_acf }}', 'Análisis de Autocorrelación')" title="Pantalla completa">
-                                            <i class="bx bx-fullscreen"></i>
-                                        </div>
-                                    </div>
-                                    <img src="data:image/png;base64,{{ demand_acf }}" 
-                                        class="chart-image" 
-                                        alt="Análisis de Autocorrelación"
-                                        loading="lazy">
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Model Performance Metrics -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="metric-card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">
-                                            <i class="bx bx-target-lock me-2"></i>
-                                            Métricas de Desempeño del Modelo
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row text-center">
-                                            <div class="col-md-3">
-                                                <div class="p-3">
-                                                    <h6 class="text-muted">Distribución Utilizada</h6>
-                                                    <h4 class="text-primary">{{ simulation_instance.fk_fdp.name|default:"Normal" }}</h4>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="p-3">
-                                                    <h6 class="text-muted">Error Cuadrático Medio</h6>
-                                                    <h4 class="text-success">{{ mse|default:"N/A"|floatformat:2 }}</h4>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="p-3">
-                                                    <h6 class="text-muted">Error Absoluto Medio</h6>
-                                                    <h4 class="text-info">{{ mae|default:"N/A"|floatformat:2 }}</h4>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="p-3">
-                                                    <h6 class="text-muted">Coeficiente R²</h6>
-                                                    <h4 class="text-warning">{{ r_squared|default:"N/A"|floatformat:3 }}</h4>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
                     <!-- Summary Statistics -->
                     <div class="metric-card mt-4">
                         <div class="card-header">

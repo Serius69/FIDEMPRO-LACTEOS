@@ -1,5 +1,6 @@
 # views/simulate_result_view.py
 from typing import List
+from ..services.validation_service import SimulationValidationService
 import numpy as np
 from django.views.generic import View
 from django.shortcuts import render, redirect, get_object_or_404
@@ -147,6 +148,21 @@ class SimulateResultView(LoginRequiredMixin, View):
         # Log accumulated totals for debugging
         logger.info(f"Accumulated totals variables: {list(analysis_data['totales_acumulativos'].keys())}")
         
+        
+        # Add validation results
+        validation_service = SimulationValidationService()
+        validation_results = validation_service.validate_simulation(simulation_id)
+        
+        # Add alerts to context
+        if validation_results['alerts']:
+            # Group alerts by type
+            alerts_by_type = {}
+            for alert in validation_results['alerts']:
+                alert_type = alert['type']
+                if alert_type not in alerts_by_type:
+                    alerts_by_type[alert_type] = []
+                alerts_by_type[alert_type].append(alert)
+        
         # Prepare complete context
         context = {
             'simulation_instance': simulation_instance,
@@ -164,12 +180,45 @@ class SimulateResultView(LoginRequiredMixin, View):
             **analysis_data.get('chart_images', {}),  # Unpack all chart images
             **financial_results,
         }
+        context['validation_alerts'] = alerts_by_type
+        context['validation_summary'] = validation_results['summary']
+        context['simulation_valid'] = validation_results['is_valid']
+        
+        # Calculate realistic statistics
+        if historical_demand and results_simulation:
+            comparison = self._calculate_realistic_comparison(historical_demand, results_simulation)
+            context['realistic_comparison'] = comparison
         
         # Log final context keys for debugging
         chart_keys = [k for k in context.keys() if k.startswith('image_data')]
         logger.info(f"Chart keys in context: {chart_keys}")
         
         return context
+    
+    
+    def _calculate_realistic_comparison(self, historical_demand, results_simulation):
+        """Calculate realistic comparison metrics"""
+        hist_mean = np.mean(historical_demand)
+        hist_std = np.std(historical_demand)
+        
+        sim_demands = [float(r.demand_mean) for r in results_simulation]
+        sim_mean = np.mean(sim_demands)
+        sim_std = np.std(sim_demands)
+        
+        # Calculate realistic growth
+        growth_rate = ((sim_mean - hist_mean) / hist_mean * 100) if hist_mean > 0 else 0
+        
+        # Flag if growth seems unrealistic
+        is_realistic = abs(growth_rate) < 50  # Less than 50% change
+        
+        return {
+            'historical_mean': hist_mean,
+            'simulated_mean': sim_mean,
+            'growth_rate': growth_rate,
+            'is_realistic': is_realistic,
+            'deviation_percentage': abs(growth_rate),
+            'recommendation': self._get_growth_recommendation(growth_rate, is_realistic)
+        }
     
     def _create_enhanced_chart_data(self, results_simulation, historical_demand):
         """Create enhanced chart data including historical demand"""
@@ -187,6 +236,23 @@ class SimulateResultView(LoginRequiredMixin, View):
         }
         
         return chart_data
+    
+    def _get_growth_recommendation(self, growth_rate, is_realistic):
+        """Get recommendation based on growth rate"""
+        if not is_realistic:
+            if growth_rate > 50:
+                return "La predicción parece sobreestimar la demanda. Revise los parámetros del modelo."
+            else:
+                return "La predicción muestra una caída drástica. Verifique los datos de entrada."
+        else:
+            if growth_rate > 20:
+                return "Crecimiento optimista pero realista. Prepare capacidad adicional."
+            elif growth_rate > 0:
+                return "Crecimiento moderado esperado. Mantenga niveles actuales."
+            elif growth_rate > -10:
+                return "Ligera contracción esperada. Optimice costos operativos."
+            else:
+                return "Contracción significativa. Implemente estrategias de retención."
     
     def generate_demand_comparison_chart(self, historical_demand: List[float], 
                                        results_simulation: List) -> str:
