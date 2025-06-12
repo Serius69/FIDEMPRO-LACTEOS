@@ -764,91 +764,108 @@ class SimulationCore:
         return final_results
 
     def _generate_demand_prediction(self, simulation_instance, variable_dict, day_index):
-        """Generate demand prediction using the selected FDP with continuity from historical data"""
+        """Generate demand prediction using the selected FDP with continuity from last historical value"""
         try:
             fdp = simulation_instance.fk_fdp
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
             
-            # Calculate base statistics from REAL data
+            # Get last historical value and statistics
             if demand_history and len(demand_history) > 0:
+                last_historical_value = float(demand_history[-1])  # Use LAST value, not mean
                 mean_demand = np.mean(demand_history)
                 std_demand = np.std(demand_history)
                 
-                # Get last historical value for continuity
-                last_historical_value = demand_history[-1]
-                
-                # Calculate trend from historical data
-                if len(demand_history) > 1:
-                    x = np.arange(len(demand_history))
-                    z = np.polyfit(x, demand_history, 1)
-                    historical_trend = z[0]  # Slope of historical trend
+                # Calculate trend from last few points
+                if len(demand_history) >= 5:
+                    # Use last 5 points to calculate recent trend
+                    recent_points = demand_history[-5:]
+                    x = np.arange(len(recent_points))
+                    z = np.polyfit(x, recent_points, 1)
+                    recent_trend = z[0]  # Recent slope
                 else:
-                    historical_trend = 0
+                    recent_trend = 0
+                
+                logger.info(f"Day {day_index}: Using last historical value {last_historical_value} as base")
             else:
-                mean_demand = variable_dict.get('DH', 2500)
+                last_historical_value = variable_dict.get('DH', 2500)
+                mean_demand = last_historical_value
                 std_demand = mean_demand * 0.1
-                last_historical_value = mean_demand
-                historical_trend = 0
+                recent_trend = 0
             
             # Add seasonality factor from questionnaire
             seasonality = variable_dict.get('ED', 1.0)
             
-            # Generate prediction based on distribution type
+            # For first day of simulation, start from last historical value
+            if day_index == 0:
+                base_value = last_historical_value
+            else:
+                # For subsequent days, use previous simulated value if available
+                base_value = getattr(self, '_last_simulated_value', last_historical_value)
+            
+            # Generate variation based on distribution type
             if fdp.distribution_type == 1:  # Normal
-                mean_param = fdp.mean_param if fdp.mean_param else mean_demand
                 std_param = fdp.std_dev_param if fdp.std_dev_param else std_demand
-                base_prediction = np.random.normal(mean_param, std_param)
+                variation = np.random.normal(0, std_param * 0.1)  # Small variation
                 
             elif fdp.distribution_type == 2:  # Exponential
                 lambda_param = fdp.lambda_param if fdp.lambda_param else 1/mean_demand
-                base_prediction = np.random.exponential(1/lambda_param)
+                variation = (np.random.exponential(1/lambda_param) - mean_demand) * 0.1
                 
             elif fdp.distribution_type == 3:  # Log-Normal
-                mean_param = fdp.mean_param if fdp.mean_param else np.log(mean_demand)
                 std_param = fdp.std_dev_param if fdp.std_dev_param else std_demand/mean_demand
-                base_prediction = np.random.lognormal(mean_param, std_param)
+                variation = (np.random.lognormal(0, std_param * 0.1) - 1) * base_value * 0.1
                 
             elif fdp.distribution_type == 4:  # Gamma
-                shape = fdp.shape_param if fdp.shape_param else (mean_demand/std_demand)**2
-                scale = fdp.scale_param if fdp.scale_param else std_demand**2/mean_demand
-                base_prediction = np.random.gamma(shape, scale)
+                shape = fdp.shape_param if fdp.shape_param else 2
+                scale = std_demand * 0.1
+                variation = (np.random.gamma(shape, scale) - shape * scale) * 0.1
                 
             elif fdp.distribution_type == 5:  # Uniform
-                min_param = fdp.min_param if fdp.min_param else mean_demand - std_demand
-                max_param = fdp.max_param if fdp.max_param else mean_demand + std_demand
-                base_prediction = np.random.uniform(min_param, max_param)
+                range_val = std_demand * 0.2
+                variation = np.random.uniform(-range_val, range_val)
                 
             else:
-                # Default to normal distribution
-                base_prediction = np.random.normal(mean_demand, std_demand)
+                # Default variation
+                variation = np.random.normal(0, std_demand * 0.1)
             
-            # Apply continuity adjustment for first day of simulation
-            if day_index == 0:
-                # Smooth transition from last historical value
-                continuity_factor = 0.7  # Weight for historical continuity
-                base_prediction = (continuity_factor * last_historical_value + 
-                                (1 - continuity_factor) * base_prediction)
+            # Apply trend continuation
+            trend_adjustment = recent_trend * (day_index + 1) * 0.5
+            
+            # Calculate final prediction
+            prediction = base_value + variation + trend_adjustment
             
             # Apply seasonality
-            prediction = base_prediction * seasonality
+            prediction *= seasonality
             
-            # Apply trend component with historical continuity
-            trend_factor = 1 + (historical_trend / mean_demand) * (day_index + 1)
-            prediction *= trend_factor
+            # Apply growth factor if specified
+            growth_rate = variable_dict.get('GROWTH_RATE', 0.002)  # 0.2% daily growth default
+            growth_factor = 1 + (growth_rate * day_index)
+            prediction *= growth_factor
             
-            # Add small random walk component for realism
-            random_walk = np.random.normal(0, std_demand * 0.05)
-            prediction += random_walk
+            # Ensure positive demand and reasonable bounds
+            prediction = max(1.0, prediction)
             
-            # Ensure positive demand
-            return max(1.0, float(prediction))
+            # Limit extreme variations (no more than 50% change from base)
+            max_change = base_value * 0.5
+            if abs(prediction - base_value) > max_change:
+                prediction = base_value + np.sign(prediction - base_value) * max_change
+            
+            # Store for next iteration
+            self._last_simulated_value = prediction
+            
+            logger.debug(f"Day {day_index}: Base={base_value:.2f}, Variation={variation:.2f}, Prediction={prediction:.2f}")
+            
+            return float(prediction)
             
         except Exception as e:
             logger.error(f"Error generating demand prediction: {str(e)}")
-            # Fallback to mean with randomness
+            # Fallback to last known value with small random variation
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
-            mean_demand = np.mean(demand_history) if demand_history else 2500
-            return max(1.0, mean_demand * (0.9 + random.random() * 0.2))
+            if demand_history:
+                last_value = float(demand_history[-1])
+            else:
+                last_value = 2500
+            return max(1.0, last_value * (0.95 + random.random() * 0.1))
 
     def _get_output_variable(self, equation):
         """Get the output variable from an equation"""

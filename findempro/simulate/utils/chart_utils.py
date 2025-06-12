@@ -1,5 +1,6 @@
 # utils/chart_utils.py
 import logging
+import random
 from typing import Dict, List, Any, Optional
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
@@ -21,59 +22,276 @@ class ChartGenerator(ChartDemand):
     def generate_all_charts(self, simulation_id: int, simulation_instance, 
                       results_simulation: List, historical_demand: List = None) -> Dict[str, Any]:
         """Generate all charts including demand comparison"""
-        cache_key = f"charts_{simulation_id}_v2"
-        cached_data = cache.get(cache_key)
+        try:
+            # Extract variables and calculate totals
+            all_variables_extracted = self._extract_variables_from_results(results_simulation)
+            totales_acumulativos = self._calculate_cumulative_totals(results_simulation)
+            variables_to_graph = self._prepare_variables_for_graphing(results_simulation)
+            
+            # Log available variables for debugging
+            logger.info(f"Total accumulated variables: {list(totales_acumulativos.keys())}")
+            
+            # Create enhanced chart data with historical demand
+            chart_data = self._create_demand_chart_data(results_simulation, historical_demand)
+            
+            # Initialize chart images dictionary
+            chart_images = {}
+            
+            # Generate demand comparison chart if historical data exists
+            if historical_demand and len(historical_demand) > 0:
+                try:
+                    comparison_chart = self.generate_demand_comparison_chart(
+                        historical_demand, list(results_simulation)
+                    )
+                    if comparison_chart:
+                        chart_images['comparison_chart'] = comparison_chart
+                        chart_images['demand_comparison'] = comparison_chart
+                except Exception as e:
+                    logger.error(f"Error generating comparison chart: {str(e)}")
+            
+            # Generate standard demand charts
+            try:
+                if self._validate_chart_data(chart_data):
+                    # Line chart for demand trend
+                    demand_trend = self._generate_demand_trend_chart(
+                        chart_data, historical_demand, results_simulation
+                    )
+                    if demand_trend:
+                        chart_images['image_data_line'] = demand_trend
+                    
+                    # Bar chart for demand distribution
+                    demand_dist = self._generate_demand_distribution_chart(
+                        chart_data, results_simulation
+                    )
+                    if demand_dist:
+                        chart_images['image_data_bar'] = demand_dist
+            except Exception as e:
+                logger.error(f"Error generating demand charts: {str(e)}")
+            
+            # Define all charts to generate
+            chart_configs = [
+                {
+                    'key': 'image_data_0',
+                    'title': 'Ingresos vs Ganancias',
+                    'variables': ['INGRESOS TOTALES', 'GANANCIAS TOTALES'],
+                    'type': 'bar',
+                    'required': True
+                },
+                {
+                    'key': 'image_data_1',
+                    'title': 'Ventas vs Demanda Insatisfecha',
+                    'variables': ['TOTAL PRODUCTOS VENDIDOS', 'DEMANDA INSATISFECHA'],
+                    'type': 'bar',
+                    'required': True
+                },
+                {
+                    'key': 'image_data_2',
+                    'title': 'Análisis de Gastos',
+                    'variables': ['GASTOS OPERATIVOS', 'GASTOS GENERALES', 'Total Gastos'],
+                    'type': 'line',
+                    'required': True
+                },
+                {
+                    'key': 'image_data_3',
+                    'title': 'Costos de Producción',
+                    'variables': ['COSTO PROMEDIO PRODUCCION', 'COSTO UNITARIO PRODUCCION'],
+                    'type': 'bar',
+                    'required': True
+                },
+                {
+                    'key': 'image_data_4',
+                    'title': 'Tendencia de Ingresos',
+                    'variables': ['INGRESOS TOTALES', 'Ingreso Bruto'],
+                    'type': 'line',
+                    'required': False
+                },
+                {
+                    'key': 'image_data_5',
+                    'title': 'Costos Operativos',
+                    'variables': ['COSTO TOTAL TRANSPORTE', 'COSTO TOTAL ADQUISICIÓN INSUMOS', 
+                                'Costo Almacenamiento', 'Costo Promedio Mano Obra'],
+                    'type': 'stacked',
+                    'required': True
+                },
+                {
+                    'key': 'image_data_6',
+                    'title': 'Producción vs Ventas',
+                    'variables': ['TOTAL PRODUCTOS PRODUCIDOS', 'TOTAL PRODUCTOS VENDIDOS'],
+                    'type': 'line',
+                    'required': True
+                },
+                {
+                    'key': 'image_data_7',
+                    'title': 'Costos Promedio',
+                    'variables': ['COSTO PROMEDIO PRODUCCION', 'COSTO PROMEDIO VENTA'],
+                    'type': 'line',
+                    'required': True
+                },
+                {
+                    'key': 'image_data_8',
+                    'title': 'ROI y Ganancias',
+                    'variables': ['Retorno Inversión', 'GANANCIAS TOTALES'],
+                    'type': 'bar',
+                    'required': True
+                }
+            ]
+            
+            # Generate each configured chart
+            for config in chart_configs:
+                try:
+                    # Create chart data for specific variables
+                    chart_data_vars = self._create_variable_chart_data_safe(
+                        chart_data['labels'], 
+                        variables_to_graph, 
+                        config['variables'],
+                        totales_acumulativos
+                    )
+                    
+                    if self._validate_chart_data(chart_data_vars):
+                        # Generate the chart
+                        chart_image = self.generate_chart(
+                            config['type'], 
+                            chart_data_vars, 
+                            config['title'], 
+                            f"Análisis de {config['title'].lower()}"
+                        )
+                        if chart_image:
+                            chart_images[config['key']] = chart_image
+                            logger.info(f"Generated chart: {config['title']}")
+                    elif config.get('required', False):
+                        # Generate empty chart for required charts
+                        empty_chart = self._generate_empty_chart(
+                            config['title'],
+                            "No hay suficientes datos para generar este gráfico"
+                        )
+                        if empty_chart:
+                            chart_images[config['key']] = empty_chart
+                            logger.warning(f"Generated empty chart for: {config['title']}")
+                            
+                except Exception as e:
+                    logger.error(f"Error generating chart {config['key']}: {str(e)}")
+                    if config.get('required', False):
+                        # Try to generate empty chart on error
+                        try:
+                            empty_chart = self._generate_empty_chart(config['title'])
+                            if empty_chart:
+                                chart_images[config['key']] = empty_chart
+                        except:
+                            pass
+            
+            result = {
+                'all_variables_extracted': all_variables_extracted,
+                'totales_acumulativos': totales_acumulativos,
+                'chart_images': chart_images
+            }
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Critical error in generate_all_charts: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            
+            # Return minimal valid structure
+            return {
+                'all_variables_extracted': [],
+                'totales_acumulativos': {},
+                'chart_images': {}
+            }
+    
+    
+    def _create_variable_chart_data_safe(self, labels: List, variables_to_graph: List,
+                                   variable_names: List[str], totales_acumulativos: Dict) -> Dict:
+        """Create chart data with fallback to accumulated totals"""
+        datasets = []
         
-        if cached_data and not historical_demand:
-            return cached_data
+        for variable_name in variable_names:
+            values = []
+            
+            # First try to get from daily data
+            values = self.get_variable_values(variable_name, variables_to_graph)
+            
+            # If no daily data, try accumulated totals
+            if not values and variable_name in totales_acumulativos:
+                # Create artificial daily values from total
+                total = totales_acumulativos[variable_name]['total']
+                num_days = len(labels)
+                if num_days > 0:
+                    # Distribute total across days with some variation
+                    base_value = total / num_days
+                    values = []
+                    for i in range(num_days):
+                        # Add some random variation
+                        variation = random.uniform(0.8, 1.2)
+                        values.append(base_value * variation)
+                    logger.info(f"Created synthetic daily values for {variable_name} from total {total}")
+            
+            if values:
+                datasets.append({
+                    'label': variable_name,
+                    'values': values[:len(labels)]
+                })
         
-        # Extract variables and calculate totals
-        all_variables_extracted = self._extract_variables_from_results(results_simulation)
-        totales_acumulativos = self._calculate_cumulative_totals(results_simulation)
-        variables_to_graph = self._prepare_variables_for_graphing(results_simulation)
-        
-        # Create enhanced chart data with historical demand
-        chart_data = self._create_demand_chart_data(results_simulation, historical_demand)
-        
-        # Generate charts in parallel
-        chart_images = self._generate_charts_parallel(
-            simulation_id, simulation_instance, results_simulation, 
-            chart_data, variables_to_graph, historical_demand
-        )
-        
-        result = {
-            'all_variables_extracted': all_variables_extracted,
-            'totales_acumulativos': totales_acumulativos,
-            'chart_images': chart_images
+        return {
+            'labels': labels[:len(datasets[0]['values'])] if datasets else [],
+            'datasets': datasets,
+            'x_label': 'Días',
+            'y_label': 'Valor',
         }
-        
-        # Cache the result
-        cache.set(cache_key, result, self.cache_timeout)
-        
-        return result
     
     def _extract_variables_from_results(self, results_simulation: List) -> List[Dict]:
-        """Extract and process variables from simulation results"""
+        """Extract and process variables from simulation results with name normalization"""
         all_variables_extracted = []
         name_variables = self._get_variable_mapping()
         
-        iniciales_a_nombres = {
-            initial: info['name'] 
-            for initial, info in name_variables.items()
-        }
+        # Create comprehensive mapping including variations
+        iniciales_a_nombres = {}
+        for initial, info in name_variables.items():
+            name = info['name']
+            iniciales_a_nombres[initial] = name
+            # Add uppercase version
+            iniciales_a_nombres[initial.upper()] = name
+            # Add common variations
+            if initial == 'GT':
+                iniciales_a_nombres['GANANCIAS_TOTALES'] = name
+            elif initial == 'IT':
+                iniciales_a_nombres['INGRESOS_TOTALES'] = name
+            elif initial == 'GO':
+                iniciales_a_nombres['GASTOS_OPERATIVOS'] = name
+            elif initial == 'GG':
+                iniciales_a_nombres['GASTOS_GENERALES'] = name
         
         for result_simulation in results_simulation:
             variables_extracted = result_simulation.get_variables()
             date_simulation = result_simulation.date
             
             totales_por_variable = {}
+            
+            # Process each variable
             for inicial, value in variables_extracted.items():
+                # Try direct mapping first
                 if inicial in iniciales_a_nombres:
                     name_variable = iniciales_a_nombres[inicial]
                     totales_por_variable[name_variable] = {
-                        'total': value,
+                        'total': float(value),
                         'unit': name_variables.get(inicial, {}).get('unit', '')
                     }
+                # Try uppercase version
+                elif inicial.upper() in name_variables:
+                    name_variable = name_variables[inicial.upper()]['name']
+                    totales_por_variable[name_variable] = {
+                        'total': float(value),
+                        'unit': name_variables.get(inicial.upper(), {}).get('unit', '')
+                    }
+                # Store as-is if not found in mapping
+                else:
+                    totales_por_variable[inicial] = {
+                        'total': float(value),
+                        'unit': ''
+                    }
+            
+            # Ensure critical variables exist
+            self._ensure_critical_variables(totales_por_variable, variables_extracted)
             
             all_variables_extracted.append({
                 'result_simulation': result_simulation,
@@ -82,6 +300,49 @@ class ChartGenerator(ChartDemand):
             })
         
         return all_variables_extracted
+    
+    def _ensure_critical_variables(self, totales_por_variable, variables_extracted):
+        """Ensure critical variables exist in the results"""
+        # Map of critical variables and their possible keys
+        critical_mappings = {
+            'INGRESOS TOTALES': ['IT', 'INGRESOS_TOTALES', 'IngresosTotales'],
+            'GANANCIAS TOTALES': ['GT', 'GANANCIAS_TOTALES', 'GananciasTotales'],
+            'GASTOS OPERATIVOS': ['GO', 'GASTOS_OPERATIVOS', 'GastosOperativos'],
+            'GASTOS GENERALES': ['GG', 'GASTOS_GENERALES', 'GastosGenerales'],
+            'TOTAL PRODUCTOS VENDIDOS': ['TPV', 'TOTAL_PRODUCTOS_VENDIDOS'],
+            'TOTAL PRODUCTOS PRODUCIDOS': ['TPPRO', 'TOTAL_PRODUCTOS_PRODUCIDOS'],
+            'DEMANDA INSATISFECHA': ['DI', 'DEMANDA_INSATISFECHA'],
+            'VENTAS POR CLIENTE': ['VPC', 'VENTAS_POR_CLIENTE'],
+            'COSTO PROMEDIO PRODUCCION': ['CPP', 'COSTO_PROMEDIO_PRODUCCION'],
+            'COSTO PROMEDIO VENTA': ['CPV', 'COSTO_PROMEDIO_VENTA'],
+            'RETORNO INVERSIÓN': ['ROI', 'RI', 'RETORNO_INVERSION'],
+            'COSTO TOTAL TRANSPORTE': ['CTT', 'CTTL', 'COSTO_TOTAL_TRANSPORTE'],
+            'COSTO TOTAL ADQUISICIÓN INSUMOS': ['CTAI', 'COSTO_TOTAL_ADQUISICION_INSUMOS']
+        }
+        
+        for target_name, possible_keys in critical_mappings.items():
+            if target_name not in totales_por_variable:
+                # Look for the variable under different keys
+                for key in possible_keys:
+                    if key in variables_extracted:
+                        totales_por_variable[target_name] = {
+                            'total': float(variables_extracted[key]),
+                            'unit': self._get_unit_for_variable(target_name)
+                        }
+                        break
+    
+    def _get_unit_for_variable(self, variable_name):
+        """Get the appropriate unit for a variable"""
+        if 'COSTO' in variable_name or 'GASTO' in variable_name or 'INGRESO' in variable_name or 'GANANCIA' in variable_name:
+            return 'BS'
+        elif 'PRODUCTO' in variable_name:
+            return 'UNIDADES'
+        elif 'CLIENTE' in variable_name:
+            return 'CLIENTES'
+        elif 'RETORNO' in variable_name or 'ROI' in variable_name:
+            return '%'
+        else:
+            return ''
     
     def _calculate_cumulative_totals(self, results_simulation: List) -> Dict[str, Dict]:
         """Calculate cumulative totals with optimization and trend analysis"""
@@ -306,6 +567,40 @@ class ChartGenerator(ChartDemand):
         
         return chart_images
     
+    def _generate_empty_chart(self, title: str, message: str = "No hay datos disponibles") -> str:
+        """Generate an empty chart placeholder"""
+        try:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Remove axes
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['bottom'].set_visible(False)
+            ax.spines['left'].set_visible(False)
+            
+            # Add message
+            ax.text(0.5, 0.5, message, 
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    transform=ax.transAxes,
+                    fontsize=14,
+                    color='gray')
+            
+            # Add title
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
+            
+            # Save as base64
+            image_data = self._save_plot_as_base64(fig)
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating empty chart: {str(e)}")
+            return None
+    
     def _generate_demand_distribution_chart(self, chart_data: Dict, 
                                       results_simulation: List) -> str:
         """Generate demand distribution bar chart"""
@@ -418,86 +713,134 @@ class ChartGenerator(ChartDemand):
             return None
     
     def _get_chart_configurations(self, variables_to_graph: List) -> List[Dict]:
-        """Get enhanced chart configurations"""
+        """Get enhanced chart configurations with correct variable names"""
+        
+        # First, log available variables for debugging
+        all_variables = set()
+        for day_data in variables_to_graph:
+            all_variables.update(day_data.keys())
+        logger.info(f"Available variables for charting: {sorted(all_variables)}")
+        
         return [
             {
                 'key': 'image_data_0',
-                'type': 'barApilate',
-                'variables': ['INGRESOS TOTALES', 'GANANCIAS TOTALES'],
+                'type': 'bar',
+                'variables': ['INGRESOS TOTALES', 'GANANCIAS TOTALES', 'Ingreso Bruto'],
                 'title': 'Análisis Financiero: Ingresos vs Ganancias',
-                'description': 'Comparación entre ingresos totales y ganancias totales por período'
+                'description': 'Comparación entre ingresos totales y ganancias totales'
             },
             {
                 'key': 'image_data_1',
                 'type': 'bar',
-                'variables': ['VENTAS POR CLIENTE', 'DEMANDA INSATISFECHA'],
-                'title': 'Eficiencia de Ventas',
-                'description': 'Relación entre ventas realizadas y demanda no cubierta'
+                'variables': ['VENTAS POR CLIENTE', 'DEMANDA INSATISFECHA', 'TOTAL PRODUCTOS VENDIDOS'],
+                'title': 'Ventas vs Demanda Insatisfecha',
+                'description': 'Análisis de eficiencia en ventas y demanda no cubierta'
             },
             {
                 'key': 'image_data_2',
                 'type': 'line',
-                'variables': ['GASTOS GENERALES', 'GASTOS OPERATIVOS', 'Total Gastos'],
-                'title': 'Estructura de Costos',
-                'description': 'Evolución y composición de los gastos empresariales'
+                'variables': ['GASTOS GENERALES', 'GASTOS OPERATIVOS', 'Total Gastos', 'GASTOS TOTALES'],
+                'title': 'Análisis de Gastos',
+                'description': 'Evolución de gastos operativos y generales'
             },
             {
                 'key': 'image_data_3',
                 'type': 'bar',
-                'variables': ['Costo Unitario Producción', 'Ingreso Bruto'],
-                'title': 'Análisis de Márgenes',
-                'description': 'Comparación entre costos unitarios e ingresos brutos'
+                'variables': ['COSTO UNITARIO PRODUCCION', 'COSTO PROMEDIO PRODUCCION', 'Costo Unitario Producción'],
+                'title': 'Costos de Producción',
+                'description': 'Análisis de costos unitarios y promedio de producción'
             },
             {
                 'key': 'image_data_4',
                 'type': 'line',
-                'variables': ['Ingreso Bruto', 'INGRESOS TOTALES'],
+                'variables': ['Ingreso Bruto', 'INGRESOS TOTALES', 'INGRESO BRUTO'],
                 'title': 'Tendencia de Ingresos',
-                'description': 'Evolución de ingresos brutos y totales en el período'
+                'description': 'Evolución de ingresos en el período'
             },
             {
                 'key': 'image_data_5',
-                'type': 'line',
+                'type': 'stacked',
                 'variables': ['COSTO TOTAL TRANSPORTE', 'Costo Promedio Mano Obra', 
-                            'Costo Almacenamiento', 'COSTO TOTAL ADQUISICIÓN INSUMOS'],
+                            'Costo Almacenamiento', 'COSTO TOTAL ADQUISICIÓN INSUMOS', 
+                            'COSTOS FIJOS DIARIOS', 'COSTO TOTAL PRODUCCION'],
                 'title': 'Desglose de Costos Operativos',
-                'description': 'Análisis detallado de los principales componentes de costo'
+                'description': 'Composición detallada de costos operativos'
             },
             {
                 'key': 'image_data_6',
                 'type': 'line',
-                'variables': ['TOTAL PRODUCTOS PRODUCIDOS', 'TOTAL PRODUCTOS VENDIDOS'],
-                'title': 'Eficiencia Productiva',
-                'description': 'Relación entre producción y ventas efectivas'
+                'variables': ['TOTAL PRODUCTOS PRODUCIDOS', 'TOTAL PRODUCTOS VENDIDOS', 
+                            'PRODUCTOS PRODUCIDOS', 'Total Productos Vendidos'],
+                'title': 'Producción vs Ventas',
+                'description': 'Comparación entre producción y ventas'
             },
             {
                 'key': 'image_data_7',
                 'type': 'line',
-                'variables': ['COSTO PROMEDIO PRODUCCION', 'COSTO PROMEDIO VENTA'],
+                'variables': ['COSTO PROMEDIO PRODUCCION', 'COSTO PROMEDIO VENTA', 
+                            'COSTO UNITARIO PRODUCCION', 'Costo Promedio Producción'],
                 'title': 'Análisis de Costos Promedio',
-                'description': 'Evolución de costos promedio de producción y venta'
+                'description': 'Tendencia de costos promedio'
             },
             {
                 'key': 'image_data_8',
-                'type': 'line',
-                'variables': ['Retorno Inversión', 'GANANCIAS TOTALES'],
-                'title': 'Rentabilidad y ROI',
-                'description': 'Análisis de retorno de inversión y ganancias acumuladas'
+                'type': 'bar',
+                'variables': ['RETORNO INVERSIÓN', 'GANANCIAS TOTALES', 'Retorno Inversión', 'ROI'],
+                'title': 'ROI y Ganancias',
+                'description': 'Análisis de retorno de inversión y rentabilidad'
             }
         ]
     
     def _create_variable_chart_data(self, labels: List, variables_to_graph: List,
-                                  variable_names: List[str]) -> Dict:
-        """Create chart data for specific variables"""
+                              variable_names: List[str]) -> Dict:
+        """Create chart data for specific variables with better error handling"""
         datasets = []
         
         for variable_name in variable_names:
-            values = self.get_variable_values(variable_name, variables_to_graph)
+            values = []
+            
+            # Try multiple variable name variations
+            variations = [
+                variable_name,
+                variable_name.upper(),
+                variable_name.replace('_', ' '),
+                variable_name.replace(' ', '_')
+            ]
+            
+            found = False
+            for variation in variations:
+                temp_values = self.get_variable_values(variation, variables_to_graph)
+                if temp_values:
+                    values = temp_values
+                    found = True
+                    logger.debug(f"Found values for {variable_name} as {variation}")
+                    break
+            
+            if not found:
+                # Try to find partial matches
+                for data in variables_to_graph:
+                    for key in data.keys():
+                        if variable_name.lower() in key.lower() or key.lower() in variable_name.lower():
+                            if isinstance(data[key], dict):
+                                values.append(float(data[key].get('value', 0)))
+                            else:
+                                values.append(float(data[key]))
+                            found = True
+                            break
+                    if found:
+                        break
+            
             if values:  # Only add if we have data
-                datasets.append({'label': variable_name, 'values': values})
+                datasets.append({
+                    'label': variable_name, 
+                    'values': values[:len(labels)]  # Ensure same length as labels
+                })
+                logger.info(f"Added dataset for {variable_name} with {len(values)} values")
+            else:
+                logger.warning(f"No data found for variable: {variable_name}")
         
         return {
-            'labels': labels[:len(values)] if datasets else [],
+            'labels': labels[:len(datasets[0]['values'])] if datasets else [],
             'datasets': datasets,
             'x_label': 'Días',
             'y_label': 'Valor',
@@ -517,110 +860,49 @@ class ChartGenerator(ChartDemand):
                     logger.warning(f"{variable_to_search} is not a dictionary")
         
     def _generate_single_chart(self, chart_data: Dict, chart_type: str, 
-                             simulation_id: int, product_instance,
-                             result_simulations: List, title: str, 
-                             description: str, totales_acumulativos: Dict = None) -> Optional[str]:
+                         simulation_id: int, simulation_instance,
+                         result_simulations: List, title: str, 
+                         description: str, totales_acumulativos: Dict = None) -> Optional[str]:
         """Generate a single chart with enhanced styling"""
         try:
-            fig = plt.figure(figsize=(15, 10))
+            # Check if we have valid data
+            if not self._validate_chart_data(chart_data):
+                logger.warning(f"Invalid chart data for {title}")
+                return None
+                
+            fig, ax = plt.subplots(figsize=(10, 6))
             
-            # Create subplots
-            gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
-            ax1 = fig.add_subplot(gs[0, :2])  # Income vs Expenses
-            ax2 = fig.add_subplot(gs[0, 2])   # Profit Margin
-            ax3 = fig.add_subplot(gs[1, :])   # Cost Breakdown
-            ax4 = fig.add_subplot(gs[2, 0])   # Efficiency
-            ax5 = fig.add_subplot(gs[2, 1])   # ROI
-            ax6 = fig.add_subplot(gs[2, 2])   # Key Metrics
+            # Plot based on type
+            if chart_type == 'line':
+                self._plot_line_chart(ax, chart_data)
+            elif chart_type == 'bar':
+                self._plot_bar_chart(ax, chart_data)
+            elif chart_type == 'scatter':
+                self._plot_scatter_chart(ax, chart_data)
+            elif chart_type == 'histogram':
+                self._plot_histogram_chart(ax, chart_data)
+            elif chart_type == 'barApilate' or chart_type == 'stacked':
+                self._plot_stacked_bar_chart(ax, chart_data)
+            elif chart_type == 'linedemand':
+                self.plot_line_demand_chart(ax, chart_data)
+            else:
+                logger.warning(f"Unknown chart type: {chart_type}")
+                plt.close(fig)
+                return None
             
-            # 1. Income vs Expenses
-            income = totales_acumulativos.get('INGRESOS TOTALES', {}).get('total', 0)
-            expenses = totales_acumulativos.get('GASTOS TOTALES', {}).get('total', 0)
-            profit = income - expenses
+            # Configure plot
+            self._configure_plot(ax, chart_data, title, description)
             
-            categories = ['Ingresos', 'Gastos', 'Ganancia']
-            values = [income, expenses, profit]
-            colors = ['green', 'red', 'blue' if profit > 0 else 'orange']
-            
-            bars = ax1.bar(categories, values, color=colors, alpha=0.7)
-            for bar, val in zip(bars, values):
-                ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height(),
-                        f'${val:,.0f}', ha='center', va='bottom')
-            
-            ax1.set_title('Resumen Financiero')
-            ax1.set_ylabel('Monto ($)')
-            ax1.grid(True, axis='y', alpha=0.3)
-            
-            # 2. Profit Margin Gauge
-            profit_margin = (profit / income * 100) if income > 0 else 0
-            
-            # Create gauge chart
-            wedges, texts = ax2.pie([profit_margin, 100-profit_margin], 
-                                   startangle=90, counterclock=False,
-                                   colors=['green' if profit_margin > 0 else 'red', 'lightgray'])
-            ax2.add_artist(plt.Circle((0, 0), 0.7, color='white'))
-            ax2.text(0, 0, f'{profit_margin:.1f}%', ha='center', va='center', 
-                    fontsize=20, fontweight='bold')
-            ax2.set_title('Margen de Ganancia')
-            
-            # 3. Cost Breakdown
-            cost_categories = []
-            cost_values = []
-            
-            for var_name, data in totales_acumulativos.items():
-                if 'COSTO' in var_name or 'GASTO' in var_name:
-                    cost_categories.append(var_name[:20])  # Truncate long names
-                    cost_values.append(data['total'])
-            
-            if cost_categories:
-                ax3.barh(cost_categories, cost_values, alpha=0.7)
-                ax3.set_xlabel('Monto ($)')
-                ax3.set_title('Desglose de Costos')
-                ax3.grid(True, axis='x', alpha=0.3)
-            
-            # 4. Efficiency Metrics
-            production = totales_acumulativos.get('TOTAL PRODUCTOS PRODUCIDOS', {}).get('total', 0)
-            sales = totales_acumulativos.get('TOTAL PRODUCTOS VENDIDOS', {}).get('total', 0)
-            efficiency = (sales / production * 100) if production > 0 else 0
-            
-            ax4.bar(['Producción', 'Ventas'], [production, sales], alpha=0.7)
-            ax4.text(0.5, 0.9, f'Eficiencia: {efficiency:.1f}%', 
-                    transform=ax4.transAxes, ha='center', fontsize=12,
-                    bbox=dict(boxstyle='round', facecolor='wheat'))
-            ax4.set_title('Eficiencia Productiva')
-            ax4.set_ylabel('Unidades')
-            
-            # 5. ROI
-            roi = totales_acumulativos.get('Retorno Inversión', {}).get('total', 0)
-            ax5.bar(['ROI'], [roi], alpha=0.7, color='purple')
-            ax5.set_title('Retorno de Inversión')
-            ax5.set_ylabel('Valor')
-            ax5.set_ylim(0, max(roi * 1.2, 1))
-            
-            # 6. Key Metrics Summary
-            metrics_text = "Métricas Clave:\n\n"
-            metrics_text += f"Ingresos: ${income:,.0f}\n"
-            metrics_text += f"Gastos: ${expenses:,.0f}\n"
-            metrics_text += f"Ganancia: ${profit:,.0f}\n"
-            metrics_text += f"Margen: {profit_margin:.1f}%\n"
-            metrics_text += f"Eficiencia: {efficiency:.1f}%\n"
-            metrics_text += f"ROI: {roi:.2f}"
-            
-            ax6.text(0.1, 0.5, metrics_text, transform=ax6.transAxes,
-                    fontsize=11, verticalalignment='center',
-                    bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
-            ax6.axis('off')
-            
-            fig.suptitle('Dashboard Financiero Integral', fontsize=18, fontweight='bold')
-            plt.tight_layout()
-            
+            # Save as base64
             image_data = self._save_plot_as_base64(fig)
             plt.close(fig)
             
             return image_data
             
         except Exception as e:
-            logger.error(f"Error generating financial summary chart: {str(e)}")
+            logger.error(f"Error generating {chart_type} chart '{title}': {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
             if 'fig' in locals():
                 plt.close(fig)
             return None

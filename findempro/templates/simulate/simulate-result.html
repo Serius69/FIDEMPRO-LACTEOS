@@ -800,10 +800,10 @@
                         <!-- Overview Tab -->
                         <div class="tab-pane fade show active" id="overview" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-6">
+                                 <div class="col-md-6 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
-                                            <i class="bx bx-bar-chart me-2"></i>
+                                            <i class="bx bx-dollar me-2"></i>
                                             Ingresos vs Ganancias
                                         </h6>
                                         <div class="chart-controls">
@@ -816,16 +816,17 @@
                                         </div>
                                         {% if image_data_0 %}
                                         <img src="data:image/png;base64,{{ image_data_0 }}" 
-                                             class="chart-image" 
-                                             alt="Gráfico de Ingresos vs Ganancias"
-                                             loading="lazy">
+                                            class="chart-image" 
+                                            alt="Ingresos vs Ganancias"
+                                            loading="lazy">
                                         {% else %}
-                                        <div class="loading-chart">
-                                            <div class="spinner"></div>
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
                                         </div>
                                         {% endif %}
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="col-md-6">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
@@ -855,115 +856,246 @@
                             </div>
                         </div>
 
-                        <!-- Financial Tab -->
+                        <!-- Financial Tab - Actualización completa -->
                         <div class="tab-pane fade" id="financial" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-6">
+                                <!-- Ingresos vs Ganancias -->
+                                <div class="col-md-6 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
-                                            <i class="bx bx-money me-2"></i>
-                                            Ventas vs Demanda Insatisfecha
+                                            <i class="bx bx-dollar me-2"></i>
+                                            Ingresos vs Ganancias
                                         </h6>
-                                        {% if image_data_1 %}
-                                        <img src="data:image/png;base64,{{ image_data_1 }}" 
-                                             class="chart-image" 
-                                             alt="Ventas vs Demanda Insatisfecha"
-                                             loading="lazy">
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_0 }}', 'ingresos-ganancias.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_0 }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        {% if image_data_0 %}
+                                        <img src="data:image/png;base64,{{ image_data_0 }}" 
+                                            class="chart-image" 
+                                            alt="Ingresos vs Ganancias"
+                                            loading="lazy">
+                                        {% else %}
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                
+                                <!-- Ventas vs Demanda Insatisfecha -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="chart-container">
+                                        <h6 class="mb-3">
+                                            <i class="bx bx-cart me-2"></i>
+                                            Ventas vs Demanda Insatisfecha
+                                        </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_1 }}', 'ventas-demanda.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_1 }}', 'Ventas vs Demanda')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
+                                        {% if image_data_1 %}
+                                        <img src="data:image/png;base64,{{ image_data_1 }}" 
+                                            class="chart-image" 
+                                            alt="Ventas vs Demanda Insatisfecha"
+                                            loading="lazy">
+                                        {% else %}
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Análisis de Gastos -->
+                                <div class="col-md-6 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-trending-down me-2"></i>
                                             Análisis de Gastos
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_2 }}', 'analisis-gastos.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_2 }}', 'Análisis de Gastos')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_2 %}
                                         <img src="data:image/png;base64,{{ image_data_2 }}" 
-                                             class="chart-image" 
-                                             alt="Análisis de gastos"
-                                             loading="lazy">
+                                            class="chart-image" 
+                                            alt="Análisis de gastos"
+                                            loading="lazy">
+                                        {% else %}
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                
+                                <!-- Costos de Producción -->
+                                <div class="col-md-6 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-calculator me-2"></i>
                                             Costos de Producción
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_3 }}', 'costos-produccion.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_3 }}', 'Costos de Producción')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_3 %}
                                         <img src="data:image/png;base64,{{ image_data_3 }}" 
-                                             class="chart-image" 
-                                             alt="Costos de producción"
-                                             loading="lazy">
+                                            class="chart-image" 
+                                            alt="Costos de producción"
+                                            loading="lazy">
+                                        {% else %}
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                
+                                <!-- ROI y Ganancias -->
+                                <div class="col-12 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-stats me-2"></i>
                                             ROI y Ganancias
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_8 }}', 'roi-ganancias.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_8 }}', 'ROI y Ganancias')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_8 %}
                                         <img src="data:image/png;base64,{{ image_data_8 }}" 
-                                             class="chart-image" 
-                                             alt="ROI y Ganancias"
-                                             loading="lazy">
+                                            class="chart-image" 
+                                            alt="ROI y Ganancias"
+                                            loading="lazy">
+                                        {% else %}
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Operations Tab -->
+                        <!-- Operations Tab - Actualización completa -->
                         <div class="tab-pane fade" id="operations" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-6">
+                                <!-- Costos Operativos -->
+                                <div class="col-md-6 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-package me-2"></i>
                                             Costos Operativos
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_5 }}', 'costos-operativos.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_5 }}', 'Costos Operativos')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_5 %}
                                         <img src="data:image/png;base64,{{ image_data_5 }}" 
-                                             class="chart-image" 
-                                             alt="Costos operativos"
-                                             loading="lazy">
+                                            class="chart-image" 
+                                            alt="Costos operativos"
+                                            loading="lazy">
+                                        {% else %}
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                
+                                <!-- Producción vs Ventas -->
+                                <div class="col-md-6 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-box me-2"></i>
                                             Producción vs Ventas
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_6 }}', 'produccion-ventas.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_6 }}', 'Producción vs Ventas')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_6 %}
                                         <img src="data:image/png;base64,{{ image_data_6 }}" 
-                                             class="chart-image" 
-                                             alt="Producción vs Ventas"
-                                             loading="lazy">
+                                            class="chart-image" 
+                                            alt="Producción vs Ventas"
+                                            loading="lazy">
+                                        {% else %}
+                                        <div class="text-center p-5">
+                                            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="col-md-12">
+                                
+                                <!-- Costos Promedio -->
+                                <div class="col-12 mb-4">
                                     <div class="chart-container">
                                         <h6 class="mb-3">
                                             <i class="bx bx-dollar-circle me-2"></i>
                                             Costos Promedio
                                         </h6>
+                                        <div class="chart-controls">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_7 }}', 'costos-promedio.png')" title="Descargar">
+                                                <i class="bx bx-download"></i>
+                                            </div>
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_7 }}', 'Costos Promedio')" title="Pantalla completa">
+                                                <i class="bx bx-fullscreen"></i>
+                                            </div>
+                                        </div>
                                         {% if image_data_7 %}
-                                        <img src="data:image/png;base64,{{ image_data_7 }}" 
-                                             class="chart-image" 
-                                             alt="Costos promedio"
-                                             loading="lazy">
-                                        {% endif %}
+                                    <img src="data:image/png;base64,{{ image_data_7 }}" 
+                                            class="chart-image" 
+                                            alt="Costos promedio"
+                                            loading="lazy">
+                                    {% else %}
+                                    <div class="text-center p-5">
+                                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                                        <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
                                     </div>
+                                    {% endif %}
                                 </div>
-                                
                             </div>
+                        </div>
                         </div>
                         
                         <!-- Endogenous Variables Tab -->

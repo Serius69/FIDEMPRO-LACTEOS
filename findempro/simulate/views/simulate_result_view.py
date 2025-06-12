@@ -96,7 +96,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             return []
     
     def _prepare_complete_results_context(self, simulation_id, simulation_instance, 
-                                        results_simulation, historical_demand):
+                                    results_simulation, historical_demand):
         """Prepare comprehensive context data for results view"""
         # Generate all charts with historical comparison
         chart_generator = ChartGenerator()
@@ -111,12 +111,17 @@ class SimulateResultView(LoginRequiredMixin, View):
             simulation_id, simulation_instance, list(results_simulation), historical_demand
         )
         
+        # Log what charts were generated
+        logger.info(f"Charts generated: {list(analysis_data.get('chart_images', {}).keys())}")
+        
         # Generate comparison chart: Historical vs Simulated
         comparison_chart = None
         if historical_demand:
             comparison_chart = self.generate_demand_comparison_chart(
                 historical_demand, list(results_simulation)
             )
+            if comparison_chart:
+                logger.info("Demand comparison chart generated successfully")
         
         # Get financial analysis and recommendations
         simulation_service = SimulationFinancial()
@@ -139,6 +144,9 @@ class SimulateResultView(LoginRequiredMixin, View):
         product_instance = simulation_instance.fk_questionary_result.fk_questionary.fk_product
         business_instance = product_instance.fk_business
         
+        # Log accumulated totals for debugging
+        logger.info(f"Accumulated totals variables: {list(analysis_data['totales_acumulativos'].keys())}")
+        
         # Prepare complete context
         context = {
             'simulation_instance': simulation_instance,
@@ -152,10 +160,14 @@ class SimulateResultView(LoginRequiredMixin, View):
             'demand_stats': demand_stats,
             'comparison_chart': comparison_chart,
             'financial_recommendations': recommendations,
-            'financial_recommendations_to_show': recommendations,  # Ensure this is included
-            **analysis_data['chart_images'],
+            'financial_recommendations_to_show': recommendations,
+            **analysis_data.get('chart_images', {}),  # Unpack all chart images
             **financial_results,
         }
+        
+        # Log final context keys for debugging
+        chart_keys = [k for k in context.keys() if k.startswith('image_data')]
+        logger.info(f"Chart keys in context: {chart_keys}")
         
         return context
     
