@@ -193,8 +193,143 @@ class SimulateResultView(LoginRequiredMixin, View):
         chart_keys = [k for k in context.keys() if k.startswith('image_data')]
         logger.info(f"Chart keys in context: {chart_keys}")
         
+        # Agregar validación del modelo
+        validation_results = self._validate_model_predictions(
+            simulation_instance, results_simulation, historical_demand
+        )
+        
+        context.update({
+            'validation_summary': validation_results['summary'],
+            'validation_details': validation_results['details'],
+            'validation_metrics': validation_results['metrics'],
+            'validation_by_distribution': validation_results['by_distribution'],
+            'validation_recommendations': validation_results['recommendations'],
+            'validation_alerts': validation_results.get('alerts', {})
+        })
+        
+        
         return context
     
+    def _validate_model_predictions(self, simulation_instance, results_simulation, historical_demand):
+        """Valida las predicciones del modelo contra todos los días simulados"""
+        
+        validation_details = []
+        all_errors = []
+        precise_count = 0
+        acceptable_count = 0
+        inaccurate_count = 0
+        
+        # Validar todos los días de simulación
+        for i, result in enumerate(results_simulation):
+            simulated = float(result.demand_mean)
+            
+            # Si hay dato histórico para ese día lo usamos para comparar
+            real = None
+            if historical_demand and i < len(historical_demand):
+                real = float(historical_demand[i])
+            else:
+                # Si no hay dato histórico, usamos el valor esperado de la distribución
+                real = float(result.demand_expected)
+            
+            difference = simulated - real
+            error_pct = abs(difference) / real * 100 if real > 0 else 0
+            
+            # Determinar veredicto
+            if error_pct < 10:
+                verdict = 'PRECISA'
+                precise_count += 1
+            elif error_pct < 20:
+                verdict = 'ACEPTABLE'
+                acceptable_count += 1
+            else:
+                verdict = 'INEXACTA'
+                inaccurate_count += 1
+            
+            all_errors.append(error_pct)
+            
+            validation_details.append({
+                'pyme_id': f'QRS-{simulation_instance.id}{i:03d}',
+                'business_name': simulation_instance.fk_questionary_result.fk_questionary.fk_product.fk_business.name,
+                'product': simulation_instance.fk_questionary_result.fk_questionary.fk_product.name,
+                'period': f'Día {i+1}',
+                'simulated_demand': simulated,
+                'real_demand': real,
+                'difference': difference,
+                'error_percentage': error_pct,
+                'verdict': verdict,
+                'is_historical': i < len(historical_demand) if historical_demand else False
+            })
+        
+        # Calcular métricas agregadas
+        if all_errors:
+            mae = np.mean([abs(d['difference']) for d in validation_details])
+            mape = np.mean(all_errors)
+            rmse = np.sqrt(np.mean([d['difference']**2 for d in validation_details]))
+            
+            # Calcular R²
+            real_values = [d['real_demand'] for d in validation_details]
+            sim_values = [d['simulated_demand'] for d in validation_details]
+            if len(real_values) > 1:
+                correlation = np.corrcoef(real_values, sim_values)[0, 1]
+                r_squared = correlation ** 2
+            else:
+                r_squared = 0
+        else:
+            mae = mape = rmse = r_squared = 0
+        
+        # Análisis por distribución
+        dist_name = simulation_instance.fk_fdp.get_distribution_type_display()
+        by_distribution = {
+            dist_name: {
+                'count': len(validation_details),
+                'avg_mape': mape,
+                'best_fit_product': simulation_instance.fk_questionary_result.fk_questionary.fk_product.name if mape < 10 else None
+            }
+        }
+        
+        # Generar recomendaciones basadas en todos los días
+        recommendations = []
+        if mape < 10:
+            recommendations.append("El modelo muestra una precisión excelente para todo el período simulado.")
+        elif mape < 20:
+            recommendations.append("El modelo tiene precisión aceptable. Se sugiere monitorear los días más inexactos.")
+        else:
+            recommendations.append("El modelo requiere calibración. Revise especialmente los días con mayor error.")
+        
+        if r_squared < 0.7:
+            recommendations.append("La correlación entre valores simulados y esperados es baja. Considere ajustar parámetros.")
+        
+        # Alertas específicas para días con error alto
+        high_error_days = [d for d in validation_details if d['error_percentage'] > 30]
+        if high_error_days:
+            recommendations.append(f"Hay {len(high_error_days)} días con error superior al 30%. Revisar estos períodos.")
+        
+        total = len(validation_details)
+        success_rate = (precise_count / total * 100) if total > 0 else 0
+        
+        return {
+            'summary': {
+                'is_valid': mape < 20,
+                'success_rate': success_rate,
+                'avg_mape': mape,
+                'precise_count': precise_count,
+                'acceptable_count': acceptable_count,
+                'inaccurate_count': inaccurate_count,
+                'total_days': total
+            },
+            'details': validation_details,
+            'metrics': {
+                'mae': mae,
+                'mape': mape,
+                'rmse': rmse,
+                'r_squared': r_squared
+            },
+            'by_distribution': by_distribution,
+            'recommendations': recommendations,
+            'alerts': {
+                'high_error_days': len(high_error_days) if high_error_days else 0
+            }
+        }
     
     def _calculate_realistic_comparison(self, historical_demand, results_simulation):
         """Calculate realistic comparison metrics"""

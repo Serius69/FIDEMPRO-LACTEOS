@@ -10,7 +10,6 @@ from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
-
 class DataParser:
     """Utility class for parsing various data formats"""
     

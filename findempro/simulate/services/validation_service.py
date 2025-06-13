@@ -3,7 +3,6 @@ import numpy as np
 from typing import Counter
 from simulate.models import ResultSimulation, Simulation
 
-
 class SimulationValidationService:
     """Service for validating simulation results"""
     

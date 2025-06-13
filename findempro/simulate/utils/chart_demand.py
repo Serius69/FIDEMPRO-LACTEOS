@@ -11,7 +11,6 @@ from .chart_base import ChartBase
 matplotlib.use('Agg')
 logger = logging.getLogger(__name__)
 
-
 class ChartDemand(ChartBase):
     """Specialized class for demand-related charts"""
     
