@@ -9,7 +9,7 @@ from decimal import Decimal
 from simulate.models import Simulation
 from product.models import Product
 from business.models import Business
-from .data.finance_data import recommendation_data
+from .data.finance_test_data import recommendation_data
 
 
 class FinancialDecision(models.Model):

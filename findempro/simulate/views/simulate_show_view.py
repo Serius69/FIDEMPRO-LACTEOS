@@ -370,7 +370,6 @@ class SimulateShowView(LoginRequiredMixin, View):
             request.session['started'] = False
             return redirect('simulate:simulate.show')
 
-
 # Function-based view wrapper
 def simulate_show_view(request):
     view = SimulateShowView.as_view()

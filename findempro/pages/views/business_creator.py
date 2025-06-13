@@ -202,7 +202,7 @@ def create_variables_and_equations(product: Product) -> None:
     Crear variables y ecuaciones para un producto usando datos mejorados
     """
     try:
-        from variable.variables_data import variables_data
+        from findempro.variable.data.variables_data import variables_data
         
         created_variables = []
         
@@ -246,7 +246,7 @@ def create_equations(product: Product) -> None:
     Crear ecuaciones para un producto
     """
     try:
-        from variable.equations_data import equations_data
+        from findempro.variable.data.equations_data import equations_data
         
         created_equations = []
         

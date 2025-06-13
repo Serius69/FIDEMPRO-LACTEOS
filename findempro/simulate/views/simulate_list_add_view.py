@@ -94,7 +94,6 @@ class SimulateAddView(LoginRequiredMixin, View):
         """Redirect GET requests to main view"""
         return redirect('simulate:simulate.show')
 
-
 class SimulateListView(LoginRequiredMixin, View):
     """View to list all simulations with enhanced filtering"""
     
@@ -288,7 +287,6 @@ class SimulateListView(LoginRequiredMixin, View):
         if param_to_remove in params:
             del params[param_to_remove]
         return f"{request.path}?{params.urlencode()}"
-
 
 def simulate_add_view(request):
     view = SimulateAddView.as_view()

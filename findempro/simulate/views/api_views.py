@@ -11,7 +11,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class SimulationProgressView(LoginRequiredMixin, View):
     """Check simulation progress"""
     
@@ -52,7 +51,6 @@ class SimulationProgressView(LoginRequiredMixin, View):
             logger.error(f"Error checking progress: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
 
-
 class SimulationRetryView(LoginRequiredMixin, View):
     """Retry failed simulation"""
     
@@ -82,7 +80,6 @@ class SimulationRetryView(LoginRequiredMixin, View):
                 'success': False,
                 'message': str(e)
             }, status=500)
-
 
 class SimulationDuplicateView(LoginRequiredMixin, View):
     """Duplicate simulation"""
@@ -119,7 +116,6 @@ class SimulationDuplicateView(LoginRequiredMixin, View):
                 'message': str(e)
             }, status=500)
 
-
 class SimulationStartView(LoginRequiredMixin, View):
     """Start pending simulation"""
     
@@ -152,7 +148,6 @@ class SimulationStartView(LoginRequiredMixin, View):
                 'success': False,
                 'message': str(e)
             }, status=500)
-
 
 class SimulationDeleteView(LoginRequiredMixin, View):
     """Delete simulation (soft delete)"""

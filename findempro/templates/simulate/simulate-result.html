@@ -2025,8 +2025,220 @@
                                     </div>
                                 </div>
                             </div>
-                            {% endif %}
+                            {% endif %}                            
+                            <!-- Validación de Variables del Modelo -->
+                            <div class="row mt-5">
+                                <div class="col-12">
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">
+                                                <i class="bx bx-check-shield me-2"></i>
+                                                Validación de Variables del Modelo
+                                                <button class="btn btn-sm btn-link text-primary" type="button" data-bs-toggle="collapse" 
+                                                        data-bs-target="#variablesValidationCollapse" aria-expanded="true">
+                                                    <i class="bx bx-chevron-down"></i>
+                                                </button>
+                                            </h5>
+                                            <div>
+                                                <span class="badge bg-info me-2">{{ variables_validation.total_variables }} variables</span>
+                                                <span class="badge bg-success me-2">{{ variables_validation.precise_count }} precisas</span>
+                                                <span class="badge bg-danger">{{ variables_validation.inaccurate_count }} inexactas</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="collapse show" id="variablesValidationCollapse">
+                                            <div class="card-body">
+                                                <!-- Resumen de Validación de Variables -->
+                                                <div class="row mb-4">
+                                                    <div class="col-md-8">
+                                                        <div class="alert alert-info mb-0">
+                                                            <i class="bx bx-info-circle me-2"></i>
+                                                            <strong>Validación de Variables:</strong> Se comparan los valores simulados contra los valores reales 
+                                                            registrados en el sistema para cada variable operativa y financiera.
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4 text-end">
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="exportVariablesValidation()">
+                                                            <i class="bx bx-download me-1"></i>Exportar Validación
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-info" onclick="toggleVariablesView()">
+                                                            <i class="bx bx-grid-alt me-1"></i>Cambiar Vista
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Vista por Variable (Default) -->
+                                                <div id="variablesSummaryView">
+                                                    <h6 class="mb-3">Resumen de Validación por Variable</h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover" id="variablesValidationTable">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Variable</th>
+                                                                    <th>Descripción</th>
+                                                                    <th>Unidad</th>
+                                                                    <th class="text-end">Valor Real Promedio</th>
+                                                                    <th class="text-end">Valor Simulado Promedio</th>
+                                                                    <th class="text-center">Error Promedio</th>
+                                                                    <th class="text-center">Días Válidos</th>
+                                                                    <th class="text-center">Veredicto</th>
+                                                                    <th class="text-center">Acciones</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for var_key, var_data in variables_validation.by_variable.items %}
+                                                                <tr class="variable-row" data-variable="{{ var_key }}">
+                                                                    <td>
+                                                                        <strong>{{ var_key }}</strong>
+                                                                        <span class="badge bg-secondary ms-1">{{ var_data.type }}</span>
+                                                                    </td>
+                                                                    <td><small>{{ var_data.description }}</small></td>
+                                                                    <td>{{ var_data.unit }}</td>
+                                                                    <td class="text-end fw-bold">
+                                                                        {{ var_data.avg_real|floatformat:2 }}
+                                                                        {% if var_data.unit == "BS" %}Bs.{% elif var_data.unit == "L" %}L{% endif %}
+                                                                    </td>
+                                                                    <td class="text-end fw-bold text-primary">
+                                                                        {{ var_data.avg_simulated|floatformat:2 }}
+                                                                        {% if var_data.unit == "BS" %}Bs.{% elif var_data.unit == "L" %}L{% endif %}
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <span class="badge {% if var_data.avg_error_pct < 5 %}bg-success{% elif var_data.avg_error_pct < 10 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                                            {{ var_data.avg_error_pct|floatformat:1 }}%
+                                                                        </span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <span class="text-muted">{{ var_data.valid_days }}/{{ var_data.total_days }}</span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        {% if var_data.verdict == 'PRECISO' %}
+                                                                            <span class="text-success"><i class="bx bx-check-circle"></i> Preciso</span>
+                                                                        {% elif var_data.verdict == 'ACEPTABLE' %}
+                                                                            <span class="text-warning"><i class="bx bx-error-circle"></i> Aceptable</span>
+                                                                        {% else %}
+                                                                            <span class="text-danger"><i class="bx bx-x-circle"></i> Inexacto</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <button class="btn btn-sm btn-link" onclick="showVariableDetails('{{ var_key }}')">
+                                                                            <i class="bx bx-show"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Vista Detallada por Día (Hidden by default) -->
+                                                <div id="variablesDailyView" style="display: none;">
+                                                    <h6 class="mb-3">Detalle de Validación por Día</h6>
+                                                    <div class="mb-3">
+                                                        <label for="variableFilter" class="form-label">Filtrar por Variable:</label>
+                                                        <select class="form-select form-select-sm" id="variableFilter" onchange="filterVariableDaily()">
+                                                            <option value="">Todas las variables</option>
+                                                            {% for var_key in variables_validation.variable_list %}
+                                                            <option value="{{ var_key }}">{{ var_key }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                                        <table class="table table-sm table-hover" id="variablesDailyTable">
+                                                            <thead class="sticky-top bg-white">
+                                                                <tr>
+                                                                    <th>Día</th>
+                                                                    <th>Variable</th>
+                                                                    <th class="text-end">Valor Real</th>
+                                                                    <th class="text-end">Valor Simulado</th>
+                                                                    <th class="text-end">Error</th>
+                                                                    <th class="text-center">Error %</th>
+                                                                    <th class="text-center">Veredicto</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for daily_item in variables_validation.daily_details %}
+                                                                <tr class="daily-variable-row" data-variable="{{ daily_item.variable }}" data-day="{{ daily_item.day }}">
+                                                                    <td>{{ daily_item.day }}</td>
+                                                                    <td>
+                                                                        <strong>{{ daily_item.variable }}</strong>
+                                                                        <br><small class="text-muted">{{ daily_item.unit }}</small>
+                                                                    </td>
+                                                                    <td class="text-end">{{ daily_item.real_value|floatformat:2 }}</td>
+                                                                    <td class="text-end text-primary">{{ daily_item.simulated_value|floatformat:2 }}</td>
+                                                                    <td class="text-end">
+                                                                        {% if daily_item.error > 0 %}
+                                                                            <span class="text-danger">+{{ daily_item.error|floatformat:2 }}</span>
+                                                                        {% else %}
+                                                                            <span class="text-success">{{ daily_item.error|floatformat:2 }}</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <span class="badge {% if daily_item.error_pct < 5 %}bg-success{% elif daily_item.error_pct < 10 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                                            {{ daily_item.error_pct|floatformat:1 }}%
+                                                                        </span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        {% if daily_item.verdict == 'PRECISO' %}
+                                                                            <i class="bx bx-check text-success"></i>
+                                                                        {% elif daily_item.verdict == 'ACEPTABLE' %}
+                                                                            <i class="bx bx-minus text-warning"></i>
+                                                                        {% else %}
+                                                                            <i class="bx bx-x text-danger"></i>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Gráfico Comparativo de Variables Clave -->
+                                                <div class="row mt-4">
+                                                    <div class="col-12">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <h6 class="mb-0">
+                                                                    <i class="bx bx-line-chart me-2"></i>
+                                                                    Comparación Visual: Variables Clave
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <canvas id="variablesComparisonChart" height="100"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Modal para Detalles de Variable -->
+                                                <div class="modal fade" id="variableDetailsModal" tabindex="-1">
+                                                    <div class="modal-dialog modal-lg">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="variableDetailsTitle">Detalles de Variable</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body" id="variableDetailsContent">
+                                                                <!-- Contenido dinámico -->
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
                         </div>
+                        
+
 
                     </div>
                     
@@ -2140,6 +2352,319 @@
 
 <!-- Agregar en la sección de scripts, después de los scripts existentes -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+
+<script>
+
+// Variables globales para gráficos de variables
+let variablesComparisonChart = null;
+let currentVariablesView = 'summary';
+
+// Inicializar cuando se muestre la pestaña
+document.getElementById('validation-tab').addEventListener('shown.bs.tab', function (e) {
+    // ... código existente ...
+    
+    // Inicializar gráfico de comparación de variables
+    initializeVariablesComparisonChart();
+});
+
+function initializeVariablesComparisonChart() {
+    const ctx = document.getElementById('variablesComparisonChart');
+    if (!ctx) return;
+    
+    // Destruir gráfico existente si existe
+    if (variablesComparisonChart) {
+        variablesComparisonChart.destroy();
+    }
+    
+    // Seleccionar las 6 variables más importantes para mostrar
+    const keyVariables = ['IT', 'GT', 'TPV', 'TPPRO', 'CTAI', 'GO'];
+    const labels = [];
+    const realData = [];
+    const simulatedData = [];
+    
+    // Obtener datos de la tabla
+    const rows = document.querySelectorAll('#variablesValidationTable tbody tr');
+    rows.forEach(row => {
+        const varName = row.querySelector('td:first-child strong').textContent;
+        if (keyVariables.includes(varName)) {
+            labels.push(varName);
+            const realValue = parseFloat(row.querySelector('td:nth-child(4)').textContent.replace(/[^\d.-]/g, ''));
+            const simValue = parseFloat(row.querySelector('td:nth-child(5)').textContent.replace(/[^\d.-]/g, ''));
+            
+            // Normalizar valores para mejor visualización
+            const maxValue = Math.max(realValue, simValue);
+            const normalizedReal = maxValue > 0 ? (realValue / maxValue) * 100 : 0;
+            const normalizedSim = maxValue > 0 ? (simValue / maxValue) * 100 : 0;
+            
+            realData.push(normalizedReal);
+            simulatedData.push(normalizedSim);
+        }
+    });
+    
+    const config = {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Valores Reales',
+                data: realData,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
+            }, {
+                label: 'Valores Simulados',
+                data: simulatedData,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Comparación de Variables Clave (Normalizado)'
+                },
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.r.toFixed(1) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20,
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
+    variablesComparisonChart = new Chart(ctx, config);
+}
+
+// Función para cambiar vista
+function toggleVariablesView() {
+    const summaryView = document.getElementById('variablesSummaryView');
+    const dailyView = document.getElementById('variablesDailyView');
+    
+    if (currentVariablesView === 'summary') {
+        summaryView.style.display = 'none';
+        dailyView.style.display = 'block';
+        currentVariablesView = 'daily';
+    } else {
+        summaryView.style.display = 'block';
+        dailyView.style.display = 'none';
+        currentVariablesView = 'summary';
+    }
+}
+
+// Función para filtrar vista diaria por variable
+function filterVariableDaily() {
+    const filter = document.getElementById('variableFilter').value;
+    const rows = document.querySelectorAll('.daily-variable-row');
+    
+    rows.forEach(row => {
+        if (filter === '' || row.dataset.variable === filter) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Función para mostrar detalles de una variable
+function showVariableDetails(variableName) {
+    const modal = new bootstrap.Modal(document.getElementById('variableDetailsModal'));
+    const modalTitle = document.getElementById('variableDetailsTitle');
+    const modalContent = document.getElementById('variableDetailsContent');
+    
+    modalTitle.textContent = `Detalles de Validación: ${variableName}`;
+    
+    // Generar contenido del modal
+    const variableData = getVariableValidationData(variableName);
+    
+    modalContent.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Información de la Variable</h6>
+                <dl class="row">
+                    <dt class="col-6">Código:</dt>
+                    <dd class="col-6">${variableName}</dd>
+                    <dt class="col-6">Descripción:</dt>
+                    <dd class="col-6">${variableData.description}</dd>
+                    <dt class="col-6">Unidad:</dt>
+                    <dd class="col-6">${variableData.unit}</dd>
+                    <dt class="col-6">Tipo:</dt>
+                    <dd class="col-6">${variableData.type}</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6>Estadísticas de Validación</h6>
+                <dl class="row">
+                    <dt class="col-6">Error Promedio:</dt>
+                    <dd class="col-6">
+                        <span class="badge ${variableData.avg_error_pct < 5 ? 'bg-success' : variableData.avg_error_pct < 10 ? 'bg-warning' : 'bg-danger'}">
+                            ${variableData.avg_error_pct.toFixed(1)}%
+                        </span>
+                    </dd>
+                    <dt class="col-6">Días Válidos:</dt>
+                    <dd class="col-6">${variableData.valid_days} de ${variableData.total_days}</dd>
+                    <dt class="col-6">Veredicto:</dt>
+                    <dd class="col-6">${variableData.verdict}</dd>
+                </dl>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-12">
+                <canvas id="variableDetailChart" height="150"></canvas>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Crear gráfico de línea para esta variable
+    setTimeout(() => {
+        createVariableDetailChart(variableName, variableData);
+    }, 200);
+}
+
+// Función para crear gráfico de detalle de variable
+function createVariableDetailChart(variableName, variableData) {
+    const ctx = document.getElementById('variableDetailChart');
+    if (!ctx) return;
+    
+    // Obtener datos diarios para esta variable
+    const dailyData = getDailyDataForVariable(variableName);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyData.days,
+            datasets: [{
+                label: 'Valor Real',
+                data: dailyData.realValues,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Valor Simulado',
+                data: dailyData.simulatedValues,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Evolución de ${variableName}`
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: variableData.unit
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Función auxiliar para obtener datos de validación de variable
+function getVariableValidationData(variableName) {
+    // Esta función obtendría los datos de la tabla o de un objeto global
+    // Por ahora, retorna datos de ejemplo
+    const row = document.querySelector(`tr[data-variable="${variableName}"]`);
+    if (row) {
+        return {
+            description: row.querySelector('td:nth-child(2) small').textContent,
+            unit: row.querySelector('td:nth-child(3)').textContent,
+            type: row.querySelector('.badge').textContent,
+            avg_error_pct: parseFloat(row.querySelector('td:nth-child(6) span').textContent),
+            valid_days: parseInt(row.querySelector('td:nth-child(7)').textContent.split('/')[0]),
+            total_days: parseInt(row.querySelector('td:nth-child(7)').textContent.split('/')[1]),
+            verdict: row.querySelector('td:nth-child(8)').textContent.trim()
+        };
+    }
+    return {};
+}
+
+// Función para obtener datos diarios de una variable
+function getDailyDataForVariable(variableName) {
+    const rows = document.querySelectorAll(`#variablesDailyTable tr[data-variable="${variableName}"]`);
+    const days = [];
+    const realValues = [];
+    const simulatedValues = [];
+    
+    rows.forEach(row => {
+        days.push(row.querySelector('td:first-child').textContent);
+        realValues.push(parseFloat(row.querySelector('td:nth-child(3)').textContent));
+        simulatedValues.push(parseFloat(row.querySelector('td:nth-child(4)').textContent));
+    });
+    
+    return { days, realValues, simulatedValues };
+}
+
+// Función para exportar validación de variables
+function exportVariablesValidation() {
+    let csv = 'Variable,Descripción,Unidad,Valor Real Promedio,Valor Simulado Promedio,Error Promedio %,Días Válidos,Veredicto\n';
+    
+    const rows = document.querySelectorAll('#variablesValidationTable tbody tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const variable = cells[0].querySelector('strong').textContent;
+        const description = cells[1].textContent.trim();
+        const unit = cells[2].textContent.trim();
+        const realAvg = cells[3].textContent.replace(/[^\d.-]/g, '');
+        const simAvg = cells[4].textContent.replace(/[^\d.-]/g, '');
+        const errorAvg = cells[5].querySelector('span').textContent.replace('%', '');
+        const validDays = cells[6].textContent.trim();
+        const verdict = cells[7].textContent.trim();
+        
+        csv += `"${variable}","${description}","${unit}",${realAvg},${simAvg},${errorAvg},"${validDays}","${verdict}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'validacion_variables_' + new Date().getTime() + '.csv';
+    link.click();
+    
+    showNotification('Validación de variables exportada exitosamente', 'success');
+}
+
+</script>
+
+
 <script>
 // Variables globales para los gráficos de validación
 let validationPrecisionChart = null;
