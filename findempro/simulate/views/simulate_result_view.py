@@ -1,5 +1,7 @@
 # views/simulate_result_view.py
 from typing import List
+
+from questionary.models import Answer
 from ..services.validation_service import SimulationValidationService
 import numpy as np
 from django.views.generic import View
@@ -193,6 +195,20 @@ class SimulateResultView(LoginRequiredMixin, View):
         chart_keys = [k for k in context.keys() if k.startswith('image_data')]
         logger.info(f"Chart keys in context: {chart_keys}")
         
+        logger.info(f"all_variables_extracted type: {type(analysis_data.get('all_variables_extracted'))}")
+        if analysis_data.get('all_variables_extracted'):
+            first_item = analysis_data['all_variables_extracted'][0] if analysis_data['all_variables_extracted'] else None
+            logger.info(f"First item structure: {first_item.keys() if isinstance(first_item, dict) else 'Not a dict'}")
+
+        # Asegurar que el formato sea correcto antes de validar
+        if not analysis_data.get('all_variables_extracted'):
+            logger.warning("No extracted variables found for validation")
+            
+        # Continuar con la validación...
+        model_validation_results = self._validate_model_variables(
+            simulation_instance, results_simulation, analysis_data['all_variables_extracted']
+        )
+        
         # Agregar validación del modelo
         validation_results = self._validate_model_predictions(
             simulation_instance, results_simulation, historical_demand
@@ -207,11 +223,6 @@ class SimulateResultView(LoginRequiredMixin, View):
             'validation_alerts': validation_results.get('alerts', {})
         })
         
-        # **NUEVA VALIDACIÓN DE VARIABLES DEL MODELO**
-        # Validar todas las variables del modelo contra valores reales
-        model_validation_results = self._validate_model_variables(
-            simulation_instance, results_simulation, analysis_data['all_variables_extracted']
-        )
         
         # Agregar resultados de validación de variables al contexto
         context.update({
@@ -228,203 +239,142 @@ class SimulateResultView(LoginRequiredMixin, View):
                 f"{model_validation_results['summary']['acceptable_count']} acceptable, "
                 f"{model_validation_results['summary']['inaccurate_count']} inaccurate")
         
+        # Agregar validación del modelo mejorada
+        validation_results = self._validate_model_predictions(
+            simulation_instance, results_simulation, historical_demand
+        )
+
+        # **NUEVA VALIDACIÓN DE VARIABLES DEL MODELO**
+        model_validation_results = self._validate_model_variables(
+            simulation_instance, results_simulation, analysis_data['all_variables_extracted']
+        )
+
+        # Agregar resultados al contexto
+        context.update({            
+            # Nuevos datos de validación de variables
+            'model_validation_summary': model_validation_results['summary'],
+            'model_validation_by_variable': model_validation_results['by_variable'],
+            'model_validation_by_type': model_validation_results.get('by_type', {}),
+            'model_validation_daily_details': model_validation_results['daily_details'],
+            'model_validation_charts': model_validation_results.get('comparison_charts', {}),
+            'model_validation_recommendations': model_validation_results.get('recommendations', []),
+            'model_variables_valid': model_validation_results['summary']['is_valid']
+        })
+        
+        
         return context
     
     def _validate_model_variables(self, simulation_instance, results_simulation, all_variables_extracted):
-        """Valida todas las variables del modelo (excepto demanda) contra valores reales"""
+        """Valida todas las variables del modelo (excepto demanda) contra valores reales de la base de datos"""
         
-        # Variables a validar basadas en las que existen en el modelo
-        variables_to_validate = {
-            # Variables Financieras
-            'IT': {'description': 'Ingresos Totales', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.10},
-            'GT': {'description': 'Ganancias Totales', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.15},
-            'GO': {'description': 'Gastos Operativos', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.05},
-            'GG': {'description': 'Gastos Generales', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.05},
-            'TG': {'description': 'Total Gastos', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.05},
-            'CTAI': {'description': 'Costo Total Adquisición Insumos', 'unit': 'BS', 'type': 'Costos', 'tolerance': 0.05},
-            'CFD': {'description': 'Costo Fijo Diario', 'unit': 'BS', 'type': 'Costos', 'tolerance': 0.02},
-            
-            # Variables de Producción
-            'TPV': {'description': 'Total Productos Vendidos', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.10},
-            'TPPRO': {'description': 'Total Productos Producidos', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.05},
-            'CPROD': {'description': 'Capacidad de Producción', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.02},
-            'QPL': {'description': 'Cantidad Producción Lote', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.05},
-            
-            # Variables de Inventario
-            'IPF': {'description': 'Inventario Productos Finales', 'unit': 'L', 'type': 'Inventario', 'tolerance': 0.15},
-            'SI': {'description': 'Stock de Seguridad', 'unit': 'L', 'type': 'Inventario', 'tolerance': 0.10},
-            'CIP': {'description': 'Capacidad Inventario Productos', 'unit': 'L', 'type': 'Inventario', 'tolerance': 0.02},
-            
-            # Variables de RRHH
-            'PE': {'description': 'Productividad Empleados', 'unit': 'L/Empleado', 'type': 'RRHH', 'tolerance': 0.10},
-            'NEPP': {'description': 'Número de Empleados', 'unit': 'Empleados', 'type': 'RRHH', 'tolerance': 0.01},
-            'SE': {'description': 'Sueldos Empleados', 'unit': 'BS', 'type': 'RRHH', 'tolerance': 0.02},
-            
-            # Variables de Clientes
-            'CPD': {'description': 'Clientes Por Día', 'unit': 'Clientes', 'type': 'Ventas', 'tolerance': 0.10},
-            'VPC': {'description': 'Ventas Por Cliente', 'unit': 'L/Cliente', 'type': 'Ventas', 'tolerance': 0.10},
-            'TCAE': {'description': 'Total Clientes Atendidos Efectivamente', 'unit': 'Clientes', 'type': 'Ventas', 'tolerance': 0.10},
-            
-            # Variables de Precios
-            'PVP': {'description': 'Precio de Venta del Producto', 'unit': 'BS/L', 'type': 'Precios', 'tolerance': 0.05},
-            'PC': {'description': 'Precio Competencia', 'unit': 'BS/L', 'type': 'Precios', 'tolerance': 0.05},
-            'CUIP': {'description': 'Costo Unitario Insumo Principal', 'unit': 'BS/L', 'type': 'Costos', 'tolerance': 0.05},
-        }
+        # Obtener TODAS las variables disponibles en el sistema desde la base de datos
+        from variable.models import Variable
         
-        # Obtener valores reales del cuestionario
-        real_values = self._extract_real_values_from_questionnaire(simulation_instance)
+        # Cargar todas las variables del producto desde la base de datos
+        product = simulation_instance.fk_questionary_result.fk_questionary.fk_product
+        db_variables = Variable.objects.filter(
+            fk_product=product,
+            is_active=True
+        ).values('initials', 'name', 'unit', 'type')
         
-        if not real_values:
-            logger.warning("No real values found in questionnaire")
-            return {
-                'summary': {
-                    'total_variables': 0,
-                    'precise_count': 0,
-                    'acceptable_count': 0,
-                    'inaccurate_count': 0,
-                    'success_rate': 0,
-                    'is_valid': False
-                },
-                'by_variable': {},
-                'daily_details': []
+        # Crear diccionario dinámico de variables a validar
+        variables_to_validate = {}
+        for var in db_variables:
+            # Excluir variables de demanda ya validadas
+            if var['initials'] in ['DE', 'DH', 'DI']:
+                continue
+                
+            # Determinar tolerancia según tipo de variable
+            tolerance = self._determine_tolerance_by_type(var['initials'], var['type'])
+            
+            variables_to_validate[var['initials']] = {
+                'description': var['name'],
+                'unit': var['unit'] or '',
+                'type': self._get_variable_type_name(var['type']),
+                'tolerance': tolerance
             }
         
-        # Validar cada variable
+        # Obtener valores reales desde múltiples fuentes en la base de datos
+        real_values = self._extract_complete_real_values_from_database(simulation_instance)
+        
+        if not real_values:
+            logger.warning("No real values found in database")
+            return self._create_empty_validation_result()
+        
+        # Inicializar contadores y estructuras
         by_variable = {}
         daily_details = []
         total_variables = 0
         precise_count = 0
         acceptable_count = 0
         inaccurate_count = 0
+        by_type_summary = {}
         
+        # Validar cada variable encontrada
         for var_key, var_info in variables_to_validate.items():
+            # Solo validar si tenemos valores reales
             if var_key not in real_values:
                 continue
                 
             total_variables += 1
             real_value = float(real_values[var_key])
             
-            # Inicializar variables para esta iteración
-            simulated_values = []
-            daily_details_by_day = {}
-            
             # Recolectar valores simulados para todos los días
-            day_counter = 1
-            for result in results_simulation:
-                # Extract values for each day
-                simulated_value = None
-                
-                # Try to get simulated value - intentar diferentes formas
-                try:
-                    # Primero intentar con el nombre exacto
-                    if hasattr(result, var_key):
-                        simulated_value = getattr(result, var_key)
-                    # Intentar con minúsculas
-                    elif hasattr(result, var_key.lower()):
-                        simulated_value = getattr(result, var_key.lower())
-                    # Intentar con un diccionario de variables si existe
-                    elif hasattr(result, 'variables') and result.variables:
-                        simulated_value = result.variables.get(var_key)
-                    # Intentar acceder como diccionario si el objeto lo permite
-                    elif hasattr(result, '__getitem__'):
-                        try:
-                            simulated_value = result[var_key]
-                        except (KeyError, TypeError):
-                            pass
-                    # Intentar con all_variables_extracted si está disponible
-                    elif all_variables_extracted and var_key in all_variables_extracted:
-                        # Si all_variables_extracted es una lista de diccionarios por día
-                        if isinstance(all_variables_extracted[var_key], list) and len(all_variables_extracted[var_key]) > day_counter - 1:
-                            simulated_value = all_variables_extracted[var_key][day_counter - 1]
-                        # Si es un valor único
-                        elif not isinstance(all_variables_extracted[var_key], list):
-                            simulated_value = all_variables_extracted[var_key]
-                            
-                except (AttributeError, TypeError, IndexError) as e:
-                    logger.debug(f"Could not extract {var_key} for day {day_counter}: {e}")
-                    continue
-                
-                if simulated_value is not None:
-                    try:
-                        simulated_value = float(simulated_value)
-                        simulated_values.append(simulated_value)
-                        
-                        # Calculate daily error
-                        if real_value > 0:
-                            error_pct = abs(simulated_value - real_value) / real_value * 100
-                        else:
-                            error_pct = abs(simulated_value) * 100  # Error absoluto si real_value es 0
-                            
-                        daily_details_by_day[day_counter] = {
-                            'day': day_counter,
-                            'simulated': simulated_value,
-                            'real': real_value,
-                            'error_pct': error_pct,
-                            'is_acceptable': error_pct <= var_info['tolerance'] * 100
-                        }
-                    except (ValueError, TypeError):
-                        logger.debug(f"Could not convert {var_key} value to float: {simulated_value}")
-                        
-                day_counter += 1
+            validation_result = self._validate_single_variable(
+                var_key, var_info, real_value, results_simulation, all_variables_extracted
+            )
             
-            # Skip if no simulated values found
-            if not simulated_values:
-                by_variable[var_key] = {
-                    'description': var_info['description'],
-                    'unit': var_info['unit'],
-                    'type': var_info['type'],
-                    'real_value': real_value,
-                    'status': 'NO_DATA',
-                    'error': 'No simulated values found'
-                }
-                inaccurate_count += 1  # Contar como inexacta si no hay datos
-                continue
-            
-            # Calculate average values and error
-            avg_simulated = sum(simulated_values) / len(simulated_values)  # Usar sum() en lugar de np.mean()
-            
-            if real_value > 0:
-                error_pct = abs(avg_simulated - real_value) / real_value * 100
-            else:
-                error_pct = abs(avg_simulated) * 100
-            
-            # Determine validation status
-            tolerance = var_info['tolerance'] * 100
-            if error_pct <= tolerance:
-                status = 'PRECISA'
+            # Actualizar contadores según el resultado
+            if validation_result['status'] == 'PRECISA':
                 precise_count += 1
-            elif error_pct <= tolerance * 2:
-                status = 'ACEPTABLE'
+            elif validation_result['status'] == 'ACEPTABLE':
                 acceptable_count += 1
-            else:
-                status = 'INEXACTA'
+            elif validation_result['status'] == 'INEXACTA':
+                inaccurate_count += 1
+            elif validation_result['status'] == 'NO_DATA':
                 inaccurate_count += 1
             
-            # Add to variables summary
-            by_variable[var_key] = {
-                'description': var_info['description'],
-                'unit': var_info['unit'],
-                'type': var_info['type'],
-                'real_value': real_value,
-                'simulated_avg': avg_simulated,
-                'simulated_values_count': len(simulated_values),
-                'error_pct': error_pct,
-                'status': status,
-                'tolerance': tolerance,
-                'daily_details': daily_details_by_day
-            }
+            # Agregar a resumen por variable
+            by_variable[var_key] = validation_result
             
-            # Add to daily details
-            for details in daily_details_by_day.values():
-                daily_details.append({
-                    'variable': var_key,
-                    'description': var_info['description'],
-                    'type': var_info['type'],
-                    **details
-                })
+            # Agregar detalles diarios si existen
+            if 'daily_details' in validation_result:
+                for day, details in validation_result['daily_details'].items():
+                    daily_details.append({
+                        'variable': var_key,
+                        'description': var_info['description'],
+                        'type': var_info['type'],
+                        **details
+                    })
+            
+            # Actualizar resumen por tipo
+            var_type = var_info['type']
+            if var_type not in by_type_summary:
+                by_type_summary[var_type] = {
+                    'total': 0,
+                    'precise': 0,
+                    'acceptable': 0,
+                    'inaccurate': 0
+                }
+            
+            by_type_summary[var_type]['total'] += 1
+            if validation_result['status'] == 'PRECISA':
+                by_type_summary[var_type]['precise'] += 1
+            elif validation_result['status'] == 'ACEPTABLE':
+                by_type_summary[var_type]['acceptable'] += 1
+            else:
+                by_type_summary[var_type]['inaccurate'] += 1
         
-        # Calculate success rate
+        # Generar gráficos comparativos
+        comparison_charts = self._generate_variable_comparison_charts(by_variable, real_values)
+        
+        # Calcular métricas agregadas
         success_rate = (precise_count / total_variables * 100) if total_variables > 0 else 0
+        
+        # Generar recomendaciones basadas en la validación
+        validation_recommendations = self._generate_validation_recommendations(
+            by_variable, success_rate, by_type_summary
+        )
         
         logger.info(f"Model variables validation completed: {total_variables} variables processed")
         logger.info(f"Results: {precise_count} precise, {acceptable_count} acceptable, {inaccurate_count} inaccurate")
@@ -436,177 +386,643 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'acceptable_count': acceptable_count,
                 'inaccurate_count': inaccurate_count,
                 'success_rate': success_rate,
-                'is_valid': success_rate >= 70
+                'is_valid': success_rate >= 70,
+                'validation_score': self._calculate_validation_score(precise_count, acceptable_count, total_variables)
             },
             'by_variable': by_variable,
-            'daily_details': daily_details
+            'by_type': by_type_summary,
+            'daily_details': daily_details,
+            'comparison_charts': comparison_charts,
+            'recommendations': validation_recommendations
         }
-        """Valida todas las variables del modelo (excepto demanda) contra valores reales"""
-        
-        # Variables a validar basadas en las que existen en el modelo
-        variables_to_validate = {
-            # Variables Financieras
-            'IT': {'description': 'Ingresos Totales', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.10},
-            'GT': {'description': 'Ganancias Totales', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.15},
-            'GO': {'description': 'Gastos Operativos', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.05},
-            'GG': {'description': 'Gastos Generales', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.05},
-            'TG': {'description': 'Total Gastos', 'unit': 'BS', 'type': 'Financiera', 'tolerance': 0.05},
-            'CTAI': {'description': 'Costo Total Adquisición Insumos', 'unit': 'BS', 'type': 'Costos', 'tolerance': 0.05},
-            'CFD': {'description': 'Costo Fijo Diario', 'unit': 'BS', 'type': 'Costos', 'tolerance': 0.02},
+    
+    def _determine_tolerance_by_type(self, var_initials, var_type):
+        """Determina la tolerancia según el tipo y naturaleza de la variable"""
+        # Tolerancias específicas por variable
+        specific_tolerances = {
+            # Variables financieras críticas
+            'IT': 0.10,  # Ingresos totales
+            'GT': 0.15,  # Ganancias totales
+            'GO': 0.05,  # Gastos operativos
+            'CFD': 0.02, # Costos fijos (más estricto)
             
-            # Variables de Producción
-            'TPV': {'description': 'Total Productos Vendidos', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.10},
-            'TPPRO': {'description': 'Total Productos Producidos', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.05},
-            'CPROD': {'description': 'Capacidad de Producción', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.02},
-            'QPL': {'description': 'Cantidad Producción Lote', 'unit': 'L', 'type': 'Producción', 'tolerance': 0.05},
+            # Variables de producción
+            'CPROD': 0.02,  # Capacidad debe ser precisa
+            'TPV': 0.10,    # Ventas pueden variar más
+            'TPPRO': 0.05,  # Producción moderada
             
-            # Variables de Inventario
-            'IPF': {'description': 'Inventario Productos Finales', 'unit': 'L', 'type': 'Inventario', 'tolerance': 0.15},
-            'SI': {'description': 'Stock de Seguridad', 'unit': 'L', 'type': 'Inventario', 'tolerance': 0.10},
-            'CIP': {'description': 'Capacidad Inventario Productos', 'unit': 'L', 'type': 'Inventario', 'tolerance': 0.02},
+            # Variables de inventario
+            'IPF': 0.15,  # Inventario puede fluctuar más
+            'SI': 0.10,   # Stock de seguridad
             
-            # Variables de RRHH
-            'PE': {'description': 'Productividad Empleados', 'unit': 'L/Empleado', 'type': 'RRHH', 'tolerance': 0.10},
-            'NEPP': {'description': 'Número de Empleados', 'unit': 'Empleados', 'type': 'RRHH', 'tolerance': 0.01},
-            'SE': {'description': 'Sueldos Empleados', 'unit': 'BS', 'type': 'RRHH', 'tolerance': 0.02},
-            
-            # Variables de Clientes
-            'CPD': {'description': 'Clientes Por Día', 'unit': 'Clientes', 'type': 'Ventas', 'tolerance': 0.10},
-            'VPC': {'description': 'Ventas Por Cliente', 'unit': 'L/Cliente', 'type': 'Ventas', 'tolerance': 0.10},
-            'TCAE': {'description': 'Total Clientes Atendidos Efectivamente', 'unit': 'Clientes', 'type': 'Ventas', 'tolerance': 0.10},
-            
-            # Variables de Precios
-            'PVP': {'description': 'Precio de Venta del Producto', 'unit': 'BS/L', 'type': 'Precios', 'tolerance': 0.05},
-            'PC': {'description': 'Precio Competencia', 'unit': 'BS/L', 'type': 'Precios', 'tolerance': 0.05},
-            'CUIP': {'description': 'Costo Unitario Insumo Principal', 'unit': 'BS/L', 'type': 'Costos', 'tolerance': 0.05},
+            # Variables exactas
+            'NEPP': 0.01,  # Número de empleados debe ser exacto
+            'PVP': 0.05,   # Precios relativamente fijos
         }
         
-        # Obtener valores reales del cuestionario
-        real_values = self._extract_real_values_from_questionnaire(simulation_instance)
+        if var_initials in specific_tolerances:
+            return specific_tolerances[var_initials]
         
-        # Validar cada variable
-        by_variable = {}
-        daily_details = []
-        total_variables = 0
-        precise_count = 0
-        acceptable_count = 0
-        inaccurate_count = 0
+        # Tolerancias por tipo de variable
+        type_tolerances = {
+            1: 0.05,  # Exógenas (deberían ser precisas)
+            2: 0.10,  # Estado (pueden variar)
+            3: 0.15,  # Endógenas (mayor variación esperada)
+        }
         
-        for var_key, var_info in variables_to_validate.items():
-            if var_key not in real_values:
-                continue
-                
-            total_variables += 1
-            real_value = float(real_values[var_key])
+        return type_tolerances.get(var_type, 0.10)
+    
+    
+    
+    def _get_variable_type_name(self, type_code):
+        """Convierte el código de tipo a nombre descriptivo"""
+        type_names = {
+            1: 'Exógena',
+            2: 'Estado',
+            3: 'Endógena'
+        }
+        return type_names.get(type_code, 'Otra')
+    
+    def _extract_complete_real_values_from_database(self, simulation_instance):
+        """
+        Extrae valores reales desde TODAS las fuentes disponibles en la base de datos
+        """
+        real_values = {}
+        
+        try:
+            # 1. Valores del cuestionario (QuestionaryResult)
+            try:
+                questionary_values = self._extract_real_values_from_questionnaire(simulation_instance)
+                real_values.update(questionary_values)
+            except Exception as e:
+                logger.error(f"Error in questionnaire extraction: {str(e)}")
             
-            # Recolectar valores simulados para todos los días
-            simulated_values = []
-            daily_details_by_day = {}
+            # 2. Valores del producto
+            try:
+                product = simulation_instance.fk_questionary_result.fk_questionary.fk_product
+                if product:
+                    product_values = self._extract_values_from_product(product)
+                    real_values.update(product_values)
+            except Exception as e:
+                logger.error(f"Error in product extraction: {str(e)}")
             
-        for result in results_simulation:
-            # Extract values for each day
+            # 3. Valores del negocio
+            try:
+                business = product.fk_business if product else None
+                if business:
+                    business_values = self._extract_values_from_business(business)
+                    real_values.update(business_values)
+            except Exception as e:
+                logger.error(f"Error in business extraction: {str(e)}")
+            
+            # 4. Valores de áreas
+            try:
+                if product:
+                    area_values = self._extract_values_from_areas(product)
+                    real_values.update(area_values)
+            except Exception as e:
+                logger.error(f"Error in areas extraction: {str(e)}")
+            
+            # 5. Valores históricos
+            try:
+                historical_values = self._extract_historical_simulation_values(product)
+                for key, value in historical_values.items():
+                    if key not in real_values:
+                        real_values[key] = value
+            except Exception as e:
+                logger.error(f"Error in historical extraction: {str(e)}")
+            
+            logger.info(f"Extracted {len(real_values)} real values from database")
+            
+            return real_values
+            
+        except Exception as e:
+            logger.error(f"Error extracting complete real values: {str(e)}")
+            return {}
+
+    
+    def _validate_single_variable(self, var_key, var_info, real_value, results_simulation, all_variables_extracted):
+        """Valida una sola variable comparando valores simulados vs reales"""
+        simulated_values = []
+        daily_details_by_day = {}
+        
+        # Recolectar valores simulados de cada día
+        for idx, result in enumerate(results_simulation):
             simulated_value = None
             
-            # Try to get simulated value
             try:
-                if hasattr(result, var_key.lower()):
-                    simulated_value = getattr(result, var_key.lower())
-                elif hasattr(result, var_key):
-                    simulated_value = getattr(result, var_key)
-                elif hasattr(result, 'variables'):
+                # 1. Intentar obtener de variables directamente
+                if hasattr(result, 'variables') and result.variables:
                     simulated_value = result.variables.get(var_key)
-            except AttributeError:
+                    
+                    # También buscar variantes del nombre
+                    if simulated_value is None:
+                        # Buscar con diferentes formatos
+                        for key in result.variables.keys():
+                            if key.upper() == var_key.upper():
+                                simulated_value = result.variables[key]
+                                break
+                
+                # 2. Intentar con el método get_variable_value
+                if simulated_value is None and hasattr(result, 'get_variable_value'):
+                    simulated_value = result.get_variable_value(var_key)
+                
+                # 3. Buscar en all_variables_extracted de forma más exhaustiva
+                if simulated_value is None and all_variables_extracted and idx < len(all_variables_extracted):
+                    day_data = all_variables_extracted[idx]
+                    
+                    if isinstance(day_data, dict):
+                        # Buscar en totales_por_variable
+                        if 'totales_por_variable' in day_data:
+                            vars_dict = day_data['totales_por_variable']
+                            
+                            # Buscar por clave exacta
+                            if var_key in vars_dict:
+                                simulated_value = vars_dict[var_key].get('total')
+                            else:
+                                # Buscar por nombre de variable
+                                for v_key, v_data in vars_dict.items():
+                                    if v_key.upper() == var_key.upper():
+                                        simulated_value = v_data.get('total')
+                                        break
+                        
+                        # Buscar directamente en day_data
+                        if simulated_value is None and var_key in day_data:
+                            simulated_value = day_data[var_key]
+                
+            except Exception as e:
+                logger.debug(f"Error extracting {var_key} for day {idx+1}: {e}")
                 continue
             
             if simulated_value is not None:
-                simulated_values.append(float(simulated_value))
-                
-                # Calculate daily error
-                if real_value > 0:
-                    error_pct = abs(simulated_value - real_value) / real_value * 100
-                    daily_details_by_day[len(simulated_values)] = {
-                        'day': len(simulated_values),
+                try:
+                    simulated_value = float(simulated_value)
+                    simulated_values.append(simulated_value)
+                    
+                    # Calcular error diario
+                    if real_value > 0:
+                        error_pct = abs(simulated_value - real_value) / real_value * 100
+                    else:
+                        error_pct = abs(simulated_value) * 100
+                    
+                    daily_details_by_day[idx + 1] = {
+                        'day': idx + 1,
                         'simulated': simulated_value,
                         'real': real_value,
+                        'difference': simulated_value - real_value,
                         'error_pct': error_pct,
                         'is_acceptable': error_pct <= var_info['tolerance'] * 100
                     }
+                except (ValueError, TypeError):
+                    logger.debug(f"Could not convert {var_key} value to float: {simulated_value}")
         
-        # Skip if no simulated values found
+        # Log para debugging
+        logger.debug(f"Variable {var_key}: found {len(simulated_values)} simulated values")
+        
+        # Si no hay valores simulados
         if not simulated_values:
-            by_variable[var_key] = {
+            return {
                 'description': var_info['description'],
                 'unit': var_info['unit'],
                 'type': var_info['type'],
+                'real_value': real_value,
                 'status': 'NO_DATA',
-                'error': 'No simulated values found'
+                'error': 'No se encontraron valores simulados',
+                'simulated_values_count': 0
             }
-            return by_variable[var_key]
         
-        # Calculate average values and error
-        avg_simulated = np.mean(simulated_values)
-        error_pct = abs(avg_simulated - real_value) / real_value * 100 if real_value > 0 else 0
+        # Calcular estadísticas
+        avg_simulated = sum(simulated_values) / len(simulated_values)
+        min_simulated = min(simulated_values)
+        max_simulated = max(simulated_values)
+        std_simulated = self._calculate_std_dev(simulated_values)
         
-        # Determine validation status
+        # Calcular error promedio
+        if real_value > 0:
+            error_pct = abs(avg_simulated - real_value) / real_value * 100
+        else:
+            error_pct = abs(avg_simulated) * 100
+        
+        # Determinar estado de validación
         tolerance = var_info['tolerance'] * 100
         if error_pct <= tolerance:
             status = 'PRECISA'
-            precise_count += 1
         elif error_pct <= tolerance * 2:
             status = 'ACEPTABLE'
-            acceptable_count += 1
         else:
             status = 'INEXACTA'
-            inaccurate_count += 1
         
-        # Add to variables summary
-        by_variable[var_key] = {
+        return {
             'description': var_info['description'],
             'unit': var_info['unit'],
             'type': var_info['type'],
             'real_value': real_value,
             'simulated_avg': avg_simulated,
+            'simulated_min': min_simulated,
+            'simulated_max': max_simulated,
+            'simulated_std': std_simulated,
+            'simulated_values_count': len(simulated_values),
             'error_pct': error_pct,
             'status': status,
             'tolerance': tolerance,
-            'daily_details': daily_details_by_day
+            'daily_details': daily_details_by_day,
+            'trend': self._calculate_trend(simulated_values)
+        }
+    
+    def _generate_variable_comparison_charts(self, by_variable, real_values):
+        """Genera gráficos comparativos para las variables validadas"""
+        charts = {}
+        
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            import base64
+            from io import BytesIO
+            
+            # Gráfico 1: Comparación Real vs Simulado por Variable
+            fig, ax = plt.subplots(figsize=(14, 8))
+            
+            variables = []
+            real_vals = []
+            sim_vals = []
+            colors = []
+            
+            for var_key, var_data in by_variable.items():
+                if var_data.get('status') != 'NO_DATA':
+                    variables.append(var_data['description'][:20] + '...' if len(var_data['description']) > 20 else var_data['description'])
+                    real_vals.append(var_data.get('real_value', 0))
+                    sim_vals.append(var_data.get('simulated_avg', 0))
+                    
+                    # Color según estado
+                    if var_data['status'] == 'PRECISA':
+                        colors.append('green')
+                    elif var_data['status'] == 'ACEPTABLE':
+                        colors.append('orange')
+                    else:
+                        colors.append('red')
+            
+            if variables:
+                x = range(len(variables))
+                width = 0.35
+                
+                bars1 = ax.bar([i - width/2 for i in x], real_vals, width, 
+                            label='Valor Real', alpha=0.8, color='steelblue')
+                bars2 = ax.bar([i + width/2 for i in x], sim_vals, width,
+                            label='Valor Simulado', alpha=0.8)
+                
+                # Colorear barras simuladas según precisión
+                for bar, color in zip(bars2, colors):
+                    bar.set_color(color)
+                
+                ax.set_xlabel('Variables', fontsize=12)
+                ax.set_ylabel('Valor', fontsize=12)
+                ax.set_title('Comparación de Variables: Real vs Simulado', fontsize=16, fontweight='bold')
+                ax.set_xticks(x)
+                ax.set_xticklabels(variables, rotation=45, ha='right')
+                ax.legend()
+                ax.grid(True, alpha=0.3, axis='y')
+                
+                plt.tight_layout()
+                
+                # Convertir a base64
+                buffer = BytesIO()
+                fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+                buffer.seek(0)
+                charts['comparison_bar'] = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                plt.close(fig)
+            
+            # Gráfico 2: Distribución de Errores
+            fig2, ax2 = plt.subplots(figsize=(10, 6))
+            
+            errors = []
+            labels = []
+            colors_pie = []
+            
+            precise = sum(1 for v in by_variable.values() if v.get('status') == 'PRECISA')
+            acceptable = sum(1 for v in by_variable.values() if v.get('status') == 'ACEPTABLE')
+            inaccurate = sum(1 for v in by_variable.values() if v.get('status') == 'INEXACTA')
+            
+            if precise > 0:
+                errors.append(precise)
+                labels.append(f'Precisas ({precise})')
+                colors_pie.append('green')
+            
+            if acceptable > 0:
+                errors.append(acceptable)
+                labels.append(f'Aceptables ({acceptable})')
+                colors_pie.append('orange')
+            
+            if inaccurate > 0:
+                errors.append(inaccurate)
+                labels.append(f'Inexactas ({inaccurate})')
+                colors_pie.append('red')
+            
+            if errors:
+                ax2.pie(errors, labels=labels, colors=colors_pie, autopct='%1.1f%%',
+                    startangle=90, textprops={'fontsize': 12})
+                ax2.set_title('Distribución de Precisión de Variables', fontsize=16, fontweight='bold')
+                
+                # Convertir a base64
+                buffer2 = BytesIO()
+                fig2.savefig(buffer2, format='png', dpi=100, bbox_inches='tight')
+                buffer2.seek(0)
+                charts['error_distribution'] = base64.b64encode(buffer2.getvalue()).decode('utf-8')
+                plt.close(fig2)
+            
+        except Exception as e:
+            logger.error(f"Error generating comparison charts: {str(e)}")
+        
+        return charts
+    
+    
+    def _extract_values_from_product(self, product):
+        """Extrae valores relevantes del modelo Product"""
+        values = {}
+        
+        try:
+            # Valores financieros del producto
+            if product.profit_margin is not None:
+                values['MB'] = float(product.profit_margin) / 100  # Convertir porcentaje
+            
+            if product.earnings is not None:
+                values['GT_PRODUCT'] = float(product.earnings)
+            
+            if product.costs is not None:
+                values['CT_PRODUCT'] = float(product.costs)
+            
+            # Valores de producción
+            if product.production_output is not None:
+                values['CPROD_BASE'] = float(product.production_output)
+            
+            if product.inventory_levels is not None:
+                values['INV_PRODUCT'] = float(product.inventory_levels)
+            
+            if product.demand_forecast is not None:
+                values['DF_PRODUCT'] = float(product.demand_forecast)
+                
+        except Exception as e:
+            logger.debug(f"Error extracting product values: {e}")
+        
+        return values
+
+    def _extract_values_from_business(self, business):
+        """Extrae valores relevantes del modelo Business"""
+        values = {}
+        
+        try:
+            # Valores del negocio que pueden ser útiles
+            if hasattr(business, 'monthly_revenue') and business.monthly_revenue:
+                values['IT_MONTHLY'] = float(business.monthly_revenue)
+                values['IT'] = float(business.monthly_revenue) / 30  # Diario
+            
+            if hasattr(business, 'monthly_expenses') and business.monthly_expenses:
+                values['GO_MONTHLY'] = float(business.monthly_expenses)
+                values['GO'] = float(business.monthly_expenses) / 30  # Diario
+                
+            if hasattr(business, 'employee_count') and business.employee_count:
+                values['NEPP'] = float(business.employee_count)
+                
+        except Exception as e:
+            logger.debug(f"Error extracting business values: {e}")
+        
+        return values
+
+    def _extract_values_from_areas(self, product):
+        """Extrae valores de las áreas asociadas al producto"""
+        values = {}
+        
+        try:
+            from product.models import Area
+            
+            areas = Area.objects.filter(
+                fk_product=product,
+                is_active=True
+            )
+            
+            for area in areas:
+                if area.params:
+                    # Si params es un diccionario con valores numéricos
+                    if isinstance(area.params, dict):
+                        for key, value in area.params.items():
+                            if isinstance(value, (int, float)):
+                                # Mapear nombres de parámetros a variables
+                                mapped_key = self._map_area_param_to_variable(key)
+                                if mapped_key:
+                                    values[mapped_key] = float(value)
+                                    
+        except Exception as e:
+            logger.debug(f"Error extracting area values: {e}")
+        
+        return values
+
+    def _extract_historical_simulation_values(self, product):
+        """Extrae valores promedio de simulaciones históricas exitosas"""
+        values = {}
+        
+        try:
+            # Buscar simulaciones previas exitosas del mismo producto
+            from simulate.models import Simulation, ResultSimulation
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            # Últimas simulaciones exitosas (últimos 30 días)
+            recent_date = timezone.now() - timedelta(days=30)
+            
+            recent_simulations = Simulation.objects.filter(
+                fk_questionary_result__fk_questionary__fk_product=product,
+                is_active=True,
+                date_created__gte=recent_date
+            ).order_by('-date_created')[:5]  # Últimas 5 simulaciones
+            
+            if recent_simulations.exists():
+                # Recolectar valores promedio de todas las simulaciones
+                aggregated_values = {}
+                counts = {}
+                
+                for sim in recent_simulations:
+                    results = ResultSimulation.objects.filter(
+                        fk_simulation=sim,
+                        is_active=True
+                    )
+                    
+                    for result in results:
+                        if result.variables:
+                            for var_key, var_value in result.variables.items():
+                                if isinstance(var_value, (int, float)):
+                                    if var_key not in aggregated_values:
+                                        aggregated_values[var_key] = 0
+                                        counts[var_key] = 0
+                                    
+                                    aggregated_values[var_key] += float(var_value)
+                                    counts[var_key] += 1
+                
+                # Calcular promedios
+                for var_key in aggregated_values:
+                    if counts[var_key] > 0:
+                        values[f"{var_key}_HIST"] = aggregated_values[var_key] / counts[var_key]
+                        
+        except Exception as e:
+            logger.debug(f"Error extracting historical simulation values: {e}")
+        
+        return values
+
+    def _map_area_param_to_variable(self, param_name):
+        """Mapea nombres de parámetros de área a variables del sistema"""
+        mapping = {
+            'capacidad_produccion': 'CPROD',
+            'capacidad_inventario': 'CIP',
+            'empleados': 'NEPP',
+            'costo_fijo': 'CFD',
+            'precio_venta': 'PVP',
+            'costo_unitario': 'CUIP',
+            'stock_seguridad': 'SI',
+            'clientes_diarios': 'CPD',
+            'margen_ganancia': 'MB',
+            'gastos_marketing': 'GMM',
+            'tiempo_produccion': 'TPE',
+            'demanda_esperada': 'DE',
         }
         
-        # Add to daily details
-        daily_details.extend([
-            {
-                'variable': var_key,
-                'description': var_info['description'],
-                'type': var_info['type'],
-                **details
-            } for details in daily_details_by_day.values()
-        ])
+        return mapping.get(param_name.lower())
+
+    def _calculate_std_dev(self, values):
+        """Calcula desviación estándar manualmente"""
+        if len(values) < 2:
+            return 0
         
-        success_rate = (precise_count / total_variables * 100) if total_variables > 0 else 0
+        mean = sum(values) / len(values)
+        variance = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
+        return variance ** 0.5
+
+    def _calculate_trend(self, values):
+        """Calcula la tendencia de una serie de valores"""
+        if len(values) < 2:
+            return 'stable'
         
+        # Calcular pendiente simple
+        x = list(range(len(values)))
+        n = len(values)
+        
+        sum_x = sum(x)
+        sum_y = sum(values)
+        sum_xy = sum(x[i] * values[i] for i in range(n))
+        sum_x2 = sum(xi ** 2 for xi in x)
+        
+        if n * sum_x2 - sum_x ** 2 == 0:
+            return 'stable'
+        
+        slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)
+        
+        if slope > 0.01:
+            return 'increasing'
+        elif slope < -0.01:
+            return 'decreasing'
+        else:
+            return 'stable'
+
+    def _create_empty_validation_result(self):
+        """Crea un resultado de validación vacío"""
         return {
             'summary': {
-                'total_variables': total_variables,
-                'precise_count': precise_count,
-                'acceptable_count': acceptable_count,
-                'inaccurate_count': inaccurate_count,
-                'success_rate': success_rate,
-                'is_valid': success_rate >= 70
+                'total_variables': 0,
+                'precise_count': 0,
+                'acceptable_count': 0,
+                'inaccurate_count': 0,
+                'success_rate': 0,
+                'is_valid': False,
+                'validation_score': 0
             },
-            'by_variable': by_variable,
-            'daily_details': daily_details
+            'by_variable': {},
+            'by_type': {},
+            'daily_details': [],
+            'comparison_charts': {},
+            'recommendations': []
         }
-     
+
+    def _calculate_validation_score(self, precise, acceptable, total):
+        """Calcula un score de validación ponderado"""
+        if total == 0:
+            return 0
+        
+        # Ponderaciones: preciso=100%, aceptable=50%, inexacto=0%
+        score = (precise * 1.0 + acceptable * 0.5) / total * 100
+        return round(score, 2)
+
+    def _generate_validation_recommendations(self, by_variable, success_rate, by_type_summary):
+        """Genera recomendaciones basadas en los resultados de validación"""
+        recommendations = []
+        
+        # Recomendación general basada en tasa de éxito
+        if success_rate >= 90:
+            recommendations.append({
+                'type': 'success',
+                'message': 'El modelo muestra una excelente precisión general. Los valores simulados son altamente confiables.',
+                'priority': 'low'
+            })
+        elif success_rate >= 70:
+            recommendations.append({
+                'type': 'warning',
+                'message': 'El modelo tiene precisión aceptable pero puede mejorarse. Revise las variables con mayor error.',
+                'priority': 'medium'
+            })
+        else:
+            recommendations.append({
+                'type': 'error',
+                'message': 'El modelo requiere calibración significativa. Muchas variables muestran desviaciones importantes.',
+                'priority': 'high'
+            })
+        
+        # Recomendaciones específicas por variable
+        critical_vars = []
+        for var_key, var_data in by_variable.items():
+            if var_data.get('status') == 'INEXACTA':
+                critical_vars.append({
+                    'variable': var_data['description'],
+                    'error': var_data.get('error_pct', 0)
+                })
+        
+        if critical_vars:
+            # Ordenar por error descendente
+            critical_vars.sort(key=lambda x: x['error'], reverse=True)
+            
+            # Tomar las 3 peores
+            worst_vars = critical_vars[:3]
+            var_list = ', '.join([f"{v['variable']} ({v['error']:.1f}% error)" for v in worst_vars])
+            
+            recommendations.append({
+                'type': 'error',
+                'message': f'Variables críticas que requieren revisión: {var_list}',
+                'priority': 'high'
+            })
+        
+        # Recomendaciones por tipo
+        for var_type, type_data in by_type_summary.items():
+            if type_data['total'] > 0:
+                type_success_rate = (type_data['precise'] / type_data['total']) * 100
+                
+                if type_success_rate < 50:
+                    recommendations.append({
+                        'type': 'warning',
+                        'message': f'Las variables de tipo "{var_type}" muestran baja precisión ({type_success_rate:.1f}%). Considere revisar las ecuaciones relacionadas.',
+                        'priority': 'medium'
+                    })
+        
+        # Recomendaciones sobre datos faltantes
+        no_data_count = sum(1 for v in by_variable.values() if v.get('status') == 'NO_DATA')
+        if no_data_count > 0:
+            recommendations.append({
+                'type': 'info',
+                'message': f'{no_data_count} variables no pudieron ser validadas por falta de datos simulados. Verifique las ecuaciones del modelo.',
+                'priority': 'medium'
+            })
+        
+        return recommendations
+    
     def _extract_real_values_from_questionnaire(self, simulation_instance):
         """
         Extrae los valores reales del cuestionario asociado a la simulación
         para comparar con los valores simulados
-        
-        Args:
-            simulation_instance: Instancia de la simulación
-            
-        Returns:
-            dict: Diccionario con los valores reales extraídos del cuestionario
         """
         real_values = {}
         
@@ -617,69 +1033,70 @@ class SimulateResultView(LoginRequiredMixin, View):
                 logger.warning("No questionary result found for simulation")
                 return real_values
             
-            # Obtener las respuestas del cuestionario
-            questionary_answers = questionary_result.questionary_answers.all()
+            # Obtener las respuestas del cuestionario con sus variables asociadas
+            answers = questionary_result.fk_question_result_answer.select_related(
+                'fk_question__fk_variable'
+            ).all()
             
-            # Mapeo de preguntas del cuestionario a variables del modelo
+            logger.info(f"Found {answers.count()} answers in questionnaire")
+            
+            # Mapeo mejorado de preguntas a variables
             question_to_variable_mapping = {
-                # Variables Financieras
-                'ingresos_totales_mensuales': 'IT',
-                'ganancias_totales_mensuales': 'GT',
-                'gastos_operativos_mensuales': 'GO',
-                'gastos_generales_mensuales': 'GG',
-                'total_gastos_mensuales': 'TG',
-                'costo_total_insumos_mensuales': 'CTAI',
-                'costos_fijos_diarios': 'CFD',
-                
-                # Variables de Producción
-                'productos_vendidos_diarios': 'TPV',
-                'productos_producidos_diarios': 'TPPRO',
-                'capacidad_produccion_diaria': 'CPROD',
-                'cantidad_lote_produccion': 'QPL',
-                
-                # Variables de Inventario
-                'inventario_productos_finales': 'IPF',
-                'stock_seguridad': 'SI',
-                'capacidad_inventario_productos': 'CIP',
-                
-                # Variables de RRHH
-                'productividad_empleados': 'PE',
-                'numero_empleados': 'NEPP',
-                'sueldos_empleados_mensuales': 'SE',
-                
-                # Variables de Clientes/Ventas
-                'clientes_por_dia': 'CPD',
-                'ventas_por_cliente': 'VPC',
-                'clientes_atendidos_diarios': 'TCAE',
-                
-                # Variables de Precios
-                'precio_venta_producto': 'PVP',
-                'precio_competencia': 'PC',
-                'costo_unitario_insumo_principal': 'CUIP',
+                # Texto completo de pregunta -> variable
+                'precio de venta del producto': 'PVP',
+                'precio venta producto': 'PVP',
+                'capacidad de producción diaria': 'CPROD',
+                'capacidad producción': 'CPROD',
+                'clientes por día': 'CPD',
+                'clientes diarios': 'CPD',
+                'número de empleados': 'NEPP',
+                'empleados': 'NEPP',
+                'costos fijos diarios': 'CFD',
+                'costo fijo diario': 'CFD',
+                'costo unitario del insumo': 'CUIP',
+                'costo unitario insumo': 'CUIP',
+                'inventario productos finales': 'IPF',
+                'stock de seguridad': 'SI',
+                'stock seguridad': 'SI',
+                'sueldos empleados': 'SE',
+                'salarios': 'SE',
+                'precio competencia': 'PC',
+                'gastos marketing': 'GMM',
+                'marketing mensual': 'GMM',
             }
             
-            # Extraer valores de las respuestas
-            for answer in questionary_answers:
-                question_key = answer.fk_question.key if hasattr(answer.fk_question, 'key') else None
-                question_text = answer.fk_question.question_text.lower().replace(' ', '_') if hasattr(answer.fk_question, 'question_text') else None
-                
-                # Intentar mapear por clave de pregunta
-                if question_key and question_key in question_to_variable_mapping:
-                    variable_key = question_to_variable_mapping[question_key]
-                    real_values[variable_key] = self._parse_numeric_value(answer.answer_value)
-                    continue
-                
-                # Intentar mapear por texto de pregunta
-                if question_text:
-                    for question_pattern, variable_key in question_to_variable_mapping.items():
+            # Procesar cada respuesta
+            for answer in answers:
+                try:
+                    # Primero intentar con la variable directamente asociada
+                    if answer.fk_question.fk_variable:
+                        var_initials = answer.fk_question.fk_variable.initials
+                        if var_initials and answer.answer:
+                            value = self._parse_numeric_value(answer.answer)
+                            if value is not None:
+                                real_values[var_initials] = value
+                                logger.debug(f"Extracted {var_initials} = {value} from variable association")
+                    
+                    # Luego intentar con mapeo de texto de pregunta
+                    question_text = answer.fk_question.question.lower().strip()
+                    
+                    # Buscar coincidencias en el mapeo
+                    for question_pattern, var_key in question_to_variable_mapping.items():
                         if question_pattern in question_text:
-                            real_values[variable_key] = self._parse_numeric_value(answer.answer_value)
-                            break
+                            if var_key not in real_values and answer.answer:  # No sobrescribir
+                                value = self._parse_numeric_value(answer.answer)
+                                if value is not None:
+                                    real_values[var_key] = value
+                                    logger.debug(f"Extracted {var_key} = {value} from question text mapping")
+                                    break
+                    
+                except Exception as e:
+                    logger.error(f"Error processing answer {answer.id}: {str(e)}")
+                    continue
             
-            # Valores calculados o derivados si no están directamente en el cuestionario
-            real_values = self._calculate_derived_values(real_values, questionary_answers)
+            # Calcular valores derivados
+            real_values = self._calculate_derived_values(real_values, answers)
             
-            # Log de valores extraídos
             logger.info(f"Real values extracted from questionnaire: {len(real_values)} variables")
             logger.debug(f"Real values: {real_values}")
             
@@ -728,46 +1145,74 @@ class SimulateResultView(LoginRequiredMixin, View):
         """
         Calcula valores derivados que no están directamente en el cuestionario
         pero pueden ser calculados a partir de otros valores
-        
-        Args:
-            real_values: Diccionario de valores reales extraídos
-            questionary_answers: Respuestas del cuestionario
-            
-        Returns:
-            dict: Diccionario actualizado con valores derivados
         """
         try:
+            derived_count = 0
+            
             # Calcular Total Gastos si no existe pero tenemos componentes
-            if 'TG' not in real_values and ('GO' in real_values or 'GG' in real_values):
+            if 'TG' not in real_values:
                 go = real_values.get('GO', 0)
                 gg = real_values.get('GG', 0)
-                se = real_values.get('SE', 0)
-                real_values['TG'] = go + gg + se
+                cfd = real_values.get('CFD', 0)
+                se = real_values.get('SE', 0) / 30 if real_values.get('SE', 0) > 1000 else real_values.get('SE', 0)
+                
+                if any([go, gg, cfd, se]):
+                    real_values['TG'] = go + gg + cfd + se
+                    derived_count += 1
+            
+            # Calcular Gastos Operativos si no existe
+            if 'GO' not in real_values and 'CFD' in real_values:
+                real_values['GO'] = real_values['CFD'] * 1.5  # Estimación
+                derived_count += 1
+            
+            # Calcular Ingresos Totales si tenemos precio y ventas
+            if 'IT' not in real_values and 'PVP' in real_values and 'TPV' in real_values:
+                real_values['IT'] = real_values['PVP'] * real_values['TPV']
+                derived_count += 1
+            
+            # Calcular TPV si tenemos clientes y ventas por cliente
+            if 'TPV' not in real_values and 'CPD' in real_values and 'VPC' in real_values:
+                real_values['TPV'] = real_values['CPD'] * real_values['VPC']
+                derived_count += 1
+            elif 'TPV' not in real_values and 'CPD' in real_values:
+                # Estimar VPC basado en el precio
+                pvp = real_values.get('PVP', 15.5)
+                if pvp < 10:
+                    vpc = 2.5  # Productos baratos, más unidades por cliente
+                else:
+                    vpc = 1.5  # Productos caros, menos unidades
+                real_values['VPC'] = vpc
+                real_values['TPV'] = real_values['CPD'] * vpc
+                derived_count += 2
+            
+            # Calcular TCAE si no existe
+            if 'TCAE' not in real_values and 'CPD' in real_values:
+                real_values['TCAE'] = real_values['CPD'] * 0.95  # 95% de efectividad
+                derived_count += 1
+            
+            # Calcular TPPRO si no existe pero tenemos TPV
+            if 'TPPRO' not in real_values and 'TPV' in real_values:
+                real_values['TPPRO'] = real_values['TPV'] * 1.05  # 5% buffer de producción
+                derived_count += 1
             
             # Calcular Ganancias Totales si tenemos ingresos y gastos
             if 'GT' not in real_values and 'IT' in real_values and 'TG' in real_values:
                 real_values['GT'] = real_values['IT'] - real_values['TG']
-            
-            # Calcular Total Clientes Atendidos si no existe pero tenemos clientes por día
-            if 'TCAE' not in real_values and 'CPD' in real_values:
-                real_values['TCAE'] = real_values['CPD']  # Asumiendo que todos los clientes son atendidos
-            
-            # Calcular Productos Vendidos si tenemos clientes y ventas por cliente
-            if 'TPV' not in real_values and 'CPD' in real_values and 'VPC' in real_values:
-                real_values['TPV'] = real_values['CPD'] * real_values['VPC']
-            
-            # Calcular Productos Producidos si no existe pero tenemos vendidos
-            if 'TPPRO' not in real_values and 'TPV' in real_values:
-                # Asumiendo que se produce lo que se vende más un buffer
-                real_values['TPPRO'] = real_values['TPV'] * 1.1  # 10% buffer
+                derived_count += 1
             
             # Convertir valores mensuales a diarios donde sea necesario
-            monthly_to_daily_variables = ['IT', 'GT', 'GO', 'GG', 'TG', 'CTAI', 'SE']
-            for var in monthly_to_daily_variables:
-                if var in real_values:
-                    real_values[var] = real_values[var] / 30  # Convertir mensual a diario
+            monthly_to_daily = {
+                'SE': 30,  # Sueldos
+                'GMM': 30, # Marketing
+            }
             
-            logger.info(f"Derived values calculated. Total variables: {len(real_values)}")
+            for var, divisor in monthly_to_daily.items():
+                if var in real_values and real_values[var] > 1000:
+                    real_values[f"{var}_MONTHLY"] = real_values[var]
+                    real_values[var] = real_values[var] / divisor
+                    derived_count += 1
+            
+            logger.info(f"Derived values calculated. Total variables: {derived_count}")
             
             return real_values
             

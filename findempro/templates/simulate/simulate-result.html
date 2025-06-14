@@ -2025,9 +2025,215 @@
                                     </div>
                                 </div>
                             </div>
-                            {% endif %}                            
+                            {% endif %}       
+                            
+                            <!-- NUEVA SECCIÓN: Validación de Variables del Modelo -->
+                            <div class="validation-section variables-validation mt-5">
+                                <h4 class="mb-3">
+                                    <i class="bx bx-calculator"></i> Validación de Variables del Modelo
+                                </h4>
+                                
+                                {% if model_validation_summary %}
+                                <!-- Resumen General -->
+                                <div class="row mb-4">
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Variables Totales</h5>
+                                                <h2 class="text-primary">{{ model_validation_summary.total_variables }}</h2>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Precisas</h5>
+                                                <h2 class="text-success">{{ model_validation_summary.precise_count }}</h2>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Aceptables</h5>
+                                                <h2 class="text-warning">{{ model_validation_summary.acceptable_count }}</h2>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Inexactas</h5>
+                                                <h2 class="text-danger">{{ model_validation_summary.inaccurate_count }}</h2>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Score de Validación -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="progress" style="height: 30px;">
+                                            <div class="progress-bar {% if model_validation_summary.success_rate >= 90 %}bg-success{% elif model_validation_summary.success_rate >= 70 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                role="progressbar" 
+                                                style="width: {{ model_validation_summary.success_rate }}%;"
+                                                aria-valuenow="{{ model_validation_summary.success_rate }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                                <strong>{{ model_validation_summary.success_rate|floatformat:1 }}% de Precisión</strong>
+                                            </div>
+                                        </div>
+                                        <p class="text-center mt-2">
+                                            <strong>Score de Validación: {{ model_validation_summary.validation_score|floatformat:1 }}/100</strong>
+                                            {% if model_validation_summary.is_valid %}
+                                                <span class="badge bg-success">Modelo Válido</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Modelo Requiere Calibración</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Gráficos Comparativos -->
+                                {% if model_validation_by_variable.comparison_charts %}
+                                <div class="row mb-4">
+                                    {% if model_validation_by_variable.comparison_charts.comparison_bar %}
+                                    <div class="col-md-8">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Comparación Real vs Simulado</h5>
+                                                <img src="data:image/png;base64,{{ model_validation_by_variable.comparison_charts.comparison_bar }}" 
+                                                    class="img-fluid" alt="Comparación de Variables">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if model_validation_by_variable.comparison_charts.error_distribution %}
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Distribución de Precisión</h5>
+                                                <img src="data:image/png;base64,{{ model_validation_by_variable.comparison_charts.error_distribution }}" 
+                                                    class="img-fluid" alt="Distribución de Errores">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Tabla de Variables Validadas -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Detalle de Variables Validadas</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Variable</th>
+                                                        <th>Tipo</th>
+                                                        <th>Valor Real</th>
+                                                        <th>Valor Simulado (Prom.)</th>
+                                                        <th>Error %</th>
+                                                        <th>Estado</th>
+                                                        <th>Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for var_key, var_data in model_validation_by_variable.items %}
+                                                    {% if var_data.status != 'NO_DATA' %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ var_key }}</strong><br>
+                                                            <small class="text-muted">{{ var_data.description }}</small>
+                                                        </td>
+                                                        <td>{{ var_data.type }}</td>
+                                                        <td>{{ var_data.real_value|floatformat:2 }} {{ var_data.unit }}</td>
+                                                        <td>{{ var_data.simulated_avg|floatformat:2 }} {{ var_data.unit }}</td>
+                                                        <td>
+                                                            <span class="badge {% if var_data.error_pct <= 5 %}bg-success{% elif var_data.error_pct <= 15 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                                {{ var_data.error_pct|floatformat:1 }}%
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            {% if var_data.status == 'PRECISA' %}
+                                                                <span class="badge bg-success">✔️ Precisa</span>
+                                                            {% elif var_data.status == 'ACEPTABLE' %}
+                                                                <span class="badge bg-warning">⚠️ Aceptable</span>
+                                                            {% else %}
+                                                                <span class="badge bg-danger">❌ Inexacta</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-outline-primary" 
+                                                                    onclick="showVariableDetails('{{ var_key }}')">
+                                                                <i class="bx bx-show"></i> Ver Detalles
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Resumen por Tipo de Variable -->
+                                {% if model_validation_by_type %}
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Precisión por Tipo de Variable</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            {% for type_name, type_data in model_validation_by_type.items %}
+                                            <div class="col-md-4 mb-3">
+                                                <h6>{{ type_name }}</h6>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <small>Precisas: {{ type_data.precise }}/{{ type_data.total }}</small>
+                                                    <small>{% widthratio type_data.precise type_data.total 100 %}%</small>
+                                                </div>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-success" style="width: {% widthratio type_data.precise type_data.total 100 %}%"></div>
+                                                    <div class="progress-bar bg-warning" style="width: {% widthratio type_data.precise type_data.total 100 %}%"></div>
+                                                    <div class="progress-bar bg-danger" style="width: {% widthratio type_data.precise type_data.total 100 %}%"></div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Recomendaciones -->
+                                {% if model_validation_recommendations %}
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Recomendaciones de Mejora</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {% for rec in model_validation_recommendations %}
+                                        <div class="alert alert-{{ rec.type }} d-flex align-items-center" role="alert">
+                                            <i class="bx bx-{% if rec.type == 'error' %}error{% elif rec.type == 'warning' %}error-alt{% else %}info-circle{% endif %} me-2"></i>
+                                            <div>{{ rec.message }}</div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% else %}
+                                <div class="alert alert-info">
+                                    <i class="bx bx-info-circle"></i> No se encontraron datos para validar las variables del modelo.
+                                </div>
+                                {% endif %}
+                            </div>
                             <!-- Validación de Variables del Modelo -->
-                            <div class="row mt-5">
+                            {% comment %} <div class="row mt-5">
                                 <div class="col-12">
                                     <div class="card border-primary">
                                         <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
@@ -2232,16 +2438,9 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-
-
+                            </div> {% endcomment %}
                         </div>
-                        
-
-
                     </div>
-                    
                     <!-- Summary Statistics -->
                     <div class="metric-card mt-4">
                         <div class="card-header">
@@ -2329,6 +2528,21 @@
         </div>
     </div>
 
+
+    <!-- Modal para Detalles de Variable -->
+    <div class="modal fade" id="variableDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles de Validación por Día</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="variableDetailsContent">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Fullscreen Overlay -->
     <div class="fullscreen-overlay" id="fullscreenOverlay">
         <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
@@ -2352,6 +2566,34 @@
 
 <!-- Agregar en la sección de scripts, después de los scripts existentes -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+
+<script>
+function showVariableDetails(varKey) {
+    const variableData = {{ model_validation_by_variable|json_script:"variable-validation-data" }};
+    const data = JSON.parse(document.getElementById('variable-validation-data').textContent);
+    
+    if (data[varKey] && data[varKey].daily_details) {
+        let content = `<h6>${data[varKey].description}</h6>`;
+        content += '<div class="table-responsive"><table class="table table-sm">';
+        content += '<thead><tr><th>Día</th><th>Real</th><th>Simulado</th><th>Error %</th></tr></thead><tbody>';
+        
+        Object.values(data[varKey].daily_details).forEach(day => {
+            const errorClass = day.error_pct <= 5 ? 'success' : day.error_pct <= 15 ? 'warning' : 'danger';
+            content += `<tr>
+                <td>Día ${day.day}</td>
+                <td>${day.real.toFixed(2)}</td>
+                <td>${day.simulated.toFixed(2)}</td>
+                <td><span class="badge bg-${errorClass}">${day.error_pct.toFixed(1)}%</span></td>
+            </tr>`;
+       });
+       
+       content += '</tbody></table></div>';
+       document.getElementById('variableDetailsContent').innerHTML = content;
+       new bootstrap.Modal(document.getElementById('variableDetailsModal')).show();
+   }
+}
+</script>
 
 
 <script>
