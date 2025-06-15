@@ -66,7 +66,7 @@ def create_and_save_questionary_result(questionary: Questionary) -> bool:
             logger.info(f"{len(created_answers)} answers created for questionary result")
             
             # Crear simulación mejorada
-            create_enhanced_simulation(questionary_result)
+            # create_enhanced_simulation(questionary_result)
             
             logger.info(f'Questionary result created for questionary {questionary.id}')
             return True
@@ -148,7 +148,7 @@ def get_answer_data_for_product(product_name: str) -> List[Dict[str, Any]]:
     
     if data_name:
         try:
-            module = __import__('questionary.data.questionary_result_data', fromlist=[data_name])
+            module = __import__('questionary.data.questionary_result_test_data', fromlist=[data_name])
             return getattr(module, data_name, [])
         except (ImportError, AttributeError) as e:
             logger.warning(f"Could not import {data_name}: {e}")
@@ -254,7 +254,7 @@ def get_simulation_data_for_product(product_name: str) -> List[Dict[str, Any]]:
     
     if data_name:
         try:
-            module = __import__('simulate.data.simulate_data', fromlist=[data_name])
+            module = __import__('simulate.data.simulate_test_data', fromlist=[data_name])
             return getattr(module, data_name, [])
         except (ImportError, AttributeError) as e:
             logger.warning(f"Could not import {data_name}: {e}")

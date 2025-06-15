@@ -1,4 +1,7 @@
-# variables_data.py - Versión Final con valores default
+
+  
+  
+  # variables_data.py - Versión Final con valores default
 variables_data = [
 # VARIABLES EXÓGENAS (TIPO 1) - Variables de entrada del sistema
 {'name': 'PRECIO DE VENTA DEL PRODUCTO',
@@ -527,4 +530,192 @@ variables_data = [
 'unit': 'L',
 'description': 'CANTIDAD PARA REABASTECER',
 'default_value': 0},
+
+{
+    'name': 'Demanda Promedio Histórica',
+    'initials': 'DPH',
+    'type': 3,  # Calculada
+    'unit': 'L/día',
+    'description': 'Media de los datos históricos de demanda',
+    'default_value': 0
+  },
+  {
+    'name': 'Desviación Estándar Demanda',
+    'initials': 'DSD',
+    'type': 3,
+    'unit': 'L',
+    'description': 'Variabilidad de la demanda histórica',
+    'default_value': 0
+  },
+  {
+    'name': 'Coeficiente Variación Demanda',
+    'initials': 'CVD',
+    'type': 3,
+    'unit': '%',
+    'description': 'Variabilidad relativa de la demanda',
+    'default_value': 0
+  },
+  {
+    'name': 'Demanda Diaria Proyectada',
+    'initials': 'DDP',
+    'type': 3,
+    'unit': 'L/día',
+    'description': 'Demanda esperada para el día actual',
+    'default_value': 0
+  },
+  {
+    'name': 'Nivel Servicio al Cliente',
+    'initials': 'NSC',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje de demanda satisfecha',
+    'default_value': 0
+  },
+  {
+    'name': 'Producción Objetivo Diaria',
+    'initials': 'POD',
+    'type': 3,
+    'unit': 'L',
+    'description': 'Meta de producción basada en histórico',
+    'default_value': 0
+  },
+  {
+    'name': 'Eficiencia Producción',
+    'initials': 'EP',
+    'type': 3,
+    'unit': '%',
+    'description': 'Eficiencia respecto a demanda histórica',
+    'default_value': 0
+  },
+  {
+    'name': 'Inventario Objetivo Productos',
+    'initials': 'IOP',
+    'type': 3,
+    'unit': 'L',
+    'description': 'Inventario óptimo de productos terminados',
+    'default_value': 0
+  },
+  {
+    'name': 'Días Cobertura Inventario',
+    'initials': 'DCI',
+    'type': 3,
+    'unit': 'días',
+    'description': 'Días que cubre el inventario actual',
+    'default_value': 0
+  },
+  {
+    'name': 'Inventario Objetivo Insumos',
+    'initials': 'IOI',
+    'type': 3,
+    'unit': 'L',
+    'description': 'Inventario óptimo de materias primas',
+    'default_value': 0
+  },
+  {
+    'name': 'Ingresos Esperados',
+    'initials': 'IE',
+    'type': 3,
+    'unit': 'Bs',
+    'description': 'Ingresos basados en demanda histórica',
+    'default_value': 0
+  },
+  {
+    'name': 'Costo Variable Unitario',
+    'initials': 'CVU',
+    'type': 3,
+    'unit': 'Bs/L',
+    'description': 'Costo variable por unidad producida',
+    'default_value': 0
+  },
+  {
+    'name': 'Rentabilidad vs Esperada',
+    'initials': 'RVE',
+    'type': 3,
+    'unit': '%',
+    'description': 'Rentabilidad real vs esperada',
+    'default_value': 0
+  },
+  {
+    'name': 'Horas Necesarias Producción',
+    'initials': 'HNP',
+    'type': 3,
+    'unit': 'minutos',
+    'description': 'Horas requeridas según demanda',
+    'default_value': 0
+  },
+  {
+    'name': 'Efectividad Marketing',
+    'initials': 'EM',
+    'type': 3,
+    'unit': 'ratio',
+    'description': 'ROI de inversión en marketing',
+    'default_value': 0
+  },
+  {
+    'name': 'Índice Competitividad',
+    'initials': 'IC',
+    'type': 3,
+    'unit': '%',
+    'description': 'Posición competitiva en el mercado',
+    'default_value': 0
+  },
+  {
+    'name': 'Índice Desempeño Global',
+    'initials': 'IDG',
+    'type': 3,
+    'unit': '%',
+    'description': 'KPI integral de desempeño empresarial',
+    'default_value': 0
+  },
+
+{
+    "name": "Merma Producción",
+    "initials": "MP",
+    "type": 3,
+    "unit": "%",
+    "description": "Porcentaje de pérdida en el proceso de producción",
+    "default_value": 0
+  },
+  {
+    "name": "Merma Inventario",
+    "initials": "MI",
+    "type": 3,
+    "unit": "%",
+    "description": "Porcentaje de pérdida en inventario por deterioro o vencimiento",
+    "default_value": 0
+  },
+  {
+    "name": "Costo Total Mermas",
+    "initials": "CTM",
+    "type": 1,
+    "unit": "$",
+    "description": "Costo monetario total de las mermas en producción e inventario",
+    "default_value": 0
+  },
+  {
+    "name": "Eficiencia Operativa Global",
+    "initials": "EOG",
+    "type": 3,
+    "unit": "%",
+    "description": "Índice de eficiencia general de las operaciones",
+    "default_value": 0
+  },
+  {
+    "name": "Índice Satisfacción Cliente",
+    "initials": "ISC",
+    "type": 3,
+    "unit": "%",
+    "description": "Medición del nivel de satisfacción de los clientes",
+    "default_value": 0
+  },
+  {
+    "name": "Punto de Equilibrio Diario",
+    "initials": "PED",
+    "type": 1,
+    "unit": "$",
+    "description": "Punto de equilibrio financiero calculado diariamente",
+    "default_value": 0
+  },
+
+
 ]

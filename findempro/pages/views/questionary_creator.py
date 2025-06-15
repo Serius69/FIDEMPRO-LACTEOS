@@ -14,7 +14,7 @@ def create_and_save_questions(questionary: Questionary) -> None:
     Crear preguntas para un cuestionario
     """
     try:
-        from questionary.data.questionary_data import question_data
+        from questionary.data.questionary_test_data import question_data
         
         created_questions = []
         

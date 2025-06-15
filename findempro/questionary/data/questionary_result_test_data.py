@@ -83,7 +83,7 @@ answer_data_leche = [
     }, 
     {
         'answer': 2500,
-        'question': '¿Cuál es la cantidad producida diariamente?',
+        'question': '¿Cuál es la cantidad que produce diariamente en promedio?',
         'unit': 'Litros/día',
         'initials_variable': 'QPL',
         'justification': 'Producción actual promedio diaria',

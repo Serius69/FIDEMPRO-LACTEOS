@@ -289,9 +289,58 @@ areas_data = [
             "merma_porcentaje": 0.02
         }
     },
+    # NUEVAS ÁREAS IDENTIFICADAS EN EQUATION_TEST_DATA
+    {
+        "name": "Análisis Demanda",
+        "description": """Estudio y análisis de patrones de demanda histórica y proyecciones.
+        Incluye análisis estadístico de tendencias, estacionalidad, variabilidad
+        y proyecciones de demanda futura basadas en datos históricos.""",
+        "params": {
+            "datos_historicos_dias": 365,
+            "ventana_analisis": 30,
+            "metodo_proyeccion": "media_movil_ponderada",
+            "factor_estacionalidad": 1.1,
+            "confiabilidad_datos": 0.95,
+            "frecuencia_actualizacion": "diaria",
+            "variables_externas": ["clima", "eventos", "competencia"],
+            "sistema_forecasting": "advanced_analytics",
+            "precision_proyeccion": 0.85,
+            "alertas_desviacion": True
+        },
+        "kpis": {
+            "precision_forecast": 0.85,
+            "error_absoluto_medio": 0.12,
+            "coeficiente_variacion": 0.15,
+            "tendencia_mensual": 0.05
+        }
+    },
+    {
+        "name": "Indicadores Generales",
+        "description": """Dashboard de indicadores clave de desempeño integral.
+        Consolidación de métricas de todas las áreas para evaluación
+        del desempeño global de la empresa.""",
+        "params": {
+            "frecuencia_medicion": "diaria",
+            "dashboard_tiempo_real": True,
+            "alertas_automaticas": True,
+            "benchmarks_industria": True,
+            "reportes_ejecutivos": "semanal",
+            "indicadores_criticos": 15,
+            "umbrales_alerta": {"critico": 0.7, "atencion": 0.85},
+            "historico_tendencias": 90,
+            "segmentacion_analisis": ["producto", "cliente", "canal"],
+            "integracion_sistemas": True
+        },
+        "kpis": {
+            "indice_desempeno_global": 0,
+            "cumplimiento_objetivos": 0,
+            "eficiencia_operativa_global": 0,
+            "satisfaccion_stakeholders": 0.85
+        }
+    }
 ]
 
-# Interrelaciones entre áreas (para análisis de impacto)
+# Interrelaciones entre áreas (actualizado con nuevas áreas)
 area_relationships = {
     "Abastecimiento": ["Inventario Insumos", "Contabilidad"],
     "Inventario Insumos": ["Producción", "Contabilidad"],
@@ -299,15 +348,17 @@ area_relationships = {
     "Control de Calidad": ["Inventario Productos Finales", "Ventas"],
     "Inventario Productos Finales": ["Distribución", "Ventas"],
     "Distribución": ["Ventas", "Marketing"],
-    "Ventas": ["Marketing", "Contabilidad", "Competencia"],
+    "Ventas": ["Marketing", "Contabilidad", "Competencia", "Análisis Demanda"],
     "Competencia": ["Marketing", "Ventas"],
     "Marketing": ["Ventas", "Contabilidad"],
     "Contabilidad": ["Todas las áreas"],
     "Recursos Humanos": ["Todas las áreas"],
-    "Mantenimiento": ["Producción", "Distribución"]
+    "Mantenimiento": ["Producción", "Distribución"],
+    "Análisis Demanda": ["Ventas", "Producción", "Inventario Productos Finales", "Marketing"],
+    "Indicadores Generales": ["Todas las áreas"]
 }
 
-# Métricas de desempeño por área
+# Métricas de desempeño por área (actualizado)
 area_performance_benchmarks = {
     "Abastecimiento": {
         "excelente": {"nivel_servicio": 0.98, "costo_variacion": 0.02},
@@ -326,6 +377,123 @@ area_performance_benchmarks = {
         "bueno": {"cumplimiento": 1.00, "crecimiento": 0.10},
         "regular": {"cumplimiento": 0.90, "crecimiento": 0.05},
         "malo": {"cumplimiento": 0.80, "crecimiento": 0.00}
-    }
     },
+    "Control de Calidad": {
+        "excelente": {"conformidad": 0.99, "tiempo_liberacion": 1.5},
+        "bueno": {"conformidad": 0.97, "tiempo_liberacion": 2.0},
+        "regular": {"conformidad": 0.95, "tiempo_liberacion": 2.5},
+        "malo": {"conformidad": 0.92, "tiempo_liberacion": 3.0}
+    },
+    "Inventario Productos Finales": {
+        "excelente": {"rotacion": 12, "exactitud": 0.99},
+        "bueno": {"rotacion": 10, "exactitud": 0.97},
+        "regular": {"rotacion": 8, "exactitud": 0.95},
+        "malo": {"rotacion": 6, "exactitud": 0.92}
+    },
+    "Inventario Insumos": {
+        "excelente": {"fill_rate": 0.98, "costo_mantenimiento": 0.02},
+        "bueno": {"fill_rate": 0.95, "costo_mantenimiento": 0.03},
+        "regular": {"fill_rate": 0.92, "costo_mantenimiento": 0.04},
+        "malo": {"fill_rate": 0.88, "costo_mantenimiento": 0.06}
+    },
+    "Distribución": {
+        "excelente": {"entregas_tiempo": 0.98, "costo_unitario": 0.05},
+        "bueno": {"entregas_tiempo": 0.95, "costo_unitario": 0.07},
+        "regular": {"entregas_tiempo": 0.90, "costo_unitario": 0.10},
+        "malo": {"entregas_tiempo": 0.85, "costo_unitario": 0.15}
+    },
+    "Marketing": {
+        "excelente": {"roi": 4.0, "top_of_mind": 0.35},
+        "bueno": {"roi": 3.0, "top_of_mind": 0.28},
+        "regular": {"roi": 2.0, "top_of_mind": 0.20},
+        "malo": {"roi": 1.0, "top_of_mind": 0.15}
+    },
+    "Competencia": {
+        "excelente": {"indice_competitividad": 0.90, "participacion_mercado": 0.20},
+        "bueno": {"indice_competitividad": 0.80, "participacion_mercado": 0.15},
+        "regular": {"indice_competitividad": 0.70, "participacion_mercado": 0.12},
+        "malo": {"indice_competitividad": 0.60, "participacion_mercado": 0.08}
+    },
+    "Contabilidad": {
+        "excelente": {"margen_ebitda": 0.20, "liquidez": 2.0},
+        "bueno": {"margen_ebitda": 0.15, "liquidez": 1.5},
+        "regular": {"margen_ebitda": 0.10, "liquidez": 1.2},
+        "malo": {"margen_ebitda": 0.05, "liquidez": 1.0}
+    },
+    "Recursos Humanos": {
+        "excelente": {"clima_laboral": 0.90, "rotacion": 0.08},
+        "bueno": {"clima_laboral": 0.85, "rotacion": 0.12},
+        "regular": {"clima_laboral": 0.80, "rotacion": 0.16},
+        "malo": {"clima_laboral": 0.75, "rotacion": 0.22}
+    },
+    "Mantenimiento": {
+        "excelente": {"disponibilidad": 0.98, "mtbf": 800},
+        "bueno": {"disponibilidad": 0.95, "mtbf": 650},
+        "regular": {"disponibilidad": 0.92, "mtbf": 500},
+        "malo": {"disponibilidad": 0.88, "mtbf": 350}
+    },
+    "Análisis Demanda": {
+        "excelente": {"precision_forecast": 0.92, "error_medio": 0.08},
+        "bueno": {"precision_forecast": 0.87, "error_medio": 0.12},
+        "regular": {"precision_forecast": 0.80, "error_medio": 0.18},
+        "malo": {"precision_forecast": 0.72, "error_medio": 0.25}
+    },
+    "Indicadores Generales": {
+        "excelente": {"desempeno_global": 0.90, "cumplimiento_objetivos": 0.95},
+        "bueno": {"desempeno_global": 0.80, "cumplimiento_objetivos": 0.85},
+        "regular": {"desempeno_global": 0.70, "cumplimiento_objetivos": 0.75},
+        "malo": {"desempeno_global": 0.60, "cumplimiento_objetivos": 0.65}
+    }
+}
+
+# Mapeo de áreas con ecuaciones (para validación cruzada)
+area_equation_mapping = {
+    "Análisis Demanda": ["DPH", "DSD", "CVD"],
+    "Ventas": ["DDP", "TCAE", "VPC", "TPV", "DI", "NSC", "DT", "ISC", "FC"],
+    "Producción": ["POD", "CPROD", "QPL", "PPL", "TPPRO", "FU", "EP", "EOG"],
+    "Inventario Productos Finales": ["IOP", "IPF", "DCI", "RTI", "CA", "MI"],
+    "Inventario Insumos": ["IOI", "PI", "UII", "II"],
+    "Contabilidad": ["IT", "IE", "CTAI", "CVU", "GO", "GG", "TG", "GT", "IB", "MB", "NR", "RVE", "CPP", "CPV", "CUP", "CHO", "PED", "RI"],
+    "Distribución": ["CTTL"],
+    "Control de Calidad": ["MP", "CTM"],
+    "Marketing": ["EM", "CUAC"],
+    "Recursos Humanos": ["PE", "HNP", "HO"],
+    "Competencia": ["PM", "IC"],
+    "Indicadores Generales": ["IDG", "PVR"]
+}
+
+# Función auxiliar para obtener área por nombre
+def get_area_by_name(area_name):
+    """Retorna la configuración de un área específica"""
+    for area in areas_data:
+        if area["name"] == area_name:
+            return area
+    return None
+
+# Función para validar completitud del modelo
+def validate_model_completeness():
+    """Valida que todas las áreas mencionadas en las ecuaciones estén definidas"""
+    equation_areas = set()
+    for area_name, equations in area_equation_mapping.items():
+        equation_areas.add(area_name)
     
+    defined_areas = set(area["name"] for area in areas_data)
+    
+    missing_areas = equation_areas - defined_areas
+    extra_areas = defined_areas - equation_areas
+    
+    return {
+        "complete": len(missing_areas) == 0,
+        "missing_areas": list(missing_areas),
+        "extra_areas": list(extra_areas),
+        "total_areas": len(defined_areas)
+    }
+
+# Configuración de simulación por defecto
+default_simulation_config = {
+    "periodo_simulacion_dias": 30,
+    "datos_historicos_requeridos": 90,
+    "frecuencia_actualizacion": "diaria",
+    "alertas_desviacion": True,
+    "precision_minima": 0.80
+}

@@ -203,9 +203,9 @@ def validate_data_coherence() -> Dict[str, Any]:
     """
     Validar la coherencia entre las diferentes estructuras de datos
     """
-    from product.data.products_data import products_data
-    from findempro.variable.data.variables_data import variables_data
-    from findempro.variable.data.equations_data import equations_data
+    from product.data.product_test_data import products_data
+    from variable.data.variable_test_data import variables_data
+    from variable.data.equation_test_data import equations_data
     
     errors = []
     

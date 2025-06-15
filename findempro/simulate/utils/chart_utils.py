@@ -1273,12 +1273,15 @@ class ChartGenerator:
             logger.error(f"Error generating financial indicators chart: {str(e)}")
             return self._create_error_chart("Error en indicadores financieros")
     
-    def _fig_to_base64(self, fig) -> str:
-        """Convertir figura matplotlib a base64"""
+    def _fig_to_base64(self, fig):
+        """
+        Convert matplotlib figure to base64 without 'optimize' parameter
+        """
         try:
             buffer = BytesIO()
+            # Remove 'optimize' parameter - use standard savefig
             fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
-                       facecolor='white', edgecolor='none')
+                    facecolor='white', edgecolor='none')
             buffer.seek(0)
             image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
             buffer.close()

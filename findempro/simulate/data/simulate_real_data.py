@@ -7,7 +7,7 @@ y coordina con los módulos existentes de simulación.
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-from questionary.data.questionary_result_data import get_realistic_answers
+from questionary.data.questionary_result_test_data import get_realistic_answers
 
 class SimulationDataOrchestrator:
     """Orquestador principal para datos de simulación"""

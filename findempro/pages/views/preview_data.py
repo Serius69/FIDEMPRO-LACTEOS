@@ -34,51 +34,51 @@ def prepare_preview_data() -> Dict[str, Any]:
     
     try:
         # Importar datos con manejo de errores MUY granular
-        logger.debug("Importing products_data")
-        products_data = safe_import('product.data.products_data', 'products_data', [])
+        logger.debug("Importing product_test_data")
+        products_data = safe_import('product.data.product_test_data', 'products_data', [])
         
-        logger.debug("Importing areas_data")
-        areas_data = safe_import('product.data.areas_data', 'areas_data', [])
-        area_relationships = safe_import('product.data.areas_data', 'area_relationships', {})
-        area_performance_benchmarks = safe_import('product.data.areas_data', 'area_performance_benchmarks', {})
+        logger.debug("Importing area_test_data")
+        areas_data = safe_import('product.data.area_test_data', 'areas_data', [])
+        area_relationships = safe_import('product.data.area_test_data', 'area_relationships', {})
+        area_performance_benchmarks = safe_import('product.data.area_test_data', 'area_performance_benchmarks', {})
         
         logger.debug("Importing product categories and metrics")
-        product_categories = safe_import('product.data.products_data', 'product_categories', {})
-        product_metrics = safe_import('product.data.products_data', 'product_metrics', {})
+        product_categories = safe_import('product.data.product_test_data', 'product_categories', {})
+        product_metrics = safe_import('product.data.product_test_data', 'product_metrics', {})
         
         logger.debug("Importing variables and equations")
-        variables_data = safe_import('variable.variables_data', 'variables_data', [])
-        equations_data = safe_import('variable.equations_data', 'equations_data', [])
+        variables_data = safe_import('variable.data.variable_test_data', 'variables_data', [])
+        equations_data = safe_import('variable.data.equation_test_data', 'equations_data', [])
         
         logger.debug("Importing questionary data")
-        questionary_data = safe_import('questionary.data.questionary_data', 'questionary_data', [])
-        question_data = safe_import('questionary.data.questionary_data', 'question_data', [])
+        questionary_data = safe_import('questionary.data.questionary_test_data', 'questionary_data', [])
+        question_data = safe_import('questionary.data.questionary_test_data', 'question_data', [])
         
         # Importar simulaciones con logging detallado
         logger.debug("Importing simulation data")
-        simulation_data_leche = safe_import('simulate.data.simulate_data', 'simulation_data_leche', [])
-        simulation_data_queso = safe_import('simulate.data.simulate_data', 'simulation_data_queso', [])
-        simulation_data_yogur = safe_import('simulate.data.simulate_data', 'simulation_data_yogur', [])
-        simulation_data_mantequilla = safe_import('simulate.data.simulate_data', 'simulation_data_mantequilla', [])
-        simulation_data_crema = safe_import('simulate.data.simulate_data', 'simulation_data_crema', [])
-        simulation_data_leche_deslactosada = safe_import('simulate.data.simulate_data', 'simulation_data_leche_deslactosada', [])
-        simulation_data_dulce_leche = safe_import('simulate.data.simulate_data', 'simulation_data_dulce_leche', [])
+        simulation_data_leche = safe_import('simulate.data.simulate_test_data', 'simulation_data_leche', [])
+        simulation_data_queso = safe_import('simulate.data.simulate_test_data', 'simulation_data_queso', [])
+        simulation_data_yogur = safe_import('simulate.data.simulate_test_data', 'simulation_data_yogur', [])
+        simulation_data_mantequilla = safe_import('simulate.data.simulate_test_data', 'simulation_data_mantequilla', [])
+        simulation_data_crema = safe_import('simulate.data.simulate_test_data', 'simulation_data_crema', [])
+        simulation_data_leche_deslactosada = safe_import('simulate.data.simulate_test_data', 'simulation_data_leche_deslactosada', [])
+        simulation_data_dulce_leche = safe_import('simulate.data.simulate_test_data', 'simulation_data_dulce_leche', [])
         
         logger.debug("Importing PDF and recommendation data")
-        pdf_data = safe_import('simulate.data.simulate_data', 'pdf_data', [])
-        get_pdf_config_by_product = safe_import('simulate.data.simulate_data', 'get_pdf_config_by_product', lambda x: {})
+        pdf_data = safe_import('simulate.data.simulate_test_data', 'pdf_data', [])
+        get_pdf_config_by_product = safe_import('simulate.data.simulate_test_data', 'get_pdf_config_by_product', lambda x: {})
         
         # Importar respuestas con logging
         logger.debug("Importing answer data")
-        answer_data_leche = safe_import('questionary.data.questionary_result_data', 'answer_data_leche', [])
-        answer_data_queso = safe_import('questionary.data.questionary_result_data', 'answer_data_queso', [])
-        answer_data_yogur = safe_import('questionary.data.questionary_result_data', 'answer_data_yogur', [])
-        answer_data_mantequilla = safe_import('questionary.data.questionary_result_data', 'answer_data_mantequilla', [])
-        answer_data_crema = safe_import('questionary.data.questionary_result_data', 'answer_data_crema', [])
-        answer_data_leche_deslactosada = safe_import('questionary.data.questionary_result_data', 'answer_data_leche_deslactosada', [])
-        answer_data_dulce_leche = safe_import('questionary.data.questionary_result_data', 'answer_data_dulce_leche', [])
+        answer_data_leche = safe_import('questionary.data.questionary_result_test_data', 'answer_data_leche', [])
+        answer_data_queso = safe_import('questionary.data.questionary_result_test_data', 'answer_data_queso', [])
+        answer_data_yogur = safe_import('questionary.data.questionary_result_test_data', 'answer_data_yogur', [])
+        answer_data_mantequilla = safe_import('questionary.data.questionary_result_test_data', 'answer_data_mantequilla', [])
+        answer_data_crema = safe_import('questionary.data.questionary_result_test_data', 'answer_data_crema', [])
+        answer_data_leche_deslactosada = safe_import('questionary.data.questionary_result_test_data', 'answer_data_leche_deslactosada', [])
+        answer_data_dulce_leche = safe_import('questionary.data.questionary_result_test_data', 'answer_data_dulce_leche', [])
         
-        recommendation_data = safe_import('finance.data.finance_data', 'recommendation_data', [])
+        recommendation_data = safe_import('finance.data.finance_test_data', 'recommendation_data', [])
         
         logger.debug("Processing products data")
         # Preparar datos de productos con información adicional

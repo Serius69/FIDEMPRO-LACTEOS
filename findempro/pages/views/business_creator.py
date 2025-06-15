@@ -63,7 +63,7 @@ def create_and_save_products(business: Business) -> None:
     """
     try:
         # Importar datos
-        from product.data.products_data import products_data
+        from product.data.product_test_data import products_data
         
         created_products = []
         
@@ -137,7 +137,7 @@ def create_and_save_areas(product: Product) -> None:
     Crear y guardar áreas para un producto con manejo mejorado de imágenes
     """
     try:
-        from product.data.areas_data import areas_data
+        from product.data.area_test_data import areas_data
         
         created_areas = []
         
@@ -202,7 +202,7 @@ def create_variables_and_equations(product: Product) -> None:
     Crear variables y ecuaciones para un producto usando datos mejorados
     """
     try:
-        from findempro.variable.data.variables_data import variables_data
+        from variable.data.variable_test_data import variables_data
         
         created_variables = []
         
@@ -246,7 +246,7 @@ def create_equations(product: Product) -> None:
     Crear ecuaciones para un producto
     """
     try:
-        from findempro.variable.data.equations_data import equations_data
+        from variable.data.equation_test_data import equations_data
         
         created_equations = []
         
@@ -295,7 +295,7 @@ def create_and_save_questionary(product: Product) -> None:
     Crear cuestionario para un producto
     """
     try:
-        from questionary.data.questionary_data import questionary_data
+        from questionary.data.questionary_test_data import questionary_data
         
         for data in questionary_data:
             if not data.get('questionary'):

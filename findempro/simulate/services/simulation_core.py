@@ -255,14 +255,58 @@ class SimulationCore:
         # Log what we actually loaded
         logger.info(f"Day {day_index}: Loaded {len(variable_dict)} variables from questionnaire")
         
-        # Generate demand prediction
+        # Generate demand prediction for current day
         predicted_demand = self._generate_demand_prediction(
             simulation_instance, variable_dict, day_index
         )
+        print (f"Predicted demand for day {day_index + 1}: {predicted_demand}")
         
-        # Update demand variables
+        # CORRECCIÓN: Usar demanda simulada del día actual
         variable_dict['DE'] = predicted_demand
-        variable_dict['DH'] = predicted_demand
+        variable_dict['DH'] = predicted_demand  # Demanda del día actual
+        
+        # Calcular DPH dinámico basado en histórico y días anteriores
+        if day_index == 0:
+            # Primer día: usar promedio del histórico real
+            demand_history = self._parse_demand_history(simulation_instance.demand_history)
+            if demand_history:
+                variable_dict['DPH'] = float(np.mean(demand_history))
+                variable_dict['DSD'] = float(np.std(demand_history))
+                variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
+            else:
+                # Fallback si no hay histórico
+                variable_dict['DPH'] = predicted_demand
+                variable_dict['DSD'] = predicted_demand * 0.1  # 10% de variación estimada
+                variable_dict['CVD'] = 0.1
+        else:
+            # Días posteriores: usar promedio móvil de días anteriores simulados
+            window_size = min(7, day_index)  # Ventana de hasta 7 días
+            previous_demands = []
+            
+            # Obtener demandas de días anteriores desde los resultados almacenados
+            if 'previous_results' in simulation_data:
+                start_idx = max(0, day_index - window_size)
+                for i in range(start_idx, day_index):
+                    if i < len(simulation_data['previous_results']):
+                        prev_result = simulation_data['previous_results'][i]
+                        if 'DE' in prev_result:
+                            previous_demands.append(float(prev_result['DE']))
+            
+            if previous_demands:
+                variable_dict['DPH'] = float(np.mean(previous_demands))
+                variable_dict['DSD'] = float(np.std(previous_demands)) if len(previous_demands) > 1 else variable_dict.get('DSD', predicted_demand * 0.1)
+                variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
+            else:
+                # Fallback: usar demanda actual
+                variable_dict['DPH'] = predicted_demand
+                variable_dict['DSD'] = variable_dict.get('DSD', predicted_demand * 0.1)
+                variable_dict['CVD'] = 0.1
+        
+        # Actualizar DDP (Demanda Diaria Proyectada) con el nuevo DPH dinámico
+        if 'ED' in variable_dict:  # Factor de estacionalidad
+            variable_dict['DDP'] = variable_dict['DPH'] * (1 + (variable_dict['DE'] - variable_dict['DPH']) / max(variable_dict['DPH'], 1) * 0.2) * variable_dict['ED']
+        else:
+            variable_dict['DDP'] = variable_dict['DPH']
         
         # Calculate all equations in proper order
         endogenous_results = self._calculate_all_equations(
@@ -273,15 +317,26 @@ class SimulationCore:
         # Ensure all variables are in results
         final_results = self._merge_results(variable_dict, endogenous_results)
         
+        # Store results for next iterations
+        if 'previous_results' not in simulation_data:
+            simulation_data['previous_results'] = []
+        
+        # Guardar resultado completo del día
+        day_complete_result = {**variable_dict, **endogenous_results}
+        simulation_data['previous_results'].append(day_complete_result)
+        
         # Validate results
         self._validate_simulation_results(final_results, variable_dict)
         
         logger.debug(f"Day {day_index}: Calculated {len(final_results)} total variables")
+        logger.debug(f"Day {day_index}: DPH={variable_dict.get('DPH', 0):.2f}, DE={predicted_demand:.2f}, DDP={variable_dict.get('DDP', 0):.2f}")
         
         return {
             'endogenous_results': final_results,
             'variable_initials_dict': variable_dict,
-            'predicted_demand': predicted_demand
+            'predicted_demand': predicted_demand,
+            'dynamic_dph': variable_dict.get('DPH', 0),
+            'demand_std': variable_dict.get('DSD', 0)
         }
 
     def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
