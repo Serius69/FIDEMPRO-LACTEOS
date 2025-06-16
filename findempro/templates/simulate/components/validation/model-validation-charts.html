@@ -1,0 +1,109 @@
+<!-- Model Validation Charts Component -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bx bx-line-chart"></i> Gráficos de Validación por Variable
+        </h5>
+        <span class="badge bg-info">
+            {{ model_validation_charts|length }} tipos de variables
+        </span>
+    </div>
+    <div class="card-body">
+        <!-- Summary Chart -->
+        {% if model_validation_charts.summary %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h6 class="mb-3">
+                        <i class="bx bx-stats"></i> Resumen de Validación por Tipo
+                    </h6>
+                    <img src="data:image/png;base64,{{ model_validation_charts.summary }}" 
+                        class="img-fluid" alt="Resumen de Validación">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Charts Grid Container -->
+        <div id="chartsContainer">
+            <div class="text-center mb-4">
+                <h6>Gráficos de Validación Disponibles</h6>
+                <p class="text-muted">{{ model_validation_charts|length }} tipos de variables con gráficos</p>
+                <button class="btn btn-primary" onclick="loadInitialCharts()">
+                    <i class="bx bx-show me-2"></i>Cargar Gráficos
+                </button>
+                <button class="btn btn-secondary" onclick="loadAllCharts()">
+                    <i class="bx bx-grid-alt me-2"></i>Cargar Todos
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loaded Charts Container -->
+        <div id="loadedChartsContainer" style="display: none;">
+            <!-- Filter Controls -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <select class="form-select" id="chartTypeFilter" onchange="filterChartsByType()">
+                        <option value="">Todos los tipos</option>
+                        {% for type_name in model_validation_charts.keys %}
+                        {% if type_name != 'summary' %}
+                        <option value="{{ type_name }}">{{ type_name }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportSelectedCharts()">
+                        <i class="bx bx-download me-1"></i>Exportar Seleccionados
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Charts Grid -->
+            <div class="row" id="chartsGrid">
+                <!-- Charts will be loaded here dynamically -->
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="text-center mt-4" id="loadMoreContainer" style="display: none;">
+                <button class="btn btn-outline-primary" onclick="loadMoreCharts()">
+                    <i class="bx bx-loader-alt me-2"></i>
+                    Cargar más gráficos
+                    <span id="remainingCount" class="badge bg-info ms-2"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Initialize charts data -->
+<script>
+// Prepare chart data for JavaScript
+const modelValidationChartsData = {
+    {% for type_name, type_charts in model_validation_charts.items %}
+    {% if type_name != 'summary' %}
+    '{{ type_name }}': [
+        {% for chart_data in type_charts %}
+        {
+            type: '{{ type_name }}',
+            variable: '{{ chart_data.variable }}',
+            description: '{{ chart_data.description|escapejs }}',
+            unit: '{{ chart_data.unit }}',
+            error_pct: {{ chart_data.error_pct|default:0 }},
+            status: '{{ chart_data.status }}',
+            chart: '{{ chart_data.chart }}',
+            days_count: {{ chart_data.days_count|default:0 }},
+            coverage: {{ chart_data.coverage|default:0 }}
+        },
+        {% endfor %}
+    ],
+    {% endif %}
+    {% endfor %}
+};
+
+// Flatten the data for easier processing
+allCharts = [];
+Object.values(modelValidationChartsData).forEach(charts => {
+    allCharts = allCharts.concat(charts);
+});
+</script>

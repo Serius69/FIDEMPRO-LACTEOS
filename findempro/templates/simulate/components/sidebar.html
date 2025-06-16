@@ -44,5 +44,34 @@
                 <button class="btn btn-sm btn-outline-secondary" onclick="shareResults()">
                     <i class="bx bx-share-alt me-1"></i>Compartir
                 </button>
-            
+            </div>
+        </div>
+    </div>
 
+    <!-- Financial Recommendations -->
+    {% if financial_recommendations_to_show %}
+    <div class="recommendation-card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="bx bx-lightbulb me-2"></i>
+                Recomendaciones Financieras
+            </h5>
+        </div>
+        <div class="card-body">
+            {% for recommendation in financial_recommendations_to_show %}
+            <div class="mb-3 p-3 bg-white rounded">
+                <h6 class="fw-bold text-primary">{{ recommendation.name }}</h6>
+                <p class="mb-2">{{ recommendation.recommendation }}</p>
+                <small class="text-muted">
+                    <i class="bx bx-info-circle me-1"></i>
+                    Variable: {{ recommendation.variable_name }}
+                </small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Daily Results Navigation -->
+    {% include "components/daily-results.html" %}
+</div>
