@@ -1845,129 +1845,128 @@
                                 </div>
                             </div>
 
-
                             <!-- Daily Validation Summary -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bx bx-calendar-check"></i> Daily Validation Summary
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <h6>Total Days</h6>
-                        <h3 class="text-primary">{{ daily_validation_summary.total_days }}</h3>
-                    </div>
-                    <div class="col-md-3">
-                        <h6>Total Validations</h6>
-                        <h3 class="text-info">{{ daily_validation_summary.total_validations }}</h3>
-                    </div>
-                    <div class="col-md-3">
-                        <h6>Success Rate</h6>
-                        <h3 class="{% if daily_validation_summary.overall_success_rate >= 90 %}text-success{% elif daily_validation_summary.overall_success_rate >= 70 %}text-warning{% else %}text-danger{% endif %}">
-                            {{ daily_validation_summary.overall_success_rate|floatformat:1 }}%
-                        </h3>
-                    </div>
-                    <div class="col-md-3">
-                        <h6>Precision Rate</h6>
-                        <h3 class="text-success">{{ daily_validation_summary.precision_rate|floatformat:1 }}%</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">
+                                                <i class="bx bx-calendar-check"></i> Daily Validation Summary
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-md-3">
+                                                    <h6>Total Days</h6>
+                                                    <h3 class="text-primary">{{ daily_validation_summary.total_days }}</h3>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <h6>Total Validations</h6>
+                                                    <h3 class="text-info">{{ daily_validation_summary.total_validations }}</h3>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <h6>Success Rate</h6>
+                                                    <h3 class="{% if daily_validation_summary.overall_success_rate >= 90 %}text-success{% elif daily_validation_summary.overall_success_rate >= 70 %}text-warning{% else %}text-danger{% endif %}">
+                                                        {{ daily_validation_summary.overall_success_rate|floatformat:1 }}%
+                                                    </h3>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <h6>Precision Rate</h6>
+                                                    <h3 class="text-success">{{ daily_validation_summary.precision_rate|floatformat:1 }}%</h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-<!-- Daily Validation Charts -->
-{% if daily_validation_charts %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bx bx-line-chart"></i> Daily Validation Comparison Charts
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    {% for var_key, chart_base64 in daily_validation_charts.items %}
-                    <div class="col-md-6 mb-4">
-                        <div class="chart-container">
-                            <img src="data:image/png;base64,{{ chart_base64 }}" 
-                                 class="img-fluid" 
-                                 alt="{{ var_key }} Daily Validation">
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+                            <!-- Daily Validation Charts -->
+                            {% if daily_validation_charts %}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">
+                                                <i class="bx bx-line-chart"></i> Daily Validation Comparison Charts
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                {% for var_key, chart_base64 in daily_validation_charts.items %}
+                                                <div class="col-md-6 mb-4">
+                                                    <div class="chart-container">
+                                                        <img src="data:image/png;base64,{{ chart_base64 }}" 
+                                                            class="img-fluid" 
+                                                            alt="{{ var_key }} Daily Validation">
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
 
-<!-- Daily Validation Details Table -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="bx bx-table"></i> Daily Validation Details
-                </h5>
-                <button class="btn btn-sm btn-outline-primary" onclick="exportDailyValidation()">
-                    <i class="bx bx-download"></i> Export CSV
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-hover table-sm" id="dailyValidationTable">
-                        <thead class="sticky-top bg-white">
-                            <tr>
-                                <th>Day</th>
-                                <th>Date</th>
-                                <th>Variable</th>
-                                <th class="text-end">Real Value</th>
-                                <th class="text-end">Simulated Value</th>
-                                <th class="text-center">Error %</th>
-                                <th class="text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for day_result in daily_validation_results %}
-                                {% for var_key, var_data in day_result.variables.items %}
-                                <tr>
-                                    <td>{{ day_result.day }}</td>
-                                    <td>{{ day_result.date|date:"d/m/Y" }}</td>
-                                    <td><strong>{{ var_key }}</strong></td>
-                                    <td class="text-end">{{ var_data.real|floatformat:2 }}</td>
-                                    <td class="text-end">{{ var_data.simulated|floatformat:2 }}</td>
-                                    <td class="text-center">
-                                        <span class="badge {% if var_data.error_pct <= 5 %}bg-success{% elif var_data.error_pct <= 10 %}bg-warning{% else %}bg-danger{% endif %}">
-                                            {{ var_data.error_pct|floatformat:1 }}%
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        {% if var_data.status == 'PRECISE' %}
-                                            <span class="text-success"><i class="bx bx-check-circle"></i> Precise</span>
-                                        {% elif var_data.status == 'ACCEPTABLE' %}
-                                            <span class="text-warning"><i class="bx bx-error-circle"></i> Acceptable</span>
-                                        {% else %}
-                                            <span class="text-danger"><i class="bx bx-x-circle"></i> Inaccurate</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                            <!-- Daily Validation Details Table -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">
+                                                <i class="bx bx-table"></i> Daily Validation Details
+                                            </h5>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="exportDailyValidation()">
+                                                <i class="bx bx-download"></i> Export CSV
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                                <table class="table table-hover table-sm" id="dailyValidationTable">
+                                                    <thead class="sticky-top bg-white">
+                                                        <tr>
+                                                            <th>Day</th>
+                                                            <th>Date</th>
+                                                            <th>Variable</th>
+                                                            <th class="text-end">Real Value</th>
+                                                            <th class="text-end">Simulated Value</th>
+                                                            <th class="text-center">Error %</th>
+                                                            <th class="text-center">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for day_result in daily_validation_results %}
+                                                            {% for var_key, var_data in day_result.variables.items %}
+                                                            <tr>
+                                                                <td>{{ day_result.day }}</td>
+                                                                <td>{{ day_result.date|date:"d/m/Y" }}</td>
+                                                                <td><strong>{{ var_key }}</strong></td>
+                                                                <td class="text-end">{{ var_data.real|floatformat:2 }}</td>
+                                                                <td class="text-end">{{ var_data.simulated|floatformat:2 }}</td>
+                                                                <td class="text-center">
+                                                                    <span class="badge {% if var_data.error_pct <= 5 %}bg-success{% elif var_data.error_pct <= 10 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                                        {{ var_data.error_pct|floatformat:1 }}%
+                                                                    </span>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    {% if var_data.status == 'PRECISE' %}
+                                                                        <span class="text-success"><i class="bx bx-check-circle"></i> Precise</span>
+                                                                    {% elif var_data.status == 'ACCEPTABLE' %}
+                                                                        <span class="text-warning"><i class="bx bx-error-circle"></i> Acceptable</span>
+                                                                    {% else %}
+                                                                        <span class="text-danger"><i class="bx bx-x-circle"></i> Inaccurate</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Modal para expandir gráficos -->
                             <div class="modal fade" id="chartExpandModal" tabindex="-1">

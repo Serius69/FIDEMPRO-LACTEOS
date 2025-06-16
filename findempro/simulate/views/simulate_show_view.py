@@ -30,17 +30,32 @@ class SimulateShowView(LoginRequiredMixin, View):
     """Main simulation configuration and execution view"""
     
     def get(self, request, *args, **kwargs):
-        """Handle GET requests for simulation setup"""
-        started = request.session.get('started', False)
-        
-        # Check if questionary parameters are present
+        """Handle GET requests with cleaner separation"""
         if 'selected_questionary_result' in request.GET:
-            return self._handle_questionary_selection(request)
+            return self._handle_questionary_analysis(request)
         
-        if not started:
-            return self._handle_initial_view(request)
+        if request.session.get('started', False):
+            return self._render_simulation_progress(request)
         else:
-            return self._handle_simulation_execution(request)
+            return self._render_initial_form(request)
+    
+    def _handle_questionary_analysis(self, request):
+        """Delegate analysis to services"""
+        questionary_id = request.GET.get('selected_questionary_result')
+        
+        # Delegate to service
+        analysis_data = self.simulation_service.prepare_simulation_analysis(
+            questionary_id=questionary_id,
+            user=request.user,
+            quantity_time=request.GET.get('selected_quantity_time', 30),
+            unit_time=request.GET.get('selected_unit_time', 'days')
+        )
+        
+        if analysis_data.get('error'):
+            messages.error(request, analysis_data['error'])
+            return redirect('simulate:simulate.show')
+        
+        return render(request, 'simulate/simulate-init.html', analysis_data)
     
     def post(self, request, *args, **kwargs):
         """Handle POST requests for simulation actions"""
