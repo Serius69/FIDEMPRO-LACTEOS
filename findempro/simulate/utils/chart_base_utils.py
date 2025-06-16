@@ -29,7 +29,12 @@ plt.rcParams['ytick.labelsize'] = 10
 plt.rcParams['legend.fontsize'] = 10
 
 logger = logging.getLogger(__name__)
+# Silenciar específicamente los mensajes de findfont
+logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
 
+# Opcional: configurar una fuente por defecto para evitar búsquedas
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = ['Arial']
 
 class ChartBase:
     """Base class for chart generation with common functionality"""

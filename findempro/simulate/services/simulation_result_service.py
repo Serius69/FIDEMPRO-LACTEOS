@@ -1,9 +1,9 @@
 from venv import logger
 from simulate.models import ResultSimulation
 from simulate.services.chart_service import ChartService
-from simulate.services.simulation_math import SimulationMathEngine
-from simulate.services.simulation_financial import SimulationFinancialAnalyzer
-from simulate.services.validation_service import SimulationValidationService
+from simulate.utils.simulation_math_utils import SimulationMathEngine
+from simulate.utils.simulation_financial_utils import SimulationFinancialAnalyzer
+from services.validation_service import SimulationValidationService
 
 
 class SimulationResultService:

@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 from ..models import Simulation, ResultSimulation
-from ..services.simulation_core import SimulationCore
+from ..utils.simulation_core_utils import SimulationCore
 
 from business.models import Business
 from product.models import Product

@@ -1,13 +1,13 @@
 from venv import logger
-from simulate.utils.chart_base import ChartBase
-from simulate.utils.chart_demand import ChartDemand
+from simulate.utils.chart_base_utils import ChartBase
+from simulate.utils.chart_demand_utils import ChartDemand
 import numpy as np
 import matplotlib.pyplot as plt
 
 from utils.chart_utils import get_simulation_data, get_historical_demand_data, get_real_values_data
 from utils.chart_utils import get_simulation_results, get_historical_demand, get_real_values
-from utils.chart_base import ChartBase
-from utils.chart_demand import ChartDemand
+from simulate.utils.chart_base_utils import ChartBase
+from simulate.utils.chart_demand_utils import ChartDemand
 
 class ChartService:
     """Unified chart generation service"""

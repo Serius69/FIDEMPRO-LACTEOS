@@ -8,8 +8,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from .models import Simulation, ResultSimulation
-from .services.simulation_core import SimulationCore
-from .utils.chart_base import ChartBase
+from .utils.simulation_core_utils import SimulationCore
+from .utils.chart_base_utils import ChartBase
 from .utils.chart_utils import ChartGenerator
 
 logger = logging.getLogger(__name__)

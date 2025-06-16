@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from scipy import stats
 
-from .chart_base import ChartBase
+from .chart_base_utils import ChartBase
 
 matplotlib.use('Agg')
 logger = logging.getLogger(__name__)
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class ChartDemand(ChartBase):
     """Specialized class for demand-related charts"""
     
+
     def generate_demand_comparison_chart(self, historical_demand: List[float], 
                                        results_simulation: List) -> str:
         """Generate comprehensive demand comparison chart"""

@@ -40,6 +40,1183 @@ class ChartGenerator:
             'real': '#2ca02c'
         }
     
+    def _generate_complete_variable_chart(self, var_key, var_data, var_type, all_variables_extracted):
+        """
+        Genera un gráfico COMPLETO mostrando la evolución de una variable a lo largo de TODOS los días
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib.dates as mdates
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            from datetime import datetime
+            
+            # Extraer datos de TODOS los días para esta variable
+            days = []
+            simulated_values = []
+            real_values = []
+            dates = []
+            
+            # Iterar sobre todos los días de simulación
+            for day_idx, day_data in enumerate(all_variables_extracted):
+                day_num = day_idx + 1
+                date = day_data.get('date_simulation')
+                
+                # Buscar esta variable en los datos del día
+                if 'totales_por_variable' in day_data:
+                    for var_name, var_info in day_data['totales_por_variable'].items():
+                        if var_name == var_key or var_info.get('initials') == var_key:
+                            simulated_value = var_info.get('total', 0)
+                            if simulated_value != 0:  # Solo incluir valores no cero
+                                days.append(day_num)
+                                simulated_values.append(simulated_value)
+                                dates.append(date)
+                                
+                                # Si hay valor real para este día, agregarlo
+                                if var_data.get('daily_details', {}).get(str(day_num)):
+                                    real_val = var_data['daily_details'][str(day_num)].get('real', 0)
+                                    real_values.append(real_val)
+                                else:
+                                    real_values.append(None)
+            
+            # Validar que tenemos datos suficientes
+            if len(days) < 2:
+                logger.warning(f"Insufficient data for chart generation: {var_key}")
+                return None
+            
+            # Crear figura más grande para mejor visualización
+            fig, ax = plt.subplots(figsize=(14, 8))
+            
+            # Plot de valores simulados (línea continua)
+            line_sim = ax.plot(days, simulated_values, 
+                            marker='o', linewidth=3, markersize=6, 
+                            alpha=0.8, color='#3498DB', 
+                            markerfacecolor='white', 
+                            markeredgecolor='#3498DB', 
+                            markeredgewidth=2,
+                            label='Valores Simulados')
+            
+            # Plot de valores reales si existen
+            if any(v is not None for v in real_values):
+                # Filtrar None values para el plot
+                real_days = [d for d, v in zip(days, real_values) if v is not None]
+                real_vals = [v for v in real_values if v is not None]
+                
+                if real_vals:
+                    line_real = ax.plot(real_days, real_vals, 
+                                    marker='s', linewidth=3, markersize=6,
+                                    alpha=0.8, color='#E74C3C',
+                                    markerfacecolor='white',
+                                    markeredgecolor='#E74C3C',
+                                    markeredgewidth=2,
+                                    label='Valores Reales')
+            
+            # Agregar línea de tendencia
+            if len(simulated_values) > 3:
+                z = np.polyfit(days, simulated_values, 1)
+                p = np.poly1d(z)
+                ax.plot(days, p(days), "--", alpha=0.7, color='#2ECC71', 
+                    linewidth=2, label=f'Tendencia (pendiente: {z[0]:.2f})')
+            
+            # Configurar título y etiquetas
+            title = f"{var_key}: {var_data.get('description', '')}"
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
+            ax.set_xlabel('Día de Simulación', fontsize=12, fontweight='bold')
+            ax.set_ylabel(f"{var_data.get('unit', 'Valor')}", fontsize=12, fontweight='bold')
+            
+            # Grid mejorado
+            ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+            ax.set_axisbelow(True)
+            
+            # Agregar información estadística
+            mean_sim = np.mean(simulated_values)
+            std_sim = np.std(simulated_values)
+            
+            # Área de desviación estándar
+            ax.fill_between(days, 
+                        [mean_sim - std_sim] * len(days), 
+                        [mean_sim + std_sim] * len(days),
+                        alpha=0.1, color='#3498DB', 
+                        label=f'±1 Desv. Est.')
+            
+            # Línea de media
+            ax.axhline(y=mean_sim, color='#3498DB', linestyle=':', 
+                    linewidth=2, alpha=0.7,
+                    label=f'Media: {mean_sim:.2f}')
+            
+            # Box de información
+            info_text = f'Error: {var_data.get("error_pct", 0):.1f}%\n'
+            info_text += f'Estado: {var_data.get("status", "UNKNOWN")}\n'
+            info_text += f'Días: {len(days)}\n'
+            info_text += f'Rango: [{min(simulated_values):.1f}, {max(simulated_values):.1f}]'
+            
+            # Color del box según estado
+            box_color = {
+                'PRECISA': '#27AE60',
+                'ACEPTABLE': '#F39C12',
+                'INEXACTA': '#E74C3C'
+            }.get(var_data.get('status', 'UNKNOWN'), '#95A5A6')
+            
+            ax.text(0.02, 0.98, info_text, 
+                transform=ax.transAxes, fontsize=11, fontweight='bold',
+                verticalalignment='top', 
+                bbox=dict(boxstyle='round,pad=0.8', 
+                            facecolor=box_color, 
+                            alpha=0.8,
+                            edgecolor='black', 
+                            linewidth=2))
+            
+            # Leyenda mejorada
+            ax.legend(loc='upper right', fontsize=10, framealpha=0.9,
+                    edgecolor='black', fancybox=True, shadow=True)
+            
+            # Ajustar layout
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            logger.info(f"Successfully generated complete chart for {var_key} with {len(days)} days")
+            
+            return {
+                'variable': var_key,
+                'description': var_data.get('description', ''),
+                'unit': var_data.get('unit', ''),
+                'error_pct': var_data.get('error_pct', 0),
+                'status': var_data.get('status', 'UNKNOWN'),
+                'chart': chart_base64,
+                'days_count': len(days),
+                'coverage': (len(days) / len(all_variables_extracted)) * 100 if all_variables_extracted else 0,
+                'real_value': var_data.get('real_value', 0),
+                'simulated_avg': var_data.get('simulated_avg', 0),
+                'total_points': len(simulated_values)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in complete chart generation for {var_key}: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            plt.close('all')
+            return None
+    
+    
+    def generate_additional_analysis_charts(self, all_variables_extracted, totales_acumulativos):
+        """
+        Genera gráficos adicionales de análisis similar a los charts_generated
+        """
+        try:
+            additional_charts = {}
+            
+            # Gráfico 1: Análisis de Costos Detallado
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+            
+            days = list(range(1, len(all_variables_extracted) + 1))
+            
+            # Extraer costos
+            costos_produccion = []
+            costos_operativos = []
+            costos_totales = []
+            
+            for day_data in all_variables_extracted:
+                costos_produccion.append(day_data.get('CPROD', 0))
+                costos_operativos.append(day_data.get('GO', 0))
+                costos_totales.append(day_data.get('TG', 0))
+            
+            # Gráfico de costos apilados
+            ax1.fill_between(days, 0, costos_produccion, alpha=0.7, color='#3498DB', label='Costos Producción')
+            ax1.fill_between(days, costos_produccion, 
+                            [cp + co for cp, co in zip(costos_produccion, costos_operativos)], 
+                            alpha=0.7, color='#E74C3C', label='Costos Operativos')
+            
+            ax1.set_xlabel('Días')
+            ax1.set_ylabel('Costos (Bs)')
+            ax1.set_title('Estructura de Costos Diarios')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Gráfico de eficiencia de costos
+            ingresos = [day_data.get('IT', 0) for day_data in all_variables_extracted]
+            margen = [(i - c) / i * 100 if i > 0 else 0 for i, c in zip(ingresos, costos_totales)]
+            
+            ax2.plot(days, margen, linewidth=2, color='#27AE60', marker='o')
+            ax2.axhline(y=0, color='red', linestyle='--', alpha=0.5)
+            ax2.fill_between(days, 0, margen, where=[m > 0 for m in margen], 
+                            color='green', alpha=0.3, label='Ganancia')
+            ax2.fill_between(days, margen, 0, where=[m < 0 for m in margen], 
+                            color='red', alpha=0.3, label='Pérdida')
+            
+            ax2.set_xlabel('Días')
+            ax2.set_ylabel('Margen (%)')
+            ax2.set_title('Margen de Ganancia Diario')
+            ax2.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            additional_charts['analisis_costos_detallado'] = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            # Gráfico 2: Análisis de Eficiencia Operativa
+            fig, ax = plt.subplots(figsize=(12, 6))
+            
+            eficiencia_produccion = []
+            utilizacion_capacidad = []
+            
+            for day_data in all_variables_extracted:
+                ef_prod = day_data.get('EP', 0) * 100 if day_data.get('EP', 0) else 0
+                util_cap = day_data.get('FU', 0) * 100 if day_data.get('FU', 0) else 0
+                
+                eficiencia_produccion.append(ef_prod)
+                utilizacion_capacidad.append(util_cap)
+            
+            ax.plot(days, eficiencia_produccion, 'b-', linewidth=2, 
+                    marker='o', label='Eficiencia Producción', markersize=4)
+            ax.plot(days, utilizacion_capacidad, 'r-', linewidth=2, 
+                    marker='s', label='Utilización Capacidad', markersize=4)
+            
+            # Líneas de referencia
+            ax.axhline(y=80, color='green', linestyle='--', alpha=0.5, label='Meta 80%')
+            ax.axhline(y=100, color='gray', linestyle='-', alpha=0.3)
+            
+            ax.set_xlabel('Días')
+            ax.set_ylabel('Porcentaje (%)')
+            ax.set_title('Indicadores de Eficiencia Operativa')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            ax.set_ylim(0, 110)
+            
+            plt.tight_layout()
+            
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            additional_charts['eficiencia_operativa'] = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return additional_charts
+            
+        except Exception as e:
+            logger.error(f"Error generating additional charts: {str(e)}")
+            return {}
+    
+    def generate_endogenous_variables_charts(self, all_variables_extracted, totales_acumulativos):
+        """
+        Genera gráficos para las variables endógenas principales
+        """
+        endogenous_charts = {}
+        
+        # Variables endógenas clave que aparecen en el log
+        key_variables = ['IT', 'GT', 'GO', 'TG', 'TPV', 'TPPRO', 'DI', 
+                        'CTAI', 'CTTL', 'CA', 'MP', 'MI', 'HO', 'PE', 
+                        'MB', 'NR', 'GG', 'SE', 'PC']
+        
+        for var_key in key_variables:
+            try:
+                # Recopilar datos directamente de all_variables_extracted
+                days = []
+                values = []
+                dates = []
+                
+                for day_idx, day_data in enumerate(all_variables_extracted):
+                    day_num = day_idx + 1
+                    
+                    # La variable está directamente en el diccionario
+                    if var_key in day_data:
+                        value = day_data.get(var_key, 0)
+                        if value is not None and value != 0:
+                            days.append(day_num)
+                            values.append(float(value))
+                            dates.append(day_data.get('date', f'Día {day_num}'))
+                
+                # Si tenemos datos, generar gráfico
+                if len(days) >= 2:
+                    # Obtener información adicional de totales_acumulativos
+                    total_info = {}
+                    for key, info in totales_acumulativos.items():
+                        if var_key in key or key == var_key:
+                            total_info = info
+                            break
+                    
+                    chart_data = self._generate_endogenous_variable_chart(
+                        var_key, days, values, dates, total_info
+                    )
+                    if chart_data:
+                        endogenous_charts[var_key] = chart_data
+                        logger.info(f"Generated endogenous chart for {var_key} with {len(values)} points")
+                else:
+                    logger.warning(f"Insufficient data for endogenous chart {var_key}: {len(days)} points")
+                        
+            except Exception as e:
+                logger.error(f"Error generating endogenous chart for {var_key}: {str(e)}")
+                continue
+        
+        logger.info(f"Total endogenous charts generated: {len(endogenous_charts)}")
+        return endogenous_charts
+
+    def _generate_endogenous_variable_chart(self, var_key, days, values, dates, total_info):
+        """
+        Genera un gráfico individual para una variable endógena
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from io import BytesIO
+            import base64
+            
+            fig, ax = plt.subplots(figsize=(12, 6))
+            
+            # Determinar el tipo de gráfico según la variable
+            if var_key in ['IT', 'GT', 'GO', 'TG', 'CTAI', 'CTTL']:
+                # Variables financieras - usar gráfico de área
+                ax.fill_between(days, 0, values, alpha=0.3, color='#3498DB')
+                ax.plot(days, values, linewidth=3, marker='o', markersize=5, 
+                    color='#2980B9', label=var_key)
+                
+                # Agregar línea de cero si hay valores negativos
+                if min(values) < 0:
+                    ax.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+                    
+            elif var_key in ['TPV', 'TPPRO', 'DI']:
+                # Variables de producción/ventas - usar barras
+                colors = ['#27AE60' if v >= 0 else '#E74C3C' for v in values]
+                bars = ax.bar(days, values, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
+                
+                # Agregar valores en las barras
+                for bar, val in zip(bars, values):
+                    height = bar.get_height()
+                    ax.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{val:.0f}', ha='center', va='bottom' if height >= 0 else 'top',
+                        fontsize=8)
+            else:
+                # Otras variables - línea simple
+                ax.plot(days, values, linewidth=2, marker='s', markersize=4,
+                    color='#8E44AD', label=var_key)
+            
+            # Agregar tendencia si hay suficientes puntos
+            if len(values) > 5:
+                z = np.polyfit(days, values, 1)
+                p = np.poly1d(z)
+                ax.plot(days, p(days), '--', alpha=0.7, color='#E74C3C', 
+                    linewidth=2, label=f'Tendencia: {z[0]:.2f}x')
+            
+            # Estadísticas
+            mean_val = np.mean(values)
+            ax.axhline(y=mean_val, color='#F39C12', linestyle=':', 
+                    linewidth=2, alpha=0.7,
+                    label=f'Media: {mean_val:.2f}')
+            
+            # Configuración
+            ax.set_xlabel('Día de Simulación', fontsize=12, fontweight='bold')
+            ax.set_ylabel(total_info.get('unit', 'Valor'), fontsize=12, fontweight='bold')
+            
+            # Título descriptivo
+            var_names = {
+                'IT': 'INGRESOS TOTALES',
+                'GT': 'GANANCIAS TOTALES',
+                'GO': 'GASTOS OPERATIVOS',
+                'TG': 'GASTOS TOTALES',
+                'TPV': 'TOTAL PRODUCTOS VENDIDOS',
+                'TPPRO': 'TOTAL PRODUCTOS PRODUCIDOS',
+                'DI': 'DEMANDA INSATISFECHA',
+                'CTAI': 'COSTO TOTAL ALMACENAMIENTO INSUMOS',
+                'CTTL': 'COSTO TOTAL TRANSPORTE Y LOGÍSTICA',
+                'CA': 'CLIENTES ATENDIDOS',
+                'MP': 'MATERIA PRIMA',
+                'MI': 'MANO DE OBRA INDIRECTA'
+            }
+            
+            title = var_names.get(var_key, var_key)
+            ax.set_title(f'{title} - Evolución Completa', fontsize=14, fontweight='bold', pad=20)
+            
+            # Grid y estilo
+            ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+            ax.set_axisbelow(True)
+            
+            # Información adicional
+            info_text = f'Total Acumulado: {total_info.get("total", sum(values)):.2f}\n'
+            info_text += f'Promedio: {mean_val:.2f}\n'
+            info_text += f'Mín/Máx: {min(values):.1f} / {max(values):.1f}'
+            
+            ax.text(0.02, 0.98, info_text, 
+                transform=ax.transAxes, fontsize=10,
+                verticalalignment='top', 
+                bbox=dict(boxstyle='round,pad=0.5', 
+                            facecolor='wheat', 
+                            alpha=0.8))
+            
+            # Leyenda
+            ax.legend(loc='upper right', fontsize=10, framealpha=0.9)
+            
+            # Layout
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return {
+                'variable': var_key,
+                'name': var_names.get(var_key, var_key),
+                'chart': chart_base64,
+                'total': total_info.get('total', sum(values)),
+                'unit': total_info.get('unit', ''),
+                'data_points': len(values)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creating endogenous chart: {str(e)}")
+            plt.close('all')
+            return None
+    
+    def _generate_validation_charts_for_variables(self, by_variable, results_simulation, all_variables_extracted):
+        """Genera gráficos de validación optimizados para cada variable"""
+        import matplotlib.pyplot as plt
+        import matplotlib
+        matplotlib.use('Agg')
+        import base64
+        import numpy as np
+        from io import BytesIO
+        
+        validation_charts = {}
+        
+        # CORRECCIÓN: Adaptar a la estructura real de datos
+        # all_variables_extracted es una lista de diccionarios con las variables directamente
+        
+        # Pre-filtrar variables válidas
+        variables_to_chart = {}
+        for var_key, var_data in by_variable.items():
+            # Verificar que la variable tiene datos simulados en all_variables_extracted
+            has_data = False
+            for day_data in all_variables_extracted:
+                if var_key in day_data and day_data[var_key] != 0:
+                    has_data = True
+                    break
+            
+            if has_data and var_data.get('status') != 'NO_DATA':
+                variables_to_chart[var_key] = var_data
+        
+        logger.info(f"Variables to chart after validation: {len(variables_to_chart)} of {len(by_variable)} total")
+        
+        # Limitar número de gráficos
+        MAX_CHARTS_PER_TYPE = 20
+        
+        # Agrupar por tipo
+        variables_by_type = {}
+        for var_key, var_data in variables_to_chart.items():
+            var_type = var_data.get('type', 'Otra')
+            if var_type not in variables_by_type:
+                variables_by_type[var_type] = {}
+            variables_by_type[var_type][var_key] = var_data
+        
+        # Generar gráficos
+        plt.rcParams['figure.max_open_warning'] = 0
+        plt.rcParams['figure.dpi'] = 100
+        
+        for var_type, variables in variables_by_type.items():
+            type_charts = []
+            
+            # Ordenar por error y tomar los más relevantes
+            sorted_vars = sorted(variables.items(), 
+                            key=lambda x: abs(x[1].get('error_pct', 0)), 
+                            reverse=True)[:MAX_CHARTS_PER_TYPE]
+            
+            for var_key, var_data in sorted_vars:
+                try:
+                    # Generar gráfico completo con la estructura correcta
+                    chart_data = self._generate_complete_variable_chart_corrected(
+                        var_key, var_data, var_type, all_variables_extracted
+                    )
+                    
+                    if chart_data:
+                        type_charts.append(chart_data)
+                        
+                except Exception as e:
+                    logger.error(f"Error generating chart for {var_key}: {str(e)}")
+                    continue
+            
+            if type_charts:
+                validation_charts[var_type] = type_charts
+        
+        # Generar gráfico resumen
+        summary_chart = self._generate_compact_summary_chart(variables_by_type)
+        if summary_chart:
+            validation_charts['summary'] = summary_chart
+        
+        total_charts = sum(len(charts) for charts in validation_charts.values() if isinstance(charts, list))
+        logger.info(f"Generated {total_charts} validation charts across {len(validation_charts)} types")
+        
+        return validation_charts
+
+    def _generate_complete_variable_chart_corrected(self, var_key, var_data, var_type, all_variables_extracted):
+        """
+        Genera un gráfico completo con la estructura correcta de datos
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            # Extraer datos de la estructura correcta
+            days = []
+            simulated_values = []
+            dates = []
+            
+            # all_variables_extracted es una lista donde cada elemento tiene las variables directamente
+            for day_idx, day_data in enumerate(all_variables_extracted):
+                day_num = day_idx + 1
+                
+                # La variable está directamente en day_data
+                if var_key in day_data:
+                    value = day_data[var_key]
+                    if value is not None and value != 0:
+                        days.append(day_num)
+                        simulated_values.append(float(value))
+                        dates.append(day_data.get('date', f'Día {day_num}'))
+            
+            # Validar datos
+            if len(days) < 2:
+                logger.warning(f"Insufficient data for {var_key}: only {len(days)} points")
+                return None
+            
+            # Crear figura
+            fig, ax = plt.subplots(figsize=(14, 8))
+            
+            # Plot principal - valores simulados
+            ax.plot(days, simulated_values, 
+                    marker='o', linewidth=3, markersize=6, 
+                    alpha=0.8, color='#3498DB', 
+                    markerfacecolor='white', 
+                    markeredgecolor='#3498DB', 
+                    markeredgewidth=2,
+                    label='Valores Simulados')
+            
+            # Si hay valor real constante, dibujarlo
+            real_value = var_data.get('real_value', 0)
+            if real_value != 0:
+                ax.axhline(y=real_value, color='#E74C3C', linestyle='-', linewidth=3, 
+                        alpha=0.8, label=f'Valor Real: {real_value:.2f}')
+            
+            # Línea de tendencia
+            if len(simulated_values) > 3:
+                z = np.polyfit(days, simulated_values, 1)
+                p = np.poly1d(z)
+                ax.plot(days, p(days), "--", alpha=0.7, color='#2ECC71', 
+                    linewidth=2, label=f'Tendencia: {z[0]:.2f}x')
+            
+            # Estadísticas
+            mean_sim = np.mean(simulated_values)
+            std_sim = np.std(simulated_values)
+            
+            # Banda de desviación estándar
+            ax.fill_between(days, 
+                        [mean_sim - std_sim] * len(days), 
+                        [mean_sim + std_sim] * len(days),
+                        alpha=0.1, color='#3498DB')
+            
+            # Línea de media
+            ax.axhline(y=mean_sim, color='#3498DB', linestyle=':', 
+                    linewidth=2, alpha=0.7,
+                    label=f'Media: {mean_sim:.2f}')
+            
+            # Configuración
+            ax.set_xlabel('Día de Simulación', fontsize=12, fontweight='bold')
+            ax.set_ylabel(f"{var_data.get('unit', 'Valor')}", fontsize=12, fontweight='bold')
+            ax.set_title(f"{var_key}: {var_data.get('description', '')}", 
+                        fontsize=16, fontweight='bold', pad=20)
+            
+            # Grid
+            ax.grid(True, alpha=0.3)
+            ax.set_axisbelow(True)
+            
+            # Box de información
+            error_pct = var_data.get('error_pct', 0)
+            status = var_data.get('status', 'UNKNOWN')
+            
+            info_text = f'Error: {error_pct:.1f}%\n'
+            info_text += f'Estado: {status}\n'
+            info_text += f'Puntos: {len(days)}\n'
+            info_text += f'Rango: [{min(simulated_values):.1f}, {max(simulated_values):.1f}]'
+            
+            box_color = {
+                'PRECISA': '#27AE60',
+                'ACEPTABLE': '#F39C12',
+                'INEXACTA': '#E74C3C'
+            }.get(status, '#95A5A6')
+            
+            ax.text(0.02, 0.98, info_text, 
+                transform=ax.transAxes, fontsize=11, fontweight='bold',
+                verticalalignment='top', 
+                bbox=dict(boxstyle='round,pad=0.8', 
+                            facecolor=box_color, 
+                            alpha=0.8,
+                            edgecolor='black', 
+                            linewidth=2))
+            
+            # Leyenda
+            ax.legend(loc='upper right', fontsize=10, framealpha=0.9)
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return {
+                'variable': var_key,
+                'description': var_data.get('description', ''),
+                'unit': var_data.get('unit', ''),
+                'error_pct': error_pct,
+                'status': status,
+                'chart': chart_base64,
+                'days_count': len(days),
+                'coverage': (len(days) / len(all_variables_extracted)) * 100,
+                'real_value': real_value,
+                'simulated_avg': mean_sim,
+                'total_points': len(simulated_values)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in chart generation for {var_key}: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            plt.close('all')
+            return None
+    
+    def _generate_compact_summary_chart(self, variables_by_type):
+        """Genera un gráfico resumen compacto de validación"""
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            import numpy as np
+            
+            fig, ax = plt.subplots(figsize=(12, 8))
+            
+            # Preparar datos por tipo
+            types = []
+            avg_errors = []
+            counts = []
+            colors = []
+            
+            for var_type, variables in variables_by_type.items():
+                if variables:
+                    types.append(var_type)
+                    errors = [v.get('error_pct', 0) for v in variables.values() if v.get('error_pct') is not None]
+                    avg_error = np.mean(errors) if errors else 0
+                    avg_errors.append(avg_error)
+                    counts.append(len(variables))
+                    
+                    # Color según error promedio
+                    if avg_error < 5:
+                        colors.append('#27AE60')
+                    elif avg_error < 15:
+                        colors.append('#F39C12')
+                    else:
+                        colors.append('#E74C3C')
+            
+            if not types:
+                plt.close(fig)
+                return None
+            
+            # Crear gráfico de barras
+            bars = ax.bar(types, avg_errors, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
+            
+            # Agregar valores y conteos en las barras
+            for bar, error, count in zip(bars, avg_errors, counts):
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + max(avg_errors) * 0.01,
+                        f'{error:.1f}%\n({count} vars)', 
+                        ha='center', va='bottom', fontsize=10, fontweight='bold')
+            
+            # Líneas de referencia
+            ax.axhline(y=5, color='green', linestyle='--', linewidth=2, alpha=0.7, label='Preciso (≤5%)')
+            ax.axhline(y=15, color='orange', linestyle='--', linewidth=2, alpha=0.7, label='Aceptable (≤15%)')
+            
+            # Configuración
+            ax.set_xlabel('Tipo de Variable', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Error Promedio (%)', fontsize=12, fontweight='bold')
+            ax.set_title('Resumen de Validación por Tipo de Variable', fontsize=14, fontweight='bold', pad=20)
+            ax.legend(loc='upper right', fontsize=10)
+            ax.grid(True, alpha=0.3, axis='y')
+            ax.set_ylim(0, max(avg_errors) * 1.3 if avg_errors else 20)
+            
+            # Mejorar etiquetas del eje x
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', facecolor='white')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating summary chart: {str(e)}")
+            plt.close('all')
+            return None
+
+    def generate_validation_charts_context(self, validation_results):
+        """
+        Extrae los gráficos de validación y los prepara para el contexto HTML
+        Retorna un diccionario con las imágenes en base64 listas para usar en HTML
+        """
+        context_charts = {}
+        
+        # Obtener los gráficos de validación
+        validation_charts = validation_results.get('validation_charts', {})
+        
+        if not validation_charts:
+            logger.warning("No validation charts found in results")
+            return context_charts
+        
+        # 1. Gráfico resumen si existe
+        if 'summary' in validation_charts and validation_charts['summary']:
+            context_charts['validation_summary'] = {
+                'image_data': validation_charts['summary'],
+                'title': 'Resumen de Validación por Tipo de Variable',
+                'description': 'Gráfico resumen mostrando el error promedio por tipo de variable'
+            }
+        
+        # 2. Gráficos individuales por variable
+        chart_counter = 1
+        individual_charts = {}
+        
+        for var_type, charts_list in validation_charts.items():
+            if var_type == 'summary':  # Skip summary, already handled
+                continue
+                
+            if isinstance(charts_list, list):
+                for chart_data in charts_list:
+                    if chart_data and chart_data.get('chart'):
+                        variable = chart_data.get('variable', f'var_{chart_counter}')
+                        
+                        # Crear clave única para cada gráfico
+                        chart_key = f'validation_chart_{chart_counter}'
+                        
+                        individual_charts[chart_key] = {
+                            'image_data': chart_data.get('chart', ''),
+                            'variable': variable,
+                            'title': f'Validación: {variable}',
+                            'description': chart_data.get('description', 'Gráfico de validación'),
+                            'error_pct': chart_data.get('error_pct', 0),
+                            'status': chart_data.get('status', 'UNKNOWN'),
+                            'unit': chart_data.get('unit', ''),
+                            'days_count': chart_data.get('days_count', 0),
+                            'coverage': chart_data.get('coverage', 0),
+                            'var_type': var_type
+                        }
+                        chart_counter += 1
+        
+        # Agregar gráficos individuales al contexto
+        if individual_charts:
+            context_charts['individual_charts'] = individual_charts
+            context_charts['total_charts'] = len(individual_charts)
+        
+        logger.info(f"Prepared {len(context_charts)} chart contexts for HTML rendering")
+        
+        return context_charts
+
+    def _generate_single_validation_chart(self, var_key, var_data, var_type):
+        """
+        Generate single validation chart - VERSIÓN CORREGIDA Y OPTIMIZADA
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib.dates as mdates
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            from datetime import datetime
+            
+            # CORRECCIÓN: Usar 'daily_details' correctamente
+            daily_details = var_data.get('daily_details', {})
+            
+            if not daily_details:
+                logger.warning(f"No daily_details found for {var_key}")
+                return None
+            
+            # Extract and validate data for plotting
+            days = []
+            values = []
+            
+            for day, detail in daily_details.items():
+                simulated_value = detail.get('simulated')
+                if simulated_value is not None and simulated_value != 0:
+                    days.append(day)
+                    values.append(simulated_value)
+            
+            # Debug logging
+            logger.info(f"Chart data for {var_key}: {len(days)} valid days, values range: {min(values) if values else 0}-{max(values) if values else 0}")
+            
+            if not days or not values or len(values) < 2:
+                logger.warning(f"Insufficient valid data for chart generation: {var_key}")
+                return None
+            
+            # Convert days to datetime objects if they're strings
+            datetime_days = []
+            for day in days:
+                if isinstance(day, str):
+                    try:
+                        # Try different date formats
+                        for fmt in ['%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d']:
+                            try:
+                                datetime_days.append(datetime.strptime(day, fmt))
+                                break
+                            except ValueError:
+                                continue
+                        else:
+                            # If no format works, use original string
+                            datetime_days.append(day)
+                    except:
+                        datetime_days.append(day)
+                else:
+                    datetime_days.append(day)
+            
+            # Create figure and axis with better size
+            fig, ax = plt.subplots(figsize=(14, 8))
+            
+            # Plot based on variable type with better styling
+            if var_type in ['continuous', 'numeric', 'Numérica', 'Continua', 'Continuous', 'Numeric']:
+                # Line plot for continuous variables
+                line = ax.plot(datetime_days, values, marker='o', linewidth=3, markersize=6, 
+                            alpha=0.8, color='#3498DB', markerfacecolor='white', 
+                            markeredgecolor='#3498DB', markeredgewidth=2)
+                ax.set_ylabel(f"{var_data.get('unit', 'Valor')}", fontsize=12, fontweight='bold')
+                
+                # Add trend line if enough data points
+                if len(values) > 3:
+                    x_numeric = np.arange(len(datetime_days))
+                    z = np.polyfit(x_numeric, values, 1)
+                    p = np.poly1d(z)
+                    ax.plot(datetime_days, p(x_numeric), "--", alpha=0.7, color='#E74C3C', 
+                        linewidth=2, label='Tendencia')
+                    
+            elif var_type in ['categorical', 'discrete', 'Categórica', 'Discreta', 'Categorical', 'Discrete']:
+                # Bar plot for categorical variables
+                bars = ax.bar(datetime_days, values, alpha=0.7, width=0.8, color='#F39C12', 
+                            edgecolor='black', linewidth=1)
+                ax.set_ylabel('Conteo/Frecuencia', fontsize=12, fontweight='bold')
+                
+                # Add value labels on bars
+                for bar, value in zip(bars, values):
+                    height = bar.get_height()
+                    ax.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{value:.1f}', ha='center', va='bottom', fontsize=9)
+                    
+            else:
+                # Default to line plot with different styling
+                ax.plot(datetime_days, values, marker='s', linewidth=3, markersize=6, 
+                    alpha=0.8, color='#27AE60', markerfacecolor='white',
+                    markeredgecolor='#27AE60', markeredgewidth=2)
+                ax.set_ylabel('Valor', fontsize=12, fontweight='bold')
+            
+            # Format x-axis for dates
+            if len(datetime_days) > 1:
+                try:
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+                    ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(datetime_days)//8)))
+                    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+                except:
+                    # Fallback for non-datetime objects
+                    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+            
+            # Set title and labels with better formatting
+            title = f"{var_key}"
+            if var_data.get('description'):
+                title += f"\n{var_data.get('description', '')[:60]}..."
+                
+            ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+            ax.set_xlabel('Fecha', fontsize=12, fontweight='bold')
+            
+            # Add grid for better readability
+            ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+            
+            # Add status background color
+            status = var_data.get('status', 'UNKNOWN')
+            ylim = ax.get_ylim()
+            if status == 'PRECISA':
+                ax.axhspan(ylim[0], ylim[1], alpha=0.05, color='green')
+            elif status == 'INEXACTA':
+                ax.axhspan(ylim[0], ylim[1], alpha=0.05, color='red')
+            elif status == 'ACEPTABLE':
+                ax.axhspan(ylim[0], ylim[1], alpha=0.05, color='orange')
+            
+            # Add error percentage annotation with better styling
+            error_pct = var_data.get('error_pct', 0)
+            if error_pct > 0:
+                color = '#E74C3C' if error_pct > 15 else '#F39C12' if error_pct > 5 else '#27AE60'
+                ax.text(0.02, 0.98, f'Error: {error_pct:.1f}%\nEstado: {status}', 
+                    transform=ax.transAxes, fontsize=11, fontweight='bold',
+                    verticalalignment='top', 
+                    bbox=dict(boxstyle='round,pad=0.5', facecolor=color, alpha=0.8, 
+                            edgecolor='black', linewidth=1))
+            
+            # Add real value reference line if available
+            real_value = var_data.get('real_value', 0)
+            simulated_avg = var_data.get('simulated_avg', 0)
+            
+            if real_value != 0:
+                ax.axhline(y=real_value, color='#E74C3C', linestyle='-', linewidth=3, 
+                        alpha=0.8, label=f'Valor Real: {real_value:.2f}')
+            
+            if simulated_avg != 0 and simulated_avg != real_value:
+                ax.axhline(y=simulated_avg, color='#3498DB', linestyle='--', linewidth=2, 
+                        alpha=0.8, label=f'Promedio Simulado: {simulated_avg:.2f}')
+            
+            # Add legend if there are reference lines
+            if real_value != 0 or simulated_avg != 0:
+                ax.legend(loc='upper right', fontsize=10, framealpha=0.9)
+            
+            # Improve layout
+            plt.tight_layout()
+            
+            # Convert to base64 with higher quality
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            logger.info(f"Successfully generated chart for {var_key}")
+            
+            return {
+                'variable': var_key,
+                'description': var_data.get('description', '')[:100],  # Más descripción
+                'unit': var_data.get('unit', ''),
+                'error_pct': var_data.get('error_pct', 0),
+                'status': var_data.get('status', 'UNKNOWN'),
+                'chart': chart_base64,
+                'days_count': len(days),
+                'coverage': var_data.get('coverage', 0),
+                'real_value': var_data.get('real_value', 0),
+                'simulated_avg': var_data.get('simulated_avg', 0)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in single chart generation for {var_key}: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            plt.close('all')
+            return None
+
+    def get_html_ready_charts(self, validation_results):
+        """
+        Método adicional para obtener gráficos en formato HTML-ready
+        Retorna HTML completo con las imágenes embebidas
+        """
+        context_charts = self.generate_validation_charts_context(validation_results)
+        
+        if not context_charts:
+            return "<p>No se generaron gráficos de validación.</p>"
+        
+        html_content = []
+        
+        # Gráfico resumen
+        if 'validation_summary' in context_charts:
+            summary = context_charts['validation_summary']
+            html_content.append(f"""
+            <div class="chart-container">
+                <h3>{summary['title']}</h3>
+                <p>{summary['description']}</p>
+                <img src="data:image/png;base64,{summary['image_data']}" 
+                    alt="Gráfico Resumen de Validación" 
+                    style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            """)
+        
+        # Gráficos individuales
+        if 'individual_charts' in context_charts:
+            html_content.append("<h3>Gráficos Individuales de Validación</h3>")
+            
+            for chart_key, chart_info in context_charts['individual_charts'].items():
+                status_color = {
+                    'PRECISA': '#27AE60',
+                    'ACEPTABLE': '#F39C12', 
+                    'INEXACTA': '#E74C3C'
+                }.get(chart_info['status'], '#7F8C8D')
+                
+                html_content.append(f"""
+                <div class="chart-container" style="margin-bottom: 20px; padding: 15px; border: 2px solid {status_color}; border-radius: 10px;">
+                    <h4 style="color: {status_color};">{chart_info['title']}</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <span style="background-color: {status_color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                            {chart_info['status']}
+                        </span>
+                        <span style="background-color: #BDC3C7; color: #2C3E50; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                            Error: {chart_info['error_pct']:.1f}%
+                        </span>
+                        <span style="background-color: #BDC3C7; color: #2C3E50; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                            Días: {chart_info['days_count']}
+                        </span>
+                    </div>
+                    <p style="font-size: 14px; color: #7F8C8D;">{chart_info['description']}</p>
+                    <img src="data:image/png;base64,{chart_info['image_data']}" 
+                        alt="Gráfico de Validación para {chart_info['variable']}" 
+                        style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                """)
+        
+        return ''.join(html_content)
+
+    def debug_chart_generation(self, by_variable):
+        """Debug method to check data structure"""
+        logger.info("=== DEBUGGING CHART GENERATION ===")
+        for var_key, var_data in by_variable.items():
+            logger.info(f"\nVariable: {var_key}")
+            logger.info(f"  Status: {var_data.get('status')}")
+            logger.info(f"  Type: {var_data.get('type')}")
+            logger.info(f"  Real value: {var_data.get('real_value')}")
+            logger.info(f"  Simulated avg: {var_data.get('simulated_avg')}")
+            logger.info(f"  Error pct: {var_data.get('error_pct')}")
+            logger.info(f"  Simulated values count: {var_data.get('simulated_values_count')}")
+            
+            # Check daily_details structure
+            daily_details = var_data.get('daily_details', {})
+            logger.info(f"  Daily details keys: {list(daily_details.keys())[:3]}...")  # First 3 days
+            
+            if daily_details:
+                first_day = list(daily_details.keys())[0]
+                first_detail = daily_details[first_day]
+                logger.info(f"  First day detail structure: {first_detail}")
+                
+                # Check if we have simulated values
+                simulated_values = [d.get('simulated', 0) for d in daily_details.values()]
+                logger.info(f"  Simulated values sample: {simulated_values[:5]}...")
+                logger.info(f"  All zeros?: {all(v == 0 for v in simulated_values)}")
+        logger.info("=== END DEBUG ===")
+    
+    def _generate_variable_comparison_charts(self, by_variable, real_values):
+        """Genera gráficos comparativos para las variables validadas"""
+        charts = {}
+        
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            import base64
+            from io import BytesIO
+            
+            # Gráfico 1: Comparación Real vs Simulado por Variable
+            fig, ax = plt.subplots(figsize=(14, 8))
+            
+            variables = []
+            real_vals = []
+            sim_vals = []
+            colors = []
+            
+            for var_key, var_data in by_variable.items():
+                if var_data.get('status') != 'NO_DATA':
+                    variables.append(var_data['description'][:20] + '...' if len(var_data['description']) > 20 else var_data['description'])
+                    real_vals.append(var_data.get('real_value', 0))
+                    sim_vals.append(var_data.get('simulated_avg', 0))
+                    
+                    # Color según estado
+                    if var_data['status'] == 'PRECISA':
+                        colors.append('green')
+                    elif var_data['status'] == 'ACEPTABLE':
+                        colors.append('orange')
+                    else:
+                        colors.append('red')
+            
+            if variables:
+                x = range(len(variables))
+                width = 0.35
+                
+                bars1 = ax.bar([i - width/2 for i in x], real_vals, width, 
+                            label='Valor Real', alpha=0.8, color='steelblue')
+                bars2 = ax.bar([i + width/2 for i in x], sim_vals, width,
+                            label='Valor Simulado', alpha=0.8)
+                
+                # Colorear barras simuladas según precisión
+                for bar, color in zip(bars2, colors):
+                    bar.set_color(color)
+                
+                ax.set_xlabel('Variables', fontsize=12)
+                ax.set_ylabel('Valor', fontsize=12)
+                ax.set_title('Comparación de Variables: Real vs Simulado', fontsize=16, fontweight='bold')
+                ax.set_xticks(x)
+                ax.set_xticklabels(variables, rotation=45, ha='right')
+                ax.legend()
+                ax.grid(True, alpha=0.3, axis='y')
+                
+                plt.tight_layout()
+                
+                # Convertir a base64
+                buffer = BytesIO()
+                fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+                buffer.seek(0)
+                charts['comparison_bar'] = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                plt.close(fig)
+            
+            # Gráfico 2: Distribución de Errores
+            fig2, ax2 = plt.subplots(figsize=(10, 6))
+            
+            errors = []
+            labels = []
+            colors_pie = []
+            
+            precise = sum(1 for v in by_variable.values() if v.get('status') == 'PRECISA')
+            acceptable = sum(1 for v in by_variable.values() if v.get('status') == 'ACEPTABLE')
+            inaccurate = sum(1 for v in by_variable.values() if v.get('status') == 'INEXACTA')
+            
+            if precise > 0:
+                errors.append(precise)
+                labels.append(f'Precisas ({precise})')
+                colors_pie.append('green')
+            
+            if acceptable > 0:
+                errors.append(acceptable)
+                labels.append(f'Aceptables ({acceptable})')
+                colors_pie.append('orange')
+            
+            if inaccurate > 0:
+                errors.append(inaccurate)
+                labels.append(f'Inexactas ({inaccurate})')
+                colors_pie.append('red')
+            
+            if errors:
+                ax2.pie(errors, labels=labels, colors=colors_pie, autopct='%1.1f%%',
+                    startangle=90, textprops={'fontsize': 12})
+                ax2.set_title('Distribución de Precisión de Variables', fontsize=16, fontweight='bold')
+                
+                # Convertir a base64
+                buffer2 = BytesIO()
+                fig2.savefig(buffer2, format='png', dpi=100, bbox_inches='tight')
+                buffer2.seek(0)
+                charts['error_distribution'] = base64.b64encode(buffer2.getvalue()).decode('utf-8')
+                plt.close(fig2)
+            
+        except Exception as e:
+            logger.error(f"Error generating comparison charts: {str(e)}")
+        
+        return charts
+    
     def generate_all_charts(self, simulation_id: int, 
                           simulation_instance: Any,
                           results: List[Any],
@@ -96,6 +1273,23 @@ class ChartGenerator:
                 'all_variables_extracted': []
             }
     
+    def create_enhanced_chart_data(self, results_simulation, historical_demand):
+        """Create enhanced chart data including historical demand"""
+        chart_data = {
+            'historical_demand': historical_demand,
+            'labels': list(range(1, len(results_simulation) + 1)),
+            'datasets': [
+                {
+                    'label': 'Demanda Simulada',
+                    'values': [float(r.demand_mean) for r in results_simulation]
+                }
+            ],
+            'x_label': 'Días',
+            'y_label': 'Demanda (Litros)'
+        }
+        
+        return chart_data
+
     def _extract_daily_data(self, results: List[Any]) -> List[Dict[str, Any]]:
         """Extract daily data from results"""
         daily_data = []

@@ -2,14 +2,25 @@
 
 equations_data = [
   # NÚCLEO: CÁLCULO DE DEMANDA PROMEDIO
-  {
+# Agregar ecuación para calcular DPH desde datos históricos
+{
     "name": "Demanda Promedio Histórica",
     "description": "Media de los datos históricos de demanda - Variable central del modelo",
-    "expression": "DPH = mean(DH)",  # Media de los 30+ datos históricos
+    # CAMBIAR DE mean(DH) a DH directamente (se calcula en el código):
+    "expression": "DPH = DH",
     "variable1": "DPH",
     "variable2": "DH",
     "area": "Análisis Demanda"
-  },
+},
+  {
+    "name": "Ventas por Cliente Base",
+    "description": "VPC inicial basado solo en histórico",
+    "expression": "VPC_BASE = DPH / max(CPD, 1)",
+    "variable1": "VPC_BASE",
+    "variable2": "DPH",
+    "variable3": "CPD",
+    "area": "Ventas"
+},
   
   {
     "name": "Desviación Estándar Demanda",
@@ -31,39 +42,45 @@ equations_data = [
   },
 
   # VENTAS - Basadas en demanda promedio histórica
+  
   {
+    "name": "Ventas por Cliente",
+    "description": "Unidades promedio vendidas por cliente ajustadas",
+    "expression": "VPC = VPC_BASE * (1 + 0.1 * ((DDP / max(DPH, 1)) - 1))",
+    "variable1": "VPC",
+    "variable2": "VPC_BASE",
+    "variable3": "DDP",
+    "variable4": "DPH",
+    "area": "Ventas"
+},
+  
+{
     "name": "Demanda Diaria Proyectada",
     "description": "Demanda esperada basada en histórico y tendencia",
-    "expression": "DDP = DPH * (1 + (DE - DPH) / max(DPH, 1) * 0.2) * ED",  # Ajuste gradual hacia DE
+    "expression": "DDP = DPH * (1 + (DE - DPH) / max(DPH, 1) * 0.2) * ED",
     "variable1": "DDP",
     "variable2": "DPH",
     "variable3": "DE",
     "variable4": "ED",
     "area": "Ventas"
-  },
+},
 
   {
     "name": "Total clientes atendidos en el dia",
     "description": "Clientes basados en demanda promedio y capacidad",
-    "expression": "TCAE = min(CPD * (DDP / DPH), (DDP / max(VPC, 1)), CPD * 1.2)",  # Escalado por demanda
+    # CAMBIAR DE:
+    # "expression": "TCAE = min(CPD * (DDP / DPH), (DDP / max(VPC, 1)), CPD * 1.2)",
+    # A:
+    "expression": "TCAE = min(CPD * (DDP / max(DPH, 1)), DDP / max(VPC, 1), CPD * 1.2)",
     "variable1": "TCAE",
     "variable2": "CPD",
     "variable3": "DDP",
     "variable4": "DPH",
     "variable5": "VPC",
     "area": "Ventas"
-  },
+},
   
-  {
-    "name": "Ventas por Cliente",
-    "description": "Unidades promedio vendidas por cliente basadas en histórico",
-    "expression": "VPC = DPH / max(CPD, 1) * (1 + 0.1 * (DDP / DPH - 1))",  # Base histórica con ajuste
-    "variable1": "VPC",
-    "variable2": "DPH",
-    "variable3": "CPD",
-    "variable4": "DDP",
-    "area": "Ventas"
-  },
+  
 
   {
     "name": "Total Productos Vendidos",
@@ -113,21 +130,26 @@ equations_data = [
   {
     "name": "Capacidad de Producción Real",
     "description": "Capacidad efectiva considerando eficiencia",
-    "expression": "CPROD = min(NEPP * (MLP / TPE) * CPPL * 0.85, CIP, POD * 1.2)",  # Limitada por objetivo
+    # CAMBIAR DE:
+    # "expression": "CPROD = min(NEPP * (MLP / TPE) * CPPL * 0.85, CIP, POD * 1.2)",
+    # A (evitar referencia circular con CIP):
+    "expression": "CPROD = min(NEPP * (MLP / max(TPE, 1)) * CPPL * 0.85, 15000, POD * 1.2)",
     "variable1": "CPROD",
     "variable2": "NEPP",
     "variable3": "MLP",
     "variable4": "TPE",
     "variable5": "CPPL",
-    "variable6": "CIP",
-    "variable7": "POD",
+    "variable6": "POD",
     "area": "Producción"
-  },
+},
 
   {
     "name": "Cantidad producida de productos lácteos",
     "description": "Producción real basada en demanda histórica y restricciones",
-    "expression": "QPL = min(max(POD - IPF, DPH * 0.8), CPROD, (II / CINSP) * 0.95)",  # Mínimo 80% DPH
+    # CAMBIAR DE:
+    # "expression": "QPL = min(max(POD - IPF, DPH * 0.8), CPROD, (II / CINSP) * 0.95)",
+    # A:
+    "expression": "QPL = min(max(POD - IPF, DPH * 0.8), CPROD, II / max(CINSP, 1) * 0.95)",
     "variable1": "QPL",
     "variable2": "POD",
     "variable3": "IPF",
@@ -136,7 +158,7 @@ equations_data = [
     "variable6": "II",
     "variable7": "CINSP",
     "area": "Producción"
-  },
+},
 
   {
     "name": "Productos Producidos por Lote",
@@ -177,27 +199,32 @@ equations_data = [
   },
 
   # INVENTARIOS - Dimensionados según demanda histórica
-  {
+{
     "name": "Inventario Objetivo Productos",
     "description": "Inventario óptimo basado en demanda y variabilidad",
-    "expression": "IOP = DPH * DPL + DSD * sqrt(DPL) * 1.65",  # Stock ciclo + seguridad
+    # Usar sqrt correctamente:
+    "expression": "IOP = DPH * DPL + DSD * sqrt(max(DPL, 1)) * 1.65",
     "variable1": "IOP",
     "variable2": "DPH",
     "variable3": "DPL",
     "variable4": "DSD",
     "area": "Inventario Productos Finales"
-  },
+},
 
   {
     "name": "Inventario Productos Finales",
     "description": "Balance de productos terminados",
+    # CAMBIAR DE:
+    # "expression": "IPF = max(0, min(IPF + PPL - TPV, CMIPF))",
+    # A (usar IPF_anterior para evitar circularidad):
     "expression": "IPF = max(0, min(IPF + PPL - TPV, CMIPF))",
+    # NOTA: En la implementación, IPF debe venir del estado anterior
     "variable1": "IPF",
     "variable2": "PPL",
     "variable3": "TPV",
     "variable4": "CMIPF",
     "area": "Inventario Productos Finales"
-  },
+},
 
   {
     "name": "Días Cobertura Inventario",
@@ -223,7 +250,7 @@ equations_data = [
   {
     "name": "Inventario Objetivo Insumos",
     "description": "Inventario óptimo de insumos basado en producción histórica",
-    "expression": "IOI = (DPH * CINSP * (TR + DPL)) + (DSD * CINSP * sqrt(TR + DPL) * 1.65)",
+    "expression": "IOI = (DPH * CINSP * (TR + DPL)) + (DSD * CINSP * sqrt(max(TR + DPL, 1)) * 1.65)",
     "variable1": "IOI",
     "variable2": "DPH",
     "variable3": "CINSP",
@@ -231,7 +258,7 @@ equations_data = [
     "variable5": "DPL",
     "variable6": "DSD",
     "area": "Inventario Insumos"
-  },
+},
 
   {
     "name": "Pedido Insumos",
@@ -259,7 +286,9 @@ equations_data = [
   {
     "name": "Inventario Insumos",
     "description": "Balance de insumos",
+    # Similar al anterior:
     "expression": "II = max(0, II + PI - UII)",
+    # NOTA: II debe venir del estado anterior
     "variable1": "II",
     "variable2": "PI",
     "variable3": "UII",
@@ -303,18 +332,24 @@ equations_data = [
   {
     "name": "Costo Variable Unitario",
     "description": "Costo variable por unidad basado en escala",
-    "expression": "CVU = CTAI / max(QPL, 1) * (1 + 0.1 * (1 - QPL / max(DPH, 1)))",  # Penalización si produce menos
+    # CAMBIAR DE:
+    # "expression": "CVU = CTAI / max(QPL, 1) * (1 + 0.1 * (1 - QPL / max(DPH, 1)))",
+    # A:
+    "expression": "CVU = (CTAI / max(QPL, 1)) * (1 + 0.1 * (1 - min(QPL / max(DPH, 1), 2)))",
     "variable1": "CVU",
     "variable2": "CTAI",
     "variable3": "QPL",
     "variable4": "DPH",
     "area": "Contabilidad"
-  },
+},
 
   {
     "name": "Gastos Operativos",
     "description": "Gastos operativos escalados por producción",
-    "expression": "GO = CFD * (0.7 + 0.3 * (QPL / max(DPH, 1))) + (SE / 30) + CTAI",  # 70% fijo + 30% variable
+    # CAMBIAR DE:
+    # "expression": "GO = CFD * (0.7 + 0.3 * (QPL / max(DPH, 1))) + (SE / 30) + CTAI",
+    # A:
+    "expression": "GO = CFD * (0.7 + 0.3 * min(QPL / max(DPH, 1), 1.5)) + (SE / 30) + CTAI",
     "variable1": "GO",
     "variable2": "CFD",
     "variable3": "QPL",
@@ -322,19 +357,22 @@ equations_data = [
     "variable5": "SE",
     "variable6": "CTAI",
     "area": "Contabilidad"
-  },
+},
 
   {
     "name": "Costo Total Transporte",
     "description": "Costo de distribución basado en ventas reales",
-    "expression": "CTTL = ceil(TPV / CTPLV) * CUTRANS * 50 * (0.8 + 0.2 * (TPV / max(DPH, 1)))",  # Eficiencia por volumen
+    # CAMBIAR expresión con ceil:
+    # "expression": "CTTL = ceil(TPV / CTPLV) * CUTRANS * 50 * (0.8 + 0.2 * (TPV / max(DPH, 1)))",
+    # A:
+    "expression": "CTTL = ceil(TPV / max(CTPLV, 1)) * CUTRANS * 50 * (0.8 + 0.2 * min(TPV / max(DPH, 1), 2))",
     "variable1": "CTTL",
     "variable2": "TPV",
     "variable3": "CTPLV",
     "variable4": "CUTRANS",
     "variable5": "DPH",
     "area": "Distribución"
-  },
+},
 
   {
     "name": "Costo Almacenamiento",
@@ -445,13 +483,16 @@ equations_data = [
   {
     "name": "Rentabilidad vs Esperada",
     "description": "Rentabilidad real vs esperada por demanda histórica",
-    "expression": "RVE = GT / max(IE * MB, 1)",  # Ganancia real vs esperada
+    # CAMBIAR DE:
+    # "expression": "RVE = GT / max(IE * MB, 1)",
+    # A:
+    "expression": "RVE = GT / max(IE * max(MB, 0.1), 1)",
     "variable1": "RVE",
     "variable2": "GT",
     "variable3": "IE",
     "variable4": "MB",
     "area": "Contabilidad"
-  },
+},
 
   # COSTOS UNITARIOS - Basados en escala de producción
   {
@@ -622,7 +663,10 @@ equations_data = [
   {
     "name": "Eficiencia Operativa Global",
     "description": "OEE basado en demanda histórica",
-    "expression": "EOG = (QPL / max(DPH * 1.2, 1)) * (1 - (MP + MI) / QPL) * NSC",
+    # CAMBIAR DE:
+    # "expression": "EOG = (QPL / max(DPH * 1.2, 1)) * (1 - (MP + MI) / QPL) * NSC",
+    # A:
+    "expression": "EOG = (QPL / max(DPH * 1.2, 1)) * (1 - (MP + MI) / max(QPL, 1)) * NSC",
     "variable1": "EOG",
     "variable2": "QPL",
     "variable3": "DPH",
@@ -630,7 +674,7 @@ equations_data = [
     "variable5": "MI",
     "variable6": "NSC",
     "area": "Producción"
-  },
+},
 
   {
     "name": "Índice Satisfacción Cliente",

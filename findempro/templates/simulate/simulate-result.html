@@ -136,7 +136,7 @@
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-value">
-                        <span class="counter" data-target="{{ demand_initial.quantity|default:0|floatformat:'0' }}">0</span> L
+                        <span class="counter" data-target="{{ demand_initial|default:0|floatformat:'0' }}">0</span> L
                     </div>
                     <div class="stat-label">Demanda Inicial</div>
                 </div>
@@ -418,15 +418,15 @@
                                             Ingresos vs Ganancias
                                         </h6>
                                         <div class="chart-controls">
-                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_0 }}', 'ingresos-ganancias.png')" title="Descargar">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
                                                 <i class="bx bx-download"></i>
                                             </div>
-                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_0 }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </div>
                                         </div>
-                                        {% if image_data_0 %}
-                                        <img src="data:image/png;base64,{{ image_data_0 }}" 
+                                        {% if image_data_ingresos_gastos %}
+                                        <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
                                             class="chart-image" 
                                             alt="Ingresos vs Ganancias"
                                             loading="lazy">
@@ -445,15 +445,15 @@
                                             Tendencia de Demanda
                                         </h6>
                                         <div class="chart-controls">
-                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_line }}', 'tendencia-demanda.png')" title="Descargar">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_simulation }}', 'tendencia-demanda.png')" title="Descargar">
                                                 <i class="bx bx-download"></i>
                                             </div>
-                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_line }}', 'Tendencia de Demanda')" title="Pantalla completa">
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_simulation }}', 'Tendencia de Demanda')" title="Pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </div>
                                         </div>
-                                        {% if image_data_line %}
-                                        <img src="data:image/png;base64,{{ image_data_line }}" 
+                                        {% if image_data_simulation %}
+                                        <img src="data:image/png;base64,{{ image_data_simulation }}" 
                                              class="chart-image" 
                                              alt="Gráfico de tendencia de demanda"
                                              loading="lazy">
@@ -477,15 +477,15 @@
                                             Ingresos vs Ganancias
                                         </h6>
                                         <div class="chart-controls">
-                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_0 }}', 'ingresos-ganancias.png')" title="Descargar">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
                                                 <i class="bx bx-download"></i>
                                             </div>
-                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_0 }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </div>
                                         </div>
-                                        {% if image_data_0 %}
-                                        <img src="data:image/png;base64,{{ image_data_0 }}" 
+                                        {% if image_data_ingresos_gastos %}
+                                        <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
                                             class="chart-image" 
                                             alt="Ingresos vs Ganancias"
                                             loading="lazy">
@@ -506,15 +506,15 @@
                                             Ventas vs Demanda Insatisfecha
                                         </h6>
                                         <div class="chart-controls">
-                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_1 }}', 'ventas-demanda.png')" title="Descargar">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_inventarios }}', 'ventas-demanda.png')" title="Descargar">
                                                 <i class="bx bx-download"></i>
                                             </div>
-                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_1 }}', 'Ventas vs Demanda')" title="Pantalla completa">
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_inventarios }}', 'Ventas vs Demanda')" title="Pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </div>
                                         </div>
-                                        {% if image_data_1 %}
-                                        <img src="data:image/png;base64,{{ image_data_1 }}" 
+                                        {% if image_data_inventarios %}
+                                        <img src="data:image/png;base64,{{ image_data_inventarios }}" 
                                             class="chart-image" 
                                             alt="Ventas vs Demanda Insatisfecha"
                                             loading="lazy">
@@ -535,15 +535,15 @@
                                             Análisis de Gastos
                                         </h6>
                                         <div class="chart-controls">
-                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_2 }}', 'analisis-gastos.png')" title="Descargar">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_rentabilidad }}', 'analisis-gastos.png')" title="Descargar">
                                                 <i class="bx bx-download"></i>
                                             </div>
-                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_2 }}', 'Análisis de Gastos')" title="Pantalla completa">
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_rentabilidad }}', 'Análisis de Gastos')" title="Pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </div>
                                         </div>
-                                        {% if image_data_2 %}
-                                        <img src="data:image/png;base64,{{ image_data_2 }}" 
+                                        {% if image_data_rentabilidad %}
+                                        <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
                                             class="chart-image" 
                                             alt="Análisis de gastos"
                                             loading="lazy">
@@ -564,15 +564,15 @@
                                             Costos de Producción
                                         </h6>
                                         <div class="chart-controls">
-                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_3 }}', 'costos-produccion.png')" title="Descargar">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_eficiencia }}', 'costos-produccion.png')" title="Descargar">
                                                 <i class="bx bx-download"></i>
                                             </div>
-                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_3 }}', 'Costos de Producción')" title="Pantalla completa">
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_eficiencia }}', 'Costos de Producción')" title="Pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </div>
                                         </div>
-                                        {% if image_data_3 %}
-                                        <img src="data:image/png;base64,{{ image_data_3 }}" 
+                                        {% if image_data_eficiencia %}
+                                        <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
                                             class="chart-image" 
                                             alt="Costos de producción"
                                             loading="lazy">
@@ -593,15 +593,15 @@
                                             ROI y Ganancias
                                         </h6>
                                         <div class="chart-controls">
-                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_8 }}', 'roi-ganancias.png')" title="Descargar">
+                                            <div class="chart-control-btn" onclick="downloadChart('{{ image_data_kpis }}', 'roi-ganancias.png')" title="Descargar">
                                                 <i class="bx bx-download"></i>
                                             </div>
-                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_8 }}', 'ROI y Ganancias')" title="Pantalla completa">
+                                            <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_kpis }}', 'ROI y Ganancias')" title="Pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </div>
                                         </div>
-                                        {% if image_data_8 %}
-                                        <img src="data:image/png;base64,{{ image_data_8 }}" 
+                                        {% if image_data_kpis %}
+                                        <img src="data:image/png;base64,{{ image_data_kpis }}" 
                                             class="chart-image" 
                                             alt="ROI y Ganancias"
                                             loading="lazy">
@@ -612,6 +612,61 @@
                                         </div>
                                         {% endif %}
                                     </div>
+                                </div>
+
+                                <!-- Gráficos Adicionales de Análisis -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h5 class="mb-3">
+                                            <i class="bx bx-analytics"></i> Análisis Adicionales
+                                        </h5>
+                                    </div>
+                                    
+                                    {% if additional_analisis_costos_detallado %}
+                                    <div class="col-12 mb-4">
+                                        <div class="chart-container">
+                                            <h6 class="mb-3">
+                                                <i class="bx bx-money me-2"></i>
+                                                Análisis Detallado de Estructura de Costos
+                                            </h6>
+                                            <div class="chart-controls">
+                                                <div class="chart-control-btn" onclick="downloadChart('{{ additional_analisis_costos_detallado }}', 'analisis-costos-detallado.png')" title="Descargar">
+                                                    <i class="bx bx-download"></i>
+                                                </div>
+                                                <div class="chart-control-btn" onclick="openFullscreen('{{ additional_analisis_costos_detallado }}', 'Análisis de Costos')" title="Pantalla completa">
+                                                    <i class="bx bx-fullscreen"></i>
+                                                </div>
+                                            </div>
+                                            <img src="data:image/png;base64,{{ additional_analisis_costos_detallado }}" 
+                                                class="chart-image" 
+                                                alt="Análisis detallado de costos"
+                                                loading="lazy">
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if additional_eficiencia_operativa %}
+                                    <div class="col-12 mb-4">
+                                        <div class="chart-container">
+                                            <h6 class="mb-3">
+                                                <i class="bx bx-tachometer me-2"></i>
+                                                Indicadores de Eficiencia Operativa
+                                            </h6>
+                                            <div class="chart-controls">
+                                                <div class="chart-control-btn" onclick="downloadChart('{{ additional_eficiencia_operativa }}', 'eficiencia-operativa.png')" title="Descargar">
+                                                    <i class="bx bx-download"></i>
+                                                </div>
+                                                <div class="chart_control-btn" onclick="openFullscreen('{{ additional_eficiencia_operativa }}', 'Eficiencia Operativa')" title="Pantalla completa">
+                                                    <i class="bx bx-fullscreen"></i>
+                                                </div>
+                                            </div>
+                                            <img src="data:image/png;base64,{{ additional_eficiencia_operativa }}" 
+                                                class="chart-image" 
+                                                alt="Indicadores de eficiencia"
+                                                loading="lazy">
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -703,10 +758,17 @@
                                     </div>
                                     {% endif %}
                                 </div>
+
+
+                                
                             </div>
                         </div>
                         <!-- Endogenous Variables Tab -->
                         <div class="tab-pane fade" id="endogenous" role="tabpanel">
+
+                            <!-- Gráficos de Variables Endógenas -->
+
+
                             <div class="row">
                                 <!-- Gráficos de Variables Endógenas -->
                                 <div class="col-12">
@@ -1061,8 +1123,8 @@
                                             <i class="bx bx-line-chart-down me-2"></i>
                                             Análisis de Demanda con Tendencias
                                         </h6>
-                                        {% if image_data_line %}
-                                        <img src="data:image/png;base64,{{ image_data_line }}" 
+                                        {% if image_data_simulation %}
+                                        <img src="data:image/png;base64,{{ image_data_simulation }}" 
                                                 class="chart-image" 
                                                 alt="Análisis de demanda"
                                                 loading="lazy">
@@ -1596,7 +1658,7 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                    {{ charts_context.validation_summary.image_data }}
                                 <!-- Score de Validación -->
                                 <div class="row mb-4">
                                     <div class="col-12">
@@ -1784,25 +1846,16 @@
                                 {% endif %}
                             </div>
                             <!-- Reemplazar la sección de gráficos de validación por variable con esto -->
+                            <!-- Gráficos de Validación por Variable -->
                             {% if model_validation_charts %}
                             <div class="card mt-4">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0">
                                         <i class="bx bx-line-chart"></i> Gráficos de Validación por Variable
                                     </h5>
-                                    <div>
-                                        <select class="form-select form-select-sm d-inline-block w-auto" id="chartTypeFilter" onchange="filterChartsByType()">
-                                            <option value="">Todos los tipos</option>
-                                            {% for type_name in model_validation_charts.keys %}
-                                            {% if type_name != 'summary' %}
-                                            <option value="{{ type_name }}">{{ type_name }}</option>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </select>
-                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="loadAllCharts()">
-                                            <i class="bx bx-download"></i> Cargar Todos
-                                        </button>
-                                    </div>
+                                    <span class="badge bg-info">
+                                        {{ model_validation_charts|length }} tipos de variables
+                                    </span>
                                 </div>
                                 <div class="card-body">
                                     <!-- Gráfico Resumen -->
@@ -1820,178 +1873,66 @@
                                     </div>
                                     {% endif %}
                                     
-                                    <!-- Contenedor de gráficos con carga diferida -->
-                                    <div id="chartsContainer">
-                                        <div class="text-center py-5">
-                                            <p class="text-muted mb-3">Los gráficos se cargarán bajo demanda para mejorar el rendimiento</p>
-                                            <button class="btn btn-primary" onclick="loadInitialCharts()">
-                                                <i class="bx bx-show"></i> Mostrar Primeros 3 Gráficos
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Placeholder para gráficos cargados -->
-                                    <div id="loadedChartsContainer" style="display: none;">
-                                        <div class="row" id="chartsGrid"></div>
-                                        
-                                        <!-- Botón para cargar más -->
-                                        <div class="text-center mt-4" id="loadMoreContainer" style="display: none;">
-                                            <button class="btn btn-outline-primary" onclick="loadMoreCharts()">
-                                                <i class="bx bx-plus"></i> Cargar Más Gráficos
-                                                <span id="remainingCount"></span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Daily Validation Summary -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5 class="mb-0">
-                                                <i class="bx bx-calendar-check"></i> Daily Validation Summary
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row text-center">
-                                                <div class="col-md-3">
-                                                    <h6>Total Days</h6>
-                                                    <h3 class="text-primary">{{ daily_validation_summary.total_days }}</h3>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <h6>Total Validations</h6>
-                                                    <h3 class="text-info">{{ daily_validation_summary.total_validations }}</h3>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <h6>Success Rate</h6>
-                                                    <h3 class="{% if daily_validation_summary.overall_success_rate >= 90 %}text-success{% elif daily_validation_summary.overall_success_rate >= 70 %}text-warning{% else %}text-danger{% endif %}">
-                                                        {{ daily_validation_summary.overall_success_rate|floatformat:1 }}%
-                                                    </h3>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <h6>Precision Rate</h6>
-                                                    <h3 class="text-success">{{ daily_validation_summary.precision_rate|floatformat:1 }}%</h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Daily Validation Charts -->
-                            {% if daily_validation_charts %}
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5 class="mb-0">
-                                                <i class="bx bx-line-chart"></i> Daily Validation Comparison Charts
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                {% for var_key, chart_base64 in daily_validation_charts.items %}
-                                                <div class="col-md-6 mb-4">
-                                                    <div class="chart-container">
-                                                        <img src="data:image/png;base64,{{ chart_base64 }}" 
-                                                            class="img-fluid" 
-                                                            alt="{{ var_key }} Daily Validation">
+                                    <!-- Gráficos por Variable -->
+                                    <div class="row">
+                                        {% for var_type, charts_list in model_validation_charts.items %}
+                                            {% if var_type != 'summary' and charts_list %}
+                                                {% for chart_data in charts_list %}
+                                                <div class="col-lg-6 mb-4">
+                                                    <div class="card h-100 shadow-sm">
+                                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <h6 class="mb-0">{{ chart_data.variable }}</h6>
+                                                                <small class="text-muted">{{ chart_data.description|truncatechars:50 }}</small>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <span class="badge bg-{% if chart_data.status == 'PRECISA' %}success{% elif chart_data.status == 'ACEPTABLE' %}warning{% else %}danger{% endif %}">
+                                                                    {{ chart_data.error_pct|floatformat:1 }}% error
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body p-2">
+                                                            <img src="data:image/png;base64,{{ chart_data.chart }}" 
+                                                                class="img-fluid validation-chart-img" 
+                                                                alt="Gráfico de {{ chart_data.variable }}">
+                                                            
+                                                            <div class="chart-controls position-absolute top-0 end-0 p-2">
+                                                                <button class="btn btn-sm btn-light" 
+                                                                        onclick="openFullscreen('{{ chart_data.chart }}', '{{ chart_data.variable }}')"
+                                                                        title="Expandir">
+                                                                    <i class="bx bx-expand"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-light" 
+                                                                        onclick="downloadChart('{{ chart_data.chart }}', '{{ chart_data.variable }}_validation.png')"
+                                                                        title="Descargar">
+                                                                    <i class="bx bx-download"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-footer bg-light">
+                                                            <div class="row text-center small">
+                                                                <div class="col-4">
+                                                                    <strong>Unidad:</strong><br>{{ chart_data.unit }}
+                                                                </div>
+                                                                <div class="col-4">
+                                                                    <strong>Días:</strong><br>{{ chart_data.days_count }}
+                                                                </div>
+                                                                <div class="col-4">
+                                                                    <strong>Cobertura:</strong><br>{{ chart_data.coverage|floatformat:0 }}%
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-
-                            <!-- Daily Validation Details Table -->
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h5 class="mb-0">
-                                                <i class="bx bx-table"></i> Daily Validation Details
-                                            </h5>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="exportDailyValidation()">
-                                                <i class="bx bx-download"></i> Export CSV
-                                            </button>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                                                <table class="table table-hover table-sm" id="dailyValidationTable">
-                                                    <thead class="sticky-top bg-white">
-                                                        <tr>
-                                                            <th>Day</th>
-                                                            <th>Date</th>
-                                                            <th>Variable</th>
-                                                            <th class="text-end">Real Value</th>
-                                                            <th class="text-end">Simulated Value</th>
-                                                            <th class="text-center">Error %</th>
-                                                            <th class="text-center">Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for day_result in daily_validation_results %}
-                                                            {% for var_key, var_data in day_result.variables.items %}
-                                                            <tr>
-                                                                <td>{{ day_result.day }}</td>
-                                                                <td>{{ day_result.date|date:"d/m/Y" }}</td>
-                                                                <td><strong>{{ var_key }}</strong></td>
-                                                                <td class="text-end">{{ var_data.real|floatformat:2 }}</td>
-                                                                <td class="text-end">{{ var_data.simulated|floatformat:2 }}</td>
-                                                                <td class="text-center">
-                                                                    <span class="badge {% if var_data.error_pct <= 5 %}bg-success{% elif var_data.error_pct <= 10 %}bg-warning{% else %}bg-danger{% endif %}">
-                                                                        {{ var_data.error_pct|floatformat:1 }}%
-                                                                    </span>
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    {% if var_data.status == 'PRECISE' %}
-                                                                        <span class="text-success"><i class="bx bx-check-circle"></i> Precise</span>
-                                                                    {% elif var_data.status == 'ACCEPTABLE' %}
-                                                                        <span class="text-warning"><i class="bx bx-error-circle"></i> Acceptable</span>
-                                                                    {% else %}
-                                                                        <span class="text-danger"><i class="bx bx-x-circle"></i> Inaccurate</span>
-                                                                    {% endif %}
-                                                                </td>
-                                                            </tr>
-                                                            {% endfor %}
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Modal para expandir gráficos -->
-                            <div class="modal fade" id="chartExpandModal" tabindex="-1">
-                                <div class="modal-dialog modal-xl">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="chartExpandTitle">Gráfico de Validación</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body text-center">
-                                            <img id="expandedChartImg" src="" class="img-fluid" alt="Gráfico expandido">
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-primary" onclick="downloadExpandedChart()">
-                                                <i class="bx bx-download"></i> Descargar
-                                            </button>
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                        </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
                             {% else %}
                             <div class="alert alert-info mt-4">
-                                <i class="bx bx-info-circle"></i> No se generaron gráficos de validación. 
-                                Verifique que las variables tengan datos suficientes para comparación.
+                                <i class="bx bx-info-circle"></i> No se generaron gráficos de validación.
                             </div>
                             {% endif %}
 

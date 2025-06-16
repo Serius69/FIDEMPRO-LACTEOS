@@ -3,6 +3,55 @@
   
   # variables_data.py - Versión Final con valores default
 variables_data = [
+  
+  
+  
+  
+  {
+    'name': 'Ventas por Cliente Base',
+    'initials': 'VPC_BASE',
+    'type': 3,
+    'unit': 'L',
+    'description': 'Ventas por cliente sin ajustes',
+    'default_value': 30
+},
+
+{
+    'name': 'Inventario Productos Finales Inicial',
+    'initials': 'IPF_INICIAL',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Inventario al inicio del día',
+    'default_value': 1000
+},
+
+{
+    'name': 'Inventario Insumos Inicial',
+    'initials': 'II_INICIAL',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Inventario de insumos al inicio del día',
+    'default_value': 5000
+},
+
+{
+    'name': 'Inventario Productos Finales Nuevo',
+    'initials': 'IPF_NEW',
+    'type': 3,
+    'unit': 'L',
+    'description': 'Inventario calculado antes de actualizar',
+    'default_value': 1000
+},
+  
+{
+    'name': 'Distancia Promedio de Entrega',
+    'initials': 'DPE',
+    'type': 1,
+    'unit': 'KM',
+    'description': 'Distancia promedio a clientes',
+    'default_value': 50
+},
+  
 # VARIABLES EXÓGENAS (TIPO 1) - Variables de entrada del sistema
 {'name': 'PRECIO DE VENTA DEL PRODUCTO',
 'initials': 'PVP',
@@ -25,12 +74,14 @@ variables_data = [
 'description': 'DEMANDA ESPERADA EN EL PERIODO DE TIEMPO ESTABLECIDO',
 'default_value': 2650},
 
-{'name': 'CAPACIDAD INVENTARIO PRODUCTOS',
-'initials': 'CIP',
-'type': 1,
-'unit': 'L',
-'description': 'CAPACIDAD MÁXIMA QUE LA EMPRESA PUEDE ALMACENAR EN INVENTARIO',
-'default_value': 15000},
+{
+    'name': 'CAPACIDAD INVENTARIO PRODUCTOS',
+    'initials': 'CIP',
+    'type': 1,
+    'unit': 'L',
+    'description': 'CAPACIDAD MÁXIMA QUE LA EMPRESA PUEDE ALMACENAR EN INVENTARIO',
+    'default_value': 10000  # CAMBIAR de 15000 a 10000 - más realista
+},
 
 {'name': 'ESTACIONALIDAD DE LA DEMANDA',
 'initials': 'ED',
@@ -39,12 +90,14 @@ variables_data = [
 'description': 'VARIACIONES PREDECIBLES DE LA DEMANDA',
 'default_value': 1.0},
 
-{'name': 'COSTO UNITARIO INSUMO PRODUCCIÓN',
-'initials': 'CUIP',
-'type': 1,
-'unit': 'BS/L',
-'description': 'COSTO QUE LE CUESTA A LA EMPRESA POR INSUMO',
-'default_value': 8.20},
+{
+    'name': 'COSTO UNITARIO INSUMO PRODUCCIÓN',
+    'initials': 'CUIP',
+    'type': 1,
+    'unit': 'BS/L',
+    'description': 'COSTO QUE LE CUESTA A LA EMPRESA POR INSUMO',
+    'default_value': 7.50  # CAMBIAR de 8.20 a 7.50 para margen más realista
+},
 
 {"name": "Tiempo Promedio entre Compras",
 "initials": "TPC",
@@ -74,19 +127,23 @@ variables_data = [
 'description': 'Cantidad Promedio Producción por Lote',
 'default_value': 500},
 
-{'name': 'Tiempo de produccion por empleado',
-'initials': 'TPE',
-'type': 1,
-'unit': 'minutos',
-'description': 'Tiempo de produccion por empleado',
-'default_value': 45},
+{
+    'name': 'Tiempo de produccion por empleado',
+    'initials': 'TPE',
+    'type': 1,
+    'unit': 'minutos',
+    'description': 'Tiempo de produccion por empleado',
+    'default_value': 30  # CAMBIAR de 45 a 30 - más productivo
+},
 
-{'name': 'SUELDOS EMPLEADOS',
-'initials': 'SE',
-'type': 1,
-'unit': 'BS/MES',
-'description': 'SUELDOS EMPLEADOS MENSUAL',
-'default_value': 48000},
+{
+    'name': 'SUELDOS EMPLEADOS',
+    'initials': 'SE',
+    'type': 1,
+    'unit': 'BS/MES',
+    'description': 'SUELDOS EMPLEADOS MENSUAL',
+    'default_value': 45000  # CAMBIAR de 48000 a 45000
+},
 
 {'name': 'PRECIO DE VENTA DE LA COMPETENCIA',
 'initials': 'PC',
@@ -95,19 +152,23 @@ variables_data = [
 'description': 'PRECIO DE VENTA DEL MISMO PRODUCTO PERO DE LA COMPETENCIA',
 'default_value': 15.80},
 
-{'name': 'COSTO FIJO DIARIO',
-'initials': 'CFD',
-'type': 1,
-'unit': 'BS/DÍA',
-'description': 'COSTO FIJO DIARIO DE LA EMPRESA',
-'default_value': 1800},
+{
+    'name': 'COSTO FIJO DIARIO',
+    'initials': 'CFD',
+    'type': 1,
+    'unit': 'BS/DÍA',
+    'description': 'COSTO FIJO DIARIO DE LA EMPRESA',
+    'default_value': 1500  # CAMBIAR de 1800 a 1500 para mejorar rentabilidad
+},
 
-{'name': 'COSTO UNITARIO POR TRANSPORTE',
-'initials': 'CUTRANS',
-'type': 1,
-'unit': 'BS/L',
-'description': 'COSTO UNITARIO POR TRANSPORTE',
-'default_value': 0.35},
+{
+    'name': 'COSTO UNITARIO POR TRANSPORTE',
+    'initials': 'CUTRANS',
+    'type': 1,
+    'unit': 'BS/L',
+    'description': 'COSTO UNITARIO POR TRANSPORTE',
+    'default_value': 0.25  # CAMBIAR de 0.35 a 0.25 - reducir costos
+},
 
 {'name': 'Tiempo Medio Procesamiento Pedido',
 'initials': 'TMP',
@@ -116,12 +177,14 @@ variables_data = [
 'description': 'TIEMPO MEDIO DE PROCESAMIENTO DE PEDIDOS',
 'default_value': 1},
 
-{'name': 'Cantidad transportada por viaje',
-'initials': 'CTPLV',
-'type': 1,
-'unit': 'L',
-'description': 'Cantidad transportada por viaje',
-'default_value': 1500},
+{
+    'name': 'Cantidad transportada por viaje',
+    'initials': 'CTPLV',
+    'type': 1,
+    'unit': 'L',
+    'description': 'Cantidad transportada por viaje',
+    'default_value': 2000  # CAMBIAR de 1500 a 2000 - más eficiente
+},
 
 {'name': 'cantidad promedio producida por lote',
 'initials': 'CPL',
@@ -130,12 +193,14 @@ variables_data = [
 'description': 'cantidad promedio producida por lote',
 'default_value': 2500},
 
-{'name': 'GASTO TOTAL MARKETING',
-'initials': 'GMM',
-'type': 1,
-'unit': 'BS/MES',
-'description': 'GASTO EN MARKETING MENSUAL',
-'default_value': 3500},
+{
+    'name': 'GASTO TOTAL MARKETING',
+    'initials': 'GMM',
+    'type': 1,
+    'unit': 'BS/MES',
+    'description': 'GASTO EN MARKETING MENSUAL',
+    'default_value': 3000  # CAMBIAR de 3500 a 3000
+},
 
 {'name': 'TIEMPO REABASTECIMIENTO',
 'initials': 'TR',
@@ -144,12 +209,14 @@ variables_data = [
 'description': 'PERIODO NECESARIO PARA REPONER EL INVENTARIO',
 'default_value': 3},
 
-{'name': 'CANTIDAD DE INSUMOS PARA UN PRODUCTO',
-'initials': 'CINSP',
-'type': 1,
-'unit': 'L',
-'description': 'CANTIDAD DE INSUMOS POR PRODUCTO',
-'default_value': 1.05},
+{
+    'name': 'CANTIDAD DE INSUMOS PARA UN PRODUCTO',
+    'initials': 'CINSP',
+    'type': 1,
+    'unit': 'L',
+    'description': 'CANTIDAD DE INSUMOS POR PRODUCTO',
+    'default_value': 1.02  # CAMBIAR de 1.05 a 1.02 - menos desperdicio
+},
 
 {'name': 'CAPACIDAD MÁXIMA INVENTARIO PRODUCTO FINAL',
 'initials': 'CMIPF',
@@ -172,12 +239,14 @@ variables_data = [
 'description': 'Número de Proveedores de Leche',
 'default_value': 3},
 
-{'name': 'Stock de Inventario mínimo de Seguridad',
-'initials': 'SI',
-'type': 1,
-'unit': 'L',
-'description': 'Stock de Inventario mínimo de Seguridad',
-'default_value': 3000},
+{
+    'name': 'Stock de Inventario mínimo de Seguridad',
+    'initials': 'SI',
+    'type': 1,
+    'unit': 'L',
+    'description': 'Stock de Inventario mínimo de Seguridad',
+    'default_value': 500  # CAMBIAR de 3000 a 500 - más proporcionado
+},
 
 {'name': 'Días Promedio de Reposición de Leche',
 'initials': 'DPL',
@@ -229,19 +298,23 @@ variables_data = [
 'description': 'NÚMERO TOTAL DE CLIENTES QUE FUERON ATENDIDOS',
 'default_value': 85},
 
-{'name': 'INVENTARIO INSUMOS',
-'initials': 'II',
-'type': 2,
-'unit': 'L',
-'description': 'CANTIDAD DE INSUMOS EXISTENTES EN INVENTARIO',
-'default_value': 5000},
+{
+    'name': 'INVENTARIO INSUMOS',
+    'initials': 'II',
+    'type': 2,
+    'unit': 'L',
+    'description': 'CANTIDAD DE INSUMOS EXISTENTES EN INVENTARIO',
+    'default_value': 8000  # CAMBIAR de 5000 a 8000 - mejor cobertura
+},
 
-{'name': 'INVENTARIO PRODUCTOS FINALES',
-'initials': 'IPF',
-'type': 2,
-'unit': 'L',
-'description': 'CANTIDAD DE PRODUCTOS FINALES EN INVENTARIO',
-'default_value': 1000},
+{
+    'name': 'INVENTARIO PRODUCTOS FINALES',
+    'initials': 'IPF',
+    'type': 2,
+    'unit': 'L',
+    'description': 'CANTIDAD DE PRODUCTOS FINALES EN INVENTARIO',
+    'default_value': 800  # CAMBIAR de 1000 a 800
+},
 
 {'name': 'PEDIDO INSUMOS',
 'initials': 'PI',
@@ -314,12 +387,14 @@ variables_data = [
 'description': 'MONTO TOTAL DE GANANCIAS GENERADAS',
 'default_value': 0},
 
-{'name': 'TOTAL CLIENTES ATENDIDOS',
-'initials': 'TCA',
-'type': 3,
-'unit': 'CLIENTES',
-'description': 'TOTAL DE CLIENTES EN EL PERÍODO',
-'default_value': 0},
+{
+    'name': 'TOTAL CLIENTES ATENDIDOS',
+    'initials': 'TCA',
+    'type': 2,  # Estado
+    'unit': 'CLIENTES',
+    'description': 'TOTAL DE CLIENTES EN EL PERÍODO',
+    'default_value': 0  # AGREGAR
+},
 
 {'name': 'NIVEL DE RENTABILIDAD',
 'initials': 'NR',
@@ -482,19 +557,23 @@ variables_data = [
 'description': 'Demanda Total',
 'default_value': 0},
 
-{'name': 'NIVEL DE COMPETENCIA EN EL MERCADO',
-'initials': 'NCM',
-'type': 3,
-'unit': '%',
-'description': 'NIVEL DE COMPETENCIA EN EL MERCADO',
-'default_value': 0},
+{
+    'name': 'NIVEL DE COMPETENCIA EN EL MERCADO',
+    'initials': 'NCM',
+    'type': 3,
+    'unit': '%',
+    'description': 'NIVEL DE COMPETENCIA EN EL MERCADO',
+    'default_value': 0.5  # AGREGAR
+},
 
-{'name': 'FRECUENCIA DE COMPRA',
-'initials': 'FC',
-'type': 3,
-'unit': 'VECES/DÍA',
-'description': 'FRECUENCIA DE COMPRA DE CLIENTES',
-'default_value': 0},
+{
+    'name': 'FRECUENCIA DE COMPRA',
+    'initials': 'FC',
+    'type': 3,
+    'unit': 'VECES/DÍA',
+    'description': 'FRECUENCIA DE COMPRA DE CLIENTES',
+    'default_value': 1.0  # AGREGAR
+},
 
 {'name': 'COSTO UNITARIO DE ADQUISICIÓN DE CLIENTES',
 'initials': 'CUAC',
@@ -545,177 +624,178 @@ variables_data = [
     'type': 3,
     'unit': 'L',
     'description': 'Variabilidad de la demanda histórica',
-    'default_value': 0
-  },
+    'default_value': 375  # CAMBIAR de 250 a 375 (15% de 2500)
+},
   {
     'name': 'Coeficiente Variación Demanda',
     'initials': 'CVD',
     'type': 3,
     'unit': '%',
     'description': 'Variabilidad relativa de la demanda',
-    'default_value': 0
-  },
+    'default_value': 0.1
+},
   {
     'name': 'Demanda Diaria Proyectada',
     'initials': 'DDP',
     'type': 3,
     'unit': 'L/día',
     'description': 'Demanda esperada para el día actual',
-    'default_value': 0
-  },
+    'default_value': 2500  # CAMBIAR de 2650 a 2500
+},
   {
     'name': 'Nivel Servicio al Cliente',
     'initials': 'NSC',
     'type': 3,
     'unit': '%',
     'description': 'Porcentaje de demanda satisfecha',
-    'default_value': 0
-  },
+    'default_value': 0.95
+},
   {
     'name': 'Producción Objetivo Diaria',
     'initials': 'POD',
     'type': 3,
     'unit': 'L',
     'description': 'Meta de producción basada en histórico',
-    'default_value': 0
-  },
+    'default_value': 2600  # CAMBIAR de 2800 a 2600
+},
+
   {
     'name': 'Eficiencia Producción',
     'initials': 'EP',
     'type': 3,
     'unit': '%',
     'description': 'Eficiencia respecto a demanda histórica',
-    'default_value': 0
-  },
+    'default_value': 0.85
+},
   {
     'name': 'Inventario Objetivo Productos',
     'initials': 'IOP',
     'type': 3,
     'unit': 'L',
     'description': 'Inventario óptimo de productos terminados',
-    'default_value': 0
-  },
+    'default_value': 2000  # CAMBIAR de 3000 a 2000
+},
   {
     'name': 'Días Cobertura Inventario',
     'initials': 'DCI',
     'type': 3,
     'unit': 'días',
     'description': 'Días que cubre el inventario actual',
-    'default_value': 0
-  },
+    'default_value': 2
+},
   {
     'name': 'Inventario Objetivo Insumos',
     'initials': 'IOI',
     'type': 3,
     'unit': 'L',
     'description': 'Inventario óptimo de materias primas',
-    'default_value': 0
-  },
+    'default_value': 5000
+},
   {
     'name': 'Ingresos Esperados',
     'initials': 'IE',
     'type': 3,
     'unit': 'Bs',
     'description': 'Ingresos basados en demanda histórica',
-    'default_value': 0
-  },
+    'default_value': 38750  # CAMBIAR a 2500 * 15.50
+},
   {
     'name': 'Costo Variable Unitario',
     'initials': 'CVU',
     'type': 3,
     'unit': 'Bs/L',
     'description': 'Costo variable por unidad producida',
-    'default_value': 0
-  },
+    'default_value': 7.65  # CAMBIAR a 7.50 * 1.02
+},
   {
     'name': 'Rentabilidad vs Esperada',
     'initials': 'RVE',
     'type': 3,
     'unit': '%',
     'description': 'Rentabilidad real vs esperada',
-    'default_value': 0
-  },
+    'default_value': 1.0
+},
   {
     'name': 'Horas Necesarias Producción',
     'initials': 'HNP',
     'type': 3,
     'unit': 'minutos',
     'description': 'Horas requeridas según demanda',
-    'default_value': 0
-  },
+    'default_value': 318  # (2650/500) * 60
+},
   {
     'name': 'Efectividad Marketing',
     'initials': 'EM',
     'type': 3,
     'unit': 'ratio',
     'description': 'ROI de inversión en marketing',
-    'default_value': 0
-  },
+    'default_value': 1.0
+},
   {
     'name': 'Índice Competitividad',
     'initials': 'IC',
     'type': 3,
     'unit': '%',
     'description': 'Posición competitiva en el mercado',
-    'default_value': 0
-  },
+    'default_value': 0.7
+},
   {
     'name': 'Índice Desempeño Global',
     'initials': 'IDG',
     'type': 3,
     'unit': '%',
     'description': 'KPI integral de desempeño empresarial',
-    'default_value': 0
-  },
+    'default_value': 0.75
+},
 
 {
     "name": "Merma Producción",
     "initials": "MP",
     "type": 3,
-    "unit": "%",
-    "description": "Porcentaje de pérdida en el proceso de producción",
-    "default_value": 0
-  },
+    "unit": "L",
+    "description": "Pérdida en el proceso de producción",
+    "default_value": 37.5  # 1.5% de 2500
+},
   {
     "name": "Merma Inventario",
     "initials": "MI",
     "type": 3,
-    "unit": "%",
-    "description": "Porcentaje de pérdida en inventario por deterioro o vencimiento",
-    "default_value": 0
-  },
+    "unit": "L",
+    "description": "Pérdida en inventario por deterioro o vencimiento",
+    "default_value": 5  # 0.5% de 1000
+},
   {
     "name": "Costo Total Mermas",
     "initials": "CTM",
-    "type": 1,
-    "unit": "$",
+    "type": 3,
+    "unit": "Bs",
     "description": "Costo monetario total de las mermas en producción e inventario",
-    "default_value": 0
-  },
+    "default_value": 460  # (37.5 + 5) * 15.50 * 0.7
+},
   {
     "name": "Eficiencia Operativa Global",
     "initials": "EOG",
     "type": 3,
     "unit": "%",
     "description": "Índice de eficiencia general de las operaciones",
-    "default_value": 0
-  },
+    "default_value": 0.85
+},
   {
     "name": "Índice Satisfacción Cliente",
     "initials": "ISC",
     "type": 3,
     "unit": "%",
     "description": "Medición del nivel de satisfacción de los clientes",
-    "default_value": 0
-  },
+    "default_value": 0.9
+},
   {
-    "name": "Punto de Equilibrio Diario",
-    "initials": "PED",
-    "type": 1,
-    "unit": "$",
-    "description": "Punto de equilibrio financiero calculado diariamente",
-    "default_value": 0
-  },
+    'name': 'Punto de Equilibrio Diario',
+    'initials': 'PED',
+    'type': 3,
+    'unit': 'L',
+    'description': 'Punto de equilibrio financiero calculado diariamente',
+    'default_value': 1800  # CAMBIAR de 2000 a 1800
+}
 
 
 ]

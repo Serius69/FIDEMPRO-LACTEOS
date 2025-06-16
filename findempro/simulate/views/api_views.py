@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 
 from ..models import Simulation, ResultSimulation
-from ..services.simulation_core import SimulationCore
+from ..utils.simulation_core_utils import SimulationCore
 
 import logging
 

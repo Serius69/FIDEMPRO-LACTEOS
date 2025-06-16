@@ -28,7 +28,7 @@ from django.shortcuts import get_object_or_404
 from questionary.models import Answer
 from ..models import ProbabilisticDensityFunction
 from ..validators.simulation_validators import SimulationValidator
-from ..utils.data_parsers import DataParser
+from ..utils.data_parsers_utils import DataParser
 
 # Set matplotlib to non-interactive mode
 matplotlib.use('Agg')
@@ -53,6 +53,182 @@ class StatisticalService:
         plt.rcParams['savefig.dpi'] = 100
         plt.rcParams['font.size'] = 10
     
+    
+    def _calculate_comprehensive_statistics(self, historical_demand, results_simulation):
+        """Calculate comprehensive statistics for analysis"""
+        stats = {
+            'historical': {},
+            'simulated': {},
+            'comparison': {},
+            'forecast_accuracy': {}
+        }
+        
+        # Historical statistics
+        if historical_demand:
+            historical_array = np.array(historical_demand)
+            stats['historical'] = {
+                'mean': np.mean(historical_array),
+                'std': np.std(historical_array),
+                'min': np.min(historical_array),
+                'max': np.max(historical_array),
+                'median': np.median(historical_array),
+                'cv': np.std(historical_array) / np.mean(historical_array) if np.mean(historical_array) > 0 else 0,
+                'trend': self._calculate_trend(historical_array)
+            }
+        
+        # Simulated statistics
+        try:
+            simulated_values = [float(r.demand_mean) for r in results_simulation]
+        except (AttributeError, ValueError, TypeError) as e:
+            logger.error(f"Error extracting simulated values: {str(e)}")
+            simulated_values = []
+        
+        if simulated_values:
+            simulated_array = np.array(simulated_values)
+            stats['simulated'] = {
+                'mean': np.mean(simulated_array),
+                'std': np.std(simulated_array),
+                'min': np.min(simulated_array),
+                'max': np.max(simulated_array),
+                'median': np.median(simulated_array),
+                'cv': np.std(simulated_array) / np.mean(simulated_array) if np.mean(simulated_array) > 0 else 0,
+                'trend': self._calculate_trend(simulated_array)
+            }
+            
+            # Comparison metrics
+            if historical_demand and stats['historical']:
+                stats['comparison'] = {
+                    'mean_diff': stats['simulated']['mean'] - stats['historical']['mean'],
+                    'mean_diff_pct': ((stats['simulated']['mean'] - stats['historical']['mean']) / 
+                                    stats['historical']['mean'] * 100) if stats['historical']['mean'] > 0 else 0,
+                    'std_diff': stats['simulated']['std'] - stats['historical']['std'],
+                    'cv_diff': stats['simulated']['cv'] - stats['historical']['cv'],
+                    'trend_change': stats['simulated']['trend'] - stats['historical']['trend']
+                }
+                
+                # Forecast accuracy metrics
+                try:
+                    stats['forecast_accuracy'] = {
+                        'mape': self._calculate_mape(historical_demand, simulated_values),
+                        'rmse': self._calculate_rmse(historical_demand, simulated_values),
+                        'mae': self._calculate_mae(historical_demand, simulated_values)
+                    }
+                except Exception as e:
+                    logger.error(f"Error calculating forecast accuracy: {str(e)}")
+                    stats['forecast_accuracy'] = {
+                        'mape': 0,
+                        'rmse': 0,
+                        'mae': 0
+                    }
+        
+        return stats
+    
+    def _calculate_realistic_comparison(self, historical_demand, results_simulation):
+        """Calculate realistic comparison metrics"""
+        hist_mean = np.mean(historical_demand)
+        hist_std = np.std(historical_demand)
+        
+        sim_demands = [float(r.demand_mean) for r in results_simulation]
+        sim_mean = np.mean(sim_demands)
+        sim_std = np.std(sim_demands)
+        
+        # Calculate realistic growth
+        growth_rate = ((sim_mean - hist_mean) / hist_mean * 100) if hist_mean > 0 else 0
+        
+        # Flag if growth seems unrealistic
+        is_realistic = abs(growth_rate) < 50  # Less than 50% change
+        
+        return {
+            'historical_mean': hist_mean,
+            'simulated_mean': sim_mean,
+            'growth_rate': growth_rate,
+            'is_realistic': is_realistic,
+            'deviation_percentage': abs(growth_rate),
+            'recommendation': self._get_growth_recommendation(growth_rate, is_realistic)
+        }
+    
+    def _get_growth_recommendation(self, growth_rate, is_realistic):
+        """Get recommendation based on growth rate"""
+        if not is_realistic:
+            if growth_rate > 50:
+                return "La predicción parece sobreestimar la demanda. Revise los parámetros del modelo."
+            else:
+                return "La predicción muestra una caída drástica. Verifique los datos de entrada."
+        else:
+            if growth_rate > 20:
+                return "Crecimiento optimista pero realista. Prepare capacidad adicional."
+            elif growth_rate > 0:
+                return "Crecimiento moderado esperado. Mantenga niveles actuales."
+            elif growth_rate > -10:
+                return "Ligera contracción esperada. Optimice costos operativos."
+            else:
+                return "Contracción significativa. Implemente estrategias de retención."
+    
+    def _calculate_mape(self, actual, predicted):
+        """Calculate Mean Absolute Percentage Error"""
+        if len(actual) == 0 or len(predicted) == 0:
+            return 0
+        
+        # Convert to numpy arrays
+        actual = np.array(actual)
+        predicted = np.array(predicted)
+        
+        # Ensure same length
+        n = min(len(actual), len(predicted))
+        actual = actual[:n]
+        predicted = predicted[:n]
+        
+        # Avoid division by zero
+        mask = actual != 0
+        if not np.any(mask):
+            return 0
+        
+        return np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100
+    
+    def _calculate_rmse(self, actual, predicted):
+        """Calculate Root Mean Square Error"""
+        if len(actual) == 0 or len(predicted) == 0:
+            return 0
+        
+        # Convert to numpy arrays
+        actual = np.array(actual)
+        predicted = np.array(predicted)
+        
+        # Ensure same length
+        n = min(len(actual), len(predicted))
+        actual = actual[:n]
+        predicted = predicted[:n]
+        
+        return np.sqrt(np.mean((actual - predicted) ** 2))
+    
+    def _calculate_mae(self, actual, predicted):
+        """Calculate Mean Absolute Error"""
+        if len(actual) == 0 or len(predicted) == 0:
+            return 0
+        
+        # Convert to numpy arrays
+        actual = np.array(actual)
+        predicted = np.array(predicted)
+        
+        # Ensure same length
+        n = min(len(actual), len(predicted))
+        actual = actual[:n]
+        predicted = predicted[:n]
+        
+        return np.mean(np.abs(actual - predicted))
+    def _calculate_trend(self, data):
+        """Calculate trend slope"""
+        try:
+            data_array = np.array(data)
+            if len(data_array) < 2:
+                return 0
+            x = np.arange(len(data_array))
+            z = np.polyfit(x, data_array, 1)
+            return float(z[0])
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error calculating trend: {str(e)}")
+            return 0
+        
     def analyze_demand_history(self, questionary_result_id: int, user) -> Dict[str, Any]:
         """
         Analyze historical demand data for distribution fitting.

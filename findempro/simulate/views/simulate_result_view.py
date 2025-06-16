@@ -7,6 +7,8 @@ import json
 import logging
 from typing import Dict, List, Any, Optional
 
+from simulate.services.statistical_service import StatisticalService
+from simulate.utils.chart_demand_utils import ChartDemand
 import numpy as np
 from django.views.generic import View
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,11 +17,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from ..models import Simulation, ResultSimulation
-from ..services.simulation_math import SimulationMathEngine
+from ..utils.simulation_math_utils import SimulationMathEngine
 from ..services.validation_service import SimulationValidationService
-from ..services.simulation_financial import SimulationFinancialAnalyzer
+from ..utils.simulation_financial_utils import SimulationFinancial, SimulationFinancialAnalyzer
 from ..utils.chart_utils import ChartGenerator
-from ..utils.data_parsers import DataParser
+from ..utils.data_parsers_utils import DataParser
 from questionary.models import Answer
 from variable.models import Variable, Equation
 from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
@@ -33,29 +35,495 @@ class SimulateResultView(LoginRequiredMixin, View):
     def __init__(self):
         super().__init__()
         self.validation_service = SimulationValidationService()
+        self.simulation_financial = SimulationFinancial()
+        self.statistical_service = StatisticalService()
+        self.chart_demand = ChartDemand()
+        self.simulation_financial = SimulationFinancial()
+        self.simulation_financial_analyzer = SimulationFinancial()
         self.financial_analyzer = SimulationFinancialAnalyzer()
         self.chart_generator = ChartGenerator()
         self.data_parser = DataParser()
         self.math_engine = SimulationMathEngine()
     
     def get(self, request, simulation_id, *args, **kwargs):
-        """Display results with proper service delegation"""
-        # Check permissions
-        if not self.result_service.user_can_view_simulation(request.user, simulation_id):
-            messages.error(request, "No tiene permisos para ver esta simulación.")
-            return redirect('simulate:simulate.show')
+        """Display simulation results with enhanced visualization"""
         
-        # Get complete analysis from service
-        analysis_data = self.result_service.get_complete_simulation_analysis(
-            simulation_id=simulation_id,
-            page=request.GET.get('page', 1)
+        # Debug logging
+        logger.info(f"GET request for simulation_id: {simulation_id} (type: {type(simulation_id)})")
+        
+        try:
+            # Validate simulation_id
+            if not isinstance(simulation_id, (int, str)):
+                logger.error(f"Invalid simulation_id type: {type(simulation_id)}")
+                messages.error(request, "ID de simulación inválido.")
+                return redirect('simulate:simulate.show')
+            
+            # Convert to int if string
+            try:
+                simulation_id = int(simulation_id)
+            except (ValueError, TypeError):
+                logger.error(f"Cannot convert simulation_id to int: {simulation_id}")
+                messages.error(request, "ID de simulación inválido.")
+                return redirect('simulate:simulate.show')
+            
+            # Get simulation with optimized queries
+            simulation_instance = get_object_or_404(
+                Simulation.objects.select_related(
+                    'fk_questionary_result__fk_questionary__fk_product__fk_business',
+                    'fk_fdp'
+                ).prefetch_related(
+                    'fk_questionary_result__fk_question_result_answer__fk_question'
+                ),
+                pk=simulation_id
+            )
+            
+            # Check permissions
+            if not self._user_can_view_simulation(request.user, simulation_instance):
+                messages.error(request, "No tiene permisos para ver esta simulación.")
+                return redirect('simulate:simulate.show')
+            
+            # Get results with pagination - FIXED
+            results_simulation = self._get_paginated_results(request, simulation_id)
+            
+            # Get historical demand data
+            historical_demand = self._get_historical_demand(simulation_instance)
+            
+            # Generate comprehensive analysis
+            context = self._prepare_complete_results_context(
+                simulation_id, simulation_instance, results_simulation, historical_demand
+            )
+            
+            return render(request, 'simulate/simulate-result.html', context)
+            
+        except Exception as e:
+            logger.error(f"Error displaying results for simulation {simulation_id}: {str(e)}")
+            messages.error(request, "Error al mostrar los resultados.")
+            return redirect('simulate:simulate.show')
+    
+    
+    def _prepare_complete_results_context(self, simulation_id, simulation_instance, results_simulation, historical_demand):
+        """Prepare comprehensive context data for results view"""
+        
+        # Initialize all services once
+        chart_generator = ChartGenerator()
+        chart_demand = ChartDemand()
+        financial_service = SimulationFinancial()
+        statistical_service = StatisticalService()
+        validation_service = SimulationValidationService()
+        
+        # Get related instances first
+        product_instance = simulation_instance.fk_questionary_result.fk_questionary.fk_product
+        business_instance = product_instance.fk_business
+        
+        # Set business instance on financial service
+        self._set_business_on_service(financial_service, business_instance)
+        
+        # Debug logging
+        logger.info(f"Preparing context for simulation_id: {simulation_id} (type: {type(simulation_id)})")
+        
+        try:
+            # Create enhanced chart data with historical demand
+            chart_data = chart_generator.create_enhanced_chart_data(
+                list(results_simulation), historical_demand
+            )
+            
+            # Generate main analysis charts
+            analysis_data = chart_generator.generate_all_charts(
+                simulation_id, simulation_instance, list(results_simulation), historical_demand
+            )
+            
+            # Log what charts were generated
+            logger.info(f"Charts generated: {list(analysis_data.get('chart_images', {}).keys())}")
+            
+            # Generate comparison chart: Historical vs Simulated
+            comparison_chart = self._generate_comparison_chart(chart_demand, historical_demand, results_simulation)
+            
+            # Get financial analysis and recommendations
+            financial_results = self._get_financial_analysis(
+                financial_service, simulation_id, simulation_instance, analysis_data
+            )
+            
+            # Calculate comprehensive statistics
+            demand_stats = statistical_service._calculate_comprehensive_statistics(
+                historical_demand, results_simulation
+            )
+            
+            # Log accumulated totals for debugging
+            logger.info(f"Accumulated totals variables: {list(analysis_data['totales_acumulativos'].keys())}")
+            
+            # Get validation results
+            validation_results = self._get_validation_results(
+                validation_service, simulation_id, simulation_instance, results_simulation, historical_demand
+            )
+            
+            # Prepare base context
+            context = self._build_base_context(
+                simulation_instance, results_simulation, product_instance, business_instance,
+                analysis_data, historical_demand, demand_stats, comparison_chart,
+                financial_results, validation_results
+            )
+            
+            # Add realistic comparison statistics
+            if historical_demand and results_simulation:
+                comparison = statistical_service._calculate_realistic_comparison(historical_demand, results_simulation)
+                context['realistic_comparison'] = comparison
+            
+            # Add model validation if variables are available
+            if analysis_data.get('all_variables_extracted'):
+                model_validation = self._add_model_validation(
+                    validation_service, simulation_instance, results_simulation, analysis_data
+                )
+                context.update(model_validation)
+            else:
+                logger.warning("No extracted variables found for model validation")
+            
+            # Add daily validation
+            daily_validation = self._add_daily_validation(
+                validation_service, simulation_instance, results_simulation
+            )
+            context.update(daily_validation)
+            
+            # Add validation charts
+            validation_charts = self._add_validation_charts(
+                chart_generator, validation_results, results_simulation, analysis_data
+            )
+            context.update(validation_charts)
+            
+            # Final logging
+            self._log_context_summary(context)
+            
+            print(f"Context prepared for simulation {simulation_id} with {len(results_simulation)} results")
+            print(f"Total variables extracted: {len(analysis_data.get('all_variables_extracted', []))}")
+            print(f"Total charts generated: {len(context.get('chart_images', {}))}")
+            print(f"Total validation alerts: {len(validation_results.get('basic_validation', {}).get('alerts', []))}")
+            print(f"Total financial recommendations: {len(financial_results.get('financial_recommendations', []))}")
+            print(f"Total daily comparisons: {len(daily_validation.get('daily_validation_results', []))}")
+            
+            # Return complete context
+            
+            
+            return context
+            
+        except Exception as e:
+            logger.error(f"Error preparing context for simulation {simulation_id}: {str(e)}")
+            # Return minimal context on error
+            return {
+                'simulation_instance': simulation_instance,
+                'results_simulation': results_simulation,
+                'results': results_simulation,
+                'error': str(e)
+            }
+
+    def _set_business_on_service(self, financial_service, business_instance):
+        """Set business instance oQn financial service using available method/attribute"""
+        if hasattr(financial_service, 'set_business'):
+            financial_service.set_business(business_instance)
+        elif hasattr(financial_service, 'business'):
+            financial_service.business = business_instance
+        elif hasattr(financial_service, '_business'):
+            financial_service._business = business_instance
+        else:
+            # If no specific method/attribute exists, set it anyway
+            financial_service.business = business_instance
+
+    def _generate_comparison_chart(self, chart_demand, historical_demand, results_simulation):
+        """Generate demand comparison chart if historical data is available"""
+        comparison_chart = None
+        if historical_demand:
+            comparison_chart = chart_demand.generate_demand_comparison_chart(
+                historical_demand, list(results_simulation)
+            )
+            if comparison_chart:
+                logger.info("Demand comparison chart generated successfully")
+        return comparison_chart
+
+    def _get_financial_analysis(self, financial_service, simulation_id, simulation_instance, analysis_data):
+        """Get financial analysis and recommendations with error handling"""
+        financial_results = {}
+        recommendations = []
+        
+        # Get financial analysis
+        try:
+            financial_results = financial_service.analyze_financial_results(
+                simulation_id, analysis_data['totales_acumulativos']
+            )
+        except Exception as e:
+            logger.error(f"Error in financial analysis: {e}")
+            financial_results = {}
+        
+        # Generate dynamic recommendations
+        try:
+            recommendations = financial_service._generate_dynamic_recommendations(
+                simulation_instance, analysis_data['totales_acumulativos'], 
+                financial_results
+            )
+        except Exception as e:
+            logger.error(f"Error generating recommendations: {e}")
+            recommendations = []
+        
+        # Add recommendations to financial results
+        financial_results['financial_recommendations'] = recommendations
+        financial_results['financial_recommendations_to_show'] = recommendations
+        
+        return financial_results
+
+    def _get_validation_results(self, validation_service, simulation_id, simulation_instance, results_simulation, historical_demand):
+        """Get comprehensive validation results"""
+        # Basic validation
+        validation_results = validation_service.validate_simulation(simulation_id)
+        
+        # Model predictions validation
+        prediction_validation_results = validation_service._validate_model_predictions(
+            simulation_instance, results_simulation, historical_demand
         )
         
-        if analysis_data.get('error'):
-            messages.error(request, analysis_data['error'])
-            return redirect('simulate:simulate.show')
+        # Combine validation results
+        combined_validation = {
+            'basic_validation': validation_results,
+            'prediction_validation': prediction_validation_results
+        }
         
-        return render(request, 'simulate/simulate-result.html', analysis_data)
+        return combined_validation
+
+    def _build_base_context(self, simulation_instance, results_simulation, product_instance, business_instance,
+                        analysis_data, historical_demand, demand_stats, comparison_chart, financial_results, validation_results):
+        """Build the base context dictionary"""
+        
+        # Group alerts by type
+        alerts_by_type = {}
+        basic_validation = validation_results.get('basic_validation', {})
+        if basic_validation.get('alerts'):
+            for alert in basic_validation['alerts']:
+                alert_type = alert['type']
+                if alert_type not in alerts_by_type:
+                    alerts_by_type[alert_type] = []
+                alerts_by_type[alert_type].append(alert)
+        
+        # Get prediction validation results
+        prediction_validation = validation_results.get('prediction_validation', {})
+        
+        context = {
+            'growth_rate': analysis_data.get('growth_rate', 0.0),
+            'error_permisible': analysis_data.get('error_permisible', 0.0),
+            'simulation_instance': simulation_instance,
+            'results_simulation': results_simulation,
+            'results': results_simulation,
+            'product_instance': product_instance,
+            'business_instance': business_instance,
+            'all_variables_extracted': analysis_data.get('all_variables_extracted', []),
+            'totales_acumulativos': analysis_data.get('totales_acumulativos', {}),
+            'historical_demand': historical_demand,
+            'demand_stats': demand_stats,
+            'comparison_chart': comparison_chart,
+            'validation_alerts': alerts_by_type,
+            'validation_summary': basic_validation.get('summary', {}),
+            'simulation_valid': basic_validation.get('is_valid', False),
+            # Prediction validation results
+            'validation_summary': prediction_validation.get('summary', {}),
+            'validation_details': prediction_validation.get('details', {}),
+            'validation_metrics': prediction_validation.get('metrics', {}),
+            'validation_by_distribution': prediction_validation.get('by_distribution', {}),
+            'validation_recommendations': prediction_validation.get('recommendations', []),
+            **analysis_data.get('chart_images', {}),  # Unpack all chart images
+            **financial_results,
+        }
+        
+        # print(f"Context prepared with {len(context.get('chart_images', {}))} chart images")
+        # # Log context keys for debugging
+        # logger.info(f"Context keys: {list(context.keys())}")
+        # # Log financial results
+        # logger.info(f"Financial results: {financial_results.get('financial_recommendations', [])}")
+        # # Log validation results
+        # logger.info(f"Validation results: {validation_results.get('basic_validation', {}).get('summary', {})}")
+        # # Log analysis data
+        # logger.info(f"Analysis data keys: {list(analysis_data.keys())}")
+        # # Log historical demand
+        # logger.info(f"Historical demand length: {len(historical_demand)}")
+        # # Log demand stats
+        # logger.info(f"Demand stats: {demand_stats}")
+        # # Log simulation instance details
+        # logger.info(f"Simulation instance: {simulation_instance.id}, "
+        #             f"Product: {product_instance.name}, "
+        #             f"Business: {business_instance.name}")
+        # # Log results simulation count
+        # logger.info(f"Results simulation count: {len(results_simulation)}")
+        # # Log all variables extracted
+        # logger.info(f"All variables extracted count: {len(analysis_data.get('all_variables_extracted', []))}")
+        # print(context.get('error_permisible'))
+        print(context)
+        return context
+
+    def _add_model_validation(self, validation_service, simulation_instance, results_simulation, analysis_data):
+        """Add model variables validation to context"""
+        model_validation_results = validation_service._validate_model_variables(
+            simulation_instance, results_simulation, analysis_data['all_variables_extracted']
+        )
+        
+        model_validation_context = {
+            'model_validation_summary': model_validation_results['summary'],
+            'model_validation_by_variable': model_validation_results['by_variable'],
+            'model_validation_daily_details': model_validation_results['daily_details'],
+            'model_variables_valid': model_validation_results['summary']['is_valid']
+        }
+        
+        # Log model validation info
+        logger.info(f"Model validation completed: {model_validation_results['summary']['success_rate']:.1f}% success rate")
+        logger.info(f"Variables validated: {model_validation_results['summary']['total_variables']} total, "
+                    f"{model_validation_results['summary']['precise_count']} precise, "
+                    f"{model_validation_results['summary']['acceptable_count']} acceptable, "
+                    f"{model_validation_results['summary']['inaccurate_count']} inaccurate")
+        
+        return model_validation_context
+
+    def _add_daily_validation(self, validation_service, simulation_instance, results_simulation):
+        """Add daily validation results to context"""
+        # Extract real values from questionnaire
+        real_values = self._extract_real_values_from_questionnaire(simulation_instance)
+        
+        # Perform daily validation
+        daily_validation_results = validation_service._validate_by_day(
+            simulation_instance, list(results_simulation), real_values
+        )
+        
+        # Generate daily validation charts
+        daily_validation_charts = validation_service._generate_daily_validation_charts(
+            daily_validation_results
+        )
+        
+        # Calculate overall daily validation summary
+        daily_validation_summary = validation_service._calculate_daily_validation_summary(
+            daily_validation_results
+        )
+        
+        return {
+            'daily_validation_results': daily_validation_results,
+            'daily_validation_charts': daily_validation_charts,
+            'daily_validation_summary': daily_validation_summary
+        }
+
+    def _add_validation_charts(self, chart_generator, validation_results, results_simulation, analysis_data):
+        """Add validation charts to context"""
+        validation_chart_context = {}
+        
+        # Generate basic validation charts
+        basic_validation = validation_results.get('basic_validation', {})
+        if basic_validation:
+            validation_chart_context = chart_generator.generate_validation_charts_context(basic_validation)
+        
+        # Get variables for chart generation
+        all_variables_extracted = analysis_data.get('all_variables_extracted', [])
+        totales_acumulativos = analysis_data.get('totales_acumulativos', {})
+        
+        # Generate model validation charts if variables are available
+        model_validation_charts = {}
+        charts_context = {}
+        
+        # Generar gráficos de validación con datos correctos
+        if validation_results and 'by_variable' in validation_results:
+            # Log para debug
+            logger.info(f"all_variables_extracted type: {type(all_variables_extracted)}")
+            if all_variables_extracted:
+                logger.info(f"First item structure: {all_variables_extracted[0].keys()}")
+            
+            validation_charts = chart_generator._generate_validation_charts_for_variables(
+                validation_results['by_variable'],
+                results_simulation,
+                all_variables_extracted
+            )
+            model_validation_charts = validation_charts
+            charts_context = chart_generator.generate_validation_charts_context(
+                {'validation_charts': validation_charts}
+            )
+        else:
+            model_validation_charts = {}
+            charts_context = {}
+        
+        # Generar gráficos de variables endógenas con la estructura correcta
+        endogenous_charts = chart_generator.generate_endogenous_variables_charts(
+            all_variables_extracted,
+            totales_acumulativos
+        )
+        
+        # Generar gráficos adicionales de análisis
+        additional_charts = chart_generator.generate_additional_analysis_charts(
+            all_variables_extracted,
+            totales_acumulativos
+        )
+        
+        # Preparar imágenes de gráficos para agregar los adicionales
+        chart_images = validation_chart_context.get('chart_images', {})
+        
+        # Agregar los gráficos adicionales al contexto
+        for key, chart in additional_charts.items():
+            chart_images[f'additional_{key}'] = chart
+        
+        return {
+            'validation_charts': validation_chart_context.get('charts', {}),
+            'validation_chart_images': chart_images,
+            'model_validation_charts': model_validation_charts,
+            'charts_context': charts_context,
+            'endogenous_charts': endogenous_charts,
+            'additional_charts': additional_charts
+        }
+
+    def _log_context_summary(self, context):
+        """Log summary information about the generated context"""
+        # Log final context keys for debugging
+        chart_keys = [k for k in context.keys() if k.startswith('image_data')]
+        logger.info(f"Chart keys in context: {chart_keys}")
+        
+        # Log variable extraction info
+        all_variables = context.get('all_variables_extracted', [])
+        logger.info(f"all_variables_extracted type: {type(all_variables)}")
+        if all_variables:
+            first_item = all_variables[0] if all_variables else None
+            logger.info(f"First item structure: {first_item.keys() if isinstance(first_item, dict) else 'Not a dict'}")
+        
+        # Log chart generation summary
+        validation_charts = context.get('model_validation_charts', {})
+        endogenous_charts = context.get('endogenous_charts', {})
+        additional_charts = context.get('additional_charts', {})
+        logger.info(f"Generated {len(validation_charts)} validation chart types")
+        logger.info(f"Generated {len(endogenous_charts)} endogenous variable charts")
+        logger.info(f"Generated {len(additional_charts)} additional analysis charts")
+    
+    
+    
+    def _get_historical_demand(self, simulation_instance):
+        """Extract historical demand data from questionary results"""
+        try:
+            # Get from simulation demand_history first
+            if simulation_instance.demand_history:
+                if isinstance(simulation_instance.demand_history, str):
+                    try:
+                        return json.loads(simulation_instance.demand_history)
+                    except:
+                        pass
+                elif isinstance(simulation_instance.demand_history, list):
+                    return simulation_instance.demand_history
+            
+            # Get from questionary answers
+            for answer in simulation_instance.fk_questionary_result.fk_question_result_answer.all():
+                if answer.fk_question.question == 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).':
+                    if answer.answer:
+                        try:
+                            # Try JSON parse
+                            return json.loads(answer.answer)
+                        except:
+                            # Try other parsing methods
+                            demand_str = answer.answer.strip()
+                            demand_str = demand_str.replace('[', '').replace(']', '')
+                            if ',' in demand_str:
+                                return [float(x.strip()) for x in demand_str.split(',') if x.strip()]
+                            elif ' ' in demand_str:
+                                return [float(x) for x in demand_str.split() if x]
+                            elif '\n' in demand_str:
+                                return [float(x.strip()) for x in demand_str.split('\n') if x.strip()]
+            
+            return []
+        except Exception as e:
+            logger.error(f"Error extracting historical demand: {str(e)}")
+            return []
     
     def _get_simulation_with_relations(self, simulation_id: int) -> Simulation:
         """Get simulation with all necessary relations"""
@@ -75,7 +543,7 @@ class SimulateResultView(LoginRequiredMixin, View):
         business = simulation.fk_questionary_result.fk_questionary.fk_product.fk_business
         return business.fk_user == user
     
-    def _get_paginated_results(self, simulation_id: int, page: int):
+    def _get_paginated_results(self, request, simulation_id):
         """Get paginated simulation results"""
         results = ResultSimulation.objects.filter(
             is_active=True,
@@ -83,6 +551,7 @@ class SimulateResultView(LoginRequiredMixin, View):
         ).order_by('date')
         
         paginator = Paginator(results, 50)  # 50 results per page
+        page = request.GET.get('page', 1)
         
         try:
             return paginator.page(page)

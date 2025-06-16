@@ -4,6 +4,8 @@ import random
 import json
 import re
 import numpy as np
+import math
+
 from datetime import timedelta
 from typing import Dict, Any, List, Optional
 
@@ -14,10 +16,12 @@ from ..models import (
     Simulation, ResultSimulation, ProbabilisticDensityFunction
 )
 from ..validators.simulation_validators import SimulationValidator
-from ..utils.data_parsers import DataParser
+from .data_parsers_utils import DataParser
 from product.models import Area
 from questionary.models import Answer, QuestionaryResult
 from variable.models import Variable, Equation
+
+from collections import defaultdict, deque
 
 logger = logging.getLogger(__name__)
 
@@ -36,92 +40,143 @@ class SimulationCore:
             'precio_venta': 'PVP',
             'precio_producto': 'PVP',
             'precio de venta': 'PVP',
+            'precio venta producto': 'PVP',
+            'precio unitario': 'PVP',
             
             # Demanda
             'demanda_historica': 'DH',
             'demanda_promedio': 'DH',
+            'demanda histórica': 'DH',
+            'histórico demanda': 'DH',
+            'datos históricos': 'DH',
             'demanda_esperada': 'DE',
             'demanda esperada': 'DE',
+            'expectativa demanda': 'DE',
             
             # Producción
             'produccion_actual': 'QPL',
             'cantidad_produccion': 'QPL',
             'cantidad producida': 'QPL',
+            'producción diaria': 'QPL',
+            'litros producidos': 'QPL',
             'producción': 'CPROD',
             'capacidad_produccion': 'CPROD',
             'capacidad de producción': 'CPROD',
             'capacidad producción diaria': 'CPROD',
+            'capacidad máxima producción': 'CPROD',
+            'capacidad planta': 'CPROD',
             
             # Inventario
             'capacidad_inventario': 'CIP',
             'capacidad inventario productos': 'CIP',
             'capacidad del inventario': 'CIP',
+            'almacén capacidad': 'CIP',
             'capacidad_almacenamiento': 'CMIPF',
             'capacidad máxima almacenamiento': 'CMIPF',
+            'capacidad almacén': 'CMIPF',
             'stock_seguridad': 'SI',
             'stock inventario mínimo': 'SI',
+            'inventario seguridad': 'SI',
+            'stock mínimo': 'SI',
             
             # Costos
             'costo_unitario_insumo': 'CUIP',
             'costo_insumos': 'CUIP',
             'costo unitario': 'CUIP',
             'costo unitario del insumo': 'CUIP',
+            'costo materia prima': 'CUIP',
+            'precio insumos': 'CUIP',
             'costo_fijo_diario': 'CFD',
             'costos_fijos': 'CFD',
             'costos fijos': 'CFD',
             'costo fijo diario': 'CFD',
+            'gastos fijos diarios': 'CFD',
             'costo_transporte': 'CUTRANS',
             'costo unitario transporte': 'CUTRANS',
+            'costo distribución': 'CUTRANS',
+            'tarifa transporte': 'CUTRANS',
             
             # Clientes
             'clientes_diarios': 'CPD',
             'clientes_por_dia': 'CPD',
             'clientes por día': 'CPD',
             'clientes llegan diariamente': 'CPD',
+            'número clientes día': 'CPD',
+            'clientes atendidos': 'CPD',
             
             # Empleados
             'numero_empleados': 'NEPP',
             'empleados': 'NEPP',
             'número de empleados': 'NEPP',
+            'cantidad empleados': 'NEPP',
+            'personal producción': 'NEPP',
             'sueldos_salarios': 'SE',
             'salarios': 'SE',
             'sueldos empleados': 'SE',
+            'salarios mensuales': 'SE',
+            'nómina mensual': 'SE',
+            'planilla': 'SE',
             
             # Marketing y competencia
             'precio_competencia': 'PC',
             'precio promedio competencia': 'PC',
+            'precio competidores': 'PC',
             'gastos_marketing': 'GMM',
             'marketing': 'GMM',
             'gastos de marketing': 'GMM',
             'gastos marketing mensuales': 'GMM',
+            'inversión marketing': 'GMM',
+            'publicidad': 'GMM',
             
             # Tiempos
             'tiempo_entre_compras': 'TPC',
             'tiempo promedio compras': 'TPC',
+            'frecuencia compra': 'TPC',
             'tiempo_reabastecimiento': 'TR',
             'tiempo reabastece insumos': 'TR',
+            'lead time': 'TR',
+            'tiempo entrega proveedores': 'TR',
             'tiempo_produccion_unitario': 'TPE',
             'tiempo producir unidad': 'TPE',
+            'minutos por litro': 'TPE',
+            'tiempo producción': 'TPE',
             'dias_reabastecimiento': 'DPL',
             'días promedio reabastecimiento': 'DPL',
+            'días reposición': 'DPL',
             'tiempo_procesamiento_pedidos': 'TMP',
             'tiempo medio procesamiento': 'TMP',
             
             # Cantidades
             'insumos_por_producto': 'CINSP',
             'litros insumo fabricar': 'CINSP',
+            'conversión insumos': 'CINSP',
+            'rendimiento insumos': 'CINSP',
             'cantidad_por_lote': 'CPPL',
             'cantidad promedio lote': 'CPPL',
+            'tamaño lote': 'CPPL',
+            'lote producción': 'CPPL',
             'cantidad_transporte_viaje': 'CTPLV',
             'litros transportan viaje': 'CTPLV',
+            'capacidad camión': 'CTPLV',
+            'capacidad vehículo': 'CTPLV',
             
             # Otros
             'estacionalidad': 'ED',
             'estacionalidad demanda': 'ED',
+            'variación estacional': 'ED',
+            'factor estacional': 'ED',
             'numero_proveedores': 'NPD',
             'proveedores leche': 'NPD',
+            'cantidad proveedores': 'NPD',
             'consumo_diario_proveedor': 'CTL',
-            'consumo diario promedio': 'CTL'
+            'consumo diario promedio': 'CTL',
+            'consumo promedio': 'CTL',
+            
+            # Horarios
+            'horas_trabajo': 'MLP',
+            'jornada laboral': 'MLP',
+            'minutos laborables': 'MLP',
+            'tiempo trabajo diario': 'MLP',
         }
 
     @transaction.atomic
@@ -175,14 +230,30 @@ class SimulationCore:
             # Get all required data
             simulation_data = self._prepare_simulation_data(simulation_instance)
             
+            # AGREGAR: Inicializar estado persistente
+            simulation_state = {
+                'inventories': {
+                    'IPF': 1000,  # Inventario inicial productos finales
+                    'II': 5000,   # Inventario inicial insumos
+                },
+                'previous_sales': [],
+                'previous_production': [],
+                'previous_demands': []
+            }
+            
             # Process days sequentially
             results_to_save = []
             
             for day_index in range(nmd):
                 try:
+                    # PASAR el estado a la simulación del día
                     day_results = self._simulate_single_day_complete(
-                        simulation_instance, simulation_data, day_index
+                        simulation_instance, simulation_data, day_index, simulation_state
                     )
+                    
+                    # ACTUALIZAR el estado con los resultados del día
+                    self._update_simulation_state(simulation_state, day_results)
+                    
                     results_to_save.append((day_index, day_results))
                     logger.info(f"Day {day_index + 1} completed with {len(day_results['endogenous_results'])} variables calculated")
                 except Exception as e:
@@ -197,6 +268,31 @@ class SimulationCore:
         except Exception as e:
             logger.error(f"Error executing simulation {simulation_instance.id}: {str(e)}")
             raise
+
+    def _update_simulation_state(self, state, day_results):
+        """Actualizar el estado de la simulación con los resultados del día"""
+        
+        results = day_results['endogenous_results']
+        
+        # Actualizar inventarios finales del día
+        if 'IPF' in results:
+            state['inventories']['IPF'] = results['IPF']
+        if 'II' in results:
+            state['inventories']['II'] = results['II']
+        
+        # Guardar históricos
+        if 'TPV' in results:
+            state['previous_sales'].append(results['TPV'])
+        if 'QPL' in results:
+            state['previous_production'].append(results['QPL'])
+        if 'predicted_demand' in day_results:
+            state['previous_demands'].append(day_results['predicted_demand'])
+        
+        # Mantener solo los últimos 30 días de histórico
+        max_history = 30
+        for key in ['previous_sales', 'previous_production', 'previous_demands']:
+            if len(state[key]) > max_history:
+                state[key] = state[key][-max_history:]
 
     def _prepare_simulation_data(self, simulation_instance):
         """Prepare all simulation data with optimized queries"""
@@ -242,7 +338,7 @@ class SimulationCore:
             'product': product
         }
 
-    def _simulate_single_day_complete(self, simulation_instance, simulation_data, day_index):
+    def _simulate_single_day_complete(self, simulation_instance, simulation_data, day_index, simulation_state):
         """Simulate a single day with complete variable initialization and calculation"""
         
         # Initialize ALL variables with REAL data from questionnaire
@@ -266,6 +362,20 @@ class SimulationCore:
         variable_dict['DH'] = predicted_demand  # Demanda del día actual
         
         # Calcular DPH dinámico basado en histórico y días anteriores
+        
+        if day_index > 0:
+            # Inventarios del día anterior
+            variable_dict['IPF'] = simulation_state['inventories']['IPF']
+            variable_dict['II'] = simulation_state['inventories']['II']
+            
+            # Histórico para cálculos de tendencia
+            if simulation_state['previous_demands']:
+                # Usar ventana móvil de los últimos 7 días para DPH
+                window = simulation_state['previous_demands'][-7:]
+                variable_dict['DPH'] = float(np.mean(window))
+                variable_dict['DSD'] = float(np.std(window)) if len(window) > 1 else variable_dict['DPH'] * 0.1
+        
+        
         if day_index == 0:
             # Primer día: usar promedio del histórico real
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
@@ -528,7 +638,7 @@ class SimulationCore:
     def _add_minimal_defaults(self, variable_dict):
         """Add only absolutely essential missing variables with realistic defaults"""
         
-        # Only add defaults for variables that are truly missing and essential
+        # EXPANDIR los defaults esenciales
         essential_defaults = {
             'CPROD': variable_dict.get('QPL', 100) * 1.2 if 'QPL' in variable_dict else 3000,
             'ED': 1.0,  # No seasonality by default
@@ -543,6 +653,15 @@ class SimulationCore:
             'CTPLV': 200,  # Transport capacity per trip
             'CPPL': 100,  # Batch size
             'TPE': 60,  # Production time per unit
+            # AGREGAR MÁS DEFAULTS CRÍTICOS:
+            'IPF': 1000,  # Inventario inicial productos finales
+            'II': 5000,   # Inventario inicial insumos
+            'VPC': 30,    # Ventas por cliente default
+            'TCAE': 85,   # Total clientes atendidos
+            'QPL': 2500,  # Cantidad producida default
+            'PPL': 2500,  # Productos por lote
+            'PI': 0,      # Pedido insumos inicial
+            'UII': 0,     # Uso inventario insumos inicial
         }
         
         added_defaults = []
@@ -559,21 +678,22 @@ class SimulationCore:
         
         endogenous_results = {}
         
-        # Define calculation order by area priority
+        # Definir orden de áreas optimizado para resolver dependencias
         area_priority = [
-            'Ventas',
-            'Producción', 
-            'Contabilidad',
-            'Inventario Insumos',
-            'Inventario Productos Finales',
-            'Distribución',
-            'Abastecimiento',
-            'Marketing',
-            'Competencia',
-            'Recursos Humanos'
+            'Análisis Demanda',      # Primero: DPH, DSD, DDP
+            'Ventas',                # Segundo: VPC, TCAE, TPV, NSC, DI
+            'Producción',            # Tercero: POD, CPROD, QPL, PPL, FU
+            'Inventario Insumos',    # Cuarto: UII, PI, II
+            'Inventario Productos Finales',  # Quinto: IPF
+            'Distribución',          # Sexto: CTTL
+            'Contabilidad',          # Séptimo: IT, CTAI, GO, GG, TG, GT, MB, NR
+            'Recursos Humanos',      # Octavo: PE
+            'Marketing',             # Noveno: otros indicadores
+            'Competencia',           # Décimo: métricas de competencia
+            'Indicadores Generales'  # Último: KPIs globales
         ]
         
-        # Group equations by area
+        # Agrupar ecuaciones por área
         equations_by_area = {}
         for eq in equations:
             area_name = eq.fk_area.name if eq.fk_area else 'Other'
@@ -581,16 +701,40 @@ class SimulationCore:
                 equations_by_area[area_name] = []
             equations_by_area[area_name].append(eq)
         
-        # Process equations in priority order
+        # Resolver ecuaciones críticas primero
+        critical_equations = []
+        regular_equations = []
+        
+        # Identificar ecuaciones críticas que deben resolverse primero
+        critical_vars = ['DPH', 'DSD', 'DDP', 'VPC', 'CPROD']
+        
+        for area in area_priority:
+            if area in equations_by_area:
+                for equation in equations_by_area[area]:
+                    output_var = self._get_output_variable(equation)
+                    if output_var in critical_vars:
+                        critical_equations.append(equation)
+                    else:
+                        regular_equations.append(equation)
+        
+        # Procesar primero las críticas
+        for equation in critical_equations:
+            self._solve_single_equation(
+                equation, variable_dict, endogenous_results
+            )
+        
+        # Luego el resto en orden de área
         for area in area_priority:
             if area in equations_by_area:
                 logger.debug(f"Processing {len(equations_by_area[area])} equations for area: {area}")
                 for equation in equations_by_area[area]:
-                    self._solve_single_equation(
-                        equation, variable_dict, endogenous_results
-                    )
+                    output_var = self._get_output_variable(equation)
+                    if output_var and output_var not in critical_vars:  # Ya procesadas
+                        self._solve_single_equation(
+                            equation, variable_dict, endogenous_results
+                        )
         
-        # Process remaining areas
+        # Procesar áreas no prioritarias
         for area, eqs in equations_by_area.items():
             if area not in area_priority:
                 for equation in eqs:
@@ -598,11 +742,110 @@ class SimulationCore:
                         equation, variable_dict, endogenous_results
                     )
         
+        # Segunda pasada para ecuaciones que dependen de resultados previos
+        unresolved_count = 0
+        max_iterations = 2
+        
+        for iteration in range(max_iterations):
+            equations_solved = 0
+            
+            for area in area_priority:
+                if area in equations_by_area:
+                    for equation in equations_by_area[area]:
+                        output_var = self._get_output_variable(equation)
+                        if output_var and output_var not in endogenous_results:
+                            # Intentar resolver
+                            all_vars = {**variable_dict, **endogenous_results}
+                            dependencies = self._extract_dependencies(equation.expression)
+                            
+                            # Verificar si todas las dependencias están disponibles
+                            if all(dep in all_vars for dep in dependencies):
+                                self._solve_single_equation(
+                                    equation, variable_dict, endogenous_results
+                                )
+                                equations_solved += 1
+                                unresolved_count += 1
+            
+            if equations_solved == 0:
+                break  # No se resolvieron más ecuaciones
+        
+        if unresolved_count > 0:
+            logger.info(f"Segunda pasada resolvió {unresolved_count} ecuaciones adicionales")
+        
         # Calculate critical missing variables
         self._calculate_missing_critical_variables(variable_dict, endogenous_results)
         
+        # Log final de variables calculadas
+        logger.debug(f"Total variables calculated: {len(endogenous_results)}")
+        
         return endogenous_results
 
+    
+    
+    def _topological_sort_equations(self, equations, graph):
+        """Ordenar ecuaciones según dependencias"""
+        # Implementación simple de ordenamiento topológico
+        visited = set()
+        stack = []
+        equation_map = {self._get_output_variable(eq): eq for eq in equations}
+        
+        def visit(var):
+            if var in visited or var not in graph:
+                return
+            visited.add(var)
+            for dep in graph.get(var, []):
+                visit(dep)
+            stack.append(var)
+        
+        # Visitar todas las variables
+        for var in graph:
+            visit(var)
+        
+        # Construir lista ordenada de ecuaciones
+        sorted_equations = []
+        for var in reversed(stack):
+            if var in equation_map:
+                sorted_equations.append(equation_map[var])
+        
+        # Agregar ecuaciones restantes
+        for eq in equations:
+            if eq not in sorted_equations:
+                sorted_equations.append(eq)
+        
+        return sorted_equations
+
+    def _can_solve_equation(self, equation, available_vars):
+        """Verificar si una ecuación puede resolverse con las variables disponibles"""
+        dependencies = self._extract_dependencies(equation.expression)
+        return all(dep in available_vars for dep in dependencies)
+    
+    def _build_dependency_graph(self, equations):
+        """Construir grafo de dependencias entre variables"""
+        graph = {}
+        
+        for eq in equations:
+            output_var = self._get_output_variable(eq)
+            if output_var:
+                dependencies = self._extract_dependencies(eq.expression)
+                graph[output_var] = dependencies
+        
+        return graph
+    
+    def _extract_dependencies(self, expression):
+        """Extraer variables que la expresión necesita"""
+        if '=' not in expression:
+            return []
+        
+        _, rhs = expression.split('=', 1)
+        # Patrón para identificar variables (mayúsculas con números/guiones bajos)
+        var_pattern = re.compile(r'\b[A-Z][A-Z0-9_]*\b')
+        variables = var_pattern.findall(rhs)
+        
+        # Filtrar funciones conocidas
+        functions = {'max', 'min', 'abs', 'round', 'ceil', 'floor', 'sqrt', 'mean', 'std'}
+        return [v for v in variables if v not in functions]
+    
+    
     def _solve_single_equation(self, equation, variable_dict, endogenous_results):
         """Solve a single equation with improved error handling"""
         
@@ -626,16 +869,52 @@ class SimulationCore:
             # Preprocess expression
             rhs = self._preprocess_expression(rhs)
             
+            # NUEVO: Verificar que todas las variables necesarias existan
+            missing_vars = []
+            for var in self._extract_dependencies(expression):
+                if var not in all_variables:
+                    missing_vars.append(var)
+            
+            if missing_vars:
+                logger.debug(f"Cannot solve {output_var}, missing: {missing_vars}")
+                return
+            
             # Evaluate
             result = self._evaluate_expression(rhs, all_variables)
             
             if result is not None:
-                endogenous_results[output_var] = result
-                variable_dict[output_var] = result
-                logger.debug(f"Calculated {output_var} = {result:.2f}")
-        
+                # NUEVO: Validar resultado antes de guardarlo
+                if self._is_valid_result(output_var, result):
+                    endogenous_results[output_var] = result
+                    variable_dict[output_var] = result
+                    logger.debug(f"Calculated {output_var} = {result:.2f}")
+                else:
+                    logger.warning(f"Invalid result for {output_var}: {result}")
+            
         except Exception as e:
             logger.debug(f"Could not solve equation {equation.expression}: {e}")
+            
+    def _is_valid_result(self, var_name, value):
+        """Validar que el resultado sea razonable"""
+        # Evitar valores negativos para ciertas variables
+        non_negative_vars = [
+            'TPV', 'QPL', 'IPF', 'II', 'IT', 'TCAE', 'VPC', 
+            'TPPRO', 'DI', 'FU', 'PE', 'NSC', 'PM'
+        ]
+        
+        if var_name in non_negative_vars and value < 0:
+            return False
+        
+        # Evitar valores extremos
+        if abs(value) > 1e9:
+            return False
+        
+        # Validar porcentajes
+        percentage_vars = ['FU', 'PE', 'NSC', 'PM', 'MB', 'NR']
+        if var_name in percentage_vars and (value < -1 or value > 2):
+            return False
+        
+        return True
 
     def _preprocess_expression(self, expression):
         """Preprocess expression to handle special cases"""
@@ -646,9 +925,24 @@ class SimulationCore:
         # Replace random() with actual value
         expression = expression.replace('random()', str(random.random()))
         
+        # AGREGAR: Manejar funciones especiales
+        # Reemplazar mean(lista) por el valor calculado
+        if 'mean(' in expression:
+            # Este es un caso especial que se maneja en el contexto
+            pass
+        
+        # Reemplazar DH si es una lista por su promedio
+        if 'mean(DH)' in expression:
+            expression = expression.replace('mean(DH)', 'DPH')
+        
         # Handle max/min functions
         expression = re.sub(r'max\s*\(', 'max(', expression)
         expression = re.sub(r'min\s*\(', 'min(', expression)
+        
+        # AGREGAR: Manejar sqrt, ceil, floor
+        expression = re.sub(r'sqrt\s*\(', 'sqrt(', expression)
+        expression = re.sub(r'ceil\s*\(', 'ceil(', expression)
+        expression = re.sub(r'floor\s*\(', 'floor(', expression)
         
         return expression
 
@@ -663,7 +957,7 @@ class SimulationCore:
                     pattern = r'\b' + re.escape(var) + r'\b'
                     expression = re.sub(pattern, str(val), expression)
             
-            # Safe evaluation context
+            # Safe evaluation context - EXPANDIR ESTO
             safe_dict = {
                 '__builtins__': {},
                 'max': max,
@@ -672,6 +966,14 @@ class SimulationCore:
                 'round': round,
                 'pow': pow,
                 'sum': sum,
+                # AGREGAR ESTAS FUNCIONES:
+                'sqrt': lambda x: x ** 0.5,
+                'ceil': lambda x: int(x) + (1 if x > int(x) else 0),
+                'floor': lambda x: int(x),
+                'mean': lambda x: sum(x) / len(x) if isinstance(x, list) else x,
+                'std': lambda x: np.std(x) if isinstance(x, list) else 0,
+                'exp': lambda x: 2.71828 ** x,
+                'log': lambda x: np.log(x) if x > 0 else 0,
             }
             
             # Evaluate
@@ -686,6 +988,27 @@ class SimulationCore:
 
     def _calculate_missing_critical_variables(self, variable_dict, endogenous_results):
         """Calculate critical variables using questionnaire data"""
+        
+        
+        # AGREGAR: Verificación de variables base antes de calcular
+        required_base_vars = ['PVP', 'CPD', 'CUIP', 'CFD', 'SE', 'GMM', 'CPROD']
+        missing_base = [v for v in required_base_vars if v not in variable_dict]
+        
+        if missing_base:
+            logger.warning(f"Missing base variables: {missing_base}")
+            # Usar defaults mínimos
+            defaults = {
+                'PVP': 15.50,
+                'CPD': 85,
+                'CUIP': 8.20,
+                'CFD': 1800,
+                'SE': 48000,
+                'GMM': 3500,
+                'CPROD': 3000
+            }
+            for var in missing_base:
+                if var in defaults:
+                    variable_dict[var] = defaults[var]
         
         # Get values from questionnaire
         cpd = variable_dict.get('CPD', 85)
@@ -705,12 +1028,26 @@ class SimulationCore:
         # Calculate TCAE realistically
         if 'TCAE' not in endogenous_results:
             max_clients_by_demand = de / vpc if vpc > 0 else cpd
-            endogenous_results['TCAE'] = min(cpd * 0.95, max_clients_by_demand)
+            tcae = min(cpd * 0.95, max_clients_by_demand)
+            # Validar resultado
+            if tcae < 0 or tcae > cpd * 1.5:
+                tcae = cpd * 0.9
+            endogenous_results['TCAE'] = tcae
         
         # Calculate TPV (Total Productos Vendidos)
         if 'TPV' not in endogenous_results:
             tcae = endogenous_results.get('TCAE', cpd * 0.95)
-            tpv = min(tcae * vpc, de, cprod * 0.9)  # Limited by demand and production
+            ipf = variable_dict.get('IPF', 1000)
+            ppl = endogenous_results.get('PPL', 0)
+            
+            # Límites más realistas
+            max_by_clients = tcae * vpc
+            max_by_inventory = ipf + ppl
+            max_by_demand = de
+            max_by_capacity = cprod * 0.9
+            
+            tpv = min(max_by_clients, max_by_inventory, max_by_demand, max_by_capacity)
+            tpv = max(0, tpv)  # No negativo
             endogenous_results['TPV'] = tpv
         
         # Calculate TPPRO (Total Productos Producidos)
@@ -797,45 +1134,203 @@ class SimulationCore:
             pc = variable_dict.get('PC', 15.80)
             endogenous_results['NCM'] = abs(pvp - pc) / max(pc, 1)
 
-    def _validate_simulation_results(self, endogenous_results, variable_dict):
-        """Validate simulation results for coherence and realism"""
-        validations = []
+    def _validate_critical_variables(self, endogenous_results, variable_dict):
+        """Validar coherencia entre variables críticas"""
         
-        # Get key metrics
+        # TPV no puede exceder inventario + producción
         tpv = endogenous_results.get('TPV', 0)
-        tppro = endogenous_results.get('TPPRO', 0)
-        it = endogenous_results.get('IT', 0)
-        gt = endogenous_results.get('GT', 0)
-        de = variable_dict.get('DE', 0)
-        pvp = variable_dict.get('PVP', 1)
-        cprod = variable_dict.get('CPROD', 0)
+        ipf = variable_dict.get('IPF', 0)
+        ppl = endogenous_results.get('PPL', 0)
         
-        # Validation 1: Sales cannot exceed production
-        if tpv > tppro * 1.1:  # Allow 10% tolerance
-            endogenous_results['TPV'] = tppro
-            logger.warning(f'Sales ({tpv}) exceed production ({tppro}), capping sales')
+        if tpv > ipf + ppl:
+            endogenous_results['TPV'] = ipf + ppl
+            logger.debug(f"Adjusted TPV to match inventory constraints")
         
-        # Validation 2: Production cannot exceed capacity
-        if tppro > cprod:
+        # Producción no puede exceder capacidad
+        qpl = endogenous_results.get('QPL', 0)
+        cprod = variable_dict.get('CPROD', 3000)
+        
+        if qpl > cprod:
+            endogenous_results['QPL'] = cprod
+            endogenous_results['PPL'] = cprod
             endogenous_results['TPPRO'] = cprod
-            logger.warning(f'Production ({tppro}) exceeds capacity ({cprod}), capping production')
+            logger.debug(f"Adjusted production to capacity limit")
         
-        # Validation 3: Revenue should match sales
-        expected_revenue = tpv * pvp
-        if abs(it - expected_revenue) > expected_revenue * 0.01:  # 1% tolerance
-            endogenous_results['IT'] = expected_revenue
-            logger.debug(f'Revenue mismatch corrected: {it} -> {expected_revenue}')
+        # Margen de ganancia debe ser razonable
+        gt = endogenous_results.get('GT', 0)
+        it = endogenous_results.get('IT', 1)
         
-        # Validation 4: Profit margins should be realistic
         if it > 0:
             margin = gt / it
-            if margin < -0.5:  # Losing more than 50%
-                # Cap losses at 30% of revenue
-                endogenous_results['TG'] = it * 1.3
-                endogenous_results['GT'] = it - endogenous_results['TG']
-                logger.warning(f'Unrealistic loss margin {margin:.2%}, adjusted to -30%')
-            elif margin > 0.8:  # More than 80% profit
-                logger.info(f'High profit margin detected: {margin:.2%}')
+            if margin < -0.5:  # Pérdida mayor al 50%
+                # Ajustar gastos
+                max_loss = it * 0.3  # Máximo 30% de pérdida
+                endogenous_results['TG'] = it + max_loss
+                endogenous_results['GT'] = -max_loss
+                logger.debug(f"Adjusted losses to reasonable level")
+            elif margin > 0.8:  # Ganancia mayor al 80%
+                logger.info(f"High profit margin detected: {margin:.2%}")
+    
+    def _validate_simulation_results(self, endogenous_results, variable_dict):
+        """Validate simulation results for coherence and realism"""
+        
+        # Validaciones más específicas y correcciones automáticas
+        validations = []
+        
+        # Get key metrics con valores por defecto seguros
+        tpv = endogenous_results.get('TPV', 0)
+        qpl = endogenous_results.get('QPL', 0)
+        it = endogenous_results.get('IT', 0)
+        gt = endogenous_results.get('GT', 0)
+        tg = endogenous_results.get('TG', 0)
+        dph = variable_dict.get('DPH', 2500)
+        ddp = endogenous_results.get('DDP', dph)
+        pvp = variable_dict.get('PVP', 15.50)
+        cprod = variable_dict.get('CPROD', 3000)
+        cuip = variable_dict.get('CUIP', 7.50)
+        ipf = endogenous_results.get('IPF', 0)
+        ii = endogenous_results.get('II', 0)
+        
+        # Validación 1: Producción debe ser coherente con ventas
+        if qpl > 0 and tpv > 0:
+            production_sales_ratio = qpl / tpv
+            if production_sales_ratio > 2:  # Produciendo más del doble de lo que vende
+                logger.warning(f'Alta sobreproducción: QPL={qpl:.0f}, TPV={tpv:.0f}, ratio={production_sales_ratio:.2f}')
+                # Ajustar producción a un máximo de 20% sobre ventas
+                new_qpl = min(qpl, tpv * 1.2)
+                endogenous_results['QPL'] = new_qpl
+                endogenous_results['PPL'] = new_qpl
+                endogenous_results['TPPRO'] = new_qpl
+                validations.append(f"Adjusted QPL from {qpl:.0f} to {new_qpl:.0f}")
+        
+        # Validación 2: Ventas no pueden exceder producción + inventario inicial
+        max_possible_sales = qpl + variable_dict.get('IPF', 0)
+        if tpv > max_possible_sales:
+            logger.warning(f'Ventas exceden disponibilidad: TPV={tpv:.0f}, Max={max_possible_sales:.0f}')
+            endogenous_results['TPV'] = max_possible_sales
+            # Recalcular ingresos
+            endogenous_results['IT'] = endogenous_results['TPV'] * pvp
+            validations.append(f"Capped TPV to available inventory")
+        
+        # Validación 3: Margen de ganancia realista
+        if it > 0:
+            margin = gt / it
+            
+            # Margen esperado entre -10% y 40%
+            if margin < -0.1:
+                logger.warning(f'Pérdida excesiva: {margin:.2%}')
+                # Limitar pérdida al 10%
+                max_costs = it * 1.1
+                if tg > max_costs:
+                    endogenous_results['TG'] = max_costs
+                    endogenous_results['GT'] = it - max_costs
+                    
+                    # Ajustar componentes de costo proporcionalmente
+                    go = endogenous_results.get('GO', 0)
+                    gg = endogenous_results.get('GG', 0)
+                    if go + gg > 0:
+                        ratio = max_costs / (go + gg)
+                        endogenous_results['GO'] = go * ratio
+                        endogenous_results['GG'] = gg * ratio
+                    
+                    validations.append(f"Limited losses to 10% of revenue")
+            
+            elif margin > 0.4:
+                logger.info(f'Margen alto pero posible: {margin:.2%}')
+                # No ajustar, pero registrar
+                validations.append(f"High but valid margin: {margin:.2%}")
+        
+        # Validación 4: Ventas vs Demanda
+        if tpv > ddp * 1.2:  # No vender más del 120% de la demanda proyectada
+            logger.warning(f'Ventas muy superiores a demanda: TPV={tpv:.0f}, DDP={ddp:.0f}')
+            new_tpv = ddp * 1.1  # Máximo 110% de demanda
+            endogenous_results['TPV'] = new_tpv
+            endogenous_results['IT'] = new_tpv * pvp
+            validations.append(f"Adjusted TPV to match demand")
+        
+        # Validación 5: Coherencia de costos
+        ctai = endogenous_results.get('CTAI', 0)
+        if it > 0 and ctai > it * 0.7:  # Costo de insumos no debe ser >70% de ingresos
+            logger.warning(f'Costo de insumos muy alto: {ctai:.0f} ({ctai/it:.2%} de ingresos)')
+            # Verificar si el cálculo es correcto
+            expected_ctai = qpl * variable_dict.get('CINSP', 1.02) * cuip
+            if abs(ctai - expected_ctai) > 1:
+                endogenous_results['CTAI'] = expected_ctai
+                validations.append(f"Corrected CTAI calculation")
+        
+        # Validación 6: Nivel de servicio
+        nsc = endogenous_results.get('NSC', 0)
+        if nsc < 0.5:
+            logger.warning(f'Nivel de servicio muy bajo: {nsc:.2%}')
+            # Recalcular basado en ventas y demanda
+            if ddp > 0:
+                endogenous_results['NSC'] = min(1.0, tpv / ddp)
+        elif nsc > 1.0:
+            endogenous_results['NSC'] = 1.0
+            validations.append("Capped NSC to 100%")
+        
+        # Validación 7: Inventarios no negativos
+        if ipf < 0:
+            endogenous_results['IPF'] = 0
+            validations.append("Corrected negative IPF")
+        
+        if ii < 0:
+            endogenous_results['II'] = 0
+            validations.append("Corrected negative II")
+        
+        # Validación 8: Capacidad de producción
+        if qpl > cprod:
+            endogenous_results['QPL'] = cprod
+            endogenous_results['PPL'] = cprod
+            endogenous_results['TPPRO'] = cprod
+            validations.append(f"Capped production to capacity: {cprod:.0f}")
+        
+        # Validación 9: Factor de utilización
+        fu = endogenous_results.get('FU', 0)
+        if fu > 1.0:
+            endogenous_results['FU'] = 1.0
+            validations.append("Capped FU to 100%")
+        elif fu < 0:
+            endogenous_results['FU'] = 0
+            validations.append("Corrected negative FU")
+        
+        # Validación 10: Productividad por empleado
+        pe = endogenous_results.get('PE', 0)
+        nepp = variable_dict.get('NEPP', 15)
+        if pe < 0:
+            endogenous_results['PE'] = qpl / max(nepp, 1)
+            validations.append("Corrected PE calculation")
+        
+        # Validación 11: Demanda insatisfecha
+        di = endogenous_results.get('DI', 0)
+        expected_di = max(0, ddp - tpv)
+        if abs(di - expected_di) > 1:
+            endogenous_results['DI'] = expected_di
+            validations.append("Corrected DI calculation")
+        
+        # Validación 12: Márgenes y ratios financieros
+        mb = endogenous_results.get('MB', 0)
+        nr = endogenous_results.get('NR', 0)
+        
+        # Margen bruto
+        if it > 0:
+            expected_mb = (it - ctai) / it
+            if abs(mb - expected_mb) > 0.01:
+                endogenous_results['MB'] = max(0, min(1, expected_mb))
+                validations.append("Corrected MB calculation")
+        
+        # Margen neto
+        if it > 0:
+            expected_nr = gt / it
+            if abs(nr - expected_nr) > 0.01:
+                endogenous_results['NR'] = max(-1, min(1, expected_nr))
+                validations.append("Corrected NR calculation")
+        
+        # Log de validaciones aplicadas
+        if validations:
+            logger.info(f"Applied {len(validations)} validations:")
+            for v in validations:
+                logger.debug(f"  - {v}")
 
     def _generate_demand_prediction(self, simulation_instance, variable_dict, day_index):
         """Generate realistic demand prediction using FDP"""
