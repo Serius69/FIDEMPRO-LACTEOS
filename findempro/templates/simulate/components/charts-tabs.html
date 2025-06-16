@@ -1,0 +1,104 @@
+<!-- Chart Tabs Component -->
+<div class="chart-tabs">
+    <ul class="nav nav-tabs" id="chartTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                    data-bs-target="#overview" type="button" role="tab">
+                <i class="bx bx-line-chart me-2"></i>
+                Resumen General
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="financial-tab" data-bs-toggle="tab" 
+                    data-bs-target="#financial" type="button" role="tab">
+                <i class="bx bx-dollar me-2"></i>
+                Análisis Financiero
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="operations-tab" data-bs-toggle="tab" 
+                    data-bs-target="#operations" type="button" role="tab">
+                <i class="bx bx-cog me-2"></i>
+                Operaciones
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="demand-tab" data-bs-toggle="tab" 
+                    data-bs-target="#demand" type="button" role="tab">
+                <i class="bx bx-trending-up me-2"></i>
+                Demanda
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="time-line-tab" data-bs-toggle="tab" 
+                    data-bs-target="#time-line" type="button" role="tab">
+                <i class="bx bx-time me-2"></i>
+                Línea de Tiempo
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="endogenous-tab" data-bs-toggle="tab" 
+                    data-bs-target="#endogenous" type="button" role="tab">
+                <i class="bx bx-scatter-chart me-2"></i>
+                Variables Endógenas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" 
+                    data-bs-target="#analysis" type="button" role="tab">
+                <i class="bx bx-analyse me-2"></i>
+                Análisis Estadístico
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="validation-tab" data-bs-toggle="tab" 
+                    data-bs-target="#validation" type="button" role="tab">
+                <i class="bx bx-check-double me-2"></i>
+                Validación del Modelo
+            </button>
+        </li>
+    </ul>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content" id="chartTabsContent">
+    <!-- Overview Tab -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        {% include "components/tabs/overview-tab.html" %}
+    </div>
+    
+    <!-- Financial Tab -->
+    <div class="tab-pane fade" id="financial" role="tabpanel">
+        {% include "components/charts/financial-charts.html" %}
+    </div>
+    
+    <!-- Operations Tab -->
+    <div class="tab-pane fade" id="operations" role="tabpanel">
+        {% include "components/charts/operations-charts.html" %}
+    </div>
+    
+    <!-- Demand Tab -->
+    <div class="tab-pane fade" id="demand" role="tabpanel">
+        {% include "components/tabs/demand-tab.html" %}
+    </div>
+    
+    <!-- Timeline Tab -->
+    <div class="tab-pane fade" id="timeline" role="tabpanel">
+        {% include "components/tabs/timeline-tab.html" %}
+    </div>
+    
+    <!-- Endogenous Variables Tab -->
+    <div class="tab-pane fade" id="endogenous" role="tabpanel">
+        {% include "components/tabs/endogenous-tab.html" %}
+    </div>
+    
+    <!-- Statistical Analysis Tab -->
+    <div class="tab-pane fade" id="analysis" role="tabpanel">
+        {% include "components/tabs/analysis-tab.html" %}
+    </div>
+    
+    <!-- Validation Tab -->
+    <div class="tab-pane fade" id="validation" role="tabpanel">
+        {% include "components/tabs/validation-tab.html" %}
+    </div>
+</div>

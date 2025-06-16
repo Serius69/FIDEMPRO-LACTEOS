@@ -1,0 +1,44 @@
+<!-- Key Insights Panel Component -->
+<div class="insights-panel">
+    <h5 class="mb-3"><i class="bx bx-bulb me-2"></i>Insights Principales</h5>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="insight-item">
+                <div class="insight-icon {% if growth_rate > 0 %}positive{% else %}negative{% endif %}">
+                    <i class="bx {% if growth_rate > 0 %}bx-trending-up{% else %}bx-trending-down{% endif %}"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Tendencia de Demanda</h6>
+                    <p class="mb-0">
+                        La demanda muestra una tendencia 
+                        {% if growth_rate > 0 %}
+                            <strong class="text-success">creciente del {{ growth_rate }}%</strong>
+                        {% else %}
+                            <strong class="text-danger">decreciente del {{ growth_rate|floatformat:"2" }}%</strong>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="insight-item">
+                <div class="insight-icon {% if error_permisible < 5 %}positive{% elif error_permisible < 10 %}warning{% else %}negative{% endif %}">
+                    <i class="bx bx-target-lock"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Precisión del Modelo</h6>
+                    <p class="mb-0">
+                        Error permisible del <strong>{{ error_permisible|floatformat:"2" }}%</strong>
+                        {% if error_permisible < 5 %}
+                            <span class="text-success">(Excelente)</span>
+                        {% elif error_permisible < 10 %}
+                            <span class="text-warning">(Bueno)</span>
+                        {% else %}
+                            <span class="text-danger">(Revisar modelo)</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

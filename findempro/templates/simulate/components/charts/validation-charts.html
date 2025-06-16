@@ -1,0 +1,87 @@
+<!-- Validation Charts Component -->
+<!-- Gráfico de Distribución de Precisión -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="chart-container">
+            <h6 class="mb-3">
+                <i class="bx bx-bar-chart-alt-2 me-2"></i>
+                Distribución de Precisión - Error Porcentual por Día
+            </h6>
+            <div class="chart-controls">
+                <div class="chart-control-btn" onclick="downloadValidationChart()" title="Descargar">
+                    <i class="bx bx-download"></i>
+                </div>
+                <div class="chart-control-btn" onclick="toggleValidationChartType()" title="Cambiar tipo de gráfico">
+                    <i class="bx bx-refresh"></i>
+                </div>
+            </div>
+            <div style="position: relative; height: 400px;">
+                <canvas id="validationPrecisionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas de Error Detalladas -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="metric-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-calculator me-2"></i>
+                    Métricas de Error del Modelo
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center p-3 border rounded mb-3">
+                            <h6 class="text-muted mb-1">MAE</h6>
+                            <h4 class="mb-0">{{ validation_metrics.mae|floatformat:2 }} L</h4>
+                            <small class="text-muted">Error Absoluto Medio</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 border rounded mb-3">
+                            <h6 class="text-muted mb-1">MAPE</h6>
+                            <h4 class="mb-0 {% if validation_metrics.mape < 10 %}text-success{% elif validation_metrics.mape < 20 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ validation_metrics.mape|floatformat:2 }}%
+                            </h4>
+                            <small class="text-muted">Error Porcentual Medio</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 border rounded">
+                            <h6 class="text-muted mb-1">RMSE</h6>
+                            <h4 class="mb-0">{{ validation_metrics.rmse|floatformat:2 }} L</h4>
+                            <small class="text-muted">Error Cuadrático Medio</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 border rounded">
+                            <h6 class="text-muted mb-1">R²</h6>
+                            <h4 class="mb-0 {% if validation_metrics.r_squared > 0.8 %}text-success{% elif validation_metrics.r_squared > 0.6 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ validation_metrics.r_squared|floatformat:3 }}
+                            </h4>
+                            <small class="text-muted">Coeficiente de Determinación</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="metric-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-pie-chart-alt-2 me-2"></i>
+                    Resumen de Precisión por Categoría
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="validationSummaryChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>

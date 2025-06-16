@@ -1,25 +1,26 @@
-<!-- Componente reutilizable para gráficos -->
+<!-- Chart Container Template -->
 <div class="chart-container">
     <h6 class="mb-3">
-        <i class="{{ icon }} me-2"></i>{{ title }}
+        <i class="bx {{ chart_icon }} me-2"></i>
+        {{ chart_title }}
     </h6>
     <div class="chart-controls">
-        <div class="chart-control-btn" onclick="downloadChart('{{ chart_data }}', '{{ filename }}')" title="Descargar">
+        <div class="chart-control-btn" onclick="downloadChart('{{ chart_data }}', '{{ chart_filename }}')" title="Descargar">
             <i class="bx bx-download"></i>
         </div>
-        <div class="chart-control-btn" onclick="openFullscreen('{{ chart_data }}', '{{ title }}')" title="Pantalla completa">
+        <div class="chart-control-btn" onclick="openFullscreen('{{ chart_data }}', '{{ chart_title }}')" title="Pantalla completa">
             <i class="bx bx-fullscreen"></i>
         </div>
     </div>
     {% if chart_data %}
-        <img src="data:image/png;base64,{{ chart_data }}" 
-             class="chart-image" 
-             alt="{{ title }}"
-             loading="lazy">
+    <img src="data:image/png;base64,{{ chart_data }}" 
+        class="chart-image" 
+        alt="{{ chart_alt }}"
+        loading="lazy">
     {% else %}
-        <div class="text-center p-5">
-            <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
-            <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
-        </div>
+    <div class="text-center p-5">
+        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+        <p class="text-muted mt-2">No hay datos disponibles para este gráfico</p>
+    </div>
     {% endif %}
 </div>
