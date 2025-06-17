@@ -624,8 +624,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             sim_len = len(simulated_demand)
             
             # Determine projection parameters
-            projection_start_idx = hist_len
-            max_projection_length = max(30, hist_len // 2)
+            max_projection_length = max(20, hist_len // 3)  # Reduced from hist_len // 2
             
             # If simulation extends beyond historical data, use that as base
             if sim_len > hist_len:
@@ -633,13 +632,8 @@ class SimulateResultView(LoginRequiredMixin, View):
                 projection_length = min(len(available_future_sim), max_projection_length)
                 logger.info(f"Using {projection_length} future simulation points as projection base")
                 
-                # Use simulation values with slight variation to maintain pattern
-                projected_demand = []
-                for i, sim_value in enumerate(available_future_sim[:projection_length]):
-                    # Add very small random variation (±0.2%) to distinguish visually
-                    variation = sim_value * np.random.uniform(-0.002, 0.002)
-                    projected_value = sim_value + variation
-                    projected_demand.append(float(projected_value))
+                # Use simulation values directly without random variation
+                projected_demand = [float(sim_value) for sim_value in available_future_sim[:projection_length]]
                 
                 logger.info(f"Generated projection following simulation pattern: {len(projected_demand)} points")
                 return projected_demand
@@ -647,51 +641,54 @@ class SimulateResultView(LoginRequiredMixin, View):
             # If no future simulation data, extrapolate the cyclical pattern
             logger.info(f"Extending simulation pattern for {max_projection_length} projection points")
             
-            # Analyze the simulation pattern for cycles - use more data for better pattern detection
+            # Analyze the simulation pattern for cycles
             cycle_info = self._extract_cyclical_pattern_improved(simulated_demand)
             
-            # Get connection point and establish baseline
-            connection_point = simulated_demand[-1] if simulated_demand else 0
+            # Get the last few simulation points for smooth connection
+            connection_window = min(5, len(simulated_demand))
+            connection_points = simulated_demand[-connection_window:]
             
-            # Calculate the underlying trend from the entire simulation
-            sim_indices = np.arange(len(simulated_demand))
-            trend_slope, trend_intercept = np.polyfit(sim_indices, simulated_demand, 1)
+            # Calculate trend from the last portion of simulation
+            if len(connection_points) >= 2:
+                x_trend = np.arange(len(connection_points))
+                trend_slope, trend_intercept = np.polyfit(x_trend, connection_points, 1)
+                # Get the trend value at the connection point
+                trend_at_connection = trend_slope * (len(connection_points) - 1) + trend_intercept
+            else:
+                trend_slope = 0
+                trend_at_connection = simulated_demand[-1] if simulated_demand else 0
             
             # Generate projection maintaining cyclical pattern
             projected_demand = []
+            sim_mean = np.mean(simulated_demand)
+            sim_std = np.std(simulated_demand)
             
-            for i in range(min(max_projection_length, 40)):  # Extended projection
-                projection_index = len(simulated_demand) + i
+            for i in range(min(max_projection_length, 30)):  # Cap at 30 points
+                # Continue the trend from the connection point
+                trend_value = trend_at_connection + trend_slope * (i + 1)
                 
-                # Continue the trend line
-                trend_value = trend_slope * projection_index + trend_intercept
-                
-                # Add cyclical component that continues the simulation pattern
-                cycle_phase = projection_index % cycle_info['period']
-                
-                # Use the actual cyclical pattern from simulation data
+                # Add cyclical component
+                cycle_phase = (len(simulated_demand) + i) % cycle_info['period']
                 cyclical_component = self._get_cyclical_value_at_phase(
                     simulated_demand, cycle_phase, cycle_info
                 )
                 
                 # Combine trend with cyclical pattern
-                projected_value = trend_value + cyclical_component
+                projected_value = trend_value + cyclical_component * 0.8  # Slightly dampen cycles
                 
-                # Add minimal noise to match simulation variability
-                noise = np.random.normal(0, cycle_info['noise_level'] * 0.3)
+                # Add controlled noise (much smaller than before)
+                noise_factor = min(sim_std * 0.1, 10)  # Limit noise
+                noise = np.random.normal(0, noise_factor)
                 projected_value += noise
                 
                 # Ensure values stay within reasonable bounds
-                sim_mean = np.mean(simulated_demand)
-                sim_range = np.max(simulated_demand) - np.min(simulated_demand)
-                
-                projected_value = np.clip(projected_value, 
-                                        sim_mean - sim_range * 0.8, 
-                                        sim_mean + sim_range * 0.8)
+                lower_bound = sim_mean - sim_std * 2
+                upper_bound = sim_mean + sim_std * 2
+                projected_value = np.clip(projected_value, lower_bound, upper_bound)
                 
                 projected_demand.append(float(projected_value))
             
-            # Apply very light smoothing to ensure continuity at connection point
+            # Apply smoothing to ensure continuity
             if len(projected_demand) > 0:
                 projected_demand = self._ensure_smooth_connection(
                     simulated_demand, projected_demand
@@ -704,7 +701,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             logger.error(f"Error generating smooth projection: {str(e)}")
             return []
 
-    
+
     def _ensure_smooth_connection(self, simulated_demand, projected_demand):
         """
         Ensure smooth connection between simulation and projection
@@ -721,14 +718,14 @@ class SimulateResultView(LoginRequiredMixin, View):
             connection_gap = proj_first - sim_last
             
             # Apply gradual adjustment over first few projection points
-            adjustment_length = min(5, len(projected_demand))
+            adjustment_length = min(3, len(projected_demand))  # Reduced from 5
             
             adjusted_projection = []
             for i, value in enumerate(projected_demand):
                 if i < adjustment_length:
                     # Gradual fade of the connection adjustment
                     fade_factor = (adjustment_length - i) / adjustment_length
-                    adjustment = connection_gap * fade_factor * 0.5  # Reduce by half
+                    adjustment = connection_gap * fade_factor * 0.3  # Reduced from 0.5
                     adjusted_value = value - adjustment
                 else:
                     adjusted_value = value
@@ -740,60 +737,15 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error ensuring smooth connection: {str(e)}")
             return projected_demand
-    
-    
-    def _get_cyclical_value_at_phase(self, simulated_demand, phase, cycle_info):
-        """
-        Get the cyclical component value at a specific phase by averaging historical values
-        """
-        try:
-            period = cycle_info['period']
-            
-            # Find all points in the simulation that correspond to this phase
-            phase_values = []
-            
-            for i in range(len(simulated_demand)):
-                if i % period == int(phase):
-                    # Remove trend to get pure cyclical component
-                    trend_at_i = np.mean(simulated_demand)  # Simple baseline
-                    cyclical_component = simulated_demand[i] - trend_at_i
-                    phase_values.append(cyclical_component)
-            
-            if phase_values:
-                # Return average cyclical value for this phase
-                return np.mean(phase_values)
-            else:
-                # Fallback to sine wave approximation
-                normalized_phase = phase / period
-                return cycle_info['amplitude'] * np.sin(2 * np.pi * normalized_phase)
-                
-        except Exception as e:
-            logger.error(f"Error getting cyclical value at phase: {str(e)}")
-            return 0
-    
-    def _light_smoothing(self, data, factor=0.3):
-        """
-        Apply light smoothing to maintain cyclical patterns while reducing noise
-        """
-        if len(data) <= 2:
-            return data
-        
-        smoothed = [data[0]]  # Keep first point
-        
-        for i in range(1, len(data)):
-            # Light exponential smoothing
-            smoothed_value = factor * data[i] + (1 - factor) * smoothed[-1]
-            smoothed.append(smoothed_value)
-        
-        return smoothed
-    
+
+
     def _extract_cyclical_pattern_improved(self, simulated_demand):
         """
-        Improved cyclical pattern extraction using spectral analysis
+        Improved cyclical pattern extraction with better parameter estimation
         """
         try:
             if len(simulated_demand) < 6:
-                return {'period': 7, 'amplitude': 10, 'offset': 0, 'noise_level': 5}
+                return {'period': 7, 'amplitude': 5, 'offset': 0, 'noise_level': 2}
             
             # Remove trend to focus on cyclical components
             indices = np.arange(len(simulated_demand))
@@ -801,7 +753,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             detrended = simulated_demand - (trend_slope * indices + trend_intercept)
             
             # Find dominant period using autocorrelation
-            max_period = min(20, len(simulated_demand) // 2)
+            max_period = min(15, len(simulated_demand) // 3)  # Reduced search space
             best_period = 7
             best_correlation = -1
             
@@ -809,10 +761,12 @@ class SimulateResultView(LoginRequiredMixin, View):
                 autocorr_values = []
                 
                 # Calculate autocorrelation for this period
-                for lag in range(len(detrended) - period):
-                    if lag + period < len(detrended):
-                        corr = np.corrcoef(detrended[lag:lag+period], 
-                                        detrended[lag+period:lag+2*period])[0,1]
+                for start in range(0, len(detrended) - 2 * period, period):
+                    segment1 = detrended[start:start + period]
+                    segment2 = detrended[start + period:start + 2 * period]
+                    
+                    if len(segment1) == len(segment2) == period:
+                        corr = np.corrcoef(segment1, segment2)[0, 1]
                         if not np.isnan(corr):
                             autocorr_values.append(abs(corr))
                 
@@ -822,11 +776,11 @@ class SimulateResultView(LoginRequiredMixin, View):
                         best_correlation = avg_correlation
                         best_period = period
             
-            # Calculate amplitude from detrended data
-            amplitude = np.std(detrended) * 1.5  # Amplify to capture full cycle range
+            # Calculate amplitude from detrended data (more conservative)
+            amplitude = np.std(detrended)
             
-            # Estimate noise level
-            noise_level = np.std(detrended) * 0.4
+            # Estimate noise level (reduced)
+            noise_level = np.std(detrended) * 0.2
             
             logger.info(f"Improved cycle detection - Period: {best_period}, "
                     f"Amplitude: {amplitude:.2f}, Noise: {noise_level:.2f}")
@@ -841,85 +795,37 @@ class SimulateResultView(LoginRequiredMixin, View):
             
         except Exception as e:
             logger.error(f"Error in improved cyclical pattern extraction: {str(e)}")
-            return {'period': 7, 'amplitude': 10, 'offset': 0, 'noise_level': 5}
-    
+            return {'period': 7, 'amplitude': 5, 'offset': 0, 'noise_level': 2}
 
-    def _analyze_simulation_pattern(self, transition_data, full_simulation):
+
+    def _get_cyclical_value_at_phase(self, simulated_demand, phase, cycle_info):
         """
-        Analyze the simulation pattern to extract trend and seasonal components
+        Get the cyclical component value at a specific phase
         """
         try:
-            # Calculate trend from transition window
-            if len(transition_data) >= 2:
-                x = np.arange(len(transition_data))
-                trend_slope, _ = np.polyfit(x, transition_data, 1)
+            period = cycle_info['period']
+            
+            # Find all points in the simulation that correspond to this phase
+            phase_values = []
+            sim_mean = np.mean(simulated_demand)
+            
+            for i in range(len(simulated_demand)):
+                if i % period == int(phase):
+                    # Remove trend to get pure cyclical component
+                    cyclical_component = simulated_demand[i] - sim_mean
+                    phase_values.append(cyclical_component)
+            
+            if phase_values:
+                # Return average cyclical value for this phase
+                return np.mean(phase_values)
             else:
-                trend_slope = 0
-            
-            # Extract seasonal pattern from full simulation
-            seasonal_pattern = []
-            if len(full_simulation) >= 10:
-                # Simple seasonal decomposition
-                window_size = min(7, len(full_simulation) // 3)  # Weekly or adaptive pattern
+                # Fallback to sine wave approximation
+                normalized_phase = phase / period
+                return cycle_info['amplitude'] * np.sin(2 * np.pi * normalized_phase)
                 
-                # Calculate moving average to remove trend
-                detrended = []
-                for i in range(len(full_simulation)):
-                    start_idx = max(0, i - window_size // 2)
-                    end_idx = min(len(full_simulation), i + window_size // 2 + 1)
-                    moving_avg = np.mean(full_simulation[start_idx:end_idx])
-                    detrended.append(full_simulation[i] - moving_avg)
-                
-                # Extract repeating pattern
-                pattern_length = min(window_size, 7)
-                for i in range(pattern_length):
-                    pattern_values = [detrended[j] for j in range(i, len(detrended), pattern_length)]
-                    if pattern_values:
-                        seasonal_pattern.append(np.mean(pattern_values))
-                    else:
-                        seasonal_pattern.append(0)
-            
-            # If no clear pattern, use small random variations
-            if not seasonal_pattern:
-                seasonal_pattern = [0] * 7  # Default weekly pattern
-            
-            # Base level for stabilization
-            base_level = np.mean(transition_data) if transition_data else 0
-            
-            logger.info(f"Pattern analysis - Trend slope: {trend_slope:.4f}, "
-                    f"Seasonal pattern length: {len(seasonal_pattern)}")
-            
-            return trend_slope, seasonal_pattern, base_level
-            
         except Exception as e:
-            logger.error(f"Error analyzing simulation pattern: {str(e)}")
-            return 0, [0], 0
-
-
-    def _apply_smoothing_filter(self, data, window_size=3):
-        """
-        Apply smoothing filter to reduce sharp transitions
-        """
-        if len(data) <= window_size:
-            return data
-        
-        smoothed = []
-        for i in range(len(data)):
-            if i < window_size // 2:
-                # Beginning: use available points
-                window_data = data[:window_size]
-            elif i >= len(data) - window_size // 2:
-                # End: use available points
-                window_data = data[-window_size:]
-            else:
-                # Middle: use centered window
-                start_idx = i - window_size // 2
-                end_idx = i + window_size // 2 + 1
-                window_data = data[start_idx:end_idx]
-            
-            smoothed.append(np.mean(window_data))
-        
-        return smoothed
+            logger.error(f"Error getting cyclical value at phase: {str(e)}")
+            return 0
 
 
     def _adjust_simulation_to_historical(self, simulated_values, historical_values):
@@ -949,8 +855,8 @@ class SimulateResultView(LoginRequiredMixin, View):
             sim_mean = np.mean(sim_overlap)
             sim_std = np.std(sim_overlap) if np.std(sim_overlap) > 0 else 1
             
-            # Calculate scaling factors
-            scale_factor = hist_std / sim_std if sim_std > 0 else 1
+            # Calculate scaling factors (more conservative)
+            scale_factor = min(hist_std / sim_std, 2.0) if sim_std > 0 else 1  # Cap scaling
             offset = hist_mean - sim_mean
             
             logger.info(f"Adjustment params - Scale: {scale_factor:.3f}, Offset: {offset:.1f}")
@@ -959,36 +865,36 @@ class SimulateResultView(LoginRequiredMixin, View):
             adjusted_values = []
             for i, value in enumerate(simulated_values):
                 if i < overlap_len:
-                    # For historical period, apply strong adjustment with pattern preservation
+                    # For historical period, apply strong adjustment
                     adjusted_value = sim_mean + (value - sim_mean) * scale_factor + offset
                     
-                    # Preserve relative position within historical distribution
+                    # Gentle blending with historical values
                     hist_percentile = (hist_overlap[i] - hist_min) / (hist_max - hist_min) if hist_max > hist_min else 0.5
                     target_value = hist_min + hist_percentile * (hist_max - hist_min)
                     
-                    # Blend adjusted simulation with target
-                    blend_weight = 0.7  # Favor simulation pattern
+                    # Blend with more weight on simulation pattern
+                    blend_weight = 0.8  # Increased from 0.7
                     adjusted_value = blend_weight * adjusted_value + (1 - blend_weight) * target_value
                     
                 else:
                     # For future periods, gradually reduce adjustment
                     fade_distance = i - overlap_len
-                    fade_factor = np.exp(-fade_distance / 15)  # Exponential fade
+                    fade_factor = np.exp(-fade_distance / 20)  # Slower fade
                     
                     adjusted_value = (
                         sim_mean + (value - sim_mean) * scale_factor + offset * fade_factor
                     )
                 
-                # Ensure reasonable bounds with some flexibility
+                # Ensure reasonable bounds
                 adjusted_value = np.clip(adjusted_value, 
-                                    hist_min * 0.7,  # Allow reasonable expansion
-                                    hist_max * 1.3)
+                                    hist_min * 0.8,  # More conservative bounds
+                                    hist_max * 1.2)
                 
                 adjusted_values.append(float(adjusted_value))
             
-            # Apply final smoothing to ensure continuity
+            # Apply minimal smoothing
             if len(adjusted_values) > 5:
-                smoothed = self._apply_smoothing_filter(adjusted_values, window_size=3)
+                smoothed = self._apply_light_smoothing(adjusted_values)
                 adjusted_values = smoothed
             
             logger.info(f"Simulation adjustment complete - Original mean: {sim_mean:.1f}, "
@@ -999,6 +905,23 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error adjusting simulation: {str(e)}")
             return simulated_values
+
+
+    def _apply_light_smoothing(self, data, alpha=0.2):
+        """
+        Apply exponential smoothing to reduce noise while preserving patterns
+        """
+        if len(data) <= 1:
+            return data
+        
+        smoothed = [data[0]]  # Keep first point unchanged
+        
+        for i in range(1, len(data)):
+            # Exponential smoothing
+            smoothed_value = alpha * data[i] + (1 - alpha) * smoothed[-1]
+            smoothed.append(smoothed_value)
+        
+        return smoothed
     
     def _get_historical_demand(self, simulation_instance):
         """Extract historical demand data from questionary results"""
