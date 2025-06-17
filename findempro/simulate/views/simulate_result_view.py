@@ -108,6 +108,10 @@ class SimulateResultView(LoginRequiredMixin, View):
         statistical_service = StatisticalService()
         validation_service = SimulationValidationService()
         
+        # Store services as instance variables for use in helper methods
+        self.chart_demand = chart_demand
+        self.validation_service = validation_service
+        
         # Get related instances first
         product_instance = simulation_instance.fk_questionary_result.fk_questionary.fk_product
         business_instance = product_instance.fk_business
@@ -135,7 +139,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Generate comparison chart: Historical vs Simulated
             comparison_chart = self._generate_comparison_chart(chart_demand, historical_demand, results_simulation)
             
-            # NEW: Generate three-line validation chart
+            # Generate three-line validation chart
             three_line_validation = self._generate_three_line_validation_chart(
                 historical_demand, results_simulation, simulation_instance
             )
@@ -203,7 +207,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Add validation charts with three-line chart
             validation_charts = self._add_validation_charts(
                 chart_generator, validation_results, results_simulation, analysis_data,
-                three_line_validation  # Pass the three-line validation result
+                three_line_validation
             )
             context.update(validation_charts)
             
@@ -215,74 +219,11 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Final logging
             self._log_context_summary(context)
             
-            
-            try:
-                if historical_demand and len(historical_demand) > 0:
-                    # Extract simulated demand
-                    simulated_demand = [float(r.demand_mean) for r in results_simulation]
-                    
-                    # Generate simple projection if needed
-                    projected_demand = []
-                    if len(historical_demand) > 2:
-                        from scipy import stats
-                        x = np.arange(len(historical_demand))
-                        y = np.array(historical_demand)
-                        slope, intercept, _, _, _ = stats.linregress(x, y)
-                        
-                        # Project for 30% of historical length
-                        proj_length = max(5, int(len(historical_demand) * 0.3))
-                        projected_x = np.arange(len(historical_demand), len(historical_demand) + proj_length)
-                        projected_demand = [float(slope * xi + intercept) for xi in projected_x]
-                    
-                    # Generate chart directly
-                    three_line_chart = chart_demand.generate_validation_comparison_chart(
-                        real_values=historical_demand,
-                        projected_values=projected_demand,
-                        simulated_values=simulated_demand
-                    )
-                    
-                    # Calculate metrics
-                    if three_line_chart:
-                        # Simple MAPE calculation
-                        min_len = min(len(historical_demand), len(simulated_demand))
-                        if min_len > 0:
-                            errors = []
-                            for i in range(min_len):
-                                if historical_demand[i] != 0:
-                                    error = abs((simulated_demand[i] - historical_demand[i]) / historical_demand[i]) * 100
-                                    errors.append(error)
-                            
-                            mape = np.mean(errors) if errors else 0
-                            three_line_metrics = {
-                                'historical_vs_simulated': {
-                                    'mape': round(mape, 2),
-                                    'accuracy_level': 'Excelente' if mape < 10 else 'Buena' if mape < 20 else 'Aceptable'
-                                }
-                            }
-                        
-                        logger.info("Three-line chart generated successfully")
-                    else:
-                        logger.warning("Three-line chart generation returned None")
-                else:
-                    logger.warning("No historical demand data available for three-line chart")
-                    
-            except Exception as e:
-                logger.error(f"Error generating three-line chart: {str(e)}")
-                logger.exception("Full traceback:")
-            
-            # Add to context (before return statement)
-            context['three_line_validation_chart'] = three_line_chart
-            context['three_line_validation_metrics'] = three_line_metrics
-            context['has_three_line_chart'] = bool(three_line_chart)
-            
             return context
             
         except Exception as e:
             logger.error(f"Error preparing context for simulation {simulation_id}: {str(e)}")
             logger.exception("Full traceback:")
-            
-            
-            
             
             # Return minimal context on error
             return {
@@ -302,7 +243,9 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'analysis_data': None,
                 'realistic_comparison': None,
                 'model_validation': None,
-                'has_three_line_chart': False
+                'has_three_line_chart': False,
+                'three_line_validation_chart': None,
+                'three_line_validation_metrics': {}
             }
 
     def _set_business_on_service(self, financial_service, business_instance):
@@ -562,13 +505,16 @@ class SimulateResultView(LoginRequiredMixin, View):
         logger.info(f"Generated {len(additional_charts)} additional analysis charts")
     
     
-    def _generate_three_line_validation_chart(self, historical_demand, results_simulation, 
-                                         simulation_instance):
+    def _generate_three_line_validation_chart(self, historical_demand, results_simulation, simulation_instance):
         """
         Generate the three-line validation chart with smooth projection aligned to simulation
         """
         try:
             logger.info("Starting three-line validation chart generation")
+            
+            if not results_simulation:
+                logger.warning("No simulation results available for three-line chart")
+                return None
             
             # Extract simulated demand from results
             raw_simulated_demand = [float(r.demand_mean) for r in results_simulation]
@@ -587,12 +533,12 @@ class SimulateResultView(LoginRequiredMixin, View):
             )
             
             # Log final data summary
-            logger.info(f"Final chart data - Historical: {len(historical_demand)}, "
+            logger.info(f"Final chart data - Historical: {len(historical_demand) if historical_demand else 0}, "
                     f"Simulated: {len(simulated_demand)}, Projected: {len(projected_demand)}")
             
             # Generate the chart using the aligned data
             validation_result = self.validation_service.generate_three_line_validation_chart(
-                historical_demand=historical_demand,
+                historical_demand=historical_demand or [],
                 simulated_demand=simulated_demand,
                 projected_demand=projected_demand,
                 chart_generator=self.chart_demand
@@ -600,6 +546,12 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             if validation_result:
                 logger.info("Three-line validation chart with smooth projection generated successfully")
+                
+                # Calculate metrics if not already present
+                if not validation_result.get('metrics'):
+                    validation_result['metrics'] = self._calculate_three_line_metrics(
+                        historical_demand, simulated_demand, projected_demand
+                    )
             else:
                 logger.error("Three-line validation chart generation returned None")
             
@@ -610,21 +562,48 @@ class SimulateResultView(LoginRequiredMixin, View):
             logger.exception("Full traceback:")
             return None
 
+    def _calculate_three_line_metrics(self, historical_demand, simulated_demand, projected_demand):
+        """Calculate metrics for three-line validation chart"""
+        try:
+            metrics = {}
+            
+            if historical_demand and simulated_demand:
+                # Calculate MAPE for historical vs simulated
+                min_len = min(len(historical_demand), len(simulated_demand))
+                if min_len > 0:
+                    errors = []
+                    for i in range(min_len):
+                        if historical_demand[i] != 0:
+                            error = abs((simulated_demand[i] - historical_demand[i]) / historical_demand[i]) * 100
+                            errors.append(error)
+                    
+                    if errors:
+                        mape = np.mean(errors)
+                        metrics['historical_vs_simulated'] = {
+                            'mape': round(mape, 2),
+                            'accuracy_level': 'Excelente' if mape < 10 else 'Buena' if mape < 20 else 'Aceptable'
+                        }
+            
+            return metrics
+            
+        except Exception as e:
+            logger.error(f"Error calculating three-line metrics: {str(e)}")
+            return {}
 
     def _generate_smooth_projection(self, historical_demand, simulated_demand):
         """
         Generate a projection that follows the cyclical patterns of the simulation
         """
         try:
-            if not historical_demand or not simulated_demand:
-                logger.warning("Missing historical or simulated data for projection")
+            if not simulated_demand:
+                logger.warning("No simulated demand data for projection")
                 return []
             
-            hist_len = len(historical_demand)
+            hist_len = len(historical_demand) if historical_demand else 0
             sim_len = len(simulated_demand)
             
             # Determine projection parameters
-            max_projection_length = max(20, hist_len // 3)  # Reduced from hist_len // 2
+            max_projection_length = max(20, hist_len // 3) if hist_len > 0 else 20
             
             # If simulation extends beyond historical data, use that as base
             if sim_len > hist_len:
@@ -632,7 +611,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                 projection_length = min(len(available_future_sim), max_projection_length)
                 logger.info(f"Using {projection_length} future simulation points as projection base")
                 
-                # Use simulation values directly without random variation
+                # Use simulation values directly
                 projected_demand = [float(sim_value) for sim_value in available_future_sim[:projection_length]]
                 
                 logger.info(f"Generated projection following simulation pattern: {len(projected_demand)} points")
@@ -652,7 +631,6 @@ class SimulateResultView(LoginRequiredMixin, View):
             if len(connection_points) >= 2:
                 x_trend = np.arange(len(connection_points))
                 trend_slope, trend_intercept = np.polyfit(x_trend, connection_points, 1)
-                # Get the trend value at the connection point
                 trend_at_connection = trend_slope * (len(connection_points) - 1) + trend_intercept
             else:
                 trend_slope = 0
@@ -663,7 +641,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             sim_mean = np.mean(simulated_demand)
             sim_std = np.std(simulated_demand)
             
-            for i in range(min(max_projection_length, 30)):  # Cap at 30 points
+            for i in range(min(max_projection_length, 30)):
                 # Continue the trend from the connection point
                 trend_value = trend_at_connection + trend_slope * (i + 1)
                 
@@ -674,10 +652,10 @@ class SimulateResultView(LoginRequiredMixin, View):
                 )
                 
                 # Combine trend with cyclical pattern
-                projected_value = trend_value + cyclical_component * 0.8  # Slightly dampen cycles
+                projected_value = trend_value + cyclical_component * 0.8
                 
-                # Add controlled noise (much smaller than before)
-                noise_factor = min(sim_std * 0.1, 10)  # Limit noise
+                # Add controlled noise
+                noise_factor = min(sim_std * 0.1, 10)
                 noise = np.random.normal(0, noise_factor)
                 projected_value += noise
                 
@@ -702,6 +680,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             return []
 
 
+
     def _ensure_smooth_connection(self, simulated_demand, projected_demand):
         """
         Ensure smooth connection between simulation and projection
@@ -718,14 +697,14 @@ class SimulateResultView(LoginRequiredMixin, View):
             connection_gap = proj_first - sim_last
             
             # Apply gradual adjustment over first few projection points
-            adjustment_length = min(3, len(projected_demand))  # Reduced from 5
+            adjustment_length = min(3, len(projected_demand))
             
             adjusted_projection = []
             for i, value in enumerate(projected_demand):
                 if i < adjustment_length:
                     # Gradual fade of the connection adjustment
                     fade_factor = (adjustment_length - i) / adjustment_length
-                    adjustment = connection_gap * fade_factor * 0.3  # Reduced from 0.5
+                    adjustment = connection_gap * fade_factor * 0.3
                     adjusted_value = value - adjustment
                 else:
                     adjusted_value = value
@@ -750,10 +729,10 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Remove trend to focus on cyclical components
             indices = np.arange(len(simulated_demand))
             trend_slope, trend_intercept = np.polyfit(indices, simulated_demand, 1)
-            detrended = simulated_demand - (trend_slope * indices + trend_intercept)
+            detrended = np.array(simulated_demand) - (trend_slope * indices + trend_intercept)
             
             # Find dominant period using autocorrelation
-            max_period = min(15, len(simulated_demand) // 3)  # Reduced search space
+            max_period = min(15, len(simulated_demand) // 3)
             best_period = 7
             best_correlation = -1
             
@@ -776,10 +755,10 @@ class SimulateResultView(LoginRequiredMixin, View):
                         best_correlation = avg_correlation
                         best_period = period
             
-            # Calculate amplitude from detrended data (more conservative)
+            # Calculate amplitude from detrended data
             amplitude = np.std(detrended)
             
-            # Estimate noise level (reduced)
+            # Estimate noise level
             noise_level = np.std(detrended) * 0.2
             
             logger.info(f"Improved cycle detection - Period: {best_period}, "
@@ -855,8 +834,8 @@ class SimulateResultView(LoginRequiredMixin, View):
             sim_mean = np.mean(sim_overlap)
             sim_std = np.std(sim_overlap) if np.std(sim_overlap) > 0 else 1
             
-            # Calculate scaling factors (more conservative)
-            scale_factor = min(hist_std / sim_std, 2.0) if sim_std > 0 else 1  # Cap scaling
+            # Calculate scaling factors
+            scale_factor = min(hist_std / sim_std, 2.0) if sim_std > 0 else 1
             offset = hist_mean - sim_mean
             
             logger.info(f"Adjustment params - Scale: {scale_factor:.3f}, Offset: {offset:.1f}")
@@ -873,13 +852,13 @@ class SimulateResultView(LoginRequiredMixin, View):
                     target_value = hist_min + hist_percentile * (hist_max - hist_min)
                     
                     # Blend with more weight on simulation pattern
-                    blend_weight = 0.8  # Increased from 0.7
+                    blend_weight = 0.8
                     adjusted_value = blend_weight * adjusted_value + (1 - blend_weight) * target_value
                     
                 else:
                     # For future periods, gradually reduce adjustment
                     fade_distance = i - overlap_len
-                    fade_factor = np.exp(-fade_distance / 20)  # Slower fade
+                    fade_factor = np.exp(-fade_distance / 20)
                     
                     adjusted_value = (
                         sim_mean + (value - sim_mean) * scale_factor + offset * fade_factor
@@ -887,7 +866,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                 
                 # Ensure reasonable bounds
                 adjusted_value = np.clip(adjusted_value, 
-                                    hist_min * 0.8,  # More conservative bounds
+                                    hist_min * 0.8,
                                     hist_max * 1.2)
                 
                 adjusted_values.append(float(adjusted_value))
