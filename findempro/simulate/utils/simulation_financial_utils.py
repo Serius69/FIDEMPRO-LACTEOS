@@ -242,6 +242,19 @@ class SimulationFinancialAnalyzer:
                 trend_analysis
             )
             
+            if results.exists():
+                first_result = results.first()
+                last_result = results.last()
+                initial_demand = float(first_result.demand_mean)
+                predicted_demand = float(last_result.demand_mean)
+            else:
+                demand_stats = simulation.get_demand_statistics()
+                initial_demand = demand_stats['mean']
+                predicted_demand = demand_stats['mean']
+            
+            growth_rate = self._calculate_growth_rate(initial_demand, predicted_demand)
+            error_permisible = self._calculate_error(initial_demand, predicted_demand)
+            
             # Calculate key financial indicators
             kpis = self._calculate_financial_kpis(daily_financials)
             
@@ -251,7 +264,9 @@ class SimulationFinancialAnalyzer:
                 profitability_analysis,
                 cost_analysis
             )
-            
+            class DemandData:
+                def __init__(self, quantity):
+                    self.quantity = quantity
             return {
                 'simulation_id': simulation_id,
                 'business': simulation.fk_questionary_result.fk_questionary.fk_product.fk_business,
@@ -265,7 +280,16 @@ class SimulationFinancialAnalyzer:
                 'risk_assessment': risk_assessment,
                 'summary': self._create_executive_summary(
                     kpis, profitability_analysis, risk_assessment
-                )
+                ),
+                'demand_initial': DemandData(initial_demand),
+                'demand_predicted': DemandData(predicted_demand),
+                'growth_rate': growth_rate,
+                'error_permisible': error_permisible,
+                # 'financial_recommendations_to_show': recommendations,
+                # 'insights': insights,
+                'has_results': results.exists(),
+                'results_count': results.count(),
+                
             }
             
         except Simulation.DoesNotExist:
@@ -1002,25 +1026,3 @@ class SimulationFinancialAnalyzer:
                 f"La simulación {best_sim['simulation_id']} muestra el mejor desempeño "
                 f"con una ganancia total de {best_sim['total_profit']:.2f}")
 
-
-# Maintain backward compatibility
-class SimulationFinancial(SimulationFinancialAnalyzer):
-    """Wrapper class for backward compatibility"""
-    
-    def analyze_financial_results(self, simulation_id: int, 
-                                totales_acumulativos: Dict[str, Dict]) -> Dict[str, Any]:
-        """Legacy method for compatibility"""
-        # Call new method
-        analysis = super().analyze_financial_results(simulation_id)
-        
-        # Format for legacy compatibility
-        return {
-            'demand_initial': type('obj', (object,), {'quantity': 0})(),
-            'demand_predicted': type('obj', (object,), {'quantity': 0})(),
-            'growth_rate': 0,
-            'error_permisible': 0,
-            'has_results': bool(analysis['daily_financials']),
-            'results_count': len(analysis['daily_financials']),
-            # Include new analysis
-            'financial_analysis': analysis
-        }

@@ -18,38 +18,61 @@ class ChartService:
         self.cache_timeout = 3600
     
     def generate_simulation_charts(self, simulation, results, historical_demand, real_values):
-        """Generate all charts for simulation results"""
+        """Generate all charts for simulation results including validation"""
         charts = {}
         
         # Extract data
         dates = [r.date for r in results]
         daily_data = self._extract_daily_data(results)
         
-        # Generate each chart type
+        # Generate demand comparison chart
         charts['demand_comparison'] = self.generate_demand_comparison_chart(
             historical_demand, results
         )
         
+        # Generate financial overview
         charts['financial_overview'] = self._generate_financial_overview(
             dates, daily_data
         )
         
+        # Generate production efficiency
         charts['production_efficiency'] = self._generate_production_efficiency(
             dates, daily_data
         )
         
+        # Generate inventory analysis
         charts['inventory_analysis'] = self._generate_inventory_analysis(
             dates, daily_data
         )
         
+        # Generate KPI dashboard
         charts['kpi_dashboard'] = self._generate_kpi_dashboard(
             daily_data
         )
         
-        # Add validation charts if real values available
-        if real_values:
-            charts['validation_comparison'] = self._generate_validation_charts(
-                daily_data, real_values
+        # NEW: Generate validation chart with three lines
+        if real_values or historical_demand:
+            # Extract simulated demand from results
+            simulated_demand = [float(r.demand_mean) for r in results]
+            
+            # Prepare real values (could be historical or actual validation data)
+            real_demand_values = real_values if real_values else historical_demand
+            
+            # Prepare projected values (if available from previous analysis)
+            projected_values = []
+            # You can extract projected values from your simulation or analysis
+            # For now, we'll use the simulated values that extend beyond historical
+            if historical_demand:
+                num_historical = len(historical_demand)
+                if len(simulated_demand) > num_historical:
+                    projected_values = simulated_demand[num_historical:]
+            
+            # Generate the validation comparison chart
+            charts['validation_comparison'] = self.demand_generator.generate_validation_comparison_chart(
+                real_values=real_demand_values,
+                projected_values=projected_values,
+                simulated_values=simulated_demand,
+                dates=dates
             )
         
         return charts

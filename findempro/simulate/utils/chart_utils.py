@@ -1888,61 +1888,395 @@ class ChartGenerator:
         plt.tight_layout()
         return self._fig_to_base64(fig)
     
-    def generate_validation_comparison_chart(self, 
-                                           variable_name: str,
-                                           real_values: List[float],
-                                           simulated_values: List[float],
-                                           tolerance: float = 0.1) -> str:
-        """Generate comparison chart for validation"""
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
-        
-        days = list(range(1, len(simulated_values) + 1))
-        
-        # Time series comparison
-        ax1.plot(days, real_values, 'g-', linewidth=2, marker='o', 
-                markersize=6, label='Valores Reales')
-        ax1.plot(days, simulated_values, 'b--', linewidth=2, marker='s',
-                markersize=6, label='Valores Simulados')
-        
-        # Tolerance bands
-        upper_tolerance = [r * (1 + tolerance) for r in real_values]
-        lower_tolerance = [r * (1 - tolerance) for r in real_values]
-        ax1.fill_between(days, lower_tolerance, upper_tolerance,
-                        alpha=0.2, color='green', label=f'±{tolerance*100:.0f}% Tolerancia')
-        
-        ax1.set_xlabel('Días')
-        ax1.set_ylabel('Valor')
-        ax1.set_title(f'Comparación: {variable_name}')
-        ax1.legend()
-        ax1.grid(True, alpha=0.3)
-        
-        # Error analysis
-        errors = [(s - r) / r * 100 if r != 0 else 0 
-                 for s, r in zip(simulated_values, real_values)]
-        
-        colors = ['green' if abs(e) <= tolerance * 100 else 'red' for e in errors]
-        bars = ax2.bar(days, errors, color=colors, alpha=0.7)
-        
-        ax2.axhline(y=0, color='black', linestyle='-', alpha=0.5)
-        ax2.axhline(y=tolerance*100, color='green', linestyle='--', alpha=0.5)
-        ax2.axhline(y=-tolerance*100, color='green', linestyle='--', alpha=0.5)
-        
-        ax2.set_xlabel('Días')
-        ax2.set_ylabel('Error (%)')
-        ax2.set_title('Análisis de Error Porcentual')
-        ax2.grid(True, alpha=0.3)
-        
-        # Add statistics
-        avg_error = np.mean(np.abs(errors))
-        accuracy = sum(1 for e in errors if abs(e) <= tolerance * 100) / len(errors) * 100
-        
-        stats_text = f'Error Promedio: {avg_error:.1f}%\nPrecisión: {accuracy:.1f}%'
-        ax2.text(0.02, 0.98, stats_text, transform=ax2.transAxes,
-                verticalalignment='top', bbox=dict(boxstyle='round', 
-                facecolor='wheat', alpha=0.8))
-        
-        plt.tight_layout()
-        return self._fig_to_base64(fig)
+    def generate_validation_comparison_chart(self, real_values, projected_values, simulated_values, dates=None):
+        """
+        Generate validation comparison chart with proper overlay of three lines
+        """
+        try:
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), 
+                                        gridspec_kw={'height_ratios': [3, 1]})
+            
+            # Clean data
+            real_values = [float(v) for v in real_values if v is not None] if real_values else []
+            projected_values = [float(v) for v in projected_values if v is not None] if projected_values else []
+            simulated_values = [float(v) for v in simulated_values if v is not None] if simulated_values else []
+            
+            logger.info(f"Generating chart - Real: {len(real_values)}, Projected: {len(projected_values)}, Simulated: {len(simulated_values)}")
+            
+            if not any([real_values, simulated_values]):
+                plt.close(fig)
+                return None
+            
+            # IMPORTANT: Create unified time axis
+            # The key is that simulated values should start at period 1, same as historical
+            
+            # Plot 1: Historical/Real demand (blue solid line)
+            if real_values:
+                hist_periods = list(range(1, len(real_values) + 1))
+                ax1.plot(hist_periods, real_values, 'b-', marker='o', markersize=6, 
+                        linewidth=2.5, label='Demanda Real Histórica', alpha=0.9, zorder=2)
+                
+                # Add mean line for historical
+                hist_mean = np.mean(real_values)
+                ax1.axhline(y=hist_mean, color='blue', linestyle=':', alpha=0.4,
+                        label=f'Media Real: {hist_mean:.1f}')
+            
+            # Plot 2: Projected demand (red solid line) - starts after historical
+            if projected_values and real_values:
+                # Projection starts right after historical data
+                proj_start = len(real_values)
+                proj_periods = list(range(proj_start + 1, proj_start + 1 + len(projected_values)))
+                
+                # Connect last historical to first projected
+                ax1.plot([hist_periods[-1], proj_periods[0]], 
+                        [real_values[-1], projected_values[0]], 
+                        'r-', linewidth=2, alpha=0.7)
+                
+                # Plot projection
+                ax1.plot(proj_periods, projected_values, 'r-', marker='s', markersize=5,
+                        linewidth=2.5, label='Demanda Proyectada', alpha=0.9, zorder=2)
+                
+                # Add mean line for projected
+                proj_mean = np.mean(projected_values)
+                ax1.axhline(y=proj_mean, color='red', linestyle=':', alpha=0.4,
+                        label=f'Media Proyectada: {proj_mean:.1f}')
+            
+            # Plot 3: Simulated demand (green dashed line) - OVERLAYS everything
+            if simulated_values:
+                # CRITICAL: Simulated values start at period 1, same as historical
+                sim_periods = list(range(1, len(simulated_values) + 1))
+                
+                # Split simulated into historical period and future period for different styling
+                if real_values:
+                    hist_length = len(real_values)
+                    
+                    # Part 1: Overlay on historical period (thicker line for validation)
+                    if len(simulated_values) >= hist_length:
+                        sim_hist_periods = sim_periods[:hist_length]
+                        sim_hist_values = simulated_values[:hist_length]
+                        ax1.plot(sim_hist_periods, sim_hist_values, 'g--', marker='^', markersize=5,
+                                linewidth=3, label='Demanda Simulada (validación)', alpha=0.8, zorder=3)
+                        
+                        # Part 2: Continue into future (if simulation extends beyond historical)
+                        if len(simulated_values) > hist_length:
+                            sim_future_periods = sim_periods[hist_length-1:]  # Include connection point
+                            sim_future_values = simulated_values[hist_length-1:]
+                            ax1.plot(sim_future_periods, sim_future_values, 'g--', marker='^', markersize=4,
+                                    linewidth=2.5, alpha=0.7, zorder=3)
+                    else:
+                        # Simulation shorter than historical
+                        ax1.plot(sim_periods, simulated_values, 'g--', marker='^', markersize=5,
+                                linewidth=3, label='Demanda Simulada', alpha=0.8, zorder=3)
+                else:
+                    # No historical data, just plot simulated
+                    ax1.plot(sim_periods, simulated_values, 'g--', marker='^', markersize=5,
+                            linewidth=2.5, label='Demanda Simulada', alpha=0.8, zorder=3)
+                
+                # Add mean line for simulated
+                sim_mean = np.mean(simulated_values)
+                ax1.axhline(y=sim_mean, color='green', linestyle=':', alpha=0.4,
+                        label=f'Media Simulada: {sim_mean:.1f}')
+            
+            # Add vertical line to mark end of historical period
+            if real_values:
+                ax1.axvline(x=len(real_values), color='gray', linestyle=':', alpha=0.5,
+                        label='Inicio Proyección', linewidth=2)
+            
+            # Configure main plot
+            ax1.set_xlabel('Período de Tiempo', fontsize=12)
+            ax1.set_ylabel('Demanda (Litros)', fontsize=12)
+            ax1.set_title('Validación del Modelo: Comparación Real vs Simulada vs Proyectada', 
+                        fontsize=16, fontweight='bold', pad=20)
+            
+            # Improve legend
+            ax1.legend(loc='best', frameon=True, fancybox=True, shadow=True, ncol=2)
+            ax1.grid(True, alpha=0.3, linestyle='--')
+            ax1.set_facecolor('#fafafa')
+            
+            # Set appropriate axis limits
+            all_values = []
+            if real_values: all_values.extend(real_values)
+            if projected_values: all_values.extend(projected_values)
+            if simulated_values: all_values.extend(simulated_values)
+            
+            if all_values:
+                y_margin = (max(all_values) - min(all_values)) * 0.1
+                ax1.set_ylim(min(all_values) - y_margin, max(all_values) + y_margin)
+            
+            # Error plot (bottom) - Compare real vs simulated in overlapping period
+            if real_values and simulated_values:
+                min_len = min(len(real_values), len(simulated_values))
+                if min_len > 0:
+                    errors = []
+                    error_periods = []
+                    
+                    for i in range(min_len):
+                        if real_values[i] != 0:
+                            error = ((simulated_values[i] - real_values[i]) / real_values[i]) * 100
+                            errors.append(error)
+                            error_periods.append(i + 1)
+                    
+                    if errors:
+                        # Color bars based on error magnitude
+                        colors = []
+                        for e in errors:
+                            if abs(e) < 5:
+                                colors.append('darkgreen')
+                            elif abs(e) < 10:
+                                colors.append('green')
+                            elif abs(e) < 15:
+                                colors.append('orange')
+                            else:
+                                colors.append('red')
+                        
+                        bars = ax2.bar(error_periods, errors, color=colors, alpha=0.7, width=0.8)
+                        
+                        # Add value labels on bars
+                        for bar, err in zip(bars, errors):
+                            if abs(err) > 2:  # Only show label if error is significant
+                                height = bar.get_height()
+                                ax2.text(bar.get_x() + bar.get_width()/2., height,
+                                        f'{err:.1f}%', ha='center', 
+                                        va='bottom' if height >= 0 else 'top',
+                                        fontsize=8)
+                        
+                        # Reference lines
+                        ax2.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+                        ax2.axhline(y=10, color='orange', linestyle='--', alpha=0.3, label='±10%')
+                        ax2.axhline(y=-10, color='orange', linestyle='--', alpha=0.3)
+                        ax2.axhline(y=20, color='red', linestyle='--', alpha=0.3, label='±20%')
+                        ax2.axhline(y=-20, color='red', linestyle='--', alpha=0.3)
+                        
+                        # Calculate and display MAPE
+                        mape = np.mean(np.abs(errors))
+                        ax2.text(0.02, 0.95, f'MAPE: {mape:.2f}%', transform=ax2.transAxes,
+                                verticalalignment='top', fontsize=11, fontweight='bold',
+                                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+                        
+                        # Add accuracy interpretation
+                        accuracy_text = ""
+                        if mape < 5:
+                            accuracy_text = "Excelente"
+                            text_color = 'darkgreen'
+                        elif mape < 10:
+                            accuracy_text = "Muy Buena"
+                            text_color = 'green'
+                        elif mape < 15:
+                            accuracy_text = "Buena"
+                            text_color = 'orange'
+                        elif mape < 20:
+                            accuracy_text = "Aceptable"
+                            text_color = 'darkorange'
+                        else:
+                            accuracy_text = "Mejorable"
+                            text_color = 'red'
+                        
+                        ax2.text(0.98, 0.95, f'Precisión: {accuracy_text}', transform=ax2.transAxes,
+                                verticalalignment='top', horizontalalignment='right',
+                                fontsize=11, fontweight='bold', color=text_color)
+                    
+                    ax2.set_xlabel('Período de Tiempo', fontsize=12)
+                    ax2.set_ylabel('Error (%)', fontsize=12)
+                    ax2.set_title('Error Porcentual: Simulado vs Real', fontsize=14)
+                    ax2.legend(loc='upper right')
+                    ax2.grid(True, alpha=0.3, axis='y')
+                    ax2.set_facecolor('#fafafa')
+                    
+                    # Set x-axis to match main plot
+                    ax2.set_xlim(ax1.get_xlim())
+            else:
+                ax2.text(0.5, 0.5, 'No hay suficientes datos para calcular errores', 
+                        transform=ax2.transAxes, ha='center', va='center',
+                        fontsize=12, color='gray')
+                ax2.set_facecolor('#fafafa')
+            
+            plt.tight_layout()
+            
+            # Convert to base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            buffer.close()
+            plt.close(fig)
+            
+            logger.info("Validation comparison chart generated successfully")
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating validation comparison chart: {str(e)}")
+            logger.exception("Full traceback:")
+            if 'fig' in locals():
+                plt.close(fig)
+            return None
+    
+    def generate_enhanced_demand_comparison(self, historical_demand, simulated_results, real_values=None):
+        """
+        Generate enhanced demand comparison with historical, simulated and optionally real validation data
+        """
+        try:
+            # Create figure with subplots
+            fig = plt.figure(figsize=(16, 12))
+            gs = fig.add_gridspec(3, 2, height_ratios=[2, 1, 1], hspace=0.3, wspace=0.3)
+            
+            # Main comparison plot
+            ax_main = fig.add_subplot(gs[0, :])
+            
+            # Extract data
+            simulated_demand = [float(r.demand_mean) for r in simulated_results]
+            
+            # Time periods
+            if historical_demand:
+                hist_time = list(range(1, len(historical_demand) + 1))
+                sim_start = len(historical_demand) + 1
+            else:
+                sim_start = 1
+            
+            sim_time = list(range(sim_start, sim_start + len(simulated_demand)))
+            
+            # Plot historical demand
+            if historical_demand:
+                ax_main.plot(hist_time, historical_demand, 'b-', marker='o', markersize=5,
+                            linewidth=2.5, label='Demanda Histórica', alpha=0.9)
+                
+                # Historical statistics
+                hist_mean = np.mean(historical_demand)
+                ax_main.axhline(y=hist_mean, color='blue', linestyle=':', alpha=0.4,
+                            label=f'Media Histórica: {hist_mean:.1f}')
+            
+            # Plot simulated demand
+            ax_main.plot(sim_time, simulated_demand, 'r-', marker='s', markersize=5,
+                        linewidth=2.5, label='Demanda Simulada', alpha=0.9)
+            
+            # Simulated statistics
+            sim_mean = np.mean(simulated_demand)
+            ax_main.axhline(y=sim_mean, color='red', linestyle=':', alpha=0.4,
+                        label=f'Media Simulada: {sim_mean:.1f}')
+            
+            # If real values provided, overlay them
+            if real_values:
+                real_time = list(range(1, len(real_values) + 1))
+                ax_main.plot(real_time, real_values, 'g--', marker='^', markersize=4,
+                            linewidth=2, label='Valores Reales (Validación)', alpha=0.8)
+                
+                real_mean = np.mean(real_values)
+                ax_main.axhline(y=real_mean, color='green', linestyle=':', alpha=0.4,
+                            label=f'Media Real: {real_mean:.1f}')
+            
+            # Transition line
+            if historical_demand:
+                ax_main.axvline(x=len(historical_demand) + 0.5, color='gray', 
+                            linestyle='--', alpha=0.5, label='Inicio Simulación')
+            
+            # Configure main plot
+            ax_main.set_xlabel('Período de Tiempo (días)', fontsize=12)
+            ax_main.set_ylabel('Demanda (Litros)', fontsize=12)
+            ax_main.set_title('Análisis Completo de Demanda: Histórica, Simulada y Validación', 
+                            fontsize=16, fontweight='bold', pad=20)
+            ax_main.legend(loc='best', frameon=True, fancybox=True, shadow=True)
+            ax_main.grid(True, alpha=0.3, linestyle='--')
+            ax_main.set_facecolor('#f8f9fa')
+            
+            # Distribution comparison (bottom left)
+            ax_dist = fig.add_subplot(gs[1, 0])
+            
+            # Create histograms
+            if historical_demand:
+                ax_dist.hist(historical_demand, bins=20, alpha=0.5, label='Histórico',
+                            color='blue', density=True, edgecolor='black')
+            ax_dist.hist(simulated_demand, bins=20, alpha=0.5, label='Simulado',
+                        color='red', density=True, edgecolor='black')
+            if real_values:
+                ax_dist.hist(real_values, bins=20, alpha=0.5, label='Real',
+                            color='green', density=True, edgecolor='black')
+            
+            ax_dist.set_xlabel('Demanda (Litros)')
+            ax_dist.set_ylabel('Densidad')
+            ax_dist.set_title('Distribución de Probabilidad')
+            ax_dist.legend()
+            ax_dist.grid(True, alpha=0.3)
+            
+            # Box plots comparison (bottom right)
+            ax_box = fig.add_subplot(gs[1, 1])
+            
+            box_data = []
+            box_labels = []
+            
+            if historical_demand:
+                box_data.append(historical_demand)
+                box_labels.append('Histórico')
+            box_data.append(simulated_demand)
+            box_labels.append('Simulado')
+            if real_values:
+                box_data.append(real_values)
+                box_labels.append('Real')
+            
+            bp = ax_box.boxplot(box_data, labels=box_labels, patch_artist=True)
+            colors = ['lightblue', 'lightcoral', 'lightgreen'][:len(box_data)]
+            for patch, color in zip(bp['boxes'], colors):
+                patch.set_facecolor(color)
+            
+            ax_box.set_ylabel('Demanda (Litros)')
+            ax_box.set_title('Comparación de Rangos')
+            ax_box.grid(True, alpha=0.3)
+            
+            # Metrics comparison (bottom)
+            ax_metrics = fig.add_subplot(gs[2, :])
+            ax_metrics.axis('off')
+            
+            # Calculate metrics
+            metrics_text = "📊 **MÉTRICAS DE VALIDACIÓN**\n\n"
+            
+            if historical_demand and simulated_demand:
+                # Compare last historical with first simulated
+                if len(historical_demand) > 0 and len(simulated_demand) > 0:
+                    transition_error = abs(historical_demand[-1] - simulated_demand[0])
+                    metrics_text += f"Error de transición: {transition_error:.2f} litros\n"
+            
+            if real_values and simulated_demand:
+                # Calculate validation metrics
+                min_len = min(len(real_values), len(simulated_demand))
+                if min_len > 0:
+                    real_compare = real_values[:min_len]
+                    sim_compare = simulated_demand[:min_len]
+                    
+                    mape = np.mean(np.abs((np.array(real_compare) - np.array(sim_compare)) / np.array(real_compare))) * 100
+                    rmse = np.sqrt(np.mean((np.array(real_compare) - np.array(sim_compare))**2))
+                    mae = np.mean(np.abs(np.array(real_compare) - np.array(sim_compare)))
+                    
+                    metrics_text += f"\nMAPE: {mape:.2f}%\n"
+                    metrics_text += f"RMSE: {rmse:.2f} litros\n"
+                    metrics_text += f"MAE: {mae:.2f} litros\n"
+                    
+                    if mape < 10:
+                        metrics_text += "\n✅ Precisión: EXCELENTE"
+                    elif mape < 20:
+                        metrics_text += "\n✅ Precisión: BUENA"
+                    elif mape < 30:
+                        metrics_text += "\n⚠️ Precisión: ACEPTABLE"
+                    else:
+                        metrics_text += "\n❌ Precisión: MEJORABLE"
+            
+            ax_metrics.text(0.5, 0.5, metrics_text, transform=ax_metrics.transAxes,
+                        fontsize=12, ha='center', va='center',
+                        bbox=dict(boxstyle='round,pad=1', facecolor='wheat', alpha=0.8))
+            
+            plt.suptitle('Sistema de Validación de Simulación de Demanda', 
+                        fontsize=18, fontweight='bold', y=0.98)
+            
+            # Convert to base64
+            image_data = self._save_plot_as_base64(fig)
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error generating enhanced demand comparison: {str(e)}")
+            if 'fig' in locals():
+                plt.close(fig)
+            return None    
+
     
     def _fig_to_base64(self, fig: Figure) -> str:
         """Convert matplotlib figure to base64 string"""

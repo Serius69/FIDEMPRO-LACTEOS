@@ -19,7 +19,6 @@ from questionary.models import Answer
 
 logger = logging.getLogger(__name__)
 
-
 class SimulationValidationService:
     """Service for validating simulation results against real data"""
     
@@ -65,6 +64,153 @@ class SimulationValidationService:
             'DE': 'flexible',    # Expected demand
             'DI': 'loose',       # Unmet demand
         }
+    
+    def generate_three_line_validation_chart(self, historical_demand, simulated_demand, 
+                                       projected_demand=None, chart_generator=None):
+        """
+        Generate three-line validation chart for complete model validation
+        
+        Args:
+            historical_demand: List of historical/real demand values
+            simulated_demand: List of simulated demand values
+            projected_demand: Optional list of projected demand values
+            chart_generator: Chart generator instance
+            
+        Returns:
+            Dictionary with chart image and validation metrics
+        """
+        try:
+            if not chart_generator:
+                from simulate.utils.chart_demand_utils import ChartDemand
+                chart_generator = ChartDemand()
+            
+            # Log input data
+            logger.info(f"Generating three-line chart - Historical: {len(historical_demand) if historical_demand else 0}, "
+                    f"Simulated: {len(simulated_demand) if simulated_demand else 0}, "
+                    f"Projected: {len(projected_demand) if projected_demand else 0}")
+            
+            # Ensure data is properly formatted
+            historical_demand = [float(v) for v in historical_demand if v is not None] if historical_demand else []
+            simulated_demand = [float(v) for v in simulated_demand if v is not None] if simulated_demand else []
+            projected_demand = [float(v) for v in projected_demand if v is not None] if projected_demand else []
+            
+            # Generate the three-line validation chart
+            validation_chart = chart_generator.generate_validation_comparison_chart(
+                real_values=historical_demand,
+                projected_values=projected_demand,
+                simulated_values=simulated_demand
+            )
+            
+            if not validation_chart:
+                logger.error("Chart generation returned None")
+                return None
+            
+            # Calculate validation metrics
+            validation_metrics = self._calculate_three_line_metrics(
+                historical_demand, simulated_demand, projected_demand
+            )
+            
+            result = {
+                'chart': validation_chart,
+                'metrics': validation_metrics,
+                'has_historical': bool(historical_demand),
+                'has_projected': bool(projected_demand),
+                'has_simulated': bool(simulated_demand)
+            }
+            
+            logger.info("Three-line validation chart generated successfully")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error generating three-line validation chart: {str(e)}")
+            logger.exception("Full traceback:")
+            return None
+    
+    def _calculate_three_line_metrics(self, historical, simulated, projected):
+        """Calculate metrics for three-line validation"""
+        metrics = {
+            'historical_vs_simulated': {},
+            'simulated_vs_projected': {},
+            'overall_validation': {}
+        }
+        
+        try:
+            # Historical vs Simulated comparison
+            if historical and simulated:
+                min_len = min(len(historical), len(simulated))
+                if min_len > 0:
+                    hist_compare = historical[:min_len]
+                    sim_compare = simulated[:min_len]
+                    
+                    # Calculate metrics
+                    errors = []
+                    squared_errors = []
+                    absolute_errors = []
+                    
+                    for h, s in zip(hist_compare, sim_compare):
+                        if h != 0:
+                            error = abs((h - s) / h) * 100
+                            errors.append(error)
+                        squared_errors.append((h - s) ** 2)
+                        absolute_errors.append(abs(h - s))
+                    
+                    mape = np.mean(errors) if errors else 0
+                    rmse = np.sqrt(np.mean(squared_errors))
+                    mae = np.mean(absolute_errors)
+                    
+                    metrics['historical_vs_simulated'] = {
+                        'mape': round(mape, 2),
+                        'rmse': round(rmse, 2),
+                        'mae': round(mae, 2),
+                        'accuracy_level': self._get_accuracy_level(mape),
+                        'samples_compared': min_len
+                    }
+            
+            # Simulated vs Projected comparison
+            if projected and simulated and historical:
+                # Compare the projected portion of simulated data
+                hist_len = len(historical)
+                if len(simulated) > hist_len:
+                    sim_projected = simulated[hist_len:]
+                    min_len = min(len(sim_projected), len(projected))
+                    if min_len > 0:
+                        sim_compare = sim_projected[:min_len]
+                        proj_compare = projected[:min_len]
+                        
+                        errors = []
+                        for s, p in zip(sim_compare, proj_compare):
+                            if p != 0:
+                                error = abs((s - p) / p) * 100
+                                errors.append(error)
+                        
+                        mape = np.mean(errors) if errors else 0
+                        
+                        metrics['simulated_vs_projected'] = {
+                            'mape': round(mape, 2),
+                            'alignment': 'Buena' if mape < 15 else 'Regular' if mape < 30 else 'Pobre',
+                            'samples_compared': min_len
+                        }
+            
+            # Overall validation score
+            scores = []
+            if metrics['historical_vs_simulated'].get('mape') is not None:
+                scores.append(max(0, 100 - metrics['historical_vs_simulated']['mape']))
+            if metrics['simulated_vs_projected'].get('mape') is not None:
+                scores.append(max(0, 100 - metrics['simulated_vs_projected']['mape']))
+            
+            if scores:
+                overall_score = np.mean(scores)
+                metrics['overall_validation'] = {
+                    'score': round(overall_score, 1),
+                    'status': 'Excelente' if overall_score > 90 else 'Bueno' if overall_score > 75 else 'Regular',
+                    'components': len(scores)
+                }
+            
+            return metrics
+            
+        except Exception as e:
+            logger.error(f"Error calculating metrics: {str(e)}")
+            return metrics
     
     def _validate_by_day(self, simulation_instance, results_simulation, real_values):
         """
@@ -148,6 +294,17 @@ class SimulationValidationService:
             daily_validation_results.append(day_validation)
         
         return daily_validation_results
+    
+    def _get_accuracy_level(self, mape):
+        """Determine accuracy level based on MAPE"""
+        if mape < 10:
+            return 'Excelente'
+        elif mape < 20:
+            return 'Buena'
+        elif mape < 30:
+            return 'Aceptable'
+        else:
+            return 'Mejorable'
     
     def _determine_validation_status(self, error_pct):
         """
@@ -310,7 +467,7 @@ class SimulationValidationService:
                 real = float(historical_demand[i])
             else:
                 # Si no hay dato histórico, usamos el valor esperado de la distribución
-                real = float(result.demand_expected)
+                real = float(result.demand_mean)
             
             difference = simulated - real
             error_pct = abs(difference) / real * 100 if real > 0 else 0
