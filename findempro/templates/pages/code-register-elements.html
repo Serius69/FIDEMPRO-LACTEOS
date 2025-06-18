@@ -1,0 +1,1122 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Vista Previa de Configuración - FindEMPro{% endblock title %}
+{% block extra_css %}
+<style>
+    .d3-tooltip {
+        pointer-events: none;
+        z-index: 1000;
+    }
+    
+    #areasNetworkGraph {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        background-color: #fff;
+        position: relative;
+        min-height: 600px;
+    }
+    
+    #historicalDemandChart {
+        min-height: 400px;
+    }
+    
+    .nav-tabs .nav-link.active {
+        font-weight: 600;
+        border-bottom: 3px solid var(--vz-primary);
+    }
+    
+    canvas {
+        max-height: 400px !important;
+    }
+
+    #demandChart {
+        max-height: 320px;
+        min-height: 220px;
+        height: 320px !important;
+    }
+    
+    .preview-card {
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        min-height: 200px;
+    }
+    
+    .preview-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-color: var(--vz-primary);
+    }
+    
+    .preview-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(45deg);
+    }
+    
+    .data-preview-table {
+        font-size: 0.875rem;
+    }
+    
+    .data-preview-table th {
+        background-color: var(--vz-light);
+        font-weight: 600;
+    }
+    
+    .demo-indicator {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+    
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--vz-primary-bg-subtle);
+        border-radius: 12px;
+        font-size: 24px;
+    }
+    
+    .info-tooltip {
+        cursor: help;
+        color: var(--vz-info);
+    }
+    
+    .config-summary {
+        background-color: var(--vz-light);
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 40px;
+        padding-bottom: 30px;
+    }
+    
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 5px;
+        height: calc(100% - 5px);
+        width: 2px;
+        background-color: var(--vz-border-color);
+    }
+    
+    .timeline-item:last-child:before {
+        display: none;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: 10px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--vz-primary);
+        border: 2px solid white;
+        box-shadow: 0 0 0 3px var(--vz-primary-bg-subtle);
+    }
+    body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+        .data-structure {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+        .variable-name {
+            color: #e83e8c;
+            font-weight: bold;
+        }
+        .data-type {
+            color: #6f42c1;
+            font-style: italic;
+        }
+        .source-location {
+            color: #28a745;
+            font-size: 0.875rem;
+        }
+        .context-flow {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 1px solid #667eea;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+</style>
+{% endblock extra_css %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+
+        <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center mb-4">
+                    <h1 class="display-4 text-primary mb-3">
+                        <i class="fas fa-code me-2"></i>
+                        Elementos Reales del Contexto
+                    </h1>
+                    <p class="lead text-muted">
+                        Análisis basado en el código real de <code>register_elements.py</code> y <code>preview_data.py</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flujo del Contexto -->
+        <div class="row">
+            <div class="col-12">
+                <div class="context-flow">
+                    <h5 class="text-primary mb-3">🔄 Flujo del Contexto</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded bg-white">
+                                <strong>register_elements()</strong>
+                                <br><small class="text-muted">views/register_elements.py</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded bg-white">
+                                <strong>prepare_preview_data()</strong>
+                                <br><small class="text-muted">views/preview_data.py</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded bg-white">
+                                <strong>Template Context</strong>
+                                <br><small class="text-muted">pages/register_elements.html</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contexto Principal -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📋 Contexto Principal enviado a la Plantilla</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="code-block">
+<pre><code>context = {
+    <span class="variable-name">'preview_data'</span>: preview_data,  <span class="data-type"># Dict completo de prepare_preview_data()</span>
+    <span class="variable-name">'title'</span>: <span class="text-success">'Vista Previa Completa - Configuración Inicial'</span>  <span class="data-type"># String</span>
+}</code></pre>
+                        </div>
+                        <div class="mt-3">
+                            <p class="mb-0"><strong>Ubicación en código:</strong></p>
+                            <small class="source-location">register_elements.py, línea ~46-49</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estructura de preview_data -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🗂️ Estructura Completa de preview_data</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Basado en el return statement de <code>prepare_preview_data()</code> (líneas 260-296):</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">📊 Datos Principales</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'business'</span>: <span class="data-type">Dict</span></code>
+                                            <small class="d-block text-muted">Información de la empresa (nombre, ubicación, tipo, etc.)</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'products_preview'</span>: <span class="data-type">List[Dict]</span></code>
+                                            <small class="d-block text-muted">Lista de productos con métricas y categorías</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'areas_preview'</span>: <span class="data-type">List[Dict]</span></code>
+                                            <small class="d-block text-muted">Áreas con relaciones y benchmarks</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'variable_preview'</span>: <span class="data-type">List</span></code>
+                                            <small class="d-block text-muted">Lista completa de variables</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'variables_by_type'</span>: <span class="data-type">Dict</span></code>
+                                            <small class="d-block text-muted">Variables organizadas por tipo (exógenas, estado, endógenas)</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'equation_preview'</span>: <span class="data-type">List</span></code>
+                                            <small class="d-block text-muted">Lista de ecuaciones del sistema</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">🔧 Datos de Simulación</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'questionary_preview'</span>: <span class="data-type">List</span></code>
+                                            <small class="d-block text-muted">Datos de cuestionarios</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'question_preview'</span>: <span class="data-type">List[Dict]</span></code>
+                                            <small class="d-block text-muted">Preguntas con respuestas de ejemplo por producto</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'simulations_preview'</span>: <span class="data-type">Dict</span></code>
+                                            <small class="d-block text-muted">Simulaciones organizadas por producto (leche, queso, yogur, etc.)</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'simulate_preview'</span>: <span class="data-type">Dict</span></code>
+                                            <small class="d-block text-muted">Simulación de ejemplo individual</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'pdf_preview'</span>: <span class="data-type">List</span></code>
+                                            <small class="d-block text-muted">Datos de configuración PDF</small>
+                                        </div>
+                                        
+                                        <div class="data-structure">
+                                            <code><span class="variable-name">'recommendations_preview'</span>: <span class="data-type">List</span></code>
+                                            <small class="d-block text-muted">Datos de recomendaciones financieras</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6 class="mb-0">📈 Datos Adicionales</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="data-structure">
+                                                    <code><span class="variable-name">'demand_example'</span>: <span class="data-type">Dict</span></code>
+                                                    <small class="d-block text-muted">Ejemplos de demanda por producto (valores fijos de 30 días)</small>
+                                                </div>
+                                                
+                                                <div class="data-structure">
+                                                    <code><span class="variable-name">'demand_configurations_preview'</span>: <span class="data-type">Dict</span></code>
+                                                    <small class="d-block text-muted">Configuraciones de demanda con base_demand, seasonality, etc.</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="data-structure">
+                                                    <code><span class="variable-name">'result_simulation_preview'</span>: <span class="data-type">Dict</span></code>
+                                                    <small class="d-block text-muted">Resultados de simulación con ROI, márgenes, intervalos de confianza</small>
+                                                </div>
+                                                
+                                                <div class="data-structure">
+                                                    <code><span class="variable-name">'summary_stats'</span>: <span class="data-type">Dict</span></code>
+                                                    <small class="d-block text-muted">Estadísticas resumen (totales de productos, áreas, variables, etc.)</small>
+                                                </div>
+                                                
+                                                <div class="data-structure">
+                                                    <code><span class="variable-name">'questionary_results_preview'</span>: <span class="data-type">Dict</span></code>
+                                                    <small class="d-block text-muted">Respuestas de cuestionarios organizadas por producto</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estructura detallada del business -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🏢 preview_data['business']</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="code-block">
+<pre><code>{
+    <span class="variable-name">'name'</span>: <span class="text-success">"Empresa Láctea Demo"</span>,
+    <span class="variable-name">'location'</span>: <span class="text-success">"La Paz, Bolivia"</span>,
+    <span class="variable-name">'type'</span>: <span class="text-success">"Pequeña empresa láctea"</span>,
+    <span class="variable-name">'employees'</span>: <span class="text-info">15</span>,
+    <span class="variable-name">'years_in_business'</span>: <span class="text-info">5</span>,
+    <span class="variable-name">'image_src'</span>: <span class="text-success">"business/pyme_lactea_default.jpg"</span>
+}</code></pre>
+                        </div>
+                        <small class="source-location">preview_data.py, líneas 263-270</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📊 preview_data['summary_stats']</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="code-block">
+<pre><code>{
+    <span class="variable-name">'total_products'</span>: <span class="data-type">len(products_data)</span>,
+    <span class="variable-name">'total_areas'</span>: <span class="data-type">len(areas_data)</span>,
+    <span class="variable-name">'total_variables'</span>: <span class="data-type">len(variables_data)</span>,
+    <span class="variable-name">'variables_by_type'</span>: {
+        <span class="variable-name">'exogenas'</span>: <span class="data-type">len(variables_by_type['exogenas'])</span>,
+        <span class="variable-name">'estado'</span>: <span class="data-type">len(variables_by_type['estado'])</span>,
+        <span class="variable-name">'endogenas'</span>: <span class="data-type">len(variables_by_type['endogenas'])</span>
+    },
+    <span class="variable-name">'total_equations'</span>: <span class="data-type">len(equations_data)</span>,
+    <span class="variable-name">'total_questions'</span>: <span class="data-type">len(question_data)</span>,
+    <span class="variable-name">'total_simulations'</span>: <span class="data-type">sum(...)</span>,
+    <span class="variable-name">'total_recommendations'</span>: <span class="data-type">len(recommendation_data)</span>,
+    <span class="variable-name">'total_pdfs'</span>: <span class="data-type">len(pdf_data)</span>
+}</code></pre>
+                        </div>
+                        <small class="source-location">preview_data.py, líneas 227-242</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos lácteos incluidos -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🥛 Productos Lácteos en simulations_preview</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Basado en las claves del diccionario en <code>simulations_preview</code> (líneas 125-167):</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span><strong>leche</strong></span>
+                                        <span class="badge bg-primary">Producto principal</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span><strong>queso</strong></span>
+                                        <span class="badge bg-info">Derivado</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span><strong>yogur</strong></span>
+                                        <span class="badge bg-success">Fermentado</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span><strong>mantequilla</strong></span>
+                                        <span class="badge bg-warning">Grasa láctea</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span><strong>crema</strong></span>
+                                        <span class="badge bg-secondary">Derivado</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span><strong>leche_deslactosada</strong></span>
+                                        <span class="badge bg-info">Especialidad</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span><strong>dulce_leche</strong></span>
+                                        <span class="badge bg-danger">Procesado</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manejo de errores -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">⚠️ Manejo de Errores en el Contexto</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">En caso de error, el contexto incluye datos mínimos:</p>
+                        <div class="code-block">
+<pre><code>context = {
+    <span class="variable-name">'preview_data'</span>: {
+        <span class="variable-name">'error'</span>: <span class="text-danger">True</span>,
+        <span class="variable-name">'message'</span>: <span class="data-type">str(e)</span>,
+        <span class="variable-name">'error_type'</span>: <span class="data-type">type(e).__name__</span>,
+        <span class="variable-name">'products_preview'</span>: [],
+        <span class="variable-name">'areas_preview'</span>: [],
+        <span class="data-type">// ... datos vacíos ...</span>
+        <span class="variable-name">'business'</span>: {
+            <span class="variable-name">'name'</span>: <span class="text-success">"Error - Datos no disponibles"</span>,
+            <span class="data-type">// ...</span>
+        }
+    },
+    <span class="variable-name">'title'</span>: <span class="text-success">'Vista Previa - Error'</span>
+}</code></pre>
+                        </div>
+                        <small class="source-location">register_elements.py, líneas 54-94</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Funciones de importación -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">📥 Fuentes de Datos Importadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Todas las importaciones utilizan <code>safe_import()</code> para evitar errores:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Datos de Productos:</h6>
+                                <ul class="list-unstyled">
+                                    <li><code>product.data.product_test_data</code></li>
+                                    <li><code>product.data.area_test_data</code></li>
+                                </ul>
+                                
+                                <h6>Variables y Ecuaciones:</h6>
+                                <ul class="list-unstyled">
+                                    <li><code>variable.data.variable_test_data</code></li>
+                                    <li><code>variable.data.equation_test_data</code></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Simulaciones:</h6>
+                                <ul class="list-unstyled">
+                                    <li><code>simulate.data.simulate_test_data</code></li>
+                                </ul>
+                                
+                                <h6>Cuestionarios:</h6>
+                                <ul class="list-unstyled">
+                                    <li><code>questionary.data.questionary_test_data</code></li>
+                                    <li><code>questionary.data.questionary_result_test_data</code></li>
+                                </ul>
+                                
+                                <h6>Finanzas:</h6>
+                                <ul class="list-unstyled">
+                                    <li><code>finance.data.finance_test_data</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    </div>
+    <!-- End Page-content -->
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+<!-- end main content-->
+{% endblock content %}
+
+{% block extra_js %}
+<!-- Required libraries -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Data preparation with error handling
+const previewData = {
+    areas_preview: {{ preview_data.areas_preview|safe|default:"[]" }},
+    simulations_preview: {{ preview_data.simulations_preview|safe|default:"{}" }},
+    demand_configurations_preview: {{ preview_data.demand_configurations_preview|safe|default:"{}" }},
+    result_simulation_preview: {{ preview_data.result_simulation_preview|safe|default:"{}" }},
+    simulate_preview: {{ preview_data.simulate_preview|safe|default:"{}" }},
+    summary_stats: {
+        variables_by_type: {{ preview_data.summary_stats.variables_by_type|safe|default:"{}" }}
+    }
+};
+
+// Initialize all visualizations
+document.addEventListener('DOMContentLoaded', function() {
+    // Create areas network graph
+    if (document.getElementById('areasNetworkGraph') && previewData.areas_preview.length > 0) {
+        createAreasNetworkGraph(previewData.areas_preview);
+    }
+    
+    // Create historical demand chart
+    if (document.getElementById('historicalDemandChart') && Object.keys(previewData.simulations_preview).length > 0) {
+        createHistoricalDemandChart(previewData.simulations_preview);
+    }
+    
+    // Create variables type chart
+    if (document.getElementById('variablesTypeChart')) {
+        createVariablesTypeChart(previewData.summary_stats.variables_by_type);
+    }
+    
+    // Create demand projections for each product
+    createProductDemandCharts(previewData.demand_configurations_preview);
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Form submission confirmation
+    initializeFormConfirmation();
+});
+
+// Areas Network Graph with D3.js
+function createAreasNetworkGraph(areasData) {
+    const container = document.getElementById('areasNetworkGraph');
+    if (!container || !areasData.length) return;
+    
+    const width = container.offsetWidth || 800;
+    const height = 600;
+    
+    // Prepare nodes and links
+    const nodes = [];
+    const links = [];
+    const nodeMap = {};
+    
+    areasData.forEach(area => {
+        if (!nodeMap[area.name]) {
+            nodeMap[area.name] = {
+                id: area.name,
+                group: getAreaGroup(area.name),
+                description: area.description,
+                kpis: area.kpis || {}
+            };
+            nodes.push(nodeMap[area.name]);
+        }
+        
+        if (area.relationships) {
+            area.relationships.forEach(target => {
+                if (target === "Todas las áreas") {
+                    areasData.forEach(otherArea => {
+                        if (otherArea.name !== area.name) {
+                            links.push({
+                                source: area.name,
+                                target: otherArea.name,
+                                value: 0.5
+                            });
+                        }
+                    });
+                } else if (areasData.some(a => a.name === target)) {
+                    links.push({
+                        source: area.name,
+                        target: target,
+                        value: 1
+                    });
+                }
+            });
+        }
+    });
+    
+    // Create SVG
+    const svg = d3.select("#areasNetworkGraph")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height]);
+    
+    // Create simulation
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(35));
+    
+    // Create zoom behavior
+    const g = svg.append("g");
+    const zoom = d3.zoom()
+        .scaleExtent([0.5, 4])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        });
+    svg.call(zoom);
+    
+    // Create links
+    const link = g.append("g")
+        .attr("stroke", "#999")
+        .attr("stroke-opacity", 0.6)
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("stroke-width", d => Math.sqrt(d.value) * 2);
+    
+    // Create nodes
+    const node = g.append("g")
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1.5)
+        .selectAll("circle")
+        .data(nodes)
+        .join("circle")
+        .attr("r", d => {
+            const connections = links.filter(l => l.source.id === d.id || l.target.id === d.id).length;
+            return Math.min(20 + connections * 2, 35);
+        })
+        .attr("fill", d => getAreaColor(d.group))
+        .call(drag(simulation));
+    
+    // Add labels
+    const label = g.append("g")
+        .selectAll("text")
+        .data(nodes)
+        .join("text")
+        .text(d => d.id)
+        .attr("font-size", 12)
+        .attr("dx", 25)
+        .attr("dy", 4);
+    
+    // Add tooltip
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "d3-tooltip")
+        .style("opacity", 0)
+        .style("position", "absolute")
+        .style("background", "rgba(0, 0, 0, 0.9)")
+        .style("color", "white")
+        .style("padding", "12px")
+        .style("border-radius", "6px")
+        .style("font-size", "12px");
+    
+    node.on("mouseover", function(event, d) {
+        tooltip.transition().duration(200).style("opacity", .9);
+        tooltip.html(`<strong>${d.id}</strong><br/>${d.description || ''}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function(d) {
+        tooltip.transition().duration(500).style("opacity", 0);
+    });
+    
+    // Update positions
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+        
+        node
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+        
+        label
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    });
+    
+    // Drag behavior
+    function drag(simulation) {
+        function dragstarted(event) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+        }
+        
+        function dragged(event) {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+        
+        function dragended(event) {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        }
+        
+        return d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended);
+    }
+}
+
+// Historical Demand Chart
+function createHistoricalDemandChart(simulationsData) {
+    const container = document.getElementById('historicalDemandChart');
+    if (!container) return;
+    
+    // Create tabs structure
+    let tabsHTML = '<ul class="nav nav-tabs mb-3" role="tablist">';
+    let contentHTML = '<div class="tab-content">';
+    let isFirst = true;
+    
+    Object.entries(simulationsData).forEach(([product, data]) => {
+        const activeClass = isFirst ? 'active' : '';
+        const productId = product.replace(/\s+/g, '');
+        
+        tabsHTML += `
+            <li class="nav-item">
+                <a class="nav-link ${activeClass}" data-bs-toggle="tab" href="#demand${productId}" role="tab">
+                    ${getProductIcon(product)} ${product.charAt(0).toUpperCase() + product.slice(1)}
+                </a>
+            </li>
+        `;
+        
+        contentHTML += `
+            <div class="tab-pane ${activeClass}" id="demand${productId}" role="tabpanel">
+                <canvas id="chart${productId}" height="100"></canvas>
+                <div id="analysis${productId}" class="mt-3"></div>
+            </div>
+        `;
+        
+        isFirst = false;
+    });
+    
+    tabsHTML += '</ul>';
+    contentHTML += '</div>';
+    
+    container.innerHTML = tabsHTML + contentHTML;
+    
+    // Create charts for each product
+    setTimeout(() => {
+        Object.entries(simulationsData).forEach(([product, data]) => {
+            const productId = product.replace(/\s+/g, '');
+            createProductChart(`chart${productId}`, product, data);
+        });
+    }, 100);
+}
+
+// Variables Type Chart
+function createVariablesTypeChart(variablesByType) {
+    const canvas = document.getElementById('variablesTypeChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Exógenas (Entrada)', 'Estado', 'Endógenas (Salida)'],
+            datasets: [{
+                data: [
+                    variablesByType.exogenas || 0,
+                    variablesByType.estado || 0,
+                    variablesByType.endogenas || 0
+                ],
+                backgroundColor: [
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Distribución de Variables por Tipo'
+                }
+            }
+        }
+    });
+}
+
+// Helper functions
+function getAreaGroup(areaName) {
+    const groups = {
+        "Abastecimiento": 1,
+        "Inventario Insumos": 2,
+        "Inventario Productos Finales": 2,
+        "Producción": 3,
+        "Control de Calidad": 3,
+        "Distribución": 4,
+        "Ventas": 4,
+        "Marketing": 5,
+        "Competencia": 5,
+        "Contabilidad": 6,
+        "Recursos Humanos": 7,
+        "Mantenimiento": 8
+    };
+    return groups[areaName] || 0;
+}
+
+function getAreaColor(group) {
+    const colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf"];
+    return colors[group % colors.length];
+}
+
+function getProductIcon(product) {
+    const icons = {
+        'leche': '<i class="ri-drop-line me-1"></i>',
+        'queso': '<i class="ri-cheese-line me-1"></i>',
+        'yogur': '<i class="ri-cup-line me-1"></i>',
+        'mantequilla': '<i class="ri-cake-line me-1"></i>',
+        'crema': '<i class="ri-water-flash-line me-1"></i>',
+        'dulce': '<i class="ri-heart-line me-1"></i>'
+    };
+    return icons[product.toLowerCase()] || '<i class="ri-product-hunt-line me-1"></i>';
+}
+
+function createProductChart(canvasId, productName, productData) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !productData.simulations) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    const datasets = productData.simulations.map((sim, index) => {
+        const colors = ['rgb(75, 192, 192)', 'rgb(255, 206, 86)', 'rgb(255, 99, 132)'];
+        return {
+            label: sim.name || sim.scenario,
+            data: sim.demand_history || [],
+            borderColor: colors[index % colors.length],
+            backgroundColor: colors[index % colors.length].replace('rgb', 'rgba').replace(')', ', 0.1)'),
+            tension: 0.4
+        };
+    });
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 30}, (_, i) => `Día ${i + 1}`),
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Simulaciones de Demanda - ${productName.charAt(0).toUpperCase() + productName.slice(1)}`
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+}
+
+function createProductDemandCharts(demandConfigurations) {
+    Object.entries(demandConfigurations).forEach(([key, config]) => {
+        const canvasId = `demandChart${key.charAt(0).toUpperCase() + key.slice(1).replace(/\s+/g, '')}`;
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const periods = 30;
+        const baseDemand = config.base_demand;
+        const growth = config.growth_rate;
+        const volatility = config.volatility;
+        
+        // Generate scenarios
+        const optimistic = Array(periods).fill().map((_, i) => {
+            return baseDemand * (1 + growth * 1.5) ** i * (1 + Math.random() * volatility);
+        });
+        
+        const baseline = Array(periods).fill().map((_, i) => {
+            return baseDemand * (1 + growth) ** i * (1 + (Math.random() - 0.5) * volatility);
+        });
+        
+        const pessimistic = Array(periods).fill().map((_, i) => {
+            return baseDemand * (1 + growth * 0.5) ** i * (1 - Math.random() * volatility);
+        });
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: periods}, (_, i) => `Día ${i+1}`),
+                datasets: [{
+                    label: 'Optimista',
+                    data: optimistic,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    fill: false
+                }, {
+                    label: 'Base',
+                    data: baseline,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    fill: false
+                }, {
+                    label: 'Pesimista',
+                    data: pessimistic,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `Proyección de Demanda - ${key.charAt(0).toUpperCase() + key.slice(1)}`
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    });
+}
+
+function initializeFormConfirmation() {
+    const confirmForm = document.getElementById('confirmForm');
+    if (!confirmForm) return;
+    
+    confirmForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        Swal.fire({
+            title: '¿Confirmar creación?',
+            html: `
+                <div class="text-start">
+                    <p class="mb-3">Se creará la siguiente configuración inicial:</p>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="ri-check-circle-fill text-success me-2"></i>
+                            <strong>${previewData.summary_stats.total_products || 7} productos lácteos</strong> predefinidos
+                        </li>
+                        <li class="mb-2">
+                            <i class="ri-check-circle-fill text-success me-2"></i>
+                            <strong>${previewData.summary_stats.total_areas || 12} áreas operativas</strong> del negocio
+                        </li>
+                        <li class="mb-2">
+                            <i class="ri-check-circle-fill text-success me-2"></i>
+                            <strong>${previewData.summary_stats.total_variables || 30}+ variables</strong> configuradas
+                        </li>
+                        <li class="mb-2">
+                            <i class="ri-check-circle-fill text-success me-2"></i>
+                            <strong>Simulación de 30 días</strong> inicializada
+                        </li>
+                    </ul>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="ri-information-line me-2"></i>
+                        <strong>Nota:</strong> Podrá personalizar todo después de la creación.
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="ri-check-line me-1"></i> Sí, crear configuración',
+            cancelButtonText: '<i class="ri-close-line me-1"></i> Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Creando configuración...',
+                    html: `
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mb-0">Por favor espere mientras configuramos su sistema.</p>
+                            <small class="text-muted">Este proceso puede tomar unos segundos.</small>
+                        </div>
+                    `,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false
+                });
+                
+                setTimeout(() => {
+                    confirmForm.submit();
+                }, 500);
+            }
+        });
+    });
+}
+</script>
+{% endblock extra_js %}
