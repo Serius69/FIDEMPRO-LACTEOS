@@ -396,6 +396,109 @@ class SimulateResultView(LoginRequiredMixin, View):
         
         return combined_validation
 
+    
+    def _generate_validation_alerts_grouped(self, validation_results):
+        """
+        Agrupa las alertas de validación por tipo para mostrar en el template
+        """
+        try:
+            alerts_by_type = {
+                'ERROR': [],
+                'WARNING': [],
+                'INFO': []
+            }
+            
+            # Procesar alertas básicas
+            basic_validation = validation_results.get('basic_validation', {})
+            if basic_validation.get('alerts'):
+                for alert in basic_validation['alerts']:
+                    alert_type = alert.get('type', 'INFO').upper()
+                    severity = alert.get('severity', 'INFO').upper()
+                    
+                    alert_data = {
+                        'message': alert.get('message', 'Alerta de validación'),
+                        'details': alert.get('details', ''),
+                        'severity': severity,
+                        'category': alert.get('category', 'General'),
+                        'recommendation': alert.get('recommendation', '')
+                    }
+                    
+                    if alert_type in alerts_by_type:
+                        alerts_by_type[alert_type].append(alert_data)
+                    else:
+                        alerts_by_type['INFO'].append(alert_data)
+            
+            # Procesar alertas de predicción
+            prediction_validation = validation_results.get('prediction_validation', {})
+            if prediction_validation.get('alerts'):
+                for alert in prediction_validation['alerts']:
+                    alert_type = alert.get('type', 'INFO').upper()
+                    severity = alert.get('severity', 'INFO').upper()
+                    
+                    alert_data = {
+                        'message': alert.get('message', 'Alerta de predicción'),
+                        'details': alert.get('details', ''),
+                        'severity': severity,
+                        'category': 'Predicción',
+                        'recommendation': alert.get('recommendation', '')
+                    }
+                    
+                    if alert_type in alerts_by_type:
+                        alerts_by_type[alert_type].append(alert_data)
+                    else:
+                        alerts_by_type['INFO'].append(alert_data)
+            
+            # Generar alertas automáticas basadas en métricas
+            self._add_automatic_alerts(alerts_by_type, validation_results)
+            
+            # Filtrar tipos vacíos
+            filtered_alerts = {k: v for k, v in alerts_by_type.items() if v}
+            
+            logger.info(f"Generated {sum(len(alerts) for alerts in filtered_alerts.values())} validation alerts")
+            return filtered_alerts
+            
+        except Exception as e:
+            logger.error(f"Error generating validation alerts: {str(e)}")
+            return {'INFO': [{'message': 'Error al procesar alertas de validación', 'severity': 'INFO'}]}
+
+    def _add_automatic_alerts(self, alerts_by_type, validation_results):
+        """Agregar alertas automáticas basadas en métricas"""
+        try:
+            # Alerta por precisión baja
+            summary = validation_results.get('basic_validation', {}).get('summary', {})
+            accuracy = summary.get('overall_accuracy', 0)
+            
+            if accuracy < 70:
+                alerts_by_type['WARNING'].append({
+                    'message': f'Precisión del modelo baja: {accuracy:.1f}%',
+                    'details': 'El modelo tiene una precisión inferior al 70%, considere revisar los parámetros.',
+                    'severity': 'WARNING',
+                    'category': 'Precisión',
+                    'recommendation': 'Revisar parámetros del modelo y datos de entrada'
+                })
+            elif accuracy < 50:
+                alerts_by_type['ERROR'].append({
+                    'message': f'Precisión del modelo crítica: {accuracy:.1f}%',
+                    'details': 'El modelo tiene una precisión muy baja, requiere revisión urgente.',
+                    'severity': 'ERROR',
+                    'category': 'Precisión',
+                    'recommendation': 'Revisar completamente el modelo y los datos'
+                })
+            
+            # Alerta por tasa de éxito baja
+            success_rate = summary.get('success_rate', 0)
+            if success_rate < 60:
+                alerts_by_type['WARNING'].append({
+                    'message': f'Tasa de éxito baja: {success_rate:.1f}%',
+                    'details': 'Muchas predicciones no cumplen con los criterios de calidad.',
+                    'severity': 'WARNING',
+                    'category': 'Calidad',
+                    'recommendation': 'Revisar criterios de validación y ajustar modelo'
+                })
+                
+        except Exception as e:
+            logger.error(f"Error adding automatic alerts: {str(e)}")
+    
     def _build_base_context(self, simulation_instance, results_simulation, product_instance, business_instance,
                         analysis_data, historical_demand, demand_stats, comparison_chart, financial_results, validation_results):
         """Build the base context dictionary"""
@@ -1488,6 +1591,320 @@ class SimulateResultView(LoginRequiredMixin, View):
             'rankings': rankings[:5],  # Top 5
             'is_best': current_rank == 1 if current_rank else False
         }
+        
+    def _calculate_complete_demand_stats(self, historical_demand, results_simulation):
+        """
+        Calcula estadísticas completas de demanda incluyendo percentiles, mediana, etc.
+        """
+        try:
+            demand_stats = {
+                'historical': {},
+                'simulated': {},
+                'comparison': {}
+            }
+            
+            # Extraer demandas simuladas
+            simulated_demands = []
+            for result in results_simulation:
+                if hasattr(result, 'demand_mean') and result.demand_mean is not None:
+                    simulated_demands.append(float(result.demand_mean))
+            
+            # Calcular estadísticas históricas
+            if historical_demand:
+                demand_stats['historical'] = self._calculate_detailed_statistics(historical_demand)
+            
+            # Calcular estadísticas simuladas
+            if simulated_demands:
+                demand_stats['simulated'] = self._calculate_detailed_statistics(simulated_demands)
+            
+            # Calcular comparación si ambas están disponibles
+            if historical_demand and simulated_demands:
+                demand_stats['comparison'] = self._calculate_comparison_metrics(
+                    historical_demand, simulated_demands
+                )
+            
+            logger.info("Complete demand statistics calculated successfully")
+            return demand_stats
+            
+        except Exception as e:
+            logger.error(f"Error calculating complete demand stats: {str(e)}")
+            return {'historical': {}, 'simulated': {}, 'comparison': {}}
+
+    def _calculate_detailed_statistics(self, data):
+        """Calcular estadísticas detalladas para un conjunto de datos"""
+        try:
+            if not data:
+                return {}
+            
+            data_array = np.array(data)
+            
+            stats = {
+                'mean': float(np.mean(data_array)),
+                'std': float(np.std(data_array)),
+                'min': float(np.min(data_array)),
+                'max': float(np.max(data_array)),
+                'median': float(np.median(data_array)),
+                'q25': float(np.percentile(data_array, 25)),
+                'q75': float(np.percentile(data_array, 75)),
+                'count': len(data),
+                'sum': float(np.sum(data_array))
+            }
+            
+            # Coeficiente de variación
+            stats['cv'] = stats['std'] / stats['mean'] if stats['mean'] != 0 else 0
+            
+            # Rango intercuartílico
+            stats['iqr'] = stats['q75'] - stats['q25']
+            
+            # Skewness y Kurtosis
+            if len(data) >= 3:
+                stats['skewness'] = float(scipy.stats.skew(data_array))
+                stats['kurtosis'] = float(scipy.stats.kurtosis(data_array))
+            else:
+                stats['skewness'] = 0
+                stats['kurtosis'] = 0
+            
+            # Percentiles adicionales
+            stats['p10'] = float(np.percentile(data_array, 10))
+            stats['p90'] = float(np.percentile(data_array, 90))
+            
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error calculating detailed statistics: {str(e)}")
+            return {}
+
+    def _calculate_comparison_metrics(self, historical_data, simulated_data):
+        """Calcular métricas de comparación entre datos históricos y simulados"""
+        try:
+            comparison = {}
+            
+            # Convertir a arrays numpy
+            hist_array = np.array(historical_data)
+            sim_array = np.array(simulated_data)
+            
+            # Ajustar longitudes para comparación
+            min_length = min(len(hist_array), len(sim_array))
+            hist_trimmed = hist_array[:min_length]
+            sim_trimmed = sim_array[:min_length]
+            
+            # Diferencias básicas
+            mean_diff = np.mean(sim_trimmed) - np.mean(hist_trimmed)
+            comparison['mean_diff'] = float(mean_diff)
+            comparison['mean_diff_pct'] = float((mean_diff / np.mean(hist_trimmed)) * 100) if np.mean(hist_trimmed) != 0 else 0
+            
+            # Diferencia en variabilidad
+            hist_cv = np.std(hist_trimmed) / np.mean(hist_trimmed) if np.mean(hist_trimmed) != 0 else 0
+            sim_cv = np.std(sim_trimmed) / np.mean(sim_trimmed) if np.mean(sim_trimmed) != 0 else 0
+            comparison['cv_diff'] = float(sim_cv - hist_cv)
+            
+            # Correlación
+            if len(hist_trimmed) > 1 and len(sim_trimmed) > 1:
+                correlation = np.corrcoef(hist_trimmed, sim_trimmed)[0, 1]
+                comparison['correlation'] = float(correlation) if not np.isnan(correlation) else 0
+            else:
+                comparison['correlation'] = 0
+            
+            # Métricas de error
+            comparison['mape'] = self._calculate_mape(hist_trimmed, sim_trimmed)
+            comparison['rmse'] = self._calculate_rmse(hist_trimmed, sim_trimmed)
+            comparison['mae'] = self._calculate_mae(hist_trimmed, sim_trimmed)
+            
+            # R² (coeficiente de determinación)
+            if len(hist_trimmed) > 1:
+                ss_res = np.sum((hist_trimmed - sim_trimmed) ** 2)
+                ss_tot = np.sum((hist_trimmed - np.mean(hist_trimmed)) ** 2)
+                comparison['r_squared'] = float(1 - (ss_res / ss_tot)) if ss_tot != 0 else 0
+            else:
+                comparison['r_squared'] = 0
+            
+            return comparison
+            
+        except Exception as e:
+            logger.error(f"Error calculating comparison metrics: {str(e)}")
+            return {}
+
+    def _calculate_mape(self, actual, predicted):
+        """Calcular Mean Absolute Percentage Error"""
+        try:
+            if len(actual) == 0:
+                return 100.0
+            
+            mask = actual != 0
+            if not np.any(mask):
+                return 100.0
+            
+            mape = np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100
+            return float(mape)
+        except:
+            return 100.0
+
+    def _calculate_rmse(self, actual, predicted):
+        """Calcular Root Mean Square Error"""
+        try:
+            return float(np.sqrt(np.mean((actual - predicted) ** 2)))
+        except:
+            return 0.0
+
+    def _calculate_mae(self, actual, predicted):
+        """Calcular Mean Absolute Error"""
+        try:
+            return float(np.mean(np.abs(actual - predicted)))
+        except:
+            return 0.0
+    
+    
+    def _calculate_enhanced_totales_acumulativos(self, all_variables_extracted):
+        """
+        Calcula totales acumulativos con estadísticas completas (min, max, std, trends)
+        """
+        try:
+            enhanced_totales = {}
+            
+            if not all_variables_extracted:
+                logger.warning("No variables extracted for enhanced totales calculation")
+                return enhanced_totales
+            
+            # Variables principales a procesar
+            variables_to_process = [
+                'PVP', 'TPV', 'IT', 'TG', 'GT', 'NR', 'NSC', 'EOG', 
+                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF'
+            ]
+            
+            for var_name in variables_to_process:
+                var_data = self._collect_enhanced_variable_data(all_variables_extracted, var_name)
+                
+                if var_data['values']:
+                    enhanced_totales[var_name] = {
+                        'total': var_data['total'],
+                        'unit': var_data['unit'],
+                        'trend': var_data['trend'],
+                        'min_value': var_data['min_value'],
+                        'max_value': var_data['max_value'],
+                        'std_deviation': var_data['std_deviation'],
+                        'mean': var_data['mean'],
+                        'count': len(var_data['values']),
+                        'cv': var_data['cv'],  # Coeficiente de variación
+                        'range': var_data['max_value'] - var_data['min_value'] if var_data['max_value'] and var_data['min_value'] else 0,
+                        'trend_strength': var_data['trend_strength'],
+                        'volatility': var_data['volatility']
+                    }
+            
+            logger.info(f"Enhanced totales calculated for {len(enhanced_totales)} variables")
+            return enhanced_totales
+            
+        except Exception as e:
+            logger.error(f"Error calculating enhanced totales: {str(e)}")
+            return {}
+
+    def _collect_enhanced_variable_data(self, all_variables_extracted, var_name):
+        """Recopilar datos mejorados para una variable específica"""
+        try:
+            values = []
+            
+            for day_data in all_variables_extracted:
+                if var_name in day_data and day_data[var_name] is not None:
+                    try:
+                        value = float(day_data[var_name])
+                        values.append(value)
+                    except (ValueError, TypeError):
+                        continue
+            
+            if not values:
+                return {
+                    'values': [],
+                    'total': 0,
+                    'unit': self._get_variable_unit(var_name),
+                    'trend': 'stable',
+                    'min_value': None,
+                    'max_value': None,
+                    'std_deviation': None,
+                    'mean': 0,
+                    'cv': 0,
+                    'trend_strength': 0,
+                    'volatility': 0
+                }
+            
+            # Calcular estadísticas básicas
+            total = sum(values)
+            mean = np.mean(values)
+            std_dev = np.std(values)
+            min_val = min(values)
+            max_val = max(values)
+            
+            # Calcular coeficiente de variación
+            cv = std_dev / mean if mean != 0 else 0
+            
+            # Calcular tendencia y fuerza de tendencia
+            trend_info = self._calculate_trend_analysis(values)
+            
+            # Calcular volatilidad (desviación estándar normalizada)
+            volatility = cv * 100  # CV expresado como porcentaje
+            
+            return {
+                'values': values,
+                'total': total,
+                'unit': self._get_variable_unit(var_name),
+                'trend': trend_info['direction'],
+                'min_value': min_val,
+                'max_value': max_val,
+                'std_deviation': std_dev,
+                'mean': mean,
+                'cv': cv,
+                'trend_strength': trend_info['strength'],
+                'volatility': volatility
+            }
+            
+        except Exception as e:
+            logger.error(f"Error collecting enhanced data for {var_name}: {str(e)}")
+            return {
+                'values': [],
+                'total': 0,
+                'unit': self._get_variable_unit(var_name),
+                'trend': 'stable',
+                'min_value': None,
+                'max_value': None,
+                'std_deviation': None,
+                'mean': 0,
+                'cv': 0,
+                'trend_strength': 0,
+                'volatility': 0
+            }
+
+    def _calculate_trend_analysis(self, values):
+        """Calcular análisis de tendencia detallado"""
+        try:
+            if len(values) < 3:
+                return {'direction': 'stable', 'strength': 0}
+            
+            # Usar regresión lineal para determinar tendencia
+            x = np.arange(len(values))
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, values)
+            
+            # Determinar dirección
+            threshold = 0.01 * np.mean(values)  # 1% del valor medio
+            
+            if slope > threshold:
+                direction = 'increasing'
+            elif slope < -threshold:
+                direction = 'decreasing'
+            else:
+                direction = 'stable'
+            
+            # Calcular fuerza de tendencia (basado en R²)
+            trend_strength = abs(r_value) * 100  # R² como porcentaje
+            
+            return {
+                'direction': direction,
+                'strength': trend_strength,
+                'slope': slope,
+                'r_squared': r_value ** 2,
+                'p_value': p_value
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating trend analysis: {str(e)}")
+            return {'direction': 'stable', 'strength': 0}
 
 
 def simulate_result_simulation_view(request, simulation_id):
