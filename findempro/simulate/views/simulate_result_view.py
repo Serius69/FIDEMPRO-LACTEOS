@@ -82,6 +82,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Get results with pagination - FIXED
             results_simulation = self._get_paginated_results(request, simulation_id)
             
+            
             # Get historical demand data
             historical_demand = self._get_historical_demand(simulation_instance)
             
@@ -211,6 +212,38 @@ class SimulateResultView(LoginRequiredMixin, View):
             )
             context.update(validation_charts)
             
+            # Extract variables
+            all_variables_extracted = self._extract_all_variables(list(results_simulation))
+            
+            # Generate main analysis charts
+            analysis_data = chart_generator.generate_all_charts(
+                simulation_id, simulation_instance, all_variables_extracted, historical_demand
+            )
+            
+            # NUEVA FUNCIONALIDAD: Generate endogenous variables charts
+            endogenous_charts = chart_generator.generate_endogenous_variables_charts(
+                all_variables_extracted, analysis_data.get('totales_acumulativos', {})
+            )
+            
+            # NUEVA FUNCIONALIDAD: Enhanced totales_acumulativos with trends and statistics
+            enhanced_totales = self._enhance_totales_acumulativos(
+                analysis_data.get('totales_acumulativos', {}), all_variables_extracted
+            )
+            
+            # Update analysis_data
+            analysis_data['totales_acumulativos'] = enhanced_totales
+            analysis_data['all_variables_extracted'] = all_variables_extracted
+            
+            # ... resto del código ...
+            
+            # Add endogenous charts to context
+            context['endogenous_charts'] = endogenous_charts
+            context['totales_acumulativos'] = enhanced_totales
+            
+            
+            
+            
+            
             # Ensure all expected keys are present with default values
             context.setdefault('chart_images', {})
             context.setdefault('financial_recommendations', financial_results.get('financial_recommendations', []))
@@ -227,6 +260,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Return minimal context on error
             return {
+                # 'demand_initial': historical_mean,
                 'simulation_id': simulation_id,
                 'simulation_instance': simulation_instance,
                 'results_simulation': results_simulation,
@@ -248,6 +282,51 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'three_line_validation_metrics': {}
             }
 
+    def _enhance_totales_acumulativos(self, totales_acumulativos, all_variables_extracted):
+        """Enhanced totales with trends and additional statistics"""
+        try:
+            enhanced_totales = {}
+            
+            for var_name, var_info in totales_acumulativos.items():
+                enhanced_info = dict(var_info)  # Copy existing info
+                
+                # Calculate trend
+                values = []
+                for day_data in all_variables_extracted:
+                    if var_name in day_data and day_data[var_name] is not None:
+                        values.append(float(day_data[var_name]))
+                
+                if len(values) > 3:
+                    # Calculate trend using linear regression
+                    x = np.arange(len(values))
+                    slope, _, _, _, _ = scipy.stats.linregress(x, values)
+                    
+                    if slope > 0.01:
+                        enhanced_info['trend'] = 'increasing'
+                    elif slope < -0.01:
+                        enhanced_info['trend'] = 'decreasing'
+                    else:
+                        enhanced_info['trend'] = 'stable'
+                    
+                    # Add min/max values
+                    enhanced_info['min_value'] = min(values)
+                    enhanced_info['max_value'] = max(values)
+                    enhanced_info['std_deviation'] = np.std(values)
+                    
+                else:
+                    enhanced_info['trend'] = 'stable'
+                    enhanced_info['min_value'] = None
+                    enhanced_info['max_value'] = None
+                    enhanced_info['std_deviation'] = None
+                
+                enhanced_totales[var_name] = enhanced_info
+            
+            return enhanced_totales
+            
+        except Exception as e:
+            logger.error(f"Error enhancing totales_acumulativos: {str(e)}")
+            return totales_acumulativos
+    
     def _set_business_on_service(self, financial_service, business_instance):
         """Set business instance oQn financial service using available method/attribute"""
         if hasattr(financial_service, 'set_business'):
@@ -278,9 +357,7 @@ class SimulateResultView(LoginRequiredMixin, View):
         
         # Get financial analysis
         try:
-            financial_results = financial_service.analyze_financial_results(
-                simulation_id, analysis_data['totales_acumulativos']
-            )
+            financial_results = financial_service.analyze_financial_results(simulation_id)
         except Exception as e:
             logger.error(f"Error in financial analysis: {e}")
             financial_results = {}
@@ -362,7 +439,6 @@ class SimulateResultView(LoginRequiredMixin, View):
             **financial_results,
         }
     
-        # print(context)
         return context
 
     def _add_model_validation(self, validation_service, simulation_instance, results_simulation, analysis_data):
@@ -1192,7 +1268,7 @@ class SimulateResultView(LoginRequiredMixin, View):
         return summary
     
     def _extract_all_variables(self, results: List[ResultSimulation]) -> List[Dict[str, Any]]:
-        """Extract all variables from results for analysis"""
+        """Extract all variables from results for analysis - CORREGIDO"""
         all_variables = []
         
         for idx, result in enumerate(results):
@@ -1203,13 +1279,41 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'demand_std': float(result.demand_std_deviation)
             }
             
+            # CORRECCION: Acceder a las variables correctamente
             if hasattr(result, 'variables') and result.variables:
-                for key, value in result.variables.items():
-                    if not key.startswith('_'):
-                        try:
-                            day_data[key] = float(value) if isinstance(value, (int, float)) else value
-                        except:
-                            day_data[key] = 0.0
+                # Si variables es un string JSON, parsearlo
+                if isinstance(result.variables, str):
+                    try:
+                        variables_dict = json.loads(result.variables)
+                        for key, value in variables_dict.items():
+                            if not key.startswith('_'):
+                                try:
+                                    day_data[key] = float(value) if isinstance(value, (int, float, str)) else value
+                                except (ValueError, TypeError):
+                                    day_data[key] = value
+                    except json.JSONDecodeError:
+                        logger.error(f"Error parsing variables JSON for result {result.id}")
+                
+                # Si variables es un diccionario
+                elif isinstance(result.variables, dict):
+                    for key, value in result.variables.items():
+                        if not key.startswith('_'):
+                            try:
+                                day_data[key] = float(value) if isinstance(value, (int, float)) else value
+                            except (ValueError, TypeError):
+                                day_data[key] = value
+            
+            # CORRECCION: Si no hay variables en el resultado, intentar calcularlas
+            else:
+                # Usar el math engine para calcular variables básicas
+                try:
+                    calculated_vars = self.math_engine.calculate_basic_variables(
+                        demand=day_data['demand_mean'],
+                        day=day_data['day']
+                    )
+                    day_data.update(calculated_vars)
+                except Exception as e:
+                    logger.warning(f"Could not calculate variables for day {idx + 1}: {e}")
             
             all_variables.append(day_data)
         

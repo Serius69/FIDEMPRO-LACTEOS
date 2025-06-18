@@ -392,6 +392,8 @@ class SimulationCore:
             # Días posteriores: usar promedio móvil de días anteriores simulados
             window_size = min(7, day_index)  # Ventana de hasta 7 días
             previous_demands = []
+            demand_history = self._parse_demand_history(simulation_instance.demand_history)
+            variable_dict['DPH'] = float(np.mean(demand_history)) if demand_history else predicted_demand
             
             # Obtener demandas de días anteriores desde los resultados almacenados
             if 'previous_results' in simulation_data:

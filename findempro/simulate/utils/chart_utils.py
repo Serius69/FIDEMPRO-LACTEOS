@@ -4,6 +4,7 @@ Enhanced chart generation utilities for simulation results.
 Focuses on daily comparisons and trend analysis.
 """
 import base64
+import io
 import logging
 from io import BytesIO
 from typing import Dict, List, Any, Optional, Tuple
@@ -310,59 +311,340 @@ class ChartGenerator:
             return {}
     
     def generate_endogenous_variables_charts(self, all_variables_extracted, totales_acumulativos):
-        """
-        Genera gráficos para las variables endógenas principales
-        """
+        """Generate comprehensive charts for endogenous variables"""
         endogenous_charts = {}
         
-        # Variables endógenas clave que aparecen en el log
-        key_variables = ['IT', 'GT', 'GO', 'TG', 'TPV', 'TPPRO', 'DI', 
-                        'CTAI', 'CTTL', 'CA', 'MP', 'MI', 'HO', 'PE', 
-                        'MB', 'NR', 'GG', 'SE', 'PC']
+        try:
+            # Variables principales para gráficos individuales
+            key_variables = ['IT', 'GT', 'TG', 'TPV', 'NSC', 'EOG', 'NR']
+            
+            for var in key_variables:
+                if self._has_variable_data(all_variables_extracted, var):
+                    chart = self._generate_variable_time_series(all_variables_extracted, var)
+                    if chart:
+                        endogenous_charts[f'{var}_time_series'] = chart
+            
+            # Gráfico de correlaciones entre variables financieras
+            financial_vars = ['IT', 'GT', 'TG', 'NR']
+            correlation_chart = self._generate_correlation_matrix(all_variables_extracted, financial_vars)
+            if correlation_chart:
+                endogenous_charts['financial_correlations'] = correlation_chart
+            
+            # Gráfico de eficiencia operativa vs satisfacción
+            efficiency_chart = self._generate_efficiency_satisfaction_scatter(all_variables_extracted)
+            if efficiency_chart:
+                endogenous_charts['efficiency_satisfaction'] = efficiency_chart
+            
+            # Gráfico de tendencias comparativas
+            trends_chart = self._generate_comparative_trends(all_variables_extracted, key_variables)
+            if trends_chart:
+                endogenous_charts['comparative_trends'] = trends_chart
+            
+            # Gráfico de distribuciones
+            distribution_chart = self._generate_variables_distribution(all_variables_extracted, key_variables)
+            if distribution_chart:
+                endogenous_charts['variables_distribution'] = distribution_chart
+            
+            logger.info(f"Generated {len(endogenous_charts)} endogenous variable charts")
+            return endogenous_charts
+            
+        except Exception as e:
+            logger.error(f"Error generating endogenous charts: {str(e)}")
+            return {}
+
+    def _has_variable_data(self, data, variable):
+        """Check if variable has data across days"""
+        if not data:
+            return False
         
-        for var_key in key_variables:
-            try:
-                # Recopilar datos directamente de all_variables_extracted
+        values = [day.get(variable) for day in data if day.get(variable) is not None]
+        return len(values) > 1
+    
+    def _generate_variable_time_series(self, data, variable):
+        """Generate time series chart for a specific variable"""
+        try:
+            days = []
+            values = []
+            
+            for i, day_data in enumerate(data):
+                if variable in day_data and day_data[variable] is not None:
+                    days.append(i + 1)
+                    values.append(float(day_data[variable]))
+            
+            if len(values) < 2:
+                return None
+            
+            plt.figure(figsize=(12, 6))
+            plt.plot(days, values, marker='o', linewidth=2, markersize=6)
+            plt.title(f'Evolución de {variable} a lo largo del tiempo', fontsize=14, fontweight='bold')
+            plt.xlabel('Día de Simulación', fontsize=12)
+            plt.ylabel(self._get_variable_unit(variable), fontsize=12)
+            plt.grid(True, alpha=0.3)
+            
+            # Agregar línea de tendencia
+            if len(values) > 3:
+                z = np.polyfit(days, values, 1)
+                p = np.poly1d(z)
+                plt.plot(days, p(days), "--", alpha=0.8, color='red', label='Tendencia')
+                plt.legend()
+            
+            # Mejorar el formato
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode()
+            plt.close()
+            
+            return image_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating time series for {variable}: {str(e)}")
+            plt.close()
+            return None
+    
+    def _generate_correlation_matrix(self, data, variables):
+        """Generate correlation matrix heatmap for specified variables"""
+        try:
+            # Extraer datos de variables
+            var_data = {}
+            for var in variables:
+                values = []
+                for day_data in data:
+                    if var in day_data and day_data[var] is not None:
+                        values.append(float(day_data[var]))
+                    else:
+                        values.append(0)
+                var_data[var] = values
+            
+            if len(var_data) < 2:
+                return None
+            
+            # Crear DataFrame para correlación
+            df = pd.DataFrame(var_data)
+            correlation_matrix = df.corr()
+            
+            plt.figure(figsize=(10, 8))
+            sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0,
+                       square=True, fmt='.2f', cbar_kws={'shrink': 0.8})
+            plt.title('Matriz de Correlación - Variables Financieras', fontsize=14, fontweight='bold')
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode()
+            plt.close()
+            
+            return image_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating correlation matrix: {str(e)}")
+            plt.close()
+            return None
+    
+    def _generate_efficiency_satisfaction_scatter(self, data):
+        """Generate scatter plot of efficiency vs satisfaction"""
+        try:
+            efficiency = []
+            satisfaction = []
+            days = []
+            
+            for i, day_data in enumerate(data):
+                if 'EOG' in day_data and 'NSC' in day_data:
+                    if day_data['EOG'] is not None and day_data['NSC'] is not None:
+                        efficiency.append(float(day_data['EOG']) * 100)
+                        satisfaction.append(float(day_data['NSC']) * 100)
+                        days.append(i + 1)
+            
+            if len(efficiency) < 3:
+                return None
+            
+            plt.figure(figsize=(10, 8))
+            scatter = plt.scatter(efficiency, satisfaction, c=days, cmap='viridis', 
+                                s=60, alpha=0.7, edgecolors='white', linewidth=1)
+            
+            plt.xlabel('Eficiencia Operativa (%)', fontsize=12)
+            plt.ylabel('Satisfacción del Cliente (%)', fontsize=12)
+            plt.title('Relación: Eficiencia Operativa vs Satisfacción del Cliente', 
+                     fontsize=14, fontweight='bold')
+            
+            # Agregar colorbar
+            cbar = plt.colorbar(scatter)
+            cbar.set_label('Día de Simulación', fontsize=10)
+            
+            # Agregar línea de tendencia
+            if len(efficiency) > 3:
+                z = np.polyfit(efficiency, satisfaction, 1)
+                p = np.poly1d(z)
+                x_trend = np.linspace(min(efficiency), max(efficiency), 100)
+                plt.plot(x_trend, p(x_trend), "--", alpha=0.8, color='red', 
+                        linewidth=2, label='Tendencia')
+                plt.legend()
+            
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode()
+            plt.close()
+            
+            return image_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating efficiency-satisfaction scatter: {str(e)}")
+            plt.close()
+            return None
+    
+    def _generate_comparative_trends(self, data, variables):
+        """Generate comparative trends chart for multiple variables"""
+        try:
+            plt.figure(figsize=(14, 8))
+            
+            colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2']
+            
+            for i, var in enumerate(variables):
+                if not self._has_variable_data(data, var):
+                    continue
+                
                 days = []
                 values = []
-                dates = []
                 
-                for day_idx, day_data in enumerate(all_variables_extracted):
-                    day_num = day_idx + 1
-                    
-                    # La variable está directamente en el diccionario
-                    if var_key in day_data:
-                        value = day_data.get(var_key, 0)
-                        if value is not None and value != 0:
-                            days.append(day_num)
-                            values.append(float(value))
-                            dates.append(day_data.get('date', f'Día {day_num}'))
+                for j, day_data in enumerate(data):
+                    if var in day_data and day_data[var] is not None:
+                        days.append(j + 1)
+                        # Normalizar valores para comparación
+                        value = float(day_data[var])
+                        if var in ['NSC', 'EOG', 'NR']:  # Variables porcentuales
+                            value *= 100
+                        values.append(value)
                 
-                # Si tenemos datos, generar gráfico
-                if len(days) >= 2:
-                    # Obtener información adicional de totales_acumulativos
-                    total_info = {}
-                    for key, info in totales_acumulativos.items():
-                        if var_key in key or key == var_key:
-                            total_info = info
-                            break
+                if len(values) > 1:
+                    # Normalizar para comparación visual
+                    if max(values) != min(values):
+                        normalized_values = [(v - min(values)) / (max(values) - min(values)) * 100 
+                                           for v in values]
+                    else:
+                        normalized_values = [50] * len(values)
                     
-                    chart_data = self._generate_endogenous_variable_chart(
-                        var_key, days, values, dates, total_info
-                    )
-                    if chart_data:
-                        endogenous_charts[var_key] = chart_data
-                        logger.info(f"Generated endogenous chart for {var_key} with {len(values)} points")
-                else:
-                    logger.warning(f"Insufficient data for endogenous chart {var_key}: {len(days)} points")
-                        
-            except Exception as e:
-                logger.error(f"Error generating endogenous chart for {var_key}: {str(e)}")
-                continue
-        
-        logger.info(f"Total endogenous charts generated: {len(endogenous_charts)}")
-        return endogenous_charts
-
+                    plt.plot(days, normalized_values, marker='o', linewidth=2, 
+                            markersize=4, label=var, color=colors[i % len(colors)])
+            
+            plt.title('Tendencias Comparativas de Variables Clave (Normalizadas)', 
+                     fontsize=14, fontweight='bold')
+            plt.xlabel('Día de Simulación', fontsize=12)
+            plt.ylabel('Valor Normalizado (%)', fontsize=12)
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode()
+            plt.close()
+            
+            return image_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating comparative trends: {str(e)}")
+            plt.close()
+            return None
+    
+    def _generate_variables_distribution(self, data, variables):
+        """Generate distribution plots for key variables"""
+        try:
+            # Calcular número de subplots
+            n_vars = len([v for v in variables if self._has_variable_data(data, v)])
+            if n_vars == 0:
+                return None
+            
+            cols = min(3, n_vars)
+            rows = (n_vars + cols - 1) // cols
+            
+            fig, axes = plt.subplots(rows, cols, figsize=(15, 5 * rows))
+            if rows == 1 and cols == 1:
+                axes = [axes]
+            elif rows == 1:
+                axes = axes
+            else:
+                axes = axes.flatten()
+            
+            plot_idx = 0
+            
+            for var in variables:
+                if not self._has_variable_data(data, var):
+                    continue
+                
+                values = []
+                for day_data in data:
+                    if var in day_data and day_data[var] is not None:
+                        value = float(day_data[var])
+                        if var in ['NSC', 'EOG', 'NR']:  # Variables porcentuales
+                            value *= 100
+                        values.append(value)
+                
+                if len(values) > 1:
+                    ax = axes[plot_idx]
+                    ax.hist(values, bins=min(10, len(values)//2 + 1), alpha=0.7, 
+                           color='skyblue', edgecolor='black')
+                    ax.set_title(f'Distribución: {var}', fontweight='bold')
+                    ax.set_xlabel(self._get_variable_unit(var))
+                    ax.set_ylabel('Frecuencia')
+                    ax.grid(True, alpha=0.3)
+                    
+                    # Agregar estadísticas
+                    mean_val = np.mean(values)
+                    std_val = np.std(values)
+                    ax.axvline(mean_val, color='red', linestyle='--', alpha=0.8, 
+                              label=f'Media: {mean_val:.2f}')
+                    ax.legend()
+                    
+                    plot_idx += 1
+            
+            # Ocultar subplots no utilizados
+            for i in range(plot_idx, len(axes)):
+                axes[i].set_visible(False)
+            
+            plt.suptitle('Distribuciones de Variables Endógenas', fontsize=16, fontweight='bold')
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode()
+            plt.close()
+            
+            return image_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating variables distribution: {str(e)}")
+            plt.close()
+            return None
+    
+    def _get_variable_unit(self, variable):
+        """Get appropriate unit for variable"""
+        units = {
+            'IT': 'Bolivianos (Bs.)',
+            'GT': 'Bolivianos (Bs.)',
+            'TG': 'Bolivianos (Bs.)',
+            'TPV': 'Litros',
+            'NSC': 'Porcentaje (%)',
+            'EOG': 'Porcentaje (%)',
+            'NR': 'Porcentaje (%)',
+            'PVP': 'Bs./Litro',
+            'DPH': 'Litros'
+        }
+        return units.get(variable, 'Unidades')
+    
     def _generate_endogenous_variable_chart(self, var_key, days, values, dates, total_info):
         """
         Genera un gráfico individual para una variable endógena

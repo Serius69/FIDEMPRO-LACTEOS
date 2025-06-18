@@ -356,6 +356,7 @@
 <script src="{% static 'libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
 // Initialize DataTable if needed
 $(document).ready(function() {
     // Auto-submit form on filter change
@@ -462,14 +463,17 @@ function duplicateSimulation(simulationId) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch(`/simulate/api/duplicate/${simulationId}/`, {
+            fetch(URLS.duplicate + simulationId + '/', {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     Swal.fire({
@@ -479,11 +483,7 @@ function duplicateSimulation(simulationId) {
                     });
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'No se pudo duplicar la simulación'
-                    });
+                    throw new Error(data.message || 'Error desconocido');
                 }
             })
             .catch(error => {
@@ -491,7 +491,7 @@ function duplicateSimulation(simulationId) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'No se pudo duplicar la simulación. Inténtalo de nuevo más tarde.'
+                    text: error.message || 'No se pudo duplicar la simulación'
                 });
             });
         }

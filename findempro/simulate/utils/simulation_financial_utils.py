@@ -6,6 +6,7 @@ Analyzes daily financial performance and generates recommendations.
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta
+from simulate.services.validation_service import SimulationValidationService
 import numpy as np
 
 from django.db import transaction
@@ -16,6 +17,7 @@ from ..models import Simulation, ResultSimulation
 from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
 from business.models import Business
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,7 @@ class SimulationFinancialAnalyzer:
     """Enhanced financial analyzer for simulation results"""
     
     def __init__(self):
+        
         self.critical_thresholds = {
             'min_profit_margin': -0.1,      # -10% minimum acceptable
             'target_profit_margin': 0.15,   # 15% target
@@ -252,8 +255,10 @@ class SimulationFinancialAnalyzer:
                 initial_demand = demand_stats['mean']
                 predicted_demand = demand_stats['mean']
             
-            growth_rate = self._calculate_growth_rate(initial_demand, predicted_demand)
-            error_permisible = self._calculate_error(initial_demand, predicted_demand)
+            simulation_val_service = SimulationValidationService()
+            
+            growth_rate = self._calculate_growth_rate_between_values(initial_demand, predicted_demand)
+            error_permisible = simulation_val_service._calculate_error_percentage(initial_demand, predicted_demand)
             
             # Calculate key financial indicators
             kpis = self._calculate_financial_kpis(daily_financials)
@@ -789,6 +794,12 @@ class SimulationFinancialAnalyzer:
         # Compound growth rate
         return ((data[-1] / data[0]) ** (1 / (len(data) - 1)) - 1) * 100
     
+    def _calculate_growth_rate_between_values(self, initial: float, final: float) -> float:
+        """Calculate growth rate between two specific values"""
+        if initial == 0:
+            return 0.0 if final == 0 else float('inf')
+        return (final - initial) / initial
+    
     def _calculate_improvement_rate(self, data: List[float]) -> float:
         """Calculate improvement rate for metrics that can be negative"""
         if len(data) < 2:
@@ -936,27 +947,41 @@ class SimulationFinancialAnalyzer:
             return 'Se requieren ajustes operativos para mejorar la rentabilidad'
     
     def _save_recommendations_to_db(self, simulation: Simulation,
-                                  recommendations: List[Dict],
-                                  business: Business) -> None:
+                                recommendations: List[Dict],
+                                business: Business) -> None:
         """Save financial recommendations to database"""
         try:
-            # Get or create recommendation records
-            for rec in recommendations[:5]:  # Save top 5
-                # Find matching recommendation template
-                db_rec = FinanceRecommendation.objects.filter(
-                    fk_business=business,
-                    variable_name__icontains=rec['category'],
-                    is_active=True
-                ).first()
+            logger.info(f"Attempting to save {len(recommendations[:5])} recommendations")
+            
+            for i, rec in enumerate(recommendations[:5]):
+                logger.info(f"Processing recommendation {i+1}: {rec}")
                 
-                if db_rec and 'metric_value' in rec:
-                    # Save simulation-specific recommendation
-                    FinanceRecommendationSimulation.objects.create(
-                        data=float(rec['metric_value']),
-                        fk_simulation=simulation,
-                    )
+                if 'metric_value' in rec:
+                    try:
+                        metric_value = float(rec['metric_value'])
+                        logger.info(f"Converting metric_value: {rec['metric_value']} -> {metric_value}")
+                        
+                        # Create the simulation record
+                        sim_rec = FinanceRecommendationSimulation.objects.create(
+                            data=metric_value,
+                            fk_simulation=simulation,
+                        )
+                        logger.info(f"Successfully created FinanceRecommendationSimulation ID: {sim_rec.id}")
+                        
+                    except ValueError as ve:
+                        logger.error(f"Error converting metric_value to float: {rec['metric_value']} - {ve}")
+                    except Exception as creation_error:
+                        logger.error(f"Error creating FinanceRecommendationSimulation: {creation_error}")
+                        logger.error(f"Simulation ID: {simulation.id}")
+                        logger.error(f"Data: {metric_value}")
+                else:
+                    logger.warning(f"Missing 'metric_value' in recommendation: {rec}")
+                    
         except Exception as e:
             logger.error(f"Error saving recommendations: {str(e)}")
+            logger.error(f"Simulation: {simulation}")
+            logger.error(f"Business: {business}")
+            logger.error(f"Recommendations: {recommendations[:5]}")
     
     def _create_empty_analysis(self) -> Dict[str, Any]:
         """Create empty analysis structure"""
