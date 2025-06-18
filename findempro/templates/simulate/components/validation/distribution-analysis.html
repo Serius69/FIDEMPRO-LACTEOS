@@ -1,0 +1,38 @@
+<!-- Distribution Analysis Component -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="metric-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-stats me-2"></i>
+                    Análisis por Tipo de Distribución Probabilística
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for dist_name, dist_stats in validation_by_distribution.items %}
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded {% if dist_stats.avg_mape < 10 %}border-success{% elif dist_stats.avg_mape < 20 %}border-warning{% else %}border-danger{% endif %}">
+                            <h6 class="text-primary">{{ dist_name }}</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-7">Total simulaciones:</dt>
+                                <dd class="col-5">{{ dist_stats.count }}</dd>
+                                <dt class="col-7">MAPE promedio:</dt>
+                                <dd class="col-5">
+                                    <span class="badge {% if dist_stats.avg_mape < 10 %}bg-success{% elif dist_stats.avg_mape < 20 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ dist_stats.avg_mape|floatformat:2 }}%
+                                    </span>
+                                </dd>
+                                <dt class="col-7">Desv. estándar:</dt>
+                                <dd class="col-5">{{ dist_stats.std_mape|floatformat:2 }}%</dd>
+                                <dt class="col-7">Mejor ajuste:</dt>
+                                <dd class="col-5">{{ dist_stats.best_fit_product|default:"N/A" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

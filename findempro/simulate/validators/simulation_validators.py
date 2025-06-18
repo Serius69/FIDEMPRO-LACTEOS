@@ -202,7 +202,7 @@ class SimulationValidator:
         else:
             try:
                 # Intentar parsear los datos
-                from ..utils.data_parsers import DataParser
+                from ..utils.data_parsers_utils import DataParser
                 parser = DataParser()
                 
                 # Si demand_history es string con comas problemáticas, limpiar primero

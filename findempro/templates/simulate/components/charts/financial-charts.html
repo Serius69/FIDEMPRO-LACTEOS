@@ -1,0 +1,64 @@
+<!-- Financial Tab Charts -->
+<div class="row">
+    <!-- Ingresos vs Ganancias -->
+    <div class="col-md-6 mb-4">
+        {% with chart_icon="bx-dollar" chart_title="Ingresos vs Ganancias" chart_data=image_data_ingresos_gastos chart_filename="ingresos-ganancias.png" chart_alt="Ingresos vs Ganancias" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    
+    <!-- Ventas vs Demanda Insatisfecha -->
+    <div class="col-md-6 mb-4">
+        {% with chart_icon="bx-cart" chart_title="Ventas vs Demanda Insatisfecha" chart_data=image_data_inventarios chart_filename="ventas-demanda.png" chart_alt="Ventas vs Demanda Insatisfecha" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    
+    <!-- Análisis de Gastos -->
+    <div class="col-md-6 mb-4">
+        {% with chart_icon="bx-trending-down" chart_title="Análisis de Gastos" chart_data=image_data_rentabilidad chart_filename="analisis-gastos.png" chart_alt="Análisis de gastos" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    
+    <!-- Costos de Producción -->
+    <div class="col-md-6 mb-4">
+        {% with chart_icon="bx-calculator" chart_title="Costos de Producción" chart_data=image_data_eficiencia chart_filename="costos-produccion.png" chart_alt="Costos de producción" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    
+    <!-- ROI y Ganancias -->
+    <div class="col-12 mb-4">
+        {% with chart_icon="bx-stats" chart_title="ROI y Ganancias" chart_data=image_data_kpis chart_filename="roi-ganancias.png" chart_alt="ROI y Ganancias" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+</div>
+
+<!-- Gráficos Adicionales de Análisis -->
+{% if additional_analisis_costos_detallado or additional_eficiencia_operativa %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h5 class="mb-3">
+            <i class="bx bx-analytics"></i> Análisis Adicionales
+        </h5>
+    </div>
+    
+    {% if additional_analisis_costos_detallado %}
+    <div class="col-12 mb-4">
+        {% with chart_icon="bx-money" chart_title="Análisis Detallado de Estructura de Costos" chart_data=additional_analisis_costos_detallado chart_filename="analisis-costos-detallado.png" chart_alt="Análisis detallado de costos" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    {% endif %}
+    
+    {% if additional_eficiencia_operativa %}
+    <div class="col-12 mb-4">
+        {% with chart_icon="bx-tachometer" chart_title="Indicadores de Eficiencia Operativa" chart_data=additional_eficiencia_operativa chart_filename="eficiencia-operativa.png" chart_alt="Indicadores de eficiencia" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

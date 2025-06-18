@@ -5,7 +5,7 @@ import os
 import shutil
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta 
 from typing import Optional, Dict, Any, List
 
 from django.conf import settings
@@ -203,9 +203,9 @@ def validate_data_coherence() -> Dict[str, Any]:
     """
     Validar la coherencia entre las diferentes estructuras de datos
     """
-    from product.data.products_data import products_data
-    from variable.variables_data import variables_data
-    from variable.equations_data import equations_data
+    from product.data.product_test_data import products_data
+    from variable.data.variable_test_data import variables_data
+    from variable.data.equation_test_data import equations_data
     
     errors = []
     

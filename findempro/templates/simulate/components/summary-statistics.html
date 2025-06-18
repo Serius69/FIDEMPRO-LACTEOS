@@ -1,0 +1,82 @@
+<!-- Summary Statistics Component -->
+<div class="metric-card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bx bx-calculator me-2"></i>
+            Resumen de Variables Totales
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for name_variable, info_variable in totales_acumulativos.items %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                <div class="metric-card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            {% if info_variable.unit == "BS" %}
+                            <div class="avatar-sm mx-auto">
+                                <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10">
+                                    <i class="bx bxs-badge-dollar fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-success{% endif %}"></i>
+                                </span>
+                            </div>
+                            {% elif info_variable.unit == "CLIENTES" %}
+                            <div class="avatar-sm mx-auto">
+                                <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-warning{% endif %} bg-opacity-10">
+                                    <i class="bx bxs-group fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-warning{% endif %}"></i>
+                                </span>
+                            </div>
+                            {% elif info_variable.unit == "L" %}
+                            <div class="avatar-sm mx-auto">
+                                <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-info{% endif %} bg-opacity-10">
+                                    <i class="bx bx-water fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-info{% endif %}"></i>
+                                </span>
+                            </div>
+                            {% elif info_variable.unit == "Horas" %}
+                            <div class="avatar-sm mx-auto">
+                                <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10">
+                                    <i class="bx bx-time-five fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-success{% endif %}"></i>
+                                </span>
+                            </div>
+                            {% else %}
+                            <div class="avatar-sm mx-auto">
+                                <span class="avatar-title rounded-circle {% if info_variable.total < 0 %}bg-danger{% else %}bg-primary{% endif %} bg-opacity-10">
+                                    <i class="bx bx-chart fs-4 {% if info_variable.total < 0 %}text-danger{% else %}text-primary{% endif %}"></i>
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <h5 class="fw-medium text-truncate tooltip-info mb-3" 
+                            data-tooltip="{{ name_variable }}">
+                            {{ name_variable|truncatechars:25 }}
+                        </h5>
+                        <h3 class="{% if info_variable.total < 0 %}text-danger{% else %}text-primary{% endif %} mb-2">
+                            {% if info_variable.unit == "BS" %}Bs. {% endif %}
+                            <span class="counter" data-target="{{ info_variable.total|floatformat:'0'|stringformat:'s'|slice:'1:' }}">0</span>
+                            {% if info_variable.total < 0 %}-{% endif %}
+                            <small class="fs-6 ms-1">
+                                {% if info_variable.unit == "BS" %}
+                                {% elif info_variable.unit == "CLIENTES" %}clientes
+                                {% elif info_variable.unit == "L" %}litros
+                                {% elif info_variable.unit == "%" %}%
+                                {% elif info_variable.unit == "Horas" %}hrs
+                                {% elif info_variable.unit == "L/BS" %}L/Bs
+                                {% elif info_variable.unit == "[0.1,0.3,0.5]" %}%
+                                {% else %}{{ info_variable.unit }}
+                                {% endif %}
+                            </small>
+                        </h3>
+                        <p class="text-muted mb-0">
+                            {% if info_variable.change_pct %}
+                            <span class="{% if info_variable.change_pct > 0 %}text-success{% else %}text-danger{% endif %} fs-5">
+                                <i class="bx {% if info_variable.change_pct > 0 %}bx-up-arrow-alt{% else %}bx-down-arrow-alt{% endif %}"></i>
+                                {{ info_variable.change_pct|floatformat:1 }}%
+                            </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

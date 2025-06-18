@@ -2,9 +2,9 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from product.models import Product
-from .variables_data import variables_data
+from .data.variable_test_data import variables_data
 from sympy import symbols, Eq, solve
-from .equations_data import equations_data
+from .data.equation_test_data import equations_data
 from product.models import Area
 from django.core.exceptions import MultipleObjectsReturned
 from django.http import Http404

@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %}
 {% load static %}
 
-{% block title %}Detalles de negocios{% endblock title %}
+{% block title %}{{ business.name }} - Detalles{% endblock title %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'libs/gridjs/dist/theme/mermaid.min.css' %}">
@@ -15,7 +15,6 @@
 
             {% block pagetitle %}
             {% include "partials/page-title.html" with pagetitle="Negocio" title=business.name %}
-
             {% endblock pagetitle %}
 
             <div class="row">
@@ -24,11 +23,12 @@
                         <div class="card-body p-4">
                             <div>
                                 <!-- Business Avatar -->
-                                    <img src="{{ business.get_photo_url }}" alt="100" style="width: 100%; height: 100%;" />
+                                <img src="{{ business.get_photo_url }}" alt="{{ business.name }}" class="img-fluid rounded" />
+                                
                                 <!-- Business Info -->
                                 <div class="mt-4 text-center">
                                     <h5 class="mb-1">{{ business.name }}</h5>
-                                    <p class="text-muted">Desde {{ business.date_created }}</p>
+                                    <p class="text-muted">Desde {{ business.date_created|date:"d M, Y" }}</p>
                                 </div>
                                 
                                 <!-- Business Details Table -->
@@ -36,165 +36,213 @@
                                     <table class="table mb-0 table-borderless">
                                         <tbody>
                                             <tr>
-                                                <th><span class="fw-medium" style="font-size: larger;">Nombre del Usuario</span></th>
-                                                <td>{{ business.fk_user.username }}</td>
+                                                <th><span class="fw-medium">Propietario</span></th>
+                                                <td>{{ business.owner_name }}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium" style="font-size: larger;">Tipo de negocio</span></th>
-                                                <td>{% if business.type == 1 %}Lacteos{% else %}{{ business.type }}{% endif %}</td>
+                                                <th><span class="fw-medium">Tipo de negocio</span></th>
+                                                <td>{{ business.get_type_display }}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium" style="font-size: larger;">Descripción</span></th>
-                                                <td>{% if business.description %}{{ business.description }}{% else %}Descripción no disponible{% endif %}</td>
+                                                <th><span class="fw-medium">Descripción</span></th>
+                                                <td>{% if business.description %}{{ business.description }}{% else %}Sin descripción{% endif %}</td>
                                             </tr>
                                             <tr>
-                                                <th><span class="fw-medium" style="font-size: larger;">Ubicación</span></th>
+                                                <th><span class="fw-medium">Ubicación</span></th>
                                                 <td>{{ business.location }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><span class="fw-medium">Total productos</span></th>
+                                                <td>{{ num_products }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                        </div> <!-- end card-body -->
-                    </div> <!-- end card -->
-                    
-                </div><!--end col-->
-
-                <div class="col-xxl-9">
-                    <div class="card">
-                        <div class="card-header border-0 align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1">Productos </h4>
-                        </div><!-- end card header -->
-                        <div class="card-body p-4">
-                            <div class="row g-4 mb-3">
-                                <div class="col-sm-auto">
-                                    <div>
-                                        <a href="{% url 'product:product.create' %}" class="btn btn-success">
-                                            <i class="ri-add-line align-bottom me-1"></i> Agregar producto
-                                        </a>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="table-responsive table-card mb-1">
-                                        <table class="table align-middle" id="productTable">
-                                            <thead class="table-light text-muted">
-                                                <tr>
-                                                    <th class="sort">Imagen </th>
-                                                    <th class="sort" data-sort="name"> Producto </th>
-                                                    <th class="sort" data-sort="type">Tipo </th>
-                                                    <th class="sort" data-sort="date"> Fecha creada </th>
-                                                    <th class="sort" data-sort="status">Estado </th>
-                                                    <th data-sort="action"> Acción </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="list form-check-all">
-                                                {% for product in products %}
-                                                <tr>
-                                                    <td class="image">
-                                                        <img src="{{ product.image_src.url }}" alt="Product Image" style="width: 100%; height: 100px; object-fit: cover;" />
-                                                    </td>
-                                                    <td class="name">{{ product.name }}</td>
-                                                    <td class="type">{{ product.type }}</td>
-                                                    <td class="date">{{ product.date_created|date:"d M,Y" }}</td>
-                                                    <td class="status">
-                                                        {% if product.is_active == 1 %}
-                                                        <span class="badge bg-success-subtle text-success text-uppercase">Activo </span>
-                                                        {% else %}
-                                                        <span class="badge bg-danger-subtle text-danger text-uppercase"> Desactivado </span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <ul class="list-inline hstack gap-2 mb-0">
-                                                            <li class="list-inline-item edit" data-bs-toggle="tooltip"
-                                                                data-bs-trigger="hover" data-bs-placement="top" title="Edit">
-                                                                <a href="#showModal-{{ forloop.counter }}" data-bs-toggle="modal"
-                                                                    class="text-primary d-inline-block edit-item-btn">
-                                                                    <i class="ri-pencil-fill fs-16"></i>
-                                                                </a>
-                                                            </li>
-                                                            <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                                data-bs-trigger="hover" data-bs-placement="top" title="Remove">
-                                                                <a class="text-danger d-inline-block remove-item-btn"
-                                                                   data-bs-toggle="modal"
-                                                                   href="#deleteRecordModal-{{ forloop.counter }}">
-                                                                    <i class="ri-delete-bin-5-fill fs-16"></i>
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </td>
-                                                </tr>
-                                                {% empty %}
-                                                <tr>
-                                                    <td>
-                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
-                                                                colors="primary:#405189,secondary:#0ab39c"
-                                                                style="width:75px;height:75px">
-                                                        </lord-icon>
-                                                        <h5 class="mt-2">Lo siento, no hay ningún negocio registrado en la base de datos</h5>
-                                                        <p class="text-muted mb-0"> Tienes que "agregar producto". </p>
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                
+                                <!-- Acciones -->
+                                <div class="mt-3 d-grid gap-2">
+                                    <a href="{% url 'business:business.list' %}" class="btn btn-light">
+                                        <i class="ri-arrow-left-line me-1"></i>Volver a la lista
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {% comment %} <div class="card">
+                <div class="col-xxl-9">
+                    <div class="card">
                         <div class="card-header border-0 align-items-center d-flex">
-                            <h4 class="card-title mb-0 flex-grow-1"> Ingresos </h4>
-                        </div><!-- end card header -->
+                            <h4 class="card-title mb-0 flex-grow-1">Productos</h4>
+                            <a href="{% url 'product:product.create' %}" class="btn btn-success btn-sm">
+                                <i class="ri-add-line align-bottom me-1"></i>Agregar producto
+                            </a>
+                        </div>
+                        
                         <div class="card-body">
-                            <div class="card-header p-0 border-0 bg-light-subtle">
-                                <div class="row g-0 text-center">
-                                    <div class="col-6 col-sm-4">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1"><span class="counter-value" data-target="{{ num_products }}">0</span></h5>
-                                            <p class="text-muted mb-0">Productos </p>
-                                        </div>
-                                    </div><!--end col-->
-                                    <div class="col-6 col-sm-4">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1">$<span class="counter-value" data-target="{{ business.product.earnings }}">0</span>k</h5>
-                                            <p class="text-muted mb-0">Ganancias </p>
-                                        </div>
-                                    </div><!--end col-->
-                                    <div class="col-6 col-sm-4">
-                                        <div class="p-3 border border-dashed border-start-0">
-                                            <h5 class="mb-1"><span class="counter-value" data-target="{{ business.product.simulate.count }}">0</span></h5>
-                                            <p class="text-muted mb-0"> Reembolsos </p>
-                                        </div>
-                                    </div><!--end col-->
+                            {% if products %}
+                                <div class="table-responsive">
+                                    <table class="table align-middle table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 120px;">Imagen</th>
+                                                <th>Producto</th>
+                                                <th>Tipo</th>
+                                                <th>Fecha creada</th>
+                                                <th>Estado</th>
+                                                <th style="width: 100px;">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for product in products %}
+                                            <tr>
+                                                <td>
+                                                    <img src="{{ product.image_src.url }}" 
+                                                         alt="{{ product.name }}" 
+                                                         class="rounded"
+                                                         style="width: 100px; height: 80px; object-fit: cover;" />
+                                                </td>
+                                                <td>
+                                                    <h6 class="mb-0">{{ product.name }}</h6>
+                                                </td>
+                                                <td>{{ product.get_type_display|default:product.type }}</td>
+                                                <td>{{ product.date_created|date:"d M, Y" }}</td>
+                                                <td>
+                                                    {% if product.is_active %}
+                                                        <span class="badge bg-success-subtle text-success">Activo</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger-subtle text-danger">Inactivo</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-light dropdown-toggle" 
+                                                                type="button" 
+                                                                data-bs-toggle="dropdown">
+                                                            <i class="ri-more-2-fill"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li>
+                                                                <a class="dropdown-item" href="#" 
+                                                                   data-bs-toggle="modal"
+                                                                   data-bs-target="#editProductModal{{ product.id }}">
+                                                                    <i class="ri-pencil-fill me-2 text-muted"></i>Editar
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item text-danger" href="#"
+                                                                   data-bs-toggle="modal"
+                                                                   data-bs-target="#deleteProductModal{{ product.id }}">
+                                                                    <i class="ri-delete-bin-fill me-2"></i>Eliminar
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- Modal Editar Producto -->
+                                            <div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Editar Producto</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Funcionalidad de edición de producto pendiente de implementación.</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Modal Eliminar Producto -->
+                                            <div class="modal fade" id="deleteProductModal{{ product.id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Confirmar Eliminación</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>¿Estás seguro de que deseas eliminar el producto <strong>{{ product.name }}</strong>?</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="button" class="btn btn-danger">Eliminar</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </div><!-- end card header -->
-                            <div>
-                                {% if business and business.dashboard %}
-                                    <!-- Mostrar el dashboard aquí -->
-                                    {{ business.dashboard }}
-                                {% else %}
-                                    <!-- Mostrar un mensaje de falta de información -->
-                                    <p>Falta información del dashboard.</p>
+                                
+                                <!-- Paginación -->
+                                {% if products.has_other_pages %}
+                                <nav class="mt-4">
+                                    <ul class="pagination justify-content-center">
+                                        {% if products.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ products.previous_page_number }}">
+                                                    <i class="ri-arrow-left-s-line"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% for num in products.paginator.page_range %}
+                                            {% if products.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                            {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if products.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ products.next_page_number }}">
+                                                    <i class="ri-arrow-right-s-line"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
                                 {% endif %}
-
-                            </div>
-                        </div><!-- end card body -->
-                    </div><!-- end card --> {% endcomment %}
-
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                               trigger="loop"
+                                               colors="primary:#405189,secondary:#0ab39c"
+                                               style="width:75px;height:75px">
+                                    </lord-icon>
+                                    <h5 class="mt-3">No hay productos registrados</h5>
+                                    <p class="text-muted mb-0">Aún no has agregado productos a este negocio.</p>
+                                    <a href="{% url 'product:product.create' %}" class="btn btn-success mt-3">
+                                        <i class="ri-add-line me-1"></i>Agregar primer producto
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    
     {% block footer %}
     {% include "partials/footer.html" %}
     {% endblock footer %}
 </div>
 {% endblock content %}
-{% block extra_content %}
-{% block modals %} {% include "partials/modals.html" %} {% endblock modals %}
-{% endblock extra_content %}
+
 {% block extra_js %}
     <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
     <script src="{% static 'libs/gridjs/dist/gridjs.umd.js' %}"></script>

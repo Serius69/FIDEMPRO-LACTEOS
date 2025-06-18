@@ -2,43 +2,22 @@ from django.views.generic import View, TemplateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.cache import cache
-from ..forms import SimulationForm
-from ..models import Simulation, QuestionaryResult, ResultSimulation, Demand
-from variable.models import Variable, Equation, EquationResult
-from business.models import Business
-from product.models import Product, Area
-from questionary.models import Questionary, Answer, Question
-from ..services.simulation_service import SimulationService
-from ..services.statistical_service import StatisticalService
-from ..utils.chart_generators import ChartGenerator
-from finance.models import FinanceRecommendation
-import numpy as np
-from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db import transaction
-from django.db.models import Prefetch, Q, Count, Avg, Sum, Exists, OuterRef
-from django.http import HttpResponseRedirect, HttpResponseNotFound, JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.generic import TemplateView, View
+from django.db.models import Prefetch
 
 from ..forms import SimulationForm
-from ..models import Simulation, ResultSimulation, Demand
-from ..services.simulation_service import SimulationService
+from ..models import Simulation
+from ..utils.simulation_core_utils import SimulationCore
 from ..services.statistical_service import StatisticalService
-from ..utils.chart_generators import ChartGenerator
-from ..validators.simulation_validators import SimulationValidator
+from ..utils.chart_demand_utils import ChartDemand
 
 from business.models import Business
-from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
 from product.models import Product, Area
-from questionary.models import QuestionaryResult, Questionary, Answer, Question
-from variable.models import Variable, Equation, EquationResult
+from questionary.models import QuestionaryResult, Answer
+from variable.models import Equation
+from finance.models import FinanceRecommendation
+
+import numpy as np
 import json
 import logging
 
@@ -210,7 +189,7 @@ class SimulateShowView(LoginRequiredMixin, View):
             analysis_results['demand_data'] = demand_data
         
         # Generate charts for visualization
-        chart_generator = ChartGenerator()
+        chart_generator = ChartDemand()
         scatter_plot = None
         histogram_plot = None
         qq_plot = None
@@ -320,7 +299,7 @@ class SimulateShowView(LoginRequiredMixin, View):
             }
             
             # Create simulation
-            simulation_service = SimulationService()
+            simulation_service = SimulationCore()
             simulation_instance = simulation_service.create_simulation(form_data)
             
             # Store in session
@@ -373,7 +352,7 @@ class SimulateShowView(LoginRequiredMixin, View):
             simulation_instance = get_object_or_404(Simulation, pk=simulation_id)
             
             # Execute simulation
-            simulation_service = SimulationService()
+            simulation_service = SimulationCore()
             simulation_service.execute_simulation(simulation_instance)
             
             # Clear session
@@ -390,7 +369,6 @@ class SimulateShowView(LoginRequiredMixin, View):
             messages.error(request, "Error al ejecutar la simulación.")
             request.session['started'] = False
             return redirect('simulate:simulate.show')
-
 
 # Function-based view wrapper
 def simulate_show_view(request):
