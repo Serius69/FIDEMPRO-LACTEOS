@@ -1,0 +1,471 @@
+<!-- Areas Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card areas-card">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-1">
+                            <i class="bx bx-grid-alt me-2 text-primary"></i>
+                            Áreas de Simulación
+                        </h4>
+                        <p class="card-title-desc mb-0">
+                            Las siguientes áreas serán incluidas en la simulación con sus respectivas ecuaciones matemáticas.
+                        </p>
+                    </div>
+                    <div class="areas-stats">
+                        <span class="badge bg-primary">{{ areas|length }} área{{ areas|length|pluralize }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% if areas %}
+                    <div class="row g-4">
+                        {% for area in areas %}
+                        <div class="col-xl-4 col-lg-6 col-md-6">
+                            <div class="card equation-card h-100 border-0 shadow-sm">
+                                <!-- Area Image -->
+                                <div class="area-image-container">
+                                    <img src="{{ area.get_photo_url }}" 
+                                         class="card-img-top area-image" 
+                                         alt="{{ area.name }}"
+                                         loading="lazy"
+                                         onerror="this.src='{% static 'images/default-area.jpg' %}'">
+                                    <div class="image-overlay">
+                                        <div class="overlay-content">
+                                            <i class="bx bx-math fs-2 text-white"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-body d-flex flex-column">
+                                    <!-- Area Header -->
+                                    <div class="area-header mb-3">
+                                        <h5 class="card-title mb-2">{{ area.name }}</h5>
+                                        <h6 class="card-subtitle text-muted mb-2">
+                                            <i class="bx bx-package me-1"></i>
+                                            {{ area.fk_product.name }}
+                                        </h6>
+                                        <div class="area-meta">
+                                            <small class="text-muted">
+                                                <i class="bx bx-building me-1"></i>
+                                                {{ area.fk_product.fk_business.name }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Area Description -->
+                                    <p class="card-text text-muted mb-3">
+                                        {{ area.description|truncatewords:20|default:"Área de simulación sin descripción disponible." }}
+                                    </p>
+                                    
+                                    <!-- Equations Section -->
+                                    <div class="equations-container flex-grow-1">
+                                        <div class="d-flex align-items-center justify-content-between mb-3">
+                                            <h6 class="fw-semibold mb-0">
+                                                <i class="bx bx-math me-1 text-info"></i>
+                                                Ecuaciones Matemáticas
+                                            </h6>
+                                            <span class="badge bg-info-subtle text-info">
+                                                {{ area.area_equation.all|length }} ecuación{{ area.area_equation.all|length|pluralize:"es" }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div id="equations{{ area.id }}" class="equations-list">
+                                            {% for equation in area.area_equation.all %}
+                                                {% if equation.fk_area.id == area.id and equation.is_active %}
+                                                <div class="equation mb-3 p-3 bg-light rounded border-start border-info border-3" 
+                                                     style="display: none;">
+                                                    <!-- Equation Header -->
+                                                    <div class="equation-header mb-2">
+                                                        <strong class="text-dark">{{ equation.name }}</strong>
+                                                        {% if equation.description %}
+                                                        <small class="text-muted d-block">{{ equation.description|truncatewords:15 }}</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <!-- Equation Expression -->
+                                                    <div class="equation-expression text-center my-3 p-2 bg-white rounded border">
+                                                        <code class="equation-code">{{ equation.expression|safe }}</code>
+                                                    </div>
+                                                    
+                                                    <!-- Variables List -->
+                                                    <div class="variables-list">
+                                                        <small class="text-muted fw-semibold d-block mb-1">Variables:</small>
+                                                        <div class="row g-1">
+                                                            {% if equation.fk_variable1 %}
+                                                            <div class="col-12 col-sm-6">
+                                                                <small class="d-flex align-items-center text-muted">
+                                                                    <span class="badge bg-secondary me-1" style="font-size: 0.7rem;">V1</span>
+                                                                    {{ equation.fk_variable1.name }}
+                                                                </small>
+                                                            </div>
+                                                            {% endif %}
+                                                            
+                                                            {% if equation.fk_variable2 %}
+                                                            <div class="col-12 col-sm-6">
+                                                                <small class="d-flex align-items-center text-muted">
+                                                                    <span class="badge bg-secondary me-1" style="font-size: 0.7rem;">V2</span>
+                                                                    {{ equation.fk_variable2.name }}
+                                                                </small>
+                                                            </div>
+                                                            {% endif %}
+                                                            
+                                                            {% if equation.fk_variable3 %}
+                                                            <div class="col-12 col-sm-6">
+                                                                <small class="d-flex align-items-center text-muted">
+                                                                    <span class="badge bg-secondary me-1" style="font-size: 0.7rem;">V3</span>
+                                                                    {{ equation.fk_variable3.name }}
+                                                                </small>
+                                                            </div>
+                                                            {% endif %}
+                                                            
+                                                            {% if equation.fk_variable4 %}
+                                                            <div class="col-12 col-sm-6">
+                                                                <small class="d-flex align-items-center text-muted">
+                                                                    <span class="badge bg-secondary me-1" style="font-size: 0.7rem;">V4</span>
+                                                                    {{ equation.fk_variable4.name }}
+                                                                </small>
+                                                            </div>
+                                                            {% endif %}
+                                                            
+                                                            {% if equation.fk_variable5 %}
+                                                            <div class="col-12 col-sm-6">
+                                                                <small class="d-flex align-items-center text-muted">
+                                                                    <span class="badge bg-secondary me-1" style="font-size: 0.7rem;">V5</span>
+                                                                    {{ equation.fk_variable5.name }}
+                                                                </small>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                        
+                                                        {% if not equation.fk_variable1 and not equation.fk_variable2 and not equation.fk_variable3 and not equation.fk_variable4 and not equation.fk_variable5 %}
+                                                        <small class="text-muted fst-italic">No hay variables definidas</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <!-- Equation Metadata -->
+                                                    {% if equation.date_created %}
+                                                    <div class="equation-meta mt-2 pt-2 border-top">
+                                                        <small class="text-muted">
+                                                            <i class="bx bx-time me-1"></i>
+                                                            Creada: {{ equation.date_created|date:"d/m/Y" }}
+                                                        </small>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                            {% empty %}
+                                            <div class="no-equations text-center p-4">
+                                                <i class="bx bx-math text-muted mb-2" style="font-size: 2rem;"></i>
+                                                <p class="text-muted mb-0">No hay ecuaciones disponibles para esta área.</p>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                        <!-- Show More Button -->
+                                        {% if area.area_equation.all %}
+                                        <div class="text-center mt-3">
+                                            <button type="button" 
+                                                    class="btn btn-outline-primary btn-sm" 
+                                                    id="showMore{{ area.id }}" 
+                                                    onclick="EquationManager.toggleEquations({{ area.id }})">
+                                                <i class="bx bx-show me-1"></i>
+                                                Ver Ecuaciones
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Card Footer -->
+                                <div class="card-footer bg-transparent border-top-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="bx bx-check-circle me-1"></i>
+                                            Activa para simulación
+                                        </small>
+                                        <div class="area-actions">
+                                            <button class="btn btn-sm btn-outline-info" 
+                                                    title="Ver detalles del área"
+                                                    onclick="showAreaDetails({{ area.id }})">
+                                                <i class="bx bx-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Areas Summary -->
+                    <div class="areas-summary mt-4 p-3 bg-light rounded">
+                        <div class="row text-center g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-number text-primary">{{ areas|length }}</div>
+                                    <div class="summary-label">Áreas Totales</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-number text-success">
+                                        {% widthratio areas.0.area_equation.all|length 1 1 %}
+                                    </div>
+                                    <div class="summary-label">Ecuaciones</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-number text-info">100%</div>
+                                    <div class="summary-label">Cobertura</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-number text-warning">Activo</div>
+                                    <div class="summary-label">Estado</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% else %}
+                    <!-- No Areas State -->
+                    <div class="no-areas-state text-center py-5">
+                        <div class="mb-4">
+                            <i class="bx bx-grid-alt text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="text-muted mb-3">No hay áreas configuradas</h5>
+                        <p class="text-muted mb-4">
+                            No se encontraron áreas de simulación para este producto. 
+                            Contacte al administrador para configurar las áreas necesarias.
+                        </p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button class="btn btn-outline-primary" onclick="refreshPage()">
+                                <i class="bx bx-refresh me-1"></i>
+                                Actualizar
+                            </button>
+                            <button class="btn btn-outline-info" onclick="showHelp()">
+                                <i class="bx bx-help-circle me-1"></i>
+                                Ayuda
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Areas Section Styles */
+.areas-card {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.equation-card {
+    transition: all 0.3s ease;
+    border-radius: 12px !important;
+    overflow: hidden;
+    background: #fff;
+}
+
+.equation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.area-image-container {
+    position: relative;
+    overflow: hidden;
+    height: 200px;
+}
+
+.area-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.equation-card:hover .area-image {
+    transform: scale(1.05);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.8), rgba(25, 118, 210, 0.8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.equation-card:hover .image-overlay {
+    opacity: 1;
+}
+
+.area-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.area-meta {
+    margin-top: 4px;
+}
+
+.equations-container {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 16px;
+}
+
+.equation {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent !important;
+}
+
+.equation:hover {
+    background: #e3f2fd !important;
+    border-left-color: #2196f3 !important;
+    transform: translateX(2px);
+}
+
+.equation-code {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    font-family: 'Courier New', 'Monaco', monospace;
+    font-size: 0.9rem;
+    color: #495057;
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.variables-list {
+    background: rgba(33, 150, 243, 0.05);
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.areas-stats .badge {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+}
+
+.areas-summary {
+    border: 1px solid #e9ecef;
+}
+
+.summary-item {
+    transition: transform 0.2s ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+}
+
+.summary-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.no-areas-state {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.area-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .area-image-container {
+        height: 150px;
+    }
+    
+    .equation-card .card-body {
+        padding: 1rem;
+    }
+    
+    .equation {
+        padding: 12px !important;
+    }
+    
+    .summary-number {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .areas-summary .row {
+        gap: 8px;
+    }
+    
+    .summary-item {
+        margin-bottom: 8px;
+    }
+    
+    .equation-code {
+        font-size: 0.8rem;
+    }
+}
+</style>
+
+<script>
+// Area management functions
+function showAreaDetails(areaId) {
+    // Implementation for showing area details modal
+    console.log('Showing details for area:', areaId);
+    
+    // Create modal or redirect to details page
+    // This can be expanded based on specific requirements
+}
+
+function refreshPage() {
+    window.location.reload();
+}
+
+function showHelp() {
+    if (window.SimulationTutorial) {
+        SimulationTutorial.start();
+    } else {
+        alert('Sistema de ayuda no disponible. Por favor contacte al soporte técnico.');
+    }
+}
+
+// Initialize equations display on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // This will be handled by EquationManager in simulation-core.js
+    if (window.EquationManager) {
+        EquationManager.initializeAll();
+    }
+});
+</script>
