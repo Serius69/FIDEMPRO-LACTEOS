@@ -1,4 +1,3 @@
-
 {% extends "partials/base.html" %}
 {% load static %}
 {% load humanize %}
@@ -21,106 +20,278 @@
             {% include "partials/page-title.html" with pagetitle="Simulaciones" title="Lista de Simulaciones" %}
             {% endblock pagetitle %}
             
-            <!-- Header -->
+            <!-- Enhanced Header -->
             <div class="simulations-header">
                 <div class="row align-items-center">
                     <div class="col-lg-8">
                         <h1 class="mb-3">
-                            <i class="bx bx-list-ul me-3"></i>
-                            Mis Simulaciones
+                            <i class="bx bx-trending-up me-3"></i>
+                            Gestión de Simulaciones
                         </h1>
-                        <p class="fs-5 mb-0">
-                            Gestione y analice todas sus simulaciones realizadas
+                        <p class="fs-5 mb-0 opacity-90">
+                            Administre, analice y supervise todas sus simulaciones de demanda
                         </p>
                     </div>
                     <div class="col-lg-4 text-lg-end">
-                        <a href="{% url 'simulate:simulate.show' %}" class="btn btn-light btn-lg">
-                            <i class="bx bx-plus-circle me-2"></i>
-                            Nueva Simulación
-                        </a>
+                        <div class="d-flex gap-2 justify-content-lg-end">
+                            <a href="{% url 'simulate:simulate.show' %}" class="btn btn-light btn-lg">
+                                <i class="bx bx-plus-circle me-2"></i>
+                                Nueva Simulación
+                            </a>
+                            <button class="btn btn-outline-light" onclick="refreshData()" title="Actualizar">
+                                <i class="bx bx-refresh"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Statistics Cards -->
+            <!-- Enhanced Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-value">{{ total_simulations|default:0 }}</div>
+                    <div class="stat-value text-primary">{{ total_simulations|default:0 }}</div>
                     <div class="stat-label">Total Simulaciones</div>
+                    {% if recent_simulations %}
+                        <div class="progress-indicator mt-2">
+                            <small class="text-muted">+{{ recent_simulations }} esta semana</small>
+                        </div>
+                    {% endif %}
                 </div>
+                
                 <div class="stat-card">
-                    <div class="stat-value">{{ completed_simulations|default:0 }}</div>
+                    <div class="stat-value text-success">{{ completed_simulations|default:0 }}</div>
                     <div class="stat-label">Completadas</div>
+                    <div class="progress-indicator mt-2">
+                        <div class="progress-bar-small" style="width: {{ completion_rate|default:0 }}%;"></div>
+                        <div class="progress-text">{{ completion_rate|default:0|floatformat:1 }}% completado</div>
+                    </div>
                 </div>
+                
                 <div class="stat-card">
-                    <div class="stat-value">{{ processing_simulations|default:0 }}</div>
+                    <div class="stat-value text-warning">{{ processing_simulations|default:0 }}</div>
                     <div class="stat-label">En Proceso</div>
+                    {% if processing_simulations > 0 %}
+                        <div class="progress-indicator mt-2">
+                            <small class="text-muted">Ejecutándose...</small>
+                        </div>
+                    {% endif %}
                 </div>
+                
                 <div class="stat-card">
-                    <div class="stat-value">{{ avg_duration|default:0|floatformat:0 }}</div>
-                    <div class="stat-label">Duración Promedio (días)</div>
+                    <div class="stat-value text-info">{{ avg_duration|default:0|floatformat:0 }}</div>
+                    <div class="stat-label">Duración Promedio</div>
+                    <div class="progress-indicator mt-2">
+                        <small class="text-muted">días por simulación</small>
+                    </div>
+                </div>
+                
+                {% if businesses_count > 1 %}
+                <div class="stat-card">
+                    <div class="stat-value text-secondary">{{ businesses_count }}</div>
+                    <div class="stat-label">Negocios Activos</div>
+                </div>
+                {% endif %}
+                
+                {% if avg_demand > 0 %}
+                <div class="stat-card">
+                    <div class="stat-value text-dark">{{ avg_demand|floatformat:0 }}</div>
+                    <div class="stat-label">Demanda Promedio</div>
+                    <div class="progress-indicator mt-2">
+                        <small class="text-muted">unidades analizadas</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="quick-actions no-print">
+                <h6>
+                    <i class="bx bx-zap me-2"></i>
+                    Acciones Rápidas
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="?status=pending" class="quick-action-btn">
+                        <i class="bx bx-time"></i>
+                        Ver Pendientes ({{ pending_simulations|default:0 }})
+                    </a>
+                    <a href="?status=completed" class="quick-action-btn">
+                        <i class="bx bx-check-circle"></i>
+                        Ver Completadas ({{ completed_simulations|default:0 }})
+                    </a>
+                    <a href="?date_from={{ today|date:'Y-m-d' }}" class="quick-action-btn">
+                        <i class="bx bx-calendar"></i>
+                        Hoy ({{ recent_simulations|default:0 }})
+                    </a>
+                    <button onclick="exportSelected()" class="quick-action-btn">
+                        <i class="bx bx-download"></i>
+                        Exportar Seleccionadas
+                    </button>
                 </div>
             </div>
             
-            <!-- Filters -->
-            <div class="filter-card">
-                <h5 class="mb-3">
-                    <i class="bx bx-filter-alt me-2"></i>
-                    Filtros de Búsqueda
-                </h5>
+            <!-- Enhanced Filters -->
+            <div class="filter-card no-print">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="bx bx-filter-alt me-2"></i>
+                        Filtros de Búsqueda
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-primary">{{ simulations.paginator.count }} resultado{{ simulations.paginator.count|pluralize }}</span>
+                        {% if active_filters %}
+                            <a href="{% url 'simulate:simulate.list' %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bx bx-x me-1"></i>Limpiar Todo
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
                 
-                <form method="get" id="filterForm">
+                <form method="get" id="filterForm" class="needs-validation" novalidate>
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label">Producto</label>
+                            <label class="form-label">
+                                <i class="bx bx-package me-1"></i>Producto
+                            </label>
                             <select name="product" class="form-select" id="productFilter">
                                 <option value="">Todos los productos</option>
                                 {% for product in products %}
-                                <option value="{{ product.id }}" {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>
+                                <option value="{{ product.id }}" 
+                                        {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>
                                     {{ product.name }}
+                                    <small>({{ product.fk_business.name }})</small>
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
                         
-                        <div class="col-md-3">
-                            <label class="form-label">Estado</label>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                <i class="bx bx-list-check me-1"></i>Estado
+                            </label>
                             <select name="status" class="form-select" id="statusFilter">
-                                <option value="">Todos los estados</option>
-                                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completadas</option>
-                                <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>En Proceso</option>
-                                <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Fallidas</option>
-                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendientes</option>
+                                <option value="">Todos</option>
+                                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>
+                                    ✅ Completadas ({{ filter_counts.completed|default:0 }})
+                                </option>
+                                <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>
+                                    ⏳ En Proceso ({{ processing_simulations|default:0 }})
+                                </option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>
+                                    ⏸️ Pendientes ({{ filter_counts.pending|default:0 }})
+                                </option>
+                                <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>
+                                    ❌ Fallidas ({{ failed_simulations|default:0 }})
+                                </option>
                             </select>
                         </div>
                         
-                        <div class="col-md-3">
-                            <label class="form-label">Fecha Desde</label>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                <i class="bx bx-calendar me-1"></i>Desde
+                            </label>
                             <input type="date" name="date_from" class="form-control" 
-                                   value="{{ request.GET.date_from }}" id="dateFromFilter">
+                                   value="{{ request.GET.date_from }}" id="dateFromFilter"
+                                   max="{{ today|date:'Y-m-d' }}">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                <i class="bx bx-calendar-check me-1"></i>Hasta
+                            </label>
+                            <input type="date" name="date_to" class="form-control" 
+                                   value="{{ request.GET.date_to }}" id="dateToFilter"
+                                   max="{{ today|date:'Y-m-d' }}">
                         </div>
                         
                         <div class="col-md-3">
-                            <label class="form-label">Fecha Hasta</label>
-                            <input type="date" name="date_to" class="form-control" 
-                                   value="{{ request.GET.date_to }}" id="dateToFilter">
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Buscar</label>
-                            <div class="input-group">
-                                <input type="text" name="search" class="form-control" 
-                                       placeholder="Buscar por ID, producto o negocio..." 
-                                       value="{{ request.GET.search }}" id="searchFilter">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="bx bx-search"></i>
-                                </button>
+                            <label class="form-label">
+                                <i class="bx bx-search me-1"></i>Buscar
+                            </label>
+                            <div class="search-container">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="ID, producto, negocio..." 
+                                           value="{{ request.GET.search }}" id="searchFilter"
+                                           autocomplete="off">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="bx bx-search"></i>
+                                    </button>
+                                </div>
+                                <div class="search-suggestions" id="searchSuggestions"></div>
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
-                            <label class="form-label">&nbsp;</label>
-                            <div class="d-flex gap-2">
+                        <!-- Advanced Filters Toggle -->
+                        <div class="col-12">
+                            <a href="#" class="filter-toggle" onclick="toggleAdvancedFilters(event)">
+                                <i class="bx bx-chevron-down me-1" id="advancedToggleIcon"></i>
+                                Filtros Avanzados
+                            </a>
+                        </div>
+                        
+                        <!-- Advanced Filters Section -->
+                        <div class="col-12 advanced-filters collapsed" id="advancedFilters">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Negocio</label>
+                                    <select name="business" class="form-select">
+                                        <option value="">Todos los negocios</option>
+                                        {% for business in businesses %}
+                                        <option value="{{ business.id }}" 
+                                                {% if request.GET.business == business.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ business.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label class="form-label">Distribución</label>
+                                    <select name="distribution" class="form-select">
+                                        <option value="">Todas las distribuciones</option>
+                                        {% for fdp in available_fdps %}
+                                        <option value="{{ fdp.distribution_type }}" 
+                                                {% if request.GET.distribution == fdp.distribution_type|stringformat:"s" %}selected{% endif %}>
+                                            {{ fdp.get_distribution_type_display }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label class="form-label">Ordenar por</label>
+                                    <select name="sort" class="form-select">
+                                        <option value="-date_created" {% if request.GET.sort == '-date_created' %}selected{% endif %}>
+                                            Más recientes
+                                        </option>
+                                        <option value="date_created" {% if request.GET.sort == 'date_created' %}selected{% endif %}>
+                                            Más antiguos
+                                        </option>
+                                        <option value="-results_count" {% if request.GET.sort == '-results_count' %}selected{% endif %}>
+                                            Más resultados
+                                        </option>
+                                        <option value="product" {% if request.GET.sort == 'product' %}selected{% endif %}>
+                                            Producto A-Z
+                                        </option>
+                                        <option value="business" {% if request.GET.sort == 'business' %}selected{% endif %}>
+                                            Negocio A-Z
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label class="form-label">Resultados por página</label>
+                                    <select name="page_size" class="form-select">
+                                        <option value="20" {% if request.GET.page_size == '20' %}selected{% endif %}>20</option>
+                                        <option value="50" {% if request.GET.page_size == '50' %}selected{% endif %}>50</option>
+                                        <option value="100" {% if request.GET.page_size == '100' %}selected{% endif %}>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bx bx-filter me-2"></i>
                                     Aplicar Filtros
@@ -129,23 +300,40 @@
                                     <i class="bx bx-reset me-2"></i>
                                     Limpiar
                                 </a>
-                                <button type="button" class="btn btn-success" onclick="exportResults()">
-                                    <i class="bx bx-download me-2"></i>
-                                    Exportar
-                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-success dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown">
+                                        <i class="bx bx-download me-2"></i>
+                                        Exportar
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="exportData('csv')">
+                                            <i class="bx bx-file me-2"></i>CSV
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportData('excel')">
+                                            <i class="bx bx-file-blank me-2"></i>Excel
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportData('json')">
+                                            <i class="bx bx-code me-2"></i>JSON
+                                        </a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </form>
                 
-                <!-- Active Filters Tags -->
+                <!-- Active Filters Display -->
                 {% if active_filters %}
                 <div class="filter-tags">
-                    <span class="text-muted me-2">Filtros activos:</span>
+                    <span class="text-muted me-2">
+                        <i class="bx bx-filter me-1"></i>Filtros activos:
+                    </span>
                     {% for filter in active_filters %}
                     <div class="filter-tag">
+                        <i class="bx bx-tag me-1"></i>
                         {{ filter.label }}: <strong>{{ filter.value }}</strong>
-                        <a href="{{ filter.remove_url }}" class="remove-filter">
+                        <a href="{{ filter.remove_url }}" class="remove-filter" title="Remover filtro">
                             <i class="bx bx-x"></i>
                         </a>
                     </div>
@@ -154,81 +342,232 @@
                 {% endif %}
             </div>
             
-            <!-- Simulations List -->
+            <!-- Bulk Actions -->
+            <div class="bulk-actions" id="bulkActions">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bx bx-check-square me-2"></i>
+                        <strong><span id="selectedCount">0</span> simulaciones seleccionadas</strong>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="bulk-action-btn" onclick="bulkAction('start')">
+                            <i class="bx bx-play me-1"></i>Ejecutar
+                        </button>
+                        <button class="bulk-action-btn" onclick="bulkAction('export')">
+                            <i class="bx bx-download me-1"></i>Exportar
+                        </button>
+                        <button class="bulk-action-btn" onclick="bulkAction('duplicate')">
+                            <i class="bx bx-copy me-1"></i>Duplicar
+                        </button>
+                        <button class="bulk-action-btn text-danger" onclick="bulkAction('delete')">
+                            <i class="bx bx-trash me-1"></i>Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced Simulations List -->
             {% if simulations %}
             <div class="row" id="simulationsList">
                 {% for simulation in simulations %}
                 <div class="col-12">
-                    <div class="simulation-card">
+                    <div class="simulation-card" data-simulation-id="{{ simulation.id }}">
                         <div class="card-body">
                             <div class="row align-items-center">
+                                <!-- Selection Checkbox -->
+                                <div class="col-auto no-print">
+                                    <div class="form-check">
+                                        <input class="form-check-input simulation-checkbox" 
+                                               type="checkbox" value="{{ simulation.id }}"
+                                               id="sim-{{ simulation.id }}">
+                                    </div>
+                                </div>
+                                
+                                <!-- Main Content -->
                                 <div class="col-lg-8">
                                     <div class="d-flex align-items-start gap-3">
-                                        <div>
+                                        <!-- Status Indicator -->
+                                        <div class="flex-shrink-0">
                                             <span class="timeline-dot {{ simulation.status }}"></span>
                                         </div>
+                                        
+                                        <!-- Simulation Info -->
                                         <div class="flex-grow-1">
-                                            <h5 class="mb-2">
-                                                Simulación #{{ simulation.id }}
-                                                <span class="simulation-status status-{{ simulation.status }} ms-2">
-                                                    {{ simulation.get_status_display }}
+                                            <div class="d-flex align-items-center mb-2">
+                                                <h5 class="mb-0 me-2">
+                                                    <a href="{% url 'simulate:simulate.result' simulation.id %}" 
+                                                       class="text-decoration-none">
+                                                        Simulación #{{ simulation.id }}
+                                                    </a>
+                                                </h5>
+                                                <span class="simulation-status status-{{ simulation.status }}">
+                                                    <i class="bx {{ simulation.status_icon }} me-1"></i>
+                                                    {{ simulation.status_display }}
                                                 </span>
-                                            </h5>
+                                                {% if simulation.status == 'processing' %}
+                                                    <div class="progress ms-2" style="width: 100px; height: 8px;">
+                                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                                             style="width: {{ simulation.progress_percentage }}%"></div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
                                             
+                                            <!-- Product Badge -->
                                             <div class="product-badge mb-2">
                                                 <i class="bx bx-package"></i>
                                                 {{ simulation.fk_questionary_result.fk_questionary.fk_product.name }}
+                                                <span class="distribution-badge distribution-{{ simulation.fk_fdp.get_distribution_type_display|lower }}">
+                                                    {{ simulation.fk_fdp.get_distribution_type_display }}
+                                                </span>
                                             </div>
                                             
+                                            <!-- Business Info -->
+                                            <div class="business-info mb-2">
+                                                <i class="bx bx-building me-1"></i>
+                                                {{ simulation.fk_questionary_result.fk_questionary.fk_product.fk_business.name }}
+                                            </div>
+                                            
+                                            <!-- Simulation Meta -->
                                             <div class="simulation-meta">
                                                 <div class="meta-item">
-                                                    <i class="bx bx-building"></i>
-                                                    {{ simulation.fk_questionary_result.fk_questionary.fk_product.fk_business.name }}
-                                                </div>
-                                                <div class="meta-item">
                                                     <i class="bx bx-calendar"></i>
-                                                    {{ simulation.date_created|date:"d/m/Y H:i" }}
+                                                    <span title="{{ simulation.date_created|date:'Y-m-d H:i:s' }}">
+                                                        {{ simulation.date_created|naturaltime }}
+                                                    </span>
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="bx bx-time"></i>
-                                                    {{ simulation.quantity_time }} {{ simulation.unit_time }}
+                                                    {{ simulation.duration_display }}
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="bx bx-chart"></i>
-                                                    {{ simulation.fk_fdp.get_distribution_type_display }}
+                                                    {{ simulation.results_count }} resultado{{ simulation.results_count|pluralize }}
+                                                </div>
+                                                {% if simulation.avg_demand_display != 'N/A' %}
+                                                <div class="meta-item">
+                                                    <i class="bx bx-trending-up"></i>
+                                                    Promedio: {{ simulation.avg_demand_display }}
+                                                </div>
+                                                {% endif %}
+                                                <div class="meta-item">
+                                                    <i class="bx bx-shield-check"></i>
+                                                    {{ simulation.confidence_level|floatformat:2 }}% confianza
                                                 </div>
                                             </div>
+                                            
+                                            <!-- Demand Statistics -->
+                                            {% if simulation.status == 'completed' %}
+                                            <div class="demand-stats">
+                                                <div class="demand-stat">
+                                                    <strong>{{ simulation.results_count }}</strong> días simulados
+                                                </div>
+                                                {% if simulation.avg_demand %}
+                                                <div class="demand-stat">
+                                                    <strong>{{ simulation.avg_demand|floatformat:2 }}</strong> demanda promedio
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
                                 
+                                <!-- Actions -->
                                 <div class="col-lg-4">
                                     <div class="action-buttons justify-content-lg-end mt-3 mt-lg-0">
                                         {% if simulation.status == 'completed' %}
-                                        <a href="{% url 'simulate:simulate.result' simulation.id %}" 
-                                        class="btn btn-primary">
-                                            <i class="bx bx-show me-2"></i>
-                                            Ver Resultados
-                                        </a>
+                                            <a href="{% url 'simulate:simulate.result' simulation.id %}" 
+                                               class="btn btn-primary">
+                                                <i class="bx bx-show me-2"></i>
+                                                Ver Resultados
+                                            </a>
+                                            <a href="#" onclick="downloadReport({{ simulation.id }})" 
+                                               class="btn btn-success btn-icon" title="Descargar Reporte">
+                                                <i class="bx bx-download"></i>
+                                            </a>
+                                        {% elif simulation.status == 'processing' %}
+                                            <button class="btn btn-warning" 
+                                                    onclick="checkProgress({{ simulation.id }})"
+                                                    title="Ver Progreso">
+                                                <i class="bx bx-time me-2"></i>
+                                                En Proceso...
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-icon" 
+                                                    onclick="stopSimulation({{ simulation.id }})"
+                                                    title="Detener">
+                                                <i class="bx bx-stop"></i>
+                                            </button>
+                                        {% elif simulation.status == 'failed' %}
+                                            <button class="btn btn-warning" 
+                                                    onclick="retrySimulation({{ simulation.id }})">
+                                                <i class="bx bx-refresh me-2"></i>
+                                                Reintentar
+                                            </button>
+                                            <button class="btn btn-info btn-icon" 
+                                                    onclick="viewErrorLog({{ simulation.id }})"
+                                                    title="Ver Error">
+                                                <i class="bx bx-error"></i>
+                                            </button>
                                         {% else %}
-                                        <button class="btn btn-info" onclick="startSimulation({{ simulation.id }})">
-                                            <i class="bx bx-play me-2"></i>
-                                            Iniciar
-                                        </button>
+                                            <button class="btn btn-info" 
+                                                    onclick="startSimulation({{ simulation.id }})">
+                                                <i class="bx bx-play me-2"></i>
+                                                Iniciar
+                                            </button>
                                         {% endif %}
                                         
-                                        <button class="btn btn-icon btn-outline-secondary" 
-                                                onclick="duplicateSimulation({{ simulation.id }})"
-                                                title="Duplicar">
-                                            <i class="bx bx-copy"></i>
-                                        </button>
-                                        
-                                        <button class="btn btn-icon btn-outline-danger" 
-                                                onclick="deleteSimulation({{ simulation.id }})"
-                                                title="Eliminar">
-                                            <i class="bx bx-trash"></i>
-                                        </button>
+                                        <!-- Common Actions -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-icon dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" title="Más opciones">
+                                                <i class="bx bx-dots-vertical-rounded"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="#" 
+                                                       onclick="duplicateSimulation({{ simulation.id }})">
+                                                        <i class="bx bx-copy me-2"></i>Duplicar
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" 
+                                                       onclick="editSimulation({{ simulation.id }})">
+                                                        <i class="bx bx-edit me-2"></i>Editar Parámetros
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" 
+                                                       onclick="shareSimulation({{ simulation.id }})">
+                                                        <i class="bx bx-share me-2"></i>Compartir
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" 
+                                                       onclick="exportSimulation({{ simulation.id }})">
+                                                        <i class="bx bx-export me-2"></i>Exportar
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="#" 
+                                                       onclick="deleteSimulation({{ simulation.id }})">
+                                                        <i class="bx bx-trash me-2"></i>Eliminar
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
+                                    
+                                    <!-- Progress Info for Processing -->
+                                    {% if simulation.status == 'processing' %}
+                                    <div class="progress-info mt-2">
+                                        <small class="text-muted">
+                                            Progreso: {{ simulation.results_count }}/{{ simulation.duration_in_days }} días
+                                            ({{ simulation.progress_percentage|floatformat:0 }}%)
+                                        </small>
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -237,79 +576,140 @@
                 {% endfor %}
             </div>
             
-            <!-- Pagination -->
+            <!-- Enhanced Pagination -->
             {% if is_paginated %}
-            <nav aria-label="Paginación de simulaciones">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            <i class="bx bx-chevrons-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            <i class="bx bx-chevron-left"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                                {{ num }}
-                            </a>
-                        </li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            <i class="bx bx-chevron-right"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                            <i class="bx bx-chevrons-right"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
+            <nav aria-label="Paginación de simulaciones" class="mt-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <span class="text-muted me-3">
+                                Mostrando {{ page_obj.start_index }}-{{ page_obj.end_index }} 
+                                de {{ page_obj.paginator.count }} simulaciones
+                            </span>
+                            <select class="form-select form-select-sm w-auto" 
+                                    onchange="changePageSize(this.value)">
+                                <option value="20" {% if request.GET.page_size == '20' %}selected{% endif %}>
+                                    20 por página
+                                </option>
+                                <option value="50" {% if request.GET.page_size == '50' %}selected{% endif %}>
+                                    50 por página
+                                </option>
+                                <option value="100" {% if request.GET.page_size == '100' %}selected{% endif %}>
+                                    100 por página
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="pagination justify-content-end mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                   title="Primera página">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                   title="Página anterior">
+                                    <i class="bx bx-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                                {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                                {% elif num == 2 or num == page_obj.paginator.num_pages|add:'-1' %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                   title="Página siguiente">
+                                    <i class="bx bx-chevron-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                   title="Última página">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
             </nav>
             {% endif %}
             
             {% else %}
-            <!-- Empty State -->
+            <!-- Enhanced Empty State -->
             <div class="card">
                 <div class="card-body">
                     <div class="empty-state">
-                        <img src="{% static 'images/empty-simulations.svg' %}" alt="No hay simulaciones">
-                        <h4>No se encontraron simulaciones</h4>
+                        <img src="{% static 'images/empty-simulations.svg' %}" alt="No hay simulaciones" 
+                             style="max-width: 250px;">
+                        <h4>
+                            {% if request.GET %}
+                                No se encontraron simulaciones
+                            {% else %}
+                                ¡Comience su primera simulación!
+                            {% endif %}
+                        </h4>
                         <p class="text-muted">
                             {% if request.GET %}
                                 No hay simulaciones que coincidan con los filtros aplicados.
+                                Intente ajustar sus criterios de búsqueda.
                             {% else %}
-                                Aún no has creado ninguna simulación.
+                                Las simulaciones le ayudan a predecir la demanda de sus productos
+                                utilizando datos históricos y modelos probabilísticos avanzados.
                             {% endif %}
                         </p>
                         <div class="mt-4">
                             {% if request.GET %}
-                            <a href="{% url 'simulate:simulate.list' %}" class="btn btn-secondary">
+                            <a href="{% url 'simulate:simulate.list' %}" class="btn btn-secondary me-2">
                                 <i class="bx bx-reset me-2"></i>
                                 Limpiar Filtros
                             </a>
                             {% endif %}
-                            <a href="{% url 'simulate:simulate.show' %}" class="btn btn-primary">
+                            <a href="{% url 'simulate:simulate.show' %}" class="btn btn-primary btn-lg">
                                 <i class="bx bx-plus-circle me-2"></i>
-                                Crear Primera Simulación
+                                {% if request.GET %}Crear Nueva Simulación{% else %}Crear Primera Simulación{% endif %}
                             </a>
                         </div>
+                        
+                        {% if not request.GET %}
+                        <div class="mt-4">
+                            <h6>¿Necesita ayuda?</h6>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="#" class="btn btn-outline-info btn-sm">
+                                    <i class="bx bx-help-circle me-1"></i>Guía de Inicio
+                                </a>
+                                <a href="#" class="btn btn-outline-success btn-sm">
+                                    <i class="bx bx-video me-1"></i>Ver Tutorial
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -323,29 +723,59 @@
     {% endblock footer %}
 </div>
 
-<!-- Progress Modal -->
+<!-- Enhanced Progress Modal -->
 <div class="modal fade" id="progressModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Progreso de Simulación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title">
+                    <i class="bx bx-trending-up me-2"></i>
+                    Progreso de Simulación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">
-                    <div class="spinner-border text-primary" role="status">
+                    <div class="spinner-border text-primary" role="status" id="progressSpinner">
                         <span class="visually-hidden">Cargando...</span>
                     </div>
                 </div>
-                <div class="progress" style="height: 25px;">
+                
+                <div class="progress mb-3" style="height: 25px;">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" 
                          role="progressbar" style="width: 0%;" id="simulationProgress">
                         0%
                     </div>
                 </div>
-                <p class="text-center mt-3 mb-0" id="progressStatus">Iniciando simulación...</p>
+                
+                <div class="text-center">
+                    <p class="mb-2" id="progressStatus">Iniciando simulación...</p>
+                    <small class="text-muted" id="progressDetails">
+                        Preparando datos y configurando parámetros
+                    </small>
+                </div>
+                
+                <div class="mt-3" id="progressActions" style="display: none;">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="pauseSimulation()">
+                            <i class="bx bx-pause"></i> Pausar
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="cancelSimulation()">
+                            <i class="bx bx-stop"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+        <h5>Procesando...</h5>
+        <p class="text-muted mb-0">Por favor espere mientras procesamos su solicitud</p>
     </div>
 </div>
 
@@ -355,257 +785,5 @@
 <script src="{% static 'libs/datatables.net/js/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-
-// Initialize DataTable if needed
-$(document).ready(function() {
-    // Auto-submit form on filter change
-    $('#productFilter, #statusFilter').change(function() {
-        $('#filterForm').submit();
-    });
-    
-    // Date range validation
-    $('#dateFromFilter, #dateToFilter').change(function() {
-        const dateFrom = new Date($('#dateFromFilter').val());
-        const dateTo = new Date($('#dateToFilter').val());
-        
-        if (dateFrom && dateTo && dateFrom > dateTo) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Rango de fechas inválido',
-                text: 'La fecha desde no puede ser mayor que la fecha hasta',
-            });
-            $(this).val('');
-        }
-    });
-});
-
-// Check simulation progress
-function checkProgress(simulationId) {
-    $('#progressModal').modal('show');
-    
-    const checkInterval = setInterval(() => {
-        fetch(`/simulate/api/progress/${simulationId}/`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'completed') {
-                    clearInterval(checkInterval);
-                    $('#progressModal').modal('hide');
-                    location.reload();
-                } else if (data.status === 'failed') {
-                    clearInterval(checkInterval);
-                    $('#progressModal').modal('hide');
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en la simulación',
-                        text: data.error || 'La simulación falló',
-                    });
-                } else {
-                    // Update progress
-                    const progress = data.progress || 0;
-                    $('#simulationProgress').css('width', progress + '%').text(progress + '%');
-                    $('#progressStatus').text(data.message || 'Procesando...');
-                }
-            })
-            .catch(error => {
-                console.error('Error checking progress:', error);
-            });
-    }, 2000); // Check every 2 seconds
-}
-
-// Retry failed simulation
-function retrySimulation(simulationId) {
-    Swal.fire({
-        title: '¿Reiniciar simulación?',
-        text: 'Se eliminarán los resultados actuales y se volverá a ejecutar',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Reiniciar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`/simulate/api/retry/${simulationId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Reiniciando',
-                        text: 'La simulación se está ejecutando nuevamente'
-                    });
-                    setTimeout(() => location.reload(), 2000);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'No se pudo reiniciar la simulación'
-                    });
-                }
-            });
-        }
-    });
-}
-
-// Duplicate simulation
-function duplicateSimulation(simulationId) {
-    Swal.fire({
-        title: '¿Duplicar simulación?',
-        text: 'Se creará una copia de esta simulación',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Duplicar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(URLS.duplicate + simulationId + '/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Simulación duplicada',
-                        text: 'La simulación se ha duplicado correctamente'
-                    });
-                    setTimeout(() => location.reload(), 2000);
-                } else {
-                    throw new Error(data.message || 'Error desconocido');
-                }
-            })
-            .catch(error => {
-                console.error('Error duplicating simulation:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message || 'No se pudo duplicar la simulación'
-                });
-            });
-        }
-    });
-}
-
-// Start simulation
-function startSimulation(simulationId) {
-    Swal.fire({
-        title: '¿Iniciar simulación?',
-        text: 'La simulación se ejecutará y generará los resultados',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Iniciar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Mostrar loading
-            Swal.fire({
-                title: 'Ejecutando simulación',
-                html: 'Por favor espere...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            
-            fetch(`/simulate/api/start/${simulationId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Simulación completada',
-                        text: 'La simulación se ha ejecutado correctamente',
-                    });
-                    setTimeout(() => location.reload(), 2000);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'No se pudo iniciar la simulación'
-                    });
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ocurrió un error al ejecutar la simulación'
-                });
-            });
-        }
-    });
-}
-// Delete simulation
-function deleteSimulation(simulationId) {
-    Swal.fire({
-        title: '¿Eliminar simulación?',
-        text: 'Esta acción no se puede deshacer',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`/simulate/api/delete/${simulationId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Eliminada',
-                        text: 'La simulación ha sido eliminada'
-                    });
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'No se pudo eliminar la simulación'
-                    });
-                }
-            });
-        }
-    });
-}
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-</script>
+<script src="{% static 'js/simulate/simulate-list.js' %}"></script>
 {% endblock extra_js %}

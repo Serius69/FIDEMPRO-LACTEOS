@@ -299,17 +299,17 @@
                                         <div class="stats-grid mb-4">
                                             <div class="stat-card">
                                                 <i class="ri-function-line" style="font-size: 2em; opacity: 0.8;"></i>
-                                                <h3>{{ equations_area.paginator.count|default:"0" }}</h3>
+                                                <h3>{{ total_equations|default:"0" }}</h3>
                                                 <p>Ecuaciones</p>
                                             </div>
                                             <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                                                 <i class="ri-bubble-chart-line" style="font-size: 2em; opacity: 0.8;"></i>
-                                                <h3 id="variableCount">0</h3>
+                                                <h3>{{ total_variables|default:"0" }}</h3>
                                                 <p>Variables</p>
                                             </div>
                                             <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                                                 <i class="ri-links-line" style="font-size: 2em; opacity: 0.8;"></i>
-                                                <h3 id="relationCount">0</h3>
+                                                <h3>{{ total_relations|default:"0" }}</h3>
                                                 <p>Relaciones</p>
                                             </div>
                                         </div>
@@ -689,8 +689,26 @@ document.querySelectorAll('.highlight-element').forEach(el => {
 });
 // Initialize tutorial on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Solo inicializar el gráfico si hay datos
+    if (graphData.variables.length > 0 || graphData.equations.length > 0) {
+        initializeGraph();
+    } else {
+        // Mostrar mensaje cuando no hay datos
+        document.getElementById('variablesGraph').innerHTML = 
+            '<div class="text-center py-5">' +
+            '<lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:100px;height:100px"></lord-icon>' +
+            '<h5 class="mt-3">No hay variables para mostrar</h5>' +
+            '<p class="text-muted">Las variables aparecerán aquí cuando agregues ecuaciones con variables asociadas.</p>' +
+            '</div>';
+    }
+    
+    updateCounts();
+    
+    // Inicializar tutorial si es necesario
     if (localStorage.getItem('areaOverviewTutorialCompleted') !== 'true') {
-        startTutorial();
+        setTimeout(() => {
+            startTutorial();
+        }, 1000);
     }
 });
 // Update variable and relation counts
@@ -698,8 +716,8 @@ function updateCounts() {
     const variableCount = document.querySelectorAll('.variable-tag').length;
     const relationCount = document.querySelectorAll('.equation-card').length; // Assuming each equation represents a relation
     
-    document.getElementById('variableCount').textContent = variableCount;
-    document.getElementById('relationCount').textContent = relationCount;
+    document.getElementById('variableCount').textContent = {{ total_variables|default:"0" }};
+    document.getElementById('relationCount').textContent = {{ total_relations|default:"0" }};
 }
 // Call updateCounts on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -742,40 +760,53 @@ function exportData() {
 }
 // Function to reset the graph view
 function resetGraph() {
-    // Logic to reset the graph view
-    // This could involve reloading the graph data or resetting the zoom/pan state
-    console.log("Graph view reset");
-    // Example: reload the graph with initial data
-    loadGraphData();
+    // Limpiar el SVG existente
+    d3.select("#variablesGraph").select("svg").remove();
+    // Reinicializar con datos frescos
+    initializeGraph();
 }
 // Function to download the graph as an image
 function downloadGraph() {
-    // Assuming you have a function to get the graph SVG or canvas
-    const svg = document.getElementById('variablesGraph').innerHTML;
-    const blob = new Blob([svg], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'variables_graph.svg';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const svg = document.querySelector("#variablesGraph svg");
+    if (svg) {
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svg);
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'area_variables_graph.svg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
 }
 // Function to load equation details for editing
 function loadEquationDetails(equationId) {
-    // Fetch equation details from the server
-    fetch(`/api/equations/${equationId}/`)
-        .then(response => response.json())
+    fetch(`/equation/get_details/${equationId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener detalles de la ecuación');
+            }
+            return response.json();
+        })
         .then(data => {
-            // Populate the modal fields with the fetched data
+            // Rellenar el modal con los datos de la ecuación
             document.getElementById('equationName').value = data.name;
             document.getElementById('equationExpression').value = data.expression;
-            // Load variables into the modal (assuming you have a function for this)
+            // Cargar variables asociadas
             loadVariablesIntoModal(data.variables);
         })
         .catch(error => {
-            console.error('Error loading equation details:', error);
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron cargar los detalles de la ecuación',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         });
 }
 // Function to load variables into the modal (example)
@@ -794,44 +825,117 @@ function loadVariablesIntoModal(variables) {
 // Function to initialize the graph
 
 function initializeGraph() {
-    // Example: Create a simple D3 graph
     const svg = d3.select("#variablesGraph")
         .append("svg")
         .attr("width", "100%")
-        .attr("height", "400px");
+        .attr("height", "500px");
     
-    // Add some example nodes and links (replace with actual data)
+    const width = document.getElementById('variablesGraph').offsetWidth;
+    const height = 500;
+    
+    // Crear nodos para variables y ecuaciones
     const nodes = [
-        { id: "Variable 1", type: "variable" },
-        { id: "Variable 2", type: "variable" },
-        { id: "Equation 1", type: "equation" }
+        ...graphData.variables.map(variable => ({
+            id: `var_${variable.id}`,
+            name: variable.name,
+            type: 'variable',
+            description: variable.description
+        })),
+        ...graphData.equations.map(equation => ({
+            id: `eq_${equation.id}`,
+            name: equation.name,
+            type: 'equation',
+            expression: equation.expression
+        }))
     ];
     
-    const links = [
-        { source: "Variable 1", target: "Equation 1" },
-        { source: "Variable 2", target: "Equation 1" }
-    ];
+    // Crear enlaces entre variables y ecuaciones
+    const links = [];
+    graphData.equations.forEach(equation => {
+        equation.variables.forEach(variableId => {
+            links.push({
+                source: `var_${variableId}`,
+                target: `eq_${equation.id}`
+            });
+        });
+    });
     
-    // Draw nodes
-    svg.selectAll("circle")
-        .data(nodes)
-        .enter()
-        .append("circle")
-        .attr("cx", (d, i) => (i + 1) * 100)
-        .attr("cy", 200)
-        .attr("r", 20)
-        .attr("fill", d => d.type === "variable" ? "#4facfe" : "#ffd700");
+    // Configurar simulación de fuerzas
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
     
-    // Draw links
-    svg.selectAll("line")
+    // Dibujar enlaces
+    const link = svg.append("g")
+        .selectAll("line")
         .data(links)
         .enter()
         .append("line")
-        .attr("x1", d => nodes.find(n => n.id === d.source).cx)
-        .attr("y1", d => nodes.find(n => n.id === d.source).cy)
-        .attr("x2", d => nodes.find(n => n.id === d.target).cx)
-        .attr("y2", d => nodes.find(n => n.id === d.target).cy)
-        .attr("stroke", "#999");
+        .attr("stroke", "#999")
+        .attr("stroke-width", 2);
+    
+    // Dibujar nodos
+    const node = svg.append("g")
+        .selectAll("circle")
+        .data(nodes)
+        .enter()
+        .append("circle")
+        .attr("r", d => d.type === 'equation' ? 25 : 20)
+        .attr("fill", d => d.type === 'variable' ? "#4facfe" : "#ffd700")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+    
+    // Agregar etiquetas
+    const labels = svg.append("g")
+        .selectAll("text")
+        .data(nodes)
+        .enter()
+        .append("text")
+        .text(d => d.name)
+        .attr("font-size", "12px")
+        .attr("text-anchor", "middle")
+        .attr("dy", d => d.type === 'equation' ? 35 : 30);
+    
+    // Agregar tooltips
+    node.append("title")
+        .text(d => d.type === 'variable' ? d.description : d.expression);
+    
+    // Actualizar posiciones en cada tick
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+        
+        node
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+        
+        labels
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    });
+    
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+    
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+    
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
 }
 // Call initializeGraph on page load
 document.addEventListener('DOMContentLoaded', () => {

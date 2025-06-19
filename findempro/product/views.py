@@ -1,3 +1,4 @@
+import json
 from sqlite3 import NotSupportedError
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.http import JsonResponse, HttpResponseForbidden, Http404
@@ -48,11 +49,14 @@ def paginate(request, queryset, per_page):
     
     return items
 
+
 @login_required
 def product_list(request):
     """Vista optimizada para listar productos con filtros y paginación"""
     try:
         business_id = request.GET.get('business_id', 'All')
+        search_query = request.GET.get('search', '').strip()
+        sort_by = request.GET.get('sort', '-last_updated')
         
         # Optimizar consultas con select_related y prefetch_related
         businesses = Business.objects.filter(
@@ -60,7 +64,7 @@ def product_list(request):
             fk_user=request.user
         ).order_by('name')
         
-        # Base query con optimizaciones
+        # Base query con optimizaciones - sin anotar campos que ya son propiedades
         products_query = Product.objects.filter(
             is_active=True
         ).select_related(
@@ -74,14 +78,12 @@ def product_list(request):
             ),
             Prefetch(
                 'fk_product_area',
-                queryset=Area.objects.filter(is_active=True),
+                queryset=Area.objects.filter(is_active=True).only('id', 'name'),
                 to_attr='active_areas'
             )
-        ).annotate(
-            areas_count_db=Count('fk_product_area', filter=Q(fk_product_area__is_active=True)),
-            variables_count_db=Count('fk_product_variable', filter=Q(fk_product_variable__is_active=True))
         )
 
+        # Filtrar por negocio
         if business_id != 'All':
             try:
                 business = businesses.get(id=business_id)
@@ -92,23 +94,95 @@ def product_list(request):
         else:
             products_query = products_query.filter(fk_business__in=businesses)
 
-        # Ordenar por fecha de actualización descendente
-        products = products_query.order_by('-last_updated', '-date_created')
+        # Filtrar por búsqueda
+        if search_query:
+            products_query = products_query.filter(
+                Q(name__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(fk_business__name__icontains=search_query)
+            )
+
+        # Ordenar productos
+        valid_sort_options = {
+            'name': 'name',
+            '-name': '-name',
+            'date_created': 'date_created',
+            '-date_created': '-date_created',
+            'last_updated': 'last_updated',
+            '-last_updated': '-last_updated',
+            'business': 'fk_business__name',
+            '-business': '-fk_business__name'
+        }
+        
+        if sort_by in valid_sort_options:
+            products_query = products_query.order_by(valid_sort_options[sort_by])
+        else:
+            products_query = products_query.order_by('-last_updated', '-date_created')
+        
+        # ESTADÍSTICAS - Calcular antes de la paginación
+        total_products = products_query.count()
+        
+        # Obtener productos del usuario para calcular estadísticas
+        user_products = Product.objects.filter(
+            is_active=True,
+            fk_business__fk_user=request.user
+        )
+        
+        # Calcular estadísticas generales
+        total_areas = Area.objects.filter(
+            fk_product__in=user_products,
+            is_active=True
+        ).count()
+        
+        total_variables = Variable.objects.filter(
+            fk_product__in=user_products,
+            is_active=True
+        ).count()
+
+        # Productos recientes (últimos 7 días)
+        recent_cutoff = timezone.now() - timezone.timedelta(days=7)
+        recent_products_count = user_products.filter(
+            date_created__gte=recent_cutoff
+        ).count()
         
         # Paginación
-        products = paginate(request, products, ITEMS_PER_PAGE)
+        products = paginate(request, products_query, ITEMS_PER_PAGE)
+        
+        # Los productos ya tienen las propiedades areas_count y variables_count definidas en el modelo
+        # Solo necesitamos agregar ecuaciones_count y simulations_count como atributos adicionales
+        for product in products:
+            # Agregar conteos adicionales como atributos (no properties)
+            product.equations_count_display = 0  # Placeholder hasta tener el modelo correcto
+            product.simulations_count_display = 0  # Placeholder hasta tener el modelo correcto
         
         # Obtener instrucciones si existen
-        instructions = Instructions.objects.filter(
-            fk_user=request.user, 
-            is_active=True
-        ).order_by('-id')[:5]  # Limitar a 5 más recientes
+        try:
+            instructions = Instructions.objects.filter(
+                fk_user=request.user, 
+                is_active=True
+            ).order_by('-id')[:5]
+        except:
+            instructions = []
 
         context = {
             'products': products, 
             'businesses': businesses, 
             'instructions': instructions,
             'selected_business': business_id,
+            'search_query': search_query,
+            'sort_by': sort_by,
+            'total_products': total_products,
+            'total_areas': total_areas,
+            'total_variables': total_variables,
+            'recent_products_count': recent_products_count,
+            'sort_options': [
+                {'value': '-last_updated', 'label': 'Más recientes'},
+                {'value': 'last_updated', 'label': 'Más antiguos'},
+                {'value': 'name', 'label': 'Nombre A-Z'},
+                {'value': '-name', 'label': 'Nombre Z-A'},
+                {'value': 'business', 'label': 'Negocio A-Z'},
+                {'value': '-business', 'label': 'Negocio Z-A'},
+            ]
         }
         
         return render(request, 'product/product-list.html', context)
@@ -119,7 +193,12 @@ def product_list(request):
         return render(request, 'product/product-list.html', {
             'products': [], 
             'businesses': [], 
-            'instructions': []
+            'instructions': [],
+            'total_products': 0,
+            'total_areas': 0,
+            'total_variables': 0,
+            'recent_products_count': 0,
+            'sort_options': []
         })
 
 @login_required
@@ -377,7 +456,7 @@ def get_product_details(request, pk):
 def area_overview(request, pk):
     """Vista optimizada para mostrar detalles de un área"""
     try:
-        # Use the correct related_name from your Equation model
+        # Obtener el área con todas las relaciones necesarias
         area = get_object_or_404(
             Area.objects.select_related(
                 'fk_product',
@@ -385,7 +464,7 @@ def area_overview(request, pk):
                 'fk_product__fk_business__fk_user'
             ).prefetch_related(
                 Prefetch(
-                    'area_equation',  # This matches the related_name in Equation model
+                    'area_equation',  # Usar el related_name correcto
                     queryset=Equation.objects.filter(is_active=True).select_related(
                         'fk_variable1',
                         'fk_variable2',
@@ -406,15 +485,78 @@ def area_overview(request, pk):
         
         current_datetime = timezone.now()
         
-        # Use the correct related_name 'area_equation'
+        # Obtener ecuaciones del área
         equations_area = area.area_equation.all()
         
+        # Obtener todas las variables únicas utilizadas en las ecuaciones del área
+        variables_used = set()
+        variables_data = []
+        
+        for equation in equations_area:
+            # Recopilar variables de cada ecuación
+            equation_variables = []
+            for var_field in ['fk_variable1', 'fk_variable2', 'fk_variable3', 'fk_variable4', 'fk_variable5']:
+                variable = getattr(equation, var_field, None)
+                if variable:
+                    variables_used.add(variable.id)
+                    equation_variables.append(variable)
+            
+            # Guardar datos para el gráfico
+            variables_data.append({
+                'equation': equation,
+                'variables': equation_variables
+            })
+        
+        # Obtener detalles completos de las variables utilizadas
+        variables_details = Variable.objects.filter(
+            id__in=variables_used,
+            is_active=True
+        ).only('id', 'name', 'description', 'image_src')
+        
+        # Contar estadísticas
+        total_equations = equations_area.count()
+        total_variables = len(variables_used)
+        total_relations = sum(len(eq_data['variables']) for eq_data in variables_data)
+        
+        # Paginación para ecuaciones
         equations_area = paginate(request, equations_area, 10)
+        
+        # Preparar datos para el gráfico de variables
+        graph_data = {
+            'variables': [
+                {
+                    'id': var.id,
+                    'name': var.name,
+                    'description': var.description,
+                    'image_url': var.get_photo_url() if hasattr(var, 'get_photo_url') else None
+                } for var in variables_details
+            ],
+            'equations': [
+                {
+                    'id': eq_data['equation'].id,
+                    'name': eq_data['equation'].name,
+                    'expression': eq_data['equation'].expression,
+                    'variables': [var.id for var in eq_data['variables']]
+                } for eq_data in variables_data
+            ]
+        }
+        
+        # Obtener todas las variables del producto para el modal de ecuaciones
+        product_variables = Variable.objects.filter(
+            fk_product=area.fk_product,
+            is_active=True
+        ).order_by('name')
         
         context = {
             'area': area,
             'equations_area': equations_area,
             'current_datetime': current_datetime,
+            'total_equations': total_equations,
+            'total_variables': total_variables,
+            'total_relations': total_relations,
+            'variables_details': variables_details,
+            'graph_data': json.dumps(graph_data),  # Convertir a JSON para el template
+            'product_variables': product_variables,
         }
         
         return render(request, 'product/area-overview.html', context)

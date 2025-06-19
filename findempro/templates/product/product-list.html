@@ -162,6 +162,61 @@
 .avatar-group-item:hover {
     transform: scale(1.1);
 }
+
+/* Nuevos estilos para estadísticas */
+.stats-overview {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item h3 {
+    font-size: 2.5em;
+    margin: 10px 0;
+    font-weight: bold;
+}
+
+.stat-item p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1.1em;
+}
+
+/* Loading states */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.product-status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.search-highlight {
+    background-color: yellow;
+    padding: 1px 3px;
+    border-radius: 3px;
+}
 </style>
 {% endblock extra_css %}
 
@@ -178,21 +233,28 @@
 </div>
 
 <div class="tutorial-tooltip" id="step2Tooltip">
-    <h5>Paso 2: Crear Nuevo Producto</h5>
-    <p>Haga clic en este botón para crear un nuevo producto. Se abrirá un formulario donde podrá ingresar todos los detalles.</p>
+    <h5>Paso 2: Buscar Productos</h5>
+    <p>Use la barra de búsqueda para encontrar productos específicos por nombre, descripción o negocio.</p>
     <button type="button" class="btn btn-primary btn-sm" onclick="nextStep(3)">Siguiente</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
 </div>
 
 <div class="tutorial-tooltip" id="step3Tooltip">
-    <h5>Paso 3: Tarjetas de Producto</h5>
-    <p>Cada tarjeta muestra información del producto. Puede ver detalles, editar o eliminar usando el menú de tres puntos.</p>
+    <h5>Paso 3: Crear Nuevo Producto</h5>
+    <p>Haga clic en este botón para crear un nuevo producto. Se abrirá un formulario donde podrá ingresar todos los detalles.</p>
     <button type="button" class="btn btn-primary btn-sm" onclick="nextStep(4)">Siguiente</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
 </div>
 
 <div class="tutorial-tooltip" id="step4Tooltip">
-    <h5>Paso 4: Acciones del Producto</h5>
+    <h5>Paso 4: Tarjetas de Producto</h5>
+    <p>Cada tarjeta muestra información del producto. Puede ver detalles, editar o eliminar usando el menú de tres puntos.</p>
+    <button type="button" class="btn btn-primary btn-sm" onclick="nextStep(5)">Siguiente</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="endTutorial()">Saltar</button>
+</div>
+
+<div class="tutorial-tooltip" id="step5Tooltip">
+    <h5>Paso 5: Acciones del Producto</h5>
     <p>Use estas opciones para:
     <br>• <strong>Vista:</strong> Ver detalles completos
     <br>• <strong>Editar:</strong> Modificar información
@@ -215,8 +277,38 @@
         {% include "partials/page-title.html" with pagetitle="Producto" title="Lista de productos" %}
       {% endblock pagetitle %}
       
+      <!-- Estadísticas generales -->
+      <div class="stats-overview">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="stat-item">
+              <h3>{{ total_products|default:"0" }}</h3>
+              <p>Total Productos</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-item">
+              <h3>{{ total_areas|default:"0" }}</h3>
+              <p>Total Áreas</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-item">
+              <h3>{{ total_variables|default:"0" }}</h3>
+              <p>Total Variables</p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-item">
+              <h3>{{ recent_products_count|default:"0" }}</h3>
+              <p>Nuevos (7 días)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- Welcome Alert for New Users -->
-      {% if products.paginator.count == 0 %}
+      {% if total_products == 0 %}
       <div class="alert alert-info alert-dismissible fade show" role="alert">
         <strong>¡Bienvenido!</strong> Parece que es la primera vez aquí. Haga clic en el botón de ayuda 
         <i class="ri-question-line"></i> en la esquina inferior derecha para un tutorial rápido.
@@ -254,12 +346,25 @@
         <div class="col-lg-12">
           <div class="card" id="filterCard">
             <div class="card-header">
-              <h6 class="card-title mb-0">Filtrar Resultados</h6>
+              <h6 class="card-title mb-0">Filtros y Búsqueda</h6>
             </div>
             <div class="card-body">
-              <form method="GET" action="{% url 'product:product.list' %}">
+              <form method="GET" action="{% url 'product:product.list' %}" id="filterForm">
                 <div class="row g-3">
-                  <div class="col-md-6">
+                  <!-- Búsqueda -->
+                  <div class="col-md-4">
+                    <label for="search-input" class="form-label">Buscar productos</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="search-input" name="search" 
+                             value="{{ search_query }}" placeholder="Buscar por nombre, descripción...">
+                      <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+                        <i class="ri-close-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Filtro por negocio -->
+                  <div class="col-md-3">
                     <label for="business-select" class="form-label">Seleccione el negocio</label>
                     <select class="form-select" id="business-select" name="business_id">
                       <option value="All">Todos los negocios</option>
@@ -272,14 +377,42 @@
                       {% endfor %}
                     </select>
                   </div>
-                  <div class="col-md-6 d-flex align-items-end">
+                  
+                  <!-- Ordenamiento -->
+                  <div class="col-md-3">
+                    <label for="sort-select" class="form-label">Ordenar por</label>
+                    <select class="form-select" id="sort-select" name="sort">
+                      {% for option in sort_options %}
+                      <option value="{{ option.value }}" {% if sort_by == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <!-- Botones de acción -->
+                  <div class="col-md-2 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-danger" id="apply-filters">
                       <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                      Aplicar Filtros
+                      Filtrar
                     </button>
                   </div>
                 </div>
               </form>
+              
+              <!-- Resultados de búsqueda -->
+              {% if search_query %}
+              <div class="mt-3">
+                <div class="alert alert-info">
+                  <i class="ri-search-line me-2"></i>
+                  Mostrando resultados para: <strong>"{{ search_query }}"</strong>
+                  <a href="{% url 'product:product.list' %}" class="btn btn-sm btn-outline-info ms-2">
+                    <i class="ri-close-line me-1"></i>Limpiar búsqueda
+                  </a>
+                </div>
+              </div>
+              {% endif %}
+              
               <div class="row g-3 mt-3">
                 <div class="col-lg-12">
                   <button type="button" class="btn btn-success" id="createProductBtn" data-bs-toggle="modal" data-bs-target="#addOrUpdateProduct">
@@ -296,8 +429,19 @@
       
       <div class="row" id="product-list">
         {% for product in products %}
-        <div class="col-xxl-4 col-lg-6 col-md-6 product-card fade-in" data-business="{{ product.fk_business.id }}" style="animation-delay: {{ forloop.counter0|floatformat:1 }}s;">
-          <div class="card card-height-100">
+        <div class="col-xxl-4 col-lg-6 col-md-6 product-card fade-in" data-business="{{ product.fk_business.id }}" style="animation-delay: {{ forloop.counter0|add:1|floatformat:1 }}s;">
+          <div class="card card-height-100 position-relative">
+            <!-- Badge de estado -->
+            {% if product.is_ready %}
+            <div class="product-status-badge">
+              <span class="badge bg-success">Listo</span>
+            </div>
+            {% else %}
+            <div class="product-status-badge">
+              <span class="badge bg-warning">En desarrollo</span>
+            </div>
+            {% endif %}
+            
             <div class="card-body">
               <div class="d-flex flex-column h-100">
                 <div class="d-flex">
@@ -337,7 +481,8 @@
                     </div>
                   </div>
                 </div>
-                <div class="d-flex mb-2">
+                
+                <div class="d-flex mb-3">
                   <div class="flex-shrink-0 me-3">
                     <div class="avatar-md">
                       <span>
@@ -345,6 +490,7 @@
                           src="{{ product.get_photo_url }}"
                           alt="{{ product.name }}"
                           class="img-fluid p-1 rounded"
+                          onerror="this.src='{% static 'images/default-product.png' %}'"
                         />
                       </span>
                     </div>
@@ -355,26 +501,44 @@
                         {{ product.name }}
                       </a>
                     </h5>
-                    <p class="text-muted text-truncate-two-lines mb-3">
+                    <p class="text-muted text-truncate-two-lines mb-2">
                       {{ product.description|truncatewords:20 }}
                     </p>
+                    <small class="text-muted">
+                      <i class="ri-building-line me-1"></i>{{ product.fk_business.name }}
+                    </small>
                   </div>
                 </div>
                 
+                <!-- Estadísticas del producto -->
                 <div class="mt-auto">
-                  <div class="d-flex mb-2">
-                    <div class="flex-grow-1">
-                      <div class="d-flex justify-content-between">
-                        <div>
-                          <i class="ri-list-check align-bottom me-1 text-muted"></i>
-                          Áreas: 
-                          <span class="badge bg-info">{{ product.areas_count|default:"0" }}</span>
-                        </div>
-                        <div>
-                          <i class="ri-function-line align-bottom me-1 text-muted"></i>
-                          Variables: 
-                          <span class="badge bg-primary">{{ product.variables_count|default:"0" }}</span>
-                        </div>
+                  <div class="row text-center">
+                    <div class="col-3">
+                      <div class="p-2">
+                        <i class="ri-list-check align-bottom text-primary"></i>
+                        <div class="fw-bold">{{ product.areas_count|default:"0" }}</div>
+                        <small class="text-muted">Áreas</small>
+                      </div>
+                    </div>
+                    <div class="col-3">
+                      <div class="p-2">
+                        <i class="ri-function-line align-bottom text-success"></i>
+                        <div class="fw-bold">{{ product.variables_count|default:"0" }}</div>
+                        <small class="text-muted">Variables</small>
+                      </div>
+                    </div>
+                    <div class="col-3">
+                      <div class="p-2">
+                        <i class="ri-calculator-line align-bottom text-warning"></i>
+                        <div class="fw-bold">{{ product.equations_count_display|default:"0" }}</div>
+                        <small class="text-muted">Ecuaciones</small>
+                      </div>
+                    </div>
+                    <div class="col-3">
+                      <div class="p-2">
+                        <i class="ri-bar-chart-line align-bottom text-info"></i>
+                        <div class="fw-bold">{{ product.simulations_count_display|default:"0" }}</div>
+                        <small class="text-muted">Simulaciones</small>
                       </div>
                     </div>
                   </div>
@@ -386,7 +550,7 @@
               <div class="d-flex align-items-center">
                 <div class="flex-grow-1">
                   <div class="avatar-group">
-                    {% for variable in product.fk_product_variable.all|slice:":5" %}
+                    {% for variable in product.active_variables|slice:":4" %}
                             <a href="javascript:void(0);"
                                 class="avatar-group-item"
                                 data-bs-toggle="tooltip"
@@ -398,13 +562,14 @@
                                         src="{{ variable.get_photo_url }}"
                                         alt="{{ variable.name }}"
                                         class="rounded-circle img-fluid"
+                                        onerror="this.src='{% static 'images/default-variable.png' %}'"
                                     />
                                 </div>
                             </a>
                         {% empty %}
                             <span class="text-muted small">Sin variables</span>
                         {% endfor %}
-                        {% if product.fk_product_variable.count > 5 %}
+                        {% if product.active_variables|length > 4 %}
                             <a href="{% url 'product:product.overview' product.id %}"
                                 class="avatar-group-item"
                                 data-bs-toggle="tooltip"
@@ -413,7 +578,7 @@
                                 title="Ver todas las variables">
                                 <div class="avatar-xxs">
                                     <div class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
-                                        +{{ product.fk_product_variable.count|add:"-5" }}
+                                        +{{ product.active_variables|length|add:"-4" }}
                                     </div>
                                 </div>
                             </a>
@@ -443,6 +608,14 @@
               style="width: 75px; height: 75px"
             ></lord-icon>
             <h5 class="mt-3">No hay productos registrados</h5>
+            {% if search_query %}
+            <p class="text-muted mb-0">
+              No se encontraron productos que coincidan con "<strong>{{ search_query }}</strong>".
+            </p>
+            <a href="{% url 'product:product.list' %}" class="btn btn-outline-primary mt-3">
+              <i class="ri-arrow-left-line me-1"></i>Ver todos los productos
+            </a>
+            {% else %}
             <p class="text-muted mb-0">
               Haga clic en "Crear nuevo" para agregar su primer producto.
             </p>
@@ -450,6 +623,7 @@
               <i class="ri-add-fill me-1 align-bottom"></i>
               Crear mi primer producto
             </button>
+            {% endif %}
           </div>
         </div>
         {% endfor %}
@@ -464,7 +638,7 @@
               <ul class="pagination justify-content-center">
                 {% if products.has_previous %}
                 <li class="page-item">
-                  <a class="page-link" href="?page={{ products.previous_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}" aria-label="Anterior">
+                  <a class="page-link" href="?page={{ products.previous_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Anterior">
                     <span aria-hidden="true">&laquo;</span>
                   </a>
                 </li>
@@ -477,14 +651,14 @@
                     </li>
                   {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
                     <li class="page-item">
-                      <a class="page-link" href="?page={{ num }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}">{{ num }}</a>
+                      <a class="page-link" href="?page={{ num }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
                     </li>
                   {% endif %}
                 {% endfor %}
                 
                 {% if products.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="?page={{ products.next_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}" aria-label="Siguiente">
+                  <a class="page-link" href="?page={{ products.next_page_number }}{% if request.GET.business_id %}&business_id={{ request.GET.business_id }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Siguiente">
                     <span aria-hidden="true">&raquo;</span>
                   </a>
                 </li>
@@ -548,6 +722,7 @@ function showStep(step) {
     document.querySelectorAll('.tutorial-tooltip').forEach(tooltip => {
         tooltip.style.display = 'none';
     });
+
     
     // Remove spotlight from all elements
     document.querySelectorAll('.tutorial-spotlight').forEach(el => {
@@ -564,26 +739,34 @@ function showStep(step) {
             }
             break;
         case 2:
+            // Highlight search input
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.classList.add('tutorial-spotlight');
+                positionTooltip('step2Tooltip', searchInput);
+            }
+            break;
+        case 3:
             // Highlight create button
             const createBtn = document.getElementById('createProductBtn');
             if (createBtn) {
                 createBtn.classList.add('tutorial-spotlight');
-                positionTooltip('step2Tooltip', createBtn);
+                positionTooltip('step3Tooltip', createBtn);
             }
             break;
-        case 3:
+        case 4:
             // Highlight first product card
             const firstCard = document.querySelector('.product-card');
             if (firstCard) {
                 firstCard.classList.add('tutorial-spotlight');
-                positionTooltip('step3Tooltip', firstCard);
+                positionTooltip('step4Tooltip', firstCard);
             } else {
                 // If no products, skip to end
                 endTutorial();
                 return;
             }
             break;
-        case 4:
+        case 5:
             // Highlight product menu
             const firstMenu = document.querySelector('.product-menu');
             if (firstMenu) {
@@ -597,7 +780,7 @@ function showStep(step) {
                 }
                 
                 firstMenu.classList.add('tutorial-spotlight');
-                positionTooltip('step4Tooltip', firstMenu);
+                positionTooltip('step5Tooltip', firstMenu);
             }
             break;
     }
@@ -678,10 +861,26 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Auto-submit form on filter change (optional - remove if not desired)
-document.getElementById('business-select').addEventListener('change', function() {
-    // Uncomment the next line to auto-submit the form
-    // this.closest('form').submit();
+// Clear search function
+function clearSearch() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('filterForm').submit();
+}
+
+// Auto-submit form on filter change with debouncing
+let searchTimeout;
+document.getElementById('search-input').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        if (this.value.length >= 3 || this.value.length === 0) {
+            document.getElementById('filterForm').submit();
+        }
+    }, 500);
+});
+
+// Auto-submit on sort change
+document.getElementById('sort-select').addEventListener('change', function() {
+    document.getElementById('filterForm').submit();
 });
 
 // Handle form submission loading state
@@ -698,6 +897,41 @@ document.getElementById('apply-filters').addEventListener('click', function() {
         btn.disabled = false;
     }, 3000);
 });
+
+// Search highlighting function
+function highlightSearchResults() {
+    const searchTerm = "{{ search_query }}";
+    if (searchTerm) {
+        const productCards = document.querySelectorAll('.product-card');
+        productCards.forEach(card => {
+            const textElements = card.querySelectorAll('h5, p, small');
+            textElements.forEach(element => {
+                const text = element.textContent;
+                if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    element.innerHTML = text.replace(regex, '<span class="search-highlight">$1</span>');
+                }
+            });
+        });
+    }
+}
+
+// Lazy loading for images
+function setupLazyLoading() {
+    const images = document.querySelectorAll('img[data-src]');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.remove('loading-skeleton');
+                observer.unobserve(img);
+            }
+        });
+    });
+
+    images.forEach(img => imageObserver.observe(img));
+}
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -722,6 +956,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.product-card').forEach((card, index) => {
         card.style.setProperty('--animation-delay', `${index * 0.1}s`);
     });
+    
+    // Highlight search results
+    highlightSearchResults();
+    
+    // Setup lazy loading
+    setupLazyLoading();
+    
+    // Auto-focus search input if it has value
+    const searchInput = document.getElementById('search-input');
+    if (searchInput.value) {
+        searchInput.focus();
+    }
 });
 
 // Handle escape key to exit tutorial
@@ -737,5 +983,50 @@ document.getElementById('tutorialOverlay').addEventListener('click', function(e)
         endTutorial();
     }
 });
+
+// Function to load product details for editing
+function loadProductDetails(productId) {
+    fetch(`/product/get_details/${productId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener detalles del producto');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Populate form fields
+            document.getElementById('product_name').value = data.name;
+            document.getElementById('product_type').value = data.type;
+            document.getElementById('product_fk_business').value = data.fk_business;
+            document.getElementById('product_description').value = data.description;
+            document.getElementById('product_id').value = data.id;
+            
+            // Update modal title
+            document.getElementById('addOrUpdateProductLabel').textContent = 'Actualizar Producto';
+            
+            // Show image if exists
+            if (data.image_src && data.image_src !== 'None') {
+                document.getElementById('product_logo_img').src = data.image_src;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron cargar los detalles del producto',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+}
+
+// Reset form when creating new product
+document.getElementById('createProductBtn').addEventListener('click', function() {
+    document.getElementById('productForm').reset();
+    document.getElementById('product_id').value = '';
+    document.getElementById('addOrUpdateProductLabel').textContent = 'Crear Producto';
+    document.getElementById('product_logo_img').src = "{% static 'images/default-product.png' %}";
+});
+
 </script>
 {% endblock extra_js %}

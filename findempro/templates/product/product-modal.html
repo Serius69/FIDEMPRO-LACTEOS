@@ -8,102 +8,139 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <div class="tab-content">
-                    <div class="tab-pane active" id="productDetails" role="tabpanel">
-                        <form id="productForm">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="text-center mb-4 mt-n5 pt-2">
-                                        <div class="position-relative d-inline-block">
-                                            <div class="position-absolute bottom-0 end-0">
-                                                <label for="product_image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Seleccionar Imagen">
-                                                    <div class="avatar-xs cursor-pointer">
-                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
-                                                            <i class="ri-image-fill"></i>
+                <!-- Loading indicator -->
+                <div id="modalLoading" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando datos del producto...</p>
+                </div>
+                
+                <!-- Form content -->
+                <div id="modalContent">
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="productDetails" role="tabpanel">
+                            <form id="productForm" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <!-- Alert for form errors -->
+                                <div id="formAlerts" style="display: none;"></div>
+                                
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="text-center mb-4 mt-n5 pt-2">
+                                            <div class="position-relative d-inline-block">
+                                                <div class="position-absolute bottom-0 end-0">
+                                                    <label for="product_image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Seleccionar Imagen">
+                                                        <div class="avatar-xs cursor-pointer">
+                                                            <div class="avatar-title bg-light border rounded-circle text-muted">
+                                                                <i class="ri-image-fill"></i>
+                                                            </div>
                                                         </div>
+                                                    </label>
+                                                    <input class="form-control d-none" value="" id="product_image_src" type="file" 
+                                                           accept="image/png, image/jpeg, image/jpg" name="image_src"/>
+                                                </div>
+                                                <div class="avatar-lg p-1">
+                                                    <div class="avatar-title bg-light rounded-circle">
+                                                        <img src="{% static 'images/default-product.png' %}" id="product_logo_img" 
+                                                             class="avatar-md rounded-circle object-fit-cover"/>
                                                     </div>
-                                                </label>
-                                                <input class="form-control d-none" value="" id="product_image_src" type="file" 
-                                                       accept="image/png, image/jpeg, image/jpg" name="image_src"/>
-                                            </div>
-                                            <div class="avatar-lg p-1">
-                                                <div class="avatar-title bg-light rounded-circle">
-                                                    <img src="{% static 'images/default-product.png' %}" id="product_logo_img" 
-                                                         class="avatar-md rounded-circle object-fit-cover"/>
                                                 </div>
                                             </div>
+                                            <h5 class="fs-13 mt-3">Imagen del Producto</h5>
+                                            <p class="text-muted fs-12">Formatos permitidos: JPG, PNG (máx. 2MB)</p>
                                         </div>
-                                        <h5 class="fs-13 mt-3">Imagen del Producto</h5>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="product_name" class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="product_name" name="name"
-                                            placeholder="Introduce el nombre del producto" required />
-                                        <div class="invalid-feedback">
-                                            Por favor, introduce el nombre del producto.
+                                        
+                                        <div class="mb-3">
+                                            <label for="product_name" class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="product_name" name="name"
+                                                placeholder="Introduce el nombre del producto" required maxlength="100"/>
+                                            <div class="invalid-feedback"></div>
+                                            <div class="form-text">Mínimo 3 caracteres, máximo 100</div>
                                         </div>
                                     </div>
+                                    <!--end col-->
+                                    
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="product_type" class="form-label">Tipo de Producto <span class="text-danger">*</span></label>
+                                            <select class="form-control" id="product_type" name="type" required>
+                                                <option value="">Selecciona tipo</option>
+                                                <option value="1">Lácteos</option>
+                                                <option value="2">Bebidas</option>
+                                                <option value="3">Alimentos</option>
+                                                <option value="4">Otros</option>
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="product_fk_business" class="form-label">Negocio <span class="text-danger">*</span></label>
+                                            <select class="form-control" id="product_fk_business" name="fk_business" required>
+                                                <option value="">Selecciona negocio</option>
+                                                {% for business in businesses %}
+                                                    <option value="{{ business.id }}">{{ business.name }}</option>
+                                                {% empty %}
+                                                    <option disabled>No hay negocios disponibles</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                            {% if not businesses %}
+                                            <div class="form-text text-warning">
+                                                <i class="ri-warning-line me-1"></i>
+                                                Debe crear un negocio antes de agregar productos.
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>       
+                                    
+                                    <div class="col-lg-12">
+                                        <div class="mb-3">
+                                            <label for="product_description" class="form-label">Descripción del Producto <span class="text-danger">*</span></label>
+                                            <textarea class="form-control" id="product_description" name="description" rows="4"
+                                                placeholder="Introduce una descripción detallada del producto" required maxlength="500"></textarea>
+                                            <div class="invalid-feedback"></div>
+                                            <div class="form-text">
+                                                <span id="charCount">0</span>/500 caracteres
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    
+                                    <!-- Product status indicator -->
+                                    <div class="col-lg-12">
+                                        <div class="alert alert-info">
+                                            <h6 class="alert-heading">Estado del Producto</h6>
+                                            <p class="mb-0">
+                                                <i class="ri-information-line me-1"></i>
+                                                El producto estará "En desarrollo" hasta que agregue al menos una área y variable.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-lg-12">
+                                        <div class="hstack gap-2 justify-content-end">
+                                            <button class="btn btn-link link-success text-decoration-none fw-medium"
+                                                data-bs-dismiss="modal" type="button">
+                                                <i class="ri-close-line me-1 align-middle"></i>
+                                                Cancelar
+                                            </button>
+                                            <input type="hidden" name="product_id" id="product_id" value="">
+                                            <button type="submit" class="btn btn-primary" id="submitProductBtn">
+                                                <i class="ri-save-3-line align-bottom me-1"></i>
+                                                <span id="submitBtnText">Guardar</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!--end col-->
                                 </div>
-                                <!--end col-->
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="product_type" class="form-label">Tipo de Producto <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="product_type" name="type" required>
-                                            <option value="">Selecciona tipo</option>
-                                            <option value="1">Lácteos</option>
-                                        </select>
-                                        <div class="invalid-feedback">
-                                            Por favor, selecciona un tipo de producto.
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="product_fk_business" class="form-label">Negocio <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="product_fk_business" name="fk_business" required>
-                                            <option value="">Selecciona negocio</option>
-                                            {% for business in businesses %}
-                                                <option value="{{ business.id }}">{{ business.name }}</option>
-                                            {% empty %}
-                                                <option disabled>No hay negocios disponibles</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">
-                                            Por favor, selecciona un negocio.
-                                        </div>
-                                    </div>
-                                </div>       
-                                <div class="col-lg-12">
-                                    <div class="mb-3">
-                                        <label for="product_description" class="form-label">Descripción del Producto <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="product_description" name="description" rows="3"
-                                            placeholder="Introduce la descripción del producto" required></textarea>
-                                        <div class="invalid-feedback">
-                                            Por favor, introduce una descripción para el producto.
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                                <div class="col-lg-12">
-                                    <div class="hstack gap-2 justify-content-end">
-                                        <button class="btn btn-link link-success text-decoration-none fw-medium"
-                                            data-bs-dismiss="modal" type="button">
-                                            <i class="ri-close-line me-1 align-middle"></i>
-                                            Cerrar
-                                        </button>
-                                        <input type="hidden" name="product_id" id="product_id" value="">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="ri-save-3-line align-bottom me-1"></i>
-                                            Guardar
-                                        </button>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                            </div>
-                            <!--end row-->
-                        </form>
+                                <!--end row-->
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,6 +165,7 @@
                         <h4>¿Está seguro?</h4>
                         <p class="text-muted mx-4 mb-0">
                             ¿Estás seguro de que quieres eliminar este producto?
+                            <br><strong class="text-warning">Esta acción no se puede deshacer.</strong>
                         </p>
                     </div>
                 </div>
@@ -136,142 +174,11 @@
                     {% csrf_token %}
                     <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
                         <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-                            Cerrar
+                            Cancelar
                         </button>
                         <button type="submit" class="btn w-sm btn-danger delete-product-btn">
-                            ¡Sí, borrarlo!
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Crear/Editar Área -->
-<div class="modal fade zoomIn" id="addOrUpdateArea" tabindex="-1" aria-labelledby="addOrUpdateArealabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-header p-3 ps-4 bg-success-subtle">
-                <h5 class="modal-title" id="addOrUpdateArealabel">Crear Área</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form id="areaForm" novalidate>
-                    {% csrf_token %}
-                    <input type="hidden" name="area_id" id="area_id" value="">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="text-center mb-4 mt-n5 pt-2">
-                                <div class="position-relative d-inline-block">
-                                    <div class="position-absolute bottom-0 end-0">
-                                        <label for="area_image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Seleccionar Imagen">
-                                            <div class="avatar-xs cursor-pointer">
-                                                <div class="avatar-title bg-light border rounded-circle text-muted">
-                                                    <i class="ri-image-fill"></i>
-                                                </div>
-                                            </div>
-                                        </label>
-                                        <input class="form-control d-none" value="" id="area_image_src" type="file" 
-                                               accept="image/png, image/jpeg, image/jpg" name="image_src"/>
-                                    </div>
-                                    <div class="avatar-lg p-1">
-                                        <div class="avatar-title bg-light rounded-circle">
-                                            <img src="{% static 'images/default-area.png' %}" id="area_logo_img" 
-                                                 class="avatar-md rounded-circle object-fit-cover"/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <h5 class="fs-13 mt-3">Imagen del Área</h5>
-                            </div>
-                            <div class="mb-3">
-                                <label for="area_name" class="form-label">Nombre del Área <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="area_name" name="name" 
-                                       placeholder="Introduce el nombre del área" required />
-                                <div class="invalid-feedback">
-                                    Por favor, introduce el nombre del área.
-                                </div>
-                            </div>
-                        </div>
-                        <!--end col-->
-                        <div class="col-lg-12">
-                            <div class="mb-3">
-                                <label for="area_fk_product" class="form-label">Producto Asociado <span class="text-danger">*</span></label>
-                                <select class="form-control" id="area_fk_product" name="fk_product" required>
-                                    <option value="">Selecciona el producto</option>
-                                    {% for product in products %}
-                                    <option value="{{ product.id }}">{{ product.name }}</option>
-                                    {% empty %}
-                                    <option disabled>No hay productos disponibles</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">
-                                    Por favor, selecciona un producto.
-                                </div>
-                            </div>
-                        </div>
-                        <!--end col-->
-                        <div class="col-lg-12">
-                            <div class="mb-3">
-                                <label for="area_description" class="form-label">Descripción del Área <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="area_description" name="description" rows="3" 
-                                          placeholder="Introduce la descripción del área" required></textarea>
-                                <div class="invalid-feedback">
-                                    Por favor, introduce una descripción del área.
-                                </div>
-                            </div>
-                        </div>
-                        <!--end col-->
-                    </div>
-                    <!--end row-->
-                    <div class="col-lg-12">
-                        <div class="hstack gap-2 justify-content-end">
-                            <button class="btn btn-link link-success text-decoration-none fw-medium" data-bs-dismiss="modal" type="button">
-                                <i class="ri-close-line me-1 align-middle"></i>
-                                Cerrar
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ri-save-3-line align-bottom me-1"></i>
-                                Guardar
-                            </button>
-                        </div>
-                    </div>
-                    <!--end col-->
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<!--end modal-->
-
-<!-- Modal para Confirmar Eliminación de Área -->
-<div id="removeAreaModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Icon and text content -->
-                <div class="mt-2 text-center">
-                    <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
-                               colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
-                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                        <h4>¿Está seguro?</h4>
-                        <p class="text-muted mx-4 mb-0">
-                            ¿Estás seguro de que quieres eliminar esta área?
-                        </p>
-                    </div>
-                </div>
-                <!-- Form for deletion -->
-                <form id="deleteAreaForm" method="POST">
-                    {% csrf_token %}
-                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-                            Cerrar
-                        </button>
-                        <button type="submit" class="btn w-sm btn-danger delete-area-btn">
-                            ¡Sí, borrarlo!
+                            <i class="ri-delete-bin-line me-1"></i>
+                            ¡Sí, eliminar!
                         </button>
                     </div>
                 </form>
@@ -282,37 +189,70 @@
 
 <!-- JavaScript para manejar los modales -->
 <script>
-// Objeto que maneja las operaciones del producto
-const productForm = {
-    modal: document.getElementById('addOrUpdateProduct'),
-    form: document.getElementById('productForm'),
-    modalTitle: document.getElementById('addOrUpdateProductLabel'),
-    productIdField: document.getElementById('product_id'),
-    imagePreview: document.getElementById('product_logo_img'),
-    imageInput: document.getElementById('product_image_src'),
+// Enhanced product form management
+class ProductFormManager {
+    constructor() {
+        this.modal = document.getElementById('addOrUpdateProduct');
+        this.form = document.getElementById('productForm');
+        this.modalTitle = document.getElementById('addOrUpdateProductLabel');
+        this.productIdField = document.getElementById('product_id');
+        this.imagePreview = document.getElementById('product_logo_img');
+        this.imageInput = document.getElementById('product_image_src');
+        this.submitBtn = document.getElementById('submitProductBtn');
+        this.submitBtnText = document.getElementById('submitBtnText');
+        this.charCountElement = document.getElementById('charCount');
+        this.modalLoading = document.getElementById('modalLoading');
+        this.modalContent = document.getElementById('modalContent');
+        this.formAlerts = document.getElementById('formAlerts');
+        
+        this.init();
+    }
     
-    // Inicializar eventos
-    init: function() {
-        // Configurar vista previa de imagen
+    init() {
+        // Image preview handler
         if (this.imageInput) {
             this.imageInput.addEventListener('change', this.handleImagePreview.bind(this));
         }
         
-        // Configurar envío del formulario
+        // Form submission handler
         if (this.form) {
             this.form.addEventListener('submit', this.submitForm.bind(this));
         }
         
-        // Configurar limpieza del formulario al cerrar el modal
+        // Modal reset handler
         if (this.modal) {
             this.modal.addEventListener('hidden.bs.modal', this.resetForm.bind(this));
+            this.modal.addEventListener('show.bs.modal', this.prepareModal.bind(this));
         }
-    },
+        
+        // Character counter for description
+        const descriptionField = document.getElementById('product_description');
+        if (descriptionField && this.charCountElement) {
+            descriptionField.addEventListener('input', this.updateCharCount.bind(this));
+        }
+        
+        // Real-time validation
+        this.setupRealtimeValidation();
+    }
     
-    // Manejar vista previa de la imagen
-    handleImagePreview: function(e) {
+    handleImagePreview(e) {
         const file = e.target.files[0];
         if (file) {
+            // Validate file size (2MB max)
+            if (file.size > 2 * 1024 * 1024) {
+                this.showAlert('error', 'La imagen no debe superar los 2MB');
+                e.target.value = '';
+                return;
+            }
+            
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                this.showAlert('error', 'Solo se permiten archivos JPG y PNG');
+                e.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = (e) => {
                 this.imagePreview.src = e.target.result;
@@ -320,25 +260,140 @@ const productForm = {
             };
             reader.readAsDataURL(file);
         }
-    },
+    }
     
-    // Abrir modal para crear producto
-    create: function() {
+    prepareModal() {
+        // Hide loading and show content by default
+        this.modalLoading.style.display = 'none';
+        this.modalContent.style.display = 'block';
+        this.hideAlert();
+    }
+    
+    showLoading() {
+        this.modalLoading.style.display = 'block';
+        this.modalContent.style.display = 'none';
+    }
+    
+    hideLoading() {
+        this.modalLoading.style.display = 'none';
+        this.modalContent.style.display = 'block';
+    }
+    
+    updateCharCount() {
+        const descriptionField = document.getElementById('product_description');
+        const currentLength = descriptionField.value.length;
+        this.charCountElement.textContent = currentLength;
+        
+        // Change color based on length
+        if (currentLength > 450) {
+            this.charCountElement.className = 'text-danger';
+        } else if (currentLength > 400) {
+            this.charCountElement.className = 'text-warning';
+        } else {
+            this.charCountElement.className = 'text-muted';
+        }
+    }
+    
+    setupRealtimeValidation() {
+        const fields = ['product_name', 'product_description'];
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('blur', () => this.validateField(field));
+                field.addEventListener('input', () => this.clearFieldError(field));
+            }
+        });
+    }
+    
+    validateField(field) {
+        const value = field.value.trim();
+        let isValid = true;
+        let errorMessage = '';
+        
+        switch (field.id) {
+            case 'product_name':
+                if (value.length < 3) {
+                    isValid = false;
+                    errorMessage = 'El nombre debe tener al menos 3 caracteres';
+                } else if (value.length > 100) {
+                    isValid = false;
+                    errorMessage = 'El nombre no puede superar los 100 caracteres';
+                }
+                break;
+            case 'product_description':
+                if (value.length < 10) {
+                    isValid = false;
+                    errorMessage = 'La descripción debe tener al menos 10 caracteres';
+                } else if (value.length > 500) {
+                    isValid = false;
+                    errorMessage = 'La descripción no puede superar los 500 caracteres';
+                }
+                break;
+        }
+        
+        if (!isValid) {
+            this.showFieldError(field, errorMessage);
+        } else {
+            this.clearFieldError(field);
+        }
+        
+        return isValid;
+    }
+    
+    showFieldError(field, message) {
+        field.classList.add('is-invalid');
+        field.classList.remove('is-valid');
+        const feedback = field.nextElementSibling;
+        if (feedback && feedback.classList.contains('invalid-feedback')) {
+            feedback.textContent = message;
+        }
+    }
+    
+    clearFieldError(field) {
+        field.classList.remove('is-invalid');
+        if (field.value.trim()) {
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+        }
+    }
+    
+    showAlert(type, message) {
+        const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+        this.formAlerts.innerHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="ri-${type === 'error' ? 'error-warning' : 'check-double'}-line me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        this.formAlerts.style.display = 'block';
+    }
+    
+    hideAlert() {
+        this.formAlerts.style.display = 'none';
+        this.formAlerts.innerHTML = '';
+    }
+    
+    create() {
         this.modalTitle.textContent = 'Crear Nuevo Producto';
         this.productIdField.value = '';
+        this.submitBtnText.textContent = 'Crear Producto';
         this.resetForm();
         
-        // Mostrar modal
+        // Show modal
         const bsModal = new bootstrap.Modal(this.modal);
         bsModal.show();
-    },
+    }
     
-    // Abrir modal para editar producto
-    edit: function(productId) {
+    edit(productId) {
         this.modalTitle.textContent = 'Actualizar Producto';
         this.productIdField.value = productId;
+        this.submitBtnText.textContent = 'Actualizar Producto';
         
-        // Cargar datos del producto
+        this.showLoading();
+        
+        // Load product data
         fetch(`/product/get_details/${productId}/`)
             .then(response => {
                 if (!response.ok) {
@@ -347,24 +402,30 @@ const productForm = {
                 return response.json();
             })
             .then(data => {
-                // Rellenar formulario con datos
+                // Populate form fields
                 document.getElementById('product_name').value = data.name;
                 document.getElementById('product_type').value = data.type;
                 document.getElementById('product_fk_business').value = data.fk_business;
                 document.getElementById('product_description').value = data.description;
                 
-                // Mostrar imagen si existe
+                // Update character count
+                this.updateCharCount();
+                
+                // Show image if exists
                 if (data.image_src && data.image_src !== 'None') {
                     this.imagePreview.src = data.image_src;
                     this.imagePreview.style.display = 'block';
                 }
                 
-                // Mostrar modal
+                this.hideLoading();
+                
+                // Show modal
                 const bsModal = new bootstrap.Modal(this.modal);
                 bsModal.show();
             })
             .catch(error => {
                 console.error('Error:', error);
+                this.hideLoading();
                 Swal.fire({
                     title: 'Error',
                     text: 'No se pudieron cargar los detalles del producto',
@@ -372,14 +433,55 @@ const productForm = {
                     confirmButtonText: 'OK'
                 });
             });
-    },
+    }
     
-    // Enviar formulario
-    submitForm: function(e) {
+    submitForm(e) {
         e.preventDefault();
+        
+        // Validate all fields
+        const nameField = document.getElementById('product_name');
+        const descriptionField = document.getElementById('product_description');
+        const typeField = document.getElementById('product_type');
+        const businessField = document.getElementById('product_fk_business');
+        
+        let isValid = true;
+        
+        // Validate required fields
+        if (!nameField.value.trim()) {
+            this.showFieldError(nameField, 'El nombre es requerido');
+            isValid = false;
+        } else {
+            isValid = this.validateField(nameField) && isValid;
+        }
+        
+        if (!descriptionField.value.trim()) {
+            this.showFieldError(descriptionField, 'La descripción es requerida');
+            isValid = false;
+        } else {
+            isValid = this.validateField(descriptionField) && isValid;
+        }
+        
+        if (!typeField.value) {
+            this.showFieldError(typeField, 'Debe seleccionar un tipo de producto');
+            isValid = false;
+        }
+        
+        if (!businessField.value) {
+            this.showFieldError(businessField, 'Debe seleccionar un negocio');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            this.showAlert('error', 'Por favor, corrija los errores en el formulario');
+            return;
+        }
         
         const isUpdate = this.productIdField.value !== '';
         const formData = new FormData(this.form);
+        
+        // Show loading state
+        this.submitBtn.disabled = true;
+        this.submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
         
         const url = isUpdate 
             ? `/product/${this.productIdField.value}/update/` 
@@ -395,257 +497,162 @@ const productForm = {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Cerrar modal
+                // Close modal
                 bootstrap.Modal.getInstance(this.modal).hide();
                 
-                // Mostrar mensaje de éxito
+                // Show success message
                 Swal.fire({
                     title: isUpdate ? 'Producto Actualizado' : 'Producto Creado',
                     text: isUpdate ? 'El producto ha sido actualizado con éxito' : 'El producto ha sido creado con éxito',
                     icon: 'success',
-                    confirmButtonText: 'OK'
+                    confirmButtonText: 'OK',
+                    timer: 3000,
+                    timerProgressBar: true
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.reload();
+                    if (result.isConfirmed || result.isDismissed) {
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            window.location.reload();
+                        }
                     }
                 });
             } else {
-                // Mostrar errores
-                let errorMessage = 'Se encontraron los siguientes errores:\n';
-                for (const field in data.errors) {
-                    if (Array.isArray(data.errors[field])) {
-                        errorMessage += `- ${data.errors[field].join(', ')}\n`;
-                    } else {
-                        errorMessage += `- ${data.errors[field]}\n`;
+                // Show field-specific errors
+                if (data.errors) {
+                    for (const field in data.errors) {
+                        const fieldElement = document.getElementById(`product_${field}`) || document.getElementById(field);
+                        if (fieldElement) {
+                            this.showFieldError(fieldElement, data.errors[field][0]);
+                        }
                     }
                 }
                 
-                Swal.fire({
-                    title: 'Error',
-                    text: errorMessage,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
+                // Show general error
+                let errorMessage = 'Se encontraron errores en el formulario';
+                if (data.errors && data.errors.general) {
+                    errorMessage = data.errors.general[0];
+                }
+                
+                this.showAlert('error', errorMessage);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Ocurrió un error al procesar la solicitud',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
+            this.showAlert('error', 'Ocurrió un error al procesar la solicitud. Por favor, intente nuevamente.');
+        })
+        .finally(() => {
+            // Reset button state
+            this.submitBtn.disabled = false;
+            this.submitBtn.innerHTML = `<i class="ri-save-3-line align-bottom me-1"></i> ${this.submitBtnText.textContent}`;
         });
-    },
+    }
     
-    // Resetear formulario
-    resetForm: function() {
+    resetForm() {
         this.form.reset();
         this.imagePreview.src = "{% static 'images/default-product.png' %}";
+        this.hideAlert();
         
-        // Limpiar clases de validación
+        // Clear validation classes
         const inputs = this.form.querySelectorAll('.form-control');
         inputs.forEach(input => {
             input.classList.remove('is-invalid', 'is-valid');
         });
-    },
+        
+        // Reset character count
+        if (this.charCountElement) {
+            this.charCountElement.textContent = '0';
+            this.charCountElement.className = 'text-muted';
+        }
+    }
     
-    // Manejar eliminación de producto
-    delete: function(productId) {
-        // Configurar URL de eliminación
+    delete(productId) {
+        // Configure deletion URL
         const deleteForm = document.getElementById('deleteProductForm');
         deleteForm.action = `/product/delete/${productId}/`;
         
-        // Mostrar modal de confirmación
+        // Show confirmation modal
         const bsModal = new bootstrap.Modal(document.getElementById('removeProductModal'));
         bsModal.show();
     }
-};
+}
 
-// Objeto que maneja las operaciones del área
-const areaForm = {
-    modal: document.getElementById('addOrUpdateArea'),
-    form: document.getElementById('areaForm'),
-    modalTitle: document.getElementById('addOrUpdateArealabel'),
-    areaIdField: document.getElementById('area_id'),
-    imagePreview: document.getElementById('area_logo_img'),
-    imageInput: document.getElementById('area_image_src'),
+// Enhanced deletion form handler
+class ProductDeletionManager {
+    constructor() {
+        this.form = document.getElementById('deleteProductForm');
+        this.submitBtn = document.querySelector('.delete-product-btn');
+        this.init();
+    }
     
-    // Inicializar eventos
-    init: function() {
-        // Configurar vista previa de imagen
-        if (this.imageInput) {
-            this.imageInput.addEventListener('change', this.handleImagePreview.bind(this));
-        }
-        
-        // Configurar envío del formulario
+    init() {
         if (this.form) {
-            this.form.addEventListener('submit', this.submitForm.bind(this));
+            this.form.addEventListener('submit', this.handleSubmit.bind(this));
         }
-        
-        // Configurar limpieza del formulario al cerrar el modal
-        if (this.modal) {
-            this.modal.addEventListener('hidden.bs.modal', this.resetForm.bind(this));
-        }
-    },
+    }
     
-    // Manejar vista previa de la imagen
-    handleImagePreview: function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.imagePreview.src = e.target.result;
-                this.imagePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    },
-    
-    // Abrir modal para crear área
-    create: function() {
-        this.modalTitle.textContent = 'Crear Nueva Área';
-        this.areaIdField.value = '';
-        this.resetForm();
-        
-        // Mostrar modal
-        const bsModal = new bootstrap.Modal(this.modal);
-        bsModal.show();
-    },
-    
-    // Abrir modal para editar área
-    edit: function(areaId) {
-        this.modalTitle.textContent = 'Actualizar Área';
-        this.areaIdField.value = areaId;
-        
-        // Cargar datos del área
-        fetch(`/product/area/get_details/${areaId}/`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al obtener detalles del área');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Rellenar formulario con datos
-                document.getElementById('area_name').value = data.name;
-                document.getElementById('area_fk_product').value = data.fk_product;
-                document.getElementById('area_description').value = data.description;
-                
-                // Mostrar imagen si existe
-                if (data.image_src && data.image_src !== 'None') {
-                    this.imagePreview.src = data.image_src;
-                    this.imagePreview.style.display = 'block';
-                }
-                
-                // Mostrar modal
-                const bsModal = new bootstrap.Modal(this.modal);
-                bsModal.show();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'No se pudieron cargar los detalles del área',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            });
-    },
-    
-    // Enviar formulario
-    submitForm: function(e) {
+    handleSubmit(e) {
         e.preventDefault();
         
-        const isUpdate = this.areaIdField.value !== '';
-        const formData = new FormData(this.form);
+        // Show loading state
+        this.submitBtn.disabled = true;
+        this.submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Eliminando...';
         
-        const url = isUpdate 
-            ? `/product/area/update/${this.areaIdField.value}/` 
-            : '/product/area/create/';
-        
-        fetch(url, {
+        // Submit form
+        fetch(this.form.action, {
             method: 'POST',
-            body: formData,
+            body: new FormData(this.form),
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Cerrar modal
-                bootstrap.Modal.getInstance(this.modal).hide();
+        .then(response => {
+            if (response.ok) {
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('removeProductModal')).hide();
                 
-                // Mostrar mensaje de éxito
+                // Show success message
                 Swal.fire({
-                    title: isUpdate ? 'Área Actualizada' : 'Área Creada',
-                    text: isUpdate ? 'El área ha sido actualizada con éxito' : 'El área ha sido creada con éxito',
+                    title: 'Producto Eliminado',
+                    text: 'El producto ha sido eliminado con éxito',
                     icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.reload();
-                    }
+                    confirmButtonText: 'OK',
+                    timer: 3000,
+                    timerProgressBar: true
+                }).then(() => {
+                    window.location.reload();
                 });
             } else {
-                // Mostrar errores
-                let errorMessage = 'Se encontraron los siguientes errores:\n';
-                for (const field in data.errors) {
-                    if (Array.isArray(data.errors[field])) {
-                        errorMessage += `- ${data.errors[field].join(', ')}\n`;
-                    } else {
-                        errorMessage += `- ${data.errors[field]}\n`;
-                    }
-                }
-                
-                Swal.fire({
-                    title: 'Error',
-                    text: errorMessage,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
+                throw new Error('Error al eliminar el producto');
             }
         })
         .catch(error => {
             console.error('Error:', error);
             Swal.fire({
                 title: 'Error',
-                text: 'Ocurrió un error al procesar la solicitud',
+                text: 'No se pudo eliminar el producto. Por favor, intente nuevamente.',
                 icon: 'error',
                 confirmButtonText: 'OK'
             });
+        })
+        .finally(() => {
+            // Reset button state
+            this.submitBtn.disabled = false;
+            this.submitBtn.innerHTML = '<i class="ri-delete-bin-line me-1"></i> ¡Sí, eliminar!';
         });
-    },
-    
-    // Resetear formulario
-    resetForm: function() {
-        this.form.reset();
-        this.imagePreview.src = "{% static 'images/default-area.png' %}";
-        
-        // Limpiar clases de validación
-        const inputs = this.form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.classList.remove('is-invalid', 'is-valid');
-        });
-    },
-    
-    // Manejar eliminación de área
-    delete: function(areaId) {
-        // Configurar URL de eliminación
-        const deleteForm = document.getElementById('deleteAreaForm');
-        deleteForm.action = `/product/area/delete/${areaId}/`;
-        
-        // Mostrar modal de confirmación
-        const bsModal = new bootstrap.Modal(document.getElementById('removeAreaModal'));
-        bsModal.show();
     }
-};
+}
 
-// Inicializar cuando el DOM esté listo
+// Initialize managers when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    productForm.init();
-    areaForm.init();
+    window.productFormManager = new ProductFormManager();
+    window.productDeletionManager = new ProductDeletionManager();
 });
+
+// Global functions for backward compatibility
+function loadProductDetails(productId) {
+    if (window.productFormManager) {
+        window.productFormManager.edit(productId);
+    }
+}
 </script>

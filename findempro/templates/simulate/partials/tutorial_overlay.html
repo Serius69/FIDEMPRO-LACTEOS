@@ -1,0 +1,197 @@
+<!-- Tutorial Overlay -->
+<div class="tutorial-overlay" id="tutorialOverlay">
+    <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
+    <div class="tutorial-tooltip" id="tutorialTooltip">
+        <div class="tutorial-header">
+            <h5 id="tutorialTitle">Bienvenido al Simulador</h5>
+            <div class="tutorial-progress" id="tutorialProgress">
+                <div class="progress mb-2" style="height: 6px;">
+                    <div class="progress-bar bg-primary" id="tutorialProgressBar" 
+                         role="progressbar" style="width: 0%" aria-valuenow="0" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <small class="text-muted">
+                    Paso <span id="tutorialCurrentStep">1</span> de <span id="tutorialTotalSteps">5</span>
+                </small>
+            </div>
+        </div>
+        
+        <div class="tutorial-content">
+            <p id="tutorialText">Le guiaremos paso a paso para configurar su simulación.</p>
+        </div>
+        
+        <div class="tutorial-actions">
+            <div class="btn-group w-100" role="group">
+                <button class="btn btn-outline-secondary btn-sm" id="tutorialSkipBtn">
+                    <i class="bx bx-x me-1"></i>Omitir
+                </button>
+                <button class="btn btn-outline-primary btn-sm" id="tutorialPrevBtn" style="display: none;">
+                    <i class="bx bx-chevron-left me-1"></i>Anterior
+                </button>
+                <button class="btn btn-primary btn-sm" id="tutorialNextBtn">
+                    Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tutorial Tips -->
+        <div class="tutorial-tips mt-3">
+            <div class="d-flex align-items-center text-muted">
+                <i class="bx bx-info-circle me-2"></i>
+                <small>Presiona <kbd>Esc</kbd> para salir del tutorial</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos específicos del tutorial */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    display: none;
+    backdrop-filter: blur(3px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.tutorial-spotlight {
+    position: absolute;
+    border-radius: 8px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid #2196f3;
+    background: transparent;
+}
+
+.tutorial-tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    max-width: 420px;
+    min-width: 320px;
+    z-index: 10001;
+    border: 1px solid #e9ecef;
+    animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tutorial-header h5 {
+    color: #2196f3;
+    margin-bottom: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.tutorial-header h5::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(45deg, #2196f3, #21cbf3);
+    margin-right: 10px;
+    border-radius: 2px;
+}
+
+.tutorial-content p {
+    margin-bottom: 16px;
+    line-height: 1.6;
+    color: #37474f;
+}
+
+.tutorial-actions .btn-group {
+    gap: 8px;
+}
+
+.tutorial-actions .btn {
+    flex: 1;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.tutorial-actions .btn:hover {
+    transform: translateY(-1px);
+}
+
+.tutorial-tips {
+    border-top: 1px solid #e9ecef;
+    padding-top: 12px;
+}
+
+.tutorial-tips kbd {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tutorial-tooltip {
+        max-width: 90vw;
+        min-width: auto;
+        margin: 0 15px;
+        padding: 20px;
+    }
+    
+    .tutorial-actions .btn {
+        font-size: 0.875rem;
+        padding: 8px 12px;
+    }
+}
+
+/* Tutorial progress bar enhancement */
+.tutorial-progress .progress {
+    background: rgba(33, 150, 243, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.tutorial-progress .progress-bar {
+    background: linear-gradient(90deg, #2196f3, #21cbf3);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tutorial-progress .progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+</style>
