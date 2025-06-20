@@ -798,3 +798,180 @@
 .transition {
     transition: var(--transition) !important;
 }
+
+/* Areas Section Styles */
+.areas-card {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.equation-card {
+    transition: all 0.3s ease;
+    border-radius: 12px !important;
+    overflow: hidden;
+    background: #fff;
+}
+
+.equation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.area-image-container {
+    position: relative;
+    overflow: hidden;
+    height: 200px;
+}
+
+.area-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.equation-card:hover .area-image {
+    transform: scale(1.05);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.8), rgba(25, 118, 210, 0.8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.equation-card:hover .image-overlay {
+    opacity: 1;
+}
+
+.area-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.area-meta {
+    margin-top: 4px;
+}
+
+.equations-container {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 16px;
+}
+
+.equation {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent !important;
+}
+
+.equation:hover {
+    background: #e3f2fd !important;
+    border-left-color: #2196f3 !important;
+    transform: translateX(2px);
+}
+
+.equation-code {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    font-family: 'Courier New', 'Monaco', monospace;
+    font-size: 0.9rem;
+    color: #495057;
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.variables-list {
+    background: rgba(33, 150, 243, 0.05);
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.areas-stats .badge {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+}
+
+.areas-summary {
+    border: 1px solid #e9ecef;
+}
+
+.summary-item {
+    transition: transform 0.2s ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+}
+
+.summary-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.no-areas-state {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.area-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .area-image-container {
+        height: 150px;
+    }
+    
+    .equation-card .card-body {
+        padding: 1rem;
+    }
+    
+    .equation {
+        padding: 12px !important;
+    }
+    
+    .summary-number {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .areas-summary .row {
+        gap: 8px;
+    }
+    
+    .summary-item {
+        margin-bottom: 8px;
+    }
+    
+    .equation-code {
+        font-size: 0.8rem;
+    }
+}

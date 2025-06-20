@@ -34,7 +34,6 @@ try:
 except ImportError:
     SimulationValidationService = None
 
-
 from business.models import Business
 from product.models import Product, Area
 from questionary.models import QuestionaryResult, Answer
@@ -57,49 +56,81 @@ class BaseSimulationView(LoginRequiredMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cache_manager = CacheManager(prefix="simulation")
-        # Servicios opcionales que pueden no existir
-        self.validation_service = SimulationValidationService() if SimulationValidationService else None
-        self.statistical_service = StatisticalService() if StatisticalService else None
-        self.chart_generator = ChartDemand()
+        
+        # Servicios opcionales que pueden no existir - manejo seguro
+        try:
+            self.validation_service = SimulationValidationService()
+        except Exception as e:
+            logger.warning(f"SimulationValidationService not available: {e}")
+            self.validation_service = None
+        
+        try:
+            self.statistical_service = StatisticalService()
+        except Exception as e:
+            logger.warning(f"StatisticalService not available: {e}")
+            self.statistical_service = None
+        
+        try:
+            self.chart_generator = ChartDemand()
+        except Exception as e:
+            logger.warning(f"ChartDemand not available: {e}")
+            self.chart_generator = None
     
     def get_cache_key(self, key_type: str, user_id: int, **kwargs) -> str:
         """Generar clave de cache consistente usando tu utilidad existente"""
-        return make_cache_key(key_type, user_id, **kwargs)
+        try:
+            return make_cache_key(key_type, user_id, **kwargs)
+        except Exception as e:
+            logger.error(f"Error generating cache key: {e}")
+            return f"fallback_{key_type}_{user_id}_{hash(str(kwargs))}"
     
     @cache_result(timeout=300, key_prefix="user_businesses")
     def get_user_businesses(self, user) -> List[Business]:
         """Obtener negocios del usuario con cache usando tu CacheManager"""
-        return list(Business.objects.filter(
-            is_active=True,
-            fk_user=user
-        ).select_related('fk_user'))
+        try:
+            return list(Business.objects.filter(
+                is_active=True,
+                fk_user=user
+            ).select_related('fk_user'))
+        except Exception as e:
+            logger.error(f"Error getting user businesses: {e}")
+            return []
     
     @cache_result(timeout=300, key_prefix="user_products")
     def get_user_products(self, user) -> List[Product]:
         """Obtener productos del usuario con cache usando tu CacheManager"""
-        businesses = self.get_user_businesses(user)
-        return list(Product.objects.filter(
-            is_active=True,
-            fk_business__in=businesses
-        ).select_related('fk_business'))
+        try:
+            businesses = self.get_user_businesses(user)
+            return list(Product.objects.filter(
+                is_active=True,
+                fk_business__in=businesses
+            ).select_related('fk_business'))
+        except Exception as e:
+            logger.error(f"Error getting user products: {e}")
+            return []
     
     def _validate_basic_form_data(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
         """Validación básica cuando no hay ValidationService"""
         errors = []
         
-        if not form_data.get('selected_questionary_result_id'):
-            errors.append("Debe seleccionar un cuestionario")
-        
-        quantity = form_data.get('selected_quantity_time')
         try:
-            quantity = int(quantity) if quantity else 0
-            if quantity < 1 or quantity > 365:
-                errors.append("La duración debe estar entre 1 y 365")
-        except (ValueError, TypeError):
-            errors.append("La duración debe ser un número válido")
-        
-        if not form_data.get('selected_unit_time'):
-            errors.append("Debe seleccionar una unidad de tiempo")
+            if not form_data.get('selected_questionary_result_id'):
+                errors.append("Debe seleccionar un cuestionario")
+            
+            quantity = form_data.get('selected_quantity_time')
+            try:
+                quantity = int(quantity) if quantity else 0
+                if quantity < 1 or quantity > 365:
+                    errors.append("La duración debe estar entre 1 y 365")
+            except (ValueError, TypeError):
+                errors.append("La duración debe ser un número válido")
+            
+            if not form_data.get('selected_unit_time'):
+                errors.append("Debe seleccionar una unidad de tiempo")
+            
+        except Exception as e:
+            logger.error(f"Error in basic form validation: {e}")
+            errors.append("Error interno en la validación")
         
         return {
             'is_valid': len(errors) == 0,
@@ -185,7 +216,11 @@ class SimulateShowView(BaseSimulationView, View):
             
             # Usar servicio de validación si existe, sino usar validación básica
             if self.validation_service:
-                validation_result = self.validation_service.validate_questionary_selection(form_data)
+                try:
+                    validation_result = self.validation_service.validate_questionary_selection(form_data)
+                except Exception as e:
+                    logger.error(f"Error using validation service: {e}")
+                    validation_result = self._validate_basic_form_data(form_data)
             else:
                 validation_result = self._validate_basic_form_data(form_data)
             
@@ -217,145 +252,194 @@ class SimulateShowView(BaseSimulationView, View):
     
     def _extract_form_data(self, request) -> Dict[str, Any]:
         """Extraer y normalizar datos del formulario"""
-        if request.method == 'GET':
-            data = request.GET
-        else:
-            data = request.POST
-        
-        return {
-            'selected_questionary_result_id': data.get('selected_questionary_result', 0),
-            'selected_quantity_time': data.get('selected_quantity_time', 30),
-            'selected_unit_time': data.get('selected_unit_time', 'days')
-        }
+        try:
+            if request.method == 'GET':
+                data = request.GET
+            else:
+                data = request.POST
+            
+            return {
+                'selected_questionary_result_id': data.get('selected_questionary_result', 0),
+                'selected_quantity_time': data.get('selected_quantity_time', 30),
+                'selected_unit_time': data.get('selected_unit_time', 'days')
+            }
+        except Exception as e:
+            logger.error(f"Error extracting form data: {e}")
+            return {
+                'selected_questionary_result_id': 0,
+                'selected_quantity_time': 30,
+                'selected_unit_time': 'days'
+            }
     
     def _save_to_session(self, request, form_data: Dict[str, Any]) -> None:
         """Guardar datos en sesión de forma segura"""
-        session_keys = [
-            'selected_questionary_result_id',
-            'selected_quantity_time', 
-            'selected_unit_time'
-        ]
-        
-        for key in session_keys:
-            if key in form_data:
-                request.session[key] = form_data[key]
-        
-        request.session.modified = True
+        try:
+            session_keys = [
+                'selected_questionary_result_id',
+                'selected_quantity_time', 
+                'selected_unit_time'
+            ]
+            
+            for key in session_keys:
+                if key in form_data:
+                    request.session[key] = form_data[key]
+            
+            request.session.modified = True
+        except Exception as e:
+            logger.error(f"Error saving to session: {e}")
     
     def _get_questionary_result_optimized(self, questionary_id: int) -> QuestionaryResult:
         """Obtener resultado de cuestionario con consultas optimizadas"""
-        return get_object_or_404(
-            QuestionaryResult.objects.select_related(
-                'fk_questionary__fk_product__fk_business'
-            ).prefetch_related(
-                Prefetch(
-                    'fk_question_result_answer',
-                    queryset=Answer.objects.select_related(
-                        'fk_question__fk_variable'
-                    ).filter(is_active=True)
-                )
-            ).filter(is_active=True),
-            pk=questionary_id
-        )
+        try:
+            return get_object_or_404(
+                QuestionaryResult.objects.select_related(
+                    'fk_questionary__fk_product__fk_business'
+                ).prefetch_related(
+                    Prefetch(
+                        'fk_question_result_answer',
+                        queryset=Answer.objects.select_related(
+                            'fk_question__fk_variable'
+                        ).filter(is_active=True)
+                    )
+                ).filter(is_active=True),
+                pk=questionary_id
+            )
+        except Exception as e:
+            logger.error(f"Error getting questionary result: {e}")
+            raise
     
     def _prepare_questionary_context(self, request, questionary_result: QuestionaryResult, 
                                    form_data: Dict[str, Any]) -> Dict[str, Any]:
         """Preparar contexto completo para la vista de cuestionario"""
-        user = request.user
-        product_instance = questionary_result.fk_questionary.fk_product
-        
-        # Datos base del usuario
-        user_data = {
-            'businesses': self.get_user_businesses(user),
-            'products': self.get_user_products(user)
-        }
-        
-        # Áreas con ecuaciones
-        areas = self._get_areas_with_equations(product_instance)
-        
-        # Cuestionarios disponibles
-        questionnaires_result = self._get_available_questionnaires(user_data['products'])
-        
-        # Funciones de densidad de probabilidad
-        fdps = self._get_probability_distributions(product_instance.fk_business)
-        
-        # Extraer y analizar datos históricos de demanda
-        demand_data = self._extract_demand_data(questionary_result)
-        analysis_results = self._perform_statistical_analysis(questionary_result, user, demand_data)
-        
-        # Generar gráficos
-        charts = self._generate_charts(demand_data)
-        
-        # Recomendaciones financieras
-        financial_recommendations = self._get_financial_recommendations(product_instance.fk_business)
-        
-        # Construir contexto final
-        context = {
-            'areas': areas,
-            'form': self.form_class(),
-            'questionnaires_result': questionnaires_result,
-            'questionary_result_instance': questionary_result,
-            'questionary_result_instance_id': questionary_result.id,
-            'selected_unit_time': form_data['selected_unit_time'],
-            'selected_quantity_time': form_data['selected_quantity_time'],
-            'fdps': fdps,
-            'demand_history': demand_data,
-            'financial_recommendations': financial_recommendations,
-            **analysis_results,
-            **charts
-        }
-        
-        # Agregar estadísticas de demanda si hay datos
-        if demand_data:
-            context['demand_stats'] = self._calculate_demand_statistics(demand_data)
-        
-        return context
+        try:
+            user = request.user
+            product_instance = questionary_result.fk_questionary.fk_product
+            
+            # Datos base del usuario
+            user_data = {
+                'businesses': self.get_user_businesses(user),
+                'products': self.get_user_products(user)
+            }
+            
+            # Áreas con ecuaciones
+            areas = self._get_areas_with_equations(product_instance)
+            
+            # Cuestionarios disponibles
+            questionnaires_result = self._get_available_questionnaires(user_data['products'])
+            
+            # Funciones de densidad de probabilidad
+            fdps = self._get_probability_distributions(product_instance.fk_business)
+            
+            # Extraer y analizar datos históricos de demanda
+            demand_data = self._extract_demand_data(questionary_result)
+            analysis_results = self._perform_statistical_analysis(questionary_result, user, demand_data)
+            
+            # Generar gráficos
+            charts = self._generate_charts(demand_data)
+            
+            # Recomendaciones financieras
+            financial_recommendations = self._get_financial_recommendations(product_instance.fk_business)
+            
+            # Construir contexto final
+            context = {
+                'areas': areas,
+                'form': self.form_class(),
+                'questionnaires_result': questionnaires_result,
+                'questionary_result_instance': questionary_result,
+                'questionary_result_instance_id': questionary_result.id,
+                'selected_unit_time': form_data['selected_unit_time'],
+                'selected_quantity_time': form_data['selected_quantity_time'],
+                'fdps': fdps,
+                'demand_history': demand_data,
+                'financial_recommendations': financial_recommendations,
+                **analysis_results,
+                **charts
+            }
+            
+            # Agregar estadísticas de demanda si hay datos
+            if demand_data:
+                context['demand_stats'] = self._calculate_demand_statistics(demand_data)
+            
+            return context
+            
+        except Exception as e:
+            logger.error(f"Error preparing questionary context: {e}")
+            # Retornar contexto mínimo en caso de error
+            return {
+                'areas': [],
+                'form': self.form_class(),
+                'questionnaires_result': [],
+                'questionary_result_instance': questionary_result,
+                'questionary_result_instance_id': questionary_result.id,
+                'selected_unit_time': form_data.get('selected_unit_time', 'days'),
+                'selected_quantity_time': form_data.get('selected_quantity_time', 30),
+                'fdps': [],
+                'demand_history': [],
+                'financial_recommendations': [],
+                'error_message': 'Error preparando el contexto de la vista'
+            }
     
     def _get_areas_with_equations(self, product: Product) -> List[Area]:
         """Obtener áreas con sus ecuaciones de forma optimizada"""
-        return Area.objects.filter(
-            is_active=True,
-            fk_product=product
-        ).prefetch_related(
-            Prefetch(
-                'area_equation',
-                queryset=Equation.objects.filter(is_active=True).select_related(
-                    'fk_variable1', 'fk_variable2', 'fk_variable3',
-                    'fk_variable4', 'fk_variable5'
+        try:
+            return Area.objects.filter(
+                is_active=True,
+                fk_product=product
+            ).prefetch_related(
+                Prefetch(
+                    'area_equation',
+                    queryset=Equation.objects.filter(is_active=True).select_related(
+                        'fk_variable1', 'fk_variable2', 'fk_variable3',
+                        'fk_variable4', 'fk_variable5'
+                    )
                 )
-            )
-        ).order_by('id')
+            ).order_by('id')
+        except Exception as e:
+            logger.error(f"Error getting areas with equations: {e}")
+            return []
     
     def _get_available_questionnaires(self, products: List[Product]) -> List[QuestionaryResult]:
         """Obtener cuestionarios disponibles con límite"""
-        return QuestionaryResult.objects.filter(
-            is_active=True,
-            fk_questionary__fk_product__in=products
-        ).select_related(
-            'fk_questionary__fk_product'
-        ).order_by('-date_created')[:50]
+        try:
+            return QuestionaryResult.objects.filter(
+                is_active=True,
+                fk_questionary__fk_product__in=products
+            ).select_related(
+                'fk_questionary__fk_product'
+            ).order_by('-date_created')[:50]
+        except Exception as e:
+            logger.error(f"Error getting available questionnaires: {e}")
+            return []
     
     def _get_probability_distributions(self, business: Business) -> List[ProbabilisticDensityFunction]:
         """Obtener distribuciones de probabilidad activas"""
-        return business.probability_distributions.filter(
-            is_active=True
-        ).order_by('distribution_type')
+        try:
+            return ProbabilisticDensityFunction.objects.filter(
+                is_active=True
+            ).order_by('distribution_type')
+        except Exception as e:
+            logger.error(f"Error getting probability distributions: {e}")
+            return []
     
     def _extract_demand_data(self, questionary_result: QuestionaryResult) -> List[float]:
         """Extraer datos históricos de demanda del cuestionario"""
-        demand_data = []
-        target_question = 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).'
-        
-        for answer in questionary_result.fk_question_result_answer.all():
-            if answer.fk_question.question == target_question:
-                try:
-                    demand_str = answer.answer
-                    demand_data = self._parse_demand_string(demand_str)
-                    break
-                except Exception as e:
-                    logger.error(f"Error parsing demand data: {e}")
-        
-        return self._validate_and_clean_demand_data(demand_data)
+        try:
+            demand_data = []
+            target_question = 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).'
+            
+            for answer in questionary_result.fk_question_result_answer.all():
+                if answer.fk_question.question == target_question:
+                    try:
+                        demand_str = answer.answer
+                        demand_data = self._parse_demand_string(demand_str)
+                        break
+                    except Exception as e:
+                        logger.error(f"Error parsing demand data: {e}")
+            
+            return self._validate_and_clean_demand_data(demand_data)
+        except Exception as e:
+            logger.error(f"Error extracting demand data: {e}")
+            return []
     
     def _parse_demand_string(self, demand_str: str) -> List[float]:
         """Parsear string de datos de demanda con múltiples formatos"""
@@ -384,17 +468,21 @@ class SimulateShowView(BaseSimulationView, View):
         if not demand_data:
             return []
         
-        # Filtrar valores válidos
-        clean_data = []
-        for value in demand_data:
-            try:
-                float_value = float(value)
-                if float_value >= 0 and not np.isnan(float_value) and not np.isinf(float_value):
-                    clean_data.append(float_value)
-            except (ValueError, TypeError):
-                continue
-        
-        return clean_data
+        try:
+            # Filtrar valores válidos
+            clean_data = []
+            for value in demand_data:
+                try:
+                    float_value = float(value)
+                    if float_value >= 0 and not np.isnan(float_value) and not np.isinf(float_value):
+                        clean_data.append(float_value)
+                except (ValueError, TypeError):
+                    continue
+            
+            return clean_data
+        except Exception as e:
+            logger.error(f"Error validating demand data: {e}")
+            return []
     
     def _perform_statistical_analysis(self, questionary_result: QuestionaryResult, 
                                     user, demand_data: List[float]) -> Dict[str, Any]:
@@ -405,17 +493,23 @@ class SimulateShowView(BaseSimulationView, View):
             
             # Usar servicio estadístico si existe
             if self.statistical_service:
-                analysis_results = self.statistical_service.analyze_demand_history(
-                    questionary_result.id, user, demand_data
-                )
-                
-                # Agregar análisis adicional si hay métodos disponibles
-                if len(demand_data) >= 10 and hasattr(self.statistical_service, 'perform_distribution_fitting'):
-                    analysis_results.update(
-                        self.statistical_service.perform_distribution_fitting(demand_data)
+                try:
+                    analysis_results = self.statistical_service.analyze_demand_history(
+                        questionary_result.id, user, demand_data
                     )
-                
-                return analysis_results
+                    
+                    # Agregar análisis adicional si hay métodos disponibles
+                    if len(demand_data) >= 10 and hasattr(self.statistical_service, 'perform_distribution_fitting'):
+                        try:
+                            additional_results = self.statistical_service.perform_distribution_fitting(demand_data)
+                            analysis_results.update(additional_results)
+                        except Exception as e:
+                            logger.warning(f"Error in additional statistical analysis: {e}")
+                    
+                    return analysis_results
+                except Exception as e:
+                    logger.error(f"Error using statistical service: {e}")
+                    return self._basic_statistical_analysis(demand_data)
             else:
                 # Análisis básico sin servicio estadístico
                 return self._basic_statistical_analysis(demand_data)
@@ -426,25 +520,31 @@ class SimulateShowView(BaseSimulationView, View):
     
     def _basic_statistical_analysis(self, demand_data: List[float]) -> Dict[str, Any]:
         """Análisis estadístico básico cuando no hay StatisticalService"""
-        if not demand_data:
-            return {}
-        
-        data_array = np.array(demand_data)
-        mean_val = np.mean(data_array)
-        std_val = np.std(data_array)
-        
-        return {
-            'demand_mean': float(mean_val),
-            'demand_std': float(std_val),
-            'demand_data': demand_data,
-            'best_distribution': 'Normal',  # Por defecto
-            'best_ks_p_value_floor': 0.5,
-            'best_ks_statistic_floor': 0.1,
-            'distribution_params': {
-                'mean': float(mean_val),
-                'std': float(std_val)
+        try:
+            if not demand_data:
+                return {}
+            
+            data_array = np.array(demand_data)
+            mean_val = np.mean(data_array)
+            std_val = np.std(data_array)
+            
+            return {
+                'demand_mean': float(mean_val),
+                'demand_std': float(std_val),
+                'demand_data': demand_data,
+                'best_distribution': 'Normal',  # Por defecto
+                'best_ks_p_value_floor': 0.5,
+                'best_ks_statistic_floor': 0.1,
+                'distribution_params': {
+                    'mean': float(mean_val),
+                    'std': float(std_val)
+                }
             }
-        }
+        except Exception as e:
+            logger.error(f"Error in basic statistical analysis: {e}")
+            return {
+                'analysis_error': f'Error en análisis básico: {str(e)}'
+            }
     
     def _generate_charts(self, demand_data: List[float]) -> Dict[str, Optional[str]]:
         """Generar gráficos de análisis de demanda"""
@@ -454,19 +554,28 @@ class SimulateShowView(BaseSimulationView, View):
             'image_data_qq': None
         }
         
-        if not demand_data or len(demand_data) < 5:
+        if not demand_data or len(demand_data) < 5 or not self.chart_generator:
             return charts
         
         try:
             # Gráfico de dispersión
-            charts['image_data'] = self.chart_generator.generate_demand_scatter_plot(demand_data)
+            try:
+                charts['image_data'] = self.chart_generator.generate_demand_scatter_plot(demand_data)
+            except Exception as e:
+                logger.error(f"Error generating scatter plot: {e}")
             
             # Histograma con distribución
-            charts['image_data_histogram'] = self.chart_generator.generate_demand_histogram(demand_data)
+            try:
+                charts['image_data_histogram'] = self.chart_generator.generate_demand_histogram(demand_data)
+            except Exception as e:
+                logger.error(f"Error generating histogram: {e}")
             
             # Q-Q Plot (si hay suficientes datos)
             if len(demand_data) >= 10:
-                charts['image_data_qq'] = self.chart_generator.generate_qq_plot(demand_data)
+                try:
+                    charts['image_data_qq'] = self.chart_generator.generate_qq_plot(demand_data)
+                except Exception as e:
+                    logger.error(f"Error generating Q-Q plot: {e}")
             
         except Exception as e:
             logger.error(f"Error generating charts: {e}")
@@ -475,29 +584,37 @@ class SimulateShowView(BaseSimulationView, View):
     
     def _get_financial_recommendations(self, business: Business) -> List[FinanceRecommendation]:
         """Obtener recomendaciones financieras"""
-        return FinanceRecommendation.objects.filter(
-            fk_business=business,
-            is_active=True
-        ).order_by('threshold_value')[:10]
+        try:
+            return FinanceRecommendation.objects.filter(
+                fk_business=business,
+                is_active=True
+            ).order_by('threshold_value')[:10]
+        except Exception as e:
+            logger.error(f"Error getting financial recommendations: {e}")
+            return []
     
     def _calculate_demand_statistics(self, demand_data: List[float]) -> Dict[str, float]:
         """Calcular estadísticas básicas de demanda"""
-        if not demand_data:
+        try:
+            if not demand_data:
+                return {}
+            
+            data_array = np.array(demand_data)
+            mean_val = np.mean(data_array)
+            
+            return {
+                'count': len(demand_data),
+                'mean': float(mean_val),
+                'std': float(np.std(data_array)),
+                'min': float(np.min(data_array)),
+                'max': float(np.max(data_array)),
+                'median': float(np.median(data_array)),
+                'cv': float(np.std(data_array) / mean_val) if mean_val > 0 else 0,
+                'variance': float(np.var(data_array))
+            }
+        except Exception as e:
+            logger.error(f"Error calculating demand statistics: {e}")
             return {}
-        
-        data_array = np.array(demand_data)
-        mean_val = np.mean(data_array)
-        
-        return {
-            'count': len(demand_data),
-            'mean': float(mean_val),
-            'std': float(np.std(data_array)),
-            'min': float(np.min(data_array)),
-            'max': float(np.max(data_array)),
-            'median': float(np.median(data_array)),
-            'cv': float(np.std(data_array) / mean_val) if mean_val > 0 else 0,
-            'variance': float(np.var(data_array))
-        }
     
     @transaction.atomic
     def _handle_simulation_start(self, request) -> redirect:
@@ -508,7 +625,11 @@ class SimulateShowView(BaseSimulationView, View):
             
             # Usar servicio de validación si existe, sino validación básica
             if self.validation_service:
-                validation_result = self.validation_service.validate_simulation_start(form_data)
+                try:
+                    validation_result = self.validation_service.validate_simulation_start(form_data)
+                except Exception as e:
+                    logger.error(f"Error using validation service for simulation start: {e}")
+                    validation_result = self._validate_simulation_start_basic(form_data)
             else:
                 validation_result = self._validate_simulation_start_basic(form_data)
             
@@ -551,8 +672,12 @@ class SimulateShowView(BaseSimulationView, View):
             
             # Iniciar ejecución asíncrona si está configurado
             if getattr(settings, 'ASYNC_SIMULATION', False):
-                simulation_service.execute_simulation_async(simulation_instance)
-                return redirect('simulate:simulate.status', simulation_id=simulation_instance.id)
+                try:
+                    simulation_service.execute_simulation_async(simulation_instance)
+                    return redirect('simulate:simulate.status', simulation_id=simulation_instance.id)
+                except Exception as e:
+                    logger.error(f"Error starting async simulation: {e}")
+                    return redirect('simulate:simulate.show')
             else:
                 return redirect('simulate:simulate.show')
                 
@@ -566,18 +691,23 @@ class SimulateShowView(BaseSimulationView, View):
         """Validación básica para inicio de simulación"""
         errors = []
         
-        if not form_data.get('fk_questionary_result'):
-            errors.append("El cuestionario es requerido")
-        
-        if not form_data.get('fk_fdp'):
-            errors.append("La función de densidad de probabilidad es requerida")
-        
         try:
-            quantity = int(form_data.get('quantity_time', 0))
-            if quantity < 1 or quantity > 365:
-                errors.append("La duración debe estar entre 1 y 365")
-        except (ValueError, TypeError):
-            errors.append("La duración debe ser un número válido")
+            if not form_data.get('fk_questionary_result'):
+                errors.append("El cuestionario es requerido")
+            
+            if not form_data.get('fk_fdp'):
+                errors.append("La función de densidad de probabilidad es requerida")
+            
+            try:
+                quantity = int(form_data.get('quantity_time', 0))
+                if quantity < 1 or quantity > 365:
+                    errors.append("La duración debe estar entre 1 y 365")
+            except (ValueError, TypeError):
+                errors.append("La duración debe ser un número válido")
+                
+        except Exception as e:
+            logger.error(f"Error in simulation start validation: {e}")
+            errors.append("Error interno en la validación")
         
         return {
             'is_valid': len(errors) == 0,
@@ -586,14 +716,18 @@ class SimulateShowView(BaseSimulationView, View):
     
     def _extract_simulation_start_data(self, request) -> Dict[str, Any]:
         """Extraer datos para inicio de simulación"""
-        return {
-            'fk_questionary_result': request.POST.get('fk_questionary_result'),
-            'quantity_time': request.POST.get('quantity_time', 30),
-            'unit_time': request.POST.get('unit_time', 'days'),
-            'fk_fdp': request.POST.get('fk_fdp'),
-            'confidence_level': request.POST.get('confidence_level', 0.95),
-            'random_seed': request.POST.get('random_seed')
-        }
+        try:
+            return {
+                'fk_questionary_result': request.POST.get('fk_questionary_result'),
+                'quantity_time': request.POST.get('quantity_time', 30),
+                'unit_time': request.POST.get('unit_time', 'days'),
+                'fk_fdp': request.POST.get('fk_fdp'),
+                'confidence_level': request.POST.get('confidence_level', 0.95),
+                'random_seed': request.POST.get('random_seed')
+            }
+        except Exception as e:
+            logger.error(f"Error extracting simulation start data: {e}")
+            return {}
     
     def _handle_simulation_cancel(self, request) -> redirect:
         """Manejar cancelación de simulación"""
@@ -608,6 +742,8 @@ class SimulateShowView(BaseSimulationView, View):
                     simulation.save(update_fields=['is_active'])
                 except Simulation.DoesNotExist:
                     pass
+                except Exception as e:
+                    logger.error(f"Error canceling simulation: {e}")
             
             # Limpiar sesión
             self._clear_simulation_session(request)
@@ -620,19 +756,22 @@ class SimulateShowView(BaseSimulationView, View):
     
     def _clear_simulation_session(self, request) -> None:
         """Limpiar datos de simulación de la sesión"""
-        session_keys = [
-            'started', 
-            'simulation_started_id', 
-            'simulation_start_time',
-            'selected_questionary_result_id',
-            'selected_quantity_time',
-            'selected_unit_time'
-        ]
-        
-        for key in session_keys:
-            request.session.pop(key, None)
-        
-        request.session.modified = True
+        try:
+            session_keys = [
+                'started', 
+                'simulation_started_id', 
+                'simulation_start_time',
+                'selected_questionary_result_id',
+                'selected_quantity_time',
+                'selected_unit_time'
+            ]
+            
+            for key in session_keys:
+                request.session.pop(key, None)
+            
+            request.session.modified = True
+        except Exception as e:
+            logger.error(f"Error clearing simulation session: {e}")
     
     def _handle_initial_view(self, request) -> render:
         """Manejar vista inicial antes de que inicie la simulación"""
@@ -734,21 +873,34 @@ class SimulationStatusView(BaseSimulationView, View):
     
     def _user_can_access_simulation(self, user, simulation: Simulation) -> bool:
         """Verificar si el usuario puede acceder a la simulación"""
-        return simulation.fk_questionary_result.fk_questionary.fk_product.fk_business.fk_user == user
+        try:
+            return simulation.fk_questionary_result.fk_questionary.fk_product.fk_business.fk_user == user
+        except Exception as e:
+            logger.error(f"Error checking simulation access: {e}")
+            return False
     
     def _calculate_simulation_progress(self, simulation: Simulation) -> Dict[str, Any]:
         """Calcular progreso de la simulación"""
-        total_expected_results = simulation.quantity_time
-        current_results = simulation.results.count()
-        
-        progress_percentage = (current_results / total_expected_results * 100) if total_expected_results > 0 else 0
-        
-        return {
-            'percentage': min(progress_percentage, 100),
-            'current_results': current_results,
-            'total_expected': total_expected_results,
-            'status': 'completed' if progress_percentage >= 100 else 'running'
-        }
+        try:
+            total_expected_results = simulation.quantity_time
+            current_results = simulation.results.count()
+            
+            progress_percentage = (current_results / total_expected_results * 100) if total_expected_results > 0 else 0
+            
+            return {
+                'percentage': min(progress_percentage, 100),
+                'current_results': current_results,
+                'total_expected': total_expected_results,
+                'status': 'completed' if progress_percentage >= 100 else 'running'
+            }
+        except Exception as e:
+            logger.error(f"Error calculating simulation progress: {e}")
+            return {
+                'percentage': 0,
+                'current_results': 0,
+                'total_expected': 0,
+                'status': 'error'
+            }
 
 
 class SimulationConfigAPIView(BaseSimulationView, View):
@@ -761,7 +913,11 @@ class SimulationConfigAPIView(BaseSimulationView, View):
             
             # Validar datos usando servicio si existe, sino validación básica
             if self.validation_service and hasattr(self.validation_service, 'validate_api_config'):
-                validation_result = self.validation_service.validate_api_config(data)
+                try:
+                    validation_result = self.validation_service.validate_api_config(data)
+                except Exception as e:
+                    logger.error(f"Error using validation service for API: {e}")
+                    validation_result = self._validate_api_config_basic(data)
             else:
                 validation_result = self._validate_api_config_basic(data)
             
@@ -791,8 +947,13 @@ class SimulationConfigAPIView(BaseSimulationView, View):
         """Validación básica para configuración API"""
         errors = []
         
-        if not data.get('questionary_id'):
-            errors.append("questionary_id es requerido")
+        try:
+            if not data.get('questionary_id'):
+                errors.append("questionary_id es requerido")
+                
+        except Exception as e:
+            logger.error(f"Error in API config validation: {e}")
+            errors.append("Error interno en la validación")
         
         return {
             'is_valid': len(errors) == 0,
@@ -801,13 +962,20 @@ class SimulationConfigAPIView(BaseSimulationView, View):
     
     def _process_api_configuration(self, data: Dict[str, Any], user) -> Dict[str, Any]:
         """Procesar configuración desde API"""
-        # Implementar lógica de configuración
-        # Esta función puede expandirse según las necesidades específicas
-        return {
-            'questionary_id': data.get('questionary_id'),
-            'configuration_complete': True,
-            'timestamp': datetime.now().isoformat()
-        }
+        try:
+            # Implementar lógica de configuración
+            # Esta función puede expandirse según las necesidades específicas
+            return {
+                'questionary_id': data.get('questionary_id'),
+                'configuration_complete': True,
+                'timestamp': datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Error processing API configuration: {e}")
+            return {
+                'error': 'Error procesando configuración',
+                'timestamp': datetime.now().isoformat()
+            }
 
 
 # Vista basada en función para compatibilidad
@@ -828,18 +996,22 @@ def cache_simulation_view(timeout=300):
     """Decorador personalizado para cache de vistas de simulación"""
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
-            # Solo cachear para usuarios autenticados y métodos GET
-            if request.user.is_authenticated and request.method == 'GET':
-                cache_key = f"simulation_view_{request.user.id}_{request.get_full_path()}"
-                cached_response = cache.get(cache_key)
+            try:
+                # Solo cachear para usuarios autenticados y métodos GET
+                if request.user.is_authenticated and request.method == 'GET':
+                    cache_key = f"simulation_view_{request.user.id}_{request.get_full_path()}"
+                    cached_response = cache.get(cache_key)
+                    
+                    if cached_response:
+                        return cached_response
+                    
+                    response = view_func(request, *args, **kwargs)
+                    cache.set(cache_key, response, timeout)
+                    return response
                 
-                if cached_response:
-                    return cached_response
-                
-                response = view_func(request, *args, **kwargs)
-                cache.set(cache_key, response, timeout)
-                return response
-            
-            return view_func(request, *args, **kwargs)
+                return view_func(request, *args, **kwargs)
+            except Exception as e:
+                logger.error(f"Error in cache decorator: {e}")
+                return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
