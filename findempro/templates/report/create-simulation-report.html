@@ -1,301 +1,10 @@
 {% extends "partials/base.html" %}
 {% load static %}
+
 {% block title %}Crear Reporte de Simulación{% endblock title %}
+
 {% block extra_css %}
-<style>
-.simulation-form {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
-    color: white;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.simulation-form::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
-    animation: float 20s infinite linear;
-}
-
-@keyframes float {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    100% { transform: translate(-100px, -100px) rotate(360deg); }
-}
-
-.form-section {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border: 1px solid rgba(0,0,0,0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.form-section:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-.parameter-group {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1.2rem;
-    margin-bottom: 1rem;
-    border-left: 4px solid #007bff;
-    position: relative;
-}
-
-.parameter-group::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, transparent 49%, rgba(0,123,255,0.05) 50%, transparent 51%);
-    pointer-events: none;
-}
-
-.preview-section {
-    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-    border-left: 4px solid #2196f3;
-    padding: 1.2rem;
-    border-radius: 0 8px 8px 0;
-    position: relative;
-}
-
-.preview-metric {
-    background: white;
-    padding: 0.8rem;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: background-color 0.3s ease;
-}
-
-.preview-metric.positive {
-    border-left: 3px solid #28a745;
-}
-
-.preview-metric.negative {
-    border-left: 3px solid #dc3545;
-}
-
-.preview-metric.neutral {
-    border-left: 3px solid #6c757d;
-}
-
-.help-tooltip {
-    cursor: help;
-    color: #6c757d;
-    transition: color 0.2s ease;
-}
-
-.help-tooltip:hover {
-    color: #495057;
-}
-
-.form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    background: linear-gradient(135deg, #5a6fd8 0%, #6b4190 100%);
-}
-
-.product-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.product-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border: 2px solid #007bff;
-}
-
-.product-card.selected {
-    background: #e3f2fd;
-    border: 2px solid #2196f3;
-}
-
-.validation-indicator {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: white;
-    font-weight: bold;
-}
-
-.validation-indicator.valid {
-    background: #28a745;
-}
-
-.validation-indicator.invalid {
-    background: #dc3545;
-}
-
-.validation-indicator.warning {
-    background: #ffc107;
-    color: #212529;
-}
-
-.progress-bar-container {
-    background: #e9ecef;
-    border-radius: 10px;
-    height: 8px;
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
-    border-radius: 10px;
-    transition: width 0.3s ease;
-}
-
-.section-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    margin-right: 0.75rem;
-}
-
-.error-message {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 0.75rem;
-    border-radius: 6px;
-    border: 1px solid #f5c6cb;
-    margin-top: 0.5rem;
-    display: none;
-}
-
-.success-message {
-    background: #d4edda;
-    color: #155724;
-    padding: 0.75rem;
-    border-radius: 6px;
-    border: 1px solid #c3e6cb;
-    margin-top: 0.5rem;
-    display: none;
-}
-
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.loading-spinner {
-    width: 60px;
-    height: 60px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #007bff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.advanced-options {
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-
-.advanced-options.show {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.input-group-addon {
-    background: #f8f9fa;
-    border: 1px solid #ced4da;
-    border-radius: 0 0.375rem 0.375rem 0;
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #6c757d;
-}
-
-@media (max-width: 768px) {
-    .simulation-form {
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .form-section {
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .parameter-group {
-        padding: 1rem;
-    }
-    
-    .preview-section {
-        padding: 1rem;
-    }
-    
-    .btn-primary {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/create-simulation-report.css' %}">
 {% endblock extra_css %}
 
 {% block content %}
@@ -304,48 +13,50 @@
         <div class="container-fluid">
             <!-- Loading Overlay -->
             <div class="loading-overlay" id="loadingOverlay">
-                <div class="text-center text-white">
+                <div class="loading-content">
                     <div class="loading-spinner"></div>
-                    <p class="mt-3">Procesando simulación...</p>
+                    <p class="loading-text">Procesando simulación...</p>
                 </div>
             </div>
 
             <!-- Page Header -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0">Crear Reporte de Simulación</h4>
-                        <div class="page-title-right">
-                            <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item">
-                                    <a href="{% url 'report:report.list' %}">Reportes</a>
-                                </li>
-                                <li class="breadcrumb-item active">Nueva Simulación</li>
-                            </ol>
+            <div class="page-header-section">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <h4 class="page-title">Crear Reporte de Simulación</h4>
+                            <div class="breadcrumb-wrapper">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'report:report.list' %}">Reportes</a>
+                                    </li>
+                                    <li class="breadcrumb-item active">Nueva Simulación</li>
+                                </ol>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Header Section -->
-            <div class="simulation-form">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h2 class="mb-1">📈 Nueva Simulación Financiera</h2>
-                        <p class="mb-0 opacity-75">Configure los parámetros para generar un reporte de simulación detallado con análisis avanzado</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <i class="ri-line-chart-line" style="font-size: 4rem; opacity: 0.3;"></i>
-                    </div>
-                </div>
-                
-                <!-- Progress Bar -->
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" id="formProgress" style="width: 20%;"></div>
+            <div class="simulation-form-header">
+                <div class="header-content">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="header-title">📈 Nueva Simulación Financiera</h2>
+                            <p class="header-subtitle">Configure los parámetros para generar un reporte de simulación detallado con análisis avanzado</p>
                         </div>
-                        <small class="opacity-75">Progreso del formulario</small>
+                        <div class="col-md-4 text-end">
+                            <i class="header-icon ri-line-chart-line"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="formProgress"></div>
+                        </div>
+                        <small class="progress-label">Progreso del formulario</small>
                     </div>
                 </div>
             </div>
@@ -353,141 +64,166 @@
             <form method="post" id="simulationForm" novalidate>
                 {% csrf_token %}
                 
-                <div class="row">
+                <div class="form-layout">
                     <!-- Left Column - Parameters -->
-                    <div class="col-lg-8">
+                    <div class="form-left-column">
+                        
                         <!-- Product Selection -->
                         <div class="form-section" data-section="product">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="section-icon bg-primary-subtle text-primary">
-                                    <i class="ri-product-hunt-line"></i>
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-primary-subtle text-primary">
+                                        <i class="ri-product-hunt-line"></i>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 class="mb-0">Selección de Producto</h5>
-                                    <small class="text-muted">Elija el producto para la simulación</small>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Selección de Producto</h5>
+                                    <small class="section-subtitle">Elija el producto para la simulación</small>
                                 </div>
                                 <div class="validation-indicator" id="productValidation"></div>
                             </div>
                             
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="{{ form.product.id_for_label }}" class="form-label fw-semibold">
-                                        {{ form.product.label }} <span class="text-danger">*</span>
-                                        <i class="ri-information-line help-tooltip ms-1" 
-                                           title="{{ form.product.help_text }}"></i>
-                                    </label>
-                                    {{ form.product }}
-                                    <div class="error-message" id="productError">
-                                        {% if form.product.errors %}{{ form.product.errors.0 }}{% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.tipo_simulacion.id_for_label }}" class="form-label fw-semibold">
-                                        {{ form.tipo_simulacion.label }}
-                                        <i class="ri-information-line help-tooltip ms-1" 
-                                           title="Seleccione el tipo de análisis que desea realizar"></i>
-                                    </label>
-                                    {{ form.tipo_simulacion }}
-                                    <div class="error-message" id="tipoError">
-                                        {% if form.tipo_simulacion.errors %}{{ form.tipo_simulacion.errors.0 }}{% endif %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Product Cards Display -->
-                            <div class="row mt-3" id="productCards">
-                                {% for product in products %}
-                                    <div class="col-md-6 mb-2">
-                                        <div class="product-card" data-product-id="{{ product.id }}" onclick="selectProduct({{ product.id }})">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-shrink-0">
-                                                    <div class="avatar-xs">
-                                                        <span class="avatar-title rounded bg-primary-subtle text-primary">
-                                                            <i class="ri-product-hunt-line"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1 ms-2">
-                                                    <h6 class="mb-0">{{ product.name }}</h6>
-                                                    <small class="text-muted">ID: {{ product.id }}</small>
-                                                    {% if product.description %}
-                                                        <p class="mb-0 text-muted small">{{ product.description|truncatechars:50 }}</p>
-                                                    {% endif %}
-                                                </div>
+                            <div class="section-content">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="field-group">
+                                            <label for="{{ form.product.id_for_label }}" class="field-label">
+                                                {% if form.product.label %}{{ form.product.label }}{% else %}Producto{% endif %} <span class="required-asterisk">*</span>
+                                                <i class="ri-information-line help-tooltip" 
+                                                   title="{% if form.product.help_text %}{{ form.product.help_text }}{% else %}Seleccione el producto a analizar{% endif %}"></i>
+                                            </label>
+                                            {{ form.product }}
+                                            <div class="error-message" id="productError">
+                                                {% if form.product.errors %}{{ form.product.errors.0 }}{% endif %}
                                             </div>
                                         </div>
                                     </div>
-                                {% empty %}
-                                    <div class="col-12">
-                                        <div class="alert alert-warning">
-                                            <i class="ri-alert-line me-2"></i>
-                                            No hay productos disponibles. 
-                                            <a href="#" class="alert-link">Crear nuevo producto</a>
+                                    <div class="col-md-6">
+                                        <div class="field-group">
+                                            <label for="{{ form.tipo_simulacion.id_for_label }}" class="field-label">
+                                                {% if form.tipo_simulacion.label %}{{ form.tipo_simulacion.label }}{% else %}Tipo de Simulación{% endif %}
+                                                <i class="ri-information-line help-tooltip" 
+                                                   title="Seleccione el tipo de análisis que desea realizar"></i>
+                                            </label>
+                                            {{ form.tipo_simulacion }}
+                                            <div class="error-message" id="tipoError">
+                                                {% if form.tipo_simulacion.errors %}{{ form.tipo_simulacion.errors.0 }}{% endif %}
+                                            </div>
                                         </div>
                                     </div>
-                                {% endfor %}
+                                </div>
+
+                                <!-- Product Cards Display -->
+                                <div class="product-cards-container" id="productCards">
+                                    <div class="row">
+                                        {% for product in products %}
+                                            <div class="col-md-6 mb-2">
+                                                <div class="product-card" data-product-id="{{ product.id }}" onclick="selectProduct({{ product.id }})">
+                                                    <div class="product-card-content">
+                                                        <div class="product-icon">
+                                                            <div class="avatar-xs">
+                                                                <span class="avatar-title rounded bg-primary-subtle text-primary">
+                                                                    <i class="ri-product-hunt-line"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="product-info">
+                                                            <h6 class="product-name">
+                                                                {% if product.name %}{{ product.name }}{% else %}Producto sin nombre{% endif %}
+                                                            </h6>
+                                                            <small class="product-id">ID: {{ product.id }}</small>
+                                                            {% if product.description %}
+                                                                <p class="product-description">{{ product.description|truncatechars:50 }}</p>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% empty %}
+                                            <div class="col-12">
+                                                <div class="empty-products-alert">
+                                                    <div class="alert alert-warning">
+                                                        <i class="ri-alert-line me-2"></i>
+                                                        No hay productos disponibles. 
+                                                        <a href="#" class="alert-link">Crear nuevo producto</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Market Parameters -->
                         <div class="form-section" data-section="market">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="section-icon bg-success-subtle text-success">
-                                    <i class="ri-line-chart-line"></i>
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-success-subtle text-success">
+                                        <i class="ri-line-chart-line"></i>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 class="mb-0">Parámetros de Mercado</h5>
-                                    <small class="text-muted">Configure la demanda y proyecciones de crecimiento</small>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Parámetros de Mercado</h5>
+                                    <small class="section-subtitle">Configure la demanda y proyecciones de crecimiento</small>
                                 </div>
                                 <div class="validation-indicator" id="marketValidation"></div>
                             </div>
                             
-                            <div class="parameter-group">
-                                <h6 class="text-primary mb-3">
-                                    <i class="ri-trending-up-line me-2"></i>
-                                    Demanda y Crecimiento
-                                </h6>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <label for="{{ form.demanda_inicial.id_for_label }}" class="form-label fw-semibold">
-                                            {{ form.demanda_inicial.label }} <span class="text-danger">*</span>
-                                            <i class="ri-information-line help-tooltip ms-1" 
-                                               title="{{ form.demanda_inicial.help_text }}"></i>
-                                        </label>
-                                        <div class="input-group">
-                                            {{ form.demanda_inicial }}
-                                            <span class="input-group-text">unidades/mes</span>
+                            <div class="section-content">
+                                <div class="parameter-group">
+                                    <h6 class="parameter-group-title">
+                                        <i class="ri-trending-up-line me-2"></i>
+                                        Demanda y Crecimiento
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label for="{{ form.demanda_inicial.id_for_label }}" class="field-label">
+                                                    {% if form.demanda_inicial.label %}{{ form.demanda_inicial.label }}{% else %}Demanda Inicial{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.demanda_inicial.help_text %}{{ form.demanda_inicial.help_text }}{% else %}Cantidad inicial de demanda esperada{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    {{ form.demanda_inicial }}
+                                                    <span class="input-group-text">unidades/mes</span>
+                                                </div>
+                                                <div class="error-message" id="demandaError">
+                                                    {% if form.demanda_inicial.errors %}{{ form.demanda_inicial.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="error-message" id="demandaError">
-                                            {% if form.demanda_inicial.errors %}{{ form.demanda_inicial.errors.0 }}{% endif %}
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label for="{{ form.tasa_crecimiento.id_for_label }}" class="field-label">
+                                                    {% if form.tasa_crecimiento.label %}{{ form.tasa_crecimiento.label }}{% else %}Tasa de Crecimiento{% endif %}
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.tasa_crecimiento.help_text %}{{ form.tasa_crecimiento.help_text }}{% else %}Porcentaje de crecimiento mensual esperado{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    {{ form.tasa_crecimiento }}
+                                                    <span class="input-group-text">% mensual</span>
+                                                </div>
+                                                <div class="error-message" id="crecimientoError">
+                                                    {% if form.tasa_crecimiento.errors %}{{ form.tasa_crecimiento.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="{{ form.tasa_crecimiento.id_for_label }}" class="form-label fw-semibold">
-                                            {{ form.tasa_crecimiento.label }}
-                                            <i class="ri-information-line help-tooltip ms-1" 
-                                               title="{{ form.tasa_crecimiento.help_text }}"></i>
-                                        </label>
-                                        <div class="input-group">
-                                            {{ form.tasa_crecimiento }}
-                                            <span class="input-group-text">% mensual</span>
-                                        </div>
-                                        <div class="error-message" id="crecimientoError">
-                                            {% if form.tasa_crecimiento.errors %}{{ form.tasa_crecimiento.errors.0 }}{% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="{{ form.horizonte.id_for_label }}" class="form-label fw-semibold">
-                                            {{ form.horizonte.label }} <span class="text-danger">*</span>
-                                            <i class="ri-information-line help-tooltip ms-1" 
-                                               title="{{ form.horizonte.help_text }}"></i>
-                                        </label>
-                                        <div class="input-group">
-                                            {{ form.horizonte }}
-                                            <span class="input-group-text">meses</span>
-                                        </div>
-                                        <div class="error-message" id="horizonteError">
-                                            {% if form.horizonte.errors %}{{ form.horizonte.errors.0 }}{% endif %}
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label for="{{ form.horizonte.id_for_label }}" class="field-label">
+                                                    {% if form.horizonte.label %}{{ form.horizonte.label }}{% else %}Horizonte de Tiempo{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.horizonte.help_text %}{{ form.horizonte.help_text }}{% else %}Período de análisis en meses{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    {{ form.horizonte }}
+                                                    <span class="input-group-text">meses</span>
+                                                </div>
+                                                <div class="error-message" id="horizonteError">
+                                                    {% if form.horizonte.errors %}{{ form.horizonte.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -496,97 +232,109 @@
 
                         <!-- Financial Parameters -->
                         <div class="form-section" data-section="financial">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="section-icon bg-warning-subtle text-warning">
-                                    <i class="ri-money-dollar-circle-line"></i>
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-warning-subtle text-warning">
+                                        <i class="ri-money-dollar-circle-line"></i>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 class="mb-0">Parámetros Financieros</h5>
-                                    <small class="text-muted">Defina precios, costos e inversiones</small>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Parámetros Financieros</h5>
+                                    <small class="section-subtitle">Defina precios, costos e inversiones</small>
                                 </div>
                                 <div class="validation-indicator" id="financialValidation"></div>
                             </div>
                             
-                            <div class="parameter-group">
-                                <h6 class="text-primary mb-3">
-                                    <i class="ri-price-tag-3-line me-2"></i>
-                                    Precios y Costos
-                                </h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <label for="{{ form.precio_unitario.id_for_label }}" class="form-label fw-semibold">
-                                            {{ form.precio_unitario.label }} <span class="text-danger">*</span>
-                                            <i class="ri-information-line help-tooltip ms-1" 
-                                               title="{{ form.precio_unitario.help_text }}"></i>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            {{ form.precio_unitario }}
+                            <div class="section-content">
+                                <div class="parameter-group">
+                                    <h6 class="parameter-group-title">
+                                        <i class="ri-price-tag-3-line me-2"></i>
+                                        Precios y Costos
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.precio_unitario.id_for_label }}" class="field-label">
+                                                    {% if form.precio_unitario.label %}{{ form.precio_unitario.label }}{% else %}Precio Unitario{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.precio_unitario.help_text %}{{ form.precio_unitario.help_text }}{% else %}Precio de venta por unidad{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.precio_unitario }}
+                                                </div>
+                                                <div class="error-message" id="precioError">
+                                                    {% if form.precio_unitario.errors %}{{ form.precio_unitario.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="error-message" id="precioError">
-                                            {% if form.precio_unitario.errors %}{{ form.precio_unitario.errors.0 }}{% endif %}
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.costo_unitario.id_for_label }}" class="field-label">
+                                                    {% if form.costo_unitario.label %}{{ form.costo_unitario.label }}{% else %}Costo Unitario{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.costo_unitario.help_text %}{{ form.costo_unitario.help_text }}{% else %}Costo de producción por unidad{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.costo_unitario }}
+                                                </div>
+                                                <div class="error-message" id="costoError">
+                                                    {% if form.costo_unitario.errors %}{{ form.costo_unitario.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label for="{{ form.costo_unitario.id_for_label }}" class="form-label fw-semibold">
-                                            {{ form.costo_unitario.label }} <span class="text-danger">*</span>
-                                            <i class="ri-information-line help-tooltip ms-1" 
-                                               title="{{ form.costo_unitario.help_text }}"></i>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            {{ form.costo_unitario }}
-                                        </div>
-                                        <div class="error-message" id="costoError">
-                                            {% if form.costo_unitario.errors %}{{ form.costo_unitario.errors.0 }}{% endif %}
+                                    
+                                    <!-- Margin Indicator -->
+                                    <div class="margin-info-container">
+                                        <div class="alert alert-info margin-info" id="marginInfo">
+                                            <small>
+                                                <strong>Margen Unitario:</strong> <span id="marginValue">$0.00</span> | 
+                                                <strong>Margen %:</strong> <span id="marginPercent">0%</span>
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Margin Indicator -->
-                                <div class="row mt-2">
-                                    <div class="col-12">
-                                        <div class="alert alert-info py-2" id="marginInfo" style="display: none;">
-                                            <small><strong>Margen Unitario:</strong> <span id="marginValue">$0.00</span> | 
-                                            <strong>Margen %:</strong> <span id="marginPercent">0%</span></small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="parameter-group">
-                                <h6 class="text-primary mb-3">
-                                    <i class="ri-wallet-3-line me-2"></i>
-                                    Gastos e Inversión
-                                </h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <label for="{{ form.gastos_fijos.id_for_label }}" class="form-label fw-semibold">
-                                            {{ form.gastos_fijos.label }}
-                                            <i class="ri-information-line help-tooltip ms-1" 
-                                               title="{{ form.gastos_fijos.help_text }}"></i>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            {{ form.gastos_fijos }}
-                                            <span class="input-group-text">/mes</span>
+                                <div class="parameter-group">
+                                    <h6 class="parameter-group-title">
+                                        <i class="ri-wallet-3-line me-2"></i>
+                                        Gastos e Inversión
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.gastos_fijos.id_for_label }}" class="field-label">
+                                                    {% if form.gastos_fijos.label %}{{ form.gastos_fijos.label }}{% else %}Gastos Fijos{% endif %}
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.gastos_fijos.help_text %}{{ form.gastos_fijos.help_text }}{% else %}Gastos fijos mensuales{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.gastos_fijos }}
+                                                    <span class="input-group-text">/mes</span>
+                                                </div>
+                                                <div class="error-message" id="gastosError">
+                                                    {% if form.gastos_fijos.errors %}{{ form.gastos_fijos.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="error-message" id="gastosError">
-                                            {% if form.gastos_fijos.errors %}{{ form.gastos_fijos.errors.0 }}{% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="{{ form.inversion_inicial.id_for_label }}" class="form-label fw-semibold">
-                                            {{ form.inversion_inicial.label }}
-                                            <i class="ri-information-line help-tooltip ms-1" 
-                                               title="{{ form.inversion_inicial.help_text }}"></i>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            {{ form.inversion_inicial }}
-                                        </div>
-                                        <div class="error-message" id="inversionError">
-                                            {% if form.inversion_inicial.errors %}{{ form.inversion_inicial.errors.0 }}{% endif %}
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.inversion_inicial.id_for_label }}" class="field-label">
+                                                    {% if form.inversion_inicial.label %}{{ form.inversion_inicial.label }}{% else %}Inversión Inicial{% endif %}
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.inversion_inicial.help_text %}{{ form.inversion_inicial.help_text }}{% else %}Inversión requerida para iniciar{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.inversion_inicial }}
+                                                </div>
+                                                <div class="error-message" id="inversionError">
+                                                    {% if form.inversion_inicial.errors %}{{ form.inversion_inicial.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -595,15 +343,15 @@
 
                         <!-- Advanced Options -->
                         <div class="form-section" data-section="advanced">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <div class="d-flex align-items-center">
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
                                     <div class="section-icon bg-info-subtle text-info">
                                         <i class="ri-settings-3-line"></i>
                                     </div>
-                                    <div>
-                                        <h5 class="mb-0">Opciones Avanzadas</h5>
-                                        <small class="text-muted">Configuraciones adicionales y análisis</small>
-                                    </div>
+                                </div>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Opciones Avanzadas</h5>
+                                    <small class="section-subtitle">Configuraciones adicionales y análisis</small>
                                 </div>
                                 <button type="button" class="btn btn-outline-info btn-sm" id="toggleAdvanced">
                                     <i class="ri-arrow-down-s-line me-1"></i>
@@ -616,64 +364,74 @@
                                     <div class="col-md-6">
                                         <div class="form-check form-switch mb-3">
                                             {{ form.incluir_graficas }}
-                                            <label class="form-check-label fw-semibold" for="{{ form.incluir_graficas.id_for_label }}">
-                                                {{ form.incluir_graficas.label }}
+                                            <label class="form-check-label field-label" for="{{ form.incluir_graficas.id_for_label }}">
+                                                {% if form.incluir_graficas.label %}{{ form.incluir_graficas.label }}{% else %}Incluir Gráficas{% endif %}
                                             </label>
-                                            <div class="form-text">{{ form.incluir_graficas.help_text }}</div>
+                                            <div class="form-text">
+                                                {% if form.incluir_graficas.help_text %}{{ form.incluir_graficas.help_text }}{% else %}Generar gráficas en el reporte{% endif %}
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-check form-switch mb-3">
                                             {{ form.incluir_analisis_sensibilidad }}
-                                            <label class="form-check-label fw-semibold" for="{{ form.incluir_analisis_sensibilidad.id_for_label }}">
-                                                {{ form.incluir_analisis_sensibilidad.label }}
+                                            <label class="form-check-label field-label" for="{{ form.incluir_analisis_sensibilidad.id_for_label }}">
+                                                {% if form.incluir_analisis_sensibilidad.label %}{{ form.incluir_analisis_sensibilidad.label }}{% else %}Análisis de Sensibilidad{% endif %}
                                             </label>
-                                            <div class="form-text">{{ form.incluir_analisis_sensibilidad.help_text }}</div>
+                                            <div class="form-text">
+                                                {% if form.incluir_analisis_sensibilidad.help_text %}{{ form.incluir_analisis_sensibilidad.help_text }}{% else %}Incluir análisis de sensibilidad{% endif %}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <!-- Additional Advanced Parameters -->
                                 <div class="parameter-group">
-                                    <h6 class="text-primary mb-3">
+                                    <h6 class="parameter-group-title">
                                         <i class="ri-calculator-line me-2"></i>
                                         Parámetros Adicionales
                                     </h6>
                                     <div class="row">
                                         <div class="col-md-4">
-                                            <label class="form-label fw-semibold">
-                                                Tasa de Descuento
-                                                <i class="ri-information-line help-tooltip ms-1" 
-                                                   title="Tasa utilizada para calcular el VAN"></i>
-                                            </label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" id="tasaDescuento" 
-                                                       value="12" min="0" max="100" step="0.1">
-                                                <span class="input-group-text">% anual</span>
+                                            <div class="field-group">
+                                                <label class="field-label">
+                                                    Tasa de Descuento
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="Tasa utilizada para calcular el VAN"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="tasaDescuento" 
+                                                           value="12" min="0" max="100" step="0.1">
+                                                    <span class="input-group-text">% anual</span>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label fw-semibold">
-                                                Inflación Esperada
-                                                <i class="ri-information-line help-tooltip ms-1" 
-                                                   title="Tasa de inflación anual esperada"></i>
-                                            </label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" id="inflacion" 
-                                                       value="5" min="0" max="50" step="0.1">
-                                                <span class="input-group-text">% anual</span>
+                                            <div class="field-group">
+                                                <label class="field-label">
+                                                    Inflación Esperada
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="Tasa de inflación anual esperada"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="inflacion" 
+                                                           value="5" min="0" max="50" step="0.1">
+                                                    <span class="input-group-text">% anual</span>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label fw-semibold">
-                                                Impuestos
-                                                <i class="ri-information-line help-tooltip ms-1" 
-                                                   title="Tasa de impuestos sobre utilidades"></i>
-                                            </label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" id="impuestos" 
-                                                       value="30" min="0" max="100" step="0.1">
-                                                <span class="input-group-text">%</span>
+                                            <div class="field-group">
+                                                <label class="field-label">
+                                                    Impuestos
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="Tasa de impuestos sobre utilidades"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="impuestos" 
+                                                           value="30" min="0" max="100" step="0.1">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -683,89 +441,89 @@
                     </div>
 
                     <!-- Right Column - Preview and Actions -->
-                    <div class="col-lg-4">
+                    <div class="form-right-column">
                         <!-- Live Preview -->
-                        <div class="form-section sticky-top" style="top: 20px;">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="section-icon bg-primary-subtle text-primary">
-                                    <i class="ri-eye-line"></i>
+                        <div class="preview-section">
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-primary-subtle text-primary">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h5 class="mb-0">Vista Previa en Tiempo Real</h5>
-                                    <small class="text-muted">Resultados calculados automáticamente</small>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Vista Previa en Tiempo Real</h5>
+                                    <small class="section-subtitle">Resultados calculados automáticamente</small>
                                 </div>
                             </div>
                             
-                            <div class="preview-section">
-                                <h6 class="text-primary mb-3">
+                            <div class="preview-content">
+                                <h6 class="preview-content-title">
                                     <i class="ri-calculator-line me-2"></i>
                                     Métricas Principales
                                 </h6>
                                 
-                                <div id="previewContent">
+                                <div class="preview-metrics" id="previewContent">
                                     <div class="preview-metric neutral" id="marginMetric">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="fw-semibold">Margen por Unidad:</small>
-                                            <span class="fw-bold" id="preview-margin">$0.00</span>
+                                        <div class="metric-content">
+                                            <small class="metric-label">Margen por Unidad:</small>
+                                            <span class="metric-value" id="preview-margin">$0.00</span>
                                         </div>
                                     </div>
                                     
                                     <div class="preview-metric neutral" id="breakEvenMetric">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="fw-semibold">Punto de Equilibrio:</small>
-                                            <span class="fw-bold" id="preview-break-even">0 unidades</span>
+                                        <div class="metric-content">
+                                            <small class="metric-label">Punto de Equilibrio:</small>
+                                            <span class="metric-value" id="preview-break-even">0 unidades</span>
                                         </div>
                                     </div>
                                     
                                     <div class="preview-metric neutral" id="roiMetric">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="fw-semibold">ROI Mensual:</small>
-                                            <span class="fw-bold" id="preview-roi">0.00%</span>
+                                        <div class="metric-content">
+                                            <small class="metric-label">ROI Mensual:</small>
+                                            <span class="metric-value" id="preview-roi">0.00%</span>
                                         </div>
                                     </div>
                                     
                                     <div class="preview-metric neutral" id="profitMetric">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="fw-semibold">Utilidad Neta (Mes 1):</small>
-                                            <span class="fw-bold" id="preview-profit">$0.00</span>
+                                        <div class="metric-content">
+                                            <small class="metric-label">Utilidad Neta (Mes 1):</small>
+                                            <span class="metric-value" id="preview-profit">$0.00</span>
                                         </div>
                                     </div>
                                     
                                     <div class="preview-metric neutral" id="paybackMetric">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="fw-semibold">Período de Recuperación:</small>
-                                            <span class="fw-bold" id="preview-payback">∞ meses</span>
+                                        <div class="metric-content">
+                                            <small class="metric-label">Período de Recuperación:</small>
+                                            <span class="metric-value" id="preview-payback">∞ meses</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Risk Assessment -->
-                                <div class="mt-3 p-3 bg-light rounded">
-                                    <h6 class="text-secondary mb-2">
+                                <div class="risk-assessment">
+                                    <h6 class="risk-title">
                                         <i class="ri-shield-check-line me-2"></i>
                                         Evaluación de Riesgo
                                     </h6>
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-grow-1">
-                                            <div class="progress" style="height: 8px;">
-                                                <div class="progress-bar" id="riskBar" style="width: 50%; background: #ffc107;"></div>
-                                            </div>
+                                    <div class="risk-bar-container">
+                                        <div class="risk-progress">
+                                            <div class="risk-progress-bar" id="riskBar"></div>
                                         </div>
-                                        <span class="ms-2 small fw-semibold" id="riskLevel">Medio</span>
+                                        <span class="risk-level" id="riskLevel">Medio</span>
                                     </div>
-                                    <small class="text-muted" id="riskDescription">Evaluando parámetros...</small>
+                                    <small class="risk-description" id="riskDescription">Evaluando parámetros...</small>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="form-section">
-                            <h5 class="mb-3">
+                        <div class="actions-section">
+                            <h5 class="actions-title">
                                 <i class="ri-play-circle-line text-warning me-2"></i>
                                 Ejecutar Simulación
                             </h5>
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <div class="actions-grid">
+                                <button type="submit" class="btn btn-primary btn-lg submit-btn" id="submitBtn">
                                     <i class="ri-rocket-line me-2"></i>
                                     <span id="submitText">Generar Simulación</span>
                                 </button>
@@ -784,7 +542,7 @@
                             </div>
                             
                             <!-- Form Validation Summary -->
-                            <div class="mt-3">
+                            <div class="validation-summary">
                                 <div class="success-message" id="validationSuccess">
                                     <i class="ri-check-circle-line me-2"></i>
                                     <span id="successText">Formulario válido</span>
@@ -800,13 +558,15 @@
 
                 <!-- Form Global Errors -->
                 {% if form.non_field_errors %}
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="alert alert-danger">
-                                <h6><i class="ri-error-warning-line me-2"></i>Errores en el formulario:</h6>
-                                {% for error in form.non_field_errors %}
-                                    <p class="mb-0">{{ error }}</p>
-                                {% endfor %}
+                    <div class="global-errors-section">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-danger">
+                                    <h6><i class="ri-error-warning-line me-2"></i>Errores en el formulario:</h6>
+                                    {% for error in form.non_field_errors %}
+                                        <p class="mb-0">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -818,507 +578,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Form elements
-    const form = document.getElementById('simulationForm');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const formProgress = document.getElementById('formProgress');
-    
-    // Input elements
-    const precioInput = document.getElementById('{{ form.precio_unitario.id_for_label }}');
-    const costoInput = document.getElementById('{{ form.costo_unitario.id_for_label }}');
-    const demandaInput = document.getElementById('{{ form.demanda_inicial.id_for_label }}');
-    const gastosFijosInput = document.getElementById('{{ form.gastos_fijos.id_for_label }}');
-    const inversionInput = document.getElementById('{{ form.inversion_inicial.id_for_label }}');
-    const crecimientoInput = document.getElementById('{{ form.tasa_crecimiento.id_for_label }}');
-    const horizonteInput = document.getElementById('{{ form.horizonte.id_for_label }}');
-    const productSelect = document.getElementById('{{ form.product.id_for_label }}');
-    
-    // Preview elements
-    const previewMargin = document.getElementById('preview-margin');
-    const previewBreakEven = document.getElementById('preview-break-even');
-    const previewRoi = document.getElementById('preview-roi');
-    const previewProfit = document.getElementById('preview-profit');
-    const previewPayback = document.getElementById('preview-payback');
-    
-    // Validation elements
-    const marginInfo = document.getElementById('marginInfo');
-    const marginValue = document.getElementById('marginValue');
-    const marginPercent = document.getElementById('marginPercent');
-    
-    // Risk assessment elements
-    const riskBar = document.getElementById('riskBar');
-    const riskLevel = document.getElementById('riskLevel');
-    const riskDescription = document.getElementById('riskDescription');
-    
-    // Default values
-    const defaultValues = {
-        precio_unitario: 100,
-        costo_unitario: 60,
-        demanda_inicial: 1000,
-        gastos_fijos: 5000,
-        inversion_inicial: 50000,
-        tasa_crecimiento: 5,
-        horizonte: 12
-    };
-    
-    // Initialize form with default values if empty
-    function initializeForm() {
-        Object.keys(defaultValues).forEach(key => {
-            const input = document.getElementById('{{ form.' + key.replace('_', '_') + '.id_for_label }}');
-            if (input && !input.value) {
-                input.value = defaultValues[key];
-            }
-        });
-        updatePreview();
-        updateFormProgress();
-    }
-    
-    // Update preview calculations
-    function updatePreview() {
-        try {
-            const precio = parseFloat(precioInput?.value) || 0;
-            const costo = parseFloat(costoInput?.value) || 0;
-            const demanda = parseFloat(demandaInput?.value) || 0;
-            const gastosFijos = parseFloat(gastosFijosInput?.value) || 0;
-            const inversion = parseFloat(inversionInput?.value) || 0;
-            const crecimiento = parseFloat(crecimientoInput?.value) || 0;
-            
-            // Basic calculations
-            const margen = precio - costo;
-            const marginPercentage = precio > 0 ? (margen / precio) * 100 : 0;
-            const utilidadBruta = margen * demanda;
-            const utilidadNeta = utilidadBruta - gastosFijos;
-            const puntoEquilibrio = margen > 0 ? Math.ceil(gastosFijos / margen) : Infinity;
-            const roi = inversion > 0 ? (utilidadNeta / inversion) * 100 : 0;
-            const payback = utilidadNeta > 0 ? inversion / utilidadNeta : Infinity;
-            
-            // Update preview display
-            if (previewMargin) previewMargin.textContent = `${margen.toFixed(2)}`;
-            if (previewBreakEven) previewBreakEven.textContent = isFinite(puntoEquilibrio) ? `${puntoEquilibrio.toLocaleString()} unidades` : '∞ unidades';
-            if (previewRoi) previewRoi.textContent = `${roi.toFixed(2)}%`;
-            if (previewProfit) previewProfit.textContent = `${utilidadNeta.toFixed(2)}`;
-            if (previewPayback) previewPayback.textContent = isFinite(payback) ? `${payback.toFixed(1)} meses` : '∞ meses';
-            
-            // Update margin info
-            if (marginInfo && marginValue && marginPercent) {
-                marginValue.textContent = `${margen.toFixed(2)}`;
-                marginPercent.textContent = `${marginPercentage.toFixed(1)}%`;
-                marginInfo.style.display = 'block';
-            }
-            
-            // Update metric colors
-            updateMetricColors(margen, utilidadNeta, roi, puntoEquilibrio, payback);
-            
-            // Update risk assessment
-            updateRiskAssessment(margen, utilidadNeta, roi, crecimiento, payback);
-            
-        } catch (error) {
-            console.error('Error updating preview:', error);
-        }
-    }
-    
-    function updateMetricColors(margen, utilidadNeta, roi, puntoEquilibrio, payback) {
-        // Margin color
-        const marginMetric = document.getElementById('marginMetric');
-        if (marginMetric) {
-            marginMetric.className = `preview-metric ${margen > 0 ? 'positive' : margen < 0 ? 'negative' : 'neutral'}`;
-        }
-        
-        // Profit color
-        const profitMetric = document.getElementById('profitMetric');
-        if (profitMetric) {
-            profitMetric.className = `preview-metric ${utilidadNeta > 0 ? 'positive' : utilidadNeta < 0 ? 'negative' : 'neutral'}`;
-        }
-        
-        // ROI color
-        const roiMetric = document.getElementById('roiMetric');
-        if (roiMetric) {
-            roiMetric.className = `preview-metric ${roi > 15 ? 'positive' : roi > 5 ? 'neutral' : 'negative'}`;
-        }
-        
-        // Break-even color
-        const breakEvenMetric = document.getElementById('breakEvenMetric');
-        if (breakEvenMetric) {
-            const demanda = parseFloat(demandaInput?.value) || 0;
-            breakEvenMetric.className = `preview-metric ${puntoEquilibrio < demanda ? 'positive' : puntoEquilibrio < demanda * 2 ? 'neutral' : 'negative'}`;
-        }
-        
-        // Payback color
-        const paybackMetric = document.getElementById('paybackMetric');
-        if (paybackMetric) {
-            paybackMetric.className = `preview-metric ${payback < 12 ? 'positive' : payback < 24 ? 'neutral' : 'negative'}`;
-        }
-    }
-    
-    function updateRiskAssessment(margen, utilidadNeta, roi, crecimiento, payback) {
-        let riskScore = 0;
-        let riskFactors = [];
-        
-        // Margin risk
-        if (margen <= 0) {
-            riskScore += 30;
-            riskFactors.push('Sin margen de beneficio');
-        } else if (margen < 20) {
-            riskScore += 15;
-            riskFactors.push('Margen bajo');
-        }
-        
-        // Profitability risk
-        if (utilidadNeta <= 0) {
-            riskScore += 25;
-            riskFactors.push('Sin utilidad neta');
-        }
-        
-        // ROI risk
-        if (roi < 5) {
-            riskScore += 20;
-            riskFactors.push('ROI bajo');
-        }
-        
-        // Growth risk
-        if (crecimiento < 0) {
-            riskScore += 15;
-            riskFactors.push('Crecimiento negativo');
-        } else if (crecimiento > 50) {
-            riskScore += 10;
-            riskFactors.push('Crecimiento muy optimista');
-        }
-        
-        // Payback risk
-        if (payback > 36) {
-            riskScore += 10;
-            riskFactors.push('Recuperación lenta');
-        }
-        
-        // Update risk display
-        let riskClass, riskText, riskDesc;
-        if (riskScore >= 50) {
-            riskClass = 'bg-danger';
-            riskText = 'Alto';
-            riskDesc = 'Proyecto de alto riesgo';
-        } else if (riskScore >= 25) {
-            riskClass = 'bg-warning';
-            riskText = 'Medio';
-            riskDesc = 'Requiere análisis adicional';
-        } else {
-            riskClass = 'bg-success';
-            riskText = 'Bajo';
-            riskDesc = 'Proyecto prometedor';
-        }
-        
-        if (riskBar) {
-            riskBar.className = `progress-bar ${riskClass}`;
-            riskBar.style.width = `${Math.min(riskScore, 100)}%`;
-        }
-        
-        if (riskLevel) riskLevel.textContent = riskText;
-        if (riskDescription) {
-            riskDescription.textContent = riskFactors.length > 0 ? riskFactors.join(', ') : riskDesc;
-        }
-    }
-    
-    function updateFormProgress() {
-        const requiredFields = [productSelect, precioInput, costoInput, demandaInput, horizonteInput];
-        const filledFields = requiredFields.filter(field => field && field.value && field.value.trim() !== '');
-        const progress = (filledFields.length / requiredFields.length) * 100;
-        
-        if (formProgress) {
-            formProgress.style.width = `${progress}%`;
-        }
-        
-        // Update section validations
-        updateSectionValidation('product', productSelect?.value);
-        updateSectionValidation('market', demandaInput?.value && horizonteInput?.value);
-        updateSectionValidation('financial', precioInput?.value && costoInput?.value);
-    }
-    
-    function updateSectionValidation(section, isValid) {
-        const indicator = document.getElementById(`${section}Validation`);
-        if (indicator) {
-            if (isValid) {
-                indicator.className = 'validation-indicator valid';
-                indicator.textContent = '✓';
-                indicator.title = 'Sección válida';
-            } else {
-                indicator.className = 'validation-indicator invalid';
-                indicator.textContent = '!';
-                indicator.title = 'Faltan datos requeridos';
-            }
-        }
-    }
-    
-    // Product selection
-    window.selectProduct = function(productId) {
-        if (productSelect) {
-            productSelect.value = productId;
-            
-            // Update visual selection
-            document.querySelectorAll('.product-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            const selectedCard = document.querySelector(`[data-product-id="${productId}"]`);
-            if (selectedCard) {
-                selectedCard.classList.add('selected');
-            }
-            
-            updateFormProgress();
-        }
-    };
-    
-    // Advanced options toggle
-    const toggleAdvanced = document.getElementById('toggleAdvanced');
-    const advancedOptions = document.getElementById('advancedOptions');
-    
-    if (toggleAdvanced && advancedOptions) {
-        toggleAdvanced.addEventListener('click', function() {
-            const isShown = advancedOptions.classList.contains('show');
-            
-            if (isShown) {
-                advancedOptions.classList.remove('show');
-                this.innerHTML = '<i class="ri-arrow-down-s-line me-1"></i>Mostrar';
-            } else {
-                advancedOptions.classList.add('show');
-                this.innerHTML = '<i class="ri-arrow-up-s-line me-1"></i>Ocultar';
-            }
-        });
-    }
-    
-    // Form validation
-    function validateForm() {
-        const errors = [];
-        const precio = parseFloat(precioInput?.value) || 0;
-        const costo = parseFloat(costoInput?.value) || 0;
-        const demanda = parseFloat(demandaInput?.value) || 0;
-        const horizonte = parseInt(horizonteInput?.value) || 0;
-        
-        // Required field validations
-        if (!productSelect?.value) errors.push('Debe seleccionar un producto');
-        if (precio <= 0) errors.push('El precio debe ser mayor a 0');
-        if (costo < 0) errors.push('El costo no puede ser negativo');
-        if (demanda <= 0) errors.push('La demanda debe ser mayor a 0');
-        if (horizonte <= 0) errors.push('El horizonte debe ser mayor a 0');
-        
-        // Business logic validations
-        if (precio <= costo) errors.push('El precio debe ser mayor al costo para tener margen');
-        if (horizonte > 120) errors.push('El horizonte no puede ser mayor a 120 meses');
-        
-        const crecimiento = parseFloat(crecimientoInput?.value) || 0;
-        if (crecimiento < -100 || crecimiento > 1000) {
-            errors.push('La tasa de crecimiento debe estar entre -100% y 1000%');
-        }
-        
-        return errors;
-    }
-    
-    function showValidationResults(errors) {
-        const successDiv = document.getElementById('validationSuccess');
-        const errorDiv = document.getElementById('validationErrors');
-        const errorList = document.getElementById('errorList');
-        
-        if (errors.length === 0) {
-            if (successDiv) {
-                successDiv.style.display = 'block';
-                setTimeout(() => {
-                    successDiv.style.display = 'none';
-                }, 3000);
-            }
-            if (errorDiv) errorDiv.style.display = 'none';
-        } else {
-            if (errorDiv && errorList) {
-                errorList.innerHTML = errors.map(error => `<div>• ${error}</div>`).join('');
-                errorDiv.style.display = 'block';
-            }
-            if (successDiv) successDiv.style.display = 'none';
-        }
-    }
-    
-    // Event listeners
-    const inputFields = [precioInput, costoInput, demandaInput, gastosFijosInput, inversionInput, crecimientoInput, horizonteInput];
-    inputFields.forEach(input => {
-        if (input) {
-            input.addEventListener('input', function() {
-                updatePreview();
-                updateFormProgress();
-                
-                // Clear individual field errors
-                const errorDiv = document.getElementById(this.id.replace('id_', '') + 'Error');
-                if (errorDiv) errorDiv.style.display = 'none';
-            });
-            
-            input.addEventListener('blur', function() {
-                // Validate individual field
-                const errors = validateForm();
-                const fieldName = this.id.replace('id_', '');
-                const fieldErrors = errors.filter(error => error.toLowerCase().includes(fieldName) || 
-                    (fieldName === 'precio_unitario' && error.includes('precio')) ||
-                    (fieldName === 'costo_unitario' && error.includes('costo')) ||
-                    (fieldName === 'demanda_inicial' && error.includes('demanda'))
-                );
-                
-                const errorDiv = document.getElementById(fieldName + 'Error');
-                if (errorDiv) {
-                    if (fieldErrors.length > 0) {
-                        errorDiv.textContent = fieldErrors[0];
-                        errorDiv.style.display = 'block';
-                    } else {
-                        errorDiv.style.display = 'none';
-                    }
-                }
-            });
-        }
-    });
-    
-    if (productSelect) {
-        productSelect.addEventListener('change', function() {
-            updateFormProgress();
-            selectProduct(this.value);
-        });
-    }
-    
-    // Button event listeners
-    const validateBtn = document.getElementById('validateForm');
-    if (validateBtn) {
-        validateBtn.addEventListener('click', function() {
-            const errors = validateForm();
-            showValidationResults(errors);
-            
-            if (errors.length === 0) {
-                this.classList.add('btn-success');
-                this.innerHTML = '<i class="ri-check-line me-2"></i>Parámetros Válidos';
-                setTimeout(() => {
-                    this.classList.remove('btn-success');
-                    this.innerHTML = '<i class="ri-check-line me-2"></i>Validar Parámetros';
-                }, 2000);
-            }
-        });
-    }
-    
-    const resetBtn = document.getElementById('resetForm');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function() {
-            if (confirm('¿Está seguro de que desea restaurar todos los valores por defecto?')) {
-                Object.keys(defaultValues).forEach(key => {
-                    const input = document.getElementById('id_' + key);
-                    if (input) input.value = defaultValues[key];
-                });
-                
-                if (productSelect) productSelect.value = '';
-                
-                // Clear product selection
-                document.querySelectorAll('.product-card').forEach(card => {
-                    card.classList.remove('selected');
-                });
-                
-                updatePreview();
-                updateFormProgress();
-                
-                // Hide error messages
-                document.querySelectorAll('.error-message').forEach(div => {
-                    div.style.display = 'none';
-                });
-            }
-        });
-    }
-    
-    // Form submission
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const errors = validateForm();
-            
-            if (errors.length > 0) {
-                e.preventDefault();
-                showValidationResults(errors);
-                
-                // Scroll to first error
-                const firstErrorField = form.querySelector('.error-message[style*="block"]');
-                if (firstErrorField) {
-                    firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                
-                return false;
-            }
-            
-            // Show loading overlay
-            if (loadingOverlay) {
-                loadingOverlay.style.display = 'flex';
-            }
-            
-            // Update submit button
-            const submitBtn = document.getElementById('submitBtn');
-            const submitText = document.getElementById('submitText');
-            if (submitBtn && submitText) {
-                submitBtn.disabled = true;
-                submitText.textContent = 'Procesando...';
-                submitBtn.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Procesando Simulación...';
-            }
-        });
-    }
-    
-    // Initialize tooltips
-    const tooltips = document.querySelectorAll('.help-tooltip');
-    tooltips.forEach(tooltip => {
-        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-            new bootstrap.Tooltip(tooltip, {
-                placement: 'top',
-                trigger: 'hover focus'
-            });
-        }
-    });
-    
-    // Auto-save form data to localStorage (optional)
-    function saveFormData() {
-        const formData = {};
-        inputFields.forEach(input => {
-            if (input && input.value) {
-                formData[input.id] = input.value;
-            }
-        });
-        
-        if (productSelect && productSelect.value) {
-            formData[productSelect.id] = productSelect.value;
-        }
-        
-        try {
-            localStorage.setItem('simulationFormData', JSON.stringify(formData));
-        } catch (e) {
-            console.warn('Could not save form data:', e);
-        }
-    }
-    
-    function loadFormData() {
-        try {
-            const savedData = localStorage.getItem('simulationFormData');
-            if (savedData) {
-                const formData = JSON.parse(savedData);
-                
-                Object.keys(formData).forEach(fieldId => {
-                    const field = document.getElementById(fieldId);
-                    if (field && !field.value) {
-                        field.value = formData[fieldId];
-                    }
-                });
-            }
-        } catch (e) {
-            console.warn('Could not load form data:', e);
-        }
-    }
-    
-    // Auto-save every 30 seconds
-    setInterval(saveFormData, 30000);
-    
-    // Initialize the form
-    loadFormData();
-    initializeForm();
-    
-    // Clear saved data on successful submission
-    window.addEventListener('beforeunload', function() {
-        if (form && form.querySelector('[type="submit"]:disabled')) {
-            localStorage.removeItem('simulationFormData');
-        }
-    });
-});
-</script>
-{% endblock extra_js %}
+<script src="{% static 'js/create-simulation-report.js' %}"></script>
+{% endblock %}

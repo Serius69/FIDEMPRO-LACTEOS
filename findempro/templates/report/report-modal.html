@@ -1,0 +1,304 @@
+{% load static %}
+
+<!-- Report Details Modal -->
+<div class="modal fade" id="reportDetailsModal" tabindex="-1" aria-labelledby="reportDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="modal-title-wrapper">
+                        <h5 class="modal-title" id="reportDetailsModalLabel">
+                            <i class="ri-file-chart-line me-2 text-primary"></i>
+                            <span id="modalReportTitle">Detalles del Reporte</span>
+                        </h5>
+                        <div class="modal-subtitle">
+                            <span id="modalReportType" class="badge bg-primary-subtle text-primary">Simulación</span>
+                            <span id="modalReportDate" class="text-muted ms-2">Creado: --/--/----</span>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="modalPrintBtn">
+                            <i class="ri-printer-line me-1"></i>Imprimir
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" id="modalExportBtn">
+                            <i class="ri-download-line me-1"></i>Exportar
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="modal-loading" id="modalLoading">
+                    <div class="loading-content">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Cargando datos del reporte...</p>
+                    </div>
+                </div>
+                
+                <div class="modal-content-wrapper" id="modalContentWrapper">
+                    <!-- Report Summary Section -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h6 class="section-title">
+                                <i class="ri-information-line text-info me-2"></i>
+                                Resumen del Reporte
+                            </h6>
+                        </div>
+                        <div class="report-summary-grid">
+                            <div class="summary-card">
+                                <div class="summary-icon bg-primary-subtle text-primary">
+                                    <i class="ri-product-hunt-line"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <div class="summary-label">Producto</div>
+                                    <div class="summary-value" id="modalProductName">No disponible</div>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon bg-success-subtle text-success">
+                                    <i class="ri-check-circle-line"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <div class="summary-label">Estado</div>
+                                    <div class="summary-value" id="modalReportStatus">No disponible</div>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon bg-warning-subtle text-warning">
+                                    <i class="ri-time-line"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <div class="summary-label">Última Actualización</div>
+                                    <div class="summary-value" id="modalLastUpdated">No disponible</div>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon bg-info-subtle text-info">
+                                    <i class="ri-bookmark-line"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <div class="summary-label">Versión</div>
+                                    <div class="summary-value" id="modalReportVersion">1.0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics Section -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h6 class="section-title">
+                                <i class="ri-dashboard-line text-success me-2"></i>
+                                Métricas Principales
+                            </h6>
+                        </div>
+                        <div class="metrics-container" id="modalMetricsContainer">
+                            <div class="metrics-loading">
+                                <div class="text-center text-muted py-3">
+                                    <i class="ri-loader-4-line spinning me-2"></i>
+                                    Cargando métricas...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parameters Section -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h6 class="section-title">
+                                <i class="ri-settings-3-line text-warning me-2"></i>
+                                Parámetros de Simulación
+                            </h6>
+                            <button class="btn btn-outline-secondary btn-sm" id="toggleParametersBtn">
+                                <i class="ri-eye-line me-1"></i>
+                                <span>Mostrar Todo</span>
+                            </button>
+                        </div>
+                        <div class="parameters-container" id="modalParametersContainer">
+                            <div class="parameters-loading">
+                                <div class="text-center text-muted py-3">
+                                    <i class="ri-loader-4-line spinning me-2"></i>
+                                    Cargando parámetros...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h6 class="section-title">
+                                <i class="ri-bar-chart-box-line text-info me-2"></i>
+                                Gráficos y Visualizaciones
+                            </h6>
+                            <div class="chart-controls">
+                                <button class="btn btn-outline-primary btn-sm" id="toggleChartsBtn">
+                                    <i class="ri-fullscreen-line me-1"></i>
+                                    Expandir
+                                </button>
+                            </div>
+                        </div>
+                        <div class="charts-container" id="modalChartsContainer">
+                            <div class="charts-loading">
+                                <div class="text-center text-muted py-4">
+                                    <i class="ri-loader-4-line spinning me-2"></i>
+                                    Generando gráficos...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Table Section -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h6 class="section-title">
+                                <i class="ri-table-line text-secondary me-2"></i>
+                                Resultados Detallados
+                            </h6>
+                            <div class="table-controls">
+                                <button class="btn btn-outline-info btn-sm" id="exportTableBtn">
+                                    <i class="ri-file-excel-line me-1"></i>
+                                    Exportar Tabla
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-container" id="modalTableContainer">
+                            <div class="table-loading">
+                                <div class="text-center text-muted py-3">
+                                    <i class="ri-loader-4-line spinning me-2"></i>
+                                    Cargando resultados...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Variables Section -->
+                    <div class="modal-section" id="variablesSection" style="display: none;">
+                        <div class="section-header">
+                            <h6 class="section-title">
+                                <i class="ri-function-line text-purple me-2"></i>
+                                Variables del Producto
+                            </h6>
+                        </div>
+                        <div class="variables-container" id="modalVariablesContainer">
+                            <!-- Variables will be loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Error Section -->
+                    <div class="modal-section error-section" id="modalErrorSection" style="display: none;">
+                        <div class="alert alert-danger">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-error-warning-line me-2"></i>
+                                <div>
+                                    <strong>Error al cargar el reporte</strong>
+                                    <div class="error-message" id="modalErrorMessage">
+                                        No se pudo cargar la información del reporte. Por favor, intente nuevamente.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-outline-danger btn-sm" id="retryLoadBtn">
+                                    <i class="ri-refresh-line me-1"></i>
+                                    Reintentar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <div class="modal-footer-left">
+                    <small class="text-muted" id="modalFooterInfo">
+                        Reporte ID: <span id="modalReportId">--</span>
+                    </small>
+                </div>
+                <div class="modal-footer-right">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="ri-close-line me-1"></i>
+                        Cerrar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="modalViewFullBtn">
+                        <i class="ri-external-link-line me-1"></i>
+                        Ver Completo
+                    </button>
+                    <button type="button" class="btn btn-success" id="modalDownloadBtn">
+                        <i class="ri-download-cloud-line me-1"></i>
+                        Descargar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">
+                    <i class="ri-question-line text-warning me-2"></i>
+                    Confirmar Acción
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-content">
+                    <div class="confirmation-icon">
+                        <i class="ri-alert-line text-warning"></i>
+                    </div>
+                    <div class="confirmation-message" id="confirmationMessage">
+                        ¿Está seguro de que desea realizar esta acción?
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmActionBtn">
+                    <i class="ri-check-line me-1"></i>
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Fullscreen Modal -->
+<div class="modal fade" id="chartFullscreenModal" tabindex="-1" aria-labelledby="chartFullscreenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chartFullscreenModalLabel">
+                    <i class="ri-bar-chart-box-line me-2"></i>
+                    <span id="fullscreenChartTitle">Gráfico en Pantalla Completa</span>
+                </h5>
+                <div class="chart-fullscreen-controls">
+                    <button type="button" class="btn btn-outline-info btn-sm" id="saveChartBtn">
+                        <i class="ri-download-line me-1"></i>
+                        Guardar Imagen
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="fullscreen-chart-container" id="fullscreenChartContainer">
+                    <!-- Chart will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay for Modal -->
+<div class="modal-loading-overlay" id="modalLoadingOverlay" style="display: none;">
+    <div class="loading-content">
+        <div class="loading-spinner-large"></div>
+        <p class="loading-text">Procesando...</p>
+    </div>
+</div>

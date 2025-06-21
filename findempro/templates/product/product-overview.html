@@ -1,425 +1,217 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Descripción del producto{% endblock title %}
+{% block title %}{% if product.name %}{{ product.name }}{% else %}Producto{% endif %} - Descripción{% endblock title %}
+
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product-overview.css' %}">
 {% endblock extra_css %}
+
 {% block content %}
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
-                <div class="page-content">
-                    <div class="container-fluid">
-                        {% block pagetitle %}
-                        {% include "partials/page-title.html" with pagetitle="Producto" title=product.name %}
-                        {% endblock pagetitle %}
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="card mt-n2 mx-n2">
-                                    <div class="bg-warning-subtle">
-                                        <div class="card-body pb-0 px-2">
-                                            <div class="row mb-1">
-                                                <!-- Product Image -->
-                                                <div class="col-lg-3 col-md-4 col-sm-6" style="background-image: url('{{ product.get_photo_url }}'); background-size: cover; background-position: center;">
-                                                </div>
-                                                <!-- Product Details -->
-                                                <div class="col-lg-9 col-md-8 col-sm-6">
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                            <h4 class="card-title fw-bold" style="font-size: 2em;">{{product.name}}</h4>
-                                                            <ul class="list-group list-group-flush">
-                                                                <li class="list-group-item"><i class="ri-building-line align-bottom me-1"></i> {{product.fk_business.name}}</li>
-                                                                <li class="list-group-item">Fecha de Creación: <span class="fw-medium">{{product.date_created}}</span></li>
-                                                                <li class="list-group-item">Fecha actualizada: <span class="fw-medium">{{product.last_updated}}</span></li>
-                                                                {% with days_since_creation=product.date_created|timesince:current_datetime %}
-                                                                    {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
-                                                                        <li class="list-group-item"><span class="badge rounded-pill bg-info">Nuevo</span></li>
-                                                                    {% endif %}
-                                                                {% endwith %}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div class="card">
-                                                        <div class="card-body">
-                                                        <h6 class="mb-3 fw-semibold text-uppercase" style="font-size: 1.5em;">Descripción</h6>
-                                                                <p>{{product.description}}</p>    
-                    
-                                                                <div class="pt-3 border-top border-top-dashed mt-4">
-                                                                    <div class="row">
-                                                                        
-                                                                        <div class="col-lg-3 col-sm-6">
-                                                                            <div>
-                                                                                <p class="mb-2 text-uppercase fw-medium">Fecha de Creación:</p>
-                                                                                <h5 class="fs-15 mb-0">{{ product.date_created|date:"F j, Y, P" }}</h5>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-lg-3 col-sm-6">
-                                                                            <div>
-                                                                                <p class="mb-2 text-uppercase fw-medium">Fecha de actualizacion: </p>
-                                                                                <h5 class="fs-15 mb-0">{{ product.last_updated|date:"F j, Y, P" }}</h5>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-lg-3 col-sm-6">
-                                                                            <div>
-                                                                                <p class="mb-2 text-uppercase fw-medium">Listo para simular:</p>
-                                                                                {% if product.is_ready %}
-                                                                                    <div class="badge bg-success fs-12">Listo</div>
-                                                                                {% else %}
-                                                                                    <div class="badge bg-danger fs-12">No Listo</div>
-                                                                                {% endif %}
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-lg-3 col-sm-6">
-                                                                            <div>
-                                                                                <p class="mb-2 text-uppercase fw-medium">Tipo de producto:</p>
-                                                                                {% if product.type == 1 %}
-                                                                                    <div class="badge bg-warning fs-12">Lacteos</div>
-                                                                                {% else %}
-                                                                                    <div class="badge bg-warning fs-12">Otros</div>
-                                                                                {% endif %}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- Product Tabs -->
-                                            <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
-                                                <li class="nav-item">
-                                                    <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview" role="tab" style="font-size: 1.5em;">Descripción general</a>
+<!-- Main Content -->
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title Section -->
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Producto" title=product.name|default:"Sin nombre" %}
+            {% endblock pagetitle %}
+            
+            <!-- Product Header Section -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="product-header-card">
+                        <div class="product-header-content">
+                            <div class="row mb-1">
+                                <!-- Product Image -->
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="product-image-container" 
+                                         style="background-image: url('{% if product.get_photo_url %}{{ product.get_photo_url }}{% else %}{% static 'images/default-product.png' %}{% endif %}');">
+                                    </div>
+                                </div>
+                                
+                                <!-- Product Details -->
+                                <div class="col-lg-9 col-md-8 col-sm-6">
+                                    <!-- Product Info Card -->
+                                    <div class="product-info-card">
+                                        <div class="product-basic-info">
+                                            <h4 class="product-title">{% if product.name %}{{ product.name }}{% else %}Producto sin nombre{% endif %}</h4>
+                                            <ul class="product-meta-list">
+                                                <li class="meta-item">
+                                                    <i class="ri-building-line me-1"></i>
+                                                    {% if product.fk_business.name %}{{ product.fk_business.name }}{% else %}Sin negocio{% endif %}
                                                 </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable" role="tab" style="font-size: 1.5em;">Variables</a>
+                                                <li class="meta-item">
+                                                    Fecha de Creación: 
+                                                    <span class="meta-value">
+                                                        {% if product.date_created %}{{ product.date_created }}{% else %}No disponible{% endif %}
+                                                    </span>
                                                 </li>
+                                                <li class="meta-item">
+                                                    Fecha actualizada: 
+                                                    <span class="meta-value">
+                                                        {% if product.last_updated %}{{ product.last_updated }}{% else %}No disponible{% endif %}
+                                                    </span>
+                                                </li>
+                                                {% if product.date_created %}
+                                                    {% with days_since_creation=product.date_created|timesince:current_datetime %}
+                                                        {% if "day" in days_since_creation and days_since_creation|add:0 <= 5 %}
+                                                            <li class="meta-item">
+                                                                <span class="badge rounded-pill bg-info">Nuevo</span>
+                                                            </li>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                {% endif %}
                                             </ul>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Product Description Card -->
+                                    <div class="product-description-card">
+                                        <div class="description-content">
+                                            <h6 class="description-title">Descripción</h6>
+                                            <p class="description-text">
+                                                {% if product.description %}{{ product.description }}{% else %}Sin descripción disponible{% endif %}
+                                            </p>
+                                            
+                                            <div class="product-metadata">
+                                                <div class="row">
+                                                    <div class="col-lg-3 col-sm-6">
+                                                        <div class="metadata-item">
+                                                            <p class="metadata-label">Fecha de Creación:</p>
+                                                            <h5 class="metadata-value">
+                                                                {% if product.date_created %}{{ product.date_created|date:"F j, Y, P" }}{% else %}No disponible{% endif %}
+                                                            </h5>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-3 col-sm-6">
+                                                        <div class="metadata-item">
+                                                            <p class="metadata-label">Fecha de actualización:</p>
+                                                            <h5 class="metadata-value">
+                                                                {% if product.last_updated %}{{ product.last_updated|date:"F j, Y, P" }}{% else %}No disponible{% endif %}
+                                                            </h5>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-3 col-sm-6">
+                                                        <div class="metadata-item">
+                                                            <p class="metadata-label">Listo para simular:</p>
+                                                            {% if product.is_ready %}
+                                                                <div class="badge bg-success fs-12">Listo</div>
+                                                            {% else %}
+                                                                <div class="badge bg-danger fs-12">No Listo</div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-3 col-sm-6">
+                                                        <div class="metadata-item">
+                                                            <p class="metadata-label">Tipo de producto:</p>
+                                                            {% if product.type == 1 %}
+                                                                <div class="badge bg-warning fs-12">Lácteos</div>
+                                                            {% elif product.type == 2 %}
+                                                                <div class="badge bg-info fs-12">Bebidas</div>
+                                                            {% elif product.type == 3 %}
+                                                                <div class="badge bg-success fs-12">Alimentos</div>
+                                                            {% else %}
+                                                                <div class="badge bg-secondary fs-12">Otros</div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <!-- Product Navigation Tabs -->
+                            <div class="product-tabs">
+                                <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#product-overview" role="tab">
+                                            <i class="ri-eye-line me-2"></i>Descripción general
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#product-variable" role="tab">
+                                            <i class="ri-bubble-chart-line me-2"></i>Variables
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <!-- end row -->
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="tab-content text-muted">
-                                    <div class="tab-pane fade show active" id="product-overview" role="tabpanel">
-                                        <div class="row">
-                                            <div class="col-xl-9 col-lg-8">
-                                                <div class="card">
-                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1" style="font-size: 2em;">Areas</h4>
-                                                        <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-danger btn-sm" data-bs-toggle="modal" 
-                                                            data-bs-target="#addOrUpdateArea"><i class="ri-share-line me-1 align-bottom"></i> Añadir área</button>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        {% for area in areas %}
-                                                            <div class="col-md-2">
-                                                                <div class="card">
-                                                                    <img src="{{ area.get_photo_url }}" class="card-img-top img-fluid" style="height: 220px;" alt="Area Image">
-                                                                    <div class="card-body">
-                                                                        <h5 class="card-title">{{ area.name }}</h5>
-                                                                        <p class="card-text">{{ area.description }}</p>
-                                                                    </div>
-                                                                    <div class="card-footer border-top-dashed">
-                                                                        <div class="row">
-                                                                            <div class="col-md-6">
-                                                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                                                                    <div>
-                                                                                        <i class="ri-function-line align-bottom me-1"></i>
-                                                                                        <span class="job-location">{{area.fk_area_equations.count}}</span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="col-md-6 justify-content-end d-flex">
-                                                                                <div class="dropdown">
-                                                                                    <button class="btn btn-link text-muted p-1 mt-n2 py-0 text-decoration-none fs-15" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                                                                        <i data-feather="more-horizontal" class="icon-sm"></i>
-                                                                                    </button>
-                                                                                    <div class="dropdown-menu dropdown-menu-end">
-                                                                                        <a class="dropdown-item" href="{% url 'product:area.overview' area.id %}">
-                                                                                            <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                                                                            Vista
-                                                                                        </a>
-                                                                                        <a href="#" class="dropdown-item edit-area" data-bs-toggle="modal"
-                                                                                            data-bs-target="#addOrUpdateArea" data-variable-id="{{ area.id }}"
-                                                                                            onclick="loadAreaDetails('{{ area.id }}'); return false;">
-                                                                                            <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                                                                            Editar
-                                                                                        </a>
-                                                                                        <div class="dropdown-divider"></div>
-                                                                                        <a id="delete-area-link" class="dropdown-item delete-area" 
-                                                                                            data-bs-toggle="modal" data-bs-target="#removeAreaModal" 
-                                                                                            data-area-id="{{ area.id }}">
-                                                                                            <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                                                                            Eliminar
-                                                                                        </a>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        {% empty %}
-                                                            <div class="col text-center py-4">
-                                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                <h5 class="mt-2">Lo sentimos, no hay ningún área registrada en la base de datos</h5>
-                                                                <p class="text-muted mb-0">Ytienes que "agregar área".</p>
-                                                            </div>
-                                                        {% endfor %}
-
-                                                    </div>
-                                                </div>
-                                                <div class="card">
-                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1" style="font-size: 2em;">Informes</h4>
-                                                    </div>
-                                                    
-                                                    <div class="card-body">
-                                                        <div class="text-muted">
-                                                            <div class="pt-3 border-top border-top-dashed mt-4"> 
-                                                                <div class="row g-3">
-                                                                    {% for report in reports %}
-                                                                    <div class="col-xxl-4 col-lg-6">
-                                                                        <div class="border rounded border-dashed p-2">
-                                                                            <div class="d-flex align-items-center">
-                                                                                <div class="flex-shrink-0 me-3">
-                                                                                    <div class="avatar-sm">
-                                                                                        <div class="avatar-title bg-light text-secondary rounded fs-24">
-                                                                                            <i class="ri-folder-zip-line"></i>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="flex-grow-1 overflow-hidden">
-                                                                                    <h5 class="fs-13 mb-1"><a href="#" class="text-body text-truncate d-block">{{report.name}}</a></h5>
-                                                                                    <div>{{report.date_created}}</div>
-                                                                                </div>
-                                                                                <div class="flex-shrink-0 ms-2">
-                                                                                    <div class="d-flex gap-1">
-                                                                                        <button type="button" class="btn btn-icon text-muted btn-sm fs-18"><i class="ri-download-2-line"></i></button>
-                                                                                        <div class="dropdown">
-                                                                                            <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                                <i class="ri-more-fill"></i>
-                                                                                            </button>
-                                                                                            <ul class="dropdown-menu">
-                                                                                                <a href="{% url 'generar_reporte_pdf' report_id=report.id %}">Descargar PDF</a>                                                                                                
-                                                                                            </ul>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <!-- end col -->
-                                                                    {% empty %}
-                                                                        <div class="col text-center py-4">
-                                                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                                            <h5 class="mt-2">Lo siento, no hay ningun reporte registrado en la base de datos</h5>
-                                                                        </div>
-                                                                    {% endfor %}
-                                                                </div>
-                                                                <!-- end row -->
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- end card body -->
-                                                </div>
-                                                <!-- end card -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Tabs Section -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="tab-content text-muted">
+                        <!-- Overview Tab -->
+                        <div class="tab-pane fade show active" id="product-overview" role="tabpanel">
+                            <div class="row">
+                                <!-- Areas and Reports Section -->
+                                <div class="col-xl-9 col-lg-8">
+                                    <!-- Areas Section -->
+                                    <div class="areas-section">
+                                        <div class="section-header">
+                                            <h4 class="section-title">
+                                                <i class="ri-map-pin-line me-2"></i>Áreas
+                                            </h4>
+                                            <div class="section-actions">
+                                                <button type="button" class="btn btn-soft-danger btn-sm" 
+                                                        data-bs-toggle="modal" data-bs-target="#addOrUpdateArea">
+                                                    <i class="ri-share-line me-1 align-bottom"></i>Añadir área
+                                                </button>
                                             </div>
-                                            <!-- ene col -->
-                                            <div class="col-xl-3 col-lg-6">  
-                                                <!-- end card -->
-                                                <div class="card">
-                                                    <div class="card-header align-items-center d-flex border-bottom-dashed">
-                                                        <h4 class="card-title mb-0 flex-grow-1" style="font-size: 2em;">Simulaciones</h4>
-                                                        <div class="flex-shrink-0">
-                                                            <button type="button" class="btn btn-soft-info btn-sm" 
-                                                            href=><i class="ri-upload-2-fill me-1 align-bottom"></i> Nueva simulación</button>
+                                        </div>
+                                        
+                                        <div class="areas-grid">
+                                            {% for area in areas %}
+                                            <div class="area-card">
+                                                <div class="area-image" 
+                                                     style="background-image: url('{% if area.get_photo_url %}{{ area.get_photo_url }}{% else %}{% static 'images/default-area.png' %}{% endif %}');">
+                                                </div>
+                                                <div class="area-content">
+                                                    <h5 class="area-name">{% if area.name %}{{ area.name }}{% else %}Área sin nombre{% endif %}</h5>
+                                                    <p class="area-description">{% if area.description %}{{ area.description }}{% else %}Sin descripción{% endif %}</p>
+                                                </div>
+                                                <div class="area-footer">
+                                                    <div class="area-stats">
+                                                        <div class="stat-item">
+                                                            <i class="ri-function-line me-1"></i>
+                                                            <span class="stat-value">{% if area.fk_area_equations.count %}{{ area.fk_area_equations.count }}{% else %}0{% endif %}</span>
                                                         </div>
                                                     </div>
-                                                    {% for simulation in simulations %}
-                                                        <div class="card mb-3">
-                                                            <div class="card-body">
-                                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                                    <h5 class="mb-0">{{simulation.date_created}}</h5>
-                                                                    <div class="d-flex gap-2">
-                                                                        <button type="button" href="" class="btn btn-sm btn-outline-secondary">
-
-                                                                            
-                                                                            <i class="ri-download-2-line"></i> Generar Reporte
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                                <ul class="list-group list-group-flush">
-                                                                    {% for demand in demands %}
-                                                                        {% if demand.fk_simulation_id == simulation.id %}
-                                                                            <li class="list-group-item">
-                                                                                {% if not demand.is_predicted %}
-                                                                                    Demanda Inicial Historica: 
-                                                                                {% else %}
-                                                                                    Demanda Simulada: 
-                                                                                {% endif %}
-                                                                                {{demand.quantity}}
-                                                                            </li>
-                                                                            <li class="list-group-item">
-                                                                                Desviación estándar de la demanda: 
-                                                                                {{ simulation.fk_fdp.std_dev_param|floatformat:2 }} * {{ demand.quantity|floatformat:2 }}
-                                                                            </li>
-                                                                        {% endif %}                                                                        
-                                                                    {% endfor %}
-                                                                    
-                                                                    <li class="list-group-item">
-                                                                        Unidad de tiempo: 
-                                                                        {% if simulation.unit_time == "days" %}
-                                                                            días
-                                                                        {% else %}
-                                                                            {{simulation.unit_time}}
-                                                                        {% endif %}
-                                                                    </li>
-                                                                </ul>
-                                                                <a href="{% url 'simulate:simulate.result' simulation.id %}" class="btn btn-success">
-                                                                    Ver más
+                                                    <div class="area-actions">
+                                                        <div class="dropdown">
+                                                            <button class="area-menu-btn" data-bs-toggle="dropdown" 
+                                                                    aria-haspopup="true" aria-expanded="false">
+                                                                <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                            </button>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="{% url 'product:area.overview' area.id %}">
+                                                                    <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                                    Vista
+                                                                </a>
+                                                                <a href="{% url 'product:area.edit' area.id %}" class="dropdown-item edit-area">
+                                                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                    Editar
+                                                                </a>
+                                                                <div class="dropdown-divider"></div>
+                                                                <a class="dropdown-item delete-area" 
+                                                                   onclick="deleteArea('{{ area.id }}'); return false;">
+                                                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                    Eliminar
                                                                 </a>
                                                             </div>
                                                         </div>
-                                                    {% empty %}
-                                                        <div class="text-center py-4">
-                                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                            <h5 class="mt-2">Lo sentimos, no hay ningúna simulacion del producto: {{product.name}}</h5>
-                                                        </div>
-                                                    {% endfor %}
+                                                    </div>
                                                 </div>
-                                                <!-- end card -->
                                             </div>
-                                            <!-- end col -->
-                                        </div>
-                                        <!-- end row -->
-                                    </div>
-                                    <!-- end tab pane -->
-                                    <div class="tab-pane fade" id="product-variable" role="tabpanel">
-                                        <div class="team-list list-view-filter">
-                                            <div class="row">
-                                                {% for variable in variables_product %}
-                                                    <div class="col-lg-2 col-md-6">
-                                                        <div class="card team-box">
-                                                            <div class="card-body px-4">
-                                                                <div class="row align-items-center team-row">
-                                                                    <div class="col-lg-12" style="background-image: url('{{ variable.get_photo_url }}'); background-size: cover; background-position: center; height: 200px;">
-                                                                    </div>
-                                                                    <div class="col-lg-12 team-settings mt-3">
-                                                                        <div class="team-content">
-                                                                            <a href="#" class="d-block"><h5 class="fs-16 mb-1">{{variable.name}}</h5></a>
-                                                                            <p class="text-muted mb-0">{{variable.description}}</p>
-                                                                        </div>
-                                                                        <div class="dropdown">
-                                                                            <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                <i class="ri-more-fill fs-17"></i>
-                                                                            </a>
-                                                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                                                <li><a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}"><i class="ri-eye-fill text-muted me-2 align-bottom"></i>View</a></li>
-                                                                                <li><a class="dropdown-item" href="{% url 'variable:variable.edit' variable.id %}"><i class="ri-delete-bin-5-fill text-muted me-2 align-bottom"></i>Edit</a></li>
-                                                                            </ul>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                {% empty %}
-                                                    <div class="col text-center py-4">
-                                                        <h5 class="mt-2">No variables found</h5>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        <!-- end team list -->
-                                        <div class="align-items-center mt-2 row text-center text-sm-start">
-                                            <div class="col-sm">
-                                              <div class="text-muted"
-                                                >Mostrar
-                                                <span class="fw-semibold">{{ simulations.number }}</span> of
-                                                <span class="fw-semibold"
-                                                  >{{ simulations.paginator.num_pages }}</span
-                                                >
-                                                Results
-                                              </div>
-                                            </div>
-                                            <div class="col-sm-auto">
-                                                <ul class="pagination pagination-separated pagination-sm justify-content-center justify-content-sm-start mb-0">
-                                                    {% if variables_product.has_previous %}
-                                                        <li class="page-item">
-                                                            <a href="javascript:void(0);" class="page-link pagination-link" data-page="{{ variables_product.previous_page_number }}">←</a>
-                                                        </li>
-                                                    {% endif %}
-                                                
-                                                    {% for i in variables_product.paginator.page_range %}
-                                                        <li class="page-item {% if i == variables_product.number %}active{% endif %}">
-                                                            <a href="javascript:void(0);" class="page-link pagination-link" data-page="{{ i }}">{{ i }}</a>
-                                                        </li>
-                                                    {% endfor %}
-                                                
-                                                    {% if variables_product.has_next %}
-                                                        <li class="page-item">
-                                                            <a href="javascript:void(0);" class="page-link pagination-link" data-page="{{ variables_product.next_page_number }}">→</a>
-                                                        </li>
-                                                    {% endif %}
-                                                </ul>
-                                            </div>            
-                                          </div>
-                                          <!-- end row -->
-                                    </div>
-                                    <!-- end tab pane -->
-                                    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-                                    <script>
-                                        $(document).ready(function() {
-                                            $('.pagination-link').on('click', function() {
-                                                var page = $(this).data('page');
-                                                $.ajax({
-                                                    url: window.location.href,
-                                                    type: 'GET',
-                                                    data: { page: page },
-                                                    success: function(data) {
-                                                        // Actualiza el contenido de la pestaña con la respuesta AJAX
-                                                        $('.tab-pane#product-variable .team-list').html($(data).find('.tab-pane#product-variable .team-list').html());
-                                                    },
-                                                    error: function(error) {
-                                                        console.error('Error al realizar la solicitud AJAX:', error);
-                                                    }
-                                                });
-                                            });
-                                        });
-                                    </script>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- container-fluid -->
-                </div>
-                <!-- End Page-content -->
-
-            {% block footer %}
-            {% include "partials/footer.html" %}
-            {% endblock footer %}
-            </div>
-            <!-- end main content-->
-{% endblock content %}
-
-{% block extra_content %}
-{% block modals %} 
-{% include "partials/modals.html" %}
-{% include "product/product-modal.html" %}
-{% endblock modals %}
-
-{% endblock extra_content %}
-    
-{% block extra_js %}
-    <script src="{% static 'js/pages/variable-overview.init.js'%}"></script>
-    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
-    <script src="{% static 'js/edit-add.js' %}"></script>
-    <script src="{% static 'js/delete.js' %}"></script>
-{% endblock extra_js %}
+                                            {% empty %}
+                                            <div class="empty-state">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                                           colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px">
+                                                </lord-icon>
+                                                <h5 class="empty-title">No hay ningún área registrada</h5>
+                                                <p class="empty-description">Debe agregar un área para comenzar.</p>
