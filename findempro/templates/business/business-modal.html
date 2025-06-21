@@ -1,144 +1,236 @@
-<!-- Modal optimizado para agregar/actualizar negocio -->
+<!-- Modal para agregar/actualizar negocio -->
 <div class="modal fade" id="addOrUpdateBusiness" tabindex="-1" aria-labelledby="addOrUpdateBusinessLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold" id="addOrUpdateBusinessLabel">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addOrUpdateBusinessLabel">
                     <i class="ri-store-2-line me-2"></i>Agregar Nuevo Negocio
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
+            
             <div class="modal-body">
-                <!-- Tutorial flotante para el modal -->
+                <!-- Tutorial flotante -->
                 <div class="alert alert-info alert-dismissible fade show d-none" id="modalTutorial" role="alert">
                     <strong><i class="ri-information-line me-2"></i>Consejo:</strong> 
                     Completa todos los campos para registrar tu negocio. La imagen es opcional pero recomendada.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <form class="needs-validation" id="businessForm" data-model="business" enctype="multipart/form-data" novalidate>
+                <form class="needs-validation business-form" id="businessForm" method="POST" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="business_id" id="business_id" value="">
                     
-                    <div class="row g-3">
+                    <div class="form-sections">
                         <!-- Sección de imagen -->
-                        <div class="col-12">
-                            <div class="text-center">
-                                <div class="mb-3">
-                                    <label for="image_src" class="form-label fw-medium">
-                                        <i class="ri-image-line me-1"></i>Imagen del Negocio
-                                    </label>
-                                    <div class="position-relative">
-                                        <img id="logo-img" 
-                                             class="img-thumbnail mb-3" 
-                                             alt="Vista previa" 
-                                             style="display: none; max-height: 200px; max-width: 100%;">
-                                        <div class="input-group">
-                                            <input type="file" 
-                                                   class="form-control" 
-                                                   id="image_src" 
-                                                   name="image_src" 
-                                                   accept="image/png, image/jpeg, image/jpg, image/webp">
-                                            <button class="btn btn-outline-secondary" type="button" id="clearImage">
-                                                <i class="ri-delete-bin-line"></i>
-                                            </button>
-                                        </div>
-                                        <div class="form-text">
-                                            Formatos permitidos: PNG, JPG, WEBP. Tamaño máximo: 5MB
-                                        </div>
+                        <div class="image-section">
+                            <label for="{{ form.image_src.id_for_label }}" class="form-label">
+                                <i class="ri-image-line me-1"></i>{{ form.image_src.label }}
+                            </label>
+                            <div class="image-upload-container">
+                                <div class="image-preview">
+                                    <img id="logo-img" alt="Vista previa" />
+                                    <div class="image-placeholder">
+                                        <i class="ri-image-add-line"></i>
+                                        <span>Subir imagen</span>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Nombre del negocio -->
-                        <div class="col-md-6">
-                            <label for="name" class="form-label fw-medium">
-                                <i class="ri-store-line me-1"></i>Nombre del Negocio <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="name" 
-                                   name="name" 
-                                   placeholder="Ej: Mi Tienda Favorita" 
-                                   required
-                                   minlength="2"
-                                   maxlength="255">
-                            <div class="invalid-feedback">
-                                Por favor ingresa un nombre válido (mínimo 2 caracteres).
-                            </div>
-                        </div>
-
-                        <!-- Tipo de negocio -->
-                        <div class="col-md-6">
-                            <label for="type" class="form-label fw-medium">
-                                <i class="ri-apps-line me-1"></i>Tipo de Negocio <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select" id="type" name="type" required>
-                                <option value="" disabled selected>Selecciona un tipo</option>
-                                <option value="1">🥛 Lácteos</option>
-                                <option value="2">🍞 Panadería</option>
-                                <option value="3">🥩 Carnicería</option>
-                                <option value="4">🥬 Verdulería</option>
-                                <option value="5">📦 Otros</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona un tipo de negocio.
-                            </div>
-                        </div>
-
-                        <!-- Ubicación -->
-                        <div class="col-12">
-                            <label for="location" class="form-label fw-medium">
-                                <i class="ri-map-pin-line me-1"></i>Ubicación <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select" id="location" name="location" required>
-                                <option value="" disabled selected>Selecciona una ciudad</option>
-                                <optgroup label="Ciudades principales">
-                                    <option value="La Paz">La Paz</option>
-                                    <option value="Santa Cruz">Santa Cruz</option>
-                                    <option value="Cochabamba">Cochabamba</option>
-                                </optgroup>
-                                <optgroup label="Otras ciudades">
-                                    <option value="Sucre">Sucre</option>
-                                    <option value="Oruro">Oruro</option>
-                                    <option value="Potosí">Potosí</option>
-                                    <option value="Tarija">Tarija</option>
-                                    <option value="Beni">Beni</option>
-                                    <option value="Pando">Pando</option>
-                                </optgroup>
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona una ubicación para el negocio.
-                            </div>
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="col-12">
-                            <label for="description" class="form-label fw-medium">
-                                <i class="ri-file-text-line me-1"></i>Descripción <span class="text-danger">*</span>
-                            </label>
-                            <textarea class="form-control" 
-                                      id="description" 
-                                      name="description" 
-                                      rows="4" 
-                                      placeholder="Describe tu negocio, productos principales, servicios que ofreces..." 
-                                      required
-                                      minlength="10"
-                                      maxlength="1000"></textarea>
-                            <div class="d-flex justify-content-between">
-                                <div class="invalid-feedback">
-                                    La descripción debe tener al menos 10 caracteres.
+                                <div class="upload-controls">
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="id_image_src" 
+                                           name="image_src" 
+                                           accept="image/png, image/jpeg, image/jpg, image/webp">
+                                    <button class="btn btn-outline-secondary" type="button" id="clearImage">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
                                 </div>
-                                <small class="text-muted">
-                                    <span id="descriptionCount">0</span>/1000 caracteres
-                                </small>
+                                <div class="upload-info">
+                                    Formatos permitidos: PNG, JPG, WEBP. Tamaño máximo: 5MB
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <!-- Nombre del negocio -->
+                            <div class="form-group">
+                                <label for="id_name" class="form-label required">
+                                    <i class="ri-store-line me-1"></i>Nombre del Negocio
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="id_name" 
+                                       name="name" 
+                                       placeholder="Ej: Mi Tienda Favorita" 
+                                       required
+                                       minlength="2"
+                                       maxlength="255">
+                                <div class="invalid-feedback">
+                                    Por favor ingresa un nombre válido (mínimo 2 caracteres).
+                                </div>
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Tipo de negocio -->
+                            <div class="form-group">
+                                <label for="id_type" class="form-label required">
+                                    <i class="ri-apps-line me-1"></i>Tipo de Negocio
+                                </label>
+                                <select class="form-select" id="id_type" name="type" required>
+                                    <option value="" disabled selected>Selecciona un tipo</option>
+                                    <option value="1">🥛 Lácteos</option>
+                                    <option value="2">🍞 Panadería</option>
+                                    <option value="3">🥩 Carnicería</option>
+                                    <option value="4">🥬 Verdulería</option>
+                                    <option value="5">📦 Otros</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Selecciona un tipo de negocio.
+                                </div>
+                                {% if form.type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Ubicación -->
+                            <div class="form-group full-width">
+                                <label for="id_location" class="form-label required">
+                                    <i class="ri-map-pin-line me-1"></i>Ubicación
+                                </label>
+                                <select class="form-select" id="id_location" name="location" required>
+                                    <option value="" disabled selected>Selecciona una ciudad</option>
+                                    <optgroup label="Ciudades principales">
+                                        <option value="La Paz">La Paz</option>
+                                        <option value="Santa Cruz">Santa Cruz</option>
+                                        <option value="Cochabamba">Cochabamba</option>
+                                    </optgroup>
+                                    <optgroup label="Otras ciudades">
+                                        <option value="Sucre">Sucre</option>
+                                        <option value="Oruro">Oruro</option>
+                                        <option value="Potosí">Potosí</option>
+                                        <option value="Tarija">Tarija</option>
+                                        <option value="Beni">Beni</option>
+                                        <option value="Pando">Pando</option>
+                                    </optgroup>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Selecciona una ubicación para el negocio.
+                                </div>
+                                {% if form.location.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.location.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="form-group full-width">
+                                <label for="id_description" class="form-label required">
+                                    <i class="ri-file-text-line me-1"></i>Descripción
+                                </label>
+                                <textarea class="form-control" 
+                                          id="id_description" 
+                                          name="description" 
+                                          rows="4" 
+                                          placeholder="Describe tu negocio, productos principales, servicios que ofreces..." 
+                                          required
+                                          minlength="10"
+                                          maxlength="1000"></textarea>
+                                <div class="form-footer">
+                                    <div class="invalid-feedback">
+                                        La descripción debe tener al menos 10 caracteres.
+                                    </div>
+                                    <div class="character-count">
+                                        <span id="descriptionCount">0</span>/1000 caracteres
+                                    </div>
+                                </div>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.description.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div><div class="invalid-feedback">
+                                    Por favor ingresa un nombre válido (mínimo 2 caracteres).
+                                </div>
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Tipo de negocio -->
+                            <div class="form-group">
+                                <label for="{{ form.type.id_for_label }}" class="form-label required">
+                                    <i class="ri-apps-line me-1"></i>{{ form.type.label }}
+                                </label>
+                                <select class="form-select" id="{{ form.type.id_for_label }}" name="{{ form.type.name }}" required>
+                                    <option value="" disabled selected>Selecciona un tipo</option>
+                                    {% for value, display in form.type.field.choices %}
+                                        {% if value %}
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Selecciona un tipo de negocio.
+                                </div>
+                                {% if form.type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Ubicación -->
+                            <div class="form-group full-width">
+                                <label for="{{ form.location.id_for_label }}" class="form-label required">
+                                    <i class="ri-map-pin-line me-1"></i>{{ form.location.label }}
+                                </label>
+                                {{ form.location }}
+                                <div class="invalid-feedback">
+                                    Selecciona una ubicación para el negocio.
+                                </div>
+                                {% if form.location.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.location.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="form-group full-width">
+                                <label for="{{ form.description.id_for_label }}" class="form-label required">
+                                    <i class="ri-file-text-line me-1"></i>{{ form.description.label }}
+                                </label>
+                                {{ form.description }}
+                                <div class="form-footer">
+                                    <div class="invalid-feedback">
+                                        La descripción debe tener al menos 10 caracteres.
+                                    </div>
+                                    <div class="character-count">
+                                        <span id="descriptionCount">0</span>/1000 caracteres
+                                    </div>
+                                </div>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.description.errors.0 }}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer bg-light">
+            
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="ri-close-line me-1"></i>Cancelar
                 </button>
@@ -151,37 +243,46 @@
     </div>
 </div>
 
-<!-- Modal optimizado de confirmación para eliminar -->
+<!-- Modal de confirmación para eliminar -->
 <div class="modal fade" id="removeBusinessModal" tabindex="-1" aria-labelledby="removeBusinessModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border-0">
+            <div class="modal-header">
                 <h5 class="modal-title" id="removeBusinessModalLabel">Confirmar Eliminación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body text-center py-4">
-                <div class="mb-4">
-                    <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" 
-                               trigger="loop" 
-                               colors="primary:#f7b84b,secondary:#f06548" 
-                               style="width: 100px; height: 100px">
-                    </lord-icon>
+            
+            <div class="modal-body">
+                <div class="confirmation-content">
+                    <div class="confirmation-icon">
+                        <lord-icon 
+                            src="https://cdn.lordicon.com/gsqxdxog.json" 
+                            trigger="loop" 
+                            colors="primary:#f7b84b,secondary:#f06548" 
+                            style="width: 100px; height: 100px">
+                        </lord-icon>
+                    </div>
+                    
+                    <div class="confirmation-text">
+                        <h4>¿Estás seguro?</h4>
+                        <p class="warning-text">
+                            Esta acción eliminará permanentemente el negocio y todos sus productos asociados. 
+                            <strong>Esta acción no se puede deshacer.</strong>
+                        </p>
+                    </div>
                 </div>
-                <h4 class="mb-3">¿Estás seguro?</h4>
-                <p class="text-muted mb-4">
-                    Esta acción eliminará permanentemente el negocio y todos sus productos asociados. 
-                    <strong>Esta acción no se puede deshacer.</strong>
-                </p>
-                <form id="deleteBusinessForm" method="POST">
+                
+                <form id="deleteBusinessForm" method="POST" action="">
                     {% csrf_token %}
-                    <input type="hidden" id="delete-business-id" name="delete_business_id" value="">
+                    <input type="hidden" id="delete-business-id" name="business_id" value="">
                 </form>
             </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                     No, cancelar
                 </button>
-                <button type="submit" form="deleteBusinessForm" class="btn btn-danger px-4" id="confirmDeleteBtn">
+                <button type="submit" form="deleteBusinessForm" class="btn btn-danger" id="confirmDeleteBtn">
                     <i class="ri-delete-bin-line me-1"></i>Sí, eliminar
                 </button>
             </div>
@@ -189,329 +290,7 @@
     </div>
 </div>
 
-<!-- Scripts optimizados -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Referencias a elementos
-    const businessForm = document.getElementById('businessForm');
-    const businessModal = new bootstrap.Modal(document.getElementById('addOrUpdateBusiness'));
-    const deleteBusinessForm = document.getElementById('deleteBusinessForm');
-    const imageInput = document.getElementById('image_src');
-    const logoImg = document.getElementById('logo-img');
-    const clearImageBtn = document.getElementById('clearImage');
-    const descriptionTextarea = document.getElementById('description');
-    const descriptionCount = document.getElementById('descriptionCount');
-    const modalTutorial = document.getElementById('modalTutorial');
-
-    // Mostrar tutorial la primera vez
-    const businessModalEl = document.getElementById('addOrUpdateBusiness');
-    businessModalEl.addEventListener('shown.bs.modal', function() {
-        if (!localStorage.getItem('businessModalTutorialShown')) {
-            modalTutorial.classList.remove('d-none');
-            localStorage.setItem('businessModalTutorialShown', 'true');
-        }
-    });
-
-    // Contador de caracteres para descripción
-    descriptionTextarea.addEventListener('input', function() {
-        const count = this.value.length;
-        descriptionCount.textContent = count;
-        
-        if (count > 900) {
-            descriptionCount.classList.add('text-warning');
-        } else {
-            descriptionCount.classList.remove('text-warning');
-        }
-    });
-
-    // Previsualización de imagen con validación
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            // Validar tamaño (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('error', 'La imagen no debe superar los 5MB');
-                this.value = '';
-                return;
-            }
-
-            // Validar tipo
-            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-            if (!validTypes.includes(file.type)) {
-                showToast('error', 'Formato de imagen no válido');
-                this.value = '';
-                return;
-            }
-
-            // Mostrar preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                logoImg.src = e.target.result;
-                logoImg.style.display = 'block';
-                clearImageBtn.style.display = 'inline-block';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // Limpiar imagen
-    clearImageBtn.addEventListener('click', function() {
-        imageInput.value = '';
-        logoImg.style.display = 'none';
-        logoImg.src = '';
-        this.style.display = 'none';
-    });
-
-    // Validación Bootstrap personalizada
-    businessForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (businessForm.checkValidity()) {
-            handleFormSubmit();
-        } else {
-            // Mostrar errores de validación
-            Array.from(businessForm.elements).forEach(field => {
-                if (!field.checkValidity()) {
-                    field.classList.add('is-invalid');
-                }
-            });
-        }
-
-        businessForm.classList.add('was-validated');
-    });
-
-    // Manejar envío del formulario
-    async function handleFormSubmit() {
-        const submitBtn = document.getElementById('submitBtn');
-        const submitBtnText = document.getElementById('submitBtnText');
-        const businessId = document.getElementById('business_id').value;
-        
-        // Deshabilitar botón y mostrar loading
-        submitBtn.disabled = true;
-        submitBtnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
-        
-        try {
-            const formData = new FormData(businessForm);
-            const url = businessId 
-                ? `{% url 'business:business.update' 0 %}`.replace('0', businessId) 
-                : `{% url 'business:business.create' %}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                showToast('success', data.message);
-                businessModal.hide();
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                showToast('error', data.message || 'Error al guardar');
-                displayFormErrors(data.errors);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('error', 'Error de conexión. Por favor, intenta nuevamente.');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtnText.textContent = businessId ? 'Actualizar Negocio' : 'Guardar Negocio';
-        }
-    }
-
-    // Manejar eliminación con confirmación
-    deleteBusinessForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const businessId = document.getElementById('delete-business-id').value;
-        const deleteBtn = document.getElementById('confirmDeleteBtn');
-        
-        deleteBtn.disabled = true;
-        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Eliminando...';
-        
-        try {
-            const response = await fetch(`{% url 'business:business.delete' 0 %}`.replace('0', businessId), {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                showToast('success', data.message || 'Negocio eliminado exitosamente');
-                bootstrap.Modal.getInstance(document.getElementById('removeBusinessModal')).hide();
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                showToast('error', data.message || 'Error al eliminar');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('error', 'Error al eliminar el negocio');
-        } finally {
-            deleteBtn.disabled = false;
-            deleteBtn.innerHTML = '<i class="ri-delete-bin-line me-1"></i>Sí, eliminar';
-        }
-    });
-
-    // Limpiar validación al cambiar campos
-    businessForm.addEventListener('input', function(e) {
-        if (e.target.classList.contains('is-invalid')) {
-            e.target.classList.remove('is-invalid');
-        }
-    });
-
-    // Reset del formulario cuando se cierra el modal
-    businessModalEl.addEventListener('hidden.bs.modal', function() {
-        businessForm.classList.remove('was-validated');
-        businessForm.reset();
-        logoImg.style.display = 'none';
-        clearImageBtn.style.display = 'none';
-        descriptionCount.textContent = '0';
-        clearFormErrors();
-    });
-});
-
-// Funciones auxiliares
-function showToast(type, message) {
-    // Implementación de notificaciones toast
-    const toastHtml = `
-        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
-    
-    // Crear container si no existe
-    let toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-        document.body.appendChild(toastContainer);
-    }
-    
-    const toastElement = document.createElement('div');
-    toastElement.innerHTML = toastHtml;
-    toastContainer.appendChild(toastElement.firstElementChild);
-    
-    const toast = new bootstrap.Toast(toastContainer.lastElementChild);
-    toast.show();
-}
-
-function displayFormErrors(errors) {
-    if (!errors) return;
-    
-    clearFormErrors();
-    
-    for (const [field, messages] of Object.entries(errors)) {
-        const fieldElement = document.getElementById(field);
-        if (fieldElement) {
-            fieldElement.classList.add('is-invalid');
-            const feedback = fieldElement.nextElementSibling;
-            if (feedback && feedback.classList.contains('invalid-feedback')) {
-                feedback.textContent = Array.isArray(messages) ? messages[0] : messages;
-            }
-        }
-    }
-}
-
-function clearFormErrors() {
-    document.querySelectorAll('.is-invalid').forEach(element => {
-        element.classList.remove('is-invalid');
-    });
-}
-
-// Función global para abrir modal en modo edición
-window.openEditBusinessModal = function(businessId) {
-    const modalTitle = document.getElementById('addOrUpdateBusinessLabel');
-    const submitBtnText = document.getElementById('submitBtnText');
-    
-    modalTitle.innerHTML = '<i class="ri-edit-line me-2"></i>Editar Negocio';
-    submitBtnText.textContent = 'Actualizar Negocio';
-    
-    // Cargar datos del negocio
-    fetch(`{% url 'business:business.get_business_details_view' 0 %}`.replace('0', businessId))
-        .then(response => response.json())
-        .then(data => {
-            if (!data.error) {
-                document.getElementById('business_id').value = data.id;
-                document.getElementById('name').value = data.name;
-                document.getElementById('type').value = data.type;
-                document.getElementById('location').value = data.location;
-                document.getElementById('description').value = data.description;
-                
-                // Actualizar contador
-                document.getElementById('descriptionCount').textContent = data.description.length;
-                
-                // Mostrar imagen si existe
-                if (data.image_src && data.image_src !== '/static/images/business/business-dummy-img.webp') {
-                    const logoImg = document.getElementById('logo-img');
-                    logoImg.src = data.image_src;
-                    logoImg.style.display = 'block';
-                    document.getElementById('clearImage').style.display = 'inline-block';
-                }
-                
-                // Mostrar modal
-                bootstrap.Modal.getInstance(document.getElementById('addOrUpdateBusiness')).show();
-            } else {
-                showToast('error', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('error', 'Error al cargar los datos del negocio');
-        });
-};
-</script>
-
-<style>
-/* Estilos adicionales para mejorar la apariencia */
-.modal-content {
-    border: none;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.modal-footer {
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.form-label {
-    color: #495057;
-    margin-bottom: 0.5rem;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-}
-
-.img-thumbnail {
-    border: 2px dashed #dee2e6;
-    background-color: #f8f9fa;
-}
-
-#clearImage {
-    display: none;
-}
-
-.toast-container {
-    z-index: 9999;
-}
-</style>
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
+    <!-- Los toasts se insertan aquí dinámicamente -->
+</div>
