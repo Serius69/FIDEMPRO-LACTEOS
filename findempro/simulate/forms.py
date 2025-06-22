@@ -20,7 +20,7 @@ class SimulationForm(forms.ModelForm):
 
 
 class SimulationConfigForm(forms.Form):
-    """Formulario para configuración inicial - SOLO lo que necesita la vista mejorada"""
+    """Formulario para configuración inicial - VERSIÓN CORREGIDA"""
     
     selected_questionary_result = forms.ModelChoiceField(
         queryset=QuestionaryResult.objects.none(),
@@ -31,7 +31,11 @@ class SimulationConfigForm(forms.Form):
             'required': 'true'
         }),
         empty_label="Seleccione un cuestionario...",
-        required=True
+        required=True,
+        error_messages={
+            'required': 'Debe seleccionar un cuestionario',
+            'invalid_choice': 'Seleccione un cuestionario válido'
+        }
     )
     
     selected_quantity_time = forms.IntegerField(
@@ -41,9 +45,17 @@ class SimulationConfigForm(forms.Form):
             'min': 1,
             'max': 365,
             'placeholder': 'Ej: 30',
-            'required': 'true'
+            'required': 'true',
+            'value': 30  # Valor por defecto
         }),
-        required=True
+        required=True,
+        initial=30,
+        error_messages={
+            'required': 'La duración es requerida',
+            'invalid': 'Ingrese un número válido',
+            'min_value': 'La duración debe ser al menos 1',
+            'max_value': 'La duración no puede exceder 365'
+        }
     )
     
     selected_unit_time = forms.ChoiceField(
@@ -53,10 +65,27 @@ class SimulationConfigForm(forms.Form):
             'class': 'form-select',
             'required': 'true'
         }),
-        required=True
+        required=True,
+        error_messages={
+            'required': 'Debe seleccionar una unidad de tiempo',
+            'invalid_choice': 'Seleccione una unidad de tiempo válida'
+        }
     )
     
-    # Campos opcionales que pueden estar en tu template
+    # Campos para inicio de simulación
+    fk_fdp = forms.ModelChoiceField(
+        queryset=ProbabilisticDensityFunction.objects.none(),
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'required': 'true'
+        }),
+        required=False,  # Solo requerido en inicio de simulación
+        empty_label="Seleccione una distribución...",
+        error_messages={
+            'invalid_choice': 'Seleccione una función de densidad válida'
+        }
+    )
+    
     confidence_level = forms.FloatField(
         initial=0.95,
         required=False,
@@ -67,7 +96,10 @@ class SimulationConfigForm(forms.Form):
                 (0.99, '99%')
             ],
             attrs={'class': 'form-select'}
-        )
+        ),
+        error_messages={
+            'invalid': 'Seleccione un nivel de confianza válido'
+        }
     )
     
     random_seed = forms.IntegerField(
@@ -75,7 +107,10 @@ class SimulationConfigForm(forms.Form):
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'placeholder': 'Ej: 12345'
-        })
+        }),
+        error_messages={
+            'invalid': 'La semilla debe ser un número entero'
+        }
     )
 
     def __init__(self, *args, **kwargs):
@@ -83,7 +118,7 @@ class SimulationConfigForm(forms.Form):
         super().__init__(*args, **kwargs)
         
         if user:
-            # Usar el mismo filtro que probablemente ya tienes en tu código
+            # Filtrar cuestionarios del usuario
             self.fields['selected_questionary_result'].queryset = (
                 QuestionaryResult.objects.filter(
                     is_active=True,
@@ -92,24 +127,89 @@ class SimulationConfigForm(forms.Form):
                     'fk_questionary__fk_product__fk_business'
                 ).order_by('-date_created')
             )
+            
+            # Filtrar FDPs disponibles para el usuario
+            self.fields['fk_fdp'].queryset = (
+                ProbabilisticDensityFunction.objects.filter(
+                    is_active=True,
+                    fk_business__fk_user=user
+                ).order_by('distribution_type')
+            )
 
     def clean_selected_quantity_time(self):
-        """Validación básica - compatible con tu lógica existente"""
+        """Validación robusta para cantidad de tiempo"""
         quantity = self.cleaned_data.get('selected_quantity_time')
         
         if quantity is None:
             raise ValidationError("La duración es requerida.")
         
-        if quantity < 1 or quantity > 365:
-            raise ValidationError("La duración debe estar entre 1 y 365.")
+        try:
+            quantity_int = int(quantity)
+        except (ValueError, TypeError):
+            raise ValidationError("La duración debe ser un número entero.")
         
-        return quantity
+        if quantity_int < 1:
+            raise ValidationError("La duración debe ser mayor a 0.")
+        
+        if quantity_int > 365:
+            raise ValidationError("La duración no puede exceder 365 días.")
+        
+        return quantity_int
 
     def clean_selected_questionary_result(self):
-        """Validación básica - compatible con tu lógica existente"""
+        """Validación robusta para cuestionario"""
         questionary = self.cleaned_data.get('selected_questionary_result')
         
         if not questionary:
             raise ValidationError("Debe seleccionar un cuestionario válido.")
         
+        # Verificar que el cuestionario esté activo
+        if not questionary.is_active:
+            raise ValidationError("El cuestionario seleccionado no está activo.")
+        
+        # Verificar que tenga respuestas
+        if not questionary.fk_question_result_answer.filter(is_active=True).exists():
+            raise ValidationError("El cuestionario seleccionado no tiene respuestas válidas.")
+        
         return questionary
+
+    def clean_fk_fdp(self):
+        """Validación para función de densidad de probabilidad"""
+        fdp = self.cleaned_data.get('fk_fdp')
+        
+        # Solo validar si se proporcionó
+        if fdp:
+            if not fdp.is_active:
+                raise ValidationError("La función de densidad seleccionada no está activa.")
+        
+        return fdp
+
+    def clean_random_seed(self):
+        """Validación para semilla aleatoria"""
+        seed = self.cleaned_data.get('random_seed')
+        
+        if seed is not None:
+            try:
+                seed_int = int(seed)
+                if seed_int < 0:
+                    raise ValidationError("La semilla debe ser un número positivo.")
+                return seed_int
+            except (ValueError, TypeError):
+                raise ValidationError("La semilla debe ser un número entero válido.")
+        
+        return seed
+
+    def clean_confidence_level(self):
+        """Validación para nivel de confianza"""
+        confidence = self.cleaned_data.get('confidence_level')
+        
+        if confidence is not None:
+            try:
+                confidence_float = float(confidence)
+                if not (0.5 <= confidence_float <= 0.99):
+                    raise ValidationError("El nivel de confianza debe estar entre 0.5 y 0.99.")
+                return confidence_float
+            except (ValueError, TypeError):
+                raise ValidationError("El nivel de confianza debe ser un número válido.")
+        
+        return 0.95  # Valor por defecto

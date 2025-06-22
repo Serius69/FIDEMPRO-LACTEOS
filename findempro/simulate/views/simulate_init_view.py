@@ -77,12 +77,39 @@ class BaseSimulationView(LoginRequiredMixin):
             self.chart_generator = None
     
     def get_cache_key(self, key_type: str, user_id: int, **kwargs) -> str:
-        """Generar clave de cache consistente usando tu utilidad existente"""
+        """Generar clave de cache consistente y segura"""
         try:
-            return make_cache_key(key_type, user_id, **kwargs)
+            import hashlib
+            
+            # Crear partes base de la clave
+            base_parts = [
+                str(key_type),
+                str(user_id)
+            ]
+            
+            # Agregar kwargs de forma ordenada
+            if kwargs:
+                sorted_kwargs = sorted(kwargs.items())
+                kwargs_str = '_'.join([f"{k}_{v}" for k, v in sorted_kwargs])
+                # Crear hash para mantener longitud manejable
+                kwargs_hash = hashlib.md5(kwargs_str.encode('utf-8')).hexdigest()[:8]
+                base_parts.append(kwargs_hash)
+            
+            # Unir con guiones bajos (seguro para memcached)
+            cache_key = "_".join(base_parts)
+            
+            # Asegurar longitud máxima
+            if len(cache_key) > 240:
+                cache_key = f"{key_type}_{hashlib.md5(cache_key.encode()).hexdigest()}"
+            
+            return cache_key
+            
         except Exception as e:
             logger.error(f"Error generating cache key: {e}")
-            return f"fallback_{key_type}_{user_id}_{hash(str(kwargs))}"
+            # Clave de fallback segura
+            import time
+            fallback = f"fallback_{key_type}_{user_id}_{int(time.time()) % 10000}"
+            return fallback
     
     @cache_result(timeout=300, key_prefix="user_businesses")
     def get_user_businesses(self, user) -> List[Business]:
@@ -110,23 +137,34 @@ class BaseSimulationView(LoginRequiredMixin):
             return []
     
     def _validate_basic_form_data(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Validación básica cuando no hay ValidationService"""
+        """Validación básica cuando no hay ValidationService - versión mejorada"""
         errors = []
         
         try:
-            if not form_data.get('selected_questionary_result_id'):
+            # Validar ID de cuestionario
+            questionary_id = form_data.get('selected_questionary_result_id', 0)
+            if not questionary_id or questionary_id == 0:
                 errors.append("Debe seleccionar un cuestionario")
+            elif questionary_id < 0:
+                errors.append("ID de cuestionario inválido")
             
-            quantity = form_data.get('selected_quantity_time')
+            # Validar duración
+            quantity = form_data.get('selected_quantity_time', 0)
             try:
-                quantity = int(quantity) if quantity else 0
-                if quantity < 1 or quantity > 365:
-                    errors.append("La duración debe estar entre 1 y 365")
+                quantity_int = int(quantity) if quantity is not None else 0
+                if quantity_int < 1:
+                    errors.append("La duración debe ser mayor a 0")
+                elif quantity_int > 365:
+                    errors.append("La duración debe ser menor o igual a 365")
             except (ValueError, TypeError):
                 errors.append("La duración debe ser un número válido")
             
-            if not form_data.get('selected_unit_time'):
+            # Validar unidad de tiempo
+            unit_time = form_data.get('selected_unit_time', '').strip()
+            if not unit_time:
                 errors.append("Debe seleccionar una unidad de tiempo")
+            elif unit_time not in ['days', 'weeks', 'months']:
+                errors.append("Debe seleccionar una unidad de tiempo válida")
             
         except Exception as e:
             logger.error(f"Error in basic form validation: {e}")
@@ -251,17 +289,41 @@ class SimulateShowView(BaseSimulationView, View):
             return self.handle_exception(request, e, "questionary selection")
     
     def _extract_form_data(self, request) -> Dict[str, Any]:
-        """Extraer y normalizar datos del formulario"""
+        """Extraer y normalizar datos del formulario - versión mejorada"""
         try:
             if request.method == 'GET':
                 data = request.GET
             else:
                 data = request.POST
             
+            # Función auxiliar para conversión segura
+            def safe_int_convert(value, default=0):
+                if value is None or value == '' or value == 'None':
+                    return default
+                try:
+                    # Manejar listas (en caso de que venga como lista)
+                    if isinstance(value, (list, tuple)) and len(value) > 0:
+                        value = value[0]
+                    return int(float(str(value).strip()))
+                except (ValueError, TypeError, AttributeError):
+                    return default
+            
+            selected_questionary_result_id = safe_int_convert(
+                data.get('selected_questionary_result'), 0
+            )
+            selected_quantity_time = safe_int_convert(
+                data.get('selected_quantity_time'), 30
+            )
+            selected_unit_time = data.get('selected_unit_time', 'days')
+            
+            # Validar que selected_unit_time no esté vacío
+            if not selected_unit_time or selected_unit_time.strip() == '':
+                selected_unit_time = 'days'
+            
             return {
-                'selected_questionary_result_id': data.get('selected_questionary_result', 0),
-                'selected_quantity_time': data.get('selected_quantity_time', 30),
-                'selected_unit_time': data.get('selected_unit_time', 'days')
+                'selected_questionary_result_id': selected_questionary_result_id,
+                'selected_quantity_time': selected_quantity_time,
+                'selected_unit_time': selected_unit_time.strip()
             }
         except Exception as e:
             logger.error(f"Error extracting form data: {e}")
@@ -688,23 +750,58 @@ class SimulateShowView(BaseSimulationView, View):
             return self.handle_exception(request, e, "simulation start")
     
     def _validate_simulation_start_basic(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Validación básica para inicio de simulación"""
+        """Validación básica para inicio de simulación - versión mejorada"""
         errors = []
         
         try:
-            if not form_data.get('fk_questionary_result'):
-                errors.append("El cuestionario es requerido")
+            # Validar cuestionario
+            questionary_id = form_data.get('fk_questionary_result', 0)
+            if not questionary_id or questionary_id == 0:
+                errors.append("Debe seleccionar un cuestionario válido")
+            elif questionary_id < 0:
+                errors.append("ID de cuestionario inválido")
             
-            if not form_data.get('fk_fdp'):
-                errors.append("La función de densidad de probabilidad es requerida")
+            # Validar FDP
+            fdp_id = form_data.get('fk_fdp', 0)
+            if not fdp_id or fdp_id == 0:
+                errors.append("Debe seleccionar una función de densidad de probabilidad")
+            elif fdp_id < 0:
+                errors.append("ID de función de densidad inválido")
             
+            # Validar duración
+            quantity = form_data.get('quantity_time', 0)
+            if quantity < 1:
+                errors.append("La duración debe ser mayor a 0")
+            elif quantity > 365:
+                errors.append("La duración debe ser menor o igual a 365 días")
+            
+            # Validar unidad de tiempo
+            unit_time = form_data.get('unit_time', '').strip()
+            valid_units = ['days', 'weeks', 'months']
+            if not unit_time:
+                errors.append("Debe seleccionar una unidad de tiempo")
+            elif unit_time not in valid_units:
+                errors.append("La unidad de tiempo debe ser válida (days, weeks, months)")
+            
+            # Validar nivel de confianza
+            confidence = form_data.get('confidence_level', 0.95)
             try:
-                quantity = int(form_data.get('quantity_time', 0))
-                if quantity < 1 or quantity > 365:
-                    errors.append("La duración debe estar entre 1 y 365")
+                confidence_float = float(confidence)
+                if not (0.5 <= confidence_float <= 0.99):
+                    errors.append("El nivel de confianza debe estar entre 0.5 y 0.99")
             except (ValueError, TypeError):
-                errors.append("La duración debe ser un número válido")
-                
+                errors.append("El nivel de confianza debe ser un número válido")
+            
+            # Validar semilla aleatoria (opcional)
+            random_seed = form_data.get('random_seed')
+            if random_seed is not None:
+                try:
+                    seed_int = int(random_seed)
+                    if seed_int < 0:
+                        errors.append("La semilla aleatoria debe ser un número positivo")
+                except (ValueError, TypeError):
+                    errors.append("La semilla aleatoria debe ser un número entero válido")
+            
         except Exception as e:
             logger.error(f"Error in simulation start validation: {e}")
             errors.append("Error interno en la validación")
@@ -715,19 +812,61 @@ class SimulateShowView(BaseSimulationView, View):
         }
     
     def _extract_simulation_start_data(self, request) -> Dict[str, Any]:
-        """Extraer datos para inicio de simulación"""
+        """Extraer datos para inicio de simulación con validación robusta"""
         try:
+            # Función auxiliar para conversión segura de enteros
+            def safe_int_convert(value, default=0):
+                if value is None or value == '' or value == 'None':
+                    return default
+                try:
+                    return int(float(str(value).strip()))  # Convertir a float primero por si hay decimales
+                except (ValueError, TypeError, AttributeError):
+                    return default
+            
+            # Función auxiliar para conversión segura de flotantes
+            def safe_float_convert(value, default=0.95):
+                if value is None or value == '' or value == 'None':
+                    return default
+                try:
+                    return float(str(value).strip())
+                except (ValueError, TypeError, AttributeError):
+                    return default
+            
+            # Extraer y convertir datos de forma segura
+            fk_questionary_result = safe_int_convert(request.POST.get('fk_questionary_result'))
+            quantity_time = safe_int_convert(request.POST.get('quantity_time'), 30)
+            unit_time = request.POST.get('unit_time', 'days')
+            fk_fdp = safe_int_convert(request.POST.get('fk_fdp'))
+            confidence_level = safe_float_convert(request.POST.get('confidence_level'), 0.95)
+            random_seed = request.POST.get('random_seed', None)
+            
+            # Limpiar random_seed si está vacío
+            if random_seed and random_seed.strip():
+                try:
+                    random_seed = int(random_seed.strip())
+                except (ValueError, TypeError):
+                    random_seed = None
+            else:
+                random_seed = None
+            
             return {
-                'fk_questionary_result': request.POST.get('fk_questionary_result'),
-                'quantity_time': request.POST.get('quantity_time', 30),
-                'unit_time': request.POST.get('unit_time', 'days'),
-                'fk_fdp': request.POST.get('fk_fdp'),
-                'confidence_level': request.POST.get('confidence_level', 0.95),
-                'random_seed': request.POST.get('random_seed')
+                'fk_questionary_result': fk_questionary_result,
+                'quantity_time': quantity_time,
+                'unit_time': unit_time,
+                'fk_fdp': fk_fdp,
+                'confidence_level': confidence_level,
+                'random_seed': random_seed
             }
         except Exception as e:
             logger.error(f"Error extracting simulation start data: {e}")
-            return {}
+            return {
+                'fk_questionary_result': 0,
+                'quantity_time': 30,
+                'unit_time': 'days',
+                'fk_fdp': 0,
+                'confidence_level': 0.95,
+                'random_seed': None
+            }
     
     def _handle_simulation_cancel(self, request) -> redirect:
         """Manejar cancelación de simulación"""

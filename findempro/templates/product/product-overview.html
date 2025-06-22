@@ -166,52 +166,337 @@
                                         </div>
                                         
                                         <div class="areas-grid">
-                                            {% for area in areas %}
-                                            <div class="area-card">
-                                                <div class="area-image" 
-                                                     style="background-image: url('{% if area.get_photo_url %}{{ area.get_photo_url }}{% else %}{% static 'images/default-area.png' %}{% endif %}');">
-                                                </div>
-                                                <div class="area-content">
-                                                    <h5 class="area-name">{% if area.name %}{{ area.name }}{% else %}Área sin nombre{% endif %}</h5>
-                                                    <p class="area-description">{% if area.description %}{{ area.description }}{% else %}Sin descripción{% endif %}</p>
-                                                </div>
-                                                <div class="area-footer">
-                                                    <div class="area-stats">
-                                                        <div class="stat-item">
-                                                            <i class="ri-function-line me-1"></i>
-                                                            <span class="stat-value">{% if area.fk_area_equations.count %}{{ area.fk_area_equations.count }}{% else %}0{% endif %}</span>
-                                                        </div>
+                                            {% if areas %}
+                                                {% for area in areas %}
+                                                <div class="area-card">
+                                                    <div class="area-image" 
+                                                         style="background-image: url('{% if area.get_photo_url %}{{ area.get_photo_url }}{% else %}{% static 'images/default-area.png' %}{% endif %}');">
                                                     </div>
-                                                    <div class="area-actions">
-                                                        <div class="dropdown">
-                                                            <button class="area-menu-btn" data-bs-toggle="dropdown" 
-                                                                    aria-haspopup="true" aria-expanded="false">
-                                                                <i data-feather="more-horizontal" class="icon-sm"></i>
-                                                            </button>
-                                                            <div class="dropdown-menu dropdown-menu-end">
-                                                                <a class="dropdown-item" href="{% url 'product:area.overview' area.id %}">
-                                                                    <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
-                                                                    Vista
-                                                                </a>
-                                                                <a href="{% url 'product:area.edit' area.id %}" class="dropdown-item edit-area">
-                                                                    <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
-                                                                    Editar
-                                                                </a>
-                                                                <div class="dropdown-divider"></div>
-                                                                <a class="dropdown-item delete-area" 
-                                                                   onclick="deleteArea('{{ area.id }}'); return false;">
-                                                                    <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
-                                                                    Eliminar
-                                                                </a>
+                                                    <div class="area-content">
+                                                        <h5 class="area-name">{% if area.name %}{{ area.name }}{% else %}Área sin nombre{% endif %}</h5>
+                                                        <p class="area-description">{% if area.description %}{{ area.description }}{% else %}Sin descripción{% endif %}</p>
+                                                    </div>
+                                                    <div class="area-footer">
+                                                        <div class="area-stats">
+                                                            <div class="stat-item">
+                                                                <i class="ri-function-line me-1"></i>
+                                                                <span class="stat-value">{% if area.area_equation.count %}{{ area.area_equation.count }}{% else %}0{% endif %}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="area-actions">
+                                                            <div class="dropdown">
+                                                                <button class="area-menu-btn" data-bs-toggle="dropdown" 
+                                                                        aria-haspopup="true" aria-expanded="false">
+                                                                    <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                                </button>
+                                                                <div class="dropdown-menu dropdown-menu-end">
+                                                                    <a class="dropdown-item" href="{% url 'product:area.overview' area.id %}">
+                                                                        <i class="ri-eye-fill align-bottom me-2 text-muted"></i>
+                                                                        Vista
+                                                                    </a>
+                                                                    <a href="#" class="dropdown-item edit-area" data-bs-toggle="modal"
+                                                                       data-bs-target="#addOrUpdateArea" data-area-id="{{ area.id }}"
+                                                                       onclick="loadAreaDetails('{{ area.id }}'); return false;">
+                                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                        Editar
+                                                                    </a>
+                                                                    <div class="dropdown-divider"></div>
+                                                                    <a class="dropdown-item delete-area" 
+                                                                       data-bs-toggle="modal" data-bs-target="#removeAreaModal" 
+                                                                       data-area-id="{{ area.id }}">
+                                                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                                                                        Eliminar
+                                                                    </a>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="empty-state">
+                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                                               colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px">
+                                                    </lord-icon>
+                                                    <h5 class="empty-title">No hay ningún área registrada</h5>
+                                                    <p class="empty-description">Debe agregar un área para comenzar.</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Reports Section -->
+                                    <div class="reports-section">
+                                        <div class="section-header">
+                                            <h4 class="section-title">
+                                                <i class="ri-file-list-3-line me-2"></i>Informes
+                                            </h4>
+                                        </div>
+                                        
+                                        <div class="reports-content">
+                                            <div class="reports-grid">
+                                                {% if reports %}
+                                                    {% for report in reports %}
+                                                    <div class="report-item">
+                                                        <div class="report-icon">
+                                                            <div class="icon-container">
+                                                                <i class="ri-folder-zip-line"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="report-info">
+                                                            <h5 class="report-name">
+                                                                <a href="#" class="report-link">
+                                                                    {% if report.name %}{{ report.name }}{% else %}Informe sin nombre{% endif %}
+                                                                </a>
+                                                            </h5>
+                                                            <div class="report-date">
+                                                                {% if report.date_created %}{{ report.date_created }}{% else %}Sin fecha{% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="report-actions">
+                                                            <button type="button" class="btn btn-icon text-muted btn-sm fs-18">
+                                                                <i class="ri-download-2-line"></i>
+                                                            </button>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-icon text-muted btn-sm fs-18 dropdown" 
+                                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    <i class="ri-more-fill"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li>
+                                                                        <a href="{% url 'generar_reporte_pdf' report_id=report.id %}" class="dropdown-item">
+                                                                            <i class="ri-file-pdf-line me-2"></i>Descargar PDF
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <div class="empty-state">
+                                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                                                   colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px">
+                                                        </lord-icon>
+                                                        <h5 class="empty-title">No hay ningún informe registrado</h5>
+                                                        <p class="empty-description">Los informes aparecerán aquí cuando se generen.</p>
+                                                    </div>
+                                                {% endif %}
                                             </div>
-                                            {% empty %}
-                                            <div class="empty-state">
-                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
-                                                           colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px">
-                                                </lord-icon>
-                                                <h5 class="empty-title">No hay ningún área registrada</h5>
-                                                <p class="empty-description">Debe agregar un área para comenzar.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Simulations Sidebar -->
+                                <div class="col-xl-3 col-lg-4">
+                                    <div class="simulations-section">
+                                        <div class="section-header">
+                                            <h4 class="section-title">
+                                                <i class="ri-bar-chart-box-line me-2"></i>Simulaciones
+                                            </h4>
+                                            <div class="section-actions">
+                                                <button type="button" class="btn btn-soft-info btn-sm">
+                                                    <i class="ri-upload-2-fill me-1 align-bottom"></i>Nueva simulación
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="simulations-list">
+                                            {% if simulations %}
+                                                {% for simulation in simulations %}
+                                                <div class="simulation-card">
+                                                    <div class="simulation-header">
+                                                        <h5 class="simulation-date">
+                                                            {% if simulation.date_created %}{{ simulation.date_created }}{% else %}Sin fecha{% endif %}
+                                                        </h5>
+                                                        <div class="simulation-actions">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="ri-download-2-line"></i> Generar Reporte
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="simulation-details">
+                                                        <ul class="simulation-info-list">
+                                                            {% for demand in demands %}
+                                                                {% if demand.fk_simulation_id == simulation.id %}
+                                                                    <li class="info-item">
+                                                                        {% if not demand.is_predicted %}
+                                                                            <span class="info-label">Demanda Inicial Histórica:</span>
+                                                                        {% else %}
+                                                                            <span class="info-label">Demanda Simulada:</span>
+                                                                        {% endif %}
+                                                                        <span class="info-value">
+                                                                            {% if demand.quantity %}{{ demand.quantity }}{% else %}0{% endif %}
+                                                                        </span>
+                                                                    </li>
+                                                                    <li class="info-item">
+                                                                        <span class="info-label">Desviación estándar:</span>
+                                                                        <span class="info-value">
+                                                                            {% if simulation.fk_fdp.std_dev_param and demand.quantity %}
+                                                                                {{ simulation.fk_fdp.std_dev_param|floatformat:2 }} * {{ demand.quantity|floatformat:2 }}
+                                                                            {% else %}
+                                                                                No disponible
+                                                                            {% endif %}
+                                                                        </span>
+                                                                    </li>
+                                                                {% endif %}                                                                        
+                                                            {% endfor %}
+                                                            
+                                                            <li class="info-item">
+                                                                <span class="info-label">Unidad de tiempo:</span>
+                                                                <span class="info-value">
+                                                                    {% if simulation.unit_time == "days" %}
+                                                                        días
+                                                                    {% elif simulation.unit_time %}
+                                                                        {{ simulation.unit_time }}
+                                                                    {% else %}
+                                                                        No especificado
+                                                                    {% endif %}
+                                                                </span>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                    
+                                                    <div class="simulation-footer">
+                                                        <a href="{% url 'simulate:simulate.result' simulation.id %}" class="btn btn-success btn-sm">
+                                                            Ver más detalles
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="empty-state">
+                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                                               colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px">
+                                                    </lord-icon>
+                                                    <h5 class="empty-title">No hay simulaciones</h5>
+                                                    <p class="empty-description">
+                                                        No hay ninguna simulación del producto: {% if product.name %}{{ product.name }}{% else %}este producto{% endif %}
+                                                    </p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Variables Tab -->
+                        <div class="tab-pane fade" id="product-variable" role="tabpanel">
+                            <div class="variables-section">
+                                <div class="section-header">
+                                    <h4 class="section-title">
+                                        <i class="ri-bubble-chart-line me-2"></i>Variables del Producto
+                                    </h4>
+                                </div>
+                                
+                                <div class="variables-grid">
+                                    {% if variables_product %}
+                                        {% for variable in variables_product %}
+                                        <div class="variable-card">
+                                            <div class="variable-image" 
+                                                 style="background-image: url('{% if variable.get_photo_url %}{{ variable.get_photo_url }}{% else %}{% static 'images/default-variable.png' %}{% endif %}');">
+                                            </div>
+                                            <div class="variable-content">
+                                                <div class="variable-info">
+                                                    <a href="#" class="variable-link">
+                                                        <h5 class="variable-name">{% if variable.name %}{{ variable.name }}{% else %}Variable sin nombre{% endif %}</h5>
+                                                    </a>
+                                                    <p class="variable-description">{% if variable.description %}{{ variable.description }}{% else %}Sin descripción{% endif %}</p>
+                                                </div>
+                                                <div class="variable-actions">
+                                                    <div class="dropdown">
+                                                        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <i class="ri-more-fill fs-17"></i>
+                                                        </a>
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li>
+                                                                <a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}">
+                                                                    <i class="ri-eye-fill text-muted me-2 align-bottom"></i>Ver
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item" href="{% url 'variable:variable.edit' variable.id %}">
+                                                                    <i class="ri-pencil-fill text-muted me-2 align-bottom"></i>Editar
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="empty-state">
+                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                                       colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px">
+                                            </lord-icon>
+                                            <h5 class="empty-title">No se encontraron variables</h5>
+                                            <p class="empty-description">Este producto aún no tiene variables asociadas.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Variables Pagination -->
+                                {% if variables_product.has_other_pages %}
+                                <div class="variables-pagination">
+                                    <div class="pagination-info">
+                                        <div class="text-muted">
+                                            Mostrando <span class="fw-semibold">{{ variables_product.number }}</span> de
+                                            <span class="fw-semibold">{{ variables_product.paginator.num_pages }}</span> páginas
+                                        </div>
+                                    </div>
+                                    <div class="pagination-controls">
+                                        <ul class="pagination pagination-separated pagination-sm justify-content-center mb-0">
+                                            {% if variables_product.has_previous %}
+                                                <li class="page-item">
+                                                    <a href="javascript:void(0);" class="page-link pagination-link" 
+                                                       data-page="{{ variables_product.previous_page_number }}">←</a>
+                                                </li>
+                                            {% endif %}
+                                        
+                                            {% for i in variables_product.paginator.page_range %}
+                                                <li class="page-item {% if i == variables_product.number %}active{% endif %}">
+                                                    <a href="javascript:void(0);" class="page-link pagination-link" 
+                                                       data-page="{{ i }}">{{ i }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        
+                                            {% if variables_product.has_next %}
+                                                <li class="page-item">
+                                                    <a href="javascript:void(0);" class="page-link pagination-link" 
+                                                       data-page="{{ variables_product.next_page_number }}">→</a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+{% endblock content %}
+
+{% block extra_content %}
+{% block modals %} 
+{% include "partials/modals.html" %}
+{% include "product/product-modal.html" %}
+{% endblock modals %}
+{% endblock extra_content %}
+    
+{% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'js/edit-add.js' %}"></script>
+<script src="{% static 'js/delete.js' %}"></script>
+<script src="{% static 'js/product-overview.js' %}"></script>
+{% endblock extra_js %}
