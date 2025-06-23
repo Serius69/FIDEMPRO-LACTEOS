@@ -2170,6 +2170,186 @@ class ChartGenerator:
         plt.tight_layout()
         return self._fig_to_base64(fig)
     
+    def _apply_safe_layout(self, fig=None):
+        """
+        CORRECCIÓN: Aplicar layout seguro sin warnings de matplotlib
+        """
+        try:
+            if fig is not None:
+                fig.tight_layout(pad=1.0)
+            else:
+                import matplotlib.pyplot as plt
+                plt.tight_layout(pad=1.0)
+        except Exception as e:
+            # Fallback a subplots_adjust manual
+            try:
+                if fig is not None:
+                    fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, 
+                                    hspace=0.3, wspace=0.3)
+                else:
+                    import matplotlib.pyplot as plt
+                    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, 
+                                    hspace=0.3, wspace=0.3)
+            except Exception as e2:
+                logger.warning(f"Could not apply layout adjustments: {e2}")
+    
+    
+    def _safe_fig_to_base64(self, fig):
+        """Convertir figura a base64 de forma segura"""
+        try:
+            from io import BytesIO
+            import base64
+            
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight',
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            buffer.close()
+            
+            import matplotlib.pyplot as plt
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error converting figure to base64: {str(e)}")
+            import matplotlib.pyplot as plt
+            plt.close(fig)
+            return None
+    
+    
+    def _process_accumulated_variables_safely(self, all_variables_extracted):
+        """
+        CORRECCIÓN: Procesar variables acumuladas con manejo de errores robusto
+        """
+        try:
+            # Lista de variables esperadas (verificar que existan)
+            expected_variables = [
+                'PVP', 'TPV', 'IT', 'TG', 'GT', 'NR', 'NSC', 'EOG', 
+                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF'
+            ]
+            
+            totales_acumulativos = {}
+            
+            # Verificar qué variables están realmente disponibles
+            available_variables = set()
+            for day_data in all_variables_extracted:
+                if isinstance(day_data, dict):
+                    available_variables.update(day_data.keys())
+            
+            logger.info(f"Available variables: {list(available_variables)}")
+            
+            # Procesar solo variables que existen
+            for var_name in expected_variables:
+                if var_name in available_variables:
+                    try:
+                        var_data = self._calculate_variable_totals_safe(all_variables_extracted, var_name)
+                        if var_data['total'] != 0 or var_data['count'] > 0:
+                            totales_acumulativos[var_name] = var_data
+                    except Exception as e:
+                        logger.warning(f"Error processing variable {var_name}: {e}")
+                        continue
+                else:
+                    logger.debug(f"Variable {var_name} not found in extracted data")
+            
+            logger.info(f"Successfully processed {len(totales_acumulativos)} accumulated variables")
+            return totales_acumulativos
+            
+        except Exception as e:
+            logger.error(f"Error processing accumulated variables: {e}")
+            return {}
+    
+    def _calculate_variable_totals_safe(self, all_variables_extracted, var_name):
+        """
+        CORRECCIÓN: Calcular totales de variable con manejo de errores
+        """
+        try:
+            values = []
+            
+            for day_data in all_variables_extracted:
+                if isinstance(day_data, dict) and var_name in day_data:
+                    try:
+                        value = day_data[var_name]
+                        if value is not None:
+                            # Intentar conversión a float
+                            numeric_value = float(value)
+                            values.append(numeric_value)
+                    except (ValueError, TypeError) as e:
+                        logger.debug(f"Could not convert {var_name} value '{value}' to float: {e}")
+                        continue
+            
+            # Calcular estadísticas
+            if values:
+                total = sum(values)
+                count = len(values)
+                average = total / count
+                min_val = min(values)
+                max_val = max(values)
+                
+                # Calcular tendencia simple
+                if len(values) >= 3:
+                    first_half = values[:len(values)//2]
+                    second_half = values[len(values)//2:]
+                    first_avg = sum(first_half) / len(first_half) if first_half else 0
+                    second_avg = sum(second_half) / len(second_half) if second_half else 0
+                    
+                    if second_avg > first_avg * 1.05:  # 5% threshold
+                        trend = 'increasing'
+                    elif second_avg < first_avg * 0.95:
+                        trend = 'decreasing'
+                    else:
+                        trend = 'stable'
+                else:
+                    trend = 'stable'
+            else:
+                total = count = average = min_val = max_val = 0
+                trend = 'stable'
+            
+            return {
+                'total': total,
+                'count': count,
+                'average': average,
+                'min_value': min_val,
+                'max_value': max_val,
+                'trend': trend,
+                'unit': self._get_safe_variable_unit(var_name)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating totals for {var_name}: {e}")
+            return {
+                'total': 0,
+                'count': 0,
+                'average': 0,
+                'min_value': 0,
+                'max_value': 0,
+                'trend': 'stable',
+                'unit': ''
+            }
+    
+    def _get_safe_variable_unit(self, var_name):
+        """Obtener unidad de variable de forma segura"""
+        units = {
+            'PVP': 'Bs./L',
+            'TPV': 'L',
+            'IT': 'Bs.',
+            'TG': 'Bs.',
+            'GT': 'Bs.',
+            'NR': '%',
+            'NSC': '%',
+            'EOG': '%',
+            'CFD': 'Bs.',
+            'CVU': 'Bs./L',
+            'DPH': 'L/día',
+            'CPROD': 'L/día',
+            'NEPP': 'empleados',
+            'RI': '%',
+            'IPF': 'L'
+        }
+        return units.get(var_name, '')
+    
+    
     def generate_validation_comparison_chart(self, real_values, projected_values, simulated_values, dates=None):
         """
         Generate validation comparison chart with proper overlay of three lines

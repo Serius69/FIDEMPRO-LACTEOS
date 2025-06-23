@@ -65,6 +65,742 @@ class SimulationValidationService:
             'DI': 'loose',       # Unmet demand
         }
     
+    
+    def _validate_model_variables(self, simulation_instance, results_simulation, all_variables_extracted):
+        """
+        MÉTODO FALTANTE: Validar variables del modelo comparando valores simulados con reales
+        """
+        try:
+            logger.info(f"Starting model variables validation for simulation {simulation_instance.id}")
+            
+            # Extraer valores reales del cuestionario
+            real_values = self._extract_real_values(simulation_instance)
+            
+            # Inicializar estructura de resultados
+            validation_results = {
+                'summary': {
+                    'total_variables': 0,
+                    'precise_count': 0,
+                    'acceptable_count': 0,
+                    'inaccurate_count': 0,
+                    'success_rate': 0.0,
+                    'is_valid': False
+                },
+                'by_variable': {},
+                'daily_details': {}
+            }
+            
+            # Variables clave para validar
+            key_variables = ['IT', 'GT', 'TG', 'TPV', 'NSC', 'EOG', 'DPH', 'CPROD']
+            
+            for var_key in key_variables:
+                if var_key in real_values:
+                    var_validation = self._validate_single_variable_across_days(
+                        var_key, real_values[var_key], all_variables_extracted
+                    )
+                    
+                    validation_results['by_variable'][var_key] = var_validation
+                    validation_results['summary']['total_variables'] += 1
+                    
+                    # Contar por estado
+                    if var_validation['status'] == 'PRECISA':
+                        validation_results['summary']['precise_count'] += 1
+                    elif var_validation['status'] == 'ACEPTABLE':
+                        validation_results['summary']['acceptable_count'] += 1
+                    else:
+                        validation_results['summary']['inaccurate_count'] += 1
+            
+            # Calcular tasa de éxito
+            total_vars = validation_results['summary']['total_variables']
+            if total_vars > 0:
+                success_count = (validation_results['summary']['precise_count'] + 
+                            validation_results['summary']['acceptable_count'])
+                validation_results['summary']['success_rate'] = success_count / total_vars * 100
+                validation_results['summary']['is_valid'] = validation_results['summary']['success_rate'] >= 70
+            
+            logger.info(f"Model variables validation completed: {validation_results['summary']['success_rate']:.1f}% success rate")
+            return validation_results
+            
+        except Exception as e:
+            logger.error(f"Error in model variables validation: {str(e)}")
+            return self._create_empty_validation_result()
+
+    
+    
+    def _validate_single_variable_across_days(self, var_key, real_value, all_variables_extracted):
+        """Validar una variable específica a través de todos los días"""
+        try:
+            simulated_values = []
+            daily_details = {}
+            
+            # Extraer valores simulados para esta variable
+            for day_idx, day_data in enumerate(all_variables_extracted):
+                day_num = day_idx + 1
+                
+                if var_key in day_data and day_data[var_key] is not None:
+                    try:
+                        sim_value = float(day_data[var_key])
+                        simulated_values.append(sim_value)
+                        
+                        # Calcular error para este día
+                        error_pct = self._calculate_error_percentage(sim_value, real_value)
+                        status = self._determine_validation_status(error_pct)
+                        
+                        daily_details[str(day_num)] = {
+                            'simulated': sim_value,
+                            'real': real_value,
+                            'error_pct': error_pct,
+                            'status': status
+                        }
+                    except (ValueError, TypeError):
+                        continue
+            
+            # Calcular estadísticas de la variable
+            if simulated_values:
+                simulated_avg = sum(simulated_values) / len(simulated_values)
+                overall_error = self._calculate_error_percentage(simulated_avg, real_value)
+                overall_status = self._determine_validation_status(overall_error)
+            else:
+                simulated_avg = 0
+                overall_error = 100.0
+                overall_status = 'NO_DATA'
+            
+            return {
+                'real_value': real_value,
+                'simulated_avg': simulated_avg,
+                'simulated_values_count': len(simulated_values),
+                'error_pct': overall_error,
+                'status': overall_status,
+                'daily_details': daily_details,
+                'description': self._get_variable_description(var_key),
+                'unit': self._get_variable_unit(var_key),
+                'type': self._get_variable_type(var_key)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error validating variable {var_key}: {str(e)}")
+            return {
+                'real_value': real_value,
+                'simulated_avg': 0,
+                'simulated_values_count': 0,
+                'error_pct': 100.0,
+                'status': 'ERROR',
+                'daily_details': {},
+                'description': var_key,
+                'unit': '',
+                'type': 'Numeric'
+            }
+    
+    def _generate_daily_validation_charts(self, daily_validation_results):
+        """
+        MÉTODO FALTANTE: Generar gráficos de validación diaria
+        """
+        try:
+            daily_charts = {}
+            
+            if not daily_validation_results:
+                logger.warning("No daily validation results provided for chart generation")
+                return daily_charts
+            
+            # Gráfico de precisión por día
+            daily_charts['daily_accuracy'] = self._generate_daily_accuracy_chart(daily_validation_results)
+            
+            # Gráfico de errores por variable
+            daily_charts['variable_errors'] = self._generate_variable_error_chart(daily_validation_results)
+            
+            # Gráfico de tendencia de validación
+            daily_charts['validation_trend'] = self._generate_validation_trend_chart(daily_validation_results)
+            
+            logger.info(f"Generated {len(daily_charts)} daily validation charts")
+            return daily_charts
+            
+        except Exception as e:
+            logger.error(f"Error generating daily validation charts: {str(e)}")
+            return {}
+    
+    def _generate_variable_error_chart(self, daily_validation_results):
+        """Generar gráfico de errores por variable"""
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            # Recopilar errores por variable
+            variable_errors = {}
+            
+            for day_validation in daily_validation_results:
+                for var_name, validation in day_validation['validations'].items():
+                    if var_name not in variable_errors:
+                        variable_errors[var_name] = []
+                    
+                    error_rate = validation.get('error_rate', 0) * 100
+                    variable_errors[var_name].append(error_rate)
+            
+            if not variable_errors:
+                return None
+            
+            # Calcular estadísticas por variable
+            variables = list(variable_errors.keys())
+            mean_errors = [np.mean(variable_errors[var]) for var in variables]
+            
+            fig, ax = plt.subplots(figsize=(12, 8))
+            
+            # Crear gráfico de barras horizontales
+            y_pos = np.arange(len(variables))
+            colors = ['#E74C3C' if error > 20 else '#F39C12' if error > 10 else '#27AE60' 
+                    for error in mean_errors]
+            
+            bars = ax.barh(y_pos, mean_errors, color=colors, alpha=0.8, edgecolor='black')
+            
+            # Agregar valores
+            for i, (bar, error) in enumerate(zip(bars, mean_errors)):
+                width = bar.get_width()
+                ax.text(width + 0.5, bar.get_y() + bar.get_height()/2,
+                    f'{error:.1f}%', ha='left', va='center', fontsize=10)
+            
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(variables)
+            ax.set_xlabel('Error Promedio (%)')
+            ax.set_title('Error Promedio por Variable')
+            ax.grid(True, alpha=0.3, axis='x')
+            
+            # Líneas de referencia
+            ax.axvline(x=10, color='orange', linestyle='--', alpha=0.5, label='Aceptable (10%)')
+            ax.axvline(x=20, color='red', linestyle='--', alpha=0.5, label='Crítico (20%)')
+            ax.legend()
+            
+            # CORRECCIÓN: Layout seguro
+            try:
+                plt.tight_layout(pad=1.0)
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating variable error chart: {str(e)}")
+            return None
+    
+    
+    def _calculate_daily_validation_summary(self, daily_validation_results):
+        """
+        MÉTODO FALTANTE: Calcular resumen de validación diaria
+        """
+        try:
+            if not daily_validation_results:
+                return {
+                    'total_days': 0,
+                    'average_accuracy': 0.0,
+                    'best_day': None,
+                    'worst_day': None,
+                    'total_variables_validated': 0,
+                    'overall_success_rate': 0.0
+                }
+            
+            total_days = len(daily_validation_results)
+            accuracy_rates = []
+            total_variables = 0
+            total_successful = 0
+            
+            best_day = {'day': 1, 'accuracy': 0}
+            worst_day = {'day': 1, 'accuracy': 100}
+            
+            for day_validation in daily_validation_results:
+                accuracy = day_validation['accuracy_rate']
+                accuracy_rates.append(accuracy)
+                
+                # Actualizar mejor y peor día
+                if accuracy > best_day['accuracy']:
+                    best_day = {'day': day_validation['day_number'], 'accuracy': accuracy}
+                if accuracy < worst_day['accuracy']:
+                    worst_day = {'day': day_validation['day_number'], 'accuracy': accuracy}
+                
+                # Contar variables
+                summary = day_validation.get('summary', {})
+                total_variables += summary.get('total', 0)
+                total_successful += summary.get('precise', 0) + summary.get('acceptable', 0)
+            
+            # Calcular promedios
+            average_accuracy = sum(accuracy_rates) / len(accuracy_rates) if accuracy_rates else 0
+            overall_success_rate = (total_successful / total_variables * 100) if total_variables > 0 else 0
+            
+            return {
+                'total_days': total_days,
+                'average_accuracy': average_accuracy * 100,
+                'best_day': best_day,
+                'worst_day': worst_day,
+                'total_variables_validated': total_variables,
+                'overall_success_rate': overall_success_rate,
+                'accuracy_std': np.std(accuracy_rates) * 100 if len(accuracy_rates) > 1 else 0
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating daily validation summary: {str(e)}")
+            return {
+                'total_days': 0,
+                'average_accuracy': 0.0,
+                'best_day': None,
+                'worst_day': None,
+                'total_variables_validated': 0,
+                'overall_success_rate': 0.0
+            }
+    
+    def _safe_numeric_operation(self, value1, value2, operation='subtract'):
+        """
+        CORRECCIÓN: Operación matemática segura para evitar errores de tipo
+        """
+        try:
+            # Convertir primer valor
+            if hasattr(value1, 'demand_mean'):
+                # Es un ResultSimulation
+                num1 = float(value1.demand_mean)
+            elif hasattr(value1, 'value'):
+                # Tiene un atributo value
+                num1 = float(value1.value)
+            elif isinstance(value1, (int, float)):
+                # Es un número directo
+                num1 = float(value1)
+            else:
+                logger.warning(f"Cannot convert value1 to float: {type(value1)}")
+                num1 = 0.0
+            
+            # Convertir segundo valor
+            if hasattr(value2, 'demand_mean'):
+                # Es un ResultSimulation
+                num2 = float(value2.demand_mean)
+            elif hasattr(value2, 'value'):
+                # Tiene un atributo value
+                num2 = float(value2.value)
+            elif isinstance(value2, (int, float)):
+                # Es un número directo
+                num2 = float(value2)
+            else:
+                logger.warning(f"Cannot convert value2 to float: {type(value2)}")
+                num2 = 0.0
+            
+            # Realizar operación
+            if operation == 'subtract':
+                return num1 - num2
+            elif operation == 'add':
+                return num1 + num2
+            elif operation == 'multiply':
+                return num1 * num2
+            elif operation == 'divide':
+                return num1 / num2 if num2 != 0 else 0
+            else:
+                return num1
+                
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.error(f"Error in safe numeric operation: {e}")
+            return 0.0
+    
+    def _generate_daily_accuracy_chart(self, daily_validation_results):
+        """Generar gráfico de precisión diaria"""
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            
+            days = []
+            accuracy_rates = []
+            
+            for day_validation in daily_validation_results:
+                days.append(day_validation['day_number'])
+                accuracy_rates.append(day_validation['accuracy_rate'] * 100)
+            
+            if not days:
+                return None
+            
+            fig, ax = plt.subplots(figsize=(12, 6))
+            
+            # Gráfico de barras coloreadas por rendimiento
+            colors = []
+            for rate in accuracy_rates:
+                if rate >= 90:
+                    colors.append('#27AE60')  # Verde
+                elif rate >= 70:
+                    colors.append('#F39C12')  # Naranja
+                else:
+                    colors.append('#E74C3C')  # Rojo
+            
+            bars = ax.bar(days, accuracy_rates, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
+            
+            # Líneas de referencia
+            ax.axhline(y=90, color='green', linestyle='--', alpha=0.5, label='Meta Excelente (90%)')
+            ax.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='Meta Buena (70%)')
+            
+            # Agregar valores en las barras
+            for bar, rate in zip(bars, accuracy_rates):
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + 1,
+                    f'{rate:.1f}%', ha='center', va='bottom', fontsize=9)
+            
+            ax.set_xlabel('Día de Simulación')
+            ax.set_ylabel('Precisión (%)')
+            ax.set_title('Precisión de Validación por Día')
+            ax.legend()
+            ax.grid(True, alpha=0.3, axis='y')
+            ax.set_ylim(0, 105)
+            
+            # CORRECCIÓN: Layout seguro
+            try:
+                plt.tight_layout(pad=1.0)
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating daily accuracy chart: {str(e)}")
+            return None
+    
+    
+    def _get_variable_description(self, var_key):
+        """Obtener descripción de la variable"""
+        descriptions = {
+            'IT': 'Ingresos Totales',
+            'GT': 'Ganancias Totales',
+            'TG': 'Gastos Totales',
+            'TPV': 'Total Productos Vendidos',
+            'NSC': 'Nivel de Servicio al Cliente',
+            'EOG': 'Eficiencia Operativa Global',
+            'DPH': 'Demanda Promedio por Hora',
+            'CPROD': 'Capacidad de Producción',
+            'PVP': 'Precio de Venta por Producto',
+            'CVU': 'Costo Variable Unitario',
+            'CFD': 'Costos Fijos Diarios',
+            'NR': 'Margen de Ganancia Neto',
+            'RI': 'Retorno de Inversión',
+            'IPF': 'Inventario de Productos Finales'
+        }
+        return descriptions.get(var_key, var_key)
+
+    
+    def _get_variable_type(self, var_key):
+        """Obtener tipo de variable"""
+        types = {
+            'IT': 'Financiera',
+            'GT': 'Financiera', 
+            'TG': 'Financiera',
+            'TPV': 'Producción',
+            'NSC': 'Servicio',
+            'EOG': 'Eficiencia',
+            'DPH': 'Demanda',
+            'CPROD': 'Capacidad',
+            'PVP': 'Precio',
+            'CVU': 'Costo',
+            'CFD': 'Costo',
+            'NR': 'Rentabilidad',
+            'RI': 'Rentabilidad',
+            'IPF': 'Inventario'
+        }
+        return types.get(var_key, 'Numérica')
+    
+    def _get_variable_unit(self, var_key):
+        """Obtener unidad de la variable"""
+        units = {
+            'IT': 'Bs.',
+            'GT': 'Bs.',
+            'TG': 'Bs.',
+            'TPV': 'Litros',
+            'NSC': '%',
+            'EOG': '%',
+            'DPH': 'Litros/hora',
+            'CPROD': 'Litros/día'
+        }
+        return units.get(var_key, '')
+    
+    
+    def _validate_model_predictions(self, simulation_instance, predicted_values, real_values):
+        """
+        Validates model predictions against real values.
+        This method was missing and causing AttributeError.
+        """
+        try:
+            validation_results = {
+                'predictions_validated': 0,
+                'accuracy_metrics': {},
+                'validation_status': 'PASSED',
+                'errors': [],
+                'warnings': []
+            }
+            
+            if not predicted_values or not real_values:
+                validation_results['validation_status'] = 'FAILED'
+                validation_results['errors'].append("Insufficient data for validation")
+                return validation_results
+            
+            # Calculate validation metrics
+            total_predictions = len(predicted_values)
+            accurate_predictions = 0
+            error_rates = []
+            
+            for i, (predicted, real) in enumerate(zip(predicted_values, real_values)):
+                if real != 0:
+                    error_rate = abs(predicted - real) / abs(real)
+                    error_rates.append(error_rate)
+                    
+                    # Consider accurate if within 15% tolerance
+                    if error_rate <= 0.15:
+                        accurate_predictions += 1
+                else:
+                    # Handle zero real values
+                    if abs(predicted) <= 1:  # Small threshold for zero
+                        accurate_predictions += 1
+                    error_rates.append(0 if predicted == 0 else 1)
+            
+            # Calculate metrics
+            if error_rates:
+                validation_results['accuracy_metrics'] = {
+                    'mean_absolute_percentage_error': sum(error_rates) / len(error_rates),
+                    'accuracy_rate': accurate_predictions / total_predictions,
+                    'total_predictions': total_predictions,
+                    'accurate_predictions': accurate_predictions
+                }
+                
+                # Determine validation status
+                accuracy_rate = validation_results['accuracy_metrics']['accuracy_rate']
+                if accuracy_rate >= 0.8:
+                    validation_results['validation_status'] = 'PASSED'
+                elif accuracy_rate >= 0.6:
+                    validation_results['validation_status'] = 'WARNING'
+                    validation_results['warnings'].append(
+                        f"Model accuracy is moderate: {accuracy_rate:.1%}"
+                    )
+                else:
+                    validation_results['validation_status'] = 'FAILED'
+                    validation_results['errors'].append(
+                        f"Model accuracy too low: {accuracy_rate:.1%}"
+                    )
+            
+            validation_results['predictions_validated'] = total_predictions
+            return validation_results
+            
+        except Exception as e:
+            logger.error(f"Error in model prediction validation: {str(e)}")
+            return {
+                'predictions_validated': 0,
+                'accuracy_metrics': {},
+                'validation_status': 'ERROR',
+                'errors': [f"Validation error: {str(e)}"],
+                'warnings': []
+            }
+    
+    def _validate_data_structure(self, data, expected_structure, context="data_validation"):
+        """
+        Validar estructura de datos antes de procesamiento
+        """
+        try:
+            validation_results = {
+                'is_valid': True,
+                'missing_fields': [],
+                'invalid_types': [],
+                'warnings': []
+            }
+            
+            if not isinstance(data, dict):
+                validation_results['is_valid'] = False
+                validation_results['warnings'].append(f"Expected dict, got {type(data)}")
+                return validation_results
+            
+            for field, expected_type in expected_structure.items():
+                if field not in data:
+                    validation_results['missing_fields'].append(field)
+                    validation_results['is_valid'] = False
+                elif not isinstance(data[field], expected_type):
+                    validation_results['invalid_types'].append({
+                        'field': field,
+                        'expected': expected_type.__name__,
+                        'actual': type(data[field]).__name__
+                    })
+                    validation_results['warnings'].append(f"Field {field} type mismatch")
+            
+            if not validation_results['is_valid']:
+                self._enhanced_error_logging(
+                    ValueError("Data structure validation failed"),
+                    context,
+                    validation_results
+                )
+            
+            return validation_results
+            
+        except Exception as e:
+            logger.error(f"Error in data structure validation: {e}")
+            return {'is_valid': False, 'missing_fields': [], 'invalid_types': [], 'warnings': [str(e)]}
+    
+    def _get_safe_variable_unit(self, var_name):
+        """Obtener unidad de variable de forma segura"""
+        units = {
+            'PVP': 'Bs./L',
+            'TPV': 'L',
+            'IT': 'Bs.',
+            'TG': 'Bs.',
+            'GT': 'Bs.',
+            'NR': '%',
+            'NSC': '%',
+            'EOG': '%',
+            'CFD': 'Bs.',
+            'CVU': 'Bs./L',
+            'DPH': 'L/día',
+            'CPROD': 'L/día',
+            'NEPP': 'empleados',
+            'RI': '%',
+            'IPF': 'L'
+        }
+        return units.get(var_name, '')
+
+    def _process_accumulated_variables_safely(self, all_variables_extracted):
+        """
+        Procesar variables acumuladas con manejo de errores robusto
+        """
+        try:
+            # Lista de variables esperadas (verificar que existan)
+            expected_variables = [
+                'PVP', 'TPV', 'IT', 'TG', 'GT', 'NR', 'NSC', 'EOG', 
+                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF'
+            ]
+            
+            totales_acumulativos = {}
+            
+            # Verificar qué variables están realmente disponibles
+            available_variables = set()
+            for day_data in all_variables_extracted:
+                if isinstance(day_data, dict):
+                    available_variables.update(day_data.keys())
+            
+            logger.info(f"Available variables: {list(available_variables)}")
+            
+            # Procesar solo variables que existen
+            for var_name in expected_variables:
+                if var_name in available_variables:
+                    try:
+                        var_data = self._calculate_variable_totals_safe(all_variables_extracted, var_name)
+                        if var_data['total'] != 0 or var_data['count'] > 0:
+                            totales_acumulativos[var_name] = var_data
+                    except Exception as e:
+                        logger.warning(f"Error processing variable {var_name}: {e}")
+                        continue
+                else:
+                    logger.debug(f"Variable {var_name} not found in extracted data")
+            
+            logger.info(f"Successfully processed {len(totales_acumulativos)} accumulated variables")
+            return totales_acumulativos
+            
+        except Exception as e:
+            logger.error(f"Error processing accumulated variables: {e}")
+            return {}
+
+    def _calculate_variable_totals_safe(self, all_variables_extracted, var_name):
+        """
+        Calcular totales de variable con manejo de errores
+        """
+        try:
+            values = []
+            
+            for day_data in all_variables_extracted:
+                if isinstance(day_data, dict) and var_name in day_data:
+                    try:
+                        value = day_data[var_name]
+                        if value is not None:
+                            # Intentar conversión a float
+                            numeric_value = float(value)
+                            values.append(numeric_value)
+                    except (ValueError, TypeError) as e:
+                        logger.debug(f"Could not convert {var_name} value '{value}' to float: {e}")
+                        continue
+            
+            # Calcular estadísticas
+            if values:
+                total = sum(values)
+                count = len(values)
+                average = total / count
+                min_val = min(values)
+                max_val = max(values)
+                
+                # Calcular tendencia simple
+                if len(values) >= 3:
+                    first_half = values[:len(values)//2]
+                    second_half = values[len(values)//2:]
+                    trend = 'increasing' if sum(second_half) > sum(first_half) else 'decreasing'
+                else:
+                    trend = 'stable'
+            else:
+                total = count = average = min_val = max_val = 0
+                trend = 'stable'
+            
+            return {
+                'total': total,
+                'count': count,
+                'average': average,
+                'min_value': min_val,
+                'max_value': max_val,
+                'trend': trend,
+                'unit': self._get_safe_variable_unit(var_name)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating totals for {var_name}: {e}")
+            return {
+                'total': 0,
+                'count': 0,
+                'average': 0,
+                'min_value': 0,
+                'max_value': 0,
+                'trend': 'stable',
+                'unit': ''
+            }
+    
+    def _enhanced_error_logging(self, error, context="operation", additional_data=None):
+        """
+        Logging mejorado para errores
+        """
+        try:
+            error_info = {
+                'error_type': type(error).__name__,
+                'error_message': str(error),
+                'context': context,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            if additional_data:
+                error_info['additional_data'] = additional_data
+            
+            logger.error(f"Enhanced error log: {json.dumps(error_info, indent=2)}")
+            
+            # Logging específico para errores conocidos
+            if isinstance(error, TypeError) and "unsupported operand type" in str(error):
+                logger.error("Detected unsupported operand type error - check numeric conversions")
+            elif isinstance(error, AttributeError) and "has no attribute" in str(error):
+                logger.error("Detected missing attribute error - check object structure")
+            elif isinstance(error, KeyError):
+                logger.error(f"Detected missing key error: {error} - check data structure")
+            
+        except Exception as logging_error:
+            # Fallback logging
+            logger.error(f"Error in enhanced logging: {logging_error}")
+            logger.error(f"Original error: {error}")
+    
+    
+    
     def validate_questionary_selection(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate questionary selection form data.

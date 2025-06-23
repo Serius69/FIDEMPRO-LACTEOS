@@ -1,12 +1,8 @@
-# equations_improved_dh.py - Sistema de ecuaciones mejorado basado en Demanda Histórica
-
 equations_data = [
   # NÚCLEO: CÁLCULO DE DEMANDA PROMEDIO
-# Agregar ecuación para calcular DPH desde datos históricos
 {
     "name": "Demanda Promedio Histórica",
     "description": "Media de los datos históricos de demanda - Variable central del modelo",
-    # CAMBIAR DE mean(DH) a DH directamente (se calcula en el código):
     "expression": "DPH = DH",
     "variable1": "DPH",
     "variable2": "DH",
@@ -44,15 +40,14 @@ equations_data = [
   # VENTAS - Basadas en demanda promedio histórica
   
   {
-    "name": "Ventas por Cliente",
-    "description": "Unidades promedio vendidas por cliente ajustadas",
-    "expression": "VPC = VPC_BASE * (1 + 0.1 * ((DDP / max(DPH, 1)) - 1))",
-    "variable1": "VPC",
-    "variable2": "VPC_BASE",
-    "variable3": "DDP",
-    "variable4": "DPH",
-    "area": "Ventas"
-},
+        "name": "Ventas por Cliente",
+        "description": "VPC basado en demanda disponible",
+        "expression": "VPC = max(20, min(50, DDP / max(CPD, 1)))",
+        "variable1": "VPC",
+        "variable2": "DDP",
+        "variable3": "CPD",
+        "area": "Ventas"
+    },
   
 {
     "name": "Demanda Diaria Proyectada",
@@ -66,33 +61,29 @@ equations_data = [
 },
 
   {
-    "name": "Total clientes atendidos en el dia",
-    "description": "Clientes basados en demanda promedio y capacidad",
-    # CAMBIAR DE:
-    # "expression": "TCAE = min(CPD * (DDP / DPH), (DDP / max(VPC, 1)), CPD * 1.2)",
-    # A:
-    "expression": "TCAE = min(CPD * (DDP / max(DPH, 1)), DDP / max(VPC, 1), CPD * 1.2)",
-    "variable1": "TCAE",
-    "variable2": "CPD",
-    "variable3": "DDP",
-    "variable4": "DPH",
-    "variable5": "VPC",
-    "area": "Ventas"
-},
+        "name": "Total Clientes Atendidos",
+        "description": "Clientes realmente atendidos",
+        "expression": "TCAE = min(CPD, DDP / max(VPC, 20), CPD * 1.1)",
+        "variable1": "TCAE",
+        "variable2": "CPD",
+        "variable3": "DDP",
+        "variable4": "VPC",
+        "area": "Ventas"
+    },
   
   
 
   {
-    "name": "Total Productos Vendidos",
-    "description": "Ventas reales limitadas por inventario y demanda",
-    "expression": "TPV = min(DDP, IPF + PPL, TCAE * VPC)",  # Limitado por demanda proyectada
-    "variable1": "TPV",
-    "variable2": "DDP",
-    "variable3": "IPF",
-    "variable4": "PPL",
-    "variable5": "TCAE",
-    "variable6": "VPC",
-    "area": "Ventas"
+        "name": "Total Productos Vendidos",
+        "description": "Ventas reales limitadas por inventario y demanda",
+        "expression": "TPV = min(DDP, max(IPF + PPL, 0), TCAE * VPC)",
+        "variable1": "TPV",
+        "variable2": "DDP",
+        "variable3": "IPF",
+        "variable4": "PPL",
+        "variable5": "TCAE",
+        "variable6": "VPC",
+        "area": "Ventas"
   },
 
   {
@@ -119,7 +110,7 @@ equations_data = [
   {
     "name": "Producción Objetivo Diaria",
     "description": "Meta de producción basada en histórico y variabilidad",
-    "expression": "POD = DPH + (DSD * 1.65) + max(0, (DDP - DPH) * 0.5)",  # Media + 1.65σ + ajuste tendencia
+    "expression": "POD = DPH + (DSD * 1.65) + max(0, (DDP - DPH) * 0.5)",
     "variable1": "POD",
     "variable2": "DPH",
     "variable3": "DSD",
@@ -128,37 +119,26 @@ equations_data = [
   },
 
   {
-    "name": "Capacidad de Producción Real",
-    "description": "Capacidad efectiva considerando eficiencia",
-    # CAMBIAR DE:
-    # "expression": "CPROD = min(NEPP * (MLP / TPE) * CPPL * 0.85, CIP, POD * 1.2)",
-    # A (evitar referencia circular con CIP):
-    "expression": "CPROD = min(NEPP * (MLP / max(TPE, 1)) * CPPL * 0.85, 15000, POD * 1.2)",
-    "variable1": "CPROD",
-    "variable2": "NEPP",
-    "variable3": "MLP",
-    "variable4": "TPE",
-    "variable5": "CPPL",
-    "variable6": "POD",
-    "area": "Producción"
-},
-
+        "name": "Capacidad Producción Real",
+        "description": "Capacidad basada en recursos disponibles",
+        "expression": "CPROD = min(NEPP * (MLP / max(TPE, 1)) * 0.85, 3000)",
+        "variable1": "CPROD",
+        "variable2": "NEPP",
+        "variable3": "MLP",
+        "variable4": "TPE",
+        "area": "Producción"
+    },
   {
-    "name": "Cantidad producida de productos lácteos",
-    "description": "Producción real basada en demanda histórica y restricciones",
-    # CAMBIAR DE:
-    # "expression": "QPL = min(max(POD - IPF, DPH * 0.8), CPROD, (II / CINSP) * 0.95)",
-    # A:
-    "expression": "QPL = min(max(POD - IPF, DPH * 0.8), CPROD, II / max(CINSP, 1) * 0.95)",
-    "variable1": "QPL",
-    "variable2": "POD",
-    "variable3": "IPF",
-    "variable4": "DPH",
-    "variable5": "CPROD",
-    "variable6": "II",
-    "variable7": "CINSP",
-    "area": "Producción"
-},
+        "name": "Producción Diaria Corregida",
+        "description": "Producción basada en demanda y capacidad",
+        "expression": "QPL = min(DDP * 1.1, CPROD, II / max(CINSP, 1))",
+        "variable1": "QPL",
+        "variable2": "DDP",
+        "variable3": "CPROD",
+        "variable4": "II",
+        "variable5": "CINSP",
+        "area": "Producción"
+    },
 
   {
     "name": "Productos Producidos por Lote",
@@ -191,7 +171,7 @@ equations_data = [
   {
     "name": "Eficiencia Producción",
     "description": "Eficiencia respecto a demanda histórica",
-    "expression": "EP = QPL / max(DPH * 1.1, 1)",  # Producción vs demanda+10%
+    "expression": "EP = QPL / max(DPH * 1.1, 1)",
     "variable1": "EP",
     "variable2": "QPL",
     "variable3": "DPH",
@@ -202,7 +182,6 @@ equations_data = [
 {
     "name": "Inventario Objetivo Productos",
     "description": "Inventario óptimo basado en demanda y variabilidad",
-    # Usar sqrt correctamente:
     "expression": "IOP = DPH * DPL + DSD * sqrt(max(DPL, 1)) * 1.65",
     "variable1": "IOP",
     "variable2": "DPH",
@@ -214,11 +193,7 @@ equations_data = [
   {
     "name": "Inventario Productos Finales",
     "description": "Balance de productos terminados",
-    # CAMBIAR DE:
-    # "expression": "IPF = max(0, min(IPF + PPL - TPV, CMIPF))",
-    # A (usar IPF_anterior para evitar circularidad):
     "expression": "IPF = max(0, min(IPF + PPL - TPV, CMIPF))",
-    # NOTA: En la implementación, IPF debe venir del estado anterior
     "variable1": "IPF",
     "variable2": "PPL",
     "variable3": "TPV",
@@ -239,7 +214,7 @@ equations_data = [
   {
     "name": "Rotación Inventario",
     "description": "Veces que rota el inventario basado en demanda histórica",
-    "expression": "RTI = (DPH * 30) / max((IPF + IOP) / 2, 1)",  # Mensual con inventario promedio
+    "expression": "RTI = (DPH * 30) / max((IPF + IOP) / 2, 1)",
     "variable1": "RTI",
     "variable2": "DPH",
     "variable3": "IPF",
@@ -263,7 +238,7 @@ equations_data = [
   {
     "name": "Pedido Insumos",
     "description": "Pedido optimizado basado en consumo histórico",
-    "expression": "PI = max(0, IOI - II + (DPH * CINSP * TR))",  # Objetivo - actual + consumo lead time
+    "expression": "PI = max(0, IOI - II + (DPH * CINSP * TR))",
     "variable1": "PI",
     "variable2": "IOI",
     "variable3": "II",
@@ -286,9 +261,7 @@ equations_data = [
   {
     "name": "Inventario Insumos",
     "description": "Balance de insumos",
-    # Similar al anterior:
     "expression": "II = max(0, II + PI - UII)",
-    # NOTA: II debe venir del estado anterior
     "variable1": "II",
     "variable2": "PI",
     "variable3": "UII",
@@ -319,7 +292,7 @@ equations_data = [
   {
     "name": "Costo Total Adquisición Insumos",
     "description": "Costo de insumos con descuentos por volumen",
-    "expression": "CTAI = UII * CUIP * (1 - 0.05 * (PI > DPH * CINSP * 3))",  # Descuento si pedido > 3 días
+    "expression": "CTAI = UII * CUIP * (1 - 0.05 * (PI > DPH * CINSP * 3))",
     "variable1": "CTAI",
     "variable2": "UII",
     "variable3": "CUIP",
@@ -332,9 +305,6 @@ equations_data = [
   {
     "name": "Costo Variable Unitario",
     "description": "Costo variable por unidad basado en escala",
-    # CAMBIAR DE:
-    # "expression": "CVU = CTAI / max(QPL, 1) * (1 + 0.1 * (1 - QPL / max(DPH, 1)))",
-    # A:
     "expression": "CVU = (CTAI / max(QPL, 1)) * (1 + 0.1 * (1 - min(QPL / max(DPH, 1), 2)))",
     "variable1": "CVU",
     "variable2": "CTAI",
@@ -346,9 +316,6 @@ equations_data = [
   {
     "name": "Gastos Operativos",
     "description": "Gastos operativos escalados por producción",
-    # CAMBIAR DE:
-    # "expression": "GO = CFD * (0.7 + 0.3 * (QPL / max(DPH, 1))) + (SE / 30) + CTAI",
-    # A:
     "expression": "GO = CFD * (0.7 + 0.3 * min(QPL / max(DPH, 1), 1.5)) + (SE / 30) + CTAI",
     "variable1": "GO",
     "variable2": "CFD",
@@ -362,9 +329,6 @@ equations_data = [
   {
     "name": "Costo Total Transporte",
     "description": "Costo de distribución basado en ventas reales",
-    # CAMBIAR expresión con ceil:
-    # "expression": "CTTL = ceil(TPV / CTPLV) * CUTRANS * 50 * (0.8 + 0.2 * (TPV / max(DPH, 1)))",
-    # A:
     "expression": "CTTL = ceil(TPV / max(CTPLV, 1)) * CUTRANS * 50 * (0.8 + 0.2 * min(TPV / max(DPH, 1), 2))",
     "variable1": "CTTL",
     "variable2": "TPV",
@@ -377,7 +341,7 @@ equations_data = [
   {
     "name": "Costo Almacenamiento",
     "description": "Costo de mantener inventario con penalización por exceso",
-    "expression": "CA = (IPF * PVP * 0.002) + 100 * (IPF > 0) + 50 * max(0, (IPF - DPH * 3) / DPH)",  # Penaliza exceso
+    "expression": "CA = (IPF * PVP * 0.002) + 100 * (IPF > 0) + 50 * max(0, (IPF - DPH * 3) / DPH)",
     "variable1": "CA",
     "variable2": "IPF",
     "variable3": "PVP",
@@ -388,7 +352,7 @@ equations_data = [
   {
     "name": "Merma Producción",
     "description": "Pérdida en proceso proporcional a producción",
-    "expression": "MP = QPL * (0.015 + 0.005 * max(0, (QPL - DPH * 1.2) / DPH))",  # Mayor merma si sobreproducción
+    "expression": "MP = QPL * (0.015 + 0.005 * max(0, (QPL - DPH * 1.2) / DPH))",
     "variable1": "MP",
     "variable2": "QPL",
     "variable3": "DPH",
@@ -398,7 +362,7 @@ equations_data = [
   {
     "name": "Merma Inventario",
     "description": "Pérdida por vencimientos",
-    "expression": "MI = IPF * (0.005 + 0.01 * max(0, (IPF - DPH * 2) / DPH))",  # Aumenta si inventario alto
+    "expression": "MI = IPF * (0.005 + 0.01 * max(0, (IPF - DPH * 2) / DPH))",
     "variable1": "MI",
     "variable2": "IPF",
     "variable3": "DPH",
@@ -419,7 +383,7 @@ equations_data = [
   {
     "name": "Gastos Generales",
     "description": "Gastos generales proporcionales a operación",
-    "expression": "GG = (GMM / 30) * (TPV / max(DPH, 0.8)) + CTTL + CA + CTM",  # Marketing escalado por ventas
+    "expression": "GG = (GMM / 30) * (TPV / max(DPH, 0.8)) + CTTL + CA + CTM",
     "variable1": "GG",
     "variable2": "GMM",
     "variable3": "TPV",
@@ -483,9 +447,6 @@ equations_data = [
   {
     "name": "Rentabilidad vs Esperada",
     "description": "Rentabilidad real vs esperada por demanda histórica",
-    # CAMBIAR DE:
-    # "expression": "RVE = GT / max(IE * MB, 1)",
-    # A:
     "expression": "RVE = GT / max(IE * max(MB, 0.1), 1)",
     "variable1": "RVE",
     "variable2": "GT",
@@ -521,7 +482,7 @@ equations_data = [
   {
     "name": "Costo Unitario Producción",
     "description": "Costo unitario total de producción",
-    "expression": "CUP = CPP * (1 + 0.1 * abs(QPL - DPH) / max(DPH, 1))",  # Penaliza desviación de óptimo
+    "expression": "CUP = CPP * (1 + 0.1 * abs(QPL - DPH) / max(DPH, 1))",
     "variable1": "CUP",
     "variable2": "CPP",
     "variable3": "QPL",
@@ -532,7 +493,7 @@ equations_data = [
   {
     "name": "Precio Venta Recomendado",
     "description": "Precio óptimo basado en costos y demanda",
-    "expression": "PVR = max(CUP * (1.3 + 0.05 * (1 - TPV/DPH)), PC * (0.95 + 0.05 * NSC))",  # Ajuste por servicio
+    "expression": "PVR = max(CUP * (1.3 + 0.05 * (1 - TPV/DPH)), PC * (0.95 + 0.05 * NSC))",
     "variable1": "PVR",
     "variable2": "CUP",
     "variable3": "TPV",
@@ -546,7 +507,7 @@ equations_data = [
   {
     "name": "Productividad Empleados",
     "description": "Litros por empleado vs demanda histórica",
-    "expression": "PE = QPL / max(NEPP, 1) / (DPH / max(NEPP, 1))",  # Productividad relativa
+    "expression": "PE = QPL / max(NEPP, 1) / (DPH / max(NEPP, 1))",
     "variable1": "PE",
     "variable2": "QPL",
     "variable3": "NEPP",
@@ -605,7 +566,7 @@ equations_data = [
   {
     "name": "Costo Unitario Adquisición Clientes",
     "description": "Costo por cliente nuevo considerando base histórica",
-    "expression": "CUAC = (GMM / 30) / max((TCAE - (DPH / VPC)) * 0.5, 1)",  # Solo nuevos clientes
+    "expression": "CUAC = (GMM / 30) / max((TCAE - (DPH / VPC)) * 0.5, 1)",
     "variable1": "CUAC",
     "variable2": "GMM",
     "variable3": "TCAE",
@@ -630,7 +591,7 @@ equations_data = [
   {
     "name": "Participación Mercado",
     "description": "Share basado en demanda histórica del mercado",
-    "expression": "PM = TPV / max(DH * 10, 1)",  # Asume mercado 10x mayor
+    "expression": "PM = TPV / max(DH * 10, 1)",
     "variable1": "PM",
     "variable2": "TPV",
     "variable3": "DH",
@@ -663,9 +624,6 @@ equations_data = [
   {
     "name": "Eficiencia Operativa Global",
     "description": "OEE basado en demanda histórica",
-    # CAMBIAR DE:
-    # "expression": "EOG = (QPL / max(DPH * 1.2, 1)) * (1 - (MP + MI) / QPL) * NSC",
-    # A:
     "expression": "EOG = (QPL / max(DPH * 1.2, 1)) * (1 - (MP + MI) / max(QPL, 1)) * NSC",
     "variable1": "EOG",
     "variable2": "QPL",
@@ -728,7 +686,351 @@ equations_data = [
     "variable6": "GT",
     "variable7": "IE",
     "area": "Indicadores Generales"
-  }
+  },
+  
+  # ================================================================
+# ÁREA: MANTENIMIENTO
+# ================================================================
+{
+    "name": "Disponibilidad de Equipos",
+    "description": "Porcentaje de tiempo que equipos están disponibles para producción",
+    "expression": "DISP = (HTO - TP) / max(HTO, 1)",
+    "variable1": "DISP",
+    "variable2": "HTO",
+    "variable3": "TP",
+    "area": "Mantenimiento"
+},
+
+{
+    "name": "Efectividad General Equipos",
+    "description": "OEE - Disponibilidad x Rendimiento x Calidad",
+    "expression": "OEE = DISP * (QPL / max(QMAX, 1)) * (QC / max(QPL, 1))",
+    "variable1": "OEE",
+    "variable2": "DISP",
+    "variable3": "QPL",
+    "variable4": "QMAX",
+    "variable5": "QC",
+    "area": "Mantenimiento"
+},
+
+{
+    "name": "Costo Mantenimiento por Litro",
+    "description": "Costo unitario de mantenimiento por litro producido",
+    "expression": "CML = (CRP + CREP + CMOM) / max(QPL, 1)",
+    "variable1": "CML",
+    "variable2": "CRP",
+    "variable3": "CREP",
+    "variable4": "CMOM",
+    "variable5": "QPL",
+    "area": "Mantenimiento"
+},
+
+{
+    "name": "Frecuencia de Fallas",
+    "description": "Número de fallas por cada 1000 horas de operación",
+    "expression": "FF = (NF * 1000) / max(HTO, 1)",
+    "variable1": "FF",
+    "variable2": "NF",
+    "variable3": "HTO",
+    "area": "Mantenimiento"
+},
+
+{
+    "name": "Ratio Mantenimiento Preventivo",
+    "description": "Porcentaje de mantenimiento preventivo vs correctivo",
+    "expression": "RMP = HMP / max(HMP + HMC, 1)",
+    "variable1": "RMP",
+    "variable2": "HMP",
+    "variable3": "HMC",
+    "area": "Mantenimiento"
+},
+
+# ================================================================
+# ÁREA: ABASTECIMIENTO
+# ================================================================
+{
+    "name": "Costo Total de Adquisición",
+    "description": "Costo total incluyendo precio, transporte y almacenamiento",
+    "expression": "CTA = CC + CTI + CAL",
+    "variable1": "CTA",
+    "variable2": "CC",
+    "variable3": "CTI",
+    "variable4": "CAL",
+    "area": "Abastecimiento"
+},
+
+{
+    "name": "Tiempo Promedio de Entrega Proveedores",
+    "description": "Tiempo promedio de entrega ponderado por proveedores",
+    "expression": "TPEP = (TE1 * P1 + TE2 * P2 + TE3 * P3) / (P1 + P2 + P3)",
+    "variable1": "TPEP",
+    "variable2": "TE1",
+    "variable3": "TE2",
+    "variable4": "TE3",
+    "variable5": "P1",
+    "variable6": "P2",
+    "variable7": "P3",
+    "area": "Abastecimiento"
+},
+
+{
+    "name": "Índice de Calidad de Proveedores",
+    "description": "Evaluación promedio de calidad de materias primas",
+    "expression": "ICP = (CMP1 * V1 + CMP2 * V2 + CMP3 * V3) / (V1 + V2 + V3)",
+    "variable1": "ICP",
+    "variable2": "CMP1",
+    "variable3": "CMP2",
+    "variable4": "CMP3",
+    "variable5": "V1",
+    "variable6": "V2",
+    "variable7": "V3",
+    "area": "Abastecimiento"
+},
+
+{
+    "name": "Rotación de Inventario Materias Primas",
+    "description": "Veces que rota el inventario de materias primas al año",
+    "expression": "RIMP = (CUIP * QPL * 365) / max((II + IIF) / 2, 1)",
+    "variable1": "RIMP",
+    "variable2": "CUIP",
+    "variable3": "QPL",
+    "variable4": "II",
+    "variable5": "IIF",
+    "area": "Abastecimiento"
+},
+
+{
+    "name": "Cumplimiento de Entregas",
+    "description": "Porcentaje de entregas a tiempo de proveedores",
+    "expression": "CDE = (EAT / max(TTEP, 1)) * 100",
+    "variable1": "CDE",
+    "variable2": "EAT",
+    "variable3": "TTEP",
+    "area": "Abastecimiento"
+},
+
+# ================================================================
+# ÁREA: RECURSOS HUMANOS - CORREGIDO
+# ================================================================
+{
+    "name": "Índice de Rotación de Personal",
+    "description": "Porcentaje anual de rotación de empleados",
+    "expression": "IRP = ((ES + EE) / 2) / max(NEPP, 1) * 100",  # CORREGIDO: ED -> EE
+    "variable1": "IRP",
+    "variable2": "ES",
+    "variable3": "EE",  # CORREGIDO: Cambiado de ED a EE
+    "variable4": "NEPP",
+    "area": "Recursos Humanos"
+},
+
+{
+    "name": "Productividad por Empleado Diaria",
+    "description": "Litros producidos por empleado por día",
+    "expression": "PPE = QPL / max(NEPP, 1)",
+    "variable1": "PPE",
+    "variable2": "QPL",
+    "variable3": "NEPP",
+    "area": "Recursos Humanos"
+},
+
+{
+    "name": "Costo de Capacitación por Empleado",
+    "description": "Inversión en capacitación por empleado al año",
+    "expression": "CCE = (CCAP * 12) / max(NEPP, 1)",
+    "variable1": "CCE",
+    "variable2": "CCAP",
+    "variable3": "NEPP",
+    "area": "Recursos Humanos"
+},
+
+{
+    "name": "Tasa de Ausentismo",
+    "description": "Porcentaje de ausentismo laboral",
+    "expression": "TAU = (HAU / max(HTP, 1)) * 100",
+    "variable1": "TAU",
+    "variable2": "HAU",
+    "variable3": "HTP",
+    "area": "Recursos Humanos"
+},
+
+{
+    "name": "Costo Laboral por Litro",
+    "description": "Costo de mano de obra por litro producido",
+    "expression": "CLL = (SE / 30) / max(QPL, 1)",
+    "variable1": "CLL",
+    "variable2": "SE",
+    "variable3": "QPL",
+    "area": "Recursos Humanos"
+},
+
+# ================================================================
+# ÁREA: MARKETING
+# ================================================================
+{
+    "name": "Retorno de Inversión Publicitaria",
+    "description": "ROI de la inversión en publicidad",
+    "expression": "ROIA = ((IT - CTA) * 100) / max(GMM, 1)",
+    "variable1": "ROIA",
+    "variable2": "IT",
+    "variable3": "CTA",
+    "variable4": "GMM",
+    "area": "Marketing"
+},
+
+{
+    "name": "Costo por Lead Generado",
+    "description": "Costo de marketing por lead generado",
+    "expression": "CPL_MKT = GMM / max(LG, 1)",  # CORREGIDO: Renombrado para evitar conflicto
+    "variable1": "CPL_MKT",
+    "variable2": "GMM",
+    "variable3": "LG",
+    "area": "Marketing"
+},
+
+{
+    "name": "Tasa de Conversión de Leads",
+    "description": "Porcentaje de leads que se convierten en clientes",
+    "expression": "TCL = (NC / max(LG, 1)) * 100",
+    "variable1": "TCL",
+    "variable2": "NC",
+    "variable3": "LG",
+    "area": "Marketing"
+},
+
+{
+    "name": "Alcance Efectivo de Campañas",
+    "description": "Alcance ponderado por efectividad de campañas",
+    "expression": "AEC = (ALC * TCL) / 100",
+    "variable1": "AEC",
+    "variable2": "ALC",
+    "variable3": "TCL",
+    "area": "Marketing"
+},
+
+{
+    "name": "Reconocimiento de Marca Índice",
+    "description": "Índice de reconocimiento de marca en el mercado",
+    "expression": "RMI = (MRE * 0.6) + (MRA * 0.4)",
+    "variable1": "RMI",
+    "variable2": "MRE",
+    "variable3": "MRA",
+    "area": "Marketing"
+},
+
+# ================================================================
+# ÁREA: COMPETENCIA
+# ================================================================
+{
+    "name": "Ventaja Competitiva de Precio",
+    "description": "Ventaja o desventaja en precio vs competencia",
+    "expression": "VCP = ((PC - PVP) / max(PC, 1)) * 100",
+    "variable1": "VCP",
+    "variable2": "PC",
+    "variable3": "PVP",
+    "area": "Competencia"
+},
+
+{
+    "name": "Participación de Mercado Relativa",
+    "description": "Market share relativo vs principal competidor",
+    "expression": "PMR = PM / max(PMC, 0.01)",
+    "variable1": "PMR",
+    "variable2": "PM",
+    "variable3": "PMC",
+    "area": "Competencia"
+},
+
+{
+    "name": "Índice de Diferenciación de Producto",
+    "description": "Nivel de diferenciación vs productos competidores",
+    "expression": "IDP = (CDP * 0.4) + (CCP * 0.3) + (CSP * 0.3)",
+    "variable1": "IDP",
+    "variable2": "CDP",
+    "variable3": "CCP",
+    "variable4": "CSP",
+    "area": "Competencia"
+},
+
+{
+    "name": "Efectividad de Estrategia Competitiva",
+    "description": "Efectividad de estrategias vs competencia",
+    "expression": "EEC = (VCP * 0.3) + (PMR * 0.4) + (IDP * 0.3)",
+    "variable1": "EEC",
+    "variable2": "VCP",
+    "variable3": "PMR",
+    "variable4": "IDP",
+    "area": "Competencia"
+},
+
+{
+    "name": "Amenaza Competitiva Global",
+    "description": "Nivel de amenaza de la competencia",
+    "expression": "AMEN = (NPC * 0.3) + ((PMC / max(PM, 1)) * 0.4) + (ICC * 0.3)",
+    "variable1": "AMEN",
+    "variable2": "NPC",
+    "variable3": "PMC",
+    "variable4": "PM",
+    "variable5": "ICC",
+    "area": "Competencia"
+},
+
+# ================================================================
+# ÁREA: DISTRIBUCIÓN
+# ================================================================
+{
+    "name": "Eficiencia de Rutas de Entrega",
+    "description": "Litros entregados por kilómetro recorrido",
+    "expression": "ERE = TPV / max(KMT, 1)",
+    "variable1": "ERE",
+    "variable2": "TPV",
+    "variable3": "KMT",
+    "area": "Distribución"
+},
+
+{
+    "name": "Costo de Distribución por Litro",
+    "description": "Costo total de distribución por litro entregado",
+    "expression": "CDL = (CTTL + CCF + CLOG) / max(TPV, 1)",
+    "variable1": "CDL",
+    "variable2": "CTTL",
+    "variable3": "CCF",
+    "variable4": "CLOG",
+    "variable5": "TPV",
+    "area": "Distribución"
+},
+
+{
+    "name": "Tiempo Promedio de Entrega Cliente",
+    "description": "Tiempo promedio desde salida hasta entrega",
+    "expression": "TPEC = TTED / max(NE, 1)",
+    "variable1": "TPEC",
+    "variable2": "TTED",
+    "variable3": "NE",
+    "area": "Distribución"
+},
+
+{
+    "name": "Índice de Calidad de Entrega",
+    "description": "Calidad de entrega considerando temperatura y tiempo",
+    "expression": "ICE = ((TCFO / max(TCF, 1)) * 0.6) + ((TEO / max(TER, 1)) * 0.4)",
+    "variable1": "ICE",
+    "variable2": "TCFO",
+    "variable3": "TCF",
+    "variable4": "TEO",
+    "variable5": "TER",
+    "area": "Distribución"
+},
+
+{
+    "name": "Tasa de Devoluciones",
+    "description": "Porcentaje de productos devueltos por problemas de distribución",
+    "expression": "TD = (PD / max(TPV, 1)) * 100",
+    "variable1": "TD",
+    "variable2": "PD",
+    "variable3": "TPV",
+    "area": "Distribución"
+}
+  
 ]
 
 

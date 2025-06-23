@@ -567,31 +567,200 @@ class SimulateResultView(LoginRequiredMixin, View):
         return model_validation_context
 
     def _add_daily_validation(self, validation_service, simulation_instance, results_simulation):
-        """Add daily validation results to context"""
-        # Extract real values from questionnaire
-        real_values = self._extract_real_values_from_questionnaire(simulation_instance)
-        
-        # Perform daily validation
-        daily_validation_results = validation_service._validate_by_day(
-            simulation_instance, list(results_simulation), real_values
-        )
-        
-        # Generate daily validation charts
-        daily_validation_charts = validation_service._generate_daily_validation_charts(
-            daily_validation_results
-        )
-        
-        # Calculate overall daily validation summary
-        daily_validation_summary = validation_service._calculate_daily_validation_summary(
-            daily_validation_results
-        )
-        
-        return {
-            'daily_validation_results': daily_validation_results,
-            'daily_validation_charts': daily_validation_charts,
-            'daily_validation_summary': daily_validation_summary
-        }
+        """
+        CORRECCIÓN: Agregar validación diaria con manejo de errores mejorado
+        """
+        try:
+            # Extraer valores reales del cuestionario
+            real_values = self._extract_real_values_from_questionnaire(simulation_instance)
+            
+            # Realizar validación diaria
+            daily_validation_results = validation_service._validate_by_day(
+                simulation_instance, list(results_simulation), real_values
+            )
+            
+            # Generar gráficos de validación diaria - CON MANEJO DE ERRORES
+            daily_validation_charts = {}
+            try:
+                if hasattr(validation_service, '_generate_daily_validation_charts'):
+                    daily_validation_charts = validation_service._generate_daily_validation_charts(
+                        daily_validation_results
+                    )
+                else:
+                    logger.warning("Validation service missing _generate_daily_validation_charts method")
+                    daily_validation_charts = self._generate_fallback_daily_charts(daily_validation_results)
+            except Exception as chart_error:
+                logger.error(f"Error generating daily validation charts: {chart_error}")
+                daily_validation_charts = {}
+            
+            # Calcular resumen de validación diaria - CON MANEJO DE ERRORES
+            daily_validation_summary = {}
+            try:
+                if hasattr(validation_service, '_calculate_daily_validation_summary'):
+                    daily_validation_summary = validation_service._calculate_daily_validation_summary(
+                        daily_validation_results
+                    )
+                else:
+                    logger.warning("Validation service missing _calculate_daily_validation_summary method")
+                    daily_validation_summary = self._calculate_fallback_daily_summary(daily_validation_results)
+            except Exception as summary_error:
+                logger.error(f"Error calculating daily validation summary: {summary_error}")
+                daily_validation_summary = {}
+            
+            return {
+                'daily_validation_results': daily_validation_results,
+                'daily_validation_charts': daily_validation_charts,
+                'daily_validation_summary': daily_validation_summary
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in daily validation: {str(e)}")
+            return {
+                'daily_validation_results': [],
+                'daily_validation_charts': {},
+                'daily_validation_summary': {}
+            }
 
+    def _calculate_fallback_daily_summary(self, daily_validation_results):
+        """Calcular resumen de fallback cuando el servicio no está disponible"""
+        try:
+            if not daily_validation_results:
+                return {
+                    'total_days': 0,
+                    'average_accuracy': 0.0,
+                    'best_day': None,
+                    'worst_day': None,
+                    'total_variables_validated': 0,
+                    'overall_success_rate': 0.0
+                }
+            
+            total_days = len(daily_validation_results)
+            accuracy_rates = [result['accuracy_rate'] for result in daily_validation_results]
+            
+            best_accuracy = max(accuracy_rates)
+            worst_accuracy = min(accuracy_rates)
+            
+            best_day_idx = accuracy_rates.index(best_accuracy)
+            worst_day_idx = accuracy_rates.index(worst_accuracy)
+            
+            return {
+                'total_days': total_days,
+                'average_accuracy': sum(accuracy_rates) / len(accuracy_rates) * 100,
+                'best_day': {
+                    'day': daily_validation_results[best_day_idx]['day_number'],
+                    'accuracy': best_accuracy
+                },
+                'worst_day': {
+                    'day': daily_validation_results[worst_day_idx]['day_number'],
+                    'accuracy': worst_accuracy
+                },
+                'total_variables_validated': sum(
+                    result.get('summary', {}).get('total', 0) 
+                    for result in daily_validation_results
+                ),
+                'overall_success_rate': sum(accuracy_rates) / len(accuracy_rates) * 100
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating fallback daily summary: {e}")
+            return {
+                'total_days': 0,
+                'average_accuracy': 0.0,
+                'best_day': None,
+                'worst_day': None,
+                'total_variables_validated': 0,
+                'overall_success_rate': 0.0
+            }
+            
+    def _safe_numeric_operation_in_view(self, value1, value2, operation='subtract'):
+        """
+        CORRECCIÓN: Operación matemática segura en la vista
+        """
+        try:
+            # Convertir ResultSimulation a valor numérico
+            if hasattr(value1, 'demand_mean'):
+                num1 = float(value1.demand_mean)
+            elif hasattr(value1, 'variables') and isinstance(value1.variables, dict):
+                # Si es un ResultSimulation, intentar extraer el valor relevante
+                num1 = float(value1.variables.get('DPH', 0))
+            elif isinstance(value1, (int, float)):
+                num1 = float(value1)
+            else:
+                logger.warning(f"Cannot convert value1 to float: {type(value1)}")
+                num1 = 0.0
+            
+            # Convertir segundo valor
+            if isinstance(value2, (int, float)):
+                num2 = float(value2)
+            elif hasattr(value2, 'demand_mean'):
+                num2 = float(value2.demand_mean)
+            else:
+                logger.warning(f"Cannot convert value2 to float: {type(value2)}")
+                num2 = 0.0
+            
+            # Realizar operación
+            if operation == 'subtract':
+                return num1 - num2
+            elif operation == 'add':
+                return num1 + num2
+            elif operation == 'multiply':
+                return num1 * num2
+            elif operation == 'divide':
+                return num1 / num2 if num2 != 0 else 0
+            else:
+                return num1
+                
+        except Exception as e:
+            logger.error(f"Error in safe numeric operation in view: {e}")
+            return 0.0
+    
+    
+    def _generate_fallback_daily_charts(self, daily_validation_results):
+        """Generar gráficos de fallback cuando el servicio no está disponible"""
+        try:
+            fallback_charts = {}
+            
+            if not daily_validation_results:
+                return fallback_charts
+            
+            # Generar un gráfico simple de precisión por día
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            
+            days = [result['day_number'] for result in daily_validation_results]
+            accuracy_rates = [result['accuracy_rate'] * 100 for result in daily_validation_results]
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.bar(days, accuracy_rates, color='skyblue', alpha=0.7)
+            ax.set_xlabel('Día de Simulación')
+            ax.set_ylabel('Precisión (%)')
+            ax.set_title('Precisión de Validación por Día (Fallback)')
+            ax.grid(True, alpha=0.3, axis='y')
+            
+            # CORRECCIÓN: Usar layout seguro
+            try:
+                plt.tight_layout(pad=1.0)
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            fallback_charts['daily_accuracy'] = chart_base64
+            
+            return fallback_charts
+            
+        except Exception as e:
+            logger.error(f"Error generating fallback daily charts: {e}")
+            return {}
+    
     def _add_validation_charts(self, chart_generator, validation_results, results_simulation, 
                               analysis_data, three_line_validation=None):
         """Add validation charts to context including three-line chart"""

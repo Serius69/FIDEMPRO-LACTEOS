@@ -107,6 +107,59 @@ def cache_result(timeout: Optional[int] = None, key_prefix: str = ""):
     return decorator
 
 
+def simple_cache_result(timeout=300, key_prefix=""):
+    """Decorador de cache simplificado que evita claves problemáticas"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                # Solo cachear si hay un self con cache_manager
+                if args and hasattr(args[0], 'cache_manager'):
+                    cache_manager = args[0].cache_manager
+                    
+                    # Crear clave simple
+                    func_name = func.__name__
+                    
+                    # Extraer user_id si está disponible
+                    user_id = None
+                    if len(args) > 1:
+                        user_arg = args[1]
+                        if hasattr(user_arg, 'id'):
+                            user_id = user_arg.id
+                        elif hasattr(user_arg, 'pk'):
+                            user_id = user_arg.pk
+                    
+                    # Crear clave simple
+                    if user_id:
+                        cache_key = f"{key_prefix}_{func_name}_{user_id}"
+                    else:
+                        cache_key = f"{key_prefix}_{func_name}_{hash(str(args) + str(kwargs)) % 10000}"
+                    
+                    # Intentar obtener del cache
+                    cached_result = cache_manager.get(cache_key)
+                    if cached_result is not None:
+                        return cached_result
+                    
+                    # Ejecutar función
+                    result = func(*args, **kwargs)
+                    
+                    # Guardar en cache
+                    cache_manager.set(cache_key, result, timeout)
+                    return result
+                
+                # Si no hay cache manager, ejecutar directamente
+                return func(*args, **kwargs)
+                
+            except Exception as e:
+                logger.error(f"Error in simple_cache_result for {func.__name__}: {e}")
+                # Si hay error de cache, ejecutar función directamente
+                return func(*args, **kwargs)
+        
+        wrapper.__name__ = func.__name__
+        wrapper.__doc__ = func.__doc__
+        return wrapper
+    return decorator
+
+
 def invalidate_cache_pattern(pattern: str):
     """Invalidate all cache keys matching pattern"""
     try:

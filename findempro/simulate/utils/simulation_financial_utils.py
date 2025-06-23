@@ -36,176 +36,383 @@ class SimulationFinancialAnalyzer:
             'target_efficiency': 0.85,      # 85% operational efficiency
         }
     
-    def _generate_dynamic_recommendations(self, simulation_instance, 
-                                    totales_acumulativos, financial_results):
-        """Generate dynamic recommendations based on simulation results"""
-        recommendations = []
-        business = simulation_instance.fk_questionary_result.fk_questionary.fk_product.fk_business
+    # def _generate_dynamic_recommendations(self, simulation_instance, 
+    #                                 totales_acumulativos, financial_results):
+    #     """Generate dynamic recommendations based on simulation results"""
+    #     recommendations = []
+    #     business = simulation_instance.fk_questionary_result.fk_questionary.fk_product.fk_business
         
-        # Get finance recommendations from database
-        db_recommendations = FinanceRecommendation.objects.filter(
-            fk_business=business,
-            is_active=True
-        ).order_by('threshold_value')
+    #     # Get finance recommendations from database
+    #     db_recommendations = FinanceRecommendation.objects.filter(
+    #         fk_business=business,
+    #         is_active=True
+    #     ).order_by('threshold_value')
         
-        # Check each recommendation against results
-        for rec in db_recommendations:
-            if rec.variable_name in totales_acumulativos:
-                value = totales_acumulativos[rec.variable_name]['total']
-                threshold = float(rec.threshold_value) if rec.threshold_value else 0
+    #     # Check each recommendation against results
+    #     for rec in db_recommendations:
+    #         if rec.variable_name in totales_acumulativos:
+    #             value = totales_acumulativos[rec.variable_name]['total']
+    #             threshold = float(rec.threshold_value) if rec.threshold_value else 0
                 
-                # Check if value exceeds threshold
-                if threshold > 0 and value > threshold:
-                    severity = ((value - threshold) / threshold * 100)
+    #             # Check if value exceeds threshold
+    #             if threshold > 0 and value > threshold:
+    #                 severity = ((value - threshold) / threshold * 100)
                     
-                    recommendations.append({
-                        'name': rec.name,
-                        'description': rec.description or rec.recommendation,
-                        'recommendation': rec.recommendation,
-                        'severity': min(100, severity),
-                        'value': value,
-                        'threshold': threshold,
-                        'variable': rec.variable_name,
-                        'priority': 'high' if severity > 50 else 'medium' if severity > 20 else 'low',
-                        # 'icon': self._get_recommendation_icon(rec.variable_name),
-                        # 'color': self._get_recommendation_color(severity)
-                    })
+    #                 recommendations.append({
+    #                     'name': rec.name,
+    #                     'description': rec.description or rec.recommendation,
+    #                     'recommendation': rec.recommendation,
+    #                     'severity': min(100, severity),
+    #                     'value': value,
+    #                     'threshold': threshold,
+    #                     'variable': rec.variable_name,
+    #                     'priority': 'high' if severity > 50 else 'medium' if severity > 20 else 'low',
+    #                     # 'icon': self._get_recommendation_icon(rec.variable_name),
+    #                     # 'color': self._get_recommendation_color(severity)
+    #                 })
         
-        # Add dynamic recommendations based on calculated metrics
+    #     # Add dynamic recommendations based on calculated metrics
         
-        # 1. Efficiency Analysis
-        if 'TOTAL PRODUCTOS VENDIDOS' in totales_acumulativos and 'TOTAL PRODUCTOS PRODUCIDOS' in totales_acumulativos:
-            vendidos = totales_acumulativos['TOTAL PRODUCTOS VENDIDOS']['total']
-            producidos = totales_acumulativos['TOTAL PRODUCTOS PRODUCIDOS']['total']
-            if producidos > 0:
-                efficiency = (vendidos / producidos) * 100
-                if efficiency < 80:
-                    recommendations.append({
-                        'name': 'Eficiencia de Ventas Baja',
-                        'description': f'Solo se está vendiendo el {efficiency:.1f}% de la producción',
-                        'recommendation': 'Revisar estrategias de ventas y marketing. Considerar promociones o ajustar producción.',
-                        'severity': 90 - efficiency,
-                        'priority': 'high' if efficiency < 60 else 'medium',
-                        'variable': 'EFICIENCIA_VENTAS',
-                        'icon': 'bx-trending-down',
-                        'color': 'danger' if efficiency < 60 else 'warning'
-                    })
+    #     # 1. Efficiency Analysis
+    #     if 'TOTAL PRODUCTOS VENDIDOS' in totales_acumulativos and 'TOTAL PRODUCTOS PRODUCIDOS' in totales_acumulativos:
+    #         vendidos = totales_acumulativos['TOTAL PRODUCTOS VENDIDOS']['total']
+    #         producidos = totales_acumulativos['TOTAL PRODUCTOS PRODUCIDOS']['total']
+    #         if producidos > 0:
+    #             efficiency = (vendidos / producidos) * 100
+    #             if efficiency < 80:
+    #                 recommendations.append({
+    #                     'name': 'Eficiencia de Ventas Baja',
+    #                     'description': f'Solo se está vendiendo el {efficiency:.1f}% de la producción',
+    #                     'recommendation': 'Revisar estrategias de ventas y marketing. Considerar promociones o ajustar producción.',
+    #                     'severity': 90 - efficiency,
+    #                     'priority': 'high' if efficiency < 60 else 'medium',
+    #                     'variable': 'EFICIENCIA_VENTAS',
+    #                     'icon': 'bx-trending-down',
+    #                     'color': 'danger' if efficiency < 60 else 'warning'
+    #                 })
         
-        # 2. Profitability Analysis
-        if 'INGRESOS TOTALES' in totales_acumulativos and 'GASTOS TOTALES' in totales_acumulativos:
-            ingresos = totales_acumulativos['INGRESOS TOTALES']['total']
-            gastos = totales_acumulativos.get('GASTOS TOTALES', {}).get('total', 0) or totales_acumulativos.get('Total Gastos', {}).get('total', 0)
+    #     # 2. Profitability Analysis
+    #     if 'INGRESOS TOTALES' in totales_acumulativos and 'GASTOS TOTALES' in totales_acumulativos:
+    #         ingresos = totales_acumulativos['INGRESOS TOTALES']['total']
+    #         gastos = totales_acumulativos.get('GASTOS TOTALES', {}).get('total', 0) or totales_acumulativos.get('Total Gastos', {}).get('total', 0)
             
-            if ingresos > 0:
-                profit_margin = ((ingresos - gastos) / ingresos) * 100
-                if profit_margin < 10:
+    #         if ingresos > 0:
+    #             profit_margin = ((ingresos - gastos) / ingresos) * 100
+    #             if profit_margin < 10:
+    #                 recommendations.append({
+    #                     'name': 'Margen de Ganancia Bajo',
+    #                     'description': f'El margen de ganancia es solo {profit_margin:.1f}%',
+    #                     'recommendation': 'Analizar estructura de costos y considerar optimizaciones o ajuste de precios.',
+    #                     'severity': 80,
+    #                     'priority': 'high',
+    #                     'variable': 'MARGEN_GANANCIA',
+    #                     'icon': 'bx-dollar-circle',
+    #                     'color': 'danger'
+    #                 })
+    #             elif profit_margin > 40:
+    #                 recommendations.append({
+    #                     'name': 'Excelente Margen de Ganancia',
+    #                     'description': f'El margen de ganancia es {profit_margin:.1f}%',
+    #                     'recommendation': 'Mantener estrategia actual. Considerar expansión o inversión en crecimiento.',
+    #                     'severity': 20,
+    #                     'priority': 'low',
+    #                     'variable': 'MARGEN_GANANCIA',
+    #                     'icon': 'bx-trophy',
+    #                     'color': 'success'
+    #                 })
+        
+    #     # 3. Inventory Analysis
+    #     if 'DEMANDA INSATISFECHA' in totales_acumulativos:
+    #         demanda_insatisfecha = totales_acumulativos['DEMANDA INSATISFECHA']['total']
+    #         if demanda_insatisfecha > 0:
+    #             recommendations.append({
+    #                 'name': 'Demanda Insatisfecha Detectada',
+    #                 'description': f'Se dejó de atender {demanda_insatisfecha:.0f} unidades de demanda',
+    #                 'recommendation': 'Aumentar capacidad de producción o mejorar gestión de inventarios.',
+    #                 'severity': min(100, demanda_insatisfecha / 100),
+    #                 'priority': 'high',
+    #                 'variable': 'DEMANDA_INSATISFECHA',
+    #                 'icon': 'bx-error-circle',
+    #                 'color': 'danger'
+    #             })
+        
+    #     # 4. Cost Structure Analysis
+    #     if 'GASTOS OPERATIVOS' in totales_acumulativos and 'INGRESOS TOTALES' in totales_acumulativos:
+    #         gastos_op = totales_acumulativos['GASTOS OPERATIVOS']['total']
+    #         ingresos = totales_acumulativos['INGRESOS TOTALES']['total']
+    #         if ingresos > 0:
+    #             cost_ratio = (gastos_op / ingresos) * 100
+    #             if cost_ratio > 70:
+    #                 recommendations.append({
+    #                     'name': 'Costos Operativos Elevados',
+    #                     'description': f'Los costos operativos representan el {cost_ratio:.1f}% de los ingresos',
+    #                     'recommendation': 'Revisar y optimizar procesos operativos. Buscar eficiencias en la cadena de suministro.',
+    #                     'severity': cost_ratio,
+    #                     'priority': 'high',
+    #                     'variable': 'COSTOS_OPERATIVOS',
+    #                     'icon': 'bx-receipt',
+    #                     'color': 'warning'
+    #                 })
+        
+    #     # 5. Growth Analysis
+    #     if 'growth_rate' in financial_results:
+    #         growth = financial_results['growth_rate']
+    #         if growth < -5:
+    #             recommendations.append({
+    #                 'name': 'Tendencia Negativa en Demanda',
+    #                 'description': f'La demanda muestra una caída del {abs(growth):.1f}%',
+    #                 'recommendation': 'Implementar estrategias de retención y recuperación de clientes. Revisar competitividad.',
+    #                 'severity': min(100, abs(growth) * 2),
+    #                 'priority': 'high',
+    #                 'variable': 'CRECIMIENTO',
+    #                 'icon': 'bx-down-arrow-alt',
+    #                 'color': 'danger'
+    #             })
+    #         elif growth > 20:
+    #             recommendations.append({
+    #                 'name': 'Crecimiento Acelerado',
+    #                 'description': f'La demanda crece al {growth:.1f}%',
+    #                 'recommendation': 'Preparar infraestructura para expansión. Asegurar capital de trabajo suficiente.',
+    #                 'severity': 30,
+    #                 'priority': 'medium',
+    #                 'variable': 'CRECIMIENTO',
+    #                 'icon': 'bx-up-arrow-alt',
+    #                 'color': 'info'
+    #             })
+        
+    #     # 6. ROI Analysis
+    #     if 'Retorno Inversión' in totales_acumulativos:
+    #         roi = totales_acumulativos['Retorno Inversión']['total']
+    #         if roi < 1:
+    #             recommendations.append({
+    #                 'name': 'ROI Bajo',
+    #                 'description': f'El retorno de inversión es {roi:.2f}',
+    #                 'recommendation': 'Revisar estrategia de inversión y buscar oportunidades de mejora en eficiencia.',
+    #                 'severity': 70,
+    #                 'priority': 'medium',
+    #                 'variable': 'ROI',
+    #                 'icon': 'bx-line-chart-down',
+    #                 'color': 'warning'
+    #             })
+        
+    #     # Sort by priority and severity
+    #     recommendations.sort(key=lambda x: (
+    #         {'high': 0, 'medium': 1, 'low': 2}.get(x.get('priority', 'low'), 3),
+    #         -x.get('severity', 0)
+    #     ))
+        
+    #     # Save recommendations to database
+    #     if recommendations:
+    #         self._save_recommendations_to_db(simulation_instance, recommendations[:10], business)
+        
+    #     return recommendations[:10]  # Return top 10 recommendations
+    
+    
+    
+    def _generate_dynamic_recommendations(self, simulation_instance, totales_acumulativos, financial_results):
+        """
+        CORRECCIÓN: Generar recomendaciones dinámicas con validación mejorada
+        """
+        try:
+            recommendations = []
+            
+            # Validar datos de entrada
+            if not totales_acumulativos:
+                logger.warning("No accumulated totals provided for recommendations")
+                return []
+            
+            # Generar recomendaciones basadas en totales acumulativos
+            raw_recommendations = []
+            raw_recommendations.extend(self._analyze_financial_performance(totales_acumulativos))
+            raw_recommendations.extend(self._analyze_operational_efficiency(totales_acumulativos))
+            raw_recommendations.extend(self._analyze_profitability(totales_acumulativos))
+            
+            # Validar cada recomendación antes de agregarla
+            for rec_data in raw_recommendations:
+                try:
+                    validated_rec = self._validate_recommendation_data(rec_data)
+                    recommendations.append(validated_rec)
+                except Exception as e:
+                    logger.warning(f"Skipping invalid recommendation: {e}")
+                    continue
+            
+            logger.info(f"Generated {len(recommendations)} validated recommendations")
+            return recommendations
+            
+        except Exception as e:
+            logger.error(f"Error generating dynamic recommendations: {e}")
+            return []
+    
+    def _analyze_financial_performance(self, totales_acumulativos):
+        """Analizar rendimiento financiero para recomendaciones"""
+        recommendations = []
+        
+        try:
+            # Análisis de ingresos
+            it_data = totales_acumulativos.get('IT', {})
+            gt_data = totales_acumulativos.get('GT', {})
+            
+            if it_data.get('total', 0) > 0 and gt_data.get('total', 0) > 0:
+                margin_ratio = gt_data['total'] / it_data['total']
+                
+                if margin_ratio < 0.1:  # Margen menor al 10%
                     recommendations.append({
-                        'name': 'Margen de Ganancia Bajo',
-                        'description': f'El margen de ganancia es solo {profit_margin:.1f}%',
-                        'recommendation': 'Analizar estructura de costos y considerar optimizaciones o ajuste de precios.',
-                        'severity': 80,
-                        'priority': 'high',
-                        'variable': 'MARGEN_GANANCIA',
-                        'icon': 'bx-dollar-circle',
-                        'color': 'danger'
+                        'title': 'Mejorar Margen de Ganancia',
+                        'description': f'El margen de ganancia actual es {margin_ratio*100:.1f}%. Se recomienda optimizar costos o incrementar precios.',
+                        'category': 'FINANCIAL',
+                        'priority': 'HIGH',
+                        'severity': 'HIGH',
+                        'metric_value': margin_ratio * 100,
+                        'threshold_value': 10.0
                     })
-                elif profit_margin > 40:
+                elif margin_ratio > 0.3:  # Margen mayor al 30%
                     recommendations.append({
-                        'name': 'Excelente Margen de Ganancia',
-                        'description': f'El margen de ganancia es {profit_margin:.1f}%',
-                        'recommendation': 'Mantener estrategia actual. Considerar expansión o inversión en crecimiento.',
-                        'severity': 20,
-                        'priority': 'low',
-                        'variable': 'MARGEN_GANANCIA',
-                        'icon': 'bx-trophy',
-                        'color': 'success'
+                        'title': 'Excelente Rentabilidad',
+                        'description': f'El margen de ganancia es {margin_ratio*100:.1f}%. Considere reinvertir en expansión.',
+                        'category': 'FINANCIAL',
+                        'priority': 'LOW',
+                        'severity': 'LOW',
+                        'metric_value': margin_ratio * 100,
+                        'threshold_value': 30.0
                     })
+            
+            return recommendations
+            
+        except Exception as e:
+            logger.error(f"Error analyzing financial performance: {e}")
+            return []
+    
+    def _analyze_operational_efficiency(self, totales_acumulativos):
+        """Analizar eficiencia operacional para recomendaciones"""
+        recommendations = []
         
-        # 3. Inventory Analysis
-        if 'DEMANDA INSATISFECHA' in totales_acumulativos:
-            demanda_insatisfecha = totales_acumulativos['DEMANDA INSATISFECHA']['total']
-            if demanda_insatisfecha > 0:
-                recommendations.append({
-                    'name': 'Demanda Insatisfecha Detectada',
-                    'description': f'Se dejó de atender {demanda_insatisfecha:.0f} unidades de demanda',
-                    'recommendation': 'Aumentar capacidad de producción o mejorar gestión de inventarios.',
-                    'severity': min(100, demanda_insatisfecha / 100),
-                    'priority': 'high',
-                    'variable': 'DEMANDA_INSATISFECHA',
-                    'icon': 'bx-error-circle',
-                    'color': 'danger'
-                })
-        
-        # 4. Cost Structure Analysis
-        if 'GASTOS OPERATIVOS' in totales_acumulativos and 'INGRESOS TOTALES' in totales_acumulativos:
-            gastos_op = totales_acumulativos['GASTOS OPERATIVOS']['total']
-            ingresos = totales_acumulativos['INGRESOS TOTALES']['total']
-            if ingresos > 0:
-                cost_ratio = (gastos_op / ingresos) * 100
-                if cost_ratio > 70:
+        try:
+            eog_data = totales_acumulativos.get('EOG', {})
+            nsc_data = totales_acumulativos.get('NSC', {})
+            
+            # Análisis de eficiencia
+            if eog_data.get('average', 0) > 0:
+                efficiency = eog_data['average'] * 100
+                
+                if efficiency < 70:
                     recommendations.append({
-                        'name': 'Costos Operativos Elevados',
-                        'description': f'Los costos operativos representan el {cost_ratio:.1f}% de los ingresos',
-                        'recommendation': 'Revisar y optimizar procesos operativos. Buscar eficiencias en la cadena de suministro.',
-                        'severity': cost_ratio,
-                        'priority': 'high',
-                        'variable': 'COSTOS_OPERATIVOS',
-                        'icon': 'bx-receipt',
-                        'color': 'warning'
+                        'title': 'Mejorar Eficiencia Operativa',
+                        'description': f'La eficiencia operativa promedio es {efficiency:.1f}%. Revisar procesos de producción.',
+                        'category': 'OPERATIONAL',
+                        'priority': 'HIGH',
+                        'severity': 'HIGH',
+                        'metric_value': efficiency,
+                        'threshold_value': 70.0
                     })
-        
-        # 5. Growth Analysis
-        if 'growth_rate' in financial_results:
-            growth = financial_results['growth_rate']
-            if growth < -5:
-                recommendations.append({
-                    'name': 'Tendencia Negativa en Demanda',
-                    'description': f'La demanda muestra una caída del {abs(growth):.1f}%',
-                    'recommendation': 'Implementar estrategias de retención y recuperación de clientes. Revisar competitividad.',
-                    'severity': min(100, abs(growth) * 2),
-                    'priority': 'high',
-                    'variable': 'CRECIMIENTO',
-                    'icon': 'bx-down-arrow-alt',
-                    'color': 'danger'
-                })
-            elif growth > 20:
-                recommendations.append({
-                    'name': 'Crecimiento Acelerado',
-                    'description': f'La demanda crece al {growth:.1f}%',
-                    'recommendation': 'Preparar infraestructura para expansión. Asegurar capital de trabajo suficiente.',
-                    'severity': 30,
-                    'priority': 'medium',
-                    'variable': 'CRECIMIENTO',
-                    'icon': 'bx-up-arrow-alt',
-                    'color': 'info'
-                })
-        
-        # 6. ROI Analysis
-        if 'Retorno Inversión' in totales_acumulativos:
-            roi = totales_acumulativos['Retorno Inversión']['total']
-            if roi < 1:
-                recommendations.append({
-                    'name': 'ROI Bajo',
-                    'description': f'El retorno de inversión es {roi:.2f}',
-                    'recommendation': 'Revisar estrategia de inversión y buscar oportunidades de mejora en eficiencia.',
-                    'severity': 70,
-                    'priority': 'medium',
-                    'variable': 'ROI',
-                    'icon': 'bx-line-chart-down',
-                    'color': 'warning'
-                })
-        
-        # Sort by priority and severity
-        recommendations.sort(key=lambda x: (
-            {'high': 0, 'medium': 1, 'low': 2}.get(x.get('priority', 'low'), 3),
-            -x.get('severity', 0)
-        ))
-        
-        # Save recommendations to database
-        if recommendations:
-            self._save_recommendations_to_db(simulation_instance, recommendations[:10], business)
-        
-        return recommendations[:10]  # Return top 10 recommendations
+                elif efficiency > 90:
+                    recommendations.append({
+                        'title': 'Excelente Eficiencia',
+                        'description': f'La eficiencia operativa es {efficiency:.1f}%. Mantener estándares actuales.',
+                        'category': 'OPERATIONAL',
+                        'priority': 'LOW',
+                        'severity': 'LOW',
+                        'metric_value': efficiency,
+                        'threshold_value': 90.0
+                    })
+            
+            # Análisis de servicio al cliente
+            if nsc_data.get('average', 0) > 0:
+                service_level = nsc_data['average'] * 100
+                
+                if service_level < 85:
+                    recommendations.append({
+                        'title': 'Mejorar Nivel de Servicio',
+                        'description': f'El nivel de servicio promedio es {service_level:.1f}%. Optimizar inventarios y capacidad.',
+                        'category': 'EFFICIENCY',
+                        'priority': 'MEDIUM',
+                        'severity': 'MEDIUM',
+                        'metric_value': service_level,
+                        'threshold_value': 85.0
+                    })
+            
+            return recommendations
+            
+        except Exception as e:
+            logger.error(f"Error analyzing operational efficiency: {e}")
+            return []
+    
+    def _validate_recommendation_data(self, recommendation_data):
+        """
+        CORRECCIÓN: Validar datos de recomendación antes de guardar
+        """
+        try:
+            # Asegurar que recommendation_data sea un diccionario
+            if not isinstance(recommendation_data, dict):
+                recommendation_data = {
+                    'title': str(recommendation_data),
+                    'description': 'Recomendación generada automáticamente',
+                    'category': 'GENERAL',
+                    'priority': 'MEDIUM'
+                }
+            
+            # Campos obligatorios
+            required_fields = ['title', 'description', 'category', 'priority']
+            
+            for field in required_fields:
+                if field not in recommendation_data or not recommendation_data[field]:
+                    recommendation_data[field] = self._get_default_value(field)
+            
+            # Validar metric_value
+            if 'metric_value' not in recommendation_data or recommendation_data['metric_value'] is None:
+                # Usar severity como metric_value si está disponible
+                if 'severity' in recommendation_data:
+                    severity_values = {'LOW': 1, 'MEDIUM': 2, 'HIGH': 3, 'CRITICAL': 4}
+                    recommendation_data['metric_value'] = severity_values.get(
+                        recommendation_data['severity'], 1
+                    )
+                else:
+                    recommendation_data['metric_value'] = 1
+            
+            # Validar threshold_value
+            if 'threshold_value' not in recommendation_data:
+                recommendation_data['threshold_value'] = recommendation_data.get('metric_value', 1)
+            
+            # Validar campos numéricos
+            numeric_fields = ['metric_value', 'threshold_value']
+            for field in numeric_fields:
+                try:
+                    recommendation_data[field] = float(recommendation_data[field])
+                except (ValueError, TypeError):
+                    recommendation_data[field] = 1.0
+            
+            # Validar categoría
+            valid_categories = ['FINANCIAL', 'OPERATIONAL', 'EFFICIENCY', 'GENERAL']
+            if recommendation_data['category'] not in valid_categories:
+                recommendation_data['category'] = 'GENERAL'
+            
+            # Validar prioridad
+            valid_priorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+            if recommendation_data['priority'] not in valid_priorities:
+                recommendation_data['priority'] = 'MEDIUM'
+            
+            return recommendation_data
+            
+        except Exception as e:
+            logger.error(f"Error validating recommendation data: {e}")
+            return {
+                'title': 'Recomendación de Simulación',
+                'description': 'Error en validación de datos',
+                'category': 'GENERAL',
+                'priority': 'MEDIUM',
+                'metric_value': 1.0,
+                'threshold_value': 1.0
+            }
+
+    def _get_default_value(self, field):
+        """Obtener valor por defecto para campos obligatorios"""
+        defaults = {
+            'title': 'Recomendación de Simulación',
+            'description': 'Recomendación generada automáticamente',
+            'category': 'GENERAL',
+            'priority': 'MEDIUM'
+        }
+        return defaults.get(field, '')
+    
     
     def analyze_financial_results(self, simulation_id: int) -> Dict[str, Any]:
         """
@@ -303,6 +510,14 @@ class SimulationFinancialAnalyzer:
         except Exception as e:
             logger.error(f"Error analyzing financial results: {str(e)}")
             return self._create_empty_analysis()
+        except Exception as e:
+            logger.error(f"Error in analyze_financial_results: {e}")
+            return {
+                'financial_recommendations': [],
+                'total_revenue': 0,
+                'total_profit': 0,
+                'average_margin': 0
+            }
     
     def _extract_daily_financials(self, results) -> List[Dict[str, Any]]:
         """Extract financial data from daily results"""
@@ -354,64 +569,49 @@ class SimulationFinancialAnalyzer:
         
         return daily_financials
     
-    def _analyze_profitability(self, daily_financials: List[Dict]) -> Dict[str, Any]:
-        """Analyze profitability metrics and patterns"""
-        if not daily_financials:
-            return {}
+    def _analyze_profitability(self, totales_acumulativos):
+        """Analizar rentabilidad para recomendaciones"""
+        recommendations = []
         
-        # Extract profit data
-        revenues = [d['revenue'] for d in daily_financials]
-        net_profits = [d['net_profit'] for d in daily_financials]
-        gross_margins = [d['gross_margin'] for d in daily_financials]
-        net_margins = [d['net_margin'] for d in daily_financials]
-        
-        # Calculate statistics
-        total_revenue = sum(revenues)
-        total_profit = sum(net_profits)
-        avg_gross_margin = np.mean(gross_margins) if gross_margins else 0
-        avg_net_margin = np.mean(net_margins) if net_margins else 0
-        
-        # Profitability trends
-        profitable_days = sum(1 for p in net_profits if p > 0)
-        loss_days = len(net_profits) - profitable_days
-        
-        # Calculate profit volatility
-        profit_std = np.std(net_profits) if len(net_profits) > 1 else 0
-        profit_cv = profit_std / abs(np.mean(net_profits)) if np.mean(net_profits) != 0 else 0
-        
-        # Break-even analysis
-        break_even_day = None
-        cumulative_profit = 0
-        for i, profit in enumerate(net_profits):
-            cumulative_profit += profit
-            if cumulative_profit > 0 and break_even_day is None:
-                break_even_day = i + 1
-        
-        return {
-            'total_revenue': total_revenue,
-            'total_profit': total_profit,
-            'average_revenue_per_day': total_revenue / len(revenues) if revenues else 0,
-            'average_profit_per_day': total_profit / len(net_profits) if net_profits else 0,
-            'gross_margin': {
-                'average': avg_gross_margin,
-                'min': min(gross_margins) if gross_margins else 0,
-                'max': max(gross_margins) if gross_margins else 0,
-                'std': np.std(gross_margins) if len(gross_margins) > 1 else 0
-            },
-            'net_margin': {
-                'average': avg_net_margin,
-                'min': min(net_margins) if net_margins else 0,
-                'max': max(net_margins) if net_margins else 0,
-                'std': np.std(net_margins) if len(net_margins) > 1 else 0
-            },
-            'profitable_days': profitable_days,
-            'loss_days': loss_days,
-            'profitability_rate': profitable_days / len(net_profits) if net_profits else 0,
-            'profit_volatility': profit_cv,
-            'break_even_day': break_even_day,
-            'roi_average': np.mean([d['roi'] for d in daily_financials]),
-            'ebitda_total': sum(d['ebitda'] for d in daily_financials)
-        }
+        try:
+            nr_data = totales_acumulativos.get('NR', {})
+            ri_data = totales_acumulativos.get('RI', {})
+            
+            # Análisis de margen neto
+            if nr_data.get('average', 0) > 0:
+                net_margin = nr_data['average'] * 100
+                
+                if net_margin < 5:
+                    recommendations.append({
+                        'title': 'Margen Neto Bajo',
+                        'description': f'El margen neto promedio es {net_margin:.1f}%. Revisar estructura de costos.',
+                        'category': 'FINANCIAL',
+                        'priority': 'CRITICAL',
+                        'severity': 'CRITICAL',
+                        'metric_value': net_margin,
+                        'threshold_value': 5.0
+                    })
+            
+            # Análisis de ROI
+            if ri_data.get('average', 0) > 0:
+                roi = ri_data['average'] * 100
+                
+                if roi < 10:
+                    recommendations.append({
+                        'title': 'ROI Bajo',
+                        'description': f'El retorno de inversión promedio es {roi:.1f}%. Evaluar inversiones alternativas.',
+                        'category': 'FINANCIAL',
+                        'priority': 'HIGH',
+                        'severity': 'HIGH',
+                        'metric_value': roi,
+                        'threshold_value': 10.0
+                    })
+            
+            return recommendations
+            
+        except Exception as e:
+            logger.error(f"Error analyzing profitability: {e}")
+            return []
     
     def _analyze_costs(self, daily_financials: List[Dict]) -> Dict[str, Any]:
         """Analyze cost structure and efficiency"""

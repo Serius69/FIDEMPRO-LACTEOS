@@ -274,25 +274,33 @@ class SimulationCore:
         
         results = day_results['endogenous_results']
         
-        # Actualizar inventarios finales del día
-        if 'IPF' in results:
-            state['inventories']['IPF'] = results['IPF']
-        if 'II' in results:
-            state['inventories']['II'] = results['II']
+        # CRÍTICO: Actualizar inventarios de forma segura
+        if 'IPF' in results and results['IPF'] is not None:
+            state['inventories']['IPF'] = max(0, float(results['IPF']))
         
-        # Guardar históricos
-        if 'TPV' in results:
-            state['previous_sales'].append(results['TPV'])
-        if 'QPL' in results:
-            state['previous_production'].append(results['QPL'])
-        if 'predicted_demand' in day_results:
-            state['previous_demands'].append(day_results['predicted_demand'])
+        if 'II' in results and results['II'] is not None:
+            state['inventories']['II'] = max(0, float(results['II']))
+        
+        # Guardar históricos con validación
+        if 'TPV' in results and results['TPV'] is not None:
+            state['previous_sales'].append(float(results['TPV']))
+        
+        if 'QPL' in results and results['QPL'] is not None:
+            state['previous_production'].append(float(results['QPL']))
+        
+        if 'predicted_demand' in day_results and day_results['predicted_demand'] is not None:
+            state['previous_demands'].append(float(day_results['predicted_demand']))
         
         # Mantener solo los últimos 30 días de histórico
         max_history = 30
         for key in ['previous_sales', 'previous_production', 'previous_demands']:
             if len(state[key]) > max_history:
                 state[key] = state[key][-max_history:]
+        
+        # AGREGAR: Log del estado para debugging
+        logger.debug(f"Updated state - IPF: {state['inventories']['IPF']}, "
+                    f"II: {state['inventories']['II']}, "
+                    f"Sales history: {len(state['previous_sales'])} days")
 
     def _prepare_simulation_data(self, simulation_instance):
         """Prepare all simulation data with optimized queries"""
@@ -348,77 +356,66 @@ class SimulationCore:
             day_index
         )
         
-        # Log what we actually loaded
-        logger.info(f"Day {day_index}: Loaded {len(variable_dict)} variables from questionnaire")
+        # CRÍTICO: Gestionar inventarios desde el estado persistente
+        if day_index == 0:
+            # Primer día: usar valores iniciales del cuestionario o defaults
+            variable_dict['IPF'] = variable_dict.get('IPF', 800)
+            variable_dict['II'] = variable_dict.get('II', 8000)
+            
+            # Inicializar estado
+            simulation_state['inventories']['IPF'] = variable_dict['IPF']
+            simulation_state['inventories']['II'] = variable_dict['II']
+        else:
+            # Días siguientes: usar estado del día anterior
+            variable_dict['IPF'] = simulation_state['inventories']['IPF']
+            variable_dict['II'] = simulation_state['inventories']['II']
+        
+        # Log para debugging
+        logger.debug(f"Day {day_index + 1}: Starting with IPF={variable_dict['IPF']}, II={variable_dict['II']}")
         
         # Generate demand prediction for current day
         predicted_demand = self._generate_demand_prediction(
             simulation_instance, variable_dict, day_index
         )
-        print (f"Predicted demand for day {day_index + 1}: {predicted_demand}")
         
-        # CORRECCIÓN: Usar demanda simulada del día actual
+        # Set current day's demand
         variable_dict['DE'] = predicted_demand
-        variable_dict['DH'] = predicted_demand  # Demanda del día actual
+        variable_dict['DH'] = predicted_demand  # Current day demand
         
-        # Calcular DPH dinámico basado en histórico y días anteriores
-        
-        if day_index > 0:
-            # Inventarios del día anterior
-            variable_dict['IPF'] = simulation_state['inventories']['IPF']
-            variable_dict['II'] = simulation_state['inventories']['II']
-            
-            # Histórico para cálculos de tendencia
-            if simulation_state['previous_demands']:
-                # Usar ventana móvil de los últimos 7 días para DPH
-                window = simulation_state['previous_demands'][-7:]
-                variable_dict['DPH'] = float(np.mean(window))
-                variable_dict['DSD'] = float(np.std(window)) if len(window) > 1 else variable_dict['DPH'] * 0.1
-        
-        
+        # Calculate DPH dinamically from historical data
         if day_index == 0:
-            # Primer día: usar promedio del histórico real
+            # First day: use historical average
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
             if demand_history:
                 variable_dict['DPH'] = float(np.mean(demand_history))
                 variable_dict['DSD'] = float(np.std(demand_history))
                 variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
             else:
-                # Fallback si no hay histórico
                 variable_dict['DPH'] = predicted_demand
-                variable_dict['DSD'] = predicted_demand * 0.1  # 10% de variación estimada
+                variable_dict['DSD'] = predicted_demand * 0.1
                 variable_dict['CVD'] = 0.1
         else:
-            # Días posteriores: usar promedio móvil de días anteriores simulados
-            window_size = min(7, day_index)  # Ventana de hasta 7 días
-            previous_demands = []
-            demand_history = self._parse_demand_history(simulation_instance.demand_history)
-            variable_dict['DPH'] = float(np.mean(demand_history)) if demand_history else predicted_demand
-            
-            # Obtener demandas de días anteriores desde los resultados almacenados
-            if 'previous_results' in simulation_data:
-                start_idx = max(0, day_index - window_size)
-                for i in range(start_idx, day_index):
-                    if i < len(simulation_data['previous_results']):
-                        prev_result = simulation_data['previous_results'][i]
-                        if 'DE' in prev_result:
-                            previous_demands.append(float(prev_result['DE']))
-            
-            if previous_demands:
-                variable_dict['DPH'] = float(np.mean(previous_demands))
-                variable_dict['DSD'] = float(np.std(previous_demands)) if len(previous_demands) > 1 else variable_dict.get('DSD', predicted_demand * 0.1)
+            # Use moving average from previous days
+            if simulation_state['previous_demands']:
+                window = simulation_state['previous_demands'][-7:]  # Last 7 days
+                variable_dict['DPH'] = float(np.mean(window))
+                variable_dict['DSD'] = float(np.std(window)) if len(window) > 1 else variable_dict['DPH'] * 0.1
                 variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
             else:
-                # Fallback: usar demanda actual
+                # Fallback
                 variable_dict['DPH'] = predicted_demand
-                variable_dict['DSD'] = variable_dict.get('DSD', predicted_demand * 0.1)
+                variable_dict['DSD'] = predicted_demand * 0.1
                 variable_dict['CVD'] = 0.1
         
-        # Actualizar DDP (Demanda Diaria Proyectada) con el nuevo DPH dinámico
-        if 'ED' in variable_dict:  # Factor de estacionalidad
+        # Calculate DDP with seasonality
+        if 'ED' in variable_dict:
             variable_dict['DDP'] = variable_dict['DPH'] * (1 + (variable_dict['DE'] - variable_dict['DPH']) / max(variable_dict['DPH'], 1) * 0.2) * variable_dict['ED']
         else:
             variable_dict['DDP'] = variable_dict['DPH']
+        
+        # CRÍTICO: Almacenar inventarios iniciales del día para cálculos
+        initial_ipf = variable_dict['IPF']
+        initial_ii = variable_dict['II']
         
         # Calculate all equations in proper order
         endogenous_results = self._calculate_all_equations(
@@ -426,35 +423,71 @@ class SimulationCore:
             variable_dict
         )
         
+        # CORRECCIÓN INVENTARIOS: Calcular correctamente basado en operaciones del día
+        qpl = endogenous_results.get('QPL', 0)
+        tpv = endogenous_results.get('TPV', 0)
+        uii = endogenous_results.get('UII', qpl * variable_dict.get('CINSP', 1.02))
+        pi = endogenous_results.get('PI', 0)
+        
+        # Inventario final productos finales
+        final_ipf = max(0, initial_ipf + qpl - tpv)
+        final_ipf = min(final_ipf, variable_dict.get('CMIPF', 20000))  # Respetar capacidad máxima
+        
+        # Inventario final insumos
+        final_ii = max(0, initial_ii + pi - uii)
+        
+        # Actualizar resultados con inventarios finales
+        endogenous_results['IPF'] = final_ipf
+        endogenous_results['II'] = final_ii
+        
+        # Validar coherencia de inventarios
+        if final_ipf < 0:
+            logger.warning(f"Day {day_index + 1}: Negative IPF corrected from {final_ipf} to 0")
+            endogenous_results['IPF'] = 0
+        
+        if final_ii < 0:
+            logger.warning(f"Day {day_index + 1}: Negative II corrected from {final_ii} to 0")
+            endogenous_results['II'] = 0
+        
         # Ensure all variables are in results
         final_results = self._merge_results(variable_dict, endogenous_results)
+        
+        # Validate results with enhanced checks
+        self._validate_simulation_results(final_results, variable_dict)
         
         # Store results for next iterations
         if 'previous_results' not in simulation_data:
             simulation_data['previous_results'] = []
         
-        # Guardar resultado completo del día
         day_complete_result = {**variable_dict, **endogenous_results}
         simulation_data['previous_results'].append(day_complete_result)
         
-        # Validate results
-        self._validate_simulation_results(final_results, variable_dict)
-        
-        logger.debug(f"Day {day_index}: Calculated {len(final_results)} total variables")
-        logger.debug(f"Day {day_index}: DPH={variable_dict.get('DPH', 0):.2f}, DE={predicted_demand:.2f}, DDP={variable_dict.get('DDP', 0):.2f}")
+        logger.debug(f"Day {day_index + 1}: Ending with IPF={final_results['IPF']}, II={final_results['II']}")
+        logger.debug(f"Day {day_index + 1}: Production={qpl}, Sales={tpv}, Demand={predicted_demand}")
         
         return {
             'endogenous_results': final_results,
             'variable_initials_dict': variable_dict,
             'predicted_demand': predicted_demand,
             'dynamic_dph': variable_dict.get('DPH', 0),
-            'demand_std': variable_dict.get('DSD', 0)
+            'demand_std': variable_dict.get('DSD', 0),
+            'inventory_movements': {
+                'initial_ipf': initial_ipf,
+                'final_ipf': final_results['IPF'],
+                'initial_ii': initial_ii,
+                'final_ii': final_results['II'],
+                'production': qpl,
+                'sales': tpv,
+                'input_usage': uii,
+                'input_purchase': pi
+            }
         }
 
     def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
-        """Initialize variables PRIMARILY from questionnaire data"""
+        """Initialize variables PRIMARILY from questionnaire data - FIXED DUPLICATES"""
         
         variable_dict = {}
+        processed_variables = set()  # Para evitar duplicaciones
         
         # Add essential system variables
         variable_dict['NMD'] = float(simulation_instance.quantity_time)
@@ -465,9 +498,10 @@ class SimulationCore:
         demand_history = self._parse_demand_history(simulation_instance.demand_history)
         if demand_history:
             variable_dict['DH'] = float(np.mean(demand_history))
+            processed_variables.add('DH')
             logger.info(f"Loaded demand history average: {variable_dict['DH']}")
         
-        # Process ALL answers from questionnaire
+        # Process ALL answers from questionnaire with deduplication
         questionnaire_values_loaded = 0
         
         for answer_data in answers:
@@ -478,31 +512,40 @@ class SimulationCore:
             if not answer_value:
                 continue
             
-            # Method 1: Direct variable mapping
-            if var_initials:
+            # Method 1: Direct variable mapping (with deduplication)
+            if var_initials and var_initials not in processed_variables:
                 processed_value = self._process_answer_value(answer_value, var_initials)
                 if processed_value is not None:
                     variable_dict[var_initials] = processed_value
+                    processed_variables.add(var_initials)
                     questionnaire_values_loaded += 1
                     logger.debug(f"Direct mapping: {var_initials} = {processed_value}")
+            elif var_initials in processed_variables:
+                logger.debug(f"Skipping duplicate mapping for {var_initials}")
             
-            # Method 2: Text-based mapping from question content
+            # Method 2: Text-based mapping (only if not already processed)
             if question_text:
                 mapped_var = self._map_question_to_variable(question_text)
-                if mapped_var and mapped_var not in variable_dict:
+                if mapped_var and mapped_var not in processed_variables:
                     processed_value = self._process_answer_value(answer_value, mapped_var)
                     if processed_value is not None:
                         variable_dict[mapped_var] = processed_value
+                        processed_variables.add(mapped_var)
                         questionnaire_values_loaded += 1
-                        logger.debug(f"Text mapping: {mapped_var} = {processed_value} (from '{question_text[:50]}...')")
+                        logger.debug(f"Text mapping: {mapped_var} = {processed_value}")
         
-        logger.info(f"Successfully loaded {questionnaire_values_loaded} values from questionnaire")
+        logger.info(f"Successfully loaded {questionnaire_values_loaded} unique values from questionnaire")
         
         # Calculate derived variables from questionnaire data
         self._calculate_derived_variables(variable_dict)
         
         # Add minimal defaults for missing ESSENTIAL variables only
         self._add_minimal_defaults(variable_dict)
+        
+        # CRUCIAL: Ensure PVP is always present
+        if 'PVP' not in variable_dict or variable_dict['PVP'] <= 0:
+            variable_dict['PVP'] = 15.50
+            logger.warning("PVP was missing or invalid, set to default: 15.50")
         
         return variable_dict
 
@@ -539,10 +582,19 @@ class SimulationCore:
     def _process_answer_value(self, answer_value, variable_name):
         """Process and clean answer values from questionnaire"""
         try:
+            # CORREGIR: Evitar duplicación de CPROD
+            if variable_name == 'CPROD':
+                # Si CPROD ya existe, no sobrescribir a menos que sea más confiable
+                if hasattr(self, '_cprod_sources'):
+                    # Priorizar fuente más confiable
+                    pass
+                else:
+                    self._cprod_sources = []
+            
             # Handle special cases
             if variable_name == 'ED':  # Estacionalidad
                 if isinstance(answer_value, str):
-                    return 1.0 if answer_value.lower() in ['sí', 'si', 'yes', 'true'] else 0.5
+                    return 1.0 if answer_value.lower() in ['sí', 'si', 'yes', 'true'] else 0.8
                 return float(answer_value) if answer_value else 1.0
             
             # Handle list/array values (like historical demand)
@@ -595,6 +647,7 @@ class SimulationCore:
             logger.error(f"Error processing answer value {answer_value} for {variable_name}: {e}")
             return None
 
+
     def _calculate_derived_variables(self, variable_dict):
         """Calculate important derived variables from questionnaire data"""
         
@@ -640,7 +693,14 @@ class SimulationCore:
     def _add_minimal_defaults(self, variable_dict):
         """Add only absolutely essential missing variables with realistic defaults"""
         
-        # EXPANDIR los defaults esenciales
+        # CRÍTICO: Definir PVP si falta
+        if 'PVP' not in variable_dict:
+            # Buscar en respuestas del cuestionario
+            pvp_found = False
+            # Si no se encuentra, usar valor por defecto razonable
+            variable_dict['PVP'] = 15.50
+            logger.warning("PVP not found in questionnaire, using default value: 15.50")
+        
         essential_defaults = {
             'CPROD': variable_dict.get('QPL', 100) * 1.2 if 'QPL' in variable_dict else 3000,
             'ED': 1.0,  # No seasonality by default
@@ -649,21 +709,31 @@ class SimulationCore:
             'TMP': 1,   # Order processing time
             'NPD': 3,   # Number of suppliers
             'MLP': 480, # Working minutes per day (8 hours)
-            'CINSP': 1.05,  # Input conversion factor
-            'SI': 100,  # Safety stock
+            'CINSP': 1.02,  # Input conversion factor (CORREGIDO: era 1.05)
+            'SI': 500,  # Safety stock (CORREGIDO: era 100)
             'DPL': 3,   # Lead time days
-            'CTPLV': 200,  # Transport capacity per trip
-            'CPPL': 100,  # Batch size
-            'TPE': 60,  # Production time per unit
-            # AGREGAR MÁS DEFAULTS CRÍTICOS:
-            'IPF': 1000,  # Inventario inicial productos finales
-            'II': 5000,   # Inventario inicial insumos
-            'VPC': 30,    # Ventas por cliente default
-            'TCAE': 85,   # Total clientes atendidos
-            'QPL': 2500,  # Cantidad producida default
-            'PPL': 2500,  # Productos por lote
-            'PI': 0,      # Pedido insumos inicial
-            'UII': 0,     # Uso inventario insumos inicial
+            'CTPLV': 2000,  # Transport capacity per trip (CORREGIDO: era 200)
+            'CPPL': 500,  # Batch size
+            'TPE': 30,  # Production time per unit (CORREGIDO: era 60)
+            'IPF': 800,  # Initial finished goods inventory (CORREGIDO: era 1000)
+            'II': 8000,   # Initial raw materials inventory (CORREGIDO: era 5000)
+            'VPC': 30,    # Sales per customer default
+            'TCAE': 85,   # Total customers served
+            'QPL': 2500,  # Default production
+            'PPL': 2500,  # Products per batch
+            'PI': 0,      # Initial input order
+            'UII': 0,     # Initial input usage
+            
+            # AGREGAR VARIABLES CRÍTICAS FALTANTES:
+            'CFD': 1500,    # Daily fixed costs (CORREGIDO: era 1800)
+            'SE': 45000,    # Monthly salaries (CORREGIDO: era 48000)
+            'GMM': 3000,    # Monthly marketing (CORREGIDO: era 3500)
+            'CUIP': 7.50,   # Unit input cost (CORREGIDO: era 8.20)
+            'CUTRANS': 0.25, # Transport unit cost (CORREGIDO: era 0.35)
+            'CPD': 85,      # Customers per day
+            'NEPP': 15,     # Number of employees
+            'PC': 15.80,    # Competition price
+            'CMIPF': 20000, # Max inventory capacity
         }
         
         added_defaults = []
@@ -673,7 +743,7 @@ class SimulationCore:
                 added_defaults.append(var)
         
         if added_defaults:
-            logger.debug(f"Added minimal defaults for: {added_defaults}")
+            logger.info(f"Added essential defaults for: {added_defaults}")
 
     def _calculate_all_equations(self, equations, variable_dict):
         """Calculate all equations with improved dependency resolution"""
@@ -1194,6 +1264,13 @@ class SimulationCore:
         ii = endogenous_results.get('II', 0)
         
         # Validación 1: Producción debe ser coherente con ventas
+        if pvp is None or pvp == 0:
+            pvp = 15.50
+            variable_dict['PVP'] = pvp
+            validations.append("Set default PVP value: 15.50")
+            logger.warning("PVP was missing, set to default value")
+        
+        
         if qpl > 0 and tpv > 0:
             production_sales_ratio = qpl / tpv
             if production_sales_ratio > 2:  # Produciendo más del doble de lo que vende

@@ -1,3 +1,5 @@
+# questionary_test_data_updated.py - Cuestionario completo para todas las variables tipo 1
+
 questionary_data = [
     {
         'questionary': 'Cuestionario completo para registro de información empresarial',
@@ -14,8 +16,6 @@ question_data = [
         'initials_variable': 'DH',
         'unit': 'Litros/día',
         'help_text': 'Ingrese los valores de venta diaria del último mes separados por comas',
-        # 'validation': 'min_length:30',
-        # 'required': True
     },
     {
         'section': 'Demanda y Ventas',
@@ -24,8 +24,6 @@ question_data = [
         'initials_variable': 'PVP',
         'unit': 'Bs/L',
         'help_text': 'Precio de venta al público de su producto principal',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Demanda y Ventas',
@@ -34,8 +32,6 @@ question_data = [
         'initials_variable': 'DE',
         'unit': 'Litros/día',
         'help_text': 'Estimación de demanda futura basada en tendencias o pedidos',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Demanda y Ventas',
@@ -44,8 +40,6 @@ question_data = [
         'initials_variable': 'ED',
         'possible_answers': ['Sí', 'No'],
         'help_text': 'Indique si las ventas varían según temporadas (escolar, fiestas, etc.)',
-        # 'conversion': {'Sí': 1.2, 'No': 1.0},  # Factor de estacionalidad
-        # 'required': True
     },
     {
         'section': 'Demanda y Ventas',
@@ -54,8 +48,6 @@ question_data = [
         'initials_variable': 'CPD',
         'unit': 'clientes/día',
         'help_text': 'Número promedio de clientes únicos atendidos por día',
-        # 'validation': 'min:1',
-        # 'required': True
     },
     {
         'section': 'Demanda y Ventas',
@@ -64,8 +56,6 @@ question_data = [
         'initials_variable': 'TPC',
         'unit': 'días',
         'help_text': 'Cada cuántos días regresan sus clientes frecuentes',
-        # 'validation': 'min:1,max:30',
-        # 'required': True
     },
     {
         'section': 'Demanda y Ventas',
@@ -74,8 +64,14 @@ question_data = [
         'initials_variable': 'PC',
         'unit': 'Bs/L',
         'help_text': 'Precio de venta de productos lácteos similares en el mercado',
-        # 'validation': 'min:0',
-        # 'required': True
+    },
+    {
+        'section': 'Demanda y Ventas',
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'type': 1,
+        'initials_variable': 'DPE',
+        'unit': 'KM',
+        'help_text': 'Distancia media en kilómetros desde su planta hasta los clientes',
     },
 
     # SECCIÓN 2: PRODUCCIÓN
@@ -86,8 +82,6 @@ question_data = [
         'initials_variable': 'QPL',
         'unit': 'Litros/día',
         'help_text': 'Producción diaria promedio actual de su planta',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Producción',
@@ -96,8 +90,6 @@ question_data = [
         'initials_variable': 'CPROD',
         'unit': 'Litros/día',
         'help_text': 'Máxima cantidad que puede producir en un día con todos los recursos',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Producción',
@@ -106,8 +98,6 @@ question_data = [
         'initials_variable': 'NEPP',
         'unit': 'empleados',
         'help_text': 'Total de empleados directamente involucrados en producción',
-        # 'validation': 'min:1',
-        # 'required': True
     },
     {
         'section': 'Producción',
@@ -116,8 +106,6 @@ question_data = [
         'initials_variable': 'TPE',
         'unit': 'minutos/100L',
         'help_text': 'Tiempo promedio de trabajo por cada 100 litros producidos',
-        # 'validation': 'min:1',
-        # 'required': True
     },
     {
         'section': 'Producción',
@@ -126,20 +114,31 @@ question_data = [
         'initials_variable': 'CPPL',
         'unit': 'Litros/lote',
         'help_text': 'Cantidad típica producida en cada lote o tanda',
-        # 'validation': 'min:1',
-        # 'required': True
     },
-    # {
-    #     'section': 'Producción',
-    #     'question': '¿Cuántos minutos laborables tiene por día?',
-    #     'type': 1,
-    #     'initials_variable': 'MLP',
-    #     'unit': 'minutos',
-    #     'help_text': 'Total de minutos de trabajo efectivo por día (ej: 480 para 8 horas)',
-    #     'validation': 'min:60,max:1440',
-    #     # 'default_value': 480,
-    #     # 'required': True
-    # },
+    {
+        'section': 'Producción',
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'type': 1,
+        'initials_variable': 'MLP',
+        'unit': 'minutos',
+        'help_text': 'Total de minutos de trabajo efectivo por día (ej: 480 para 8 horas)',
+    },
+    {
+        'section': 'Producción',
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'type': 1,
+        'initials_variable': 'HTO',
+        'unit': 'horas',
+        'help_text': 'Horas totales programadas de operación incluyendo mantenimiento',
+    },
+    {
+        'section': 'Producción',
+        'question': '¿Cuál es la cantidad máxima producible por día?',
+        'type': 1,
+        'initials_variable': 'QMAX',
+        'unit': 'Litros',
+        'help_text': 'Capacidad máxima teórica de producción diaria al 100%',
+    },
 
     # SECCIÓN 3: INVENTARIOS
     {
@@ -149,8 +148,6 @@ question_data = [
         'initials_variable': 'CMIPF',
         'unit': 'Litros',
         'help_text': 'Capacidad total de sus cámaras frigoríficas o almacén',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Inventarios',
@@ -159,8 +156,6 @@ question_data = [
         'initials_variable': 'CIP',
         'unit': 'Litros',
         'help_text': 'Capacidad utilizable actual de almacenamiento',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Inventarios',
@@ -169,8 +164,6 @@ question_data = [
         'initials_variable': 'SI',
         'unit': 'Litros',
         'help_text': 'Inventario mínimo para evitar desabastecimiento',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Inventarios',
@@ -179,18 +172,14 @@ question_data = [
         'initials_variable': 'TR',
         'unit': 'días',
         'help_text': 'Frecuencia de compra de materia prima',
-        # 'validation': 'min:1,max:7',
-        # 'required': True
     },
     {
         'section': 'Inventarios',
-        'question': '¿Días promedio de reabastecimiento?',
+        'question': '¿Días promedio de reposición de leche?',
         'type': 1,
         'initials_variable': 'DPL',
         'unit': 'días',
         'help_text': 'Lead time desde que pide hasta que recibe la materia prima',
-        # 'validation': 'min:0,max:7',
-        # 'required': True
     },
     {
         'section': 'Inventarios',
@@ -199,8 +188,22 @@ question_data = [
         'initials_variable': 'TMP',
         'unit': 'días',
         'help_text': 'Tiempo desde que recibe un pedido hasta que lo entrega',
-        # 'validation': 'min:0,max:3',
-        # 'required': True
+    },
+    {
+        'section': 'Inventarios',
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'type': 1,
+        'initials_variable': 'CTL',
+        'unit': 'Litros/día',
+        'help_text': 'Cantidad de litros de leche que consume diariamente',
+    },
+    {
+        'section': 'Inventarios',
+        'question': '¿Cuántos días máximos planea simular?',
+        'type': 1,
+        'initials_variable': 'NMD',
+        'unit': 'días',
+        'help_text': 'Número de días para la simulación del modelo',
     },
 
     # SECCIÓN 4: COSTOS Y FINANZAS
@@ -211,8 +214,6 @@ question_data = [
         'initials_variable': 'CUIP',
         'unit': 'Bs/L',
         'help_text': 'Costo por litro de leche cruda o insumo principal',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Costos y Finanzas',
@@ -221,8 +222,6 @@ question_data = [
         'initials_variable': 'CINSP',
         'unit': 'L insumo/L producto',
         'help_text': 'Factor de conversión de materia prima a producto terminado',
-        # 'validation': 'min:0.5,max:15',
-        # 'required': True
     },
     {
         'section': 'Costos y Finanzas',
@@ -231,8 +230,6 @@ question_data = [
         'initials_variable': 'CFD',
         'unit': 'Bs/día',
         'help_text': 'Incluye alquiler, servicios básicos, seguros, etc.',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Costos y Finanzas',
@@ -241,8 +238,6 @@ question_data = [
         'initials_variable': 'SE',
         'unit': 'Bs/mes',
         'help_text': 'Suma total de la planilla mensual de todos los empleados',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Costos y Finanzas',
@@ -251,8 +246,6 @@ question_data = [
         'initials_variable': 'GMM',
         'unit': 'Bs/mes',
         'help_text': 'Gastos en publicidad, promociones, redes sociales, etc.',
-        # 'validation': 'min:0',
-        # 'required': True
     },
 
     # SECCIÓN 5: LOGÍSTICA Y DISTRIBUCIÓN
@@ -263,8 +256,6 @@ question_data = [
         'initials_variable': 'CUTRANS',
         'unit': 'Bs/L',
         'help_text': 'Costo de transportar un litro de producto hasta el cliente',
-        # 'validation': 'min:0',
-        # 'required': True
     },
     {
         'section': 'Logística',
@@ -273,102 +264,99 @@ question_data = [
         'initials_variable': 'CTPLV',
         'unit': 'Litros/viaje',
         'help_text': 'Capacidad de su vehículo o medio de transporte',
-        # 'validation': 'min:1',
-        # 'required': True
+    },
+
+    # SECCIÓN 6: CADENA DE FRÍO Y CALIDAD
+    {
+        'section': 'Control de Calidad',
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'type': 1,
+        'initials_variable': 'TCFO',
+        'unit': '°C',
+        'help_text': 'Temperatura ideal para conservar la calidad del producto',
+    },
+    {
+        'section': 'Control de Calidad',
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'type': 1,
+        'initials_variable': 'TEO',
+        'unit': 'horas',
+        'help_text': 'Tiempo máximo aceptable desde salida hasta entrega',
+    },
+
+    # SECCIÓN 7: PROVEEDORES
+    {
+        'section': 'Proveedores',
+        'question': '¿Cuántos proveedores de leche tiene?',
+        'type': 1,
+        'initials_variable': 'NPD',
+        'unit': 'proveedores',
+        'help_text': 'Número total de proveedores de materia prima',
+    },
+    {
+        'section': 'Proveedores',
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'type': 1,
+        'initials_variable': 'TE1',
+        'unit': 'días',
+        'help_text': 'Tiempo de entrega del proveedor que más le suministra',
+    },
+    {
+        'section': 'Proveedores',
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'type': 1,
+        'initials_variable': 'TE2',
+        'unit': 'días',
+        'help_text': 'Tiempo de entrega del segundo proveedor más importante',
+    },
+    {
+        'section': 'Proveedores',
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'type': 1,
+        'initials_variable': 'TE3',
+        'unit': 'días',
+        'help_text': 'Tiempo de entrega del tercer proveedor (si aplica)',
+    },
+    {
+        'section': 'Proveedores',
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'type': 1,
+        'initials_variable': 'P1',
+        'unit': '%',
+        'help_text': 'Participación porcentual del proveedor principal (ej: 0.5 = 50%)',
+    },
+    {
+        'section': 'Proveedores',
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'type': 1,
+        'initials_variable': 'P2',
+        'unit': '%',
+        'help_text': 'Participación porcentual del proveedor secundario',
+    },
+    {
+        'section': 'Proveedores',
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'type': 1,
+        'initials_variable': 'P3',
+        'unit': '%',
+        'help_text': 'Participación porcentual del proveedor terciario',
+    },
+
+    # SECCIÓN 8: COMPETENCIA
+    {
+        'section': 'Competencia',
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'type': 1,
+        'initials_variable': 'PMC',
+        'unit': '%',
+        'help_text': 'Market share estimado de su competidor más fuerte',
+    },
+    {
+        'section': 'Competencia',
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'type': 1,
+        'initials_variable': 'NPC',
+        'unit': 'productos',
+        'help_text': 'Número de marcas o productos similares al suyo',
     }
-
 ]
-
-# # Validaciones adicionales para el cuestionario
-# question_validations = {
-#     'cross_validations': [
-#         {
-#             'rule': 'QPL <= CPROD',
-#             'message': 'La producción diaria no puede ser mayor que la capacidad máxima'
-#         },
-#         {
-#             'rule': 'CIP <= CMIPF',
-#             'message': 'La capacidad actual no puede ser mayor que la capacidad máxima'
-#         },
-#         {
-#             'rule': 'mean(DH) * 0.5 <= QPL <= mean(DH) * 1.5',
-#             'message': 'La producción debe estar entre 50% y 150% de la demanda promedio histórica'
-#         },
-#         {
-#             'rule': 'CUIP < PVP * 0.7',
-#             'message': 'El costo de materia prima debe ser menor al 70% del precio de venta'
-#         },
-#         {
-#             'rule': 'TPE * NEPP <= MLP',
-#             'message': 'El tiempo total de producción no puede exceder las horas laborables'
-#         }
-#     ]
-# }
-
-# # Agrupación de preguntas por criticidad
-# question_priority = {
-#     'critical': [  # Preguntas esenciales para el modelo
-#         'DH', 'PVP', 'CUIP', 'QPL', 'CPROD', 'NEPP', 'SE', 'CFD'
-#     ],
-#     'important': [  # Preguntas importantes pero con defaults razonables
-#         'DE', 'CPD', 'CINSP', 'TR', 'CMIPF', 'GMM', 'CUTRANS'
-#     ],
-#     'optional': [  # Preguntas que pueden usar valores calculados
-#         'IPF', 'II', 'VPC', 'ED', 'SI', 'TPC'
-#     ]
-# }
-
-# # Función para calcular valores por defecto inteligentes
-# def calculate_intelligent_defaults(answers):
-#     """
-#     Calcula valores por defecto basados en las respuestas ya proporcionadas
-#     """
-#     defaults = {}
-    
-#     # Si tenemos demanda histórica, calcular promedios
-#     if 'DH' in answers and isinstance(answers['DH'], list):
-#         dph = sum(answers['DH']) / len(answers['DH'])
-        
-#         # Inventario inicial sugerido: 2 días de demanda
-#         if 'IPF' not in answers:
-#             defaults['IPF'] = dph * 2
-            
-#         # Inventario de insumos: 3 días de producción
-#         if 'II' not in answers and 'CINSP' in answers:
-#             defaults['II'] = dph * answers['CINSP'] * 3
-            
-#         # Ventas por cliente
-#         if 'VPC' not in answers and 'CPD' in answers:
-#             defaults['VPC'] = dph / answers['CPD']
-            
-#         # Demanda esperada: promedio histórico + 5%
-#         if 'DE' not in answers:
-#             defaults['DE'] = dph * 1.05
-            
-#         # Stock de seguridad: 1 día de demanda
-#         if 'SI' not in answers:
-#             defaults['SI'] = dph
-    
-#     return defaults
-
-# # Función para generar resumen del cuestionario
-# def generate_questionnaire_summary(answers):
-#     """
-#     Genera un resumen de las respuestas para validación
-#     """
-#     if 'DH' in answers and isinstance(answers['DH'], list):
-#         dph = sum(answers['DH']) / len(answers['DH'])
-#         dsd = (sum((x - dph) ** 2 for x in answers['DH']) / len(answers['DH'])) ** 0.5
-        
-#         summary = {
-#             'demanda_promedio_historica': round(dph, 2),
-#             'desviacion_estandar': round(dsd, 2),
-#             'coeficiente_variacion': round(dsd / dph, 3),
-#             'capacidad_utilizada': round(answers.get('QPL', 0) / answers.get('CPROD', 1), 2),
-#             'margen_bruto_esperado': round((answers.get('PVP', 0) - answers.get('CUIP', 0)) / answers.get('PVP', 1), 2),
-#             'dias_inventario_objetivo': round(answers.get('SI', 0) / dph, 1) if dph > 0 else 0
-#         }
-        
-#         return summary
-    
-#     return None

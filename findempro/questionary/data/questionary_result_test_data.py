@@ -2,6 +2,7 @@
 import random
 import numpy as np
 
+
 questionary_result_data = [
     {
         'name': 'Respuestas para el producto Leche',
@@ -61,7 +62,6 @@ questionary_result_data = [
     }
 ]
 
-# Respuestas específicas para Leche - COMPLETAS
 answer_data_leche = [
     {
         'answer': 15.50,
@@ -263,6 +263,142 @@ answer_data_leche = [
         'initials_variable': 'CTPLV',
         'justification': 'Capacidad de transporte local',
         'variable_name': 'capacidad_transporte_por_viaje'
+    },
+    {
+        'answer': 25,
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'unit': 'KM',
+        'initials_variable': 'DPE',
+        'justification': 'Distancia media de distribución urbana',
+        'variable_name': 'distancia_promedio_entrega'
+    },
+    {
+        'answer': 2800,
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'unit': 'Litros/día',
+        'initials_variable': 'CTL',
+        'justification': 'Consumo de leche cruda para producción',
+        'variable_name': 'consumo_total_leche'
+    },
+    {
+        'answer': 480,
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'unit': 'minutos',
+        'initials_variable': 'MLP',
+        'justification': 'Jornada laboral de 8 horas efectivas',
+        'variable_name': 'minutos_laborables_por_dia'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuántos días máximos planea simular?',
+        'unit': 'días',
+        'initials_variable': 'NMD',
+        'justification': 'Período de simulación de un mes',
+        'variable_name': 'numero_maximo_dias'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos proveedores de leche tiene?',
+        'unit': 'proveedores',
+        'initials_variable': 'NPD',
+        'justification': 'Red diversificada de proveedores locales',
+        'variable_name': 'numero_proveedores_leche'
+    },
+    {
+        'answer': 24,
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'unit': 'horas',
+        'initials_variable': 'HTO',
+        'justification': 'Operación continua con turnos',
+        'variable_name': 'horas_totales_operacion'
+    },
+    {
+        'answer': 3200,
+        'question': '¿Cuál es la cantidad máxima producible por día?',
+        'unit': 'Litros',
+        'initials_variable': 'QMAX',
+        'justification': 'Capacidad teórica máxima al 100%',
+        'variable_name': 'cantidad_maxima_producible'
+    },
+    {
+        'answer': 4.0,
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'unit': '°C',
+        'initials_variable': 'TCFO',
+        'justification': 'Temperatura óptima para conservación láctea',
+        'variable_name': 'temperatura_cadena_frio_objetivo'
+    },
+    {
+        'answer': 0.5,
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'unit': 'horas',
+        'initials_variable': 'TEO',
+        'justification': 'Tiempo máximo aceptable de entrega',
+        'variable_name': 'tiempo_entrega_objetivo'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'unit': 'días',
+        'initials_variable': 'TE1',
+        'justification': 'Lead time del proveedor más confiable',
+        'variable_name': 'tiempo_entrega_proveedor_1'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'unit': 'días',
+        'initials_variable': 'TE2',
+        'justification': 'Lead time del segundo proveedor',
+        'variable_name': 'tiempo_entrega_proveedor_2'
+    },
+    {
+        'answer': 4,
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'unit': 'días',
+        'initials_variable': 'TE3',
+        'justification': 'Lead time del tercer proveedor',
+        'variable_name': 'tiempo_entrega_proveedor_3'
+    },
+    {
+        'answer': 0.5,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'unit': '%',
+        'initials_variable': 'P1',
+        'justification': '50% del suministro del proveedor principal',
+        'variable_name': 'peso_proveedor_1'
+    },
+    {
+        'answer': 0.3,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'unit': '%',
+        'initials_variable': 'P2',
+        'justification': '30% del suministro del proveedor secundario',
+        'variable_name': 'peso_proveedor_2'
+    },
+    {
+        'answer': 0.2,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'unit': '%',
+        'initials_variable': 'P3',
+        'justification': '20% del suministro del proveedor terciario',
+        'variable_name': 'peso_proveedor_3'
+    },
+    {
+        'answer': 35,
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'unit': '%',
+        'initials_variable': 'PMC',
+        'justification': 'Competidor líder con participación significativa',
+        'variable_name': 'participacion_mercado_competidor'
+    },
+    {
+        'answer': 12,
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'unit': 'productos',
+        'initials_variable': 'NPC',
+        'justification': 'Mercado con competencia moderada',
+        'variable_name': 'numero_productos_competencia'
     }
 ]
 
@@ -470,6 +606,38 @@ answer_data_queso = [
         'variable_name': 'capacidad_transporte_por_viaje'
     },
     {
+        'answer': 40,
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'unit': 'KM',
+        'initials_variable': 'DPE',
+        'justification': 'Distribución regional para mayoristas',
+        'variable_name': 'distancia_promedio_entrega'
+    },
+    {
+        'answer': 2000,
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'unit': 'Litros/día',
+        'initials_variable': 'CTL',
+        'justification': 'Consumo de leche para producción de queso',
+        'variable_name': 'consumo_total_leche'
+    },
+    {
+        'answer': 480,
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'unit': 'minutos',
+        'initials_variable': 'MLP',
+        'justification': 'Jornada laboral estándar de 8 horas',
+        'variable_name': 'minutos_laborables_por_dia'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuántos días máximos planea simular?',
+        'unit': 'días',
+        'initials_variable': 'NMD',
+        'justification': 'Período de simulación mensual',
+        'variable_name': 'numero_maximo_dias'
+    },
+    {
         'answer': 4,
         'question': '¿Cuántos proveedores de leche tiene?',
         'unit': 'proveedores',
@@ -478,20 +646,100 @@ answer_data_queso = [
         'variable_name': 'numero_proveedores_leche'
     },
     {
-        'answer': 2000,
-        'question': '¿Cuál es el consumo diario promedio de leche?',
-        'unit': 'Litros/día',
-        'initials_variable': 'CTL',
-        'justification': 'Consumo de leche para producción de queso',
-        'variable_name': 'consumo_total_leche'
+        'answer': 16,
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'unit': 'horas',
+        'initials_variable': 'HTO',
+        'justification': 'Operación en dos turnos de trabajo',
+        'variable_name': 'horas_totales_operacion'
     },
     {
-        'answer': 50,
-        'question': '¿Cuál es la cantidad promedio total producida por lote?',
+        'answer': 280,
+        'question': '¿Cuál es la cantidad máxima producible por día?',
         'unit': 'kg',
-        'initials_variable': 'CPL',
-        'justification': 'Producción total por lote completo',
-        'variable_name': 'cantidad_promedio_lote'
+        'initials_variable': 'QMAX',
+        'justification': 'Capacidad máxima teórica de quesería',
+        'variable_name': 'cantidad_maxima_producible'
+    },
+    {
+        'answer': 3.5,
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'unit': '°C',
+        'initials_variable': 'TCFO',
+        'justification': 'Temperatura de maduración y conservación',
+        'variable_name': 'temperatura_cadena_frio_objetivo'
+    },
+    {
+        'answer': 1.0,
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'unit': 'horas',
+        'initials_variable': 'TEO',
+        'justification': 'Tiempo para distribución mayorista',
+        'variable_name': 'tiempo_entrega_objetivo'
+    },
+    {
+        'answer': 1,
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'unit': 'días',
+        'initials_variable': 'TE1',
+        'justification': 'Proveedor local muy cercano',
+        'variable_name': 'tiempo_entrega_proveedor_1'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'unit': 'días',
+        'initials_variable': 'TE2',
+        'justification': 'Proveedor regional cercano',
+        'variable_name': 'tiempo_entrega_proveedor_2'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'unit': 'días',
+        'initials_variable': 'TE3',
+        'justification': 'Proveedor de respaldo',
+        'variable_name': 'tiempo_entrega_proveedor_3'
+    },
+    {
+        'answer': 0.4,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'unit': '%',
+        'initials_variable': 'P1',
+        'justification': '40% del proveedor principal',
+        'variable_name': 'peso_proveedor_1'
+    },
+    {
+        'answer': 0.35,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'unit': '%',
+        'initials_variable': 'P2',
+        'justification': '35% del proveedor secundario',
+        'variable_name': 'peso_proveedor_2'
+    },
+    {
+        'answer': 0.25,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'unit': '%',
+        'initials_variable': 'P3',
+        'justification': '25% del proveedor terciario',
+        'variable_name': 'peso_proveedor_3'
+    },
+    {
+        'answer': 40,
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'unit': '%',
+        'initials_variable': 'PMC',
+        'justification': 'Competidor fuerte en el mercado quesero',
+        'variable_name': 'participacion_mercado_competidor'
+    },
+    {
+        'answer': 8,
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'unit': 'productos',
+        'initials_variable': 'NPC',
+        'justification': 'Mercado especializado con pocos competidores',
+        'variable_name': 'numero_productos_competencia'
     }
 ]
 
@@ -697,6 +945,142 @@ answer_data_yogur = [
         'initials_variable': 'CTPLV',
         'justification': 'Capacidad de transporte local',
         'variable_name': 'capacidad_transporte_por_viaje'
+    },
+    {
+        'answer': 20,
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'unit': 'KM',
+        'initials_variable': 'DPE',
+        'justification': 'Distribución local urbana',
+        'variable_name': 'distancia_promedio_entrega'
+    },
+    {
+        'answer': 380,
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'unit': 'Litros/día',
+        'initials_variable': 'CTL',
+        'justification': 'Consumo de leche para yogur',
+        'variable_name': 'consumo_total_leche'
+    },
+    {
+        'answer': 480,
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'unit': 'minutos',
+        'initials_variable': 'MLP',
+        'justification': 'Jornada artesanal de 8 horas',
+        'variable_name': 'minutos_laborables_por_dia'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuántos días máximos planea simular?',
+        'unit': 'días',
+        'initials_variable': 'NMD',
+        'justification': 'Simulación mensual',
+        'variable_name': 'numero_maximo_dias'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos proveedores de leche tiene?',
+        'unit': 'proveedores',
+        'initials_variable': 'NPD',
+        'justification': 'Proveedores locales de confianza',
+        'variable_name': 'numero_proveedores_leche'
+    },
+    {
+        'answer': 12,
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'unit': 'horas',
+        'initials_variable': 'HTO',
+        'justification': 'Operación diurna con fermentación nocturna',
+        'variable_name': 'horas_totales_operacion'
+    },
+    {
+        'answer': 420,
+        'question': '¿Cuál es la cantidad máxima producible por día?',
+        'unit': 'Litros',
+        'initials_variable': 'QMAX',
+        'justification': 'Capacidad máxima de fermentadores',
+        'variable_name': 'cantidad_maxima_producible'
+    },
+    {
+        'answer': 4.5,
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'unit': '°C',
+        'initials_variable': 'TCFO',
+        'justification': 'Temperatura óptima para yogur',
+        'variable_name': 'temperatura_cadena_frio_objetivo'
+    },
+    {
+        'answer': 0.3,
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'unit': 'horas',
+        'initials_variable': 'TEO',
+        'justification': 'Entrega rápida local',
+        'variable_name': 'tiempo_entrega_objetivo'
+    },
+    {
+        'answer': 1,
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'unit': 'días',
+        'initials_variable': 'TE1',
+        'justification': 'Proveedor local diario',
+        'variable_name': 'tiempo_entrega_proveedor_1'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'unit': 'días',
+        'initials_variable': 'TE2',
+        'justification': 'Proveedor de respaldo',
+        'variable_name': 'tiempo_entrega_proveedor_2'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'unit': 'días',
+        'initials_variable': 'TE3',
+        'justification': 'Proveedor de emergencia',
+        'variable_name': 'tiempo_entrega_proveedor_3'
+    },
+    {
+        'answer': 0.7,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'unit': '%',
+        'initials_variable': 'P1',
+        'justification': '70% del proveedor principal',
+        'variable_name': 'peso_proveedor_1'
+    },
+    {
+        'answer': 0.2,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'unit': '%',
+        'initials_variable': 'P2',
+        'justification': '20% del proveedor secundario',
+        'variable_name': 'peso_proveedor_2'
+    },
+    {
+        'answer': 0.1,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'unit': '%',
+        'initials_variable': 'P3',
+        'justification': '10% del proveedor terciario',
+        'variable_name': 'peso_proveedor_3'
+    },
+    {
+        'answer': 25,
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'unit': '%',
+        'initials_variable': 'PMC',
+        'justification': 'Competencia moderada en yogur artesanal',
+        'variable_name': 'participacion_mercado_competidor'
+    },
+    {
+        'answer': 15,
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'unit': 'productos',
+        'initials_variable': 'NPC',
+        'justification': 'Mercado fragmentado con muchas opciones',
+        'variable_name': 'numero_productos_competencia'
     }
 ]
 
@@ -902,6 +1286,142 @@ answer_data_mantequilla = [
         'initials_variable': 'CTPLV',
         'justification': 'Capacidad de reparto refrigerado',
         'variable_name': 'capacidad_transporte_por_viaje'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'unit': 'KM',
+        'initials_variable': 'DPE',
+        'justification': 'Distribución local y regional',
+        'variable_name': 'distancia_promedio_entrega'
+    },
+    {
+        'answer': 390,
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'unit': 'Litros/día',
+        'initials_variable': 'CTL',
+        'justification': 'Consumo de crema para mantequilla',
+        'variable_name': 'consumo_total_leche'
+    },
+    {
+        'answer': 480,
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'unit': 'minutos',
+        'initials_variable': 'MLP',
+        'justification': 'Jornada familiar de 8 horas',
+        'variable_name': 'minutos_laborables_por_dia'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuántos días máximos planea simular?',
+        'unit': 'días',
+        'initials_variable': 'NMD',
+        'justification': 'Simulación mensual',
+        'variable_name': 'numero_maximo_dias'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos proveedores de leche tiene?',
+        'unit': 'proveedores',
+        'initials_variable': 'NPD',
+        'justification': 'Proveedores familiares locales',
+        'variable_name': 'numero_proveedores_leche'
+    },
+    {
+        'answer': 10,
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'unit': 'horas',
+        'initials_variable': 'HTO',
+        'justification': 'Operación familiar diurna',
+        'variable_name': 'horas_totales_operacion'
+    },
+    {
+        'answer': 110,
+        'question': '¿Cuál es la cantidad máxima producible por día?',
+        'unit': 'kg',
+        'initials_variable': 'QMAX',
+        'justification': 'Capacidad máxima de batidoras',
+        'variable_name': 'cantidad_maxima_producible'
+    },
+    {
+        'answer': 2.0,
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'unit': '°C',
+        'initials_variable': 'TCFO',
+        'justification': 'Temperatura para mantequilla sólida',
+        'variable_name': 'temperatura_cadena_frio_objetivo'
+    },
+    {
+        'answer': 0.8,
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'unit': 'horas',
+        'initials_variable': 'TEO',
+        'justification': 'Entrega local rápida',
+        'variable_name': 'tiempo_entrega_objetivo'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'unit': 'días',
+        'initials_variable': 'TE1',
+        'justification': 'Proveedor local familiar',
+        'variable_name': 'tiempo_entrega_proveedor_1'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'unit': 'días',
+        'initials_variable': 'TE2',
+        'justification': 'Proveedor de respaldo',
+        'variable_name': 'tiempo_entrega_proveedor_2'
+    },
+    {
+        'answer': 5,
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'unit': 'días',
+        'initials_variable': 'TE3',
+        'justification': 'Proveedor de emergencia',
+        'variable_name': 'tiempo_entrega_proveedor_3'
+    },
+    {
+        'answer': 0.6,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'unit': '%',
+        'initials_variable': 'P1',
+        'justification': '60% del proveedor principal',
+        'variable_name': 'peso_proveedor_1'
+    },
+    {
+        'answer': 0.4,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'unit': '%',
+        'initials_variable': 'P2',
+        'justification': '40% del proveedor secundario',
+        'variable_name': 'peso_proveedor_2'
+    },
+    {
+        'answer': 0.0,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'unit': '%',
+        'initials_variable': 'P3',
+        'justification': 'No usa tercer proveedor regularmente',
+        'variable_name': 'peso_proveedor_3'
+    },
+    {
+        'answer': 20,
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'unit': '%',
+        'initials_variable': 'PMC',
+        'justification': 'Mercado local con competencia baja',
+        'variable_name': 'participacion_mercado_competidor'
+    },
+    {
+        'answer': 6,
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'unit': 'productos',
+        'initials_variable': 'NPC',
+        'justification': 'Mercado pequeño con pocos competidores',
+        'variable_name': 'numero_productos_competencia'
     }
 ]
 
@@ -1107,6 +1627,142 @@ answer_data_crema = [
         'initials_variable': 'CTPLV',
         'justification': 'Capacidad transporte refrigerado',
         'variable_name': 'capacidad_transporte_por_viaje'
+    },
+    {
+        'answer': 15,
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'unit': 'KM',
+        'initials_variable': 'DPE',
+        'justification': 'Distribución muy local',
+        'variable_name': 'distancia_promedio_entrega'
+    },
+    {
+        'answer': 1020,
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'unit': 'Litros/día',
+        'initials_variable': 'CTL',
+        'justification': 'Consumo de leche para descremado',
+        'variable_name': 'consumo_total_leche'
+    },
+    {
+        'answer': 480,
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'unit': 'minutos',
+        'initials_variable': 'MLP',
+        'justification': 'Jornada de microempresa',
+        'variable_name': 'minutos_laborables_por_dia'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuántos días máximos planea simular?',
+        'unit': 'días',
+        'initials_variable': 'NMD',
+        'justification': 'Simulación mensual',
+        'variable_name': 'numero_maximo_dias'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos proveedores de leche tiene?',
+        'unit': 'proveedores',
+        'initials_variable': 'NPD',
+        'justification': 'Proveedores locales limitados',
+        'variable_name': 'numero_proveedores_leche'
+    },
+    {
+        'answer': 8,
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'unit': 'horas',
+        'initials_variable': 'HTO',
+        'justification': 'Operación diurna de microempresa',
+        'variable_name': 'horas_totales_operacion'
+    },
+    {
+        'answer': 200,
+        'question': '¿Cuál es la cantidad máxima producible por día?',
+        'unit': 'Litros',
+        'initials_variable': 'QMAX',
+        'justification': 'Capacidad máxima teórica',
+        'variable_name': 'cantidad_maxima_producible'
+    },
+    {
+        'answer': 3.0,
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'unit': '°C',
+        'initials_variable': 'TCFO',
+        'justification': 'Temperatura para crema fresca',
+        'variable_name': 'temperatura_cadena_frio_objetivo'
+    },
+    {
+        'answer': 0.4,
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'unit': 'horas',
+        'initials_variable': 'TEO',
+        'justification': 'Entrega local muy rápida',
+        'variable_name': 'tiempo_entrega_objetivo'
+    },
+    {
+        'answer': 1,
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'unit': 'días',
+        'initials_variable': 'TE1',
+        'justification': 'Proveedor local diario',
+        'variable_name': 'tiempo_entrega_proveedor_1'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'unit': 'días',
+        'initials_variable': 'TE2',
+        'justification': 'Proveedor alternativo',
+        'variable_name': 'tiempo_entrega_proveedor_2'
+    },
+    {
+        'answer': 4,
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'unit': 'días',
+        'initials_variable': 'TE3',
+        'justification': 'Proveedor de emergencia',
+        'variable_name': 'tiempo_entrega_proveedor_3'
+    },
+    {
+        'answer': 0.8,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'unit': '%',
+        'initials_variable': 'P1',
+        'justification': '80% del proveedor principal',
+        'variable_name': 'peso_proveedor_1'
+    },
+    {
+        'answer': 0.2,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'unit': '%',
+        'initials_variable': 'P2',
+        'justification': '20% del proveedor secundario',
+        'variable_name': 'peso_proveedor_2'
+    },
+    {
+        'answer': 0.0,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'unit': '%',
+        'initials_variable': 'P3',
+        'justification': 'No usa tercer proveedor',
+        'variable_name': 'peso_proveedor_3'
+    },
+    {
+        'answer': 15,
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'unit': '%',
+        'initials_variable': 'PMC',
+        'justification': 'Mercado local con baja competencia',
+        'variable_name': 'participacion_mercado_competidor'
+    },
+    {
+        'answer': 4,
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'unit': 'productos',
+        'initials_variable': 'NPC',
+        'justification': 'Mercado de nicho con pocos competidores',
+        'variable_name': 'numero_productos_competencia'
     }
 ]
 
@@ -1312,6 +1968,142 @@ answer_data_leche_deslactosada = [
         'initials_variable': 'CTPLV',
         'justification': 'Capacidad transporte refrigerado',
         'variable_name': 'capacidad_transporte_por_viaje'
+    },
+    {
+        'answer': 35,
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'unit': 'KM',
+        'initials_variable': 'DPE',
+        'justification': 'Distribución regional especializada',
+        'variable_name': 'distancia_promedio_entrega'
+    },
+    {
+        'answer': 1320,
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'unit': 'Litros/día',
+        'initials_variable': 'CTL',
+        'justification': 'Consumo de leche para deslactosado',
+        'variable_name': 'consumo_total_leche'
+    },
+    {
+        'answer': 480,
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'unit': 'minutos',
+        'initials_variable': 'MLP',
+        'justification': 'Jornada especializada de 8 horas',
+        'variable_name': 'minutos_laborables_por_dia'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuántos días máximos planea simular?',
+        'unit': 'días',
+        'initials_variable': 'NMD',
+        'justification': 'Simulación mensual',
+        'variable_name': 'numero_maximo_dias'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos proveedores de leche tiene?',
+        'unit': 'proveedores',
+        'initials_variable': 'NPD',
+        'justification': 'Proveedores especializados',
+        'variable_name': 'numero_proveedores_leche'
+    },
+    {
+        'answer': 20,
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'unit': 'horas',
+        'initials_variable': 'HTO',
+        'justification': 'Operación en turnos especializados',
+        'variable_name': 'horas_totales_operacion'
+    },
+    {
+        'answer': 1900,
+        'question': '¿Cuál es la cantidad máxima producible por día?',
+        'unit': 'Litros',
+        'initials_variable': 'QMAX',
+        'justification': 'Capacidad máxima de planta especializada',
+        'variable_name': 'cantidad_maxima_producible'
+    },
+    {
+        'answer': 4.0,
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'unit': '°C',
+        'initials_variable': 'TCFO',
+        'justification': 'Temperatura estándar láctea',
+        'variable_name': 'temperatura_cadena_frio_objetivo'
+    },
+    {
+        'answer': 0.6,
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'unit': 'horas',
+        'initials_variable': 'TEO',
+        'justification': 'Entrega especializada',
+        'variable_name': 'tiempo_entrega_objetivo'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'unit': 'días',
+        'initials_variable': 'TE1',
+        'justification': 'Proveedor especializado cercano',
+        'variable_name': 'tiempo_entrega_proveedor_1'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'unit': 'días',
+        'initials_variable': 'TE2',
+        'justification': 'Proveedor regional',
+        'variable_name': 'tiempo_entrega_proveedor_2'
+    },
+    {
+        'answer': 4,
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'unit': 'días',
+        'initials_variable': 'TE3',
+        'justification': 'Proveedor de respaldo',
+        'variable_name': 'tiempo_entrega_proveedor_3'
+    },
+    {
+        'answer': 0.5,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'unit': '%',
+        'initials_variable': 'P1',
+        'justification': '50% del proveedor principal',
+        'variable_name': 'peso_proveedor_1'
+    },
+    {
+        'answer': 0.3,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'unit': '%',
+        'initials_variable': 'P2',
+        'justification': '30% del proveedor secundario',
+        'variable_name': 'peso_proveedor_2'
+    },
+    {
+        'answer': 0.2,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'unit': '%',
+        'initials_variable': 'P3',
+        'justification': '20% del proveedor terciario',
+        'variable_name': 'peso_proveedor_3'
+    },
+    {
+        'answer': 45,
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'unit': '%',
+        'initials_variable': 'PMC',
+        'justification': 'Competidor fuerte en productos especializados',
+        'variable_name': 'participacion_mercado_competidor'
+    },
+    {
+        'answer': 5,
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'unit': 'productos',
+        'initials_variable': 'NPC',
+        'justification': 'Mercado especializado con pocos competidores',
+        'variable_name': 'numero_productos_competencia'
     }
 ]
 
@@ -1517,6 +2309,142 @@ answer_data_dulce_leche = [
         'initials_variable': 'CTPLV',
         'justification': 'Capacidad transporte standard',
         'variable_name': 'capacidad_transporte_por_viaje'
+    },
+    {
+        'answer': 22,
+        'question': '¿Cuál es la distancia promedio de entrega a sus clientes?',
+        'unit': 'KM',
+        'initials_variable': 'DPE',
+        'justification': 'Distribución tradicional local',
+        'variable_name': 'distancia_promedio_entrega'
+    },
+    {
+        'answer': 332,
+        'question': '¿Cuál es el consumo diario promedio de materia prima?',
+        'unit': 'Litros/día',
+        'initials_variable': 'CTL',
+        'justification': 'Consumo de leche para dulce',
+        'variable_name': 'consumo_total_leche'
+    },
+    {
+        'answer': 480,
+        'question': '¿Cuántos minutos laborables tiene por día?',
+        'unit': 'minutos',
+        'initials_variable': 'MLP',
+        'justification': 'Jornada tradicional de 8 horas',
+        'variable_name': 'minutos_laborables_por_dia'
+    },
+    {
+        'answer': 30,
+        'question': '¿Cuántos días máximos planea simular?',
+        'unit': 'días',
+        'initials_variable': 'NMD',
+        'justification': 'Simulación mensual',
+        'variable_name': 'numero_maximo_dias'
+    },
+    {
+        'answer': 2,
+        'question': '¿Cuántos proveedores de leche tiene?',
+        'unit': 'proveedores',
+        'initials_variable': 'NPD',
+        'justification': 'Proveedores tradicionales locales',
+        'variable_name': 'numero_proveedores_leche'
+    },
+    {
+        'answer': 12,
+        'question': '¿Cuántas horas totales de operación tiene la planta por día?',
+        'unit': 'horas',
+        'initials_variable': 'HTO',
+        'justification': 'Operación tradicional extendida',
+        'variable_name': 'horas_totales_operacion'
+    },
+    {
+        'answer': 160,
+        'question': '¿Cuál es la cantidad máxima producible por día?',
+        'unit': 'kg',
+        'initials_variable': 'QMAX',
+        'justification': 'Capacidad máxima de pailas',
+        'variable_name': 'cantidad_maxima_producible'
+    },
+    {
+        'answer': 18.0,
+        'question': '¿Cuál es la temperatura objetivo para mantener la cadena de frío?',
+        'unit': '°C',
+        'initials_variable': 'TCFO',
+        'justification': 'Temperatura ambiente controlada',
+        'variable_name': 'temperatura_cadena_frio_objetivo'
+    },
+    {
+        'answer': 1.0,
+        'question': '¿Cuál es el tiempo objetivo de entrega por cliente?',
+        'unit': 'horas',
+        'initials_variable': 'TEO',
+        'justification': 'Entrega tradicional pausada',
+        'variable_name': 'tiempo_entrega_objetivo'
+    },
+    {
+        'answer': 3,
+        'question': '¿Cuántos días demora la entrega el proveedor principal?',
+        'unit': 'días',
+        'initials_variable': 'TE1',
+        'justification': 'Proveedor tradicional local',
+        'variable_name': 'tiempo_entrega_proveedor_1'
+    },
+    {
+        'answer': 4,
+        'question': '¿Cuántos días demora la entrega el proveedor secundario?',
+        'unit': 'días',
+        'initials_variable': 'TE2',
+        'justification': 'Proveedor alternativo',
+        'variable_name': 'tiempo_entrega_proveedor_2'
+    },
+    {
+        'answer': 5,
+        'question': '¿Cuántos días demora la entrega el proveedor terciario?',
+        'unit': 'días',
+        'initials_variable': 'TE3',
+        'justification': 'Proveedor de emergencia',
+        'variable_name': 'tiempo_entrega_proveedor_3'
+    },
+    {
+        'answer': 0.7,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor principal?',
+        'unit': '%',
+        'initials_variable': 'P1',
+        'justification': '70% del proveedor principal',
+        'variable_name': 'peso_proveedor_1'
+    },
+    {
+        'answer': 0.3,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor secundario?',
+        'unit': '%',
+        'initials_variable': 'P2',
+        'justification': '30% del proveedor secundario',
+        'variable_name': 'peso_proveedor_2'
+    },
+    {
+        'answer': 0.0,
+        'question': '¿Qué porcentaje de su materia prima le suministra el proveedor terciario?',
+        'unit': '%',
+        'initials_variable': 'P3',
+        'justification': 'No usa tercer proveedor regularmente',
+        'variable_name': 'peso_proveedor_3'
+    },
+    {
+        'answer': 18,
+        'question': '¿Cuál es la participación de mercado del principal competidor?',
+        'unit': '%',
+        'initials_variable': 'PMC',
+        'justification': 'Mercado tradicional con baja competencia',
+        'variable_name': 'participacion_mercado_competidor'
+    },
+    {
+        'answer': 7,
+        'question': '¿Cuántos productos competidores existen en el mercado?',
+        'unit': 'productos',
+        'initials_variable': 'NPC',
+        'justification': 'Mercado tradicional con pocos competidores',
+        'variable_name': 'numero_productos_competencia'
     }
 ]
 
