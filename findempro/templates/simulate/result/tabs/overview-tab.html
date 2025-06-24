@@ -1,4 +1,4 @@
-<!-- Overview Tab -->
+<!-- Overview Tab - Versión Corregida -->
 <div class="tab-pane fade show active" id="overview" role="tabpanel">
     
     <!-- Header de resumen ejecutivo -->
@@ -21,17 +21,23 @@
                             <i class="bx bx-check-circle me-1"></i>
                             Simulación Completada
                         </span>
+                        {% if kpis.total_days %}
+                        <span class="badge bg-primary">
+                            <i class="bx bx-time me-1"></i>
+                            {{ kpis.total_days }} días simulados
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="summary-description">
                     <p class="lead">
-                        Análisis integral de {{ all_variables_extracted|length|default:0 }} días de simulación 
+                        Análisis integral de {{ kpis.total_days|default:0 }} días de simulación 
                         para <strong>{{ product_instance.name|default:"el producto" }}</strong> de 
                         <strong>{{ business_instance.name|default:"la empresa" }}</strong>.
-                        {% if totales_acumulativos.GT %}
-                            {% if totales_acumulativos.GT.total > 0 %}
+                        {% if total_profit %}
+                            {% if total_profit > 0 %}
                                 La simulación proyecta un escenario <span class="text-success font-weight-bold">rentable</span> 
-                                con ganancias totales de <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}</strong>.
+                                con ganancias totales de <strong>Bs. {{ total_profit|floatformat:2 }}</strong>.
                             {% else %}
                                 La simulación indica la necesidad de <span class="text-warning font-weight-bold">optimización</span> 
                                 en la estrategia operativa y financiera.
@@ -58,20 +64,20 @@
                         </div>
                         <div class="metric-content">
                             <div class="metric-value">
-                                {% if totales_acumulativos.IT %}
-                                    Bs. {{ totales_acumulativos.IT.total|floatformat:0|default:"0" }}
-                                {% else %}
-                                    Bs. 0
-                                {% endif %}
+                                Bs. {{ total_revenue|floatformat:0|default:"0" }}
                             </div>
                             <div class="metric-label">Ingresos Totales</div>
                             <div class="metric-trend">
-                                {% if totales_acumulativos.IT.trend == "increasing" %}
-                                    <span class="trend-up"><i class="bx bx-trending-up"></i> Creciente</span>
-                                {% elif totales_acumulativos.IT.trend == "decreasing" %}
-                                    <span class="trend-down"><i class="bx bx-trending-down"></i> Decreciente</span>
+                                {% if totales_acumulativos and totales_acumulativos.INGRESOS %}
+                                    {% if totales_acumulativos.INGRESOS.trend == "increasing" %}
+                                        <span class="trend-up"><i class="bx bx-trending-up"></i> Creciente</span>
+                                    {% elif totales_acumulativos.INGRESOS.trend == "decreasing" %}
+                                        <span class="trend-down"><i class="bx bx-trending-down"></i> Decreciente</span>
+                                    {% else %}
+                                        <span class="trend-stable"><i class="bx bx-minus"></i> Estable</span>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="trend-stable"><i class="bx bx-minus"></i> Estable</span>
+                                    <span class="trend-stable"><i class="bx bx-info-circle"></i> Sin tendencia</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -83,16 +89,12 @@
                         </div>
                         <div class="metric-content">
                             <div class="metric-value">
-                                {% if totales_acumulativos.GT %}
-                                    Bs. {{ totales_acumulativos.GT.total|floatformat:0|default:"0" }}
-                                {% else %}
-                                    Bs. 0
-                                {% endif %}
+                                Bs. {{ total_profit|floatformat:0|default:"0" }}
                             </div>
                             <div class="metric-label">Ganancia Neta</div>
                             <div class="metric-trend">
-                                {% if totales_acumulativos.GT %}
-                                    {% if totales_acumulativos.GT.total > 0 %}
+                                {% if total_profit %}
+                                    {% if total_profit > 0 %}
                                         <span class="trend-up"><i class="bx bx-check-circle"></i> Rentable</span>
                                     {% else %}
                                         <span class="trend-down"><i class="bx bx-x-circle"></i> Con pérdidas</span>
@@ -110,19 +112,13 @@
                         </div>
                         <div class="metric-content">
                             <div class="metric-value">
-                                {% if totales_acumulativos.EOG and all_variables_extracted|length > 0 %}
-                                    {% widthratio totales_acumulativos.EOG.total 1 all_variables_extracted|length as avg_eff %}
-                                    {% widthratio avg_eff 1 100 as eff_percent %}
-                                    {{ eff_percent|floatformat:1 }}%
-                                {% else %}
-                                    0.0%
-                                {% endif %}
+                                {{ kpis.avg_efficiency|floatformat:1|default:"0.0" }}%
                             </div>
                             <div class="metric-label">Eficiencia Operativa</div>
                             <div class="metric-trend">
-                                {% if eff_percent >= 80 %}
+                                {% if kpis.avg_efficiency >= 80 %}
                                     <span class="trend-up"><i class="bx bx-check"></i> Excelente</span>
-                                {% elif eff_percent >= 60 %}
+                                {% elif kpis.avg_efficiency >= 60 %}
                                     <span class="trend-stable"><i class="bx bx-info-circle"></i> Buena</span>
                                 {% else %}
                                     <span class="trend-down"><i class="bx bx-error"></i> Necesita mejora</span>
@@ -137,19 +133,13 @@
                         </div>
                         <div class="metric-content">
                             <div class="metric-value">
-                                {% if totales_acumulativos.NR and all_variables_extracted|length > 0 %}
-                                    {% widthratio totales_acumulativos.NR.total 1 all_variables_extracted|length as avg_margin %}
-                                    {% widthratio avg_margin 1 100 as margin_percent %}
-                                    {{ margin_percent|floatformat:1 }}%
-                                {% else %}
-                                    0.0%
-                                {% endif %}
+                                {{ average_margin|floatformat:1|default:"0.0" }}%
                             </div>
                             <div class="metric-label">Margen de Rentabilidad</div>
                             <div class="metric-trend">
-                                {% if margin_percent >= 20 %}
+                                {% if average_margin >= 20 %}
                                     <span class="trend-up"><i class="bx bx-star"></i> Excelente</span>
-                                {% elif margin_percent >= 10 %}
+                                {% elif average_margin >= 10 %}
                                     <span class="trend-stable"><i class="bx bx-check"></i> Aceptable</span>
                                 {% else %}
                                     <span class="trend-down"><i class="bx bx-error"></i> Bajo</span>
@@ -196,11 +186,11 @@
                 {% endif %}
                 <div class="chart-summary">
                     <small class="text-muted">
-                        {% if totales_acumulativos.IT and totales_acumulativos.GT %}
+                        {% if total_revenue and total_profit %}
                             Rendimiento financiero: 
-                            {% if totales_acumulativos.GT.total > 0 %}
+                            {% if total_profit > 0 %}
                                 <span class="text-success">Positivo</span> - 
-                                Margen del {{ margin_percent|floatformat:1 }}%
+                                Margen del {{ average_margin|floatformat:1 }}%
                             {% else %}
                                 <span class="text-danger">Requiere optimización</span>
                             {% endif %}
@@ -270,8 +260,8 @@
                     <i class="bx bx-pie-chart me-2"></i>
                     Distribución de Costos
                 </h6>
-                {% if image_data_costos or image_data_gastos %}
-                <img src="data:image/png;base64,{{ image_data_costos|default:image_data_gastos }}" 
+                {% if image_data_costos or chart_images.costs_analysis %}
+                <img src="data:image/png;base64,{{ image_data_costos|default:chart_images.costs_analysis }}" 
                     class="chart-image" 
                     alt="Distribución de Costos"
                     loading="lazy">
@@ -310,8 +300,8 @@
                     <i class="bx bx-trending-up me-2"></i>
                     Análisis de ROI
                 </h6>
-                {% if image_data_roi or image_data_kpis %}
-                <img src="data:image/png;base64,{{ image_data_roi|default:image_data_kpis }}" 
+                {% if image_data_roi or chart_images.roi_analysis %}
+                <img src="data:image/png;base64,{{ image_data_roi|default:chart_images.roi_analysis }}" 
                     class="chart-image" 
                     alt="Análisis de ROI"
                     loading="lazy">
@@ -344,10 +334,10 @@
                                 <div class="insight-content">
                                     <h6 class="insight-title">Performance Financiera</h6>
                                     <p class="insight-description">
-                                        {% if totales_acumulativos.GT %}
-                                            {% if totales_acumulativos.GT.total > 0 %}
+                                        {% if total_profit %}
+                                            {% if total_profit > 0 %}
                                                 La simulación proyecta una rentabilidad positiva de 
-                                                <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}</strong>, 
+                                                <strong>Bs. {{ total_profit|floatformat:2 }}</strong>, 
                                                 indicando un modelo de negocio viable.
                                             {% else %}
                                                 Los resultados muestran necesidad de optimización en costos y 
@@ -368,11 +358,11 @@
                                 <div class="insight-content">
                                     <h6 class="insight-title">Eficiencia Operativa</h6>
                                     <p class="insight-description">
-                                        {% if eff_percent %}
-                                            La eficiencia operativa promedio del {{ eff_percent|floatformat:1 }}% 
-                                            {% if eff_percent >= 80 %}
+                                        {% if kpis.avg_efficiency %}
+                                            La eficiencia operativa promedio del {{ kpis.avg_efficiency|floatformat:1 }}% 
+                                            {% if kpis.avg_efficiency >= 80 %}
                                                 demuestra procesos optimizados y alta productividad.
-                                            {% elif eff_percent >= 60 %}
+                                            {% elif kpis.avg_efficiency >= 60 %}
                                                 indica un rendimiento aceptable con oportunidades de mejora.
                                             {% else %}
                                                 requiere atención inmediata para optimizar procesos y recursos.
@@ -417,14 +407,14 @@
                                 Acciones Recomendadas
                             </h6>
                             <div class="recommendations-list">
-                                {% if margin_percent < 15 %}
+                                {% if average_margin < 15 %}
                                 <div class="recommendation-item">
                                     <i class="bx bx-arrow-to-right text-danger"></i>
                                     <span>Revisar estructura de costos</span>
                                 </div>
                                 {% endif %}
                                 
-                                {% if eff_percent < 70 %}
+                                {% if kpis.avg_efficiency < 70 %}
                                 <div class="recommendation-item">
                                     <i class="bx bx-arrow-to-right text-warning"></i>
                                     <span>Optimizar procesos operativos</span>
@@ -459,4 +449,235 @@
             </div>
         </div>
     </div>
+
+    <!-- Tabla resumen de KPIs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-table me-2"></i>
+                        Resumen de KPIs Principales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Indicador</th>
+                                    <th>Valor</th>
+                                    <th>Unidad</th>
+                                    <th>Estado</th>
+                                    <th>Interpretación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Días Simulados</strong></td>
+                                    <td>{{ kpis.total_days|default:0 }}</td>
+                                    <td>días</td>
+                                    <td>
+                                        {% if kpis.total_days > 30 %}
+                                            <span class="badge bg-success">Completo</span>
+                                        {% elif kpis.total_days > 7 %}
+                                            <span class="badge bg-warning">Parcial</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Insuficiente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>Período de análisis de la simulación</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Demanda Promedio</strong></td>
+                                    <td>{{ kpis.avg_demand|floatformat:2|default:0 }}</td>
+                                    <td>L/día</td>
+                                    <td>
+                                        {% if kpis.avg_demand > 100 %}
+                                            <span class="badge bg-success">Alta</span>
+                                        {% elif kpis.avg_demand > 50 %}
+                                            <span class="badge bg-info">Media</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Baja</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>Nivel de demanda promedio diaria</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Ventas Promedio</strong></td>
+                                    <td>{{ kpis.avg_sales|floatformat:2|default:0 }}</td>
+                                    <td>L/día</td>
+                                    <td>
+                                        {% if kpis.avg_sales > 90 %}
+                                            <span class="badge bg-success">Excelente</span>
+                                        {% elif kpis.avg_sales > 70 %}
+                                            <span class="badge bg-info">Bueno</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Regular</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>Capacidad de conversión de demanda en ventas</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Satisfacción del Cliente</strong></td>
+                                    <td>{{ kpis.avg_service_level|floatformat:1|default:0 }}</td>
+                                    <td>%</td>
+                                    <td>
+                                        {% if kpis.avg_service_level >= 90 %}
+                                            <span class="badge bg-success">Excelente</span>
+                                        {% elif kpis.avg_service_level >= 80 %}
+                                            <span class="badge bg-info">Bueno</span>
+                                        {% elif kpis.avg_service_level >= 70 %}
+                                            <span class="badge bg-warning">Regular</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Deficiente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>Nivel de satisfacción promedio de los clientes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Eficiencia Operativa</strong></td>
+                                    <td>{{ kpis.avg_efficiency|floatformat:1|default:0 }}</td>
+                                    <td>%</td>
+                                    <td>
+                                        {% if kpis.avg_efficiency >= 85 %}
+                                            <span class="badge bg-success">Óptima</span>
+                                        {% elif kpis.avg_efficiency >= 75 %}
+                                            <span class="badge bg-info">Buena</span>
+                                        {% elif kpis.avg_efficiency >= 60 %}
+                                            <span class="badge bg-warning">Regular</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Deficiente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>Eficiencia en los procesos operativos</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Margen de Ganancia</strong></td>
+                                    <td>{{ average_margin|floatformat:2|default:0 }}</td>
+                                    <td>%</td>
+                                    <td>
+                                        {% if average_margin >= 25 %}
+                                            <span class="badge bg-success">Excelente</span>
+                                        {% elif average_margin >= 15 %}
+                                            <span class="badge bg-info">Bueno</span>
+                                        {% elif average_margin >= 5 %}
+                                            <span class="badge bg-warning">Regular</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Bajo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>Rentabilidad promedio sobre las ventas</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas y notificaciones -->
+    {% if validation_alerts or financial_recommendations %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-bell me-2"></i>
+                        Alertas y Notificaciones del Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if validation_alerts %}
+                        {% for alert_type, alerts in validation_alerts.items %}
+                            {% for alert in alerts %}
+                            <div class="alert alert-{% if alert_type == 'ERROR' %}danger{% elif alert_type == 'WARNING' %}warning{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                                <i class="bx {% if alert_type == 'ERROR' %}bx-error{% elif alert_type == 'WARNING' %}bx-error-circle{% else %}bx-info-circle{% endif %} me-2"></i>
+                                <strong>{{ alert_type }}:</strong> {{ alert.message }}
+                                {% if alert.recommendation %}
+                                    <hr>
+                                    <small><strong>Recomendación:</strong> {{ alert.recommendation }}</small>
+                                {% endif %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if financial_recommendations %}
+                        {% for rec in financial_recommendations|slice:":3" %}
+                        <div class="alert alert-{{ rec.type|default:'info' }} alert-dismissible fade show" role="alert">
+                            <i class="bx {% if rec.type == 'success' %}bx-check-circle{% elif rec.type == 'warning' %}bx-error-circle{% elif rec.type == 'danger' %}bx-x-circle{% else %}bx-info-circle{% endif %} me-2"></i>
+                            <strong>Recomendación Financiera:</strong> {{ rec.message }}
+                            {% if rec.priority %}
+                                <span class="badge bg-{{ rec.priority }} ms-2">
+                                    {% if rec.priority == 'high' %}Alta Prioridad
+                                    {% elif rec.priority == 'medium' %}Media Prioridad
+                                    {% else %}Baja Prioridad
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
+
+<!-- Scripts específicos para Overview -->
+<script>
+function downloadChart(chartData, filename) {
+    try {
+        const link = document.createElement('a');
+        link.href = 'data:image/png;base64,' + chartData;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error descargando gráfico:', error);
+        alert('Error al descargar el gráfico');
+    }
+}
+
+function openFullscreen(chartData, title) {
+    try {
+        const modal = new bootstrap.Modal(document.getElementById('fullscreenModal'));
+        document.getElementById('fullscreenModalTitle').textContent = title;
+        document.getElementById('fullscreenModalImage').src = 'data:image/png;base64,' + chartData;
+        modal.show();
+    } catch (error) {
+        console.error('Error abriendo pantalla completa:', error);
+    }
+}
+
+// Actualizar métricas en tiempo real si hay nuevos datos
+function updateMetrics() {
+    // Placeholder para futuras actualizaciones automáticas
+    console.log('Métricas actualizadas');
+}
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    // Ocultar alertas automáticamente después de 10 segundos
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(alert => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 10000);
+    
+    // Tooltip para elementos con título
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
