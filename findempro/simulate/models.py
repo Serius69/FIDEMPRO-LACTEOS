@@ -363,6 +363,14 @@ class Simulation(models.Model):
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
     
+    extracted_variables = models.TextField(null=True, blank=True, help_text="Variables extraídas desde BD en formato JSON")
+    demand_config = models.TextField(null=True, blank=True, help_text="Configuración de demanda en formato JSON")
+    extraction_report = models.TextField(null=True, blank=True, help_text="Reporte de extracción de variables")
+    execution_report = models.TextField(null=True, blank=True, help_text="Reporte de ejecución de simulación")
+    is_completed = models.BooleanField(default=False, help_text="Indica si la simulación se completó")
+    completion_date = models.DateTimeField(null=True, blank=True, help_text="Fecha de finalización")
+    
+    
     class Meta:
         verbose_name = "Simulation"
         verbose_name_plural = "Simulations"
@@ -472,6 +480,8 @@ class ResultSimulation(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)   
+    
+    metadata = models.JSONField(default=dict, blank=True, help_text="Metadatos del resultado")
     
     class Meta:
         verbose_name = "Simulation Result"

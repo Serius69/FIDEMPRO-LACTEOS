@@ -1,0 +1,462 @@
+<!-- Overview Tab -->
+<div class="tab-pane fade show active" id="overview" role="tabpanel">
+    
+    <!-- Header de resumen ejecutivo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="executive-summary">
+                <div class="summary-header">
+                    <h2 class="summary-title">
+                        <i class="bx bx-chart me-3"></i>
+                        Resumen Ejecutivo de la Simulación
+                    </h2>
+                    <div class="summary-badges">
+                        {% if simulation_instance.date_created %}
+                        <span class="badge bg-info">
+                            <i class="bx bx-calendar me-1"></i>
+                            {{ simulation_instance.date_created|date:"d/m/Y H:i" }}
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-success">
+                            <i class="bx bx-check-circle me-1"></i>
+                            Simulación Completada
+                        </span>
+                    </div>
+                </div>
+                <div class="summary-description">
+                    <p class="lead">
+                        Análisis integral de {{ all_variables_extracted|length|default:0 }} días de simulación 
+                        para <strong>{{ product_instance.name|default:"el producto" }}</strong> de 
+                        <strong>{{ business_instance.name|default:"la empresa" }}</strong>.
+                        {% if totales_acumulativos.GT %}
+                            {% if totales_acumulativos.GT.total > 0 %}
+                                La simulación proyecta un escenario <span class="text-success font-weight-bold">rentable</span> 
+                                con ganancias totales de <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}</strong>.
+                            {% else %}
+                                La simulación indica la necesidad de <span class="text-warning font-weight-bold">optimización</span> 
+                                en la estrategia operativa y financiera.
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas clave del resumen -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="metrics-overview">
+                <h4 class="metrics-title mb-4">
+                    <i class="bx bx-tachometer me-2"></i>
+                    Métricas Clave de Performance
+                </h4>
+                <div class="metrics-grid">
+                    <div class="metric-card metric-revenue">
+                        <div class="metric-icon">
+                            <i class="bx bx-dollar-circle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">
+                                {% if totales_acumulativos.IT %}
+                                    Bs. {{ totales_acumulativos.IT.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </div>
+                            <div class="metric-label">Ingresos Totales</div>
+                            <div class="metric-trend">
+                                {% if totales_acumulativos.IT.trend == "increasing" %}
+                                    <span class="trend-up"><i class="bx bx-trending-up"></i> Creciente</span>
+                                {% elif totales_acumulativos.IT.trend == "decreasing" %}
+                                    <span class="trend-down"><i class="bx bx-trending-down"></i> Decreciente</span>
+                                {% else %}
+                                    <span class="trend-stable"><i class="bx bx-minus"></i> Estable</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card metric-profit">
+                        <div class="metric-icon">
+                            <i class="bx bx-trending-up"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">
+                                {% if totales_acumulativos.GT %}
+                                    Bs. {{ totales_acumulativos.GT.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </div>
+                            <div class="metric-label">Ganancia Neta</div>
+                            <div class="metric-trend">
+                                {% if totales_acumulativos.GT %}
+                                    {% if totales_acumulativos.GT.total > 0 %}
+                                        <span class="trend-up"><i class="bx bx-check-circle"></i> Rentable</span>
+                                    {% else %}
+                                        <span class="trend-down"><i class="bx bx-x-circle"></i> Con pérdidas</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="trend-stable">No disponible</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card metric-efficiency">
+                        <div class="metric-icon">
+                            <i class="bx bx-cog"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">
+                                {% if totales_acumulativos.EOG and all_variables_extracted|length > 0 %}
+                                    {% widthratio totales_acumulativos.EOG.total 1 all_variables_extracted|length as avg_eff %}
+                                    {% widthratio avg_eff 1 100 as eff_percent %}
+                                    {{ eff_percent|floatformat:1 }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </div>
+                            <div class="metric-label">Eficiencia Operativa</div>
+                            <div class="metric-trend">
+                                {% if eff_percent >= 80 %}
+                                    <span class="trend-up"><i class="bx bx-check"></i> Excelente</span>
+                                {% elif eff_percent >= 60 %}
+                                    <span class="trend-stable"><i class="bx bx-info-circle"></i> Buena</span>
+                                {% else %}
+                                    <span class="trend-down"><i class="bx bx-error"></i> Necesita mejora</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card metric-margin">
+                        <div class="metric-icon">
+                            <i class="bx bx-percentage"></i>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">
+                                {% if totales_acumulativos.NR and all_variables_extracted|length > 0 %}
+                                    {% widthratio totales_acumulativos.NR.total 1 all_variables_extracted|length as avg_margin %}
+                                    {% widthratio avg_margin 1 100 as margin_percent %}
+                                    {{ margin_percent|floatformat:1 }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </div>
+                            <div class="metric-label">Margen de Rentabilidad</div>
+                            <div class="metric-trend">
+                                {% if margin_percent >= 20 %}
+                                    <span class="trend-up"><i class="bx bx-star"></i> Excelente</span>
+                                {% elif margin_percent >= 10 %}
+                                    <span class="trend-stable"><i class="bx bx-check"></i> Aceptable</span>
+                                {% else %}
+                                    <span class="trend-down"><i class="bx bx-error"></i> Bajo</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos principales del overview -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-dollar me-2"></i>
+                        Evolución Financiera: Ingresos vs Ganancias
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_ingresos_gastos %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_ingresos_gastos %}
+                <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                    class="chart-image" 
+                    alt="Evolución Financiera: Ingresos vs Ganancias"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico financiero no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+                <div class="chart-summary">
+                    <small class="text-muted">
+                        {% if totales_acumulativos.IT and totales_acumulativos.GT %}
+                            Rendimiento financiero: 
+                            {% if totales_acumulativos.GT.total > 0 %}
+                                <span class="text-success">Positivo</span> - 
+                                Margen del {{ margin_percent|floatformat:1 }}%
+                            {% else %}
+                                <span class="text-danger">Requiere optimización</span>
+                            {% endif %}
+                        {% else %}
+                            Análisis financiero en proceso
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-line-chart me-2"></i>
+                        Comportamiento de la Demanda
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_simulation %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_simulation }}', 'tendencia-demanda.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_simulation }}', 'Tendencia de Demanda')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_simulation %}
+                <img src="data:image/png;base64,{{ image_data_simulation }}" 
+                    class="chart-image" 
+                    alt="Comportamiento de la Demanda"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de demanda no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+                <div class="chart-summary">
+                    <small class="text-muted">
+                        {% if growth_rate %}
+                            Tendencia de crecimiento: 
+                            {% if growth_rate > 0 %}
+                                <span class="text-success">+{{ growth_rate|floatformat:2 }}%</span> - Creciente
+                            {% elif growth_rate < 0 %}
+                                <span class="text-danger">{{ growth_rate|floatformat:2 }}%</span> - Decreciente
+                            {% else %}
+                                <span class="text-info">{{ growth_rate|floatformat:2 }}%</span> - Estable
+                            {% endif %}
+                        {% else %}
+                            Análisis de tendencia en proceso
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos adicionales de overview -->
+    <div class="row mb-4">
+        <div class="col-lg-4 mb-3">
+            <div class="chart-container compact">
+                <h6 class="chart-title mb-3">
+                    <i class="bx bx-pie-chart me-2"></i>
+                    Distribución de Costos
+                </h6>
+                {% if image_data_costos or image_data_gastos %}
+                <img src="data:image/png;base64,{{ image_data_costos|default:image_data_gastos }}" 
+                    class="chart-image" 
+                    alt="Distribución de Costos"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder compact">
+                    <i class="bx bx-pie-chart text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No disponible</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="chart-container compact">
+                <h6 class="chart-title mb-3">
+                    <i class="bx bx-bar-chart me-2"></i>
+                    Eficiencia Operativa
+                </h6>
+                {% if image_data_eficiencia %}
+                <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                    class="chart-image" 
+                    alt="Eficiencia Operativa"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder compact">
+                    <i class="bx bx-bar-chart text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No disponible</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="chart-container compact">
+                <h6 class="chart-title mb-3">
+                    <i class="bx bx-trending-up me-2"></i>
+                    Análisis de ROI
+                </h6>
+                {% if image_data_roi or image_data_kpis %}
+                <img src="data:image/png;base64,{{ image_data_roi|default:image_data_kpis }}" 
+                    class="chart-image" 
+                    alt="Análisis de ROI"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder compact">
+                    <i class="bx bx-trending-up text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No disponible</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen de insights y recomendaciones -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="insights-overview">
+                <h4 class="insights-title mb-4">
+                    <i class="bx bx-lightbulb me-2"></i>
+                    Insights Principales y Recomendaciones
+                </h4>
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="insights-list">
+                            <!-- Insight financiero -->
+                            <div class="insight-item">
+                                <div class="insight-icon bg-success">
+                                    <i class="bx bx-dollar"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h6 class="insight-title">Performance Financiera</h6>
+                                    <p class="insight-description">
+                                        {% if totales_acumulativos.GT %}
+                                            {% if totales_acumulativos.GT.total > 0 %}
+                                                La simulación proyecta una rentabilidad positiva de 
+                                                <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}</strong>, 
+                                                indicando un modelo de negocio viable.
+                                            {% else %}
+                                                Los resultados muestran necesidad de optimización en costos y 
+                                                estrategias de precios para alcanzar rentabilidad.
+                                            {% endif %}
+                                        {% else %}
+                                            Análisis financiero en proceso de cálculo.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Insight operativo -->
+                            <div class="insight-item">
+                                <div class="insight-icon bg-info">
+                                    <i class="bx bx-cog"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h6 class="insight-title">Eficiencia Operativa</h6>
+                                    <p class="insight-description">
+                                        {% if eff_percent %}
+                                            La eficiencia operativa promedio del {{ eff_percent|floatformat:1 }}% 
+                                            {% if eff_percent >= 80 %}
+                                                demuestra procesos optimizados y alta productividad.
+                                            {% elif eff_percent >= 60 %}
+                                                indica un rendimiento aceptable con oportunidades de mejora.
+                                            {% else %}
+                                                requiere atención inmediata para optimizar procesos y recursos.
+                                            {% endif %}
+                                        {% else %}
+                                            Los indicadores operativos están siendo analizados para identificar oportunidades de mejora.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Insight de demanda -->
+                            <div class="insight-item">
+                                <div class="insight-icon bg-warning">
+                                    <i class="bx bx-trending-up"></i>
+                                </div>
+                                <div class="insight-content">
+                                    <h6 class="insight-title">Comportamiento de Demanda</h6>
+                                    <p class="insight-description">
+                                        {% if growth_rate %}
+                                            El análisis revela una tasa de crecimiento del {{ growth_rate|floatformat:2 }}%, 
+                                            {% if growth_rate > 0 %}
+                                                sugiriendo oportunidades de expansión y crecimiento del mercado.
+                                            {% elif growth_rate < 0 %}
+                                                indicando la necesidad de estrategias para revertir la tendencia.
+                                            {% else %}
+                                                mostrando un mercado estable con demanda predecible.
+                                            {% endif %}
+                                        {% else %}
+                                            El comportamiento de la demanda está siendo analizado para identificar patrones y tendencias.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="recommendations-card">
+                            <h6 class="recommendations-title">
+                                <i class="bx bx-check-square me-2"></i>
+                                Acciones Recomendadas
+                            </h6>
+                            <div class="recommendations-list">
+                                {% if margin_percent < 15 %}
+                                <div class="recommendation-item">
+                                    <i class="bx bx-arrow-to-right text-danger"></i>
+                                    <span>Revisar estructura de costos</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if eff_percent < 70 %}
+                                <div class="recommendation-item">
+                                    <i class="bx bx-arrow-to-right text-warning"></i>
+                                    <span>Optimizar procesos operativos</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if growth_rate > 5 %}
+                                <div class="recommendation-item">
+                                    <i class="bx bx-arrow-to-right text-success"></i>
+                                    <span>Considerar expansión de capacidad</span>
+                                </div>
+                                {% elif growth_rate < -2 %}
+                                <div class="recommendation-item">
+                                    <i class="bx bx-arrow-to-right text-info"></i>
+                                    <span>Desarrollar estrategias de mercado</span>
+                                </div>
+                                {% endif %}
+
+                                <div class="recommendation-item">
+                                    <i class="bx bx-arrow-to-right text-primary"></i>
+                                    <span>Monitorear KPIs continuamente</span>
+                                </div>
+
+                                <div class="recommendation-item">
+                                    <i class="bx bx-arrow-to-right text-secondary"></i>
+                                    <span>Implementar mejora continua</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

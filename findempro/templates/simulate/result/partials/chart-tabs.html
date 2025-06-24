@@ -1,0 +1,78 @@
+<!-- Chart Tabs -->
+<div class="chart-tabs">
+    <ul class="nav nav-tabs" id="chartTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                    data-bs-target="#overview" type="button" role="tab">
+                <i class="bx bx-line-chart me-2"></i>
+                Resumen General
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="financial-tab" data-bs-toggle="tab" 
+                    data-bs-target="#financial" type="button" role="tab">
+                <i class="bx bx-dollar me-2"></i>
+                Análisis Financiero
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="operations-tab" data-bs-toggle="tab" 
+                    data-bs-target="#operations" type="button" role="tab">
+                <i class="bx bx-cog me-2"></i>
+                Operaciones
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="demand-tab" data-bs-toggle="tab" 
+                    data-bs-target="#demand" type="button" role="tab">
+                <i class="bx bx-trending-up me-2"></i>
+                Demanda
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="endogenous-tab" data-bs-toggle="tab" 
+                    data-bs-target="#endogenous" type="button" role="tab">
+                <i class="bx bx-scatter-chart me-2"></i>
+                Variables Endógenas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" 
+                    data-bs-target="#analysis" type="button" role="tab">
+                <i class="bx bx-analyse me-2"></i>
+                Análisis Estadístico
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="validation-tab" data-bs-toggle="tab" 
+                    data-bs-target="#validation" type="button" role="tab">
+                <i class="bx bx-check-double me-2"></i>
+                Validación del Modelo
+            </button>
+        </li>
+    </ul>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content" id="chartTabsContent">
+    <!-- Overview Tab -->
+    {% include "simulate/result/tabs/overview-tab.html" %}
+    
+    <!-- Financial Tab -->
+    {% include "simulate/result/tabs/financial-tab.html" %}
+    
+    <!-- Operations Tab -->
+    {% include "simulate/result/tabs/operations-tab.html" %}
+    
+    <!-- Demand Tab -->
+    {% include "simulate/result/tabs/demand-tab.html" %}
+    
+    <!-- Endogenous Variables Tab -->
+    {% include "simulate/result/tabs/endogenous-tab.html" %}
+    
+    <!-- Statistical Analysis Tab -->
+    {% include "simulate/result/tabs/analysis-tab.html" %}
+    
+    <!-- Validation Tab -->
+    {% include "simulate/result/tabs/validation-tab.html" %}
+</div>

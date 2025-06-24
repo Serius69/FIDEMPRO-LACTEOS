@@ -1,0 +1,654 @@
+<!-- Financial Tab - Actualización completa -->
+<div class="tab-pane fade" id="financial" role="tabpanel">
+    
+    <!-- Header con resumen financiero -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h4 class="alert-heading mb-3">
+                    <i class="bx bx-dollar-circle me-2"></i>
+                    Análisis Financiero Integral
+                </h4>
+                <p class="mb-2">
+                    Análisis completo de la performance financiera de la simulación, incluyendo ingresos, gastos, 
+                    rentabilidad y métricas clave de rendimiento financiero.
+                </p>
+                <small class="text-muted">
+                    Período analizado: <strong>{{ all_variables_extracted|length|default:0 }} días</strong> | 
+                    {% if totales_acumulativos.GT %}
+                        Ganancia total: <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2|default:"0.00" }}</strong>
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas financieras principales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Ingresos Totales</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.IT %}
+                                    Bs. {{ totales_acumulativos.IT.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-dollar display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Gastos Totales</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.TG %}
+                                    Bs. {{ totales_acumulativos.TG.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-trending-down display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Ganancia Neta</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.GT %}
+                                    Bs. {{ totales_acumulativos.GT.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-trending-up display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Margen Promedio</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.NR %}
+                                    {% widthratio totales_acumulativos.NR.total 1 all_variables_extracted|length as avg_margin %}
+                                    {% widthratio avg_margin 1 100 as margin_percent %}
+                                    {{ margin_percent|floatformat:1 }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-percentage display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos principales -->
+    <div class="row">
+        <!-- Ingresos vs Ganancias -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-dollar me-2"></i>
+                        Evolución de Ingresos vs Ganancias
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_ingresos_gastos %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_ingresos_gastos %}
+                <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                    class="chart-image" 
+                    alt="Evolución de Ingresos vs Ganancias"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de ingresos vs ganancias no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Análisis de Gastos -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-trending-down me-2"></i>
+                        Composición y Evolución de Gastos
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_gastos or image_data_rentabilidad %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_gastos|default:image_data_rentabilidad }}', 'analisis-gastos.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_gastos|default:image_data_rentabilidad }}', 'Análisis de Gastos')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_gastos %}
+                <img src="data:image/png;base64,{{ image_data_gastos }}" 
+                    class="chart-image" 
+                    alt="Análisis de gastos"
+                    loading="lazy">
+                {% elif image_data_rentabilidad %}
+                <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
+                    class="chart-image" 
+                    alt="Análisis de rentabilidad y gastos"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de análisis de gastos no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Costos de Producción -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-calculator me-2"></i>
+                        Estructura de Costos de Producción
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_costos or image_data_eficiencia %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_costos|default:image_data_eficiencia }}', 'costos-produccion.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_costos|default:image_data_eficiencia }}', 'Costos de Producción')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_costos %}
+                <img src="data:image/png;base64,{{ image_data_costos }}" 
+                    class="chart-image" 
+                    alt="Costos de producción"
+                    loading="lazy">
+                {% elif image_data_eficiencia %}
+                <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                    class="chart-image" 
+                    alt="Eficiencia y costos"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de costos de producción no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Rentabilidad y ROI -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-stats me-2"></i>
+                        Rentabilidad y ROI
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_roi or image_data_kpis %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_roi|default:image_data_kpis }}', 'roi-rentabilidad.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_roi|default:image_data_kpis }}', 'ROI y Rentabilidad')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_roi %}
+                <img src="data:image/png;base64,{{ image_data_roi }}" 
+                    class="chart-image" 
+                    alt="ROI y rentabilidad"
+                    loading="lazy">
+                {% elif image_data_kpis %}
+                <img src="data:image/png;base64,{{ image_data_kpis }}" 
+                    class="chart-image" 
+                    alt="KPIs financieros"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de ROI y rentabilidad no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de variables financieras endógenas -->
+    {% if endogenous_charts %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-line-chart me-2"></i>
+                Variables Financieras Endógenas
+            </h5>
+        </div>
+        
+        {% for chart_name, chart_data in endogenous_charts.items %}
+            {% if 'IT' in chart_name or 'GT' in chart_name or 'TG' in chart_name or 'NR' in chart_name %}
+            <div class="col-md-6 mb-4">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h6 class="mb-3">
+                            {% if 'IT' in chart_name %}
+                                <i class="bx bx-dollar text-success me-2"></i>Evolución de Ingresos Totales
+                            {% elif 'GT' in chart_name %}
+                                <i class="bx bx-trending-up text-primary me-2"></i>Evolución de Ganancia Total
+                            {% elif 'TG' in chart_name %}
+                                <i class="bx bx-trending-down text-danger me-2"></i>Evolución de Total Gastos
+                            {% elif 'NR' in chart_name %}
+                                <i class="bx bx-percentage text-info me-2"></i>Evolución del Nivel de Rentabilidad
+                            {% endif %}
+                        </h6>
+                        <div class="chart-controls">
+                            <div class="chart-control-btn" onclick="downloadChart('{{ chart_data }}', '{{ chart_name }}.png')" title="Descargar">
+                                <i class="bx bx-download"></i>
+                            </div>
+                            <div class="chart-control-btn" onclick="openFullscreen('{{ chart_data }}', '{{ chart_name }}')" title="Pantalla completa">
+                                <i class="bx bx-fullscreen"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <img src="data:image/png;base64,{{ chart_data }}" 
+                        class="chart-image" 
+                        alt="{{ chart_name }}"
+                        loading="lazy">
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Análisis financiero detallado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-analytics me-2"></i>
+                Análisis Financiero Detallado
+            </h5>
+        </div>
+        
+        <!-- Flujo de caja y liquidez -->
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-money me-2"></i>
+                        Flujo de Caja Operativo
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_flujo_caja or additional_analisis_costos_detallado %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_flujo_caja|default:additional_analisis_costos_detallado }}', 'flujo-caja.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_flujo_caja|default:additional_analisis_costos_detallado }}', 'Flujo de Caja')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_flujo_caja %}
+                <img src="data:image/png;base64,{{ image_data_flujo_caja }}" 
+                    class="chart-image" 
+                    alt="Flujo de caja operativo"
+                    loading="lazy">
+                {% elif additional_analisis_costos_detallado %}
+                <img src="data:image/png;base64,{{ additional_analisis_costos_detallado }}" 
+                    class="chart-image" 
+                    alt="Análisis detallado de costos"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de flujo de caja no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Indicadores de eficiencia financiera -->
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-tachometer me-2"></i>
+                        Indicadores de Eficiencia Financiera
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_indicadores or additional_eficiencia_operativa %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_indicadores|default:additional_eficiencia_operativa }}', 'indicadores-financieros.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_indicadores|default:additional_eficiencia_operativa }}', 'Indicadores Financieros')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_indicadores %}
+                <img src="data:image/png;base64,{{ image_data_indicadores }}" 
+                    class="chart-image" 
+                    alt="Indicadores de eficiencia financiera"
+                    loading="lazy">
+                {% elif additional_eficiencia_operativa %}
+                <img src="data:image/png;base64,{{ additional_eficiencia_operativa }}" 
+                    class="chart-image" 
+                    alt="Eficiencia operativa"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de indicadores financieros no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Proyecciones y tendencias -->
+    {% if image_data_proyecciones or image_data_tendencias %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-trending-up me-2"></i>
+                Proyecciones y Tendencias Financieras
+            </h5>
+        </div>
+        
+        {% if image_data_proyecciones %}
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-line-chart me-2"></i>
+                        Proyecciones Financieras
+                    </h6>
+                    <div class="chart-controls">
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_proyecciones }}', 'proyecciones-financieras.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_proyecciones }}', 'Proyecciones Financieras')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                    </div>
+                </div>
+                <img src="data:image/png;base64,{{ image_data_proyecciones }}" 
+                    class="chart-image" 
+                    alt="Proyecciones financieras"
+                    loading="lazy">
+            </div>
+        </div>
+        {% endif %}
+
+        {% if image_data_tendencias %}
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-stats me-2"></i>
+                        Análisis de Tendencias
+                    </h6>
+                    <div class="chart-controls">
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_tendencias }}', 'tendencias-financieras.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_tendencias }}', 'Tendencias Financieras')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                    </div>
+                </div>
+                <img src="data:image/png;base64,{{ image_data_tendencias }}" 
+                    class="chart-image" 
+                    alt="Análisis de tendencias"
+                    loading="lazy">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Tabla resumen financiero -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-table me-2"></i>
+                        Resumen Financiero por Variable
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Variable Financiera</th>
+                                    <th>Valor Total</th>
+                                    <th>Promedio Diario</th>
+                                    <th>Tendencia</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for name_variable, info_variable in totales_acumulativos.items %}
+                                    {% if 'IT' in name_variable or 'GT' in name_variable or 'TG' in name_variable or 'NR' in name_variable or 'PVP' in name_variable or 'CFD' in name_variable or 'CVU' in name_variable %}
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                {% if name_variable == 'IT' %}Ingresos Totales
+                                                {% elif name_variable == 'GT' %}Ganancia Total
+                                                {% elif name_variable == 'TG' %}Total Gastos
+                                                {% elif name_variable == 'NR' %}Nivel de Rentabilidad
+                                                {% elif name_variable == 'PVP' %}Precio de Venta al Público
+                                                {% elif name_variable == 'CFD' %}Costo Fijo Diario
+                                                {% elif name_variable == 'CVU' %}Costo Variable Unitario
+                                                {% else %}{{ name_variable }}
+                                                {% endif %}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">{{ name_variable }}</small>
+                                        </td>
+                                        <td class="fw-bold">
+                                            {% if info_variable.unit == "BS" %}
+                                                <span class="text-success">Bs. {{ info_variable.total|floatformat:2 }}</span>
+                                            {% elif "%" in info_variable.unit %}
+                                                <span class="text-info">{{ info_variable.total|floatformat:3 }}</span>
+                                            {% else %}
+                                                {{ info_variable.total|floatformat:2 }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if all_variables_extracted|length > 0 %}
+                                                {% widthratio info_variable.total 1 all_variables_extracted|length as daily_avg %}
+                                                {% if info_variable.unit == "BS" %}
+                                                    Bs. {{ daily_avg|floatformat:2 }}
+                                                {% elif "%" in info_variable.unit %}
+                                                    {{ daily_avg|floatformat:3 }}
+                                                {% else %}
+                                                    {{ daily_avg|floatformat:2 }}
+                                                {% endif %}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if info_variable.trend == "increasing" %}
+                                                <span class="badge bg-success">
+                                                    <i class="bx bx-trending-up me-1"></i>Creciente
+                                                </span>
+                                            {% elif info_variable.trend == "decreasing" %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bx bx-trending-down me-1"></i>Decreciente
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bx bx-minus me-1"></i>Estable
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if name_variable == 'GT' %}
+                                                {% if info_variable.total > 0 %}
+                                                    <span class="badge bg-success">Rentable</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Con pérdidas</span>
+                                                {% endif %}
+                                            {% elif name_variable == 'NR' %}
+                                                {% if info_variable.total > 0.2 %}
+                                                    <span class="badge bg-success">Excelente</span>
+                                                {% elif info_variable.total > 0.1 %}
+                                                    <span class="badge bg-warning">Bueno</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Bajo</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-info">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <i class="bx bx-info-circle display-4 text-muted"></i>
+                                        <h6 class="mt-2 text-muted">No hay datos financieros disponibles</h6>
+                                        <small class="text-muted">Los datos se generarán durante el procesamiento de la simulación.</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recomendaciones financieras -->
+    {% if financial_recommendations %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-lightbulb me-2"></i>
+                        Recomendaciones Financieras
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for recommendation in financial_recommendations %}
+                        <div class="col-md-6 mb-3">
+                            <div class="alert alert-{{ recommendation.type|default:'info' }} alert-dismissible">
+                                <h6 class="alert-heading">
+                                    {% if recommendation.type == 'success' %}
+                                        <i class="bx bx-check-circle me-2"></i>
+                                    {% elif recommendation.type == 'warning' %}
+                                        <i class="bx bx-error me-2"></i>
+                                    {% elif recommendation.type == 'danger' %}
+                                        <i class="bx bx-x-circle me-2"></i>
+                                    {% else %}
+                                        <i class="bx bx-info-circle me-2"></i>
+                                    {% endif %}
+                                    {{ recommendation.title|default:'Recomendación Financiera' }}
+                                </h6>
+                                <p class="mb-2">{{ recommendation.message }}</p>
+                                {% if recommendation.priority %}
+                                <small class="fw-bold">
+                                    Prioridad: 
+                                    <span class="badge bg-{{ recommendation.priority }}">
+                                        {% if recommendation.priority == 'high' %}Alta
+                                        {% elif recommendation.priority == 'medium' %}Media
+                                        {% else %}Baja
+                                        {% endif %}
+                                    </span>
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Modal para pantalla completa -->
+    <div class="modal fade" id="fullscreenModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fullscreenModalTitle">Gráfico Financiero</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="fullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
+                        <i class="bx bx-download me-1"></i>Descargar
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

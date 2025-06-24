@@ -1,0 +1,402 @@
+<!-- Operations Tab - Corregido -->
+<div class="tab-pane fade" id="operations" role="tabpanel">
+    
+    <!-- Header con resumen operativo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h4 class="alert-heading mb-3">
+                    <i class="bx bx-cog me-2"></i>
+                    Análisis Operativo Integral
+                </h4>
+                <p class="mb-2">
+                    Análisis completo de la eficiencia operativa, incluyendo costos de producción, capacidad utilizada, 
+                    eficiencia de procesos y métricas clave de desempeño operacional.
+                </p>
+                <small class="text-muted">
+                    Período analizado: <strong>{{ all_variables_extracted|length|default:0 }} días</strong>
+                    {% if totales_acumulativos.TPV %}
+                        | Total productos vendidos: <strong>{{ totales_acumulativos.TPV.total|floatformat:0|default:"0" }} unidades</strong>
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas operativas principales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Productos Vendidos</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.TPV %}
+                                    {{ totales_acumulativos.TPV.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-package display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Eficiencia Operativa</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.EOG and all_variables_extracted|length > 0 %}
+                                    {% widthratio totales_acumulativos.EOG.total 1 all_variables_extracted|length as avg_eog %}
+                                    {% widthratio avg_eog 1 100 as eog_percent %}
+                                    {{ eog_percent|floatformat:1 }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-tachometer display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Capacidad Utilizada</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.CPROD and totales_acumulativos.TPV %}
+                                    {% widthratio totales_acumulativos.TPV.total 100 totales_acumulativos.CPROD.total as capacity_used %}
+                                    {{ capacity_used|floatformat:1 }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-bar-chart display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Costo Variable Unit.</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.CVU and all_variables_extracted|length > 0 %}
+                                    {% widthratio totales_acumulativos.CVU.total 1 all_variables_extracted|length as avg_cvu %}
+                                    Bs. {{ avg_cvu|floatformat:2 }}
+                                {% else %}
+                                    Bs. 0.00
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-calculator display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos principales -->
+    <div class="row">
+        <!-- Costos Operativos -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h6 class="mb-3">
+                    <i class="bx bx-package me-2"></i>
+                    Evolución de Costos Operativos
+                </h6>
+                <div class="chart-controls">
+                    {% if image_data_5 %}
+                    <div class="chart-control-btn" onclick="downloadChart('{{ image_data_5 }}', 'costos-operativos.png')" title="Descargar">
+                        <i class="bx bx-download"></i>
+                    </div>
+                    <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_5 }}', 'Costos Operativos')" title="Pantalla completa">
+                        <i class="bx bx-fullscreen"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if image_data_5 %}
+                <img src="data:image/png;base64,{{ image_data_5 }}" 
+                    class="chart-image" 
+                    alt="Costos operativos"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de costos operativos no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Producción vs Ventas -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h6 class="mb-3">
+                    <i class="bx bx-box me-2"></i>
+                    Producción vs Ventas
+                </h6>
+                <div class="chart-controls">
+                    {% if image_data_6 %}
+                    <div class="chart-control-btn" onclick="downloadChart('{{ image_data_6 }}', 'produccion-ventas.png')" title="Descargar">
+                        <i class="bx bx-download"></i>
+                    </div>
+                    <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_6 }}', 'Producción vs Ventas')" title="Pantalla completa">
+                        <i class="bx bx-fullscreen"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if image_data_6 %}
+                <img src="data:image/png;base64,{{ image_data_6 }}" 
+                    class="chart-image" 
+                    alt="Producción vs Ventas"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de producción vs ventas no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Eficiencia Operativa -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h6 class="mb-3">
+                    <i class="bx bx-tachometer me-2"></i>
+                    Indicadores de Eficiencia Operativa
+                </h6>
+                <div class="chart-controls">
+                    {% if image_data_eficiencia %}
+                    <div class="chart-control-btn" onclick="downloadChart('{{ image_data_eficiencia }}', 'eficiencia-operativa.png')" title="Descargar">
+                        <i class="bx bx-download"></i>
+                    </div>
+                    <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_eficiencia }}', 'Eficiencia Operativa')" title="Pantalla completa">
+                        <i class="bx bx-fullscreen"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if image_data_eficiencia %}
+                <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                    class="chart-image" 
+                    alt="Eficiencia operativa"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de eficiencia operativa no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Análisis de Costos Promedio -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h6 class="mb-3">
+                    <i class="bx bx-dollar-circle me-2"></i>
+                    Análisis de Costos Promedio
+                </h6>
+                <div class="chart-controls">
+                    {% if image_data_7 %}
+                    <div class="chart-control-btn" onclick="downloadChart('{{ image_data_7 }}', 'costos-promedio.png')" title="Descargar">
+                        <i class="bx bx-download"></i>
+                    </div>
+                    <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_7 }}', 'Costos Promedio')" title="Pantalla completa">
+                        <i class="bx bx-fullscreen"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if image_data_7 %}
+                <img src="data:image/png;base64,{{ image_data_7 }}" 
+                    class="chart-image" 
+                    alt="Costos promedio"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Gráfico de costos promedio no disponible</p>
+                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla resumen operativo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-table me-2"></i>
+                        Resumen Operativo por Variable
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Variable Operativa</th>
+                                    <th>Valor Total</th>
+                                    <th>Promedio Diario</th>
+                                    <th>Tendencia</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for name_variable, info_variable in totales_acumulativos.items %}
+                                    {% if 'TPV' in name_variable or 'EOG' in name_variable or 'CPROD' in name_variable or 'NEPP' in name_variable or 'CFD' in name_variable or 'CVU' in name_variable or 'DPH' in name_variable %}
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                {% if name_variable == 'TPV' %}Total Productos Vendidos
+                                                {% elif name_variable == 'EOG' %}Eficiencia Operativa General
+                                                {% elif name_variable == 'CPROD' %}Capacidad de Producción
+                                                {% elif name_variable == 'NEPP' %}Número de Empleados en Producción
+                                                {% elif name_variable == 'CFD' %}Costo Fijo Diario
+                                                {% elif name_variable == 'CVU' %}Costo Variable Unitario
+                                                {% elif name_variable == 'DPH' %}Demanda Promedio Histórica
+                                                {% else %}{{ name_variable }}
+                                                {% endif %}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">{{ name_variable }}</small>
+                                        </td>
+                                        <td class="fw-bold">
+                                            {% if info_variable.unit == "BS" %}
+                                                <span class="text-warning">Bs. {{ info_variable.total|floatformat:2 }}</span>
+                                            {% elif info_variable.unit == "L" %}
+                                                <span class="text-primary">{{ info_variable.total|floatformat:0 }} L</span>
+                                            {% elif "%" in info_variable.unit %}
+                                                <span class="text-info">{{ info_variable.total|floatformat:3 }}</span>
+                                            {% elif "Personas" in info_variable.unit %}
+                                                <span class="text-success">{{ info_variable.total|floatformat:0 }} pers.</span>
+                                            {% else %}
+                                                {{ info_variable.total|floatformat:2 }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if all_variables_extracted|length > 0 %}
+                                                {% widthratio info_variable.total 1 all_variables_extracted|length as daily_avg %}
+                                                {% if info_variable.unit == "BS" %}
+                                                    Bs. {{ daily_avg|floatformat:2 }}
+                                                {% elif info_variable.unit == "L" %}
+                                                    {{ daily_avg|floatformat:1 }} L
+                                                {% elif "%" in info_variable.unit %}
+                                                    {{ daily_avg|floatformat:3 }}
+                                                {% elif "Personas" in info_variable.unit %}
+                                                    {{ daily_avg|floatformat:0 }} pers.
+                                                {% else %}
+                                                    {{ daily_avg|floatformat:2 }}
+                                                {% endif %}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if info_variable.trend == "increasing" %}
+                                                <span class="badge bg-success">
+                                                    <i class="bx bx-trending-up me-1"></i>Creciente
+                                                </span>
+                                            {% elif info_variable.trend == "decreasing" %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bx bx-trending-down me-1"></i>Decreciente
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bx bx-minus me-1"></i>Estable
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if name_variable == 'EOG' %}
+                                                {% if all_variables_extracted|length > 0 %}
+                                                    {% widthratio info_variable.total 1 all_variables_extracted|length as avg_eog %}
+                                                    {% if avg_eog > 0.8 %}
+                                                        <span class="badge bg-success">Excelente</span>
+                                                    {% elif avg_eog > 0.6 %}
+                                                        <span class="badge bg-warning">Bueno</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Bajo</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-info">N/A</span>
+                                                {% endif %}
+                                            {% elif name_variable == 'TPV' %}
+                                                {% if info_variable.trend == "increasing" %}
+                                                    <span class="badge bg-success">Creciendo</span>
+                                                {% elif info_variable.trend == "decreasing" %}
+                                                    <span class="badge bg-warning">Decreciendo</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">Estable</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-info">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <i class="bx bx-info-circle display-4 text-muted"></i>
+                                        <h6 class="mt-2 text-muted">No hay datos operativos disponibles</h6>
+                                        <small class="text-muted">Los datos se generarán durante el procesamiento de la simulación.</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para pantalla completa -->
+    <div class="modal fade" id="fullscreenModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fullscreenModalTitle">Gráfico Operativo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="fullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
+                        <i class="bx bx-download me-1"></i>Descargar
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

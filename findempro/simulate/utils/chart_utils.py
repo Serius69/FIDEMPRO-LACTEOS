@@ -2194,6 +2194,55 @@ class ChartGenerator:
                 logger.warning(f"Could not apply layout adjustments: {e2}")
     
     
+    def generate_dashboard_charts_fixed(self, all_variables_extracted, totales_acumulativos):
+        """CORRECCIÓN: Generar gráficos del dashboard con datos reales"""
+        
+        charts = {}
+        
+        try:
+            # CORRECCIÓN 1: Verificar que hay datos
+            if not all_variables_extracted or len(all_variables_extracted) == 0:
+                logger.warning("No data available for chart generation")
+                return {}
+            
+            # CORRECCIÓN 2: Extraer datos de forma segura
+            days = [d.get('day', i+1) for i, d in enumerate(all_variables_extracted)]
+            
+            # CORRECCIÓN 3: Gráfico financiero con validación
+            revenues = []
+            profits = []
+            for day_data in all_variables_extracted:
+                revenues.append(float(day_data.get('IT', 0)))
+                profits.append(float(day_data.get('GT', 0)))
+            
+            if any(revenues) or any(profits):
+                charts['financial_overview'] = self._create_financial_chart(days, revenues, profits)
+            
+            # CORRECCIÓN 4: Gráfico de eficiencia con validación
+            efficiencies = []
+            service_levels = []
+            for day_data in all_variables_extracted:
+                efficiencies.append(float(day_data.get('EOG', 0.8)) * 100)
+                service_levels.append(float(day_data.get('NSC', 0.85)) * 100)
+            
+            if any(efficiencies) or any(service_levels):
+                charts['efficiency_overview'] = self._create_efficiency_chart(days, efficiencies, service_levels)
+            
+            # CORRECCIÓN 5: Gráfico de producción
+            production = [float(d.get('QPL', 0)) for d in all_variables_extracted]
+            sales = [float(d.get('TPV', 0)) for d in all_variables_extracted]
+            
+            if any(production) or any(sales):
+                charts['production_overview'] = self._create_production_chart(days, production, sales)
+            
+            logger.info(f"Generated {len(charts)} dashboard charts successfully")
+            return charts
+            
+        except Exception as e:
+            logger.error(f"Error generating dashboard charts: {str(e)}")
+            return {}
+    
+    
     def _safe_fig_to_base64(self, fig):
         """Convertir figura a base64 de forma segura"""
         try:

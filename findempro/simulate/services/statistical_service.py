@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+import warnings
 from scipy import stats
 from scipy.stats import (
     kstest, norm, expon, lognorm, gaussian_kde,
@@ -34,6 +35,36 @@ from ..utils.data_parsers_utils import DataParser
 matplotlib.use('Agg')
 
 logger = logging.getLogger(__name__)
+
+
+# Configurar matplotlib para evitar errores de fuentes y caracteres
+matplotlib.use('Agg')  # Backend sin GUI
+matplotlib.rcParams['font.family'] = ['DejaVu Sans', 'Liberation Sans', 'sans-serif']
+matplotlib.rcParams['font.size'] = 10
+matplotlib.rcParams['axes.unicode_minus'] = False
+
+# Suprimir warnings específicos de matplotlib
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+warnings.filterwarnings('ignore', message='Glyph.*missing from current font')
+
+def safe_text(text):
+    """Convertir caracteres unicode problemáticos a ASCII seguros"""
+    replacements = {
+        '✓': 'OK',
+        '❌': 'ERROR', 
+        '⚠️': 'WARNING',
+        '📊': 'Chart',
+        '📈': 'Trend',
+        '📉': 'Down',
+        '🔴': 'RED',
+        '🟢': 'GREEN',
+        '🟡': 'YELLOW'
+    }
+    
+    for unicode_char, ascii_replacement in replacements.items():
+        text = text.replace(unicode_char, ascii_replacement)
+    
+    return text
 
 
 class StatisticalService:

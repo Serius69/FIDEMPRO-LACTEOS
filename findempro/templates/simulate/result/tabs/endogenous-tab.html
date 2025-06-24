@@ -1,0 +1,332 @@
+<!-- Endogenous Variables Tab -->
+<div class="tab-pane fade" id="endogenous" role="tabpanel">
+    
+    <!-- Título Principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-primary">
+                <h4 class="alert-heading mb-3">
+                    <i class="bx bx-trending-up me-2"></i>
+                    Variables Endógenas del Modelo
+                </h4>
+                <p class="mb-2">
+                    Las variables endógenas son aquellas que se determinan dentro del modelo de simulación 
+                    basándose en las relaciones matemáticas establecidas y las variables exógenas.
+                </p>
+                <small class="text-muted">
+                    Total de variables endógenas procesadas: <strong>{{ totales_acumulativos|length|default:0 }}</strong> | 
+                    Período de simulación: <strong>{{ all_variables_extracted|length|default:0 }} días</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Resumen -->
+    <div class="row mb-4" id="endogenousMetrics">
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Variables Totales</h6>
+                            <h3 class="mb-0" id="totalVarsCount">{{ totales_acumulativos|length|default:0 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-list-ul display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Variables Financieras</h6>
+                            <h3 class="mb-0" id="financialVarsCount">0</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-dollar display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Variables Operativas</h6>
+                            <h3 class="mb-0" id="operationalVarsCount">0</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-cog display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Variables de Calidad</h6>
+                            <h3 class="mb-0" id="qualityVarsCount">0</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-star display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de Variables Endógenas -->
+    {% if endogenous_charts or chart_images %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-bar-chart me-2"></i>
+                        Gráficos de Variables Endógenas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Gráficos endógenos específicos -->
+                        {% for chart_name, chart_data in endogenous_charts.items %}
+                        <div class="col-lg-6">
+                            <div class="card chart-card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        {% if 'IT' in chart_name %}
+                                            <i class="bx bx-dollar text-success me-2"></i>Ingresos Totales
+                                        {% elif 'GT' in chart_name %}
+                                            <i class="bx bx-trending-up text-info me-2"></i>Ganancia Total
+                                        {% elif 'TG' in chart_name %}
+                                            <i class="bx bx-receipt text-danger me-2"></i>Total Gastos
+                                        {% elif 'TPV' in chart_name %}
+                                            <i class="bx bx-box text-primary me-2"></i>Total Productos Vendidos
+                                        {% elif 'NSC' in chart_name %}
+                                            <i class="bx bx-star text-warning me-2"></i>Satisfacción del Cliente
+                                        {% elif 'EOG' in chart_name %}
+                                            <i class="bx bx-cog text-secondary me-2"></i>Eficiencia Operativa
+                                        {% else %}
+                                            <i class="bx bx-stats me-2"></i>{{ chart_name }}
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {% if chart_data %}
+                                            <img src="data:image/png;base64,{{ chart_data }}" 
+                                                class="img-fluid chart-image" 
+                                                alt="Gráfico {{ chart_name }}"
+                                                onclick="expandChart('{{ chart_name }}', this.src)">
+                                        {% else %}
+                                            <div class="chart-placeholder">
+                                                <i class="bx bx-bar-chart display-4 text-muted"></i>
+                                                <p class="text-muted">Gráfico no disponible</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- Gráficos adicionales del análisis -->
+                        {% for chart_key, chart_data in chart_images.items %}
+                            {% if 'endogenous' in chart_key or 'variables' in chart_key %}
+                            <div class="col-lg-6">
+                                <div class="card chart-card">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">
+                                            <i class="bx bx-line-chart me-2"></i>
+                                            {% if 'trend' in chart_key %}
+                                                Tendencias de Variables
+                                            {% elif 'correlation' in chart_key %}
+                                                Correlaciones
+                                            {% elif 'distribution' in chart_key %}
+                                                Distribuciones
+                                            {% else %}
+                                                {{ chart_key|title }}
+                                            {% endif %}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <img src="data:image/png;base64,{{ chart_data }}" 
+                                                class="img-fluid chart-image" 
+                                                alt="Gráfico {{ chart_key }}"
+                                                onclick="expandChart('{{ chart_key }}', this.src)">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Mensaje si no hay gráficos -->
+                        {% if not endogenous_charts and not chart_images %}
+                        <div class="col-12">
+                            <div class="text-center py-5">
+                                <i class="bx bx-bar-chart display-1 text-muted"></i>
+                                <h5 class="mt-3 text-muted">No hay gráficos disponibles</h5>
+                                <p class="text-muted">Los gráficos de variables endógenas se generarán durante el análisis.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabla Resumen de Variables Endógenas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="data-table-container">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-list-ul me-2"></i>
+                        Resumen Completo de Variables Endógenas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="endogenousTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%">Variable</th>
+                                    <th style="width: 15%">Valor Total</th>
+                                    <th style="width: 12%">Unidad</th>
+                                    <th style="width: 15%">Promedio Diario</th>
+                                    <th style="width: 10%">Tendencia</th>
+                                    <th style="width: 13%">Rango</th>
+                                    <th style="width: 10%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="endogenousTableBody">
+                                {% for name_variable, info_variable in totales_acumulativos.items %}
+                                <tr data-variable="{{ name_variable }}" 
+                                    data-category="{% if 'IT' in name_variable or 'GT' in name_variable or 'TG' in name_variable or 'NR' in name_variable %}financial{% elif 'NSC' in name_variable or 'EOG' in name_variable %}quality{% else %}operational{% endif %}"
+                                    data-trend="{{ info_variable.trend|default:'stable' }}">
+                                    <td>
+                                        <div class="variable-info">
+                                            <strong>{{ name_variable }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                {% if "IT" in name_variable %}
+                                                    <i class="bx bx-dollar text-success"></i> Ingresos totales del período
+                                                {% elif "GT" in name_variable %}
+                                                    <i class="bx bx-trending-up text-info"></i> Ganancia acumulada
+                                                {% elif "TG" in name_variable %}
+                                                    <i class="bx bx-receipt text-danger"></i> Gastos totales
+                                                {% elif "TPV" in name_variable %}
+                                                    <i class="bx bx-box text-primary"></i> Productos vendidos
+                                                {% elif "NSC" in name_variable %}
+                                                    <i class="bx bx-star text-warning"></i> Satisfacción del cliente
+                                                {% elif "EOG" in name_variable %}
+                                                    <i class="bx bx-cog text-secondary"></i> Eficiencia operativa
+                                                {% elif "NR" in name_variable %}
+                                                    <i class="bx bx-percentage text-info"></i> Nivel de rentabilidad
+                                                {% else %}
+                                                    <i class="bx bx-stats text-secondary"></i> Variable del modelo
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold variable-total">
+                                        {% if info_variable.unit == "BS" %}
+                                            <span class="text-success">Bs. {{ info_variable.total|floatformat:2 }}</span>
+                                        {% elif "%" in info_variable.unit %}
+                                            <span class="text-info">{{ info_variable.total|floatformat:3 }}</span>
+                                        {% else %}
+                                            {{ info_variable.total|floatformat:2 }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="variable-unit">
+                                        <span class="badge bg-light text-dark">
+                                            {% if info_variable.unit == "BS" %}Bolivianos
+                                            {% elif info_variable.unit == "L" %}Litros
+                                            {% elif info_variable.unit == "CLIENTES" %}Clientes
+                                            {% elif info_variable.unit == "%" %}Porcentaje
+                                            {% elif info_variable.unit == "Horas" %}Horas
+                                            {% elif info_variable.unit == "L/BS" %}L/Bs.
+                                            {% elif info_variable.unit == "[0.1,0.3,0.5]" %}Factor
+                                            {% else %}{{ info_variable.unit }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="variable-average">
+                                        {% if all_variables_extracted|length > 0 %}
+                                            {% widthratio info_variable.total 1 all_variables_extracted|length as daily_average %}
+                                            {% if info_variable.unit == "BS" %}
+                                                Bs. {{ daily_average|floatformat:2 }}
+                                            {% elif "%" in info_variable.unit %}
+                                                {{ daily_average|floatformat:3 }}
+                                            {% else %}
+                                                {{ daily_average|floatformat:2 }}
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td class="variable-trend">
+                                        {% if info_variable.trend == "increasing" %}
+                                            <span class="badge bg-success">
+                                                <i class="bx bx-trending-up me-1"></i>Creciente
+                                            </span>
+                                        {% elif info_variable.trend == "decreasing" %}
+                                            <span class="badge bg-danger">
+                                                <i class="bx bx-trending-down me-1"></i>Decreciente
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bx bx-minus me-1"></i>Estable
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="variable-range">
+                                        {% if info_variable.min_value and info_variable.max_value %}
+                                            <small class="text-muted">
+                                                {{ info_variable.min_value|floatformat:1 }} - {{ info_variable.max_value|floatformat:1 }}
+                                            </small>
+                                        {% else %}
+                                            <small class="text-muted">N/A</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="variable-actions">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    onclick="showVariableDetails('{{ name_variable }}')"
+                                                    title="Ver detalles">
+                                                <i class="bx bx-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="bx bx-info-circle display-4 text-muted"></i>
+                                        <h5 class="mt-3 text-muted">No hay variables endógenas disponibles</h5>
+                                        <p class="text-muted">Las variables se generarán durante el procesamiento de la simulación.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

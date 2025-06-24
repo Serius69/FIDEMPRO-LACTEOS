@@ -247,7 +247,7 @@ class AppsView(TemplateView):
 class SimulateShowView(BaseSimulationView, View):
     """Vista principal para configuración y ejecución de simulaciones"""
     
-    template_name = 'simulate/simulate-init.html'
+    template_name = 'simulate/init/simulate-init.html'
     form_class = SimulationConfigForm
     
     def get(self, request, *args, **kwargs):

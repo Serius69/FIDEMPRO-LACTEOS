@@ -22,7 +22,7 @@
             {% endblock pagetitle %}
 
             <!-- Tutorial Overlay -->
-            {% include 'simulate/partials/tutorial_overlay.html' %}
+            {% include 'simulate/init/partials/tutorial_overlay.html' %}
 
             <!-- Help Icon -->
             <div class="help-icon" onclick="SimulationTutorial.start()" title="Ayuda" aria-label="Ayuda interactiva">
@@ -30,10 +30,10 @@
             </div>
 
             <!-- Header Section -->
-            {% include 'simulate/partials/header_section.html' %}
+            {% include 'simulate/init/partials/header_section.html' %}
 
             <!-- Loading Overlay -->
-            {% include 'simulate/partials/loading_overlay.html' %}
+            {% include 'simulate/init/partials/loading_overlay.html' %}
 
             <!-- Error/Success Messages -->
             <div id="messageContainer" class="message-container"></div>
@@ -55,17 +55,17 @@
                                 <!-- Configuration Form -->
                                 <div class="col-lg-6">
                                     {% if not started %}
-                                        {% include 'simulate/partials/configuration_form.html' %}
-                                        {% include 'simulate/partials/demand_history_table.html' %}
+                                        {% include 'simulate/init/partials/configuration_form.html' %}
+                                        {% include 'simulate/init/partials/demand_history_table.html' %}
                                     {% endif %}
                                 </div>
 
                                 <!-- Model Summary -->
                                 <div class="col-lg-6">
                                     {% if questionary_result_instance %}
-                                        {% include 'simulate/partials/model_summary.html' %}
+                                        {% include 'simulate/init/partials/model_summary.html' %}
                                     {% else %}
-                                        {% include 'simulate/partials/pending_configuration.html' %}
+                                        {% include 'simulate/init/partials/pending_configuration.html' %}
                                     {% endif %}
                                 </div>
                             </div>
@@ -76,12 +76,12 @@
 
             <!-- Areas Section -->
             {% if areas %}
-                {% include 'simulate/partials/areas_section.html' %}
+                {% include 'simulate/init/partials/areas_section.html' %}
             {% endif %}
 
             <!-- Cancel Simulation -->
             {% if started %}
-                {% include 'simulate/partials/simulation_progress.html' %}
+                {% include 'simulate/init/partials/simulation_progress.html' %}
             {% endif %}
 
         </div>

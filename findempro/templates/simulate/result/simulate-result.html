@@ -1,0 +1,99 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Resultados de Simulación{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/joint.css' %}"> 
+<link rel="stylesheet" href="{% static 'libs/dropzone/dist/dropzone.css'%}" type="text/css" />
+<link rel="stylesheet" href="{% static 'libs/filepond/dist/filepond.min.css'%}" type="text/css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
+<link rel="stylesheet" href="{% static 'css/simulate-result.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Simulación" title="Resultados" %}
+            {% endblock pagetitle %}
+
+            <!-- Results Tutorial -->
+            {% include "simulate/result/partials/results-tutorial.html" %}
+
+            <!-- Results Header -->
+            {% include "simulate/result/partials/results-header.html" %}
+
+            <!-- Key Insights Panel -->
+            {% include "simulate/result/partials/insights-panel.html" %}
+
+            <!-- Key Statistics with Animation -->
+            {% include "simulate/result/partials/stats-grid.html" %}
+
+            <!-- Main Content Grid -->
+            <div class="row">
+                <!-- Sidebar with Parameters and Controls -->
+                <div class="col-lg-4">
+                    {% include "simulate/result/partials/sidebar-controls.html" %}
+                </div>
+
+                <!-- Main Charts and Analysis -->
+                <div class="col-lg-8">
+                    {% include "simulate/result/partials/chart-tabs.html" %}
+                </div>
+            </div>
+
+            <!-- Modals -->
+            {% include "simulate/result/partials/modals.html" %}
+
+            <!-- Fullscreen Overlay -->
+            {% include "simulate/result/partials/fullscreen-overlay.html" %}
+
+            {% block footer %}
+            {% include "partials/footer.html" %}
+            {% endblock footer %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- External Libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<!-- Core Modules -->
+<script src="{% static 'js/simulate/core/chart-manager.js' %}"></script>
+<script src="{% static 'js/simulate/core/pagination-manager.js' %}"></script>
+<script src="{% static 'js/simulate/core/export-manager.js' %}"></script>
+
+<!-- Tab-specific Modules -->
+<script src="{% static 'js/simulate/tabs/validation-charts.js' %}"></script>
+<script src="{% static 'js/simulate/tabs/endogenous-variables.js' %}"></script>
+<script src="{% static 'js/simulate/tabs/statistical-analysis.js' %}"></script>
+
+<!-- Main Application -->
+<script src="{% static 'js/simulate/app.js' %}"></script>
+
+<!-- Template Data for JavaScript -->
+<script>
+// Pasar datos del template a JavaScript
+window.templateData = {
+    totalDays: {{ all_variables_extracted|length|default:0 }},
+    growthRate: {{ growth_rate|default:0 }},
+    errorPermisible: {{ error_permisible|default:0 }},
+    totalesAcumulativos: {{ totales_acumulativos|safe }},
+    validationSummary: {
+        preciseCount: {{ validation_summary.precise_count|default:0 }},
+        acceptableCount: {{ validation_summary.acceptable_count|default:0 }},
+        inaccurateCount: {{ validation_summary.inaccurate_count|default:0 }},
+        avgMape: {{ validation_summary.avg_mape|default:0 }}
+    }
+};
+</script>
+{% endblock extra_js %}
