@@ -392,22 +392,36 @@ class VariableMapper:
             logger.error(f"Error calculating derived variables: {str(e)}")
         
         return derived
-    
+
     def _apply_enhanced_defaults(self, extracted_variables: Dict[str, Any]) -> Dict[str, Any]:
-        """Aplicar valores por defecto mejorados para variables faltantes"""
+        """✅ MEJORADO: Aplicar defaults asegurando que NR esté presente"""
         
         complete_vars = extracted_variables.copy()
         defaults_applied = 0
+        
+        # ✅ PRIORIDAD CRÍTICA: Asegurar variables financieras básicas primero
+        critical_financial_vars = ['IT', 'TG', 'GT', 'NR']
         
         for var_code, default_value in self.enhanced_defaults.items():
             if var_code not in complete_vars or complete_vars[var_code] is None:
                 complete_vars[var_code] = default_value
                 defaults_applied += 1
+                
+                # Log especial para variables críticas
+                if var_code in critical_financial_vars:
+                    logger.info(f"✅ Aplicado default crítico {var_code}: {default_value}")
         
-        # Ajustes contextuales de defaults
+        # ✅ VERIFICACIÓN FINAL: Recalcular NR si hay inconsistencias
+        if 'NR' in complete_vars and complete_vars.get('GT') is not None and complete_vars.get('IT') is not None:
+            calculated_nr = complete_vars['GT'] / max(complete_vars['IT'], 1)
+            if abs(calculated_nr - complete_vars['NR']) > 0.1:  # Si hay gran diferencia
+                complete_vars['NR'] = calculated_nr
+                logger.info(f"✅ NR recalculado por consistencia: {calculated_nr}")
+        
+        # Ajustes contextuales
         complete_vars = self._apply_contextual_adjustments(complete_vars)
         
-        logger.info(f"Applied {defaults_applied} default values")
+        logger.info(f"✅ Aplicados {defaults_applied} valores por defecto")
         return complete_vars
     
     def _apply_contextual_adjustments(self, variables: Dict[str, Any]) -> Dict[str, Any]:
