@@ -380,21 +380,39 @@ class SimulateResultView(LoginRequiredMixin, View):
 
     def _get_validation_results(self, validation_service, simulation_id, simulation_instance, results_simulation, historical_demand):
         """Get comprehensive validation results"""
-        # Basic validation
-        validation_results = validation_service.validate_simulation(simulation_id)
-        
-        # Model predictions validation
-        prediction_validation_results = validation_service._validate_model_predictions(
-            simulation_instance, results_simulation, historical_demand
-        )
-        
-        # Combine validation results
-        combined_validation = {
-            'basic_validation': validation_results,
-            'prediction_validation': prediction_validation_results
-        }
-        
-        return combined_validation
+        try:
+            # Basic validation
+            validation_results = validation_service.validate_simulation(simulation_id)
+            
+            # Model predictions validation - CORREGIR ESTE ERROR
+            prediction_validation_results = {}
+            try:
+                prediction_validation_results = validation_service._validate_model_predictions(
+                    simulation_instance, list(results_simulation), historical_demand
+                )
+            except Exception as e:
+                logger.error(f"Error in model prediction validation: {e}")
+                prediction_validation_results = {
+                    'summary': {'success_rate': 0.0, 'avg_mape': 100.0},
+                    'details': {},
+                    'metrics': {},
+                    'alerts': []
+                }
+            
+            # Combine validation results
+            combined_validation = {
+                'basic_validation': validation_results,
+                'prediction_validation': prediction_validation_results
+            }
+            
+            return combined_validation
+            
+        except Exception as e:
+            logger.error(f"Error getting validation results: {e}")
+            return {
+                'basic_validation': {'alerts': [], 'summary': {}},
+                'prediction_validation': {'summary': {}, 'alerts': []}
+            }
 
     
     def _generate_validation_alerts_grouped(self, validation_results):
@@ -568,99 +586,146 @@ class SimulateResultView(LoginRequiredMixin, View):
 
     def _add_daily_validation(self, validation_service, simulation_instance, results_simulation):
         """Add daily validation results to context"""
-        # Extract real values from questionnaire
-        real_values = self._extract_real_values_from_questionnaire(simulation_instance)
-        
-        # Perform daily validation
-        daily_validation_results = validation_service._validate_by_day(
-            simulation_instance, list(results_simulation), real_values
-        )
-        
-        # Generate daily validation charts
-        daily_validation_charts = validation_service._generate_daily_validation_charts(
-            daily_validation_results
-        )
-        
-        # Calculate overall daily validation summary
-        daily_validation_summary = validation_service._calculate_daily_validation_summary(
-            daily_validation_results
-        )
-        
-        return {
-            'daily_validation_results': daily_validation_results,
-            'daily_validation_charts': daily_validation_charts,
-            'daily_validation_summary': daily_validation_summary
-        }
+        try:
+            # Extract real values from questionnaire
+            real_values = self._extract_real_values_from_questionnaire(simulation_instance)
+            
+            # Perform daily validation - CORREGIR
+            daily_validation_results = []
+            daily_validation_charts = {}
+            daily_validation_summary = {'success_rate': 0.0, 'avg_accuracy': 0.0}
+            
+            try:
+                daily_validation_results = validation_service._validate_by_day(
+                    simulation_instance, list(results_simulation), real_values
+                )
+            except Exception as e:
+                logger.error(f"Error in daily validation: {e}")
+            
+            # Generate daily validation charts - PROTEGER DE ERRORES
+            try:
+                if hasattr(validation_service, '_generate_daily_validation_charts'):
+                    daily_validation_charts = validation_service._generate_daily_validation_charts(
+                        daily_validation_results
+                    )
+            except Exception as e:
+                logger.error(f"Error generating daily validation charts: {e}")
+            
+            # Calculate summary - PROTEGER DE ERRORES
+            try:
+                if hasattr(validation_service, '_calculate_daily_validation_summary'):
+                    daily_validation_summary = validation_service._calculate_daily_validation_summary(
+                        daily_validation_results
+                    )
+            except Exception as e:
+                logger.error(f"Error calculating daily validation summary: {e}")
+            
+            return {
+                'daily_validation_results': daily_validation_results,
+                'daily_validation_charts': daily_validation_charts,
+                'daily_validation_summary': daily_validation_summary
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in daily validation: {e}")
+            return {
+                'daily_validation_results': [],
+                'daily_validation_charts': {},
+                'daily_validation_summary': {'success_rate': 0.0, 'avg_accuracy': 0.0}
+            }
 
     def _add_validation_charts(self, chart_generator, validation_results, results_simulation, 
-                              analysis_data, three_line_validation=None):
+                          analysis_data, three_line_validation=None):
         """Add validation charts to context including three-line chart"""
-        validation_chart_context = {}
-        
-        # Generate basic validation charts
-        basic_validation = validation_results.get('basic_validation', {})
-        if basic_validation:
-            validation_chart_context = chart_generator.generate_validation_charts_context(basic_validation)
-        
-        # Get variables for chart generation
-        all_variables_extracted = analysis_data.get('all_variables_extracted', [])
-        totales_acumulativos = analysis_data.get('totales_acumulativos', {})
-        
-        # Generate model validation charts if variables are available
-        model_validation_charts = {}
-        charts_context = {}
-        
-        # Generate validation charts with correct data
-        if validation_results and 'by_variable' in validation_results:
-            # Log for debug
-            logger.info(f"all_variables_extracted type: {type(all_variables_extracted)}")
-            if all_variables_extracted:
-                logger.info(f"First item structure: {all_variables_extracted[0].keys()}")
+        try:
+            validation_chart_context = {}
             
-            validation_charts = chart_generator._generate_validation_charts_for_variables(
-                validation_results['by_variable'],
-                results_simulation,
-                all_variables_extracted
-            )
-            model_validation_charts = validation_charts
-            charts_context = chart_generator.generate_validation_charts_context(
-                {'validation_charts': validation_charts}
-            )
-        else:
+            # Generate basic validation charts - PROTEGER DE ERRORES
+            basic_validation = validation_results.get('basic_validation', {})
+            if basic_validation:
+                try:
+                    validation_chart_context = chart_generator.generate_validation_charts_context(basic_validation)
+                except Exception as e:
+                    logger.error(f"Error generating basic validation charts: {e}")
+                    validation_chart_context = {'charts': {}, 'chart_images': {}}
+            
+            # Get variables for chart generation
+            all_variables_extracted = analysis_data.get('all_variables_extracted', [])
+            totales_acumulativos = analysis_data.get('totales_acumulativos', {})
+            
+            # Generate model validation charts - CORREGIR ESTRUCTURA
             model_validation_charts = {}
             charts_context = {}
-        
-        # Generate endogenous variables charts
-        endogenous_charts = chart_generator.generate_endogenous_variables_charts(
-            all_variables_extracted,
-            totales_acumulativos
-        )
-        
-        # Generate additional analysis charts
-        additional_charts = chart_generator.generate_additional_analysis_charts(
-            all_variables_extracted,
-            totales_acumulativos
-        )
-        
-        # Prepare chart images including the three-line validation chart
-        chart_images = validation_chart_context.get('chart_images', {})
-        
-        # Add three-line validation chart if available
-        if three_line_validation and three_line_validation.get('chart'):
-            chart_images['three_line_validation'] = three_line_validation['chart']
-        
-        # Add additional charts to context
-        for key, chart in additional_charts.items():
-            chart_images[f'additional_{key}'] = chart
-        
-        return {
-            'validation_charts': validation_chart_context.get('charts', {}),
-            'validation_chart_images': chart_images,
-            'model_validation_charts': model_validation_charts,
-            'charts_context': charts_context,
-            'endogenous_charts': endogenous_charts,
-            'additional_charts': additional_charts
-        }
+            
+            try:
+                # CORREGIR: Verificar que by_variable existe y tiene la estructura correcta
+                by_variable = validation_results.get('basic_validation', {}).get('by_variable', {})
+                if by_variable and all_variables_extracted:
+                    validation_charts = chart_generator._generate_validation_charts_for_variables(
+                        by_variable,
+                        list(results_simulation),  # Convertir a lista
+                        all_variables_extracted
+                    )
+                    model_validation_charts = validation_charts
+                    charts_context = chart_generator.generate_validation_charts_context(
+                        {'validation_charts': validation_charts}
+                    )
+            except Exception as e:
+                logger.error(f"Error generating model validation charts: {e}")
+                model_validation_charts = {}
+                charts_context = {}
+            
+            # Generate endogenous variables charts - PROTEGER
+            endogenous_charts = {}
+            try:
+                endogenous_charts = chart_generator.generate_endogenous_variables_charts(
+                    all_variables_extracted,
+                    totales_acumulativos
+                )
+            except Exception as e:
+                logger.error(f"Error generating endogenous charts: {e}")
+            
+            # Generate additional analysis charts - PROTEGER
+            additional_charts = {}
+            try:
+                additional_charts = chart_generator.generate_additional_analysis_charts(
+                    all_variables_extracted,
+                    totales_acumulativos
+                )
+            except Exception as e:
+                logger.error(f"Error generating additional charts: {e}")
+            
+            # Prepare chart images safely
+            chart_images = validation_chart_context.get('chart_images', {})
+            
+            # Add three-line validation chart if available
+            if three_line_validation and three_line_validation.get('chart'):
+                chart_images['three_line_validation'] = three_line_validation['chart']
+            
+            # Add additional charts to context safely
+            for key, chart in additional_charts.items():
+                if chart:  # Verificar que el chart no sea None
+                    chart_images[f'additional_{key}'] = chart
+            
+            return {
+                'validation_charts': validation_chart_context.get('charts', {}),
+                'validation_chart_images': chart_images,
+                'model_validation_charts': model_validation_charts,
+                'charts_context': charts_context,
+                'endogenous_charts': endogenous_charts,
+                'additional_charts': additional_charts
+            }
+            
+        except Exception as e:
+            logger.error(f"Error adding validation charts: {e}")
+            return {
+                'validation_charts': {},
+                'validation_chart_images': {},
+                'model_validation_charts': {},
+                'charts_context': {},
+                'endogenous_charts': {},
+                'additional_charts': {}
+            }
 
     def _log_context_summary(self, context):
         """Log summary information about the generated context"""
@@ -1375,50 +1440,60 @@ class SimulateResultView(LoginRequiredMixin, View):
         all_variables = []
         
         for idx, result in enumerate(results):
-            day_data = {
-                'day': idx + 1,
-                'date': result.date.isoformat() if result.date else None,
-                'demand_mean': float(result.demand_mean),
-                'demand_std': float(result.demand_std_deviation)
-            }
-            
-            # CORRECCION: Acceder a las variables correctamente
-            if hasattr(result, 'variables') and result.variables:
-                # Si variables es un string JSON, parsearlo
-                if isinstance(result.variables, str):
-                    try:
-                        variables_dict = json.loads(result.variables)
-                        for key, value in variables_dict.items():
+            try:
+                day_data = {
+                    'day': idx + 1,
+                    'date': result.date.isoformat() if hasattr(result, 'date') and result.date else None,
+                    'demand_mean': float(result.demand_mean) if hasattr(result, 'demand_mean') else 0.0,
+                    'demand_std': float(result.demand_std_deviation) if hasattr(result, 'demand_std_deviation') else 0.0
+                }
+                
+                # CORRECCIÓN: Acceder a las variables correctamente
+                if hasattr(result, 'variables') and result.variables:
+                    # Si variables es un string JSON, parsearlo
+                    if isinstance(result.variables, str):
+                        try:
+                            variables_dict = json.loads(result.variables)
+                            for key, value in variables_dict.items():
+                                if not key.startswith('_'):
+                                    try:
+                                        day_data[key] = float(value) if isinstance(value, (int, float, str)) and str(value).replace('.','').replace('-','').isdigit() else value
+                                    except (ValueError, TypeError):
+                                        day_data[key] = value
+                        except json.JSONDecodeError as e:
+                            logger.error(f"Error parsing variables JSON for result {result.id}: {e}")
+                    
+                    # Si variables es un diccionario
+                    elif isinstance(result.variables, dict):
+                        for key, value in result.variables.items():
                             if not key.startswith('_'):
                                 try:
-                                    day_data[key] = float(value) if isinstance(value, (int, float, str)) else value
+                                    day_data[key] = float(value) if isinstance(value, (int, float)) else value
                                 except (ValueError, TypeError):
                                     day_data[key] = value
-                    except json.JSONDecodeError:
-                        logger.error(f"Error parsing variables JSON for result {result.id}")
                 
-                # Si variables es un diccionario
-                elif isinstance(result.variables, dict):
-                    for key, value in result.variables.items():
-                        if not key.startswith('_'):
-                            try:
-                                day_data[key] = float(value) if isinstance(value, (int, float)) else value
-                            except (ValueError, TypeError):
-                                day_data[key] = value
-            
-            # CORRECCION: Si no hay variables en el resultado, intentar calcularlas
-            else:
-                # Usar el math engine para calcular variables básicas
-                try:
-                    calculated_vars = self.math_engine.calculate_basic_variables(
-                        demand=day_data['demand_mean'],
-                        day=day_data['day']
-                    )
-                    day_data.update(calculated_vars)
-                except Exception as e:
-                    logger.warning(f"Could not calculate variables for day {idx + 1}: {e}")
-            
-            all_variables.append(day_data)
+                # Si no hay variables, intentar calcular básicas
+                else:
+                    try:
+                        calculated_vars = self.math_engine.calculate_basic_variables(
+                            demand=day_data['demand_mean'],
+                            day=day_data['day']
+                        )
+                        day_data.update(calculated_vars)
+                    except Exception as e:
+                        logger.warning(f"Could not calculate variables for day {idx + 1}: {e}")
+                
+                all_variables.append(day_data)
+                
+            except Exception as e:
+                logger.error(f"Error processing result {idx}: {e}")
+                # Agregar datos mínimos en caso de error
+                all_variables.append({
+                    'day': idx + 1,
+                    'date': None,
+                    'demand_mean': 0.0,
+                    'demand_std': 0.0
+                })
         
         return all_variables
     
