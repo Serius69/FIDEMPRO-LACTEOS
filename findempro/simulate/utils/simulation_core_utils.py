@@ -310,61 +310,6 @@ class SimulationCore:
             'demand_std': variable_dict.get('DSD', 0)
         }
 
-    # def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
-    #     """Initialize variables PRIMARILY from questionnaire data"""
-        
-    #     variable_dict = {}
-        
-    #     # Add essential system variables
-    #     variable_dict['NMD'] = float(simulation_instance.quantity_time)
-    #     variable_dict['DIA'] = float(day_index + 1)
-    #     variable_dict['random'] = lambda: random.random()
-        
-    #     # Parse demand history first
-    #     demand_history = self._parse_demand_history(simulation_instance.demand_history)
-    #     if demand_history:
-    #         variable_dict['DH'] = float(np.mean(demand_history))
-    #         logger.info(f"Loaded demand history average: {variable_dict['DH']}")
-        
-    #     # Process ALL answers from questionnaire
-    #     questionnaire_values_loaded = 0
-        
-    #     for answer_data in answers:
-    #         var_initials = answer_data.get('fk_question__fk_variable__initials')
-    #         answer_value = answer_data.get('answer')
-    #         question_text = answer_data.get('fk_question__question', '')
-            
-    #         if not answer_value:
-    #             continue
-            
-    #         # Method 1: Direct variable mapping
-    #         if var_initials:
-    #             processed_value = self._process_answer_value(answer_value, var_initials)
-    #             if processed_value is not None:
-    #                 variable_dict[var_initials] = processed_value
-    #                 questionnaire_values_loaded += 1
-    #                 logger.debug(f"Direct mapping: {var_initials} = {processed_value}")
-            
-    #         # Method 2: Text-based mapping from question content
-    #         if question_text:
-    #             mapped_var = self._map_question_to_variable(question_text)
-    #             if mapped_var and mapped_var not in variable_dict:
-    #                 processed_value = self._process_answer_value(answer_value, mapped_var)
-    #                 if processed_value is not None:
-    #                     variable_dict[mapped_var] = processed_value
-    #                     questionnaire_values_loaded += 1
-    #                     logger.debug(f"Text mapping: {mapped_var} = {processed_value} (from '{question_text[:50]}...')")
-        
-    #     logger.info(f"Successfully loaded {questionnaire_values_loaded} values from questionnaire")
-        
-    #     # Calculate derived variables from questionnaire data
-    #     self._calculate_derived_variables(variable_dict)
-        
-    #     # Add minimal defaults for missing ESSENTIAL variables only
-    #     self._add_minimal_defaults(variable_dict)
-        
-    #     return variable_dict
-
     def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
         """Initialize variables PRIMARILY from questionnaire data usando VariableMapper"""
         

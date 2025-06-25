@@ -6,7 +6,7 @@ Focuses on daily comparisons and proper data visualization.
 import json
 import logging
 from typing import Dict, List, Any, Optional
-
+import scipy.stats
 from simulate.services.statistical_service import StatisticalService
 from simulate.utils.chart_demand_utils import ChartDemand
 import numpy as np
@@ -241,8 +241,10 @@ class SimulateResultView(LoginRequiredMixin, View):
             context['totales_acumulativos'] = enhanced_totales
             
             
-            
-            
+            analysis_data = chart_generator.generate_all_charts_enhanced(
+                simulation_id, simulation_instance, list(results_simulation), historical_demand
+            )
+                    
             
             # Ensure all expected keys are present with default values
             context.setdefault('chart_images', {})
@@ -251,6 +253,18 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Final logging
             self._log_context_summary(context)
+            
+            context.update({
+                # Nuevos gráficos
+                'cost_distribution_chart': analysis_data['chart_images'].get('image_data_cost_distribution'),
+                'capacity_demand_chart': analysis_data['chart_images'].get('image_data_capacity_vs_demand'),
+                'financial_efficiency_chart': analysis_data['chart_images'].get('image_data_financial_efficiency'),
+                'production_evolution_chart': analysis_data['chart_images'].get('image_data_production_evolution'),
+                
+                # Flag para mostrar nuevos gráficos en template
+                'has_advanced_charts': True
+            })
+            
             
             return context
             
@@ -298,8 +312,12 @@ class SimulateResultView(LoginRequiredMixin, View):
                 
                 if len(values) > 3:
                     # Calculate trend using linear regression
-                    x = np.arange(len(values))
-                    slope, _, _, _, _ = scipy.stats.linregress(x, values)
+                    try:
+                        x = np.arange(len(values))
+                        slope, _, _, _, _ = scipy.stats.linregress(x, values)
+                    except ImportError:
+                        # Fallback simple calculation
+                        slope = (values[-1] - values[0]) / len(values) if len(values) > 1 else 0
                     
                     if slope > 0.01:
                         enhanced_info['trend'] = 'increasing'
@@ -518,7 +536,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             logger.error(f"Error adding automatic alerts: {str(e)}")
     
     def _build_base_context(self, simulation_instance, results_simulation, product_instance, business_instance,
-                        analysis_data, historical_demand, demand_stats, comparison_chart, financial_results, validation_results):
+                    analysis_data, historical_demand, demand_stats, comparison_chart, financial_results, validation_results):
         """Build the base context dictionary"""
         
         # Group alerts by type
@@ -534,6 +552,9 @@ class SimulateResultView(LoginRequiredMixin, View):
         # Get prediction validation results
         prediction_validation = validation_results.get('prediction_validation', {})
         
+        # Generate validation alerts grouped
+        validation_alerts = self._generate_validation_alerts_grouped(validation_results)
+        
         context = {
             'growth_rate': analysis_data.get('growth_rate', 0.0),
             'error_permisible': analysis_data.get('error_permisible', 0.0),
@@ -547,8 +568,8 @@ class SimulateResultView(LoginRequiredMixin, View):
             'historical_demand': historical_demand,
             'demand_stats': demand_stats,
             'comparison_chart': comparison_chart,
-            'validation_alerts': alerts_by_type,
-            'validation_summary': basic_validation.get('summary', {}),
+            'validation_alerts': validation_alerts,  # Usar la versión agrupada
+            'basic_validation_summary': basic_validation.get('summary', {}),  # Cambiar nombre
             'simulation_valid': basic_validation.get('is_valid', False),
             # Prediction validation results
             'validation_summary': prediction_validation.get('summary', {}),
@@ -559,7 +580,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             **analysis_data.get('chart_images', {}),  # Unpack all chart images
             **financial_results,
         }
-    
+
         return context
 
     def _add_model_validation(self, validation_service, simulation_instance, results_simulation, analysis_data):
@@ -635,7 +656,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             }
 
     def _add_validation_charts(self, chart_generator, validation_results, results_simulation, 
-                          analysis_data, three_line_validation=None):
+                      analysis_data, three_line_validation=None):
         """Add validation charts to context including three-line chart"""
         try:
             validation_chart_context = {}
@@ -660,16 +681,21 @@ class SimulateResultView(LoginRequiredMixin, View):
             try:
                 # CORREGIR: Verificar que by_variable existe y tiene la estructura correcta
                 by_variable = validation_results.get('basic_validation', {}).get('by_variable', {})
-                if by_variable and all_variables_extracted:
-                    validation_charts = chart_generator._generate_validation_charts_for_variables(
-                        by_variable,
-                        list(results_simulation),  # Convertir a lista
-                        all_variables_extracted
-                    )
-                    model_validation_charts = validation_charts
-                    charts_context = chart_generator.generate_validation_charts_context(
-                        {'validation_charts': validation_charts}
-                    )
+                if by_variable and all_variables_extracted and len(all_variables_extracted) > 0:
+                    # Verificar que by_variable tiene datos válidos
+                    valid_variables = {k: v for k, v in by_variable.items() 
+                                    if v.get('status') != 'NO_DATA' and v.get('simulated_values_count', 0) > 0}
+                    
+                    if valid_variables:
+                        validation_charts = chart_generator._generate_validation_charts_for_variables(
+                            valid_variables,  # Usar valid_variables en lugar de by_variable
+                            list(results_simulation),  # Convertir a lista
+                            all_variables_extracted
+                        )
+                        model_validation_charts = validation_charts
+                        charts_context = chart_generator.generate_validation_charts_context(
+                            {'validation_charts': validation_charts}
+                        )
             except Exception as e:
                 logger.error(f"Error generating model validation charts: {e}")
                 model_validation_charts = {}
@@ -1207,7 +1233,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             fk_simulation_id=simulation_id
         ).order_by('date')
         
-        paginator = Paginator(results, 50)  # 50 results per page
+        paginator = Paginator(results, 365)  # 50 results per page
         page = request.GET.get('page', 1)
         
         try:
@@ -1460,8 +1486,9 @@ class SimulateResultView(LoginRequiredMixin, View):
                                         day_data[key] = float(value) if isinstance(value, (int, float, str)) and str(value).replace('.','').replace('-','').isdigit() else value
                                     except (ValueError, TypeError):
                                         day_data[key] = value
-                        except json.JSONDecodeError as e:
-                            logger.error(f"Error parsing variables JSON for result {result.id}: {e}")
+                        except (json.JSONDecodeError, TypeError) as e:
+                            logger.warning(f"Could not parse variables JSON for result {result.id}: {e}")
+                            variables_dict = {}
                     
                     # Si variables es un diccionario
                     elif isinstance(result.variables, dict):
@@ -1871,6 +1898,15 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error calculating enhanced totales: {str(e)}")
             return {}
+
+    def _get_variable_unit(self, var_name):
+        """Get unit for variable"""
+        units = {
+            'PVP': 'Bs./L', 'TPV': 'L', 'IT': 'Bs.', 'TG': 'Bs.', 'GT': 'Bs.',
+            'NR': '%', 'NSC': '%', 'EOG': '%', 'CFD': 'Bs.', 'CVU': 'Bs./L',
+            'DPH': 'L/día', 'CPROD': 'L/día', 'NEPP': 'Personas', 'RI': '%', 'IPF': 'L'
+        }
+        return units.get(var_name, '')
 
     def _collect_enhanced_variable_data(self, all_variables_extracted, var_name):
         """Recopilar datos mejorados para una variable específica"""

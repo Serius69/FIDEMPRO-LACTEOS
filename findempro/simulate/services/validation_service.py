@@ -193,7 +193,8 @@ class SimulationValidationService:
     
     def _generate_daily_validation_charts(self, daily_validation_results):
         """
-        MÉTODO FALTANTE: Generar gráficos de validación diaria
+        CORRECCIÓN: Generar gráficos de validación diaria
+        Fixes: 'day_number', 'validations' key errors
         """
         try:
             daily_charts = {}
@@ -202,14 +203,38 @@ class SimulationValidationService:
                 logger.warning("No daily validation results provided for chart generation")
                 return daily_charts
             
-            # Gráfico de precisión por día
-            daily_charts['daily_accuracy'] = self._generate_daily_accuracy_chart(daily_validation_results)
+            # CORRECCIÓN: Verificar y procesar estructura de datos
+            processed_results = []
+            for day_result in daily_validation_results:
+                if isinstance(day_result, dict):
+                    processed_day = {
+                        'day_number': day_result.get('day_number', day_result.get('day', 1)),
+                        'accuracy_rate': day_result.get('accuracy_rate', day_result.get('success_rate', 0)),
+                        'validations': day_result.get('validations', {})
+                    }
+                    processed_results.append(processed_day)
             
-            # Gráfico de errores por variable
-            daily_charts['variable_errors'] = self._generate_variable_error_chart(daily_validation_results)
+            if not processed_results:
+                logger.warning("No valid daily results after processing")
+                return daily_charts
+            
+            # Gráfico de precisión por día
+            try:
+                daily_charts['daily_accuracy'] = self._generate_daily_accuracy_chart(processed_results)
+            except Exception as e:
+                logger.error(f"Error generating daily accuracy chart: {str(e)}")
+            
+            # Gráfico de errores por variable  
+            try:
+                daily_charts['variable_errors'] = self._generate_variable_error_chart(processed_results)
+            except Exception as e:
+                logger.error(f"Error generating variable error chart: {str(e)}")
             
             # Gráfico de tendencia de validación
-            daily_charts['validation_trend'] = self._generate_validation_trend_chart(daily_validation_results)
+            try:
+                daily_charts['validation_trend'] = self._generate_validation_trend_chart(processed_results)
+            except Exception as e:
+                logger.error(f"Error generating validation trend chart: {str(e)}")
             
             logger.info(f"Generated {len(daily_charts)} daily validation charts")
             return daily_charts
@@ -217,7 +242,83 @@ class SimulationValidationService:
         except Exception as e:
             logger.error(f"Error generating daily validation charts: {str(e)}")
             return {}
+
     
+    def _generate_validation_trend_chart(self, daily_validation_results):
+        """
+        MÉTODO FALTANTE: Generar gráfico de tendencia de validación
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            if not daily_validation_results:
+                return None
+            
+            # Extraer datos de tendencia
+            days = []
+            accuracy_rates = []
+            error_rates = []
+            
+            for day_result in daily_validation_results:
+                days.append(day_result.get('day_number', len(days) + 1))
+                accuracy_rates.append(day_result.get('accuracy_rate', 0) * 100)
+                
+                # Calcular error promedio del día
+                validations = day_result.get('validations', {})
+                day_errors = [v.get('error_rate', 0) for v in validations.values() if 'error_rate' in v]
+                avg_error = np.mean(day_errors) * 100 if day_errors else 0
+                error_rates.append(avg_error)
+            
+            if not days:
+                return None
+            
+            # Crear gráfico
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+            
+            # Gráfico 1: Tendencia de precisión
+            ax1.plot(days, accuracy_rates, 'b-', linewidth=2, marker='o', label='Precisión')
+            ax1.fill_between(days, 0, accuracy_rates, alpha=0.3, color='blue')
+            ax1.axhline(y=90, color='green', linestyle='--', alpha=0.5, label='Meta Excelente')
+            ax1.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='Meta Aceptable')
+            ax1.set_ylabel('Precisión (%)')
+            ax1.set_title('Tendencia de Precisión de Validación')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            ax1.set_ylim(0, 105)
+            
+            # Gráfico 2: Tendencia de errores
+            ax2.plot(days, error_rates, 'r-', linewidth=2, marker='s', label='Error Promedio')
+            ax2.fill_between(days, 0, error_rates, alpha=0.3, color='red')
+            ax2.set_xlabel('Día de Simulación')
+            ax2.set_ylabel('Error Promedio (%)')
+            ax2.set_title('Tendencia de Error Promedio')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            # Layout seguro
+            try:
+                plt.tight_layout(pad=1.0)
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, hspace=0.3)
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating validation trend chart: {str(e)}")
+            return None
+        
     def _generate_variable_error_chart(self, daily_validation_results):
         """Generar gráfico de errores por variable"""
         try:
@@ -294,7 +395,8 @@ class SimulationValidationService:
     
     def _calculate_daily_validation_summary(self, daily_validation_results):
         """
-        MÉTODO FALTANTE: Calcular resumen de validación diaria
+        CORRECCIÓN: Calcular resumen de validación diaria
+        Fixes: 'accuracy_rate' key missing error
         """
         try:
             if not daily_validation_results:
@@ -316,19 +418,39 @@ class SimulationValidationService:
             worst_day = {'day': 1, 'accuracy': 100}
             
             for day_validation in daily_validation_results:
-                accuracy = day_validation['accuracy_rate']
-                accuracy_rates.append(accuracy)
-                
-                # Actualizar mejor y peor día
-                if accuracy > best_day['accuracy']:
-                    best_day = {'day': day_validation['day_number'], 'accuracy': accuracy}
-                if accuracy < worst_day['accuracy']:
-                    worst_day = {'day': day_validation['day_number'], 'accuracy': accuracy}
-                
-                # Contar variables
-                summary = day_validation.get('summary', {})
-                total_variables += summary.get('total', 0)
-                total_successful += summary.get('precise', 0) + summary.get('acceptable', 0)
+                if isinstance(day_validation, dict):
+                    # CORRECCIÓN PRINCIPAL: Buscar accuracy_rate en múltiples ubicaciones
+                    accuracy = (day_validation.get('accuracy_rate') or 
+                              day_validation.get('success_rate') or 
+                              day_validation.get('accuracy') or 0)
+                    
+                    if accuracy > 1:  # Si está en porcentaje, convertir a decimal
+                        accuracy = accuracy / 100
+                        
+                    accuracy_rates.append(accuracy)
+                    
+                    # Actualizar mejor y peor día
+                    day_number = (day_validation.get('day_number') or 
+                                day_validation.get('day') or len(accuracy_rates))
+                    
+                    if accuracy > best_day['accuracy']:
+                        best_day = {'day': day_number, 'accuracy': accuracy}
+                    if accuracy < worst_day['accuracy']:
+                        worst_day = {'day': day_number, 'accuracy': accuracy}
+                    
+                    # Contar variables
+                    summary = day_validation.get('summary', {})
+                    validations = day_validation.get('validations', {})
+                    
+                    if summary:
+                        total_variables += summary.get('total', 0)
+                        total_successful += (summary.get('precise', 0) + summary.get('acceptable', 0))
+                    elif validations:
+                        total_variables += len(validations)
+                        successful = sum(1 for v in validations.values() 
+                                       if v.get('is_accurate', False) or 
+                                          v.get('status', '').upper() in ['PRECISE', 'ACCEPTABLE'])
+                        total_successful += successful
             
             # Calcular promedios
             average_accuracy = sum(accuracy_rates) / len(accuracy_rates) if accuracy_rates else 0
@@ -532,8 +654,8 @@ class SimulationValidationService:
     
     def _validate_model_predictions(self, simulation_instance, predicted_values, real_values):
         """
-        Validates model predictions against real values.
-        This method was missing and causing AttributeError.
+        CORRECCIÓN: Validates model predictions against real values.
+        Fixes: unsupported operand type(s) for -: 'ResultSimulation' and 'float'
         """
         try:
             validation_results = {
@@ -549,12 +671,40 @@ class SimulationValidationService:
                 validation_results['errors'].append("Insufficient data for validation")
                 return validation_results
             
+            # CORRECCIÓN PRINCIPAL: Convertir predicted_values de forma segura
+            processed_predicted = []
+            for pred_val in predicted_values:
+                try:
+                    if hasattr(pred_val, 'demand_mean'):
+                        # Es un objeto ResultSimulation
+                        processed_predicted.append(float(pred_val.demand_mean))
+                    elif hasattr(pred_val, 'value'):
+                        processed_predicted.append(float(pred_val.value))
+                    elif isinstance(pred_val, (int, float)):
+                        processed_predicted.append(float(pred_val))
+                    else:
+                        # Intentar conversión directa
+                        processed_predicted.append(float(pred_val))
+                except (ValueError, TypeError, AttributeError):
+                    processed_predicted.append(0.0)
+            
+            # Convertir real_values de forma segura
+            processed_real = []
+            for real_val in real_values:
+                try:
+                    processed_real.append(float(real_val))
+                except (ValueError, TypeError):
+                    processed_real.append(0.0)
+            
             # Calculate validation metrics
-            total_predictions = len(predicted_values)
+            total_predictions = min(len(processed_predicted), len(processed_real))
             accurate_predictions = 0
             error_rates = []
             
-            for i, (predicted, real) in enumerate(zip(predicted_values, real_values)):
+            for i in range(total_predictions):
+                predicted = processed_predicted[i]
+                real = processed_real[i]
+                
                 if real != 0:
                     error_rate = abs(predicted - real) / abs(real)
                     error_rates.append(error_rate)
@@ -569,7 +719,7 @@ class SimulationValidationService:
                     error_rates.append(0 if predicted == 0 else 1)
             
             # Calculate metrics
-            if error_rates:
+            if error_rates and total_predictions > 0:
                 validation_results['accuracy_metrics'] = {
                     'mean_absolute_percentage_error': sum(error_rates) / len(error_rates),
                     'accuracy_rate': accurate_predictions / total_predictions,

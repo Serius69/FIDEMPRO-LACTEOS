@@ -536,7 +536,7 @@ class SimulateShowView(BaseSimulationView, View):
                 fk_questionary__fk_product__in=products
             ).select_related(
                 'fk_questionary__fk_product'
-            ).order_by('-date_created')[:50]
+            ).order_by('-date_created')
         except Exception as e:
             logger.error(f"Error getting available questionnaires: {e}")
             return []

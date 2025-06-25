@@ -11,7 +11,6 @@ from product.models import Product
 from business.models import Business
 from .data.finance_test_data import recommendation_data
 
-
 class FinancialDecision(models.Model):
     """
     Modelo para gestionar decisiones financieras empresariales.
@@ -370,6 +369,12 @@ class FinanceRecommendation(models.Model):
         verbose_name='Última Actualización', 
         help_text='La fecha en que se actualizó la recomendación por última vez'
     )
+    metric_value = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Valor de Métrica',
+        help_text='Valor numérico asociado a la recomendación'
+    )
     
     class Meta:
         verbose_name = 'Recomendación Financiera'
@@ -403,18 +408,104 @@ class FinanceRecommendation(models.Model):
             finance_recommendation.save()
 
 
+
+
 class FinanceRecommendationSimulation(models.Model):
     """
     Modelo para almacenar simulaciones de recomendaciones financieras
     """
-    data = models.FloatField(
-        verbose_name='Datos',
-        help_text='Datos numéricos de la simulación'
+    # CORRECCIÓN: Agregar campos category, severity, title, description, actions, impact, metric_value
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('critical', 'Crítico'),
+            ('profitability', 'Rentabilidad'),
+            ('costs', 'Costos'),
+            ('efficiency', 'Eficiencia'),
+            ('financial', 'Financiero'),
+        ],
+        default='financial',
+        verbose_name='Categoría',
+        help_text='Categoría de la recomendación'
     )
+    
+    severity = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Bajo'),
+            ('medium', 'Medio'),
+            ('high', 'Alto'),
+            ('critical', 'Crítico'),
+        ],
+        default='medium',
+        verbose_name='Severidad',
+        help_text='Nivel de severidad de la recomendación'
+    )
+    
+    title = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name='Título',
+        help_text='Título de la recomendación'
+    )
+    
+    description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Descripción',
+        help_text='Descripción detallada de la recomendación'
+    )
+    
+    actions = models.JSONField(
+        default=list,
+        verbose_name='Acciones',
+        help_text='Lista de acciones recomendadas (JSON array)'
+    )
+    
+    impact = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Bajo'),
+            ('medium', 'Medio'),
+            ('high', 'Alto'),
+            ('critical', 'Crítico'),
+        ],
+        default='medium',
+        verbose_name='Impacto',
+        help_text='Nivel de impacto de la recomendación'
+    )
+    
+    # CORRECCIÓN: Cambiar data por metric_value como se usa en el log
+    metric_value = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Valor de Métrica',
+        help_text='Valor numérico asociado a la recomendación'
+    )
+    
     fk_simulation = models.ForeignKey(
         Simulation,
         on_delete=models.CASCADE,
         related_name='finance_recommendation_simulations',
-        verbose_name='Simulación',
-        help_text='Simulación asociada a la recomendación financiera'
+        verbose_name='Simulación'
     )
+    
+    # Campos de auditoría - FIXED: Use only default for existing records
+    date_created = models.DateTimeField(
+        default=timezone.now,  # Use only default, not auto_now_add with default
+        verbose_name='Fecha de Creación'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Activo'
+    )
+    
+    class Meta:
+        verbose_name = 'Simulación de Recomendación Financiera'
+        verbose_name_plural = 'Simulaciones de Recomendaciones Financieras'
+        ordering = ['-date_created']
+    
+    def __str__(self):
+        return f"{self.title} - {self.category} ({self.severity})"
