@@ -134,7 +134,7 @@
             <!-- Main Content Grid -->
             <div class="row">
                 <!-- Sidebar with Parameters and Controls -->
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <!-- Simulation Parameters -->
                     <div class="metric-card mb-4">
                         <div class="card-header">
@@ -208,7 +208,7 @@
                     {% endif %}
 
                     <!-- Daily Results Navigation -->
-                    <div class="container mt-4">
+                    <div class="container mt-12">
                         <div class="data-table-container">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
@@ -268,41 +268,234 @@
                                                                 <strong>{{ key }}</strong>
                                                                 <br>
                                                                 <small class="text-muted">
-                                                                    {% if key == 'PVP' %}Precio de Venta al Público
-                                                                    {% elif key == 'TPV' %}Total Productos Vendidos
-                                                                    {% elif key == 'IT' %}Ingresos Totales
-                                                                    {% elif key == 'TG' %}Total Gastos
-                                                                    {% elif key == 'GT' %}Ganancia Total
-                                                                    {% elif key == 'NR' %}Nivel de Rentabilidad
-                                                                    {% elif key == 'NSC' %}Nivel de Satisfacción del Cliente
-                                                                    {% elif key == 'EOG' %}Eficiencia Operativa General
-                                                                    {% elif key == 'DPH' %}Demanda Promedio Histórica
-                                                                    {% elif key == 'CFD' %}Costo Fijo Diario
-                                                                    {% elif key == 'CVU' %}Costo Variable Unitario
-                                                                    {% elif key == 'CPROD' %}Capacidad de Producción
-                                                                    {% elif key == 'NEPP' %}Número de Empleados en Producción
-                                                                    {% else %}{{ key }}
-                                                                    {% endif %}
-                                                                </small>
+    {% if key == 'PVP' %}Precio de Venta al Público
+    {% elif key == 'TPV' %}Total Productos Vendidos
+    {% elif key == 'IT' %}Ingresos Totales
+    {% elif key == 'TG' %}Total Gastos
+    {% elif key == 'GT' %}Ganancia Total
+    {% elif key == 'NR' %}Nivel de Rentabilidad
+    {% elif key == 'NSC' %}Nivel de Satisfacción del Cliente
+    {% elif key == 'EOG' %}Eficiencia Operativa General
+    {% elif key == 'DPH' %}Demanda Promedio Histórica
+    {% elif key == 'CFD' %}Costo Fijo Diario
+    {% elif key == 'CVU' %}Costo Variable Unitario
+    {% elif key == 'CPROD' %}Capacidad de Producción
+    {% elif key == 'NEPP' %}Número de Empleados en Producción
+    {% elif key == 'VPC_BASE' %}Ventas por Cliente Base
+    {% elif key == 'IPF_INICIAL' %}Inventario Productos Finales Inicial
+    {% elif key == 'II_INICIAL' %}Inventario Insumos Inicial
+    {% elif key == 'IPF_NEW' %}Inventario Productos Finales Nuevo
+    {% elif key == 'DPE' %}Distancia Promedio de Entrega
+    {% elif key == 'DH' %}Demanda Histórica
+    {% elif key == 'DE' %}Demanda Esperada
+    {% elif key == 'CIP' %}Capacidad Inventario Productos
+    {% elif key == 'ED' %}Estacionalidad de la Demanda
+    {% elif key == 'CUIP' %}Costo Unitario Insumo
+    {% elif key == 'TPC' %}Tiempo Promedio entre Compras
+    {% elif key == 'CPD' %}Clientes Por Día
+    {% elif key == 'CPPL' %}Cantidad Promedio Producción por Lote
+    {% elif key == 'TPE' %}Tiempo de producción por empleado
+    {% elif key == 'SE' %}Sueldos Empleados
+    {% elif key == 'PC' %}Precio de Venta de la Competencia
+    {% elif key == 'CUTRANS' %}Costo Transporte Unitario
+    {% elif key == 'TMP' %}Tiempo Medio Procesamiento Pedido
+    {% elif key == 'CTPLV' %}Cantidad transportada por viaje
+    {% elif key == 'GMM' %}Gastos Marketing Mensual
+    {% elif key == 'TR' %}Tiempo Reabastecimiento
+    {% elif key == 'CINSP' %}Conversión Insumos
+    {% elif key == 'CMIPF' %}Capacidad Máxima Inventario Producto Final
+    {% elif key == 'NMD' %}Número Máximo de Días
+    {% elif key == 'NPD' %}Número de Proveedores de Leche
+    {% elif key == 'SI' %}Stock Inventario Seguridad
+    {% elif key == 'DPL' %}Días Promedio de Reposición de Leche
+    {% elif key == 'CTL' %}Consumo diario promedio
+    {% elif key == 'MLP' %}Minutos Laborables Por Día
+    {% elif key == 'HTO' %}Horas Totales de Operación
+    {% elif key == 'QMAX' %}Cantidad Máxima Producible
+    {% elif key == 'TCFO' %}Temperatura Cadena Frío Objetivo
+    {% elif key == 'TEO' %}Tiempo Entrega Objetivo
+    {% elif key == 'TE1' %}Tiempo Entrega Proveedor 1
+    {% elif key == 'TE2' %}Tiempo Entrega Proveedor 2
+    {% elif key == 'TE3' %}Tiempo Entrega Proveedor 3
+    {% elif key == 'P1' %}Peso Proveedor 1
+    {% elif key == 'P2' %}Peso Proveedor 2
+    {% elif key == 'P3' %}Peso Proveedor 3
+    {% elif key == 'PMC' %}Participación Mercado Competidor
+    {% elif key == 'NPC' %}Número Productos Competencia
+    {% elif key == 'QPL' %}Cantidad producida de productos lácteos
+    {% elif key == 'VPC' %}Ventas Por Cliente
+    {% elif key == 'TCAE' %}Total Clientes Atendidos en el Día
+    {% elif key == 'II' %}Inventario Insumos
+    {% elif key == 'IPF' %}Inventario Productos Finales
+    {% elif key == 'PI' %}Pedido Insumos
+    {% elif key == 'UII' %}Uso de Inventario Insumos
+    {% elif key == 'PPL' %}Productos Producidos por Lote
+    {% elif key == 'TCA' %}Total Clientes Atendidos
+    {% elif key == 'TP' %}Tiempo de Parada
+    {% elif key == 'QC' %}Cantidad Conforme
+    {% elif key == 'CRP' %}Costo Reparaciones
+    {% elif key == 'CREP' %}Costo Repuestos
+    {% elif key == 'CMOM' %}Costo Mano Obra Mantenimiento
+    {% elif key == 'NF' %}Número de Fallas
+    {% elif key == 'HMP' %}Horas Mantenimiento Preventivo
+    {% elif key == 'HMC' %}Horas Mantenimiento Correctivo
+    {% elif key == 'CC' %}Costo de Compra
+    {% elif key == 'CTI' %}Costo de Transporte Insumos
+    {% elif key == 'CAL' %}Costo de Almacenamiento
+    {% elif key == 'CMP1' %}Calidad Materia Prima 1
+    {% elif key == 'CMP2' %}Calidad Materia Prima 2
+    {% elif key == 'CMP3' %}Calidad Materia Prima 3
+    {% elif key == 'V1' %}Volumen Proveedor 1
+    {% elif key == 'V2' %}Volumen Proveedor 2
+    {% elif key == 'V3' %}Volumen Proveedor 3
+    {% elif key == 'IIF' %}Inventario Final Insumos
+    {% elif key == 'EAT' %}Entregas a Tiempo
+    {% elif key == 'TTEP' %}Total de Entregas Proveedores
+    {% elif key == 'ES' %}Empleados Salieron
+    {% elif key == 'EE' %}Empleados Entraron
+    {% elif key == 'CCAP' %}Costo Capacitación Mensual
+    {% elif key == 'HAU' %}Horas Ausentismo
+    {% elif key == 'HTP' %}Horas Trabajadas Programadas
+    {% elif key == 'LG' %}Leads Generados
+    {% elif key == 'NC' %}Nuevos Clientes
+    {% elif key == 'AC' %}Alcance de Campañas
+    {% elif key == 'ALC' %}Alcance Campañas
+    {% elif key == 'MRE' %}Marca Reconocimiento Espontáneo
+    {% elif key == 'MRA' %}Marca Reconocimiento Asistido
+    {% elif key == 'CDP' %}Calidad Diferenciada Producto
+    {% elif key == 'CCP' %}Costo Competitivo Producto
+    {% elif key == 'CSP' %}Servicio Competitivo Producto
+    {% elif key == 'ICC' %}Intensidad Campañas Competencia
+    {% elif key == 'KMT' %}Kilómetros Totales
+    {% elif key == 'CCF' %}Costo Cadena Frío
+    {% elif key == 'CLOG' %}Costo Logístico
+    {% elif key == 'TTED' %}Tiempo Total Entregas Distribución
+    {% elif key == 'NE' %}Número de Entregas
+    {% elif key == 'TCF' %}Temperatura Cadena Frío
+    {% elif key == 'TER' %}Tiempo Entrega Real
+    {% elif key == 'PD' %}Productos Devueltos
+    {% elif key == 'CTR' %}Costo Total Reorden
+    {% elif key == 'CTAI' %}Costo Total Adquisición Insumos
+    {% elif key == 'TPPRO' %}Total Productos Producidos
+    {% elif key == 'DI' %}Demanda Insatisfecha
+    {% elif key == 'GO' %}Gastos Operativos
+    {% elif key == 'GG' %}Gastos Generales
+    {% elif key == 'CTTL' %}Costo Total Transporte
+    {% elif key == 'CPP' %}Costo Promedio Producción
+    {% elif key == 'CPV' %}Costo Promedio Venta
+    {% elif key == 'CPI' %}Costo Promedio Insumos
+    {% elif key == 'CPMO' %}Costo Promedio Mano Obra
+    {% elif key == 'CUP' %}Costo Unitario Producción
+    {% elif key == 'PVR' %}Precio Venta Recomendado
+    {% elif key == 'FU' %}Factor Utilización
+    {% elif key == 'IB' %}Ingreso Bruto
+    {% elif key == 'MB' %}Margen Bruto
+    {% elif key == 'RI' %}Retorno Inversión
+    {% elif key == 'RTI' %}Rotación Inventario
+    {% elif key == 'RTC' %}Rotación Clientes
+    {% elif key == 'PM' %}Participación Mercado
+    {% elif key == 'PE' %}Productividad Empleados
+    {% elif key == 'HO' %}Horas Ociosas
+    {% elif key == 'CHO' %}Costo Horas Ociosas
+    {% elif key == 'CA' %}Costo Almacenamiento
+    {% elif key == 'DT' %}Demanda Total
+    {% elif key == 'NCM' %}Nivel de Competencia en el Mercado
+    {% elif key == 'FC' %}Frecuencia de Compra
+    {% elif key == 'CUAC' %}Costo Unitario de Adquisición de Clientes
+    {% elif key == 'CUI' %}Costo Unitario Inventario
+    {% elif key == 'NIL' %}Nivel Ideal del Inventario Leche
+    {% elif key == 'DF' %}Tiempo Formulación Pedido
+    {% elif key == 'PRL' %}Pedido Reabastecimiento Leche
+    {% elif key == 'DSD' %}Desviación Estándar Demanda
+    {% elif key == 'CVD' %}Coeficiente Variación Demanda
+    {% elif key == 'DDP' %}Demanda Diaria Proyectada
+    {% elif key == 'POD' %}Producción Objetivo Diaria
+    {% elif key == 'EP' %}Eficiencia Producción
+    {% elif key == 'IOP' %}Inventario Objetivo Productos
+    {% elif key == 'DCI' %}Días Cobertura Inventario
+    {% elif key == 'IOI' %}Inventario Objetivo Insumos
+    {% elif key == 'IE' %}Ingresos Esperados
+    {% elif key == 'RVE' %}Rentabilidad vs Esperada
+    {% elif key == 'HNP' %}Horas Necesarias Producción
+    {% elif key == 'EM' %}Efectividad Marketing
+    {% elif key == 'IC' %}Índice Competitividad
+    {% elif key == 'IDG' %}Índice Desempeño Global
+    {% elif key == 'MP' %}Merma Producción Calculada
+    {% elif key == 'MI' %}Merma Inventario Calculada
+    {% elif key == 'CTM' %}Costo Total Mermas Calculado
+    {% elif key == 'ISC' %}Índice Satisfacción Cliente Calculado
+    {% elif key == 'PED' %}Punto de Equilibrio Diario
+    {% elif key == 'DISP' %}Disponibilidad
+    {% elif key == 'OEE' %}Efectividad General Equipos
+    {% elif key == 'CML' %}Costo Mantenimiento por Litro
+    {% elif key == 'FF' %}Frecuencia de Fallas
+    {% elif key == 'RMP' %}Ratio Mantenimiento Preventivo
+    {% elif key == 'CTA' %}Costo Total de Adquisición
+    {% elif key == 'TPEP' %}Tiempo Promedio Entrega Proveedores
+    {% elif key == 'ICP' %}Índice Calidad Proveedores
+    {% elif key == 'RIMP' %}Rotación Inventario Materias Primas
+    {% elif key == 'CDE' %}Cumplimiento Entregas
+    {% elif key == 'IRP' %}Índice Rotación Personal
+    {% elif key == 'PPE' %}Productividad por Empleado
+    {% elif key == 'CCE' %}Costo Capacitación por Empleado
+    {% elif key == 'TAU' %}Tasa Ausentismo
+    {% elif key == 'CLL' %}Costo Laboral por Litro
+    {% elif key == 'ROIA' %}ROI Inversión Publicitaria
+    {% elif key == 'CPL_MKT' %}Costo por Lead
+    {% elif key == 'TCL' %}Tasa Conversión Leads
+    {% elif key == 'AEC' %}Alcance Efectivo Campañas
+    {% elif key == 'RMI' %}Reconocimiento Marca Índice
+    {% elif key == 'VCP' %}Ventaja Competitiva Precio
+    {% elif key == 'PMR' %}Participación Mercado Relativa
+    {% elif key == 'IDP' %}Índice Diferenciación Producto
+    {% elif key == 'EEC' %}Efectividad Estrategia Competitiva
+    {% elif key == 'AMEN' %}Amenaza Competitiva
+    {% elif key == 'ERE' %}Eficiencia Rutas Entrega
+    {% elif key == 'CDL' %}Costo Distribución por Litro
+    {% elif key == 'TPEC' %}Tiempo Promedio Entrega Cliente
+    {% elif key == 'ICE' %}Índice Calidad Entrega
+    {% elif key == 'TD' %}Tasa Devoluciones
+    {% else %}{{ key }}
+    {% endif %}
+</small>
                                                             </td>
                                                             <td class="fw-bold">
-                                                                {% if key == 'NR' or key == 'NSC' or key == 'EOG' %}
-                                                                    {{ value|floatformat:3 }}
-                                                                {% elif key == 'PVP' or key == 'IT' or key == 'TG' or key == 'GT' or key == 'CFD' or key == 'CVU' %}
-                                                                    {{ value|floatformat:2 }}
-                                                                {% else %}
-                                                                    {{ value|floatformat:2 }}
-                                                                {% endif %}
-                                                            </td>
+    {% if key == 'NR' or key == 'NSC' or key == 'EOG' or key == 'EP' or key == 'RVE' or key == 'EM' or key == 'IC' or key == 'IDG' or key == 'ISC' or key == 'DISP' or key == 'OEE' or key == 'RMP' or key == 'TAU' or key == 'ROIA' or key == 'TCL' or key == 'TD' or key == 'MB' or key == 'RI' or key == 'PM' or key == 'FU' or key == 'VCP' or key == 'PMR' or key == 'EEC' or key == 'CVD' %}
+        {{ value|floatformat:3 }}
+    {% elif key == 'PVP' or key == 'IT' or key == 'TG' or key == 'GT' or key == 'CFD' or key == 'CVU' or key == 'CUIP' or key == 'SE' or key == 'PC' or key == 'CUTRANS' or key == 'GMM' or key == 'CINSP' or key == 'TCFO' or key == 'TEO' or key == 'P1' or key == 'P2' or key == 'P3' or key == 'CRP' or key == 'CREP' or key == 'CMOM' or key == 'HMP' or key == 'HMC' or key == 'CC' or key == 'CTI' or key == 'CAL' or key == 'CMP1' or key == 'CMP2' or key == 'CMP3' or key == 'CCAP' or key == 'CCF' or key == 'CLOG' or key == 'TCF' or key == 'TER' or key == 'CTR' or key == 'CTAI' or key == 'GO' or key == 'GG' or key == 'CTTL' or key == 'CPP' or key == 'CPV' or key == 'CPI' or key == 'CPMO' or key == 'CUP' or key == 'PVR' or key == 'IB' or key == 'CHO' or key == 'CA' or key == 'CUAC' or key == 'CUI' or key == 'IE' or key == 'CTM' or key == 'CTA' or key == 'CCE' or key == 'CLL' or key == 'CPL_MKT' or key == 'CDL' or key == 'CML' %}
+        {{ value|floatformat:2 }}
+    {% else %}
+        {{ value|floatformat:2 }}
+    {% endif %}
+</td>
                                                             <td class="small text-muted">
-                                                                {% if key == 'TPV' or key == 'DPH' %}Litros
-                                                                {% elif key == 'PVP' or key == 'IT' or key == 'TG' or key == 'GT' or key == 'CFD' or key == 'CVU' %}Bs.
-                                                                {% elif key == 'NR' or key == 'NSC' or key == 'EOG' %}%
-                                                                {% elif key == 'CPROD' %}L/día
-                                                                {% elif key == 'NEPP' %}Personas
-                                                                {% else %}Unidad
-                                                                {% endif %}
-                                                            </td>
+    {% if key == 'TPV' or key == 'DPH' or key == 'DH' or key == 'DE' or key == 'CIP' or key == 'CPPL' or key == 'QMAX' or key == 'QPL' or key == 'VPC' or key == 'VPC_BASE' or key == 'IPF_INICIAL' or key == 'II_INICIAL' or key == 'IPF_NEW' or key == 'II' or key == 'IPF' or key == 'PI' or key == 'UII' or key == 'PPL' or key == 'QC' or key == 'V1' or key == 'V2' or key == 'V3' or key == 'IIF' or key == 'KMT' or key == 'PD' or key == 'TPPRO' or key == 'DI' or key == 'DT' or key == 'NIL' or key == 'PRL' or key == 'DSD' or key == 'DDP' or key == 'POD' or key == 'IOP' or key == 'IOI' or key == 'MP' or key == 'MI' or key == 'PED' or key == 'CTL' or key == 'CMIPF' or key == 'SI' %}Litros
+    {% elif key == 'PVP' or key == 'IT' or key == 'TG' or key == 'GT' or key == 'CFD' or key == 'CVU' or key == 'CUIP' or key == 'SE' or key == 'PC' or key == 'CUTRANS' or key == 'GMM' or key == 'CRP' or key == 'CREP' or key == 'CMOM' or key == 'CC' or key == 'CTI' or key == 'CAL' or key == 'CCAP' or key == 'CCF' or key == 'CLOG' or key == 'CTR' or key == 'CTAI' or key == 'GO' or key == 'GG' or key == 'CTTL' or key == 'CPP' or key == 'CPV' or key == 'CPI' or key == 'CPMO' or key == 'CUP' or key == 'PVR' or key == 'IB' or key == 'CHO' or key == 'CA' or key == 'CUAC' or key == 'CUI' or key == 'IE' or key == 'CTM' or key == 'CTA' or key == 'CCE' or key == 'CLL' or key == 'CPL_MKT' or key == 'CDL' or key == 'CML' %}Bs.
+    {% elif key == 'NR' or key == 'NSC' or key == 'EOG' or key == 'ED' or key == 'P1' or key == 'P2' or key == 'P3' or key == 'PMC' or key == 'MRE' or key == 'MRA' or key == 'NCM' or key == 'EP' or key == 'CVD' or key == 'RVE' or key == 'EM' or key == 'IC' or key == 'IDG' or key == 'ISC' or key == 'DISP' or key == 'OEE' or key == 'RMP' or key == 'CDE' or key == 'IRP' or key == 'TAU' or key == 'ROIA' or key == 'TCL' or key == 'VCP' or key == 'EEC' or key == 'TD' or key == 'MB' or key == 'RI' or key == 'PM' or key == 'FU' %}%
+    {% elif key == 'CPROD' %}L/día
+    {% elif key == 'NEPP' or key == 'CPD' or key == 'TCAE' or key == 'TCA' or key == 'NPC' or key == 'EAT' or key == 'TTEP' or key == 'ES' or key == 'EE' or key == 'LG' or key == 'NC' or key == 'AC' or key == 'ALC' or key == 'NE' or key == 'NF' or key == 'NPD' %}Personas
+    {% elif key == 'DPE' %}KM
+    {% elif key == 'TPC' or key == 'TMP' or key == 'TR' or key == 'NMD' or key == 'DPL' or key == 'TE1' or key == 'TE2' or key == 'TE3' or key == 'DCI' or key == 'DF' %}DÍAS
+    {% elif key == 'TPE' or key == 'MLP' or key == 'HNP' %}minutos
+    {% elif key == 'HTO' or key == 'TEO' or key == 'TP' or key == 'HMP' or key == 'HMC' or key == 'HAU' or key == 'HTP' or key == 'TTED' or key == 'TER' or key == 'TPEC' or key == 'HO' %}HORAS
+    {% elif key == 'CINSP' %}L/L
+    {% elif key == 'TCFO' or key == 'TCF' %}°C
+    {% elif key == 'CUIP' or key == 'CUTRANS' or key == 'CVU' or key == 'CML' or key == 'CDL' or key == 'CLL' %}Bs/L
+    {% elif key == 'SE' or key == 'GMM' or key == 'CCAP' %}Bs/mes
+    {% elif key == 'CMP1' or key == 'CMP2' or key == 'CMP3' or key == 'CDP' or key == 'CCP' or key == 'CSP' or key == 'ICP' or key == 'RMI' or key == 'IDP' %}PUNTOS
+    {% elif key == 'ICC' or key == 'AMEN' or key == 'ICE' %}INDICE
+    {% elif key == 'FC' %}VECES/DÍA
+    {% elif key == 'RTI' or key == 'RTC' or key == 'PMR' %}VECES
+    {% elif key == 'PE' or key == 'PPE' %}L/EMPLEADO
+    {% elif key == 'FF' %}FALLAS/1000H
+    {% elif key == 'RIMP' %}VECES/AÑO
+    {% elif key == 'CCE' %}BS/EMPLEADO
+    {% elif key == 'CPL_MKT' %}BS/LEAD
+    {% elif key == 'CUAC' %}BS/CLIENTE
+    {% elif key == 'ERE' %}L/KM
+    {% else %}Unidad
+    {% endif %}
+</td>
                                                             <td>
                                                                 {% if key == 'NR' %}
                                                                     {% if value >= 0.2 %}
@@ -433,7 +626,7 @@
                     </div>
                 </div>
                 <!-- Main Charts and Analysis -->
-                <div class="col-lg-8">
+                <div class="col-lg-9">
                     <!-- Chart Tabs -->
                         <div class="chart-tabs">
                             <ul class="nav nav-tabs" id="chartTabs" role="tablist">
@@ -570,161 +763,203 @@
                                 <!-- Gráficos principales del overview -->
                                 <div class="row mb-4">
                                     <div class="col-lg-6 mb-4">
-                                        <div class="chart-container">
-                                            <div class="chart-header">
-                                                <h6 class="chart-title mb-3">
-                                                    <i class="bx bx-dollar me-2"></i>
-                                                    Evolución Financiera: Ingresos vs Ganancias
-                                                </h6>
-                                                <div class="chart-controls">
-                                                    {% if image_data_ingresos_gastos %}
-                                                    <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
-                                                        <i class="bx bx-download"></i>
-                                                    </div>
-                                                    <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
-                                                        <i class="bx bx-fullscreen"></i>
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            {% if image_data_ingresos_gastos %}
-                                            <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
-                                                class="chart-image" 
-                                                alt="Evolución Financiera: Ingresos vs Ganancias"
-                                                loading="lazy">
-                                            {% else %}
-                                            <div class="chart-placeholder">
-                                                <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
-                                                <p class="text-muted mt-2">Gráfico financiero no disponible</p>
-                                                <small class="text-muted">Los datos se generarán durante el análisis</small>
-                                            </div>
-                                            {% endif %}
-                                            <div class="chart-summary">
-                                                <small class="text-muted">
-                                                    {% if totales_acumulativos.IT and totales_acumulativos.GT %}
-                                                        Rendimiento financiero: 
-                                                        {% if totales_acumulativos.GT.total > 0 %}
-                                                            <span class="text-success">Positivo</span> - 
-                                                            Margen del {{ margin_percent|floatformat:1 }}%
-                                                        {% else %}
-                                                            <span class="text-danger">Requiere optimización</span>
-                                                        {% endif %}
-                                                    {% else %}
-                                                        Análisis financiero en proceso
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
+    <div class="chart-container">
+        <!-- TEXTO ARRIBA: Header con título y controles -->
+        <div class="chart-header">
+            <h6 class="chart-title mb-3">
+                <i class="bx bx-dollar me-2"></i>
+                Evolución Financiera: Ingresos vs Ganancias
+            </h6>
+            <div class="chart-controls">
+                {% if image_data_ingresos_gastos %}
+                <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
+                    <i class="bx bx-download"></i>
+                </div>
+                <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                    <i class="bx bx-fullscreen"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+        <div class="chart-content">
+            {% if image_data_ingresos_gastos %}
+            <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                class="chart-image" 
+                alt="Evolución Financiera: Ingresos vs Ganancias"
+                loading="lazy">
+            {% else %}
+            <div class="chart-placeholder">
+                <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">Gráfico financiero no disponible</p>
+                <small class="text-muted">Los datos se generarán durante el análisis</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FOOTER ABAJO: Resumen y análisis -->
+        <div class="chart-footer">
+            <div class="chart-summary">
+                <small class="text-muted">
+                    {% if totales_acumulativos.IT and totales_acumulativos.GT %}
+                        Rendimiento financiero: 
+                        {% if totales_acumulativos.GT.total > 0 %}
+                            <span class="text-success">Positivo</span> - 
+                            Margen del {{ margin_percent|floatformat:1 }}%
+                        {% else %}
+                            <span class="text-danger">Requiere optimización</span>
+                        {% endif %}
+                    {% else %}
+                        Análisis financiero en proceso
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
                                     
                                     <div class="col-lg-6 mb-4">
-                                        <div class="chart-container">
-                                            <div class="chart-header">
-                                                <h6 class="chart-title mb-3">
-                                                    <i class="bx bx-line-chart me-2"></i>
-                                                    Comportamiento de la Demanda
-                                                </h6>
-                                                <div class="chart-controls">
-                                                    {% if image_data_simulation %}
-                                                    <div class="chart-control-btn" onclick="downloadChart('{{ image_data_simulation }}', 'tendencia-demanda.png')" title="Descargar">
-                                                        <i class="bx bx-download"></i>
-                                                    </div>
-                                                    <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_simulation }}', 'Tendencia de Demanda')" title="Pantalla completa">
-                                                        <i class="bx bx-fullscreen"></i>
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            {% if image_data_simulation %}
-                                            <img src="data:image/png;base64,{{ image_data_simulation }}" 
-                                                class="chart-image" 
-                                                alt="Comportamiento de la Demanda"
-                                                loading="lazy">
-                                            {% elif comparison_chart %}
-                                            <img src="data:image/png;base64,{{ comparison_chart }}" 
-                                                class="chart-image" 
-                                                alt="Comparación de Demanda"
-                                                loading="lazy">
-                                            {% else %}
-                                            <div class="chart-placeholder">
-                                                <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
-                                                <p class="text-muted mt-2">Gráfico de demanda no disponible</p>
-                                                <small class="text-muted">Los datos se generarán durante el análisis</small>
-                                            </div>
-                                            {% endif %}
-                                            <div class="chart-summary">
-                                                <small class="text-muted">
-                                                    {% if growth_rate %}
-                                                        Tendencia de crecimiento: 
-                                                        {% if growth_rate > 0 %}
-                                                            <span class="text-success">+{{ growth_rate|floatformat:2 }}%</span> - Creciente
-                                                        {% elif growth_rate < 0 %}
-                                                            <span class="text-danger">{{ growth_rate|floatformat:2 }}%</span> - Decreciente
-                                                        {% else %}
-                                                            <span class="text-info">{{ growth_rate|floatformat:2 }}%</span> - Estable
-                                                        {% endif %}
-                                                    {% elif demand_stats.comparison.mean_diff_pct %}
-                                                        Cambio vs histórico: {{ demand_stats.comparison.mean_diff_pct|floatformat:2 }}%
-                                                    {% else %}
-                                                        Análisis de tendencia en proceso
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
+    <div class="chart-container">
+        <!-- TEXTO ARRIBA: Header con título y controles -->
+        <div class="chart-header">
+            <h6 class="chart-title mb-3">
+                <i class="bx bx-line-chart me-2"></i>
+                Comportamiento de la Demanda
+            </h6>
+            <div class="chart-controls">
+                {% if image_data_simulation %}
+                <div class="chart-control-btn" onclick="downloadChart('{{ image_data_simulation }}', 'tendencia-demanda.png')" title="Descargar">
+                    <i class="bx bx-download"></i>
+                </div>
+                <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_simulation }}', 'Tendencia de Demanda')" title="Pantalla completa">
+                    <i class="bx bx-fullscreen"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+        <div class="chart-content">
+            {% if image_data_simulation %}
+            <img src="data:image/png;base64,{{ image_data_simulation }}" 
+                class="chart-image" 
+                alt="Comportamiento de la Demanda"
+                loading="lazy">
+            {% elif comparison_chart %}
+            <img src="data:image/png;base64,{{ comparison_chart }}" 
+                class="chart-image" 
+                alt="Comparación de Demanda"
+                loading="lazy">
+            {% else %}
+            <div class="chart-placeholder">
+                <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">Gráfico de demanda no disponible</p>
+                <small class="text-muted">Los datos se generarán durante el análisis</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FOOTER ABAJO: Resumen y análisis -->
+        <div class="chart-footer">
+            <div class="chart-summary">
+                <small class="text-muted">
+                    {% if growth_rate %}
+                        Tendencia de crecimiento: 
+                        {% if growth_rate > 0 %}
+                            <span class="text-success">+{{ growth_rate|floatformat:2 }}%</span> - Creciente
+                        {% elif growth_rate < 0 %}
+                            <span class="text-danger">{{ growth_rate|floatformat:2 }}%</span> - Decreciente
+                        {% else %}
+                            <span class="text-info">{{ growth_rate|floatformat:2 }}%</span> - Estable
+                        {% endif %}
+                    {% elif demand_stats.comparison.mean_diff_pct %}
+                        Cambio vs histórico: {{ demand_stats.comparison.mean_diff_pct|floatformat:2 }}%
+                    {% else %}
+                        Análisis de tendencia en proceso
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
                                 </div>
 
                                 <!-- Gráficos adicionales de overview -->
-                                <div class="row mb-4">
-                                    <div class="col-lg-4 mb-3">
-                                        <div class="chart-container compact">
-                                            <h6 class="chart-title mb-3">
-                                                <i class="bx bx-bar-chart me-2"></i>
-                                                Eficiencia Operativa
-                                            </h6>
-                                            {% if image_data_eficiencia %}
-                                            <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
-                                                class="chart-image" 
-                                                alt="Eficiencia Operativa"
-                                                loading="lazy">
-                                            {% else %}
-                                            <div class="chart-placeholder compact">
-                                                <i class="bx bx-bar-chart text-muted" style="font-size: 2rem;"></i>
-                                                <p class="text-muted mt-2">No disponible</p>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+                                <div class="row mb-6">
+                                    <div class="col-lg-6 mb-3">
+    <div class="chart-container compact">
+        <!-- TEXTO ARRIBA: Título -->
+        <div class="chart-header">
+            <h6 class="chart-title mb-3">
+                <i class="bx bx-bar-chart me-2"></i>
+                Eficiencia Operativa
+            </h6>
+        </div>
 
-                                    <div class="col-lg-4 mb-3">
-                                        <div class="chart-container compact">
-                                            <h6 class="chart-title mb-3">
-                                                <i class="bx bx-trending-up me-2"></i>
-                                                Análisis de ROI
-                                            </h6>
-                                            {% if image_data_kpis %}
-                                            <img src="data:image/png;base64,{{ image_data_kpis }}" 
-                                                class="chart-image" 
-                                                alt="Análisis de KPIs"
-                                                loading="lazy">
-                                            {% elif image_data_rentabilidad %}
-                                            <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
-                                                class="chart-image" 
-                                                alt="Análisis de Rentabilidad"
-                                                loading="lazy">
-                                            {% else %}
-                                            <div class="chart-placeholder compact">
-                                                <i class="bx bx-trending-up text-muted" style="font-size: 2rem;"></i>
-                                                <p class="text-muted mt-2">No disponible</p>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+        <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+        <div class="chart-content">
+            {% if image_data_eficiencia %}
+            <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                class="chart-image" 
+                alt="Eficiencia Operativa"
+                loading="lazy">
+            {% else %}
+            <div class="chart-placeholder compact">
+                <i class="bx bx-bar-chart text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted mt-2">No disponible</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FOOTER ABAJO: Podría agregarse aquí si se necesita -->
+        <div class="chart-footer">
+            <!-- Footer vacío para mantener consistencia -->
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-6 mb-3">
+    <div class="chart-container compact">
+        <!-- TEXTO ARRIBA: Título -->
+        <div class="chart-header">
+            <h6 class="chart-title mb-3">
+                <i class="bx bx-trending-up me-2"></i>
+                Análisis de ROI
+            </h6>
+        </div>
+
+        <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+        <div class="chart-content">
+            {% if image_data_kpis %}
+            <img src="data:image/png;base64,{{ image_data_kpis }}" 
+                class="chart-image" 
+                alt="Análisis de KPIs"
+                loading="lazy">
+            {% elif image_data_rentabilidad %}
+            <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
+                class="chart-image" 
+                alt="Análisis de Rentabilidad"
+                loading="lazy">
+            {% else %}
+            <div class="chart-placeholder compact">
+                <i class="bx bx-trending-up text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted mt-2">No disponible</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FOOTER ABAJO: Podría agregarse aquí si se necesita -->
+        <div class="chart-footer">
+            <!-- Footer vacío para mantener consistencia -->
+        </div>
+    </div>
+</div>
                                 </div>
 
                                 <!-- Datos estadísticos adicionales si están disponibles -->
                                 {% if demand_stats.comparison %}
-                                <div class="row mb-4">
+                                <div class="row mb-9">
                                     <div class="col-12">
                                         <h5 class="mb-3">
                                             <i class="bx bx-calculator me-2"></i>
@@ -940,37 +1175,47 @@
     <div class="row">
         <!-- Ingresos vs Ganancias -->
         <div class="col-md-6 mb-4">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h6 class="mb-3">
-                        <i class="bx bx-dollar me-2"></i>
-                        Evolución de Ingresos vs Ganancias
-                    </h6>
-                    <div class="chart-controls">
-                        {% if image_data_ingresos_gastos %}
-                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
-                            <i class="bx bx-download"></i>
-                        </div>
-                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
-                            <i class="bx bx-fullscreen"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+    <div class="chart-container">
+        <!-- TEXTO ARRIBA: Header con título y controles -->
+        <div class="chart-header">
+            <h6 class="chart-title mb-3">
+                <i class="bx bx-dollar me-2"></i>
+                Evolución de Ingresos vs Ganancias
+            </h6>
+            <div class="chart-controls">
                 {% if image_data_ingresos_gastos %}
-                <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
-                    class="chart-image" 
-                    alt="Evolución de Ingresos vs Ganancias"
-                    loading="lazy">
-                {% else %}
-                <div class="chart-placeholder">
-                    <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-2">Gráfico de ingresos vs ganancias no disponible</p>
-                    <small class="text-muted">Los datos se generarán durante el análisis</small>
+                <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
+                    <i class="bx bx-download"></i>
+                </div>
+                <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                    <i class="bx bx-fullscreen"></i>
                 </div>
                 {% endif %}
             </div>
         </div>
+
+        <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+        <div class="chart-content">
+            {% if image_data_ingresos_gastos %}
+            <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                class="chart-image" 
+                alt="Evolución de Ingresos vs Ganancias"
+                loading="lazy">
+            {% else %}
+            <div class="chart-placeholder">
+                <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">Gráfico de ingresos vs ganancias no disponible</p>
+                <small class="text-muted">Los datos se generarán durante el análisis</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FOOTER ABAJO: Preparado para resumen -->
+        <div class="chart-footer">
+            <!-- Footer disponible para agregar información de resumen -->
+        </div>
+    </div>
+</div>
         
         <!-- Análisis de Gastos -->
         <div class="col-md-6 mb-4">
@@ -1555,7 +1800,7 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- Gráfico de Costos Operativos -->
+                                    {% comment %} <!-- Gráfico de Costos Operativos -->
                                     <div class="col-lg-6 mb-4">
                                         <div class="chart-container">
                                             <div class="chart-header">
@@ -1655,7 +1900,7 @@
                                             </div>
                                             {% endif %}
                                         </div>
-                                    </div>
+                                    </div> {% endcomment %}
                                 </div>
 
                                 <!-- Gráficos de variables operativas endógenas -->
@@ -1720,9 +1965,9 @@
                                                         <thead>
                                                             <tr>
                                                                 <th>Variable Operativa</th>
-                                                                <th>Valor Total</th>
-                                                                <th>Unidad</th>
                                                                 <th>Promedio Diario</th>
+                                                                <th>Unidad</th>
+                                                                <th>Valor Total</th>
                                                                 <th>Tendencia</th>
                                                                 <th>Estado</th>
                                                             </tr>
@@ -1878,7 +2123,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    {% comment %} <div class="col-md-3">
                                         <div class="card bg-gradient-success text-white">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between">
@@ -1922,7 +2167,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> {% endcomment %}
                                 </div>
 
                                 <!-- Gráficos de Variables Endógenas -->
@@ -2045,9 +2290,9 @@
                                                         <thead>
                                                             <tr>
                                                                 <th style="width: 25%">Variable</th>
-                                                                <th style="width: 15%">Valor Total</th>
-                                                                <th style="width: 12%">Unidad</th>
                                                                 <th style="width: 15%">Promedio Diario</th>
+                                                                <th style="width: 12%">Unidad</th>
+                                                                <th style="width: 15%">Valor Total</th>
                                                                 <th style="width: 10%">Tendencia</th>
                                                                 <th style="width: 13%">Rango</th>
                                                                 <th style="width: 10%">Acciones</th>

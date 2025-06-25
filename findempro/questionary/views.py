@@ -318,7 +318,7 @@ def questionnaire_main_view(request):
             fk_product__fk_business__fk_user=request.user
         )
         
-        # Get existing answers
+        # Get existing answers as dictionary for template
         existing_answers = {}
         if questionary_result_id:
             answers = Answer.objects.filter(
@@ -441,7 +441,7 @@ def questionnaire_result_view(request, pk):
         answers = Answer.objects.filter(
             fk_questionary_result=questionary_result, 
             is_active=True,
-        ).select_related('fk_question', 'fk_question__fk_variable')
+        ).select_related('fk_question', 'fk_question__fk_variable').order_by('fk_question__id')
         
         paginator = Paginator(answers, 40)
         page = request.GET.get('page')
@@ -453,9 +453,23 @@ def questionnaire_result_view(request, pk):
                answer.fk_question.question == 'Ingrese los datos históricos de la demanda de su empresa (mínimo 30 datos).':
                 processed_data = process_answer(answer)
                 if processed_data:
+                    # Calculate statistics
+                    data_sum = sum(processed_data)
+                    data_avg = data_sum / len(processed_data) if processed_data else 0
+                    data_min = min(processed_data) if processed_data else 0
+                    data_max = max(processed_data) if processed_data else 0
+                    
                     processed_answers.append({
                         'answer_id': answer.id,
-                        'data': processed_data
+                        'data': processed_data,
+                        'statistics': {
+                            'count': len(processed_data),
+                            'sum': data_sum,
+                            'average': data_avg,
+                            'min': data_min,
+                            'max': data_max,
+                            'range': data_max - data_min
+                        }
                     })
 
         context = {

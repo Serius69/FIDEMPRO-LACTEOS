@@ -1,6 +1,5 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% load questionary_tags %}
 {% block title %}Cuestionario{% endblock title %}
 
 {% block extra_css %}
@@ -8,9 +7,6 @@
 {% endblock extra_css %}
 
 {% block content %}
-<!-- ============================================================== -->
-<!-- Start right Content here -->
-<!-- ============================================================== -->
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
@@ -18,11 +14,16 @@
             {% include "partials/page-title.html" with pagetitle="Cuestionario" title="Resolver Cuestionario" %}
             {% endblock pagetitle %}
             
-            <!-- Mensaje de éxito flotante -->
-            <div class="alert alert-success success-message" role="alert" aria-live="polite">
-                <i class="fa fa-check-circle"></i> <span id="success-text">Operación exitosa</span>
-                <button type="button" class="btn-close" aria-label="Cerrar"></button>
-            </div>
+            <!-- Mensajes flash -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fa fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
             
             <!-- Header principal -->
             <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
@@ -85,8 +86,7 @@
                                         </h5>
                                     </div>
                                     <div class="card-body">
-                                        <form method="GET" action="{% url 'questionary:questionary.main' %}" onsubmit="return validateForm()">
-                                            {% csrf_token %}
+                                        <form method="GET" action="{% url 'questionary:questionary.main' %}">
                                             <div class="form-group mb-3">
                                                 <label for="inputGroupSelect01" class="form-label">
                                                     <i class="fa fa-list-alt"></i> Cuestionarios disponibles
@@ -97,7 +97,7 @@
                                                         <option value="{{ questionary.id }}" 
                                                                 data-product="{{ questionary.fk_product.name }}"
                                                         {% if questionary.id|stringformat:"s" == selected_questionary_id|stringformat:"s" %} selected {% endif %}>
-                                                            {{ questionary.questionary }}
+                                                            {{ questionary.questionary }} - {{ questionary.fk_product.name }}
                                                         </option>
                                                     {% endfor %}
                                                 </select>
@@ -145,9 +145,7 @@
                                     </div>
                                 </div>
                                 {% endif %}
-                            {% endif %}
-                            
-                            {% if started_questionary %}
+                            {% else %}
                                 <!-- Panel de información del cuestionario activo -->
                                 <div class="card shadow-sm">
                                     <div class="card-header bg-primary text-white">
@@ -218,7 +216,7 @@
                                         <form method="POST" action="{% url 'questionary:questionary.main' %}">
                                             {% csrf_token %}
                                             <button type="submit" name="cancel" class="btn btn-danger btn-sm w-100"
-                                                    onclick="return confirm('¿Está seguro de que desea cancelar el cuestionario? Se perderán todos los datos no guardados.')">
+                                                    onclick="return confirm('¿Está seguro de que desea cancelar el cuestionario? Se guardará como borrador.')">
                                                 <i class="fa fa-times"></i> Cancelar Cuestionario
                                             </button>
                                         </form>
@@ -235,17 +233,17 @@
                                     <div class="card-body">
                                         <div class="d-grid gap-2">
                                             <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                    onclick="questionaryMain.exportQuestionaryData()"
+                                                    onclick="exportQuestionaryData()"
                                                     data-bs-toggle="tooltip" title="Exportar datos del cuestionario">
                                                 <i class="fa fa-download"></i> Exportar Datos
                                             </button>
                                             <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                                    onclick="questionaryMain.printQuestionary()"
+                                                    onclick="printQuestionary()"
                                                     data-bs-toggle="tooltip" title="Imprimir cuestionario">
                                                 <i class="fa fa-print"></i> Imprimir
                                             </button>
                                             <button type="button" class="btn btn-outline-info btn-sm" 
-                                                    onclick="questionaryMain.autoSave()"
+                                                    onclick="autoSave()"
                                                     data-bs-toggle="tooltip" title="Guardar borrador">
                                                 <i class="fa fa-save"></i> Guardar Borrador
                                             </button>
@@ -396,8 +394,7 @@
                                     <div class="card-body">
                                         {% if questions_to_answer %}
                                             <form method="POST" action="{% url 'questionary:questionary.main' %}" 
-                                                  id="questionForm" class="needs-validation" novalidate
-                                                  onsubmit="return validateAnswers()">
+                                                  id="questionForm" class="needs-validation" novalidate>
                                                 {% csrf_token %}
                                                 <input type="hidden" name="current_page" value="{{ questions_to_answer.number }}">
                                                 
@@ -431,7 +428,7 @@
                                                                             </label>
                                                                             <div class="input-group">
                                                                                 <input type="number" 
-                                                                                       value="{% if existing_answers %}{{ existing_answers|get_item:question.id|default:'' }}{% endif %}"
+                                                                                       value="{% for ans_key, ans_value in existing_answers.items %}{% if ans_key == question.id %}{{ ans_value }}{% endif %}{% endfor %}"
                                                                                        class="form-control" 
                                                                                        name="answer_{{ question.id }}"
                                                                                        id="answer_{{ question.id }}"
@@ -459,7 +456,7 @@
                                                                                 <option value="">-- Seleccione una opción --</option>
                                                                                 {% for option in question.possible_answers %}
                                                                                     <option value="{{ option }}" 
-                                                                                            {% if existing_answers and existing_answers|get_item:question.id == option %}selected{% endif %}>
+                                                                                            {% for ans_key, ans_value in existing_answers.items %}{% if ans_key == question.id and ans_value == option %}selected{% endif %}{% endfor %}>
                                                                                         {{ option }}
                                                                                     </option>
                                                                                 {% endfor %}
@@ -522,7 +519,7 @@
                                                                             
                                                                             <input type="hidden" name="historicalData_{{ question.id }}" 
                                                                                    id="historicalData_{{ question.id }}" 
-                                                                                   value="{% if existing_answers %}{{ existing_answers|get_item:question.id|default:'' }}{% endif %}">
+                                                                                   value="{% for ans_key, ans_value in existing_answers.items %}{% if ans_key == question.id %}{{ ans_value }}{% endif %}{% endfor %}">
                                                                         </div>
                                                                     {% endif %}
                                                                 </div>
@@ -630,4 +627,101 @@
 
 {% block extra_js %}
 <script src="{% static 'js/questionary-main.js' %}"></script>
+
+<!-- CSRF Token para AJAX -->
+<script>
+    window.csrfToken = '{{ csrf_token }}';
+</script>
+
+<!-- Funciones globales para compatibilidad -->
+<script>
+function validateForm() {
+    return questionaryMain ? questionaryMain.validateForm() : true;
+}
+
+function validateAnswers() {
+    return questionaryMain ? questionaryMain.validateAnswers() : true;
+}
+
+function agregarFila(questionId) {
+    if (questionaryMain) {
+        questionaryMain.agregarFila(questionId);
+    }
+}
+
+function agregarMultiplesFila(questionId, cantidad) {
+    if (questionaryMain) {
+        questionaryMain.agregarMultiplesFila(questionId, cantidad);
+    }
+}
+
+function eliminarFila(button, questionId) {
+    if (questionaryMain) {
+        questionaryMain.eliminarFila(button, questionId);
+    }
+}
+
+function guardarDatosHistoricos(questionId) {
+    if (questionaryMain) {
+        questionaryMain.guardarDatosHistoricos(questionId);
+    }
+}
+
+function exportQuestionaryData() {
+    if (questionaryMain) {
+        questionaryMain.exportQuestionaryData();
+    }
+}
+
+function printQuestionary() {
+    if (questionaryMain) {
+        questionaryMain.printQuestionary();
+    }
+}
+
+function autoSave() {
+    if (questionaryMain) {
+        questionaryMain.autoSave();
+    }
+}
+
+// Inicializar datos históricos existentes cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos históricos existentes
+    {% for question in questions_to_answer %}
+        {% if question.type == 3 %}
+            {% for ans_key, ans_value in existing_answers.items %}
+                {% if ans_key == question.id %}
+                    const existingData_{{ question.id }} = '{{ ans_value }}';
+                    if (existingData_{{ question.id }}) {
+                        loadExistingHistoricalData({{ question.id }}, existingData_{{ question.id }});
+                    }
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+});
+
+function loadExistingHistoricalData(questionId, dataString) {
+    if (!dataString || !questionaryMain) return;
+    
+    try {
+        const values = dataString.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+        values.forEach((value, index) => {
+            questionaryMain.agregarFila(questionId);
+            const tbody = document.getElementById('tbody_' + questionId);
+            if (tbody && tbody.rows.length > 0) {
+                const lastRow = tbody.rows[tbody.rows.length - 1];
+                const input = lastRow.cells[1]?.querySelector('input');
+                if (input) {
+                    input.value = value;
+                }
+            }
+        });
+        questionaryMain.updateCounter(questionId);
+    } catch (error) {
+        console.error('Error loading historical data for question ' + questionId + ':', error);
+    }
+}
+</script>
 {% endblock extra_js %}

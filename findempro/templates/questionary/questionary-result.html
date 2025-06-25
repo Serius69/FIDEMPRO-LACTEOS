@@ -256,19 +256,15 @@
                                                                         <div class="row">
                                                                             <div class="col-md-3">
                                                                                 <strong>Total:</strong> {{ item.data|length }}<br>
-                                                                                <strong>Promedio:</strong> 
-                                                                                {% widthratio item.data|add_list 1 item.data|length as avg %}
-                                                                                {{ avg|floatformat:2 }}
+                                                                                <strong>Promedio:</strong> {{ item.average|floatformat:2 }}
                                                                             </div>
                                                                             <div class="col-md-3">
-                                                                                <strong>Mínimo:</strong> {{ item.data|min|floatformat:2 }}<br>
-                                                                                <strong>Máximo:</strong> {{ item.data|max|floatformat:2 }}
+                                                                                <strong>Mínimo:</strong> {{ item.minimum|floatformat:2 }}<br>
+                                                                                <strong>Máximo:</strong> {{ item.maximum|floatformat:2 }}
                                                                             </div>
                                                                             <div class="col-md-3">
-                                                                                <strong>Suma Total:</strong> {{ item.data|add_list|floatformat:2 }}<br>
-                                                                                <strong>Rango:</strong> 
-                                                                                {% widthratio item.data|max|sub:item.data|min 1 1 as range %}
-                                                                                {{ range|floatformat:2 }}
+                                                                                <strong>Suma Total:</strong> {{ item.sum_total|floatformat:2 }}<br>
+                                                                                <strong>Rango:</strong> {{ item.range|floatformat:2 }}
                                                                             </div>
                                                                             <div class="col-md-3">
                                                                                 <div class="text-center">
@@ -434,24 +430,6 @@
 {% block extra_js %}
 <script src="{% static 'js/questionary-result.js' %}"></script>
 <script>
-// Additional template filters that might be missing
-if (!window.templateFilters) {
-    window.templateFilters = {
-        add_list: function(arr) {
-            if (!Array.isArray(arr)) return 0;
-            return arr.reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-        },
-        min: function(arr) {
-            if (!Array.isArray(arr) || arr.length === 0) return 0;
-            return Math.min(...arr.map(val => parseFloat(val) || 0));
-        },
-        max: function(arr) {
-            if (!Array.isArray(arr) || arr.length === 0) return 0;
-            return Math.max(...arr.map(val => parseFloat(val) || 0));
-        }
-    };
-}
-
 // Enhance answer rows with click interaction
 document.addEventListener('DOMContentLoaded', function() {
     // Add click interaction to answer rows
