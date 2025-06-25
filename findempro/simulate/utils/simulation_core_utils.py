@@ -3,6 +3,7 @@ import logging
 import random
 import json
 import re
+from simulate.utils.variable_mapper import VariableMapper
 import numpy as np
 import math
 
@@ -34,150 +35,8 @@ class SimulationCore:
         self.batch_size = 100
         
         # Mapeo mejorado y completo de preguntas a variables
-        self.question_to_variable_mapping = {
-            # Precios
-            'precio_actual': 'PVP',
-            'precio_venta': 'PVP',
-            'precio_producto': 'PVP',
-            'precio de venta': 'PVP',
-            'precio venta producto': 'PVP',
-            'precio unitario': 'PVP',
-            
-            # Demanda
-            'demanda_historica': 'DH',
-            'demanda_promedio': 'DH',
-            'demanda histórica': 'DH',
-            'histórico demanda': 'DH',
-            'datos históricos': 'DH',
-            'demanda_esperada': 'DE',
-            'demanda esperada': 'DE',
-            'expectativa demanda': 'DE',
-            
-            # Producción
-            'produccion_actual': 'QPL',
-            'cantidad_produccion': 'QPL',
-            'cantidad producida': 'QPL',
-            'producción diaria': 'QPL',
-            'litros producidos': 'QPL',
-            'producción': 'CPROD',
-            'capacidad_produccion': 'CPROD',
-            'capacidad de producción': 'CPROD',
-            'capacidad producción diaria': 'CPROD',
-            'capacidad máxima producción': 'CPROD',
-            'capacidad planta': 'CPROD',
-            
-            # Inventario
-            'capacidad_inventario': 'CIP',
-            'capacidad inventario productos': 'CIP',
-            'capacidad del inventario': 'CIP',
-            'almacén capacidad': 'CIP',
-            'capacidad_almacenamiento': 'CMIPF',
-            'capacidad máxima almacenamiento': 'CMIPF',
-            'capacidad almacén': 'CMIPF',
-            'stock_seguridad': 'SI',
-            'stock inventario mínimo': 'SI',
-            'inventario seguridad': 'SI',
-            'stock mínimo': 'SI',
-            
-            # Costos
-            'costo_unitario_insumo': 'CUIP',
-            'costo_insumos': 'CUIP',
-            'costo unitario': 'CUIP',
-            'costo unitario del insumo': 'CUIP',
-            'costo materia prima': 'CUIP',
-            'precio insumos': 'CUIP',
-            'costo_fijo_diario': 'CFD',
-            'costos_fijos': 'CFD',
-            'costos fijos': 'CFD',
-            'costo fijo diario': 'CFD',
-            'gastos fijos diarios': 'CFD',
-            'costo_transporte': 'CUTRANS',
-            'costo unitario transporte': 'CUTRANS',
-            'costo distribución': 'CUTRANS',
-            'tarifa transporte': 'CUTRANS',
-            
-            # Clientes
-            'clientes_diarios': 'CPD',
-            'clientes_por_dia': 'CPD',
-            'clientes por día': 'CPD',
-            'clientes llegan diariamente': 'CPD',
-            'número clientes día': 'CPD',
-            'clientes atendidos': 'CPD',
-            
-            # Empleados
-            'numero_empleados': 'NEPP',
-            'empleados': 'NEPP',
-            'número de empleados': 'NEPP',
-            'cantidad empleados': 'NEPP',
-            'personal producción': 'NEPP',
-            'sueldos_salarios': 'SE',
-            'salarios': 'SE',
-            'sueldos empleados': 'SE',
-            'salarios mensuales': 'SE',
-            'nómina mensual': 'SE',
-            'planilla': 'SE',
-            
-            # Marketing y competencia
-            'precio_competencia': 'PC',
-            'precio promedio competencia': 'PC',
-            'precio competidores': 'PC',
-            'gastos_marketing': 'GMM',
-            'marketing': 'GMM',
-            'gastos de marketing': 'GMM',
-            'gastos marketing mensuales': 'GMM',
-            'inversión marketing': 'GMM',
-            'publicidad': 'GMM',
-            
-            # Tiempos
-            'tiempo_entre_compras': 'TPC',
-            'tiempo promedio compras': 'TPC',
-            'frecuencia compra': 'TPC',
-            'tiempo_reabastecimiento': 'TR',
-            'tiempo reabastece insumos': 'TR',
-            'lead time': 'TR',
-            'tiempo entrega proveedores': 'TR',
-            'tiempo_produccion_unitario': 'TPE',
-            'tiempo producir unidad': 'TPE',
-            'minutos por litro': 'TPE',
-            'tiempo producción': 'TPE',
-            'dias_reabastecimiento': 'DPL',
-            'días promedio reabastecimiento': 'DPL',
-            'días reposición': 'DPL',
-            'tiempo_procesamiento_pedidos': 'TMP',
-            'tiempo medio procesamiento': 'TMP',
-            
-            # Cantidades
-            'insumos_por_producto': 'CINSP',
-            'litros insumo fabricar': 'CINSP',
-            'conversión insumos': 'CINSP',
-            'rendimiento insumos': 'CINSP',
-            'cantidad_por_lote': 'CPPL',
-            'cantidad promedio lote': 'CPPL',
-            'tamaño lote': 'CPPL',
-            'lote producción': 'CPPL',
-            'cantidad_transporte_viaje': 'CTPLV',
-            'litros transportan viaje': 'CTPLV',
-            'capacidad camión': 'CTPLV',
-            'capacidad vehículo': 'CTPLV',
-            
-            # Otros
-            'estacionalidad': 'ED',
-            'estacionalidad demanda': 'ED',
-            'variación estacional': 'ED',
-            'factor estacional': 'ED',
-            'numero_proveedores': 'NPD',
-            'proveedores leche': 'NPD',
-            'cantidad proveedores': 'NPD',
-            'consumo_diario_proveedor': 'CTL',
-            'consumo diario promedio': 'CTL',
-            'consumo promedio': 'CTL',
-            
-            # Horarios
-            'horas_trabajo': 'MLP',
-            'jornada laboral': 'MLP',
-            'minutos laborables': 'MLP',
-            'tiempo trabajo diario': 'MLP',
-        }
+        self.variable_mapper = VariableMapper()  # AGREGAR ESTA LÍNEA
+        self.data_parser = DataParser()          # AGREGAR ESTA LÍNEA
 
     @transaction.atomic
     def create_simulation(self, form_data: Dict[str, Any]) -> Simulation:
@@ -451,67 +310,92 @@ class SimulationCore:
             'demand_std': variable_dict.get('DSD', 0)
         }
 
+    # def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
+    #     """Initialize variables PRIMARILY from questionnaire data"""
+        
+    #     variable_dict = {}
+        
+    #     # Add essential system variables
+    #     variable_dict['NMD'] = float(simulation_instance.quantity_time)
+    #     variable_dict['DIA'] = float(day_index + 1)
+    #     variable_dict['random'] = lambda: random.random()
+        
+    #     # Parse demand history first
+    #     demand_history = self._parse_demand_history(simulation_instance.demand_history)
+    #     if demand_history:
+    #         variable_dict['DH'] = float(np.mean(demand_history))
+    #         logger.info(f"Loaded demand history average: {variable_dict['DH']}")
+        
+    #     # Process ALL answers from questionnaire
+    #     questionnaire_values_loaded = 0
+        
+    #     for answer_data in answers:
+    #         var_initials = answer_data.get('fk_question__fk_variable__initials')
+    #         answer_value = answer_data.get('answer')
+    #         question_text = answer_data.get('fk_question__question', '')
+            
+    #         if not answer_value:
+    #             continue
+            
+    #         # Method 1: Direct variable mapping
+    #         if var_initials:
+    #             processed_value = self._process_answer_value(answer_value, var_initials)
+    #             if processed_value is not None:
+    #                 variable_dict[var_initials] = processed_value
+    #                 questionnaire_values_loaded += 1
+    #                 logger.debug(f"Direct mapping: {var_initials} = {processed_value}")
+            
+    #         # Method 2: Text-based mapping from question content
+    #         if question_text:
+    #             mapped_var = self._map_question_to_variable(question_text)
+    #             if mapped_var and mapped_var not in variable_dict:
+    #                 processed_value = self._process_answer_value(answer_value, mapped_var)
+    #                 if processed_value is not None:
+    #                     variable_dict[mapped_var] = processed_value
+    #                     questionnaire_values_loaded += 1
+    #                     logger.debug(f"Text mapping: {mapped_var} = {processed_value} (from '{question_text[:50]}...')")
+        
+    #     logger.info(f"Successfully loaded {questionnaire_values_loaded} values from questionnaire")
+        
+    #     # Calculate derived variables from questionnaire data
+    #     self._calculate_derived_variables(variable_dict)
+        
+    #     # Add minimal defaults for missing ESSENTIAL variables only
+    #     self._add_minimal_defaults(variable_dict)
+        
+    #     return variable_dict
+
     def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
-        """Initialize variables PRIMARILY from questionnaire data"""
+        """Initialize variables PRIMARILY from questionnaire data usando VariableMapper"""
         
-        variable_dict = {}
+        # Usar el VariableMapper para extraer todas las variables
+        questionary_result = simulation_instance.fk_questionary_result
+        extracted_vars = self.variable_mapper.extract_all_variables(questionary_result)
         
-        # Add essential system variables
-        variable_dict['NMD'] = float(simulation_instance.quantity_time)
-        variable_dict['DIA'] = float(day_index + 1)
-        variable_dict['random'] = lambda: random.random()
+        logger.info(f"VariableMapper extrajo {len(extracted_vars)} variables")
         
-        # Parse demand history first
+        # Agregar variables del sistema
+        extracted_vars.update({
+            'NMD': float(simulation_instance.quantity_time),
+            'DIA': float(day_index + 1),
+            'random': lambda: random.random()
+        })
+        
+        # Parse demand history si existe
         demand_history = self._parse_demand_history(simulation_instance.demand_history)
         if demand_history:
-            variable_dict['DH'] = float(np.mean(demand_history))
-            logger.info(f"Loaded demand history average: {variable_dict['DH']}")
+            extracted_vars['DH'] = float(np.mean(demand_history))
+            logger.info(f"Loaded demand history average: {extracted_vars['DH']}")
         
-        # Process ALL answers from questionnaire
-        questionnaire_values_loaded = 0
-        
-        for answer_data in answers:
-            var_initials = answer_data.get('fk_question__fk_variable__initials')
-            answer_value = answer_data.get('answer')
-            question_text = answer_data.get('fk_question__question', '')
-            
-            if not answer_value:
-                continue
-            
-            # Method 1: Direct variable mapping
-            if var_initials:
-                processed_value = self._process_answer_value(answer_value, var_initials)
-                if processed_value is not None:
-                    variable_dict[var_initials] = processed_value
-                    questionnaire_values_loaded += 1
-                    logger.debug(f"Direct mapping: {var_initials} = {processed_value}")
-            
-            # Method 2: Text-based mapping from question content
-            if question_text:
-                mapped_var = self._map_question_to_variable(question_text)
-                if mapped_var and mapped_var not in variable_dict:
-                    processed_value = self._process_answer_value(answer_value, mapped_var)
-                    if processed_value is not None:
-                        variable_dict[mapped_var] = processed_value
-                        questionnaire_values_loaded += 1
-                        logger.debug(f"Text mapping: {mapped_var} = {processed_value} (from '{question_text[:50]}...')")
-        
-        logger.info(f"Successfully loaded {questionnaire_values_loaded} values from questionnaire")
-        
-        # Calculate derived variables from questionnaire data
-        self._calculate_derived_variables(variable_dict)
-        
-        # Add minimal defaults for missing ESSENTIAL variables only
-        self._add_minimal_defaults(variable_dict)
-        
-        return variable_dict
-
+        return extracted_vars
+    
+    
     def _map_question_to_variable(self, question_text: str) -> Optional[str]:
         """Map question text to variable initials using comprehensive mapping"""
         question_lower = question_text.lower()
         
         # Try exact phrase matching first
-        for key_phrase, var_initials in self.question_to_variable_mapping.items():
+        for key_phrase, var_initials in self.variable_mapper.items():
             if key_phrase in question_lower:
                 return var_initials
         
@@ -675,10 +559,44 @@ class SimulationCore:
         if added_defaults:
             logger.debug(f"Added minimal defaults for: {added_defaults}")
 
+    def _convert_equations_data_to_objects(self, equations_data):
+        """Convierte equations_data a objetos tipo Equation"""
+        converted_equations = []
+        
+        for eq_data in equations_data:
+            # Crear objeto simulado tipo Equation
+            class MockEquation:
+                def __init__(self, data):
+                    self.expression = data['expression']
+                    self.name = data['name']
+                    self.description = data['description']
+                    self.fk_area = MockArea(data.get('area', 'General'))
+            
+            class MockArea:
+                def __init__(self, name):
+                    self.name = name
+            
+            converted_equations.append(MockEquation(eq_data))
+        
+        return converted_equations
+    
     def _calculate_all_equations(self, equations, variable_dict):
         """Calculate all equations with improved dependency resolution"""
         
         endogenous_results = {}
+        
+        try:
+            from variable.data.equation_test_data import equations_data
+            logger.info(f"Cargando {len(equations_data)} ecuaciones adicionales del sistema")
+            
+            # Convertir equations_data a formato compatible
+            additional_equations = self._convert_equations_data_to_objects(equations_data)
+            all_equations = list(equations) + additional_equations
+            
+            logger.info(f"Total de ecuaciones a procesar: {len(all_equations)}")
+        except ImportError:
+            logger.warning("No se pudo cargar equation_test_data, usando solo ecuaciones de BD")
+            all_equations = list(equations)
         
         # Definir orden de áreas optimizado para resolver dependencias
         area_priority = [

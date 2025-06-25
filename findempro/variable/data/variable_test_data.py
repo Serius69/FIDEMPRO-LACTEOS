@@ -115,7 +115,7 @@ variables_data = [
 'type': 1,
 'unit': 'EMPLEADOS',
 'description': 'Numero de empleados',
-'default_value': 15},
+'default_value': 25},  # CAMBIAR de 15 a 25
 
 {'name': 'Cantidad Promedio Producción por Lote',
 'initials': 'CPPL',
@@ -130,7 +130,7 @@ variables_data = [
     'type': 1,
     'unit': 'minutos',
     'description': 'Tiempo de produccion por empleado',
-    'default_value': 30  # CAMBIAR de 45 a 30 - más productivo
+    'default_value': 20  # CAMBIAR de 30 a 20 - más eficiente
 },
 
 {

@@ -3,6 +3,7 @@
 VERSIÓN CORREGIDA: Motor matemático completo con resolución de dependencias EOG-IDG
 """
 import logging
+import re
 import numpy as np
 from typing import Dict, Any, List, Tuple, Optional, Set
 from decimal import Decimal, ROUND_HALF_UP
@@ -242,6 +243,82 @@ class SimulationMathEngine:
             'HO', {'MLP', 'HNP'}, 
             lambda v: max(0, v.get('MLP', 480) - v.get('HNP', 400))
         )
+        try:
+            from variable.data.equation_test_data import equations_data
+            logger.info(f"Registrando {len(equations_data)} ecuaciones adicionales")
+            
+            for eq_data in equations_data:
+                variable_name = eq_data['variable1']
+                expression = eq_data['expression']
+                
+                # Extraer dependencias
+                dependencies = self._extract_dependencies_from_expression(expression)
+                
+                # Crear función de cálculo
+                calc_function = self._create_calculation_function(expression)
+                
+                # Registrar en el solver
+                self.equation_solver.register_equation(
+                    variable_name, 
+                    set(dependencies), 
+                    calc_function
+                )
+                
+            logger.info("Ecuaciones adicionales registradas exitosamente")
+            
+        except ImportError:
+            logger.warning("No se pudo cargar equation_test_data")
+        
+    
+    def _extract_dependencies_from_expression(self, expression: str) -> List[str]:
+        """Extrae variables dependientes de una expresión"""
+        if '=' not in expression:
+            return []
+        
+        _, rhs = expression.split('=', 1)
+        var_pattern = re.compile(r'\b[A-Z][A-Z0-9_]*\b')
+        variables = var_pattern.findall(rhs)
+        
+        # Filtrar funciones conocidas
+        functions = {'max', 'min', 'abs', 'round', 'ceil', 'floor', 'sqrt', 'mean', 'std'}
+        return [v for v in variables if v not in functions]
+
+    def _create_calculation_function(self, expression: str):
+        """Crea función de cálculo desde expresión"""
+        if '=' not in expression:
+            return lambda v: 0
+        
+        _, rhs = expression.split('=', 1)
+        
+        def calc_func(variables):
+            try:
+                # Reemplazar variables por valores
+                expr = rhs
+                for var, val in sorted(variables.items(), key=lambda x: len(x[0]), reverse=True):
+                    if var in expr:
+                        pattern = r'\b' + re.escape(var) + r'\b'
+                        expr = re.sub(pattern, str(val), expr)
+                
+                # Contexto seguro de evaluación
+                safe_dict = {
+                    '__builtins__': {},
+                    'max': max, 'min': min, 'abs': abs, 'round': round,
+                    'sqrt': lambda x: x ** 0.5,
+                    'ceil': lambda x: int(x) + (1 if x > int(x) else 0),
+                    'floor': lambda x: int(x),
+                    'mean': lambda x: sum(x) / len(x) if isinstance(x, list) else x,
+                    'std': lambda x: np.std(x) if isinstance(x, list) else 0,
+                }
+                
+                result = eval(expr, safe_dict)
+                return float(result)
+                
+            except Exception as e:
+                logger.debug(f"Error evaluando expresión {rhs}: {e}")
+                return 0.0
+        
+        return calc_func
+    
     
     def calculate_complete_variables(self, 
                                    demand_metrics: Dict[str, float],
@@ -531,6 +608,23 @@ class SimulationMathEngine:
         
         validated_vars = variables.copy()
         validation_log = []
+        
+        cprod = validated_vars.get('CPROD', 3000)
+        dph = demand_metrics.get('DPH', 2500)
+        
+        if cprod < dph * 0.9:  # Capacidad menor al 90% de demanda
+            new_cprod = dph * 1.1
+            validated_vars['CPROD'] = new_cprod
+            validation_log.append(f"Increased CPROD from {cprod} to {new_cprod}")
+        
+        # NUEVA VALIDACIÓN: EOG mínimo
+        if 'EOG' in validated_vars and validated_vars['EOG'] < 0.3:
+            # Recalcular con valores mínimos aceptables
+            pe = max(validated_vars.get('PE', 0.85), 0.7)
+            fu = max(validated_vars.get('FU', 0.80), 0.7) 
+            qc = validated_vars.get('QC', 0.95)
+            validated_vars['EOG'] = pe * fu * qc
+            validation_log.append("Recalculated EOG with minimum acceptable values")
         
         # Validación 1: Coherencia de márgenes
         if 'MB' in validated_vars and (validated_vars['MB'] < -1 or validated_vars['MB'] > 1):

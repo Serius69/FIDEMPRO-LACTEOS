@@ -119,15 +119,16 @@ equations_data = [
   },
 
   {
-        "name": "Capacidad Producción Real",
-        "description": "Capacidad basada en recursos disponibles",
-        "expression": "CPROD = min(NEPP * (MLP / max(TPE, 1)) * 0.85, 3000)",
-        "variable1": "CPROD",
-        "variable2": "NEPP",
-        "variable3": "MLP",
-        "variable4": "TPE",
-        "area": "Producción"
-    },
+    "name": "Capacidad Producción Real",
+    "description": "Capacidad basada en recursos disponibles",
+    "expression": "CPROD = min(NEPP * (MLP / max(TPE)) * 0.85, max(DPH * 1.2))",  # CORREGIDO
+    "variable1": "CPROD",
+    "variable2": "NEPP",
+    "variable3": "MLP",
+    "variable4": "TPE",
+    "variable5": "DPH",  # AGREGADO
+    "area": "Producción"
+},
   {
         "name": "Producción Diaria Corregida",
         "description": "Producción basada en demanda y capacidad",
@@ -623,10 +624,10 @@ equations_data = [
 
   {
     "name": "Eficiencia Operativa Global",
-    "description": "OEE basado en demanda histórica",
-    "expression": "EOG = (QPL / max(DPH * 1.2, 1)) * (1 - (MP + MI) / max(QPL, 1)) * NSC",
+    "description": "OEE basado en disponibilidad, rendimiento y calidad",
+    "expression": "EOG = min(1.0, (QPL / max(DPH, 1)) * (1 - (MP + MI) / max(QPL, 1)) * NSC)", 
     "variable1": "EOG",
-    "variable2": "QPL",
+    "variable2": "QPL", 
     "variable3": "DPH",
     "variable4": "MP",
     "variable5": "MI",

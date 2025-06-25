@@ -394,37 +394,45 @@ class VariableMapper:
         variables = {}
         
         try:
-            # Obtener producto y negocio del cuestionario
-            product = questionary_result.fk_questionary.fk_product
-            business = product.fk_business
+            # NUEVO: Cargar variables desde variable_test_data
+            from variable.data.variable_test_data import variables_data
+            logger.info(f"Cargando {len(variables_data)} variables desde variable_test_data")
             
-            # CORREGIDO: Consulta sin fk_business directo
-            # Buscar variables activas (sin filtro por business específico por ahora)
-            system_variables = Variable.objects.filter(
-                is_active=True
-            )
+            for var_data in variables_data:
+                initials = var_data['initials']
+                default_value = var_data.get('default_value', 0)
+                
+                if initials in self.variable_mapping:
+                    try:
+                        value = float(default_value) if default_value is not None else 0.0
+                        variables[initials] = value
+                    except (ValueError, TypeError):
+                        variables[initials] = 0.0
             
-            # Alternativamente, si Variable tiene relación con Product:
-            # system_variables = Variable.objects.filter(
-            #     fk_product=product,  # Si existe esta relación
-            #     is_active=True
-            # )
+            logger.info(f"Cargadas {len(variables)} variables desde variable_test_data")
             
-            for sys_var in system_variables:
-                if sys_var.initials in self.variable_mapping:
-                    # Intentar obtener valor por defecto o calculado
-                    if hasattr(sys_var, 'default_value') and sys_var.default_value:
-                        try:
-                            value = float(sys_var.default_value)
-                            variables[sys_var.initials] = value
-                        except (ValueError, TypeError):
-                            pass
-            
-            logger.info(f"Extracted {len(variables)} variables from variable system")
-            
-        except Exception as e:
-            logger.error(f"Error extracting from variable system: {str(e)}")
-            # NO fallar completamente, continuar con valores por defecto
+        except ImportError:
+            logger.warning("No se pudo cargar variable_test_data")
+            # Fallback al código original
+            try:
+                product = questionary_result.fk_questionary.fk_product
+                business = product.fk_business
+                
+                system_variables = Variable.objects.filter(is_active=True)
+                
+                for sys_var in system_variables:
+                    if sys_var.initials in self.variable_mapping:
+                        if hasattr(sys_var, 'default_value') and sys_var.default_value:
+                            try:
+                                value = float(sys_var.default_value)
+                                variables[sys_var.initials] = value
+                            except (ValueError, TypeError):
+                                pass
+                
+                logger.info(f"Extracted {len(variables)} variables from variable system")
+                
+            except Exception as e:
+                logger.error(f"Error extracting from variable system: {str(e)}")
         
         return variables
     
@@ -612,11 +620,31 @@ class VariableMapper:
         
         adjusted_vars = variables.copy()
         
+        # CORRECCIÓN CRÍTICA: Ajustar capacidad de producción según demanda
+        if 'DPH' in adjusted_vars or 'DE' in adjusted_vars:
+            expected_demand = adjusted_vars.get('DPH', adjusted_vars.get('DE', 2500))
+            
+            # Capacidad debe ser al menos 110% de la demanda esperada
+            min_capacity = expected_demand * 1.1
+            current_capacity = adjusted_vars.get('CPROD', 3000)
+            
+            if current_capacity < min_capacity:
+                adjusted_vars['CPROD'] = min_capacity
+                logger.info(f"Ajustada CPROD de {current_capacity} a {min_capacity} para cubrir demanda")
+        
         # Ajustar capacidad de producción según número de empleados
         if adjusted_vars.get('NEPP', 0) > 0:
-            base_capacity = adjusted_vars.get('CPROD', 3000)
-            employee_factor = adjusted_vars['NEPP'] / 15  # 15 empleados base
-            adjusted_vars['CPROD'] = base_capacity * employee_factor
+            required_capacity = adjusted_vars.get('CPROD', 3000)
+            current_employees = adjusted_vars['NEPP']
+            mLP = adjusted_vars.get('MLP', 480)
+            tpe = adjusted_vars.get('TPE', 30)
+            
+            # Calcular empleados necesarios
+            required_employees = max(10, int((required_capacity * tpe) / mLP))
+            
+            if current_employees < required_employees:
+                adjusted_vars['NEPP'] = required_employees
+                logger.info(f"Ajustado NEPP de {current_employees} a {required_employees}")
         
         # Ajustar costos fijos según tamaño de operación
         if adjusted_vars.get('NEPP', 0) > 20:  # Operación grande
