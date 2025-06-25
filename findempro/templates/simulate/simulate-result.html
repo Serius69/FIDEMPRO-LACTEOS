@@ -538,190 +538,30 @@
                                                         {% endif %}
                                                     {% endif %}
                                                 </p>
-                                                {% if growth_rate %}
-                                                <p class="mb-0">
-                                                    <strong>Tendencia de crecimiento:</strong> 
-                                                    <span class="{% if growth_rate > 0 %}text-success{% elif growth_rate < 0 %}text-danger{% else %}text-info{% endif %}">
-                                                        {{ growth_rate|floatformat:2 }}%
-                                                    </span>
-                                                    {% if error_permisible %}
-                                                    | <strong>Error del modelo:</strong> {{ error_permisible|floatformat:2 }}%
+                                                
+                                                <p class="lead">
+                                                    El análisis de demanda revela que la demanda histórica promedio es de 
+                                                    <strong>{{ demand_stats.historical.mean|floatformat:1 }} L diarios</strong>, mientras que la simulación 
+                                                    proyecta una demanda de <strong>{{ demand_stats.simulated.mean|floatformat:1 }} L diarios</strong>.
+                                                    {% if demand_stats.comparison.mean_diff > 0 %}
+                                                        Esto representa un <span class="text-success font-weight-bold">incremento esperado</span> de 
+                                                        <strong>{{ demand_stats.comparison.mean_diff|floatformat:1 }} L</strong>
+                                                        {% if demand_stats.comparison.mean_diff_pct %}
+                                                            ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
+                                                        {% endif %}, 
+                                                        indicando un crecimiento positivo en la demanda del producto.
+                                                    {% elif demand_stats.comparison.mean_diff < 0 %}
+                                                        Esto representa una <span class="text-danger font-weight-bold">disminución esperada</span> de 
+                                                        <strong>{{ demand_stats.comparison.mean_diff|floatformat:1 }} L</strong>
+                                                        {% if demand_stats.comparison.mean_diff_pct %}
+                                                            ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
+                                                        {% endif %}, 
+                                                        sugiriendo la necesidad de estrategias para estimular la demanda.
+                                                    {% else %}
+                                                        Esto muestra una <span class="text-info font-weight-bold">estabilidad</span> en los patrones de demanda, 
+                                                        manteniendo niveles consistentes con el comportamiento histórico.
                                                     {% endif %}
                                                 </p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Métricas clave del resumen -->
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <div class="metrics-overview">
-                                            <h4 class="metrics-title mb-4">
-                                                <i class="bx bx-tachometer me-2"></i>
-                                                Métricas Clave de Performance
-                                            </h4>
-                                            <div class="metrics-grid">
-                                                <!-- Ingresos Totales -->
-                                                <div class="metric-card metric-revenue">
-                                                    <div class="metric-icon">
-                                                        <i class="bx bx-dollar-circle"></i>
-                                                    </div>
-                                                    <div class="metric-content">
-                                                        <div class="metric-value">
-                                                            {% if totales_acumulativos.IT %}
-                                                                Bs. {{ totales_acumulativos.IT.total|floatformat:0|default:"0" }}
-                                                            {% else %}
-                                                                Bs. 0
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="metric-label">Ingresos Totales</div>
-                                                        <div class="metric-trend">
-                                                            {% if totales_acumulativos.IT.trend == "increasing" %}
-                                                                <span class="trend-up"><i class="bx bx-trending-up"></i> Creciente</span>
-                                                            {% elif totales_acumulativos.IT.trend == "decreasing" %}
-                                                                <span class="trend-down"><i class="bx bx-trending-down"></i> Decreciente</span>
-                                                            {% else %}
-                                                                <span class="trend-stable"><i class="bx bx-minus"></i> Estable</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Ganancia Neta -->
-                                                <div class="metric-card metric-profit">
-                                                    <div class="metric-icon">
-                                                        <i class="bx bx-trending-up"></i>
-                                                    </div>
-                                                    <div class="metric-content">
-                                                        <div class="metric-value">
-                                                            {% if totales_acumulativos.GT %}
-                                                                Bs. {{ totales_acumulativos.GT.total|floatformat:0|default:"0" }}
-                                                            {% else %}
-                                                                Bs. 0
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="metric-label">Ganancia Neta</div>
-                                                        <div class="metric-trend">
-                                                            {% if totales_acumulativos.GT %}
-                                                                {% if totales_acumulativos.GT.total > 0 %}
-                                                                    <span class="trend-up"><i class="bx bx-check-circle"></i> Rentable</span>
-                                                                {% else %}
-                                                                    <span class="trend-down"><i class="bx bx-x-circle"></i> Con pérdidas</span>
-                                                                {% endif %}
-                                                            {% else %}
-                                                                <span class="trend-stable">No disponible</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Eficiencia Operativa -->
-                                                <div class="metric-card metric-efficiency">
-                                                    <div class="metric-icon">
-                                                        <i class="bx bx-cog"></i>
-                                                    </div>
-                                                    <div class="metric-content">
-                                                        <div class="metric-value">
-                                                            {% if totales_acumulativos.EOG and all_variables_extracted|length > 0 %}
-                                                                {% widthratio totales_acumulativos.EOG.total 1 all_variables_extracted|length as avg_eff %}
-                                                                {% widthratio avg_eff 1 100 as eff_percent %}
-                                                                {{ eff_percent|floatformat:1 }}%
-                                                            {% else %}
-                                                                0.0%
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="metric-label">Eficiencia Operativa</div>
-                                                        <div class="metric-trend">
-                                                            {% if eff_percent >= 80 %}
-                                                                <span class="trend-up"><i class="bx bx-check"></i> Excelente</span>
-                                                            {% elif eff_percent >= 60 %}
-                                                                <span class="trend-stable"><i class="bx bx-info-circle"></i> Buena</span>
-                                                            {% else %}
-                                                                <span class="trend-down"><i class="bx bx-error"></i> Necesita mejora</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Margen de Rentabilidad -->
-                                                <div class="metric-card metric-margin">
-                                                    <div class="metric-icon">
-                                                        <i class="bx bx-percentage"></i>
-                                                    </div>
-                                                    <div class="metric-content">
-                                                        <div class="metric-value">
-                                                            {% if totales_acumulativos.NR and all_variables_extracted|length > 0 %}
-                                                                {% widthratio totales_acumulativos.NR.total 1 all_variables_extracted|length as avg_margin %}
-                                                                {% widthratio avg_margin 1 100 as margin_percent %}
-                                                                {{ margin_percent|floatformat:1 }}%
-                                                            {% else %}
-                                                                0.0%
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="metric-label">Margen de Rentabilidad</div>
-                                                        <div class="metric-trend">
-                                                            {% if margin_percent >= 20 %}
-                                                                <span class="trend-up"><i class="bx bx-star"></i> Excelente</span>
-                                                            {% elif margin_percent >= 10 %}
-                                                                <span class="trend-stable"><i class="bx bx-check"></i> Aceptable</span>
-                                                            {% else %}
-                                                                <span class="trend-down"><i class="bx bx-error"></i> Bajo</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Nivel de Servicio -->
-                                                {% if totales_acumulativos.NSC %}
-                                                <div class="metric-card metric-service">
-                                                    <div class="metric-icon">
-                                                        <i class="bx bx-user-check"></i>
-                                                    </div>
-                                                    <div class="metric-content">
-                                                        <div class="metric-value">
-                                                            {% widthratio totales_acumulativos.NSC.total 1 all_variables_extracted|length as avg_service %}
-                                                            {% widthratio avg_service 1 100 as service_percent %}
-                                                            {{ service_percent|floatformat:1 }}%
-                                                        </div>
-                                                        <div class="metric-label">Nivel de Servicio</div>
-                                                        <div class="metric-trend">
-                                                            {% if service_percent >= 95 %}
-                                                                <span class="trend-up"><i class="bx bx-star"></i> Excelente</span>
-                                                            {% elif service_percent >= 85 %}
-                                                                <span class="trend-stable"><i class="bx bx-check"></i> Bueno</span>
-                                                            {% else %}
-                                                                <span class="trend-down"><i class="bx bx-error"></i> Bajo</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {% endif %}
-
-                                                <!-- Productos Vendidos -->
-                                                {% if totales_acumulativos.TPV %}
-                                                <div class="metric-card metric-sales">
-                                                    <div class="metric-icon">
-                                                        <i class="bx bx-package"></i>
-                                                    </div>
-                                                    <div class="metric-content">
-                                                        <div class="metric-value">
-                                                            {{ totales_acumulativos.TPV.total|floatformat:0 }} L
-                                                        </div>
-                                                        <div class="metric-label">Total Vendido</div>
-                                                        <div class="metric-trend">
-                                                            {% if totales_acumulativos.TPV.trend == "increasing" %}
-                                                                <span class="trend-up"><i class="bx bx-trending-up"></i> Creciente</span>
-                                                            {% elif totales_acumulativos.TPV.trend == "decreasing" %}
-                                                                <span class="trend-down"><i class="bx bx-trending-down"></i> Decreciente</span>
-                                                            {% else %}
-                                                                <span class="trend-stable"><i class="bx bx-minus"></i> Estable</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {% endif %}
                                             </div>
                                         </div>
                                     </div>
@@ -839,31 +679,6 @@
                                     <div class="col-lg-4 mb-3">
                                         <div class="chart-container compact">
                                             <h6 class="chart-title mb-3">
-                                                <i class="bx bx-pie-chart me-2"></i>
-                                                Distribución de Costos
-                                            </h6>
-                                            {% if image_data_costos %}
-                                            <img src="data:image/png;base64,{{ image_data_costos }}" 
-                                                class="chart-image" 
-                                                alt="Distribución de Costos"
-                                                loading="lazy">
-                                            {% elif image_data_gastos %}
-                                            <img src="data:image/png;base64,{{ image_data_gastos }}" 
-                                                class="chart-image" 
-                                                alt="Análisis de Gastos"
-                                                loading="lazy">
-                                            {% else %}
-                                            <div class="chart-placeholder compact">
-                                                <i class="bx bx-pie-chart text-muted" style="font-size: 2rem;"></i>
-                                                <p class="text-muted mt-2">No disponible</p>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-4 mb-3">
-                                        <div class="chart-container compact">
-                                            <h6 class="chart-title mb-3">
                                                 <i class="bx bx-bar-chart me-2"></i>
                                                 Eficiencia Operativa
                                             </h6>
@@ -906,41 +721,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Alertas de validación si existen -->
-                                {% if validation_alerts %}
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <h5 class="mb-3">
-                                            <i class="bx bx-shield-quarter me-2"></i>
-                                            Alertas de Validación
-                                        </h5>
-                                        {% for alert_type, alerts in validation_alerts.items %}
-                                            {% if alerts %}
-                                            <div class="alert alert-{% if alert_type == 'ERROR' %}danger{% elif alert_type == 'WARNING' %}warning{% else %}info{% endif %} mb-2">
-                                                <h6 class="alert-heading">
-                                                    <i class="bx {% if alert_type == 'ERROR' %}bx-error-circle{% elif alert_type == 'WARNING' %}bx-error{% else %}bx-info-circle{% endif %} me-2"></i>
-                                                    {{ alert_type|capfirst }} ({{ alerts|length }})
-                                                </h6>
-                                                <div class="row">
-                                                    {% for alert in alerts|slice:":3" %}
-                                                    <div class="col-md-4">
-                                                        <p class="mb-1"><strong>{{ alert.message }}</strong></p>
-                                                        {% if alert.details %}
-                                                        <small class="text-muted">{{ alert.details|truncatewords:10 }}</small>
-                                                        {% endif %}
-                                                    </div>
-                                                    {% endfor %}
-                                                </div>
-                                                {% if alerts|length > 3 %}
-                                                <small class="text-muted">... y {{ alerts|length|add:"-3" }} alertas más</small>
-                                                {% endif %}
-                                            </div>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                {% endif %}
 
                                 <!-- Datos estadísticos adicionales si están disponibles -->
                                 {% if demand_stats.comparison %}
@@ -1555,55 +1335,6 @@
                    </div>
                </div>
            </div>
-       </div>
-   </div>
-   {% endif %}
-
-   <!-- Alertas financieras específicas si están disponibles -->
-   {% if validation_alerts.ERROR or validation_alerts.WARNING %}
-   <div class="row mb-4">
-       <div class="col-12">
-           <h5 class="mb-3">
-               <i class="bx bx-error-circle me-2"></i>
-               Alertas Financieras
-           </h5>
-           {% if validation_alerts.ERROR %}
-           <div class="alert alert-danger mb-3">
-               <h6 class="alert-heading">
-                   <i class="bx bx-error-circle me-2"></i>
-                   Alertas Críticas ({{ validation_alerts.ERROR|length }})
-               </h6>
-               <div class="row">
-                   {% for alert in validation_alerts.ERROR|slice:":3" %}
-                   <div class="col-md-4">
-                       <p class="mb-1"><strong>{{ alert.message }}</strong></p>
-                       {% if alert.details %}
-                       <small class="text-muted">{{ alert.details|truncatewords:15 }}</small>
-                       {% endif %}
-                   </div>
-                   {% endfor %}
-               </div>
-           </div>
-           {% endif %}
-
-           {% if validation_alerts.WARNING %}
-           <div class="alert alert-warning mb-3">
-               <h6 class="alert-heading">
-                   <i class="bx bx-error me-2"></i>
-                   Advertencias ({{ validation_alerts.WARNING|length }})
-               </h6>
-               <div class="row">
-                   {% for alert in validation_alerts.WARNING|slice:":3" %}
-                   <div class="col-md-4">
-                       <p class="mb-1"><strong>{{ alert.message }}</strong></p>
-                       {% if alert.details %}
-                       <small class="text-muted">{{ alert.details|truncatewords:15 }}</small>
-                       {% endif %}
-                   </div>
-                   {% endfor %}
-               </div>
-           </div>
-           {% endif %}
        </div>
    </div>
    {% endif %}

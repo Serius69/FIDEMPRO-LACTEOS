@@ -100,7 +100,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     
     
     def _prepare_complete_results_context(self, simulation_id, simulation_instance, results_simulation, historical_demand):
-        """Prepare comprehensive context data for results view"""
+        """Prepare comprehensive context data for results view - OPTIMIZADO Y CORREGIDO"""
         
         # Initialize all services once
         chart_generator = ChartGenerator()
@@ -124,19 +124,44 @@ class SimulateResultView(LoginRequiredMixin, View):
         logger.info(f"Preparing context for simulation_id: {simulation_id} (type: {type(simulation_id)})")
         
         try:
-            # Create enhanced chart data with historical demand
+            # PASO 1: Extract variables FIRST - CRÍTICO PARA TOTALES ACUMULATIVOS
+            all_variables_extracted = self._extract_all_variables(list(results_simulation))
+            logger.info(f"Variables extraction result: {len(all_variables_extracted)} days extracted")
+            
+            if all_variables_extracted:
+                sample_vars = [k for k in all_variables_extracted[0].keys() if k not in ['day', 'date', 'demand_mean', 'demand_std']]
+                logger.info(f"Sample variables from first day: {sample_vars}")
+            
+            # PASO 2: Create enhanced chart data with historical demand
             chart_data = chart_generator.create_enhanced_chart_data(
                 list(results_simulation), historical_demand
             )
             
-            # Generate main analysis charts
-            analysis_data = chart_generator.generate_all_charts(
+            # PASO 3: Generate main analysis charts usando variables extraídas
+            analysis_data = chart_generator.generate_all_charts_enhanced(
                 simulation_id, simulation_instance, list(results_simulation), historical_demand
             )
+            
+            # CORRECCIÓN CRÍTICA: Calcular totales_acumulativos DESPUÉS de tener all_variables_extracted
+            try:
+                # Calcular totales acumulativos mejorados
+                enhanced_totales = self._calculate_enhanced_totales_acumulativos(all_variables_extracted)
+                
+                # Actualizar analysis_data con los totales mejorados
+                analysis_data['totales_acumulativos'] = enhanced_totales
+                analysis_data['all_variables_extracted'] = all_variables_extracted
+                
+                logger.info(f"Updated totales_acumulativos with {len(enhanced_totales)} variables")
+                
+            except Exception as e:
+                logger.error(f"Error calculating enhanced totales: {str(e)}")
+                # Fallback: usar los totales básicos de analysis_data
+                enhanced_totales = analysis_data.get('totales_acumulativos', {})
             
             # Log what charts were generated
             logger.info(f"Charts generated: {list(analysis_data.get('chart_images', {}).keys())}")
             
+            # PASO 4: Generate additional charts
             # Generate comparison chart: Historical vs Simulated
             comparison_chart = self._generate_comparison_chart(chart_demand, historical_demand, results_simulation)
             
@@ -145,52 +170,62 @@ class SimulateResultView(LoginRequiredMixin, View):
                 historical_demand, results_simulation, simulation_instance
             )
             
-            # Get financial analysis and recommendations
+            # NUEVA FUNCIONALIDAD: Generate endogenous variables charts
+            endogenous_charts = chart_generator.generate_endogenous_variables_charts(
+                all_variables_extracted, enhanced_totales
+            )
+            
+            # PASO 5: Get financial analysis and recommendations
             financial_results = self._get_financial_analysis(
                 financial_service, simulation_id, simulation_instance, analysis_data
             )
             
-            # Calculate comprehensive statistics
+            # PASO 6: Calculate comprehensive statistics
             demand_stats = statistical_service._calculate_comprehensive_statistics(
                 historical_demand, results_simulation
             )
             
             # Log accumulated totals for debugging
-            logger.info(f"Accumulated totals variables: {list(analysis_data['totales_acumulativos'].keys())}")
+            logger.info(f"Accumulated totals variables: {list(enhanced_totales.keys())}")
             
-            # Get validation results
+            # PASO 7: Get validation results
             validation_results = self._get_validation_results(
                 validation_service, simulation_id, simulation_instance, results_simulation, historical_demand
             )
             
-            # Prepare base context
+            # PASO 8: Prepare base context
             context = self._build_base_context(
                 simulation_instance, results_simulation, product_instance, business_instance,
                 analysis_data, historical_demand, demand_stats, comparison_chart,
                 financial_results, validation_results
             )
             
-            # Add simulation_id to context
-            context['simulation_id'] = simulation_id
+            # PASO 9: Add core data to context
+            context.update({
+                'simulation_id': simulation_id,
+                'chart_data': chart_data,
+                'totales_acumulativos': enhanced_totales,  # Usar enhanced_totales
+                'all_variables_extracted': all_variables_extracted,
+                'endogenous_charts': endogenous_charts,
+            })
             
-            # Add chart_data to context
-            context['chart_data'] = chart_data
-            
-            # Add three-line validation chart to context
+            # PASO 10: Add three-line validation chart to context
             if three_line_validation:
-                context['three_line_validation_chart'] = three_line_validation.get('chart')
-                context['three_line_validation_metrics'] = three_line_validation.get('metrics', {})
-                context['has_three_line_chart'] = True
+                context.update({
+                    'three_line_validation_chart': three_line_validation.get('chart'),
+                    'three_line_validation_metrics': three_line_validation.get('metrics', {}),
+                    'has_three_line_chart': True
+                })
             else:
                 context['has_three_line_chart'] = False
             
-            # Add realistic comparison statistics
+            # PASO 11: Add realistic comparison statistics
             if historical_demand and results_simulation:
                 comparison = statistical_service._calculate_realistic_comparison(historical_demand, results_simulation)
                 context['realistic_comparison'] = comparison
             
-            # Add model validation if variables are available
-            if analysis_data.get('all_variables_extracted'):
+            # PASO 12: Add model validation if variables are available
+            if all_variables_extracted:
                 model_validation = self._add_model_validation(
                     validation_service, simulation_instance, results_simulation, analysis_data
                 )
@@ -199,63 +234,22 @@ class SimulateResultView(LoginRequiredMixin, View):
                 logger.warning("No extracted variables found for model validation")
                 context['model_validation'] = None
             
-            # Add daily validation
+            # PASO 13: Add daily validation
             daily_validation = self._add_daily_validation(
                 validation_service, simulation_instance, results_simulation
             )
             context.update(daily_validation)
             
-            # Add validation charts with three-line chart
+            # PASO 14: Add validation charts with three-line chart
             validation_charts = self._add_validation_charts(
                 chart_generator, validation_results, results_simulation, analysis_data,
                 three_line_validation
             )
             context.update(validation_charts)
             
-            # Extract variables
-            all_variables_extracted = self._extract_all_variables(list(results_simulation))
-            
-            # Generate main analysis charts
-            analysis_data = chart_generator.generate_all_charts(
-                simulation_id, simulation_instance, all_variables_extracted, historical_demand
-            )
-            
-            # NUEVA FUNCIONALIDAD: Generate endogenous variables charts
-            endogenous_charts = chart_generator.generate_endogenous_variables_charts(
-                all_variables_extracted, analysis_data.get('totales_acumulativos', {})
-            )
-            
-            # NUEVA FUNCIONALIDAD: Enhanced totales_acumulativos with trends and statistics
-            enhanced_totales = self._enhance_totales_acumulativos(
-                analysis_data.get('totales_acumulativos', {}), all_variables_extracted
-            )
-            
-            # Update analysis_data
-            analysis_data['totales_acumulativos'] = enhanced_totales
-            analysis_data['all_variables_extracted'] = all_variables_extracted
-            
-            # ... resto del código ...
-            
-            # Add endogenous charts to context
-            context['endogenous_charts'] = endogenous_charts
-            context['totales_acumulativos'] = enhanced_totales
-            
-            
-            analysis_data = chart_generator.generate_all_charts_enhanced(
-                simulation_id, simulation_instance, list(results_simulation), historical_demand
-            )
-                    
-            
-            # Ensure all expected keys are present with default values
-            context.setdefault('chart_images', {})
-            context.setdefault('financial_recommendations', financial_results.get('financial_recommendations', []))
-            context.setdefault('daily_validation_results', daily_validation.get('daily_validation_results', []))
-            
-            # Final logging
-            self._log_context_summary(context)
-            
+            # PASO 15: Add advanced charts
             context.update({
-                # Nuevos gráficos
+                # Nuevos gráficos avanzados
                 'cost_distribution_chart': analysis_data['chart_images'].get('image_data_cost_distribution'),
                 'capacity_demand_chart': analysis_data['chart_images'].get('image_data_capacity_vs_demand'),
                 'financial_efficiency_chart': analysis_data['chart_images'].get('image_data_financial_efficiency'),
@@ -265,6 +259,13 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'has_advanced_charts': True
             })
             
+            # PASO 16: Ensure all expected keys are present with default values
+            context.setdefault('chart_images', {})
+            context.setdefault('financial_recommendations', financial_results.get('financial_recommendations', []))
+            context.setdefault('daily_validation_results', daily_validation.get('daily_validation_results', []))
+            
+            # Final logging
+            self._log_context_summary(context)
             
             return context
             
@@ -274,7 +275,6 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Return minimal context on error
             return {
-                # 'demand_initial': historical_mean,
                 'simulation_id': simulation_id,
                 'simulation_instance': simulation_instance,
                 'results_simulation': results_simulation,
@@ -293,7 +293,11 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'model_validation': None,
                 'has_three_line_chart': False,
                 'three_line_validation_chart': None,
-                'three_line_validation_metrics': {}
+                'three_line_validation_metrics': {},
+                'totales_acumulativos': {},
+                'all_variables_extracted': [],
+                'endogenous_charts': {},
+                'has_advanced_charts': False
             }
 
     def _enhance_totales_acumulativos(self, totales_acumulativos, all_variables_extracted):
@@ -1858,7 +1862,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     
     def _calculate_enhanced_totales_acumulativos(self, all_variables_extracted):
         """
-        Calcula totales acumulativos con estadísticas completas (min, max, std, trends)
+        Calcula totales acumulativos con estadísticas completas - CORREGIDO
         """
         try:
             enhanced_totales = {}
@@ -1867,13 +1871,33 @@ class SimulateResultView(LoginRequiredMixin, View):
                 logger.warning("No variables extracted for enhanced totales calculation")
                 return enhanced_totales
             
-            # Variables principales a procesar
+            # DEBUG: Log para verificar datos de entrada
+            logger.info(f"Processing {len(all_variables_extracted)} days for totales calculation")
+            if all_variables_extracted:
+                sample_day = all_variables_extracted[0]
+                available_vars = [k for k in sample_day.keys() if k not in ['day', 'date', 'demand_mean', 'demand_std']]
+                logger.info(f"Available variables in first day: {available_vars}")
+            
+            # Variables principales a procesar - EXPANDIDA
             variables_to_process = [
                 'PVP', 'TPV', 'IT', 'TG', 'GT', 'NR', 'NSC', 'EOG', 
-                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF'
+                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF',
+                # Agregar más variables posibles
+                'GO', 'QPL', 'DH', 'CCMP', 'RGP', 'CP', 'CV'
             ]
             
-            for var_name in variables_to_process:
+            # NUEVO: También procesar cualquier variable encontrada en los datos
+            discovered_vars = set()
+            for day_data in all_variables_extracted:
+                for key in day_data.keys():
+                    if key not in ['day', 'date', 'demand_mean', 'demand_std'] and not key.startswith('_'):
+                        discovered_vars.add(key)
+            
+            # Combinar variables predefinidas con descubiertas
+            all_vars_to_process = list(set(variables_to_process + list(discovered_vars)))
+            logger.info(f"Processing totales for variables: {all_vars_to_process}")
+            
+            for var_name in all_vars_to_process:
                 var_data = self._collect_enhanced_variable_data(all_variables_extracted, var_name)
                 
                 if var_data['values']:
@@ -1886,17 +1910,21 @@ class SimulateResultView(LoginRequiredMixin, View):
                         'std_deviation': var_data['std_deviation'],
                         'mean': var_data['mean'],
                         'count': len(var_data['values']),
-                        'cv': var_data['cv'],  # Coeficiente de variación
+                        'cv': var_data['cv'],
                         'range': var_data['max_value'] - var_data['min_value'] if var_data['max_value'] and var_data['min_value'] else 0,
                         'trend_strength': var_data['trend_strength'],
                         'volatility': var_data['volatility']
                     }
+                    logger.debug(f"Calculated totales for {var_name}: total={var_data['total']:.2f}, mean={var_data['mean']:.2f}")
+                else:
+                    logger.debug(f"No valid values found for variable {var_name}")
             
-            logger.info(f"Enhanced totales calculated for {len(enhanced_totales)} variables")
+            logger.info(f"Enhanced totales calculated for {len(enhanced_totales)} variables: {list(enhanced_totales.keys())}")
             return enhanced_totales
             
         except Exception as e:
             logger.error(f"Error calculating enhanced totales: {str(e)}")
+            logger.exception("Full traceback:")
             return {}
 
     def _get_variable_unit(self, var_name):
@@ -1909,17 +1937,44 @@ class SimulateResultView(LoginRequiredMixin, View):
         return units.get(var_name, '')
 
     def _collect_enhanced_variable_data(self, all_variables_extracted, var_name):
-        """Recopilar datos mejorados para una variable específica"""
+        """Recopilar datos mejorados para una variable específica - CORREGIDO"""
         try:
             values = []
             
-            for day_data in all_variables_extracted:
+            logger.debug(f"Collecting data for variable {var_name} from {len(all_variables_extracted)} days")
+            
+            for day_idx, day_data in enumerate(all_variables_extracted):
                 if var_name in day_data and day_data[var_name] is not None:
                     try:
-                        value = float(day_data[var_name])
+                        # MEJORADO: Mejor validación y conversión de valores
+                        raw_value = day_data[var_name]
+                        
+                        if isinstance(raw_value, (int, float)):
+                            value = float(raw_value)
+                        elif isinstance(raw_value, str):
+                            # Limpiar string antes de convertir
+                            cleaned_value = raw_value.strip().replace(',', '.')
+                            if cleaned_value.replace('.','').replace('-','').replace('e','').replace('E','').isdigit():
+                                value = float(cleaned_value)
+                            else:
+                                logger.debug(f"Skipping non-numeric string value for {var_name} on day {day_idx}: {raw_value}")
+                                continue
+                        else:
+                            logger.debug(f"Skipping non-numeric value for {var_name} on day {day_idx}: {raw_value} (type: {type(raw_value)})")
+                            continue
+                        
+                        # Validar que el valor sea razonable
+                        if not np.isfinite(value):
+                            logger.debug(f"Skipping infinite/NaN value for {var_name} on day {day_idx}: {value}")
+                            continue
+                        
                         values.append(value)
-                    except (ValueError, TypeError):
+                        
+                    except (ValueError, TypeError) as e:
+                        logger.debug(f"Error converting value for {var_name} on day {day_idx}: {day_data[var_name]} - {e}")
                         continue
+            
+            logger.debug(f"Collected {len(values)} valid values for {var_name}")
             
             if not values:
                 return {
@@ -1937,11 +1992,12 @@ class SimulateResultView(LoginRequiredMixin, View):
                 }
             
             # Calcular estadísticas básicas
-            total = sum(values)
-            mean = np.mean(values)
-            std_dev = np.std(values)
-            min_val = min(values)
-            max_val = max(values)
+            values_array = np.array(values)
+            total = float(np.sum(values_array))
+            mean = float(np.mean(values_array))
+            std_dev = float(np.std(values_array))
+            min_val = float(np.min(values_array))
+            max_val = float(np.max(values_array))
             
             # Calcular coeficiente de variación
             cv = std_dev / mean if mean != 0 else 0
@@ -1952,7 +2008,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Calcular volatilidad (desviación estándar normalizada)
             volatility = cv * 100  # CV expresado como porcentaje
             
-            return {
+            result = {
                 'values': values,
                 'total': total,
                 'unit': self._get_variable_unit(var_name),
@@ -1965,6 +2021,9 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'trend_strength': trend_info['strength'],
                 'volatility': volatility
             }
+            
+            logger.debug(f"Variable {var_name} stats: total={total:.2f}, mean={mean:.2f}, count={len(values)}")
+            return result
             
         except Exception as e:
             logger.error(f"Error collecting enhanced data for {var_name}: {str(e)}")
