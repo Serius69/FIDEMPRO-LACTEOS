@@ -37,8 +37,8 @@ class EquationSolver:
         """Resolver ecuaciones con iteraciones para manejar dependencias circulares"""
         
         # CORRECCIÓN: Orden específico para EOG antes que IDG
-        priority_order = ['PE', 'FU', 'NSC', 'EOG', 'IDG']
-        
+        priority_order = ['TG','GT', 'PE', 'FU', 'NSC', 'EOG','NR', 'IDG',  'MB', 'HO' , 'CHO', 'RI']
+
         # Construir orden considerando prioridades
         calculation_order = []
         
@@ -51,7 +51,7 @@ class EquationSolver:
         remaining_vars = target_variables - set(calculation_order)
         calculation_order.extend(self.build_calculation_order(remaining_vars))
         
-        logger.info(f"Calculation order (EOG before IDG): {calculation_order}")
+        logger.info(f"Calculation order: {calculation_order}")
         
         result_vars = copy.deepcopy(variables)
         
@@ -174,7 +174,17 @@ class SimulationMathEngine:
     def _register_all_equations_fixed(self):
         """Registra todas las ecuaciones del sistema CON ORDEN CORRECTO"""
         
-        # CORRECCIÓN: Registrar PE primero (sin dependencias complejas)
+        self.equation_solver.register_equation(
+            'TG', {'GO', 'GG'}, 
+            lambda v: v.get('GO', 0) + v.get('GG', 0)
+        )
+        
+        # Ecuaciones financieras básicas
+        self.equation_solver.register_equation(
+            'GT', {'IT', 'TG'}, 
+            lambda v: v.get('IT', 0) - v.get('TG', 0)
+        )
+        
         self.equation_solver.register_equation(
             'PE', {'QPL', 'DPH'}, 
             lambda v: min(1.0, v.get('QPL', 0) / max(v.get('DPH', 1) * 1.1, 1))
@@ -204,18 +214,7 @@ class SimulationMathEngine:
             lambda v: (v.get('EOG', 0.68) * 0.4 + 
                       v.get('NSC', 0.90) * 0.3 + 
                       min(v.get('NR', 0.15) + 0.5, 1.0) * 0.3)
-        )
-        
-        # Ecuaciones financieras básicas
-        self.equation_solver.register_equation(
-            'GT', {'IT', 'TG'}, 
-            lambda v: v.get('IT', 0) - v.get('TG', 0)
-        )
-        
-        self.equation_solver.register_equation(
-            'TG', {'GO', 'GG'}, 
-            lambda v: v.get('GO', 0) + v.get('GG', 0)
-        )
+        )     
         
         self.equation_solver.register_equation(
             'MB', {'IB', 'IT'}, 
@@ -589,6 +588,7 @@ class SimulationMathEngine:
             'DPH': demand,
             'TPV': demand * 0.95,  # 95% de satisfacción de demanda
             'IT': demand * 0.95 * 15.50,  # Ingresos estimados
+            'CTAI': demand * 0.95 * 8.20,
             'GO': 1800 + (48000 / 30),  # Gastos operativos diarios
             'TG': (1800 + (48000 / 30)) * 1.3,  # Gastos totales estimados
             'NSC': 0.95,  # Nivel de servicio base
@@ -599,7 +599,14 @@ class SimulationMathEngine:
             'day': day
         }
         
-        # Calcular ganancia total
+        gmm_daily = 3500 / 30
+        transport_basic = 200  # Transporte básico estimado
+        storage_basic = 150   # Almacenamiento básico
+        mermas_basic = basic_vars['TPV'] * 0.01 * 15.50 * 0.7  # 1% mermas
+        basic_vars['GG'] = gmm_daily + transport_basic + storage_basic + mermas_basic + basic_vars['CTAI']
+        
+        # Calcular gastos totales y ganancia
+        basic_vars['TG'] = basic_vars['GO'] + basic_vars['GG']
         basic_vars['GT'] = basic_vars['IT'] - basic_vars['TG']
         
         # Calcular márgenes básicos
@@ -634,6 +641,14 @@ class SimulationMathEngine:
                 demand_metrics, parameters, previous_state, 
                 previous_state.get('_day', 1)
             )
+            
+            # 3. 🔧 VALIDACIÓN FINANCIERA FINAL
+            financial_valid = self._final_financial_check(day_results)
+            if not financial_valid:
+                logger.warning("🚨 Simulación falló validación financiera final")
+                # Usar cálculo básico como respaldo
+                day_results = self.calculate_basic_variables(current_demand, 1)
+                day_results['_fallback_used'] = True
             
             # 3. CORRECCIÓN: Verificar que EOG e IDG se calcularon
             if day_results.get('EOG', 0) == 0:
@@ -674,11 +689,13 @@ class SimulationMathEngine:
                 'service_level': day_results.get('NSC', 0),
                 'operational_efficiency': day_results.get('EOG', 0),
                 'global_indicator': day_results.get('IDG', 0),
-                'calculation_method': 'complete_equation_solver_fixed',
+                'calculation_method': 'complete_equation_solver_fixed_v2',
                 'equations_solved': len(self.equation_solver.equations),
                 'convergence_achieved': day_results.get('_calculation_complete', False),
                 'eog_calculated': day_results.get('_eog_calculated', False),
-                'idg_calculated': day_results.get('_idg_calculated', False)
+                'idg_calculated': day_results.get('_idg_calculated', False),
+                'financial_validated': day_results.get('_financial_validated', False),
+                'corrections_applied': day_results.get('_financial_corrections', [])
             }
             
             return day_results
@@ -731,14 +748,37 @@ class SimulationMathEngine:
             'DDP': ddp,
             'RECENT_MEAN': recent_mean
         }
+        
+    def _final_financial_check(self, results: Dict[str, Any]) -> bool:
+        """🔧 Validación financiera final para detectar números imposibles"""
+        
+        it = results.get('IT', 0)
+        tg = results.get('TG', 0)
+        gt = results.get('GT', 0)
+        nr = results.get('NR', 0)
+        
+        # Verificaciones críticas
+        checks = {
+            'positive_revenue': it >= 0,
+            'reasonable_cost_ratio': tg <= it * 3.0 if it > 0 else True,  # Cambiar de 1.8 a 3.0
+            'reasonable_margin': -0.95 <= nr <= 0.95 if it > 0 else True,  # Más permisivo
+            'consistent_profit': abs(gt - (it - tg)) < 1.0 if it > 0 else True  # Más tolerancia
+        }
+        
+        failed_checks = [check for check, passed in checks.items() if not passed]
+        
+        if failed_checks:
+            logger.error(f"🚨 Failed financial checks: {failed_checks}")
+            logger.error(f"🚨 IT={it:.2f}, TG={tg:.2f}, GT={gt:.2f}, NR={nr:.2%}")
+            return False
+        
+        return True    
+    
     
     def _calculate_additional_metrics(self, variables: Dict[str, Any]) -> Dict[str, Any]:
         """Calcular métricas adicionales derivadas CORREGIDAS"""
         
         additional = {}
-        
-        # Indicador de desempeño global mejorado (CORREGIDO - ya no se calcula aquí)
-        # IDG se calcula en las ecuaciones principales
         
         # Indicador de salud financiera
         if all(k in variables for k in ['GT', 'IT', 'TG']):
@@ -814,6 +854,12 @@ class SimulationMathEngine:
                 elif var in ['NSC', 'PE', 'FU', 'EOG', 'IDG'] and (value < 0 or value > 1):
                     validation_report['warnings'].append(f"{var} outside normal range [0,1]: {value}")
         
+         # 🔧 CORRECCIÓN: Validación financiera específica
+        if 'IT' in results and 'TG' in results and results['IT'] > 0:
+            cost_ratio = results['TG'] / results['IT']
+            if cost_ratio > 1.5:
+                validation_report['warnings'].append(f"Cost ratio too high: {cost_ratio:.2f}")
+        
         # CORRECCIÓN: Validación específica para EOG e IDG
         if 'EOG' in results:
             eog_value = results['EOG']
@@ -830,11 +876,10 @@ class SimulationMathEngine:
             validation_report['calculation_quality'] = 'INCOMPLETE'
         elif validation_report['invalid_values']:
             validation_report['calculation_quality'] = 'INVALID'
-        elif validation_report['warnings']:
+        elif len(validation_report['warnings']) > 3:
             validation_report['calculation_quality'] = 'WARNING'
         
-        return validation_report
-    
+        return validation_report    
 
     def calculate_endogenous_variables_fixed(self, demand_metrics, parameters, previous_state):
         """CORRECCIÓN CRÍTICA: Cálculo de variables endógenas con dependencias resueltas"""

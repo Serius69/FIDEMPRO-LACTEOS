@@ -1,4 +1,5 @@
-from venv import logger
+import logging
+
 from simulate.utils.chart_base_utils import ChartBase
 from simulate.utils.chart_demand_utils import ChartDemand
 import numpy as np
@@ -9,6 +10,7 @@ from utils.chart_utils import get_simulation_results, get_historical_demand, get
 from simulate.utils.chart_base_utils import ChartBase
 from simulate.utils.chart_demand_utils import ChartDemand
 
+logger = logging.getLogger(__name__)
 class ChartService:
     """Unified chart generation service"""
     

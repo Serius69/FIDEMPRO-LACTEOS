@@ -25,7 +25,7 @@ from ..utils.chart_demand_utils import ChartDemand
 
 # Importaciones condicionales para servicios que pueden no existir
 try:
-    from ..services.statistical_service import StatisticalService
+    from simulate.services.statistical_service import StatisticalService
 except ImportError:
     StatisticalService = None
 
