@@ -6,13 +6,14 @@
 <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
 <style>
     .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         padding: 60px 0;
-        color: white;
+        color: #1e293b;
         border-radius: 15px;
         margin-bottom: 30px;
         position: relative;
         overflow: hidden;
+        border: 1px solid #cbd5e1;
     }
     
     .hero-section::before {
@@ -22,24 +23,25 @@
         right: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
         animation: pulse 15s ease-in-out infinite;
     }
     
     @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 0.5; }
-        50% { transform: scale(1.1); opacity: 0.3; }
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.1); opacity: 0.1; }
     }
     
     .feature-card {
-        border: none;
-        border-radius: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
         padding: 30px;
         height: 100%;
         transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
         position: relative;
         overflow: hidden;
+        background: #ffffff;
     }
     
     .feature-card::before {
@@ -48,15 +50,16 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #0ab39c, #405189);
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, #1e40af);
         transform: translateX(-100%);
         transition: transform 0.3s ease;
     }
     
     .feature-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+        border-color: #cbd5e1;
     }
     
     .feature-card:hover::before {
@@ -66,7 +69,7 @@
     .feature-icon {
         width: 60px;
         height: 60px;
-        border-radius: 15px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -75,29 +78,30 @@
     }
     
     .feature-icon.primary {
-        background: rgba(10, 179, 156, 0.1);
-        color: #0ab39c;
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
     }
     
     .feature-icon.info {
-        background: rgba(64, 81, 137, 0.1);
-        color: #405189;
+        background: rgba(71, 85, 105, 0.1);
+        color: #475569;
     }
     
     .feature-icon.warning {
-        background: rgba(241, 180, 76, 0.1);
-        color: #f1b44c;
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
     }
     
     .feature-icon.danger {
-        background: rgba(244, 63, 94, 0.1);
-        color: #f43f5e;
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
     }
     
     .quick-action-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 15px;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
         padding: 20px;
         text-align: center;
         transition: all 0.3s ease;
@@ -113,14 +117,16 @@
         left: 50%;
         width: 0;
         height: 0;
-        background: rgba(255,255,255,0.2);
+        background: rgba(59, 130, 246, 0.1);
         border-radius: 50%;
         transform: translate(-50%, -50%);
         transition: width 0.6s, height 0.6s;
     }
     
     .quick-action-card:hover {
-        transform: scale(1.05);
+        transform: scale(1.02);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-color: #94a3b8;
     }
     
     .quick-action-card:hover::after {
@@ -129,24 +135,25 @@
     }
     
     .stats-widget {
-        background: #f8f9fa;
+        background: #ffffff;
         border-radius: 10px;
         padding: 20px;
         text-align: center;
-        border: 1px solid #e9ecef;
+        border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
     }
     
     .stats-widget:hover {
-        border-color: #0ab39c;
-        background: #fff;
+        border-color: #3b82f6;
+        background: #f8fafc;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
     }
     
     .notification-badge {
         position: absolute;
         top: -5px;
         right: -5px;
-        background: #f43f5e;
+        background: #ef4444;
         color: white;
         border-radius: 10px;
         padding: 2px 8px;
@@ -156,7 +163,7 @@
     
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
+        50% { transform: translateY(-3px); }
     }
     
     .tutorial-overlay {
@@ -165,9 +172,10 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.8);
+        background: rgba(15, 23, 42, 0.7);
         z-index: 9999;
         display: none;
+        backdrop-filter: blur(2px);
     }
     
     .tutorial-highlight {
@@ -175,7 +183,7 @@
         z-index: 10000;
         background: white;
         border-radius: 10px;
-        box-shadow: 0 0 0 4px rgba(10, 179, 156, 0.3);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
     
     .welcome-animation {
@@ -185,7 +193,7 @@
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
         }
         to {
             opacity: 1;
@@ -196,23 +204,67 @@
     .activity-feed {
         max-height: 400px;
         overflow-y: auto;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
     }
     
     .activity-feed::-webkit-scrollbar {
-        width: 5px;
+        width: 4px;
     }
     
     .activity-feed::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: #f1f5f9;
     }
     
     .activity-feed::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 5px;
+        background: #cbd5e1;
+        border-radius: 4px;
     }
     
     .activity-feed::-webkit-scrollbar-thumb:hover {
-        background: #555;
+        background: #94a3b8;
+    }
+    
+    /* Colores adicionales para elementos de texto */
+    .text-primary { color: #1e40af; }
+    .text-secondary { color: #475569; }
+    .text-muted { color: #64748b; }
+    .bg-light { background-color: #f8fafc; }
+    .bg-white { background-color: #ffffff; }
+    .border-light { border-color: #e2e8f0; }
+    
+    /* Botones ejecutivos */
+    .btn-executive {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .btn-executive:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+    
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .btn-secondary:hover {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        color: #334155;
     }
 </style>
 {% endblock extra_css %}
@@ -294,14 +346,14 @@
                         <p class="mb-0 opacity-75">Administrar catálogo</p>
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3">
+                {% comment %} <div class="col-md-3 col-sm-6 mb-3">
                     <div class="quick-action-card" onclick="window.location.href='{% url 'report:simulation.create' %}'">
                         <i class="ri-file-chart-line fs-1 mb-2"></i>
                         <h5>Generar Reporte</h5>
                         <p class="mb-0 opacity-75">Exportar análisis</p>
                         <span class="notification-badge">Nuevo</span>
                     </div>
-                </div>
+                </div> {% endcomment %}
             </div>
 
             <!-- Stats Overview -->

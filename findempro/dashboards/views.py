@@ -399,10 +399,39 @@ def dashboard_user(request):
         # Actualizar sesión
         request.session['business_id'] = business_id
         
-        # Obtener métricas del negocio
-        metrics = DashboardService.get_business_metrics(business_id)
+        # Obtener métricas del negocio directamente
+        products = Product.objects.filter(
+            fk_business=business_id
+        ).prefetch_related(
+            Prefetch('fk_product_area', queryset=Area.objects.select_related('fk_product'))
+        )
         
-        # Obtener recomendaciones con datos disponibles
+        # Obtener IDs de productos para consultas posteriores
+        product_ids = list(products.values_list('id', flat=True))
+        
+        # Obtener últimos gráficos de forma optimizada
+        latest_charts = Chart.objects.filter(
+            fk_product_id__in=product_ids,
+            is_active=True
+        ).values('fk_product_id').annotate(
+            latest_id=Max('id')
+        ).values_list('latest_id', flat=True)
+        
+        charts = Chart.objects.filter(
+            id__in=latest_charts
+        ).select_related('fk_product')
+        
+        # Obtener simulaciones con prefetch
+        simulations = Simulation.objects.filter(
+            fk_questionary_result__fk_questionary__fk_product_id__in=product_ids
+        ).select_related(
+            'fk_questionary_result__fk_questionary__fk_product',
+            'fk_fdp'
+        ).prefetch_related(
+            'results'  # Prefetch results para evitar N+1 queries
+        ).order_by('-date_created')
+        
+        # Obtener recomendaciones con datos disponibles - FIXED
         recommendations_query = FinanceRecommendationSimulation.objects.filter(
             fk_simulation__fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
         ).select_related(
@@ -410,15 +439,16 @@ def dashboard_user(request):
         ).annotate(
             product_name=F('fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'),
             simulation_date=F('fk_simulation__date_created'),
-            data_percentage=F('data') * 100
+            # Fixed: Use metric_value instead of data
+            data_percentage=F('metric_value') * 100
         ).order_by('-simulation_date')
         
         # Paginación
         paginator = Paginator(recommendations_query, 10)
         page_obj = paginator.get_page(request.GET.get('page'))
         
-        # Calcular totales
-        totals = DashboardService.calculate_totals(metrics['simulations'])
+        # Calcular totales directamente
+        totals = DashboardService.calculate_totals(simulations)
         
         # Obtener actividad reciente con más detalles
         recent_activity = ActivityLog.objects.filter(
@@ -431,20 +461,35 @@ def dashboard_user(request):
             is_active=True
         ).order_by('-id')
         
-        # Obtener productos y áreas del negocio actual
-        products = metrics['products']
+        # Obtener áreas del negocio actual
         areas = Area.objects.filter(
             fk_product__in=products
         ).select_related('fk_product')
         
-        # Calcular estadísticas adicionales del negocio
-        business_stats = DashboardService.calculate_business_stats(business_id)
+        # Calcular estadísticas adicionales del negocio directamente
+        try:
+            products_count = products.count()
+            areas_count = areas.count()
+            simulations_count = simulations.count()
+            charts_count = charts.count()
+            
+            business_stats = {
+                'products_count': products_count,
+                'areas_count': areas_count,
+                'simulations_count': simulations_count,
+                'charts_count': charts_count,
+            }
+        except Exception as e:
+            logger.error(f"Error calculating business stats: {e}")
+            business_stats = {
+                'products_count': 0,
+                'areas_count': 0,
+                'simulations_count': 0,
+                'charts_count': 0,
+            }
         
         # Calcular cambios porcentuales comparando con el mes anterior
         percentage_changes = DashboardService.get_percentage_changes(business_id, totals)
-        
-        # Obtener gráficos con datos completos
-        charts = metrics['charts']
         
         # Saludo personalizado
         current_hour = datetime.now().hour
