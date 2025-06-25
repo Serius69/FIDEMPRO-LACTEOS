@@ -680,9 +680,13 @@
                                         </div>
                                     </div>
                                 </div>
+                                
 
                                 <!-- Métricas clave del resumen -->
                                 <div class="row mb-4">
+
+                                    
+
                                     <div class="col-12">
                                         <div class="metrics-overview">
                                             <h4 class="metrics-title mb-4">
@@ -1093,27 +1097,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Modal para pantalla completa -->
-                                <div class="modal fade" id="fullscreenModal" tabindex="-1">
-                                    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="fullscreenModalTitle">Gráfico Overview</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <img id="fullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
-                                                    <i class="bx bx-download me-1"></i>Descargar
-                                                </button>
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1750,28 +1733,6 @@
                                     </div>
                                 </div>
                                 {% endif %}
-
-                                <!-- Modal para pantalla completa -->
-                                <div class="modal fade" id="fullscreenModal" tabindex="-1">
-                                    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="fullscreenModalTitle">Gráfico Financiero</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <img id="fullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
-                                                    <i class="bx bx-download me-1"></i>Descargar
-                                                </button>
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
                             <!-- Operations Tab - Corregido -->
                             <div class="tab-pane fade" id="operations" role="tabpanel">
@@ -2152,28 +2113,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Modal para pantalla completa -->
-                                <div class="modal fade" id="fullscreenModal" tabindex="-1">
-                                    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="fullscreenModalTitle">Gráfico Operativo</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <img id="fullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
-                                                    <i class="bx bx-download me-1"></i>Descargar
-                                                </button>
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
                             <!-- Endogenous Variables Tab -->
                             <div class="tab-pane fade" id="endogenous" role="tabpanel">
@@ -3306,28 +3245,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Modal para pantalla completa -->
-                                <div class="modal fade" id="fullscreenModal" tabindex="-1">
-                                    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="fullscreenModalTitle">Análisis Estadístico</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <img id="fullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
-                                                    <i class="bx bx-download me-1"></i>Descargar
-                                                </button>
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
                             <!-- Validation Tab -->
                             <div class="tab-pane fade" id="validation" role="tabpanel">
@@ -4012,16 +3929,16 @@
             </div>
         </div>
     </div>
-    <!-- Modal para pantalla completa -->
-    <div class="modal fade" id="fullscreenModal" tabindex="-1">
+    <!-- SOLO ESTOS DOS MODALES AL FINAL DEL TEMPLATE -->
+    <div class="modal fade" id="mainFullscreenModal" tabindex="-1">
         <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="fullscreenModalTitle">Gráfico Operativo</h5>
+                    <h5 class="modal-title" id="mainFullscreenModalTitle">Gráfico</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="fullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+                    <img id="mainFullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
@@ -4032,14 +3949,23 @@
             </div>
         </div>
     </div>
-    <!-- Fullscreen Overlay -->
-    <div class="fullscreen-overlay" id="fullscreenOverlay">
-        <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
-        <div class="fullscreen-content">
-            <img id="fullscreenImage" src="" alt="" class="img-fluid">
+
+    <div class="modal fade" id="mainDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mainDetailsModalTitle">Detalles</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="mainDetailsModalBody">
+                    <!-- Contenido dinámico -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
         </div>
     </div>
-
     {% block footer %}
     {% include "partials/footer.html" %}
     {% endblock footer %}
@@ -4057,387 +3983,542 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
 <script>
-// JavaScript para funcionalidad del análisis estadístico
-function downloadChart(chartData, filename) {
-    try {
-        if (!chartData) {
-            console.warn('No chart data provided for download');
-            return;
-        }
-        
-        const link = document.createElement('a');
-        link.href = 'data:image/png;base64,' + chartData;
-        link.download = filename || 'analisis-estadistico.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        console.log('Statistical chart downloaded:', filename);
-    } catch (error) {
-        console.error('Error downloading chart:', error);
-        alert('Error al descargar el gráfico');
-    }
-}
 
-function openFullscreen(chartData, title) {
-    try {
-        if (!chartData) {
-            console.warn('No chart data provided for fullscreen');
-            return;
-        }
-        
-        const modal = document.getElementById('fullscreenModal');
-        const modalTitle = document.getElementById('fullscreenModalTitle');
-        const modalImage = document.getElementById('fullscreenModalImage');
-        
-        if (modal && modalTitle && modalImage) {
-            modalTitle.textContent = title || 'Análisis Estadístico';
-            modalImage.src = 'data:image/png;base64,' + chartData;
-            modalImage.setAttribute('data-chart-data', chartData);
-            
-            if (typeof bootstrap !== 'undefined') {
-                new bootstrap.Modal(modal).show();
-            } else {
-                modal.style.display = 'block';
-                modal.classList.add('show');
-            }
-        }
-    } catch (error) {
-        console.error('Error opening fullscreen:', error);
-        alert('Error al abrir el gráfico en pantalla completa');
-    }
-}
+// ==========================================
+// SCRIPT UNIFICADO PARA SIMULATE-RESULT.HTML
+// ==========================================
 
-function downloadCurrentChart() {
-    try {
-        const modalImage = document.getElementById('fullscreenModalImage');
-        const chartData = modalImage.getAttribute('data-chart-data');
-        const title = document.getElementById('fullscreenModalTitle').textContent;
-        
-        if (chartData) {
-            const filename = title.toLowerCase().replace(/\s+/g, '-') + '.png';
-            downloadChart(chartData, filename);
-        }
-    } catch (error) {
-        console.error('Error downloading current chart:', error);
-        alert('Error al descargar el gráfico');
-    }
-}
+// Variables globales
+let currentDay = 1;
+let totalDays = 0;
+let currentPage = 1;
+let rowsPerPage = 10;
+let validationPrecisionChart = null;
+let validationSummaryChart = null;
+let variablesComparisonChart = null;
+let currentChartType = 'bar';
+let allCharts = [];
+let loadedCharts = 0;
+const CHARTS_PER_BATCH = 3;
 
-// Click en imágenes para abrir en pantalla completa
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('chart-image')) {
-        const src = event.target.src;
-        const alt = event.target.alt;
-        
-        // Extraer data base64 del src
-        const base64Data = src.split(',')[1];
-        if (base64Data) {
-            openFullscreen(base64Data, alt);
-        }
-    }
+// ==========================================
+// INICIALIZACIÓN PRINCIPAL
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
 });
 
-console.log('Statistical analysis tab JavaScript loaded successfully');
-</script>
-
-<script>
-// Animación para los contadores
-document.addEventListener('DOMContentLoaded', function() {
-    function animateCounters() {
-        const counters = document.querySelectorAll('.counter');
-        
-        counters.forEach(counter => {
-            const target = parseFloat(counter.getAttribute('data-target'));
-            const duration = 2000; // 2 segundos
-            const increment = target / (duration / 16); // 60 FPS
-            let current = 0;
-            
-            const timer = setInterval(() => {
-                current += increment;
-                
-                if (current >= target) {
-                    current = target;
-                    clearInterval(timer);
-                }
-                
-                // Formatear el número según el tipo
-                if (target % 1 === 0) {
-                    counter.textContent = Math.floor(current).toLocaleString('es-ES');
-                } else {
-                    counter.textContent = current.toFixed(2);
-                }
-            }, 16);
-        });
-    }
+function initializeApp() {
+    totalDays = parseInt(document.querySelector('[data-total-days]')?.dataset.totalDays) || 
+                document.querySelectorAll('.daily-result-item').length;
     
-    // Iniciar animación cuando sea visible
-    const statsGrid = document.querySelector('.stats-grid');
-    if (statsGrid) {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    animateCounters();
-                    observer.unobserve(entry.target);
-                }
-            });
+    initializeCounters();
+    initializeDailyResultsPagination();
+    initializeTablePagination();
+    initializeModals();
+    initializeChartInteractions();
+    initializeExportFunctions();
+    initializeTooltips();
+    initializeTabEvents();
+    initializeKeyboardShortcuts();
+    
+    // Ocultar tutorial si no es primera vez
+    if (localStorage.getItem('resultsViewedBefore')) {
+        hideTutorial();
+    }
+}
+
+// ==========================================
+// NAVEGACIÓN DE DÍAS
+// ==========================================
+function initializeDailyResultsPagination() {
+    const prevBtn = document.getElementById('prevDayBtn');
+    const nextBtn = document.getElementById('nextDayBtn');
+    const dayCounter = document.getElementById('dayCounter');
+    const currentDayIndicator = document.getElementById('currentDayIndicator');
+    
+    if (!prevBtn || !nextBtn) return;
+    
+    function updateDayDisplay() {
+        // Ocultar todos los items
+        document.querySelectorAll('.daily-result-item').forEach(item => {
+            item.style.display = 'none';
         });
         
-        observer.observe(statsGrid);
+        // Mostrar item actual con animación
+        const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
+        if (currentItem) {
+            currentItem.style.display = 'block';
+            currentItem.style.animation = 'fadeIn 0.3s ease';
+        }
+        
+        // Actualizar contadores
+        if (dayCounter) dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
+        if (currentDayIndicator) currentDayIndicator.textContent = `Día ${currentDay}`;
+        
+        // Actualizar estado de botones
+        prevBtn.disabled = currentDay === 1;
+        nextBtn.disabled = currentDay === totalDays;
+        
+        // Clases de botones
+        prevBtn.className = currentDay === 1 ? 
+            'btn btn-sm btn-outline-secondary btn-pagination' : 
+            'btn btn-sm btn-outline-primary btn-pagination';
+        nextBtn.className = currentDay === totalDays ? 
+            'btn btn-sm btn-outline-secondary btn-pagination' : 
+            'btn btn-sm btn-outline-primary btn-pagination';
+        
+        // Scroll al top
+        const cardBody = document.querySelector('.card-body');
+        if (cardBody) cardBody.scrollTop = 0;
     }
-});
-</script>
-
-<script>
-// JavaScript para funcionalidad de la pestaña operaciones
-function downloadChart(chartData, filename) {
-    try {
-        if (!chartData) {
-            console.warn('No chart data provided for download');
-            return;
-        }
-        
-        const link = document.createElement('a');
-        link.href = 'data:image/png;base64,' + chartData;
-        link.download = filename || 'grafico-operativo.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        console.log('Chart downloaded:', filename);
-    } catch (error) {
-        console.error('Error downloading chart:', error);
-        alert('Error al descargar el gráfico');
-    }
-}
-
-function openFullscreen(chartData, title) {
-    try {
-        if (!chartData) {
-            console.warn('No chart data provided for fullscreen');
-            return;
-        }
-        
-        const modal = document.getElementById('fullscreenModal');
-        const modalTitle = document.getElementById('fullscreenModalTitle');
-        const modalImage = document.getElementById('fullscreenModalImage');
-        
-        if (modal && modalTitle && modalImage) {
-            modalTitle.textContent = title || 'Gráfico Operativo';
-            modalImage.src = 'data:image/png;base64,' + chartData;
-            modalImage.setAttribute('data-chart-data', chartData);
-            
-            if (typeof bootstrap !== 'undefined') {
-                new bootstrap.Modal(modal).show();
-            } else {
-                modal.style.display = 'block';
-                modal.classList.add('show');
-            }
-        }
-    } catch (error) {
-        console.error('Error opening fullscreen:', error);
-        alert('Error al abrir el gráfico en pantalla completa');
-    }
-}
-
-function downloadCurrentChart() {
-    try {
-        const modalImage = document.getElementById('fullscreenModalImage');
-        const chartData = modalImage.getAttribute('data-chart-data');
-        const title = document.getElementById('fullscreenModalTitle').textContent;
-        
-        if (chartData) {
-            const filename = title.toLowerCase().replace(/\s+/g, '-') + '.png';
-            downloadChart(chartData, filename);
-        }
-    } catch (error) {
-        console.error('Error downloading current chart:', error);
-        alert('Error al descargar el gráfico');
-    }
-}
-
-// Cerrar modal con ESC
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        const modal = document.getElementById('fullscreenModal');
-        if (modal && modal.classList.contains('show')) {
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            if (bsModal) {
-                bsModal.hide();
-            }
-        }
-    }
-});
-
-// Click en imágenes para abrir en pantalla completa
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('chart-image')) {
-        const src = event.target.src;
-        const alt = event.target.alt;
-        
-        // Extraer data base64 del src
-        const base64Data = src.split(',')[1];
-        if (base64Data) {
-            openFullscreen(base64Data, alt);
-        }
-    }
-});
-
-console.log('Operations tab JavaScript loaded successfully');
-</script>
-<script>
-// JavaScript para funcionalidad de la pestaña financiera
-function downloadChart(chartData, filename) {
-    try {
-        if (!chartData) {
-            console.warn('No chart data provided for download');
-            return;
-        }
-        
-        const link = document.createElement('a');
-        link.href = 'data:image/png;base64,' + chartData;
-        link.download = filename || 'grafico-financiero.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        console.log('Chart downloaded:', filename);
-    } catch (error) {
-        console.error('Error downloading chart:', error);
-        alert('Error al descargar el gráfico');
-    }
-}
-
-function openFullscreen(chartData, title) {
-    try {
-        if (!chartData) {
-            console.warn('No chart data provided for fullscreen');
-            return;
-        }
-        
-        const modal = document.getElementById('fullscreenModal');
-        const modalTitle = document.getElementById('fullscreenModalTitle');
-        const modalImage = document.getElementById('fullscreenModalImage');
-        
-        if (modal && modalTitle && modalImage) {
-            modalTitle.textContent = title || 'Gráfico Financiero';
-            modalImage.src = 'data:image/png;base64,' + chartData;
-            modalImage.setAttribute('data-chart-data', chartData);
-            
-            if (typeof bootstrap !== 'undefined') {
-                new bootstrap.Modal(modal).show();
-            } else {
-                modal.style.display = 'block';
-                modal.classList.add('show');
-            }
-        }
-    } catch (error) {
-        console.error('Error opening fullscreen:', error);
-        alert('Error al abrir el gráfico en pantalla completa');
-    }
-}
-
-function downloadCurrentChart() {
-    try {
-        const modalImage = document.getElementById('fullscreenModalImage');
-        const chartData = modalImage.getAttribute('data-chart-data');
-        const title = document.getElementById('fullscreenModalTitle').textContent;
-        
-        if (chartData) {
-            const filename = title.toLowerCase().replace(/\s+/g, '-') + '.png';
-            downloadChart(chartData, filename);
-        }
-    } catch (error) {
-        console.error('Error downloading current chart:', error);
-        alert('Error al descargar el gráfico');
-    }
-}
-
-// Cerrar modal con ESC
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        const modal = document.getElementById('fullscreenModal');
-        if (modal && modal.classList.contains('show')) {
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            if (bsModal) {
-                bsModal.hide();
-            }
-        }
-    }
-});
-
-// Click en imágenes para abrir en pantalla completa
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('chart-image')) {
-        const src = event.target.src;
-        const alt = event.target.alt;
-        
-        // Extraer data base64 del src
-        const base64Data = src.split(',')[1];
-        if (base64Data) {
-            openFullscreen(base64Data, alt);
-        }
-    }
-});
-
-console.log('Financial tab JavaScript loaded successfully');
-</script>
-
-<script>
-// JavaScript para funcionalidad de la pestaña de variables endógenas
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar contadores
-    updateVariableCounts();
     
-    // Configurar filtros
-    setupTableFilters();
-    
-    // Configurar navegación de gráficos
-    setupChartNavigation();
-    
-    // Configurar ordenamiento de tabla
-    setupTableSorting();
-});
-
-function updateVariableCounts() {
-    const rows = document.querySelectorAll('#endogenousTableBody tr[data-category]');
-    let financial = 0, operational = 0, quality = 0;
-    
-    rows.forEach(row => {
-        const category = row.dataset.category;
-        if (category === 'financial') financial++;
-        else if (category === 'operational') operational++;
-        else if (category === 'quality') quality++;
+    prevBtn.addEventListener('click', function() {
+        if (currentDay > 1) {
+            currentDay--;
+            updateDayDisplay();
+        }
     });
     
-    document.getElementById('financialVarsCount').textContent = financial;
-    document.getElementById('operationalVarsCount').textContent = operational;
-    document.getElementById('qualityVarsCount').textContent = quality;
-}
-
-function setupTableFilters() {
-    const searchInput = document.getElementById('endogenousSearch');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const trendFilter = document.getElementById('trendFilter');
+    nextBtn.addEventListener('click', function() {
+        if (currentDay < totalDays) {
+            currentDay++;
+            updateDayDisplay();
+        }
+    });
     
-    if (searchInput) {
-        searchInput.addEventListener('input', filterTable);
+    // Inicializar vista
+    updateDayDisplay();
+}
+
+// ==========================================
+// CONTADORES ANIMADOS
+// ==========================================
+function initializeCounters() {
+    const counters = document.querySelectorAll('.counter');
+    const speed = 200;
+    
+    const animateCounter = (counter) => {
+        const target = parseFloat(counter.getAttribute('data-target'));
+        const count = parseFloat(counter.innerText) || 0;
+        const increment = target / speed;
+        
+        if (count < target) {
+            const newCount = Math.ceil(count + increment);
+            if (target % 1 === 0) {
+                counter.innerText = newCount.toLocaleString('es-ES');
+            } else {
+                counter.innerText = newCount.toFixed(2);
+            }
+            setTimeout(() => animateCounter(counter), 1);
+        } else {
+            if (target % 1 === 0) {
+                counter.innerText = target.toLocaleString('es-ES');
+            } else {
+                counter.innerText = target.toFixed(2);
+            }
+        }
+    };
+    
+    // Observer para activar cuando sea visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    
+    counters.forEach(counter => {
+        observer.observe(counter);
+    });
+}
+
+// ==========================================
+// PAGINACIÓN DE TABLAS
+// ==========================================
+function initializeTablePagination() {
+    const table = document.getElementById('demandTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const totalPages = Math.ceil(rows.length / rowsPerPage);
+    
+    const prevBtn = document.getElementById('prevTablePage');
+    const nextBtn = document.getElementById('nextTablePage');
+    const pageInfo = document.getElementById('tablePageInfo');
+    
+    if (!prevBtn || !nextBtn) return;
+    
+    function updateTableDisplay() {
+        // Ocultar todas las filas
+        rows.forEach(row => row.style.display = 'none');
+        
+        // Mostrar filas de la página actual
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, rows.length);
+        
+        for (let i = startIndex; i < endIndex; i++) {
+            if (rows[i]) {
+                rows[i].style.display = 'table-row';
+                rows[i].style.animation = 'fadeIn 0.2s ease';
+            }
+        }
+        
+        // Actualizar info
+        if (pageInfo) pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+        
+        // Actualizar botones
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
     }
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', filterTable);
-    }
-    if (trendFilter) {
-        trendFilter.addEventListener('change', filterTable);
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            updateTableDisplay();
+        }
+    });
+    
+    nextBtn.addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updateTableDisplay();
+        }
+    });
+    
+    updateTableDisplay();
+}
+
+// ==========================================
+// MODALES UNIFICADOS
+// ==========================================
+function initializeModals() {
+    // Cerrar con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
+    });
+    
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            closeAllModals();
+        }
+    });
+}
+
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modal => {
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) bsModal.hide();
+    });
+}
+
+// ==========================================
+// FUNCIONES DE GRÁFICOS UNIFICADAS
+// ==========================================
+function initializeChartInteractions() {
+    // Click en imágenes para expandir
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('chart-image')) {
+            const src = e.target.src;
+            const alt = e.target.alt;
+            const base64Data = src.split(',')[1];
+            if (base64Data) {
+                openFullscreen(base64Data, alt);
+            }
+        }
+    });
+}
+
+function downloadChart(chartData, filename) {
+    try {
+        if (!chartData) {
+            console.warn('No chart data provided for download');
+            showNotification('No hay datos del gráfico para descargar', 'warning');
+            return;
+        }
+        
+        const link = document.createElement('a');
+        link.href = 'data:image/png;base64,' + chartData;
+        link.download = filename || 'grafico.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Gráfico descargado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error downloading chart:', error);
+        showNotification('Error al descargar el gráfico', 'error');
     }
 }
 
-<script>
-// JavaScript simplificado para la pestaña de variables endógenas
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar contadores al cargar la pestaña
-    updateVariableCounts();
-});
+function openFullscreen(chartData, title) {
+    try {
+        if (!chartData) {
+            console.warn('No chart data provided for fullscreen');
+            return;
+        }
+        
+        const modal = document.getElementById('mainFullscreenModal');
+        const modalTitle = document.getElementById('mainFullscreenModalTitle');
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        
+        if (modal && modalTitle && modalImage) {
+            modalTitle.textContent = title || 'Gráfico';
+            modalImage.src = 'data:image/png;base64,' + chartData;
+            modalImage.setAttribute('data-chart-data', chartData);
+            
+            new bootstrap.Modal(modal).show();
+        }
+    } catch (error) {
+        console.error('Error opening fullscreen:', error);
+        showNotification('Error al abrir el gráfico', 'error');
+    }
+}
 
+function downloadCurrentChart() {
+    try {
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        const chartData = modalImage?.getAttribute('data-chart-data');
+        const title = document.getElementById('mainFullscreenModalTitle')?.textContent;
+        
+        if (chartData) {
+            const filename = (title || 'grafico').toLowerCase().replace(/\s+/g, '-') + '.png';
+            downloadChart(chartData, filename);
+        }
+    } catch (error) {
+        console.error('Error downloading current chart:', error);
+        showNotification('Error al descargar el gráfico', 'error');
+    }
+}
+
+// ==========================================
+// EXPORTACIÓN UNIFICADA
+// ==========================================
+function initializeExportFunctions() {
+    window.exportToPDF = async function() {
+        const btn = event?.target;
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando PDF...';
+            btn.disabled = true;
+        }
+        
+        try {
+            const element = document.querySelector('.page-content');
+            const canvas = await html2canvas(element, {
+                scale: 1.5,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jspdf.jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            });
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            pdf.save(`simulacion_${new Date().getTime()}_resultados.pdf`);
+            
+            showNotification('PDF generado exitosamente', 'success');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showNotification('Error al generar PDF', 'error');
+        } finally {
+            if (btn) {
+                btn.innerHTML = btn.dataset.originalText || '<i class="bx bx-file-pdf me-2"></i>Exportar PDF';
+                btn.disabled = false;
+            }
+        }
+    };
+    
+    window.exportToExcel = function() {
+        const btn = event?.target;
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando Excel...';
+            btn.disabled = true;
+        }
+        
+        try {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Variable,Valor Total,Unidad,Promedio,Tendencia\n";
+            
+            // Obtener datos de la tabla de variables
+            const rows = document.querySelectorAll('#endogenousTableBody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 5) {
+                    const variable = cells[0].textContent.trim();
+                    const total = cells[1].textContent.trim().replace(/[^\d.-]/g, '');
+                    const unit = cells[2].textContent.trim();
+                    const average = cells[3].textContent.trim().replace(/[^\d.-]/g, '');
+                    const trend = cells[4].textContent.trim();
+                    
+                    csvContent += `"${variable}","${total}","${unit}","${average}","${trend}"\n`;
+                }
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `simulacion_${new Date().getTime()}_resultados.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Archivo Excel generado exitosamente', 'success');
+        } catch (error) {
+            console.error('Error generating Excel:', error);
+            showNotification('Error al generar Excel', 'error');
+        } finally {
+            if (btn) {
+                btn.innerHTML = '<i class="bx bx-file me-2"></i>Exportar Excel';
+                btn.disabled = false;
+            }
+        }
+    };
+}
+
+// ==========================================
+// GRÁFICOS DE VALIDACIÓN
+// ==========================================
+function initializeValidationCharts() {
+    initializeValidationPrecisionChart();
+    initializeValidationSummaryChart();
+}
+
+function initializeValidationPrecisionChart() {
+    const ctx = document.getElementById('validationPrecisionChart');
+    if (!ctx) return;
+    
+    if (validationPrecisionChart) {
+        validationPrecisionChart.destroy();
+    }
+    
+    const tableRows = document.querySelectorAll('#validationDetailTable tbody tr');
+    const labels = [];
+    const errorData = [];
+    const colors = [];
+    
+    tableRows.forEach(row => {
+        const day = row.querySelector('td:first-child')?.textContent;
+        const errorCell = row.querySelector('td:nth-child(7) span');
+        if (day && errorCell) {
+            const errorValue = parseFloat(errorCell.textContent);
+            
+            labels.push(`Día ${day}`);
+            errorData.push(errorValue);
+            
+            if (errorValue < 10) {
+                colors.push('rgba(40, 167, 69, 0.8)');
+            } else if (errorValue < 20) {
+                colors.push('rgba(255, 193, 7, 0.8)');
+            } else {
+                colors.push('rgba(220, 53, 69, 0.8)');
+            }
+        }
+    });
+    
+    const config = {
+        type: currentChartType,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Error Porcentual (%)',
+                data: errorData,
+                backgroundColor: colors,
+                borderColor: colors.map(c => c.replace('0.8', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribución de Error Porcentual por Día'
+                },
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Error Porcentual (%)' }
+                }
+            }
+        }
+    };
+    
+    validationPrecisionChart = new Chart(ctx, config);
+}
+
+function initializeValidationSummaryChart() {
+    const ctx = document.getElementById('validationSummaryChart');
+    if (!ctx) return;
+    
+    if (validationSummaryChart) {
+        validationSummaryChart.destroy();
+    }
+    
+    // Obtener datos del template
+    const preciseCount = parseInt(document.querySelector('[data-precise-count]')?.dataset.preciseCount) || 0;
+    const acceptableCount = parseInt(document.querySelector('[data-acceptable-count]')?.dataset.acceptableCount) || 0;
+    const inaccurateCount = parseInt(document.querySelector('[data-inaccurate-count]')?.dataset.inaccurateCount) || 0;
+    
+    const config = {
+        type: 'doughnut',
+        data: {
+            labels: ['Precisa (<10%)', 'Aceptable (10-20%)', 'Inexacta (>20%)'],
+            datasets: [{
+                data: [preciseCount, acceptableCount, inaccurateCount],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    };
+    
+    validationSummaryChart = new Chart(ctx, config);
+}
+
+function toggleValidationChartType() {
+    currentChartType = currentChartType === 'bar' ? 'line' : 'bar';
+    initializeValidationPrecisionChart();
+}
+
+function downloadValidationChart() {
+    if (!validationPrecisionChart) return;
+    
+    const url = validationPrecisionChart.toBase64Image();
+    const link = document.createElement('a');
+    link.download = 'distribucion_precision_' + new Date().getTime() + '.png';
+    link.href = url;
+    link.click();
+}
+
+// ==========================================
+// VARIABLES ENDÓGENAS
+// ==========================================
 function updateVariableCounts() {
     try {
         const rows = document.querySelectorAll('#endogenousTableBody tr[data-category]');
@@ -4450,7 +4531,6 @@ function updateVariableCounts() {
             else if (category === 'quality') quality++;
         });
         
-        // Actualizar contadores
         const financialCount = document.getElementById('financialVarsCount');
         const operationalCount = document.getElementById('operationalVarsCount');
         const qualityCount = document.getElementById('qualityVarsCount');
@@ -4458,8 +4538,6 @@ function updateVariableCounts() {
         if (financialCount) financialCount.textContent = financial;
         if (operationalCount) operationalCount.textContent = operational;
         if (qualityCount) qualityCount.textContent = quality;
-        
-        console.log(`Variables count updated: Financial: ${financial}, Operational: ${operational}, Quality: ${quality}`);
     } catch (error) {
         console.error('Error updating variable counts:', error);
     }
@@ -4467,22 +4545,15 @@ function updateVariableCounts() {
 
 function expandChart(chartName, imageSrc) {
     try {
-        const modal = document.getElementById('chartModal');
-        const modalTitle = document.getElementById('chartModalTitle');
-        const modalImage = document.getElementById('chartModalImage');
+        const modal = document.getElementById('mainFullscreenModal');
+        const modalTitle = document.getElementById('mainFullscreenModalTitle');
+        const modalImage = document.getElementById('mainFullscreenModalImage');
         
         if (modal && modalTitle && modalImage) {
             modalTitle.textContent = `Gráfico: ${chartName}`;
             modalImage.src = imageSrc || '';
             
-            // Usar Bootstrap modal si está disponible
-            if (typeof bootstrap !== 'undefined') {
-                new bootstrap.Modal(modal).show();
-            } else {
-                // Fallback simple
-                modal.style.display = 'block';
-                modal.classList.add('show');
-            }
+            new bootstrap.Modal(modal).show();
         }
     } catch (error) {
         console.error('Error expanding chart:', error);
@@ -4491,29 +4562,26 @@ function expandChart(chartName, imageSrc) {
 
 function showVariableDetails(variableName) {
     try {
-        // Obtener datos de la variable
         const row = document.querySelector(`tr[data-variable="${variableName}"]`);
-        if (!row) {
-            console.warn(`Variable row not found: ${variableName}`);
-            return;
-        }
+        if (!row) return;
         
-        const category = row.dataset.category || 'unknown';
-        const trend = row.dataset.trend || 'stable';
-        const totalElement = row.querySelector('.variable-total');
-        const unitElement = row.querySelector('.variable-unit');
-        const averageElement = row.querySelector('.variable-average');
+        const modal = document.getElementById('mainDetailsModal');
+        const modalTitle = document.getElementById('mainDetailsModalTitle');
+        const modalBody = document.getElementById('mainDetailsModalBody');
         
-        const total = totalElement ? totalElement.textContent.trim() : 'N/A';
-        const unit = unitElement ? unitElement.textContent.trim() : 'N/A';
-        const average = averageElement ? averageElement.textContent.trim() : 'N/A';
-        
-        // Construir contenido del modal
-        const modalBody = document.getElementById('variableDetailsBody');
-        const modalTitle = document.getElementById('variableDetailsTitle');
-        
-        if (modalBody && modalTitle) {
+        if (modal && modalTitle && modalBody) {
             modalTitle.textContent = `Detalles: ${variableName}`;
+            
+            const category = row.dataset.category || 'unknown';
+            const trend = row.dataset.trend || 'stable';
+            const totalElement = row.querySelector('.variable-total');
+            const unitElement = row.querySelector('.variable-unit');
+            const averageElement = row.querySelector('.variable-average');
+            
+            const total = totalElement?.textContent.trim() || 'N/A';
+            const unit = unitElement?.textContent.trim() || 'N/A';
+            const average = averageElement?.textContent.trim() || 'N/A';
+            
             modalBody.innerHTML = `
                 <div class="row">
                     <div class="col-md-6">
@@ -4535,26 +4603,14 @@ function showVariableDetails(variableName) {
                 </div>
                 <div class="mt-3">
                     <h6>Descripción</h6>
-                    <p class="text-muted">
-                        ${getVariableDescription(variableName)}
-                    </p>
+                    <p class="text-muted">${getVariableDescription(variableName)}</p>
                 </div>
             `;
             
-            // Mostrar modal
-            const modal = document.getElementById('variableDetailsModal');
-            if (modal) {
-                if (typeof bootstrap !== 'undefined') {
-                    new bootstrap.Modal(modal).show();
-                } else {
-                    modal.style.display = 'block';
-                    modal.classList.add('show');
-                }
-            }
+            new bootstrap.Modal(modal).show();
         }
     } catch (error) {
         console.error('Error showing variable details:', error);
-        alert('Error al mostrar los detalles de la variable.');
     }
 }
 
@@ -4578,1976 +4634,88 @@ function getVariableDescription(variableName) {
     return descriptions[variableName] || `Variable endógena ${variableName} del modelo de simulación.`;
 }
 
-// Cerrar modales al hacer clic fuera
-document.addEventListener('click', function(event) {
-    // Cerrar modal de gráfico
-    const chartModal = document.getElementById('chartModal');
-    if (chartModal && event.target === chartModal) {
-        chartModal.style.display = 'none';
-        chartModal.classList.remove('show');
-    }
-    
-    // Cerrar modal de detalles
-    const detailsModal = document.getElementById('variableDetailsModal');
-    if (detailsModal && event.target === detailsModal) {
-        detailsModal.style.display = 'none';
-        detailsModal.classList.remove('show');
-    }
-});
-
-// Cerrar modales con botón close
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('btn-close')) {
-        const modal = event.target.closest('.modal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-        }
-    }
-});
-
-// Actualizar contadores cuando se activa la pestaña endógenas
-document.addEventListener('shown.bs.tab', function(event) {
-    if (event.target.getAttribute('aria-controls') === 'endogenous') {
-        setTimeout(updateVariableCounts, 100);
-    }
-});
-
-// Función para manejar clicks en imágenes de gráficos
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('chart-image')) {
-        const chartName = event.target.getAttribute('alt') || 'Gráfico';
-        const imageSrc = event.target.src;
-        expandChart(chartName, imageSrc);
-    }
-});
-
-console.log('Endogenous variables tab JavaScript loaded successfully');
-</script>
-
-<script>
-// JavaScript para funcionalidad de la pestaña de variables endógenas
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar contadores
-    updateVariableCounts();
-    
-    // Configurar filtros
-    setupTableFilters();
-    
-    // Configurar navegación de gráficos
-    setupChartNavigation();
-    
-    // Configurar ordenamiento de tabla
-    setupTableSorting();
-});
-
-function updateVariableCounts() {
-    const rows = document.querySelectorAll('#endogenousTableBody tr[data-category]');
-    let financial = 0, operational = 0, quality = 0;
-    
-    rows.forEach(row => {
-        const category = row.dataset.category;
-        if (category === 'financial') financial++;
-        else if (category === 'operational') operational++;
-        else if (category === 'quality') quality++;
-    });
-    
-    document.getElementById('financialVarsCount').textContent = financial;
-    document.getElementById('operationalVarsCount').textContent = operational;
-    document.getElementById('qualityVarsCount').textContent = quality;
-}
-
-function setupTableFilters() {
-    const searchInput = document.getElementById('endogenousSearch');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const trendFilter = document.getElementById('trendFilter');
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', filterTable);
-    }
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', filterTable);
-    }
-    if (trendFilter) {
-        trendFilter.addEventListener('change', filterTable);
-    }
-}
-
-function filterTable() {
-    const search = document.getElementById('endogenousSearch')?.value.toLowerCase() || '';
-    const category = document.getElementById('categoryFilter')?.value || '';
-    const trend = document.getElementById('trendFilter')?.value || '';
-    
-    const rows = document.querySelectorAll('#endogenousTableBody tr[data-variable]');
-    
-    rows.forEach(row => {
-        const variable = row.dataset.variable.toLowerCase();
-        const rowCategory = row.dataset.category;
-        const rowTrend = row.dataset.trend;
+// ==========================================
+// EVENTOS DE PESTAÑAS
+// ==========================================
+function initializeTabEvents() {
+    // Inicializar contenido cuando se muestre una pestaña
+    document.addEventListener('shown.bs.tab', function(e) {
+        const targetId = e.target.getAttribute('aria-controls');
         
-        const matchesSearch = variable.includes(search);
-        const matchesCategory = !category || rowCategory === category;
-        const matchesTrend = !trend || rowTrend === trend;
-        
-        if (matchesSearch && matchesCategory && matchesTrend) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
-
-function setupChartNavigation() {
-    // Navegación por categorías de gráficos
-    const categoryButtons = document.querySelectorAll('[data-chart-category]');
-    categoryButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Actualizar botones activos
-            categoryButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Filtrar gráficos
-            const category = this.dataset.chartCategory;
-            filterCharts(category);
-        });
-    });
-    
-    // Toggle entre vista grid y carrusel
-    const viewButtons = document.querySelectorAll('[data-view]');
-    viewButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            viewButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const view = this.dataset.view;
-            toggleChartView(view);
-        });
-    });
-}
-
-function filterCharts(category) {
-    const chartItems = document.querySelectorAll('.chart-item');
-    
-    chartItems.forEach(item => {
-        if (category === 'all' || item.dataset.category === category) {
-            item.style.display = '';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-
-function toggleChartView(view) {
-    const gridContainer = document.getElementById('chartsGridContainer');
-    const carouselContainer = document.getElementById('chartsCarouselContainer');
-    
-    if (view === 'grid') {
-        gridContainer.classList.remove('d-none');
-        carouselContainer.classList.add('d-none');
-    } else {
-        gridContainer.classList.add('d-none');
-        carouselContainer.classList.remove('d-none');
-        setupCarousel();
-    }
-}
-
-function setupCarousel() {
-    const carouselInner = document.querySelector('#chartsCarousel .carousel-inner');
-    const chartItems = document.querySelectorAll('.chart-item:not([style*="display: none"])');
-    
-    // Limpiar carousel
-    carouselInner.innerHTML = '';
-    
-    // Crear slides
-    chartItems.forEach((item, index) => {
-        const slide = document.createElement('div');
-        slide.className = `carousel-item ${index === 0 ? 'active' : ''}`;
-        slide.innerHTML = item.innerHTML;
-        carouselInner.appendChild(slide);
-    });
-}
-
-function setupTableSorting() {
-    const sortableHeaders = document.querySelectorAll('.sortable');
-    
-    sortableHeaders.forEach(header => {
-        header.addEventListener('click', function() {
-            const sortType = this.dataset.sort;
-            sortTable(sortType);
-        });
-    });
-}
-
-function sortTable(sortType) {
-    const tbody = document.getElementById('endogenousTableBody');
-    const rows = Array.from(tbody.querySelectorAll('tr[data-variable]'));
-    
-    rows.sort((a, b) => {
-        let aVal, bVal;
-        
-        switch(sortType) {
-            case 'variable':
-                aVal = a.dataset.variable.toLowerCase();
-                bVal = b.dataset.variable.toLowerCase();
-                return aVal.localeCompare(bVal);
-                
-            case 'total':
-                aVal = parseFloat(a.querySelector('.variable-total').textContent.replace(/[^\d.-]/g, ''));
-                bVal = parseFloat(b.querySelector('.variable-total').textContent.replace(/[^\d.-]/g, ''));
-                return bVal - aVal; // Descendente
-                
-            case 'average':
-                aVal = parseFloat(a.querySelector('.variable-average').textContent.replace(/[^\d.-]/g, ''));
-                bVal = parseFloat(b.querySelector('.variable-average').textContent.replace(/[^\d.-]/g, ''));
-                return bVal - aVal; // Descendente
-                
-            default:
-                return 0;
-        }
-    });
-    
-    // Reordenar las filas
-    rows.forEach(row => tbody.appendChild(row));
-}
-
-function expandChart(chartName) {
-    const chartImage = document.querySelector(`[data-chart-name="${chartName}"]`);
-    if (chartImage) {
-        document.getElementById('chartModalTitle').textContent = `Gráfico: ${chartName}`;
-        document.getElementById('chartModalImage').src = chartImage.src;
-        new bootstrap.Modal(document.getElementById('chartModal')).show();
-    }
-}
-
-function showVariableDetails(variableName) {
-    // Obtener datos de la variable
-    const row = document.querySelector(`tr[data-variable="${variableName}"]`);
-    if (!row) return;
-    
-    const category = row.dataset.category;
-    const trend = row.dataset.trend;
-    const total = row.querySelector('.variable-total').textContent;
-    const unit = row.querySelector('.variable-unit').textContent;
-    const average = row.querySelector('.variable-average').textContent;
-    
-    // Construir contenido del modal
-    const modalBody = document.getElementById('variableDetailsBody');
-    modalBody.innerHTML = `
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Información General</h6>
-                <table class="table table-sm">
-                    <tr><td><strong>Variable:</strong></td><td>${variableName}</td></tr>
-                    <tr><td><strong>Categoría:</strong></td><td class="text-capitalize">${category}</td></tr>
-                    <tr><td><strong>Unidad:</strong></td><td>${unit}</td></tr>
-                    <tr><td><strong>Tendencia:</strong></td><td class="text-capitalize">${trend}</td></tr>
-                </table>
-            </div>
-            <div class="col-md-6">
-                <h6>Valores</h6>
-                <table class="table table-sm">
-                    <tr><td><strong>Total:</strong></td><td>${total}</td></tr>
-                    <tr><td><strong>Promedio:</strong></td><td>${average}</td></tr>
-                </table>
-            </div>
-        </div>
-        <div class="mt-3">
-            <h6>Descripción</h6>
-            <p class="text-muted">
-                ${getVariableDescription(variableName)}
-            </p>
-        </div>
-    `;
-    
-    document.getElementById('variableDetailsTitle').textContent = `Detalles: ${variableName}`;
-    new bootstrap.Modal(document.getElementById('variableDetailsModal')).show();
-}
-
-function getVariableDescription(variableName) {
-    const descriptions = {
-        'IT': 'Ingresos Totales: Suma de todos los ingresos generados durante el período de simulación.',
-        'GT': 'Ganancia Total: Diferencia entre ingresos totales y gastos totales del período.',
-        'TG': 'Total Gastos: Suma de todos los costos y gastos incurridos durante la simulación.',
-        'TPV': 'Total Productos Vendidos: Cantidad total de productos vendidos en el período.',
-        'NSC': 'Nivel de Satisfacción del Cliente: Indicador de calidad del servicio prestado.',
-        'EOG': 'Eficiencia Operativa General: Medida de la eficiencia en los procesos operativos.',
-        'NR': 'Nivel de Rentabilidad: Porcentaje de ganancia sobre los ingresos totales.'
-    };
-    
-    return descriptions[variableName] || `Variable endógena ${variableName} del modelo de simulación.`;
-}
-
-function showVariableChart(variableName) {
-    // Buscar si existe un gráfico para esta variable
-    const chartImage = document.querySelector(`[data-chart-name*="${variableName}"]`);
-    if (chartImage) {
-        expandChart(variableName);
-    } else {
-        alert('No hay gráfico disponible para esta variable.');
-    }
-}
-
-function downloadChart() {
-    const chartImage = document.getElementById('chartModalImage');
-    if (chartImage.src) {
-        const link = document.createElement('a');
-        link.href = chartImage.src;
-        link.download = 'grafico_variable.png';
-        link.click();
-    }
-}
-
-function exportEndogenousTable(format) {
-    const table = document.getElementById('endogenousTable');
-    const rows = table.querySelectorAll('tbody tr[data-variable]');
-    
-    if (format === 'excel') {
-        exportToExcel(rows);
-    } else if (format === 'pdf') {
-        exportToPDF(rows);
-    }
-}
-
-function exportToExcel(rows) {
-    let csvContent = 'Variable,Valor Total,Unidad,Promedio Diario,Tendencia\n';
-    
-    rows.forEach(row => {
-        if (row.style.display !== 'none') {
-            const variable = row.dataset.variable;
-            const total = row.querySelector('.variable-total').textContent.replace(/[,]/g, '');
-            const unit = row.querySelector('.variable-unit').textContent;
-            const average = row.querySelector('.variable-average').textContent.replace(/[,]/g, '');
-            const trend = row.dataset.trend;
-            
-            csvContent += `"${variable}","${total}","${unit}","${average}","${trend}"\n`;
-        }
-    });
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'variables_endogenas.csv';
-    link.click();
-}
-
-function exportToPDF(rows) {
-    // Implementación simplificada para PDF
-    window.print();
-}
-
-// Paginación de tabla
-let currentPage = 1;
-const rowsPerPage = 10;
-
-function paginateEndogenousTable(direction) {
-    const tbody = document.getElementById('endogenousTableBody');
-    const rows = Array.from(tbody.querySelectorAll('tr[data-variable]')).filter(row => 
-        row.style.display !== 'none'
-    );
-    
-    const totalPages = Math.ceil(rows.length / rowsPerPage);
-    
-    if (direction === 'prev' && currentPage > 1) {
-        currentPage--;
-    } else if (direction === 'next' && currentPage < totalPages) {
-        currentPage++;
-    }
-    
-    // Ocultar todas las filas
-    rows.forEach(row => row.style.display = 'none');
-    
-    // Mostrar filas de la página actual
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    const endIndex = startIndex + rowsPerPage;
-    
-    for (let i = startIndex; i < endIndex && i < rows.length; i++) {
-        rows[i].style.display = '';
-    }
-    
-    // Actualizar información de paginación
-    document.getElementById('endogenousPageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
-    
-    // Actualizar estado de botones
-    document.getElementById('prevPageItem').classList.toggle('disabled', currentPage === 1);
-    document.getElementById('nextPageItem').classList.toggle('disabled', currentPage === totalPages);
-}
-
-// Inicializar paginación al cargar
-document.addEventListener('DOMContentLoaded', function() {
-    paginateEndogenousTable('current');
-});
-</script>
-
-<script>
-// JavaScript para navegación entre días
-document.addEventListener('DOMContentLoaded', function() {
-    let currentDay = 1;
-    const totalDays = {{ all_variables_extracted|length }};
-    
-    const dailyItems = document.querySelectorAll('.daily-result-item');
-    const currentDayIndicator = document.getElementById('currentDayIndicator');
-    const dayCounter = document.getElementById('dayCounter');
-    const prevDayBtn = document.getElementById('prevDayBtn');
-    const nextDayBtn = document.getElementById('nextDayBtn');
-    
-    function updateDayView() {
-        // Ocultar todos los items
-        dailyItems.forEach(item => {
-            item.style.display = 'none';
-        });
-        
-        // Mostrar el item del día actual
-        const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
-        if (currentItem) {
-            currentItem.style.display = 'block';
+        switch(targetId) {
+            case 'endogenous':
+                setTimeout(updateVariableCounts, 100);
+                break;
+            case 'validation':
+                setTimeout(initializeValidationCharts, 100);
+                break;
         }
         
-        // Actualizar indicadores
-        currentDayIndicator.textContent = `Día ${currentDay}`;
-        dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
-        
-        // Actualizar estado de botones
-        prevDayBtn.disabled = currentDay <= 1;
-        nextDayBtn.disabled = currentDay >= totalDays;
-        
-        // Scroll to top
-        document.querySelector('.card-body').scrollTop = 0;
-    }
-    
-    // Event listeners
-    prevDayBtn.addEventListener('click', function() {
-        if (currentDay > 1) {
-            currentDay--;
-            updateDayView();
+        // Animar entrada de contenido
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) {
+            targetPane.style.animation = 'fadeIn 0.3s ease';
         }
     });
-    
-    nextDayBtn.addEventListener('click', function() {
-        if (currentDay < totalDays) {
-            currentDay++;
-            updateDayView();
-        }
-    });
-    
-    // Navegación con teclado
+}
+
+// ==========================================
+// ATAJOS DE TECLADO
+// ==========================================
+function initializeKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowLeft' && !prevDayBtn.disabled) {
-            prevDayBtn.click();
-        } else if (e.key === 'ArrowRight' && !nextDayBtn.disabled) {
-            nextDayBtn.click();
-        }
-    });
-    
-    // Inicializar vista
-    updateDayView();
-});
-<script>
-function exportDailyValidation() {
-    let csv = 'Day,Date,Variable,Real Value,Simulated Value,Error %,Status\n';
-    
-    const rows = document.querySelectorAll('#dailyValidationTable tbody tr');
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const day = cells[0].textContent;
-        const date = cells[1].textContent;
-        const variable = cells[2].textContent;
-        const real = cells[3].textContent;
-        const simulated = cells[4].textContent;
-        const error = cells[5].querySelector('span').textContent;
-        const status = cells[6].textContent.trim();
-        
-        csv += `${day},"${date}","${variable}",${real},${simulated},${error},"${status}"\n`;
-    });
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'daily_validation_' + new Date().getTime() + '.csv';
-    link.click();
-}
-</script>
-
-<!-- Agregar script de carga diferida -->
-<script>
-// Variables globales para gestión de gráficos
-let allCharts = [];
-let loadedCharts = 0;
-const CHARTS_PER_BATCH = 3;
-let currentTypeFilter = '';
-
-// Preparar datos de gráficos
-{% for type_name, type_charts in model_validation_charts.items %}
-{% if type_name != 'summary' %}
-{% for chart_data in type_charts %}
-allCharts.push({
-    type: '{{ type_name }}',
-    variable: '{{ chart_data.variable }}',
-    description: '{{ chart_data.description|escapejs }}',
-    unit: '{{ chart_data.unit }}',
-    error_pct: {{ chart_data.error_pct|default:0 }},
-    status: '{{ chart_data.status }}',
-    chart: '{{ chart_data.chart }}',
-    days_count: {{ chart_data.days_count|default:0 }},
-    coverage: {{ chart_data.coverage|default:0 }}
-});
-{% endfor %}
-{% endif %}
-{% endfor %}
-
-// Función para cargar gráficos iniciales
-function loadInitialCharts() {
-    document.getElementById('chartsContainer').style.display = 'none';
-    document.getElementById('loadedChartsContainer').style.display = 'block';
-    
-    // Ordenar por error descendente para mostrar los más críticos primero
-    allCharts.sort((a, b) => b.error_pct - a.error_pct);
-    
-    loadMoreCharts();
-}
-
-// Función para cargar más gráficos
-function loadMoreCharts() {
-    const container = document.getElementById('chartsGrid');
-    const filteredCharts = currentTypeFilter 
-        ? allCharts.filter(c => c.type === currentTypeFilter)
-        : allCharts;
-    
-    const endIndex = Math.min(loadedCharts + CHARTS_PER_BATCH, filteredCharts.length);
-    
-    for (let i = loadedCharts; i < endIndex; i++) {
-        const chartData = filteredCharts[i];
-        const chartHtml = createChartCard(chartData);
-        container.insertAdjacentHTML('beforeend', chartHtml);
-        
-        // Aplicar lazy loading a la imagen
-        const imgElement = container.querySelector(`#chart-${chartData.variable}`);
-        if (imgElement && 'IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        img.classList.remove('lazy');
-                        observer.unobserve(img);
-                    }
-                });
-            });
-            imageObserver.observe(imgElement);
-        }
-    }
-    
-    loadedCharts = endIndex;
-    
-    // Actualizar botón de cargar más
-    const remaining = filteredCharts.length - loadedCharts;
-    if (remaining > 0) {
-        document.getElementById('loadMoreContainer').style.display = 'block';
-        document.getElementById('remainingCount').textContent = `(${remaining} restantes)`;
-    } else {
-        document.getElementById('loadMoreContainer').style.display = 'none';
-    }
-    
-    // Animar entrada de nuevos gráficos
-    animateNewCharts();
-}
-
-// Crear tarjeta de gráfico
-function createChartCard(chartData) {
-    const statusClass = chartData.status === 'PRECISA' ? 'success' : 
-                       chartData.status === 'ACEPTABLE' ? 'warning' : 'danger';
-    
-    return `
-        <div class="col-lg-6 mb-4 chart-card" data-variable="${chartData.variable}" data-type="${chartData.type}">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0">${chartData.variable}</h6>
-                        <small class="text-muted">${chartData.description}</small>
-                    </div>
-                    <div class="text-end">
-                        <span class="badge bg-${statusClass}">
-                            ${chartData.error_pct.toFixed(1)}% error
-                        </span>
-                    </div>
-                </div>
-                <div class="card-body p-2">
-                    <div class="chart-wrapper position-relative">
-                        <img id="chart-${chartData.variable}"
-                             data-src="data:image/png;base64,${chartData.chart}" 
-                             class="img-fluid validation-chart-img lazy" 
-                             alt="Gráfico de ${chartData.variable}"
-                             loading="lazy">
-                        
-                        <div class="chart-loading position-absolute top-50 start-50 translate-middle" style="display: none;">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                        </div>
-                        
-                        <div class="chart-controls position-absolute top-0 end-0 p-2">
-                            <button class="btn btn-sm btn-light" 
-                                    onclick="expandChart('${chartData.variable}', '${chartData.chart}')"
-                                    title="Expandir">
-                                <i class="bx bx-expand"></i>
-                            </button>
-                            <button class="btn btn-sm btn-light" 
-                                    onclick="downloadChart('${chartData.chart}', '${chartData.variable}_validation.png')"
-                                    title="Descargar">
-                                <i class="bx bx-download"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light">
-                    <div class="row text-center small">
-                        <div class="col-4">
-                            <strong>Unidad:</strong><br>${chartData.unit}
-                        </div>
-                        <div class="col-4">
-                            <strong>Días:</strong><br>${chartData.days_count}
-                        </div>
-                        <div class="col-4">
-                            <strong>Cobertura:</strong><br>${chartData.coverage.toFixed(0)}%
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Filtrar gráficos por tipo
-function filterChartsByType() {
-    const filter = document.getElementById('chartTypeFilter').value;
-    currentTypeFilter = filter;
-    
-    // Reiniciar y recargar
-    loadedCharts = 0;
-    document.getElementById('chartsGrid').innerHTML = '';
-    
-    if (document.getElementById('loadedChartsContainer').style.display !== 'none') {
-        loadMoreCharts();
-    }
-}
-
-// Cargar todos los gráficos (con confirmación)
-function loadAllCharts() {
-    if (allCharts.length > 10) {
-        if (!confirm(`¿Está seguro de cargar todos los ${allCharts.length} gráficos? Esto puede tardar un momento.`)) {
-            return;
-        }
-    }
-    
-    document.getElementById('chartsContainer').style.display = 'none';
-    document.getElementById('loadedChartsContainer').style.display = 'block';
-    
-    // Mostrar indicador de carga
-    showLoadingIndicator();
-    
-    // Cargar por lotes para no bloquear el navegador
-    loadChartsInBatches();
-}
-
-// Cargar gráficos en lotes
-function loadChartsInBatches() {
-    const BATCH_SIZE = 5;
-    const container = document.getElementById('chartsGrid');
-    
-    function loadBatch(startIndex) {
-        const endIndex = Math.min(startIndex + BATCH_SIZE, allCharts.length);
-        
-        for (let i = startIndex; i < endIndex; i++) {
-            const chartData = allCharts[i];
-            const chartHtml = createChartCard(chartData);
-            container.insertAdjacentHTML('beforeend', chartHtml);
-        }
-        
-        loadedCharts = endIndex;
-        updateProgress(loadedCharts, allCharts.length);
-        
-        if (endIndex < allCharts.length) {
-            // Continuar con el siguiente lote después de un pequeño delay
-            setTimeout(() => loadBatch(endIndex), 100);
-        } else {
-            hideLoadingIndicator();
-            document.getElementById('loadMoreContainer').style.display = 'none';
-        }
-    }
-    
-    loadBatch(0);
-}
-
-// Indicadores de carga
-function showLoadingIndicator() {
-    const indicator = document.createElement('div');
-    indicator.id = 'batchLoadingIndicator';
-    indicator.className = 'text-center py-3';
-    indicator.innerHTML = `
-        <div class="progress mb-2" style="height: 20px;">
-            <div id="loadingProgress" class="progress-bar progress-bar-striped progress-bar-animated" 
-                 role="progressbar" style="width: 0%">0%</div>
-        </div>
-        <p class="text-muted">Cargando gráficos...</p>
-    `;
-    document.getElementById('loadedChartsContainer').insertBefore(
-        indicator, 
-        document.getElementById('chartsGrid')
-    );
-}
-
-function updateProgress(current, total) {
-    const percentage = (current / total * 100).toFixed(0);
-    const progressBar = document.getElementById('loadingProgress');
-    if (progressBar) {
-        progressBar.style.width = percentage + '%';
-        progressBar.textContent = percentage + '%';
-    }
-}
-
-function hideLoadingIndicator() {
-    const indicator = document.getElementById('batchLoadingIndicator');
-    if (indicator) {
-        indicator.remove();
-    }
-}
-
-// Animar entrada de gráficos
-function animateNewCharts() {
-    const newCards = document.querySelectorAll('.chart-card:not(.animated)');
-    newCards.forEach((card, index) => {
-        setTimeout(() => {
-            card.classList.add('animated', 'fadeInUp');
-        }, index * 100);
-    });
-}
-
-// Estilos CSS para animaciones
-const style = document.createElement('style');
-style.textContent = `
-    .chart-card {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .chart-card.animated {
-        opacity: 1;
-    }
-    .fadeInUp {
-        animation: fadeInUp 0.5s ease;
-    }
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    .lazy {
-        background: #f0f0f0;
-        min-height: 200px;
-    }
-`;
-document.head.appendChild(style);
-
-
-document.addEventListener('error', function(e) {
-    if (e.target.tagName === 'IMG' && e.target.classList.contains('validation-chart-img')) {
-        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yIGNhcmdhbmRvIGdyw6FmaWNvPC90ZXh0Pgo8L3N2Zz4=';
-        e.target.classList.remove('lazy');
-        
-        // Log error
-        console.error('Failed to load chart for:', e.target.alt);
-    }
-}, true);
-
-// Función para reintentar carga de gráficos fallidos
-function retryFailedCharts() {
-    const failedImages = document.querySelectorAll('.validation-chart-img[src*="Error"]');
-    failedImages.forEach(img => {
-        const originalSrc = img.dataset.src;
-        if (originalSrc) {
-            img.src = originalSrc;
-        }
-    });
-}
-
-// Función para verificar rendimiento
-function checkPerformance() {
-    if ('performance' in window && 'memory' in performance) {
-        const memoryUsage = performance.memory.usedJSHeapSize / 1048576;
-        console.log(`Memory usage: ${memoryUsage.toFixed(2)} MB`);
-        
-        if (memoryUsage > 500) {
-            console.warn('High memory usage detected. Consider closing other tabs.');
-        }
-    }
-}
-
-// Monitorear rendimiento cada 30 segundos
-setInterval(checkPerformance, 30000);
-
-// Función para limpiar memoria
-function cleanupCharts() {
-    // Remover gráficos no visibles del DOM
-    const allCharts = document.querySelectorAll('.chart-card');
-    const viewportHeight = window.innerHeight;
-    
-    allCharts.forEach(chart => {
-        const rect = chart.getBoundingClientRect();
-        if (rect.bottom < -viewportHeight || rect.top > viewportHeight * 2) {
-            const img = chart.querySelector('.validation-chart-img');
-            if (img && img.src && !img.classList.contains('lazy')) {
-                img.dataset.src = img.src;
-                img.src = '';
-                img.classList.add('lazy');
-            }
-        }
-    });
-}
-
-// Limpiar memoria al hacer scroll
-let scrollTimeout;
-window.addEventListener('scroll', () => {
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(cleanupCharts, 200);
-});
-
-// Función para exportar gráficos seleccionados
-function exportSelectedCharts() {
-    const selectedCharts = [];
-    document.querySelectorAll('.chart-card input[type="checkbox"]:checked').forEach(cb => {
-        const card = cb.closest('.chart-card');
-        const img = card.querySelector('.validation-chart-img');
-        if (img && img.src) {
-            selectedCharts.push({
-                variable: card.dataset.variable,
-                image: img.src
-            });
-        }
-    });
-    
-    if (selectedCharts.length === 0) {
-        alert('Por favor seleccione al menos un gráfico para exportar.');
-        return;
-    }
-    
-    // Crear PDF o ZIP con los gráficos seleccionados
-    console.log('Exporting', selectedCharts.length, 'charts...');
-    // Implementar exportación aquí
-}
-
-</script>
-
-<script>
-
-// Variables globales para gráficos de variables
-let variablesComparisonChart = null;
-let currentVariablesView = 'summary';
-
-// Inicializar cuando se muestre la pestaña
-document.getElementById('validation-tab').addEventListener('shown.bs.tab', function (e) {
-    // ... código existente ...
-    
-    // Inicializar gráfico de comparación de variables
-    initializeVariablesComparisonChart();
-});
-
-function initializeVariablesComparisonChart() {
-    const ctx = document.getElementById('variablesComparisonChart');
-    if (!ctx) return;
-    
-    // Destruir gráfico existente si existe
-    if (variablesComparisonChart) {
-        variablesComparisonChart.destroy();
-    }
-    
-    // Seleccionar las 6 variables más importantes para mostrar
-    const keyVariables = ['IT', 'GT', 'TPV', 'TPPRO', 'CTAI', 'GO'];
-    const labels = [];
-    const realData = [];
-    const simulatedData = [];
-    
-    // Obtener datos de la tabla
-    const rows = document.querySelectorAll('#variablesValidationTable tbody tr');
-    rows.forEach(row => {
-        const varName = row.querySelector('td:first-child strong').textContent;
-        if (keyVariables.includes(varName)) {
-            labels.push(varName);
-            const realValue = parseFloat(row.querySelector('td:nth-child(4)').textContent.replace(/[^\d.-]/g, ''));
-            const simValue = parseFloat(row.querySelector('td:nth-child(5)').textContent.replace(/[^\d.-]/g, ''));
-            
-            // Normalizar valores para mejor visualización
-            const maxValue = Math.max(realValue, simValue);
-            const normalizedReal = maxValue > 0 ? (realValue / maxValue) * 100 : 0;
-            const normalizedSim = maxValue > 0 ? (simValue / maxValue) * 100 : 0;
-            
-            realData.push(normalizedReal);
-            simulatedData.push(normalizedSim);
-        }
-    });
-    
-    const config = {
-        type: 'radar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Valores Reales',
-                data: realData,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
-            }, {
-                label: 'Valores Simulados',
-                data: simulatedData,
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Comparación de Variables Clave (Normalizado)'
-                },
-                legend: {
-                    position: 'bottom'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.r.toFixed(1) + '%';
-                        }
-                    }
-                }
-            },
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        stepSize: 20,
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                }
-            }
-        }
-    };
-    
-    variablesComparisonChart = new Chart(ctx, config);
-}
-
-// Función para cambiar vista
-function toggleVariablesView() {
-    const summaryView = document.getElementById('variablesSummaryView');
-    const dailyView = document.getElementById('variablesDailyView');
-    
-    if (currentVariablesView === 'summary') {
-        summaryView.style.display = 'none';
-        dailyView.style.display = 'block';
-        currentVariablesView = 'daily';
-    } else {
-        summaryView.style.display = 'block';
-        dailyView.style.display = 'none';
-        currentVariablesView = 'summary';
-    }
-}
-
-// Función para filtrar vista diaria por variable
-function filterVariableDaily() {
-    const filter = document.getElementById('variableFilter').value;
-    const rows = document.querySelectorAll('.daily-variable-row');
-    
-    rows.forEach(row => {
-        if (filter === '' || row.dataset.variable === filter) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
-
-// Función para mostrar detalles de una variable
-function showVariableDetails(variableName) {
-    const modal = new bootstrap.Modal(document.getElementById('variableDetailsModal'));
-    const modalTitle = document.getElementById('variableDetailsTitle');
-    const modalContent = document.getElementById('variableDetailsContent');
-    
-    modalTitle.textContent = `Detalles de Validación: ${variableName}`;
-    
-    // Generar contenido del modal
-    const variableData = getVariableValidationData(variableName);
-    
-    modalContent.innerHTML = `
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Información de la Variable</h6>
-                <dl class="row">
-                    <dt class="col-6">Código:</dt>
-                    <dd class="col-6">${variableName}</dd>
-                    <dt class="col-6">Descripción:</dt>
-                    <dd class="col-6">${variableData.description}</dd>
-                    <dt class="col-6">Unidad:</dt>
-                    <dd class="col-6">${variableData.unit}</dd>
-                    <dt class="col-6">Tipo:</dt>
-                    <dd class="col-6">${variableData.type}</dd>
-                </dl>
-            </div>
-            <div class="col-md-6">
-                <h6>Estadísticas de Validación</h6>
-                <dl class="row">
-                    <dt class="col-6">Error Promedio:</dt>
-                    <dd class="col-6">
-                        <span class="badge ${variableData.avg_error_pct < 5 ? 'bg-success' : variableData.avg_error_pct < 10 ? 'bg-warning' : 'bg-danger'}">
-                            ${variableData.avg_error_pct.toFixed(1)}%
-                        </span>
-                    </dd>
-                    <dt class="col-6">Días Válidos:</dt>
-                    <dd class="col-6">${variableData.valid_days} de ${variableData.total_days}</dd>
-                    <dt class="col-6">Veredicto:</dt>
-                    <dd class="col-6">${variableData.verdict}</dd>
-                </dl>
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-12">
-                <canvas id="variableDetailChart" height="150"></canvas>
-            </div>
-        </div>
-    `;
-    
-    modal.show();
-    
-    // Crear gráfico de línea para esta variable
-    setTimeout(() => {
-        createVariableDetailChart(variableName, variableData);
-    }, 200);
-}
-
-// Función para crear gráfico de detalle de variable
-function createVariableDetailChart(variableName, variableData) {
-    const ctx = document.getElementById('variableDetailChart');
-    if (!ctx) return;
-    
-    // Obtener datos diarios para esta variable
-    const dailyData = getDailyDataForVariable(variableName);
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: dailyData.days,
-            datasets: [{
-                label: 'Valor Real',
-                data: dailyData.realValues,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                tension: 0.4
-            }, {
-                label: 'Valor Simulado',
-                data: dailyData.simulatedValues,
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: `Evolución de ${variableName}`
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: variableData.unit
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Función auxiliar para obtener datos de validación de variable
-function getVariableValidationData(variableName) {
-    // Esta función obtendría los datos de la tabla o de un objeto global
-    // Por ahora, retorna datos de ejemplo
-    const row = document.querySelector(`tr[data-variable="${variableName}"]`);
-    if (row) {
-        return {
-            description: row.querySelector('td:nth-child(2) small').textContent,
-            unit: row.querySelector('td:nth-child(3)').textContent,
-            type: row.querySelector('.badge').textContent,
-            avg_error_pct: parseFloat(row.querySelector('td:nth-child(6) span').textContent),
-            valid_days: parseInt(row.querySelector('td:nth-child(7)').textContent.split('/')[0]),
-            total_days: parseInt(row.querySelector('td:nth-child(7)').textContent.split('/')[1]),
-            verdict: row.querySelector('td:nth-child(8)').textContent.trim()
-        };
-    }
-    return {};
-}
-
-// Función para obtener datos diarios de una variable
-function getDailyDataForVariable(variableName) {
-    const rows = document.querySelectorAll(`#variablesDailyTable tr[data-variable="${variableName}"]`);
-    const days = [];
-    const realValues = [];
-    const simulatedValues = [];
-    
-    rows.forEach(row => {
-        days.push(row.querySelector('td:first-child').textContent);
-        realValues.push(parseFloat(row.querySelector('td:nth-child(3)').textContent));
-        simulatedValues.push(parseFloat(row.querySelector('td:nth-child(4)').textContent));
-    });
-    
-    return { days, realValues, simulatedValues };
-}
-
-// Función para exportar validación de variables
-function exportVariablesValidation() {
-    let csv = 'Variable,Descripción,Unidad,Valor Real Promedio,Valor Simulado Promedio,Error Promedio %,Días Válidos,Veredicto\n';
-    
-    const rows = document.querySelectorAll('#variablesValidationTable tbody tr');
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const variable = cells[0].querySelector('strong').textContent;
-        const description = cells[1].textContent.trim();
-        const unit = cells[2].textContent.trim();
-        const realAvg = cells[3].textContent.replace(/[^\d.-]/g, '');
-        const simAvg = cells[4].textContent.replace(/[^\d.-]/g, '');
-        const errorAvg = cells[5].querySelector('span').textContent.replace('%', '');
-        const validDays = cells[6].textContent.trim();
-        const verdict = cells[7].textContent.trim();
-        
-        csv += `"${variable}","${description}","${unit}",${realAvg},${simAvg},${errorAvg},"${validDays}","${verdict}"\n`;
-    });
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'validacion_variables_' + new Date().getTime() + '.csv';
-    link.click();
-    
-    showNotification('Validación de variables exportada exitosamente', 'success');
-}
-
-</script>
-
-
-<script>
-// Variables globales para los gráficos de validación
-let validationPrecisionChart = null;
-let validationSummaryChart = null;
-let currentChartType = 'bar';
-
-// Inicializar gráficos cuando se muestre la pestaña de validación
-document.getElementById('validation-tab').addEventListener('shown.bs.tab', function (e) {
-    // Destruir gráficos existentes si existen
-    if (validationPrecisionChart) {
-        validationPrecisionChart.destroy();
-    }
-    if (validationSummaryChart) {
-        validationSummaryChart.destroy();
-    }
-    
-    // Inicializar gráfico de distribución de precisión
-    initializeValidationPrecisionChart();
-    
-    // Inicializar gráfico de resumen
-    initializeValidationSummaryChart();
-});
-
-function initializeValidationPrecisionChart() {
-    const ctx = document.getElementById('validationPrecisionChart');
-    if (!ctx) return;
-    
-    // Preparar datos desde la tabla
-    const tableRows = document.querySelectorAll('#validationDetailTable tbody tr');
-    const labels = [];
-    const errorData = [];
-    const colors = [];
-    
-    tableRows.forEach(row => {
-        const day = row.querySelector('td:first-child').textContent;
-        const errorCell = row.querySelector('td:nth-child(7) span');
-        const errorValue = parseFloat(errorCell.textContent);
-        
-        labels.push(`Día ${day}`);
-        errorData.push(errorValue);
-        
-        // Asignar color según el error
-        if (errorValue < 10) {
-            colors.push('rgba(40, 167, 69, 0.8)'); // Verde
-        } else if (errorValue < 20) {
-            colors.push('rgba(255, 193, 7, 0.8)'); // Amarillo
-        } else {
-            colors.push('rgba(220, 53, 69, 0.8)'); // Rojo
-        }
-    });
-    
-    // Configuración del gráfico
-    const config = {
-        type: currentChartType,
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Error Porcentual (%)',
-                data: errorData,
-                backgroundColor: currentChartType === 'line' ? 'rgba(54, 162, 235, 0.2)' : colors,
-                borderColor: currentChartType === 'line' ? 'rgba(54, 162, 235, 1)' : colors.map(c => c.replace('0.8', '1')),
-                borderWidth: currentChartType === 'line' ? 2 : 1,
-                tension: currentChartType === 'line' ? 0.4 : 0,
-                fill: currentChartType === 'line' ? true : false,
-                pointBackgroundColor: currentChartType === 'line' ? colors : undefined,
-                pointBorderColor: currentChartType === 'line' ? colors.map(c => c.replace('0.8', '1')) : undefined,
-                pointRadius: currentChartType === 'line' ? 4 : 0,
-                pointHoverRadius: currentChartType === 'line' ? 6 : 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Distribución de Error Porcentual por Día de Simulación',
-                    font: {
-                        size: 16
-                    }
-                },
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Error: ${context.parsed.y.toFixed(2)}%`;
-                        },
-                        afterLabel: function(context) {
-                            const error = context.parsed.y;
-                            if (error < 10) return 'Veredicto: ✅ Precisa';
-                            else if (error < 20) return 'Veredicto: ⚠️ Aceptable';
-                            else return 'Veredicto: ❌ Inexacta';
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Error Porcentual (%)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    },
-                    grid: {
-                        color: function(context) {
-                            if (context.tick.value === 10) return 'rgba(255, 193, 7, 0.3)';
-                            if (context.tick.value === 20) return 'rgba(220, 53, 69, 0.3)';
-                            return 'rgba(0, 0, 0, 0.1)';
-                        },
-                        lineWidth: function(context) {
-                            if (context.tick.value === 10 || context.tick.value === 20) return 2;
-                            return 1;
-                        }
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Días de Simulación'
-                    },
-                    ticks: {
-                        autoSkip: true,
-                        maxTicksLimit: 20,
-                        callback: function(value, index) {
-                            // Mostrar solo cada N días si hay muchos
-                            if (labels.length > 50) {
-                                return index % 5 === 0 ? this.getLabelForValue(value) : '';
-                            }
-                            return this.getLabelForValue(value);
-                        }
-                    }
-                }
-            },
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
-            // Agregar líneas de referencia
-            plugins: {
-                annotation: {
-                    annotations: {
-                        line1: {
-                            type: 'line',
-                            yMin: 10,
-                            yMax: 10,
-                            borderColor: 'rgba(255, 193, 7, 0.8)',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            label: {
-                                content: 'Límite Aceptable (10%)',
-                                enabled: true,
-                                position: 'end'
-                            }
-                        },
-                        line2: {
-                            type: 'line',
-                            yMin: 20,
-                            yMax: 20,
-                            borderColor: 'rgba(220, 53, 69, 0.8)',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            label: {
-                                content: 'Límite Inexacto (20%)',
-                                enabled: true,
-                                position: 'end'
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-    
-    validationPrecisionChart = new Chart(ctx, config);
-}
-
-function initializeValidationSummaryChart() {
-    const ctx = document.getElementById('validationSummaryChart');
-    if (!ctx) return;
-    
-    // Datos del resumen
-    const data = {
-        labels: ['Precisa (<10%)', 'Aceptable (10-20%)', 'Inexacta (>20%)'],
-        datasets: [{
-            data: [
-                {{ validation_summary.precise_count|default:0 }},
-                {{ validation_summary.acceptable_count|default:0 }},
-                {{ validation_summary.inaccurate_count|default:0 }}
-            ],
-            backgroundColor: [
-                'rgba(40, 167, 69, 0.8)',
-                'rgba(255, 193, 7, 0.8)',
-                'rgba(220, 53, 69, 0.8)'
-            ],
-            borderColor: [
-                'rgba(40, 167, 69, 1)',
-                'rgba(255, 193, 7, 1)',
-                'rgba(220, 53, 69, 1)'
-            ],
-            borderWidth: 2
-        }]
-    };
-    
-    const config = {
-        type: 'doughnut',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        usePointStyle: true,
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} días (${percentage}%)`;
-                        }
-                    }
-                }
-            }
-        }
-    };
-    
-    validationSummaryChart = new Chart(ctx, config);
-}
-
-// Función para cambiar el tipo de gráfico
-function toggleValidationChartType() {
-    currentChartType = currentChartType === 'bar' ? 'line' : 'bar';
-    if (validationPrecisionChart) {
-        validationPrecisionChart.destroy();
-        initializeValidationPrecisionChart();
-    }
-}
-
-// Función para descargar el gráfico
-function downloadValidationChart() {
-    if (!validationPrecisionChart) return;
-    
-    const url = validationPrecisionChart.toBase64Image();
-    const link = document.createElement('a');
-    link.download = 'distribucion_precision_' + new Date().getTime() + '.png';
-    link.href = url;
-    link.click();
-}
-
-// Función para exportar resultados de validación a CSV
-function exportValidationResults() {
-    let csv = 'Día,Fecha,Producto,Empresa,Demanda Simulada (L),Demanda Real (L),Diferencia (L),Error %,Veredicto\n';
-    
-    const tableRows = document.querySelectorAll('#validationDetailTable tbody tr.validation-row');
-    
-    tableRows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const day = cells[0].textContent.trim();
-        const date = cells[1].textContent.trim();
-        const productInfo = cells[2].textContent.trim().split('\n');
-        const product = productInfo[0].trim();
-        const business = productInfo[1] ? productInfo[1].trim() : '';
-        const simulated = cells[3].textContent.replace(' L', '').trim();
-        const real = cells[4].textContent.replace(' L', '').trim();
-        const difference = cells[5].textContent.replace(' L', '').replace('+', '').trim();
-        const error = cells[6].querySelector('span').textContent.replace('%', '').trim();
-        const verdict = cells[7].textContent.trim();
-        
-        csv += `${day},"${date}","${product}","${business}",${simulated},${real},${difference},${error},"${verdict}"\n`;
-    });
-    
-    // Agregar totales
-    const footerCells = document.querySelectorAll('#validationDetailTable tfoot td');
-    if (footerCells.length > 0) {
-        csv += '\nTotales/Promedios,,,,' + 
-               footerCells[3].textContent.replace(' L', '').trim() + ',' +
-               footerCells[4].textContent.replace(' L', '').trim() + ',' +
-               footerCells[5].textContent.replace(' L', '').replace('+', '').trim() + ',' +
-               footerCells[6].querySelector('span').textContent.replace('%', '').trim() + ',';
-    }
-    
-    // Descargar archivo
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'validacion_modelo_' + new Date().getTime() + '.csv';
-    link.click();
-    
-    showNotification('Resultados exportados exitosamente', 'success');
-}
-
-// Resaltar filas al hacer hover
-document.addEventListener('DOMContentLoaded', function() {
-    const validationRows = document.querySelectorAll('.validation-row');
-    validationRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#f8f9fa';
-            this.style.cursor = 'pointer';
-        });
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
-        row.addEventListener('click', function() {
-            const day = this.dataset.day;
-            // Aquí se podría mostrar más detalles del día específico
-            console.log('Día seleccionado:', day);
-        });
-    });
-});
-</script>
-<script>
-// Initialize timeline with limited items
-document.addEventListener('DOMContentLoaded', function() {
-   // Show only first 10 timeline items initially
-   const timelineItems = document.querySelectorAll('.timeline-item');
-   let visibleItems = 10;
-   
-   timelineItems.forEach((item, index) => {
-       if (index >= visibleItems) {
-           item.style.display = 'none';
-       }
-   });
-   
-   // Initialize endogenous table pagination
-   initializeEndogenousTablePagination();
-});
-
-// Toggle timeline details
-function toggleTimelineDetails(day) {
-   const detailsDiv = document.getElementById(`timelineDetails${day}`);
-   const isVisible = detailsDiv.style.display !== 'none';
-   
-   if (isVisible) {
-       detailsDiv.style.display = 'none';
-   } else {
-       detailsDiv.style.display = 'block';
-       detailsDiv.style.animation = 'fadeIn 0.3s ease';
-   }
-}
-
-// Load more timeline items
-function loadMoreTimeline() {
-   const timelineItems = document.querySelectorAll('.timeline-item');
-   let visibleCount = 0;
-   let itemsToShow = 10;
-   
-   timelineItems.forEach((item) => {
-       if (item.style.display !== 'none') {
-           visibleCount++;
-       }
-   });
-   
-   let shown = 0;
-   timelineItems.forEach((item, index) => {
-       if (index >= visibleCount && shown < itemsToShow) {
-           item.style.display = 'block';
-           item.style.animation = 'fadeIn 0.3s ease';
-           shown++;
-       }
-   });
-   
-   // Hide button if all items are visible
-   if (visibleCount + shown >= timelineItems.length) {
-       event.target.style.display = 'none';
-   }
-}
-
-// Paginate endogenous table
-function initializeEndogenousTablePagination() {
-   const table = document.getElementById('endogenousTable');
-   if (!table) return;
-   
-   const tbody = table.querySelector('tbody');
-   const rows = Array.from(tbody.querySelectorAll('tr'));
-   const itemsPerPage = 15;
-   let currentPage = 1;
-   const totalPages = Math.ceil(rows.length / itemsPerPage);
-   
-   window.paginateEndogenousTable = function(direction) {
-       if (direction === 'prev' && currentPage > 1) {
-           currentPage--;
-       } else if (direction === 'next' && currentPage < totalPages) {
-           currentPage++;
-       }
-       
-       // Hide all rows
-       rows.forEach(row => row.style.display = 'none');
-       
-       // Show current page rows
-       const startIndex = (currentPage - 1) * itemsPerPage;
-       const endIndex = Math.min(startIndex + itemsPerPage, rows.length);
-       
-       for (let i = startIndex; i < endIndex; i++) {
-           if (rows[i]) {
-               rows[i].style.display = 'table-row';
-               rows[i].style.animation = 'fadeIn 0.2s ease';
-           }
-       }
-       
-       // Update page info
-       document.getElementById('endogenousPageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
-       
-       // Update button states
-       const prevBtn = document.querySelector('[onclick="paginateEndogenousTable(\'prev\')"]');
-       const nextBtn = document.querySelector('[onclick="paginateEndogenousTable(\'next\')"]');
-       
-       if (prevBtn) {
-           prevBtn.parentElement.classList.toggle('disabled', currentPage === 1);
-       }
-       if (nextBtn) {
-           nextBtn.parentElement.classList.toggle('disabled', currentPage === totalPages);
-       }
-   };
-   
-   // Initialize first page
-   window.paginateEndogenousTable('init');
-}
-
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all interactive features
-    initializeCounters();
-    initializeDailyResultsPagination();
-    initializeTablePagination();
-    initializeFullscreen();
-    initializeExportFunctions();
-    initializeTooltips();
-    initializeChartInteractions();
-    
-    // Check if first time viewing results
-    if (!localStorage.getItem('resultsViewedBefore')) {
-        localStorage.setItem('resultsViewedBefore', 'true');
-    } else {
-        // Hide tutorial for returning users
-        document.getElementById('resultsTutorial').style.display = 'none';
-    }
-});
-
-// Hide tutorial
-function hideTutorial() {
-    const tutorial = document.getElementById('resultsTutorial');
-    tutorial.style.animation = 'fadeOut 0.5s ease-out';
-    setTimeout(() => {
-        tutorial.style.display = 'none';
-    }, 500);
-}
-
-// Animated Counters
-function initializeCounters() {
-    const counters = document.querySelectorAll('.counter');
-    const speed = 200; // Animation speed
-    
-    const animateCounter = (counter) => {
-        const target = +counter.getAttribute('data-target');
-        const count = +counter.innerText;
-        const increment = target / speed;
-        
-        if (count < target) {
-            counter.innerText = Math.ceil(count + increment);
-            setTimeout(() => animateCounter(counter), 1);
-        } else {
-            counter.innerText = target;
-        }
-    };
-    
-    // Intersection Observer for viewport detection
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounter(entry.target);
-                observer.unobserve(entry.target);
-            }
-        });
-    });
-    
-    counters.forEach(counter => {
-        observer.observe(counter);
-    });
-}
-
-// Daily Results Pagination
-function initializeDailyResultsPagination() {
-    const totalDays = {{ all_variables_extracted|length }};
-    let currentDay = 1;
-    
-    const prevBtn = document.getElementById('prevDayBtn');
-    const nextBtn = document.getElementById('nextDayBtn');
-    const dayCounter = document.getElementById('dayCounter');
-    const currentDayIndicator = document.getElementById('currentDayIndicator');
-    
-    function updateDayDisplay() {
-        // Hide all items
-        document.querySelectorAll('.daily-result-item').forEach(item => {
-            item.style.display = 'none';
-        });
-        
-        // Show current item with animation
-        const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
-        if (currentItem) {
-            currentItem.style.display = 'block';
-            currentItem.style.animation = 'fadeIn 0.3s ease';
-        }
-        
-        // Update counters
-        dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
-        currentDayIndicator.textContent = `Día ${currentDay}`;
-        
-        // Update button states
-        prevBtn.disabled = currentDay === 1;
-        nextBtn.disabled = currentDay === totalDays;
-        
-        // Add/remove button classes
-        prevBtn.classList.toggle('btn-outline-secondary', currentDay === 1);
-        prevBtn.classList.toggle('btn-outline-primary', currentDay > 1);
-        nextBtn.classList.toggle('btn-outline-secondary', currentDay === totalDays);
-        nextBtn.classList.toggle('btn-outline-primary', currentDay < totalDays);
-    }
-    
-    prevBtn.addEventListener('click', function() {
-        if (currentDay > 1) {
-            currentDay--;
-            updateDayDisplay();
-        }
-    });
-    
-    nextBtn.addEventListener('click', function() {
-        if (currentDay < totalDays) {
-            currentDay++;
-            updateDayDisplay();
-        }
-    });
-    
-    // Initialize display
-    updateDayDisplay();
-    
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
+        // Navegación de días con Ctrl + Flechas
         if (e.ctrlKey || e.metaKey) {
             if (e.key === 'ArrowLeft' && currentDay > 1) {
                 e.preventDefault();
                 currentDay--;
-                updateDayDisplay();
+                document.querySelectorAll('.daily-result-item').forEach(item => {
+                    item.style.display = item.dataset.day == currentDay ? 'block' : 'none';
+                });
+                updateDayCounters();
             } else if (e.key === 'ArrowRight' && currentDay < totalDays) {
                 e.preventDefault();
                 currentDay++;
-                updateDayDisplay();
+                document.querySelectorAll('.daily-result-item').forEach(item => {
+                    item.style.display = item.dataset.day == currentDay ? 'block' : 'none';
+                });
+                updateDayCounters();
             }
         }
     });
 }
 
-// Table Pagination
-function initializeTablePagination() {
-    const table = document.getElementById('demandTable');
-    if (!table) return;
+function updateDayCounters() {
+    const dayCounter = document.getElementById('dayCounter');
+    const currentDayIndicator = document.getElementById('currentDayIndicator');
     
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const itemsPerPage = 10;
-    const totalPages = Math.ceil(rows.length / itemsPerPage);
-    let currentPage = 1;
-    
-    const prevBtn = document.getElementById('prevTablePage');
-    const nextBtn = document.getElementById('nextTablePage');
-    const pageInfo = document.getElementById('tablePageInfo');
-    
-    function updateTableDisplay() {
-        // Hide all rows
-        rows.forEach(row => row.style.display = 'none');
-        
-        // Show current page rows
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = Math.min(startIndex + itemsPerPage, rows.length);
-        
-        for (let i = startIndex; i < endIndex; i++) {
-            if (rows[i]) {
-                rows[i].style.display = 'table-row';
-                rows[i].style.animation = 'fadeIn 0.2s ease';
-            }
-        }
-        
-        // Update page info
-        pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-        
-        // Update button states
-        prevBtn.disabled = currentPage === 1;
-        nextBtn.disabled = currentPage === totalPages;
-    }
-    
-    prevBtn.addEventListener('click', function() {
-        if (currentPage > 1) {
-            currentPage--;
-            updateTableDisplay();
-        }
-    });
-    
-    nextBtn.addEventListener('click', function() {
-        if (currentPage < totalPages) {
-            currentPage++;
-            updateTableDisplay();
-        }
-    });
-    
-    // Initialize display
-    updateTableDisplay();
+    if (dayCounter) dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
+    if (currentDayIndicator) currentDayIndicator.textContent = `Día ${currentDay}`;
 }
 
-// Fullscreen functionality
-function initializeFullscreen() {
-    window.openFullscreen = function(imageData, title) {
-        const overlay = document.getElementById('fullscreenOverlay');
-        const image = document.getElementById('fullscreenImage');
-        
-        image.src = `data:image/png;base64,${imageData}`;
-        image.alt = title;
-        overlay.style.display = 'flex';
-        
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
-    };
-    
-    window.closeFullscreen = function() {
-        const overlay = document.getElementById('fullscreenOverlay');
-        overlay.style.display = 'none';
-        
-        // Restore body scroll
-        document.body.style.overflow = '';
-    };
-    
-    // Close on ESC key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeFullscreen();
-        }
-    });
-    
-    // Close on overlay click
-    document.getElementById('fullscreenOverlay').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeFullscreen();
-        }
-    });
-}
-
-// Export functionality
-function initializeExportFunctions() {
-    window.exportToPDF = async function() {
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando PDF...';
-        btn.disabled = true;
-        
-        try {
-            // Wait for html2canvas to be ready
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Capture the main content
-            const element = document.querySelector('.page-content');
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                logging: false,
-                useCORS: true,
-                allowTaint: true
-            });
-            
-            // Convert to PDF
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jspdf.jsPDF({
-                orientation: 'landscape',
-                unit: 'px',
-                format: [canvas.width, canvas.height]
-            });
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-            pdf.save(`simulacion_${new Date().getTime()}_resultados.pdf`);
-            
-            showNotification('PDF generado exitosamente', 'success');
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            showNotification('Error al generar PDF', 'error');
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    };
-    
-    window.exportToExcel = function() {
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando Excel...';
-        btn.disabled = true;
-        
-        // Create CSV content
-        let csvContent = "data:text/csv;charset=utf-8,";
-        
-        // Add headers
-        csvContent += "Variable,Valor Total,Unidad\n";
-        
-        // Add data
-        {% for name_variable, info_variable in totales_acumulativos.items %}
-        csvContent += '"{{ name_variable }}","{{ info_variable.total|floatformat:2 }}","{{ info_variable.unit }}"\n';
-        {% endfor %}
-        
-        // Create download link
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `simulacion_${new Date().getTime()}_resultados.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        showNotification('Archivo CSV generado exitosamente', 'success');
-        
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    };
-}
-
-// Chart interactions
-function initializeChartInteractions() {
-    // Download chart
-    window.downloadChart = function(imageData, filename) {
-        const link = document.createElement('a');
-        link.href = `data:image/png;base64,${imageData}`;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        showNotification('Gráfico descargado exitosamente', 'success');
-    };
-    
-    // Share results
-    window.shareResults = function() {
-        if (navigator.share) {
-            navigator.share({
-                title: 'Resultados de Simulación',
-                text: 'Mira los resultados de mi simulación de negocio',
-                url: window.location.href
-            }).then(() => {
-                showNotification('Compartido exitosamente', 'success');
-            }).catch((error) => {
-                console.log('Error sharing:', error);
-            });
-        } else {
-            // Fallback: copy to clipboard
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                showNotification('Enlace copiado al portapapeles', 'success');
-            });
-        }
-    };
-}
-
-// Timeline functionality
-window.loadMoreTimeline = function() {
-    showNotification('Cargando más días...', 'info');
-    // Here you would load more timeline items via AJAX
-};
-
-// Tooltips
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
 function initializeTooltips() {
-    // Add CSS for animations
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
-        }
-        .cursor-pointer { cursor: pointer; }
-    `;
-    document.head.appendChild(style);
+    // Agregar estilos de animación
+    if (!document.getElementById('custom-animations')) {
+        const style = document.createElement('style');
+        style.id = 'custom-animations';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+            .cursor-pointer { cursor: pointer; }
+        `;
+        document.head.appendChild(style);
+    }
 }
 
-// Notification system
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
@@ -6565,7 +4733,6 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Auto-remove after 5 seconds
     setTimeout(() => {
         if (notification.parentNode) {
             notification.remove();
@@ -6573,39 +4740,356 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Chart loading states
-document.querySelectorAll('.chart-image').forEach(img => {
-    img.addEventListener('load', function() {
-        this.style.opacity = '0';
-        this.style.animation = 'fadeIn 0.5s ease forwards';
-    });
-});
+function hideTutorial() {
+    const tutorial = document.getElementById('resultsTutorial');
+    if (tutorial) {
+        tutorial.style.animation = 'fadeOut 0.5s ease-out';
+        setTimeout(() => {
+            tutorial.style.display = 'none';
+        }, 500);
+        localStorage.setItem('resultsViewedBefore', 'true');
+    }
+}
 
-// Smooth tab transitions
-document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
-    tab.addEventListener('shown.bs.tab', function(e) {
-        const targetPane = document.querySelector(this.getAttribute('data-bs-target'));
-        if (targetPane) {
-            targetPane.style.animation = 'fadeIn 0.3s ease';
+function shareResults() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Resultados de Simulación',
+            text: 'Mira los resultados de mi simulación de negocio',
+            url: window.location.href
+        }).then(() => {
+            showNotification('Compartido exitosamente', 'success');
+        }).catch((error) => {
+            console.log('Error sharing:', error);
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            showNotification('Enlace copiado al portapapeles', 'success');
+        });
+    }
+}
+
+// Exportar validación de resultados
+function exportValidationResults() {
+    try {
+        let csv = 'Día,Fecha,Producto,Empresa,Demanda Simulada (L),Demanda Real (L),Diferencia (L),Error %,Veredicto\n';
+        
+        const tableRows = document.querySelectorAll('#validationDetailTable tbody tr.validation-row');
+        
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 8) {
+                const day = cells[0].textContent.trim();
+                const date = cells[1].textContent.trim();
+                const productInfo = cells[2].textContent.trim().split('\n');
+                const product = productInfo[0].trim();
+                const business = productInfo[1] ? productInfo[1].trim() : '';
+                const simulated = cells[3].textContent.replace(' L', '').trim();
+                const real = cells[4].textContent.replace(' L', '').trim();
+                const difference = cells[5].textContent.replace(' L', '').replace('+', '').trim();
+                const error = cells[6].querySelector('span')?.textContent.replace('%', '').trim() || '0';
+                const verdict = cells[7].textContent.trim();
+                
+                csv += `${day},"${date}","${product}","${business}",${simulated},${real},${difference},${error},"${verdict}"\n`;
+            }
+        });
+        
+        // Agregar totales si existen
+        const footerCells = document.querySelectorAll('#validationDetailTable tfoot td');
+        if (footerCells.length > 0) {
+            csv += '\nTotales/Promedios,,,,' + 
+                   footerCells[3]?.textContent.replace(' L', '').trim() + ',' +
+                   footerCells[4]?.textContent.replace(' L', '').trim() + ',' +
+                   footerCells[5]?.textContent.replace(' L', '').replace('+', '').trim() + ',' +
+                   footerCells[6]?.querySelector('span')?.textContent.replace('%', '').trim() + ',';
+        }
+        
+        // Descargar archivo
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'validacion_modelo_' + new Date().getTime() + '.csv';
+        link.click();
+        
+        showNotification('Resultados exportados exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exporting validation results:', error);
+        showNotification('Error al exportar resultados', 'error');
+    }
+}
+
+// Exportar validación de variables
+function exportVariablesValidation() {
+    try {
+        let csv = 'Variable,Descripción,Unidad,Valor Real Promedio,Valor Simulado Promedio,Error Promedio %,Días Válidos,Veredicto\n';
+        
+        const rows = document.querySelectorAll('#variablesValidationTable tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 8) {
+                const variable = cells[0].querySelector('strong')?.textContent || '';
+                const description = cells[1].textContent.trim();
+                const unit = cells[2].textContent.trim();
+                const realAvg = cells[3].textContent.replace(/[^\d.-]/g, '');
+                const simAvg = cells[4].textContent.replace(/[^\d.-]/g, '');
+                const errorAvg = cells[5].querySelector('span')?.textContent.replace('%', '') || '0';
+                const validDays = cells[6].textContent.trim();
+                const verdict = cells[7].textContent.trim();
+                
+                csv += `"${variable}","${description}","${unit}",${realAvg},${simAvg},${errorAvg},"${validDays}","${verdict}"\n`;
+            }
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'validacion_variables_' + new Date().getTime() + '.csv';
+        link.click();
+        
+        showNotification('Validación de variables exportada exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exporting variables validation:', error);
+        showNotification('Error al exportar validación de variables', 'error');
+    }
+}
+
+// Exportar tabla de variables endógenas
+function exportEndogenousTable(format) {
+    try {
+        const table = document.getElementById('endogenousTable');
+        const rows = table.querySelectorAll('tbody tr[data-variable]');
+        
+        if (format === 'excel' || format === 'csv') {
+            let csvContent = 'Variable,Valor Total,Unidad,Promedio Diario,Tendencia,Rango,Volatilidad\n';
+            
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    const variable = row.dataset.variable;
+                    const total = row.querySelector('.variable-total')?.textContent.replace(/[,]/g, '') || '';
+                    const unit = row.querySelector('.variable-unit')?.textContent || '';
+                    const average = row.querySelector('.variable-average')?.textContent.replace(/[,]/g, '') || '';
+                    const trend = row.dataset.trend || '';
+                    const range = row.querySelector('.variable-range')?.textContent || '';
+                    const volatility = row.querySelector('.variable-volatility')?.textContent || '';
+                    
+                    csvContent += `"${variable}","${total}","${unit}","${average}","${trend}","${range}","${volatility}"\n`;
+                }
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'variables_endogenas_' + new Date().getTime() + '.csv';
+            link.click();
+            
+            showNotification('Variables endógenas exportadas exitosamente', 'success');
+        } else if (format === 'pdf') {
+            window.print();
+        }
+    } catch (error) {
+        console.error('Error exporting endogenous table:', error);
+        showNotification('Error al exportar tabla', 'error');
+    }
+}
+
+// ==========================================
+// FUNCIONES ESPECÍFICAS DE GRÁFICOS
+// ==========================================
+
+// Cargar gráficos de validación por lotes
+function loadInitialCharts() {
+    const container = document.getElementById('chartsContainer');
+    const loadedContainer = document.getElementById('loadedChartsContainer');
+    
+    if (container) container.style.display = 'none';
+    if (loadedContainer) loadedContainer.style.display = 'block';
+    
+    loadMoreCharts();
+}
+
+function loadMoreCharts() {
+    const container = document.getElementById('chartsGrid');
+    if (!container) return;
+    
+    const remaining = allCharts.length - loadedCharts;
+    const toLoad = Math.min(CHARTS_PER_BATCH, remaining);
+    
+    for (let i = loadedCharts; i < loadedCharts + toLoad; i++) {
+        if (allCharts[i]) {
+            const chartHtml = createChartCard(allCharts[i]);
+            container.insertAdjacentHTML('beforeend', chartHtml);
+        }
+    }
+    
+    loadedCharts += toLoad;
+    
+    // Actualizar botón de cargar más
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const remainingCount = document.getElementById('remainingCount');
+    
+    if (loadMoreContainer && remainingCount) {
+        const newRemaining = allCharts.length - loadedCharts;
+        if (newRemaining > 0) {
+            loadMoreContainer.style.display = 'block';
+            remainingCount.textContent = `(${newRemaining} restantes)`;
+        } else {
+            loadMoreContainer.style.display = 'none';
+        }
+    }
+}
+
+function createChartCard(chartData) {
+    const statusClass = chartData.status === 'PRECISA' ? 'success' : 
+                       chartData.status === 'ACEPTABLE' ? 'warning' : 'danger';
+    
+    return `
+        <div class="col-lg-6 mb-4 chart-card" data-variable="${chartData.variable}" data-type="${chartData.type}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">${chartData.variable}</h6>
+                        <small class="text-muted">${chartData.description}</small>
+                    </div>
+                    <span class="badge bg-${statusClass}">
+                        ${chartData.error_pct?.toFixed(1) || 0}% error
+                    </span>
+                </div>
+                <div class="card-body p-2">
+                    <img src="data:image/png;base64,${chartData.chart}" 
+                         class="img-fluid validation-chart-img" 
+                         alt="Gráfico de ${chartData.variable}"
+                         onclick="expandChart('${chartData.variable}', this.src)">
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row text-center small">
+                        <div class="col-4">
+                            <strong>Unidad:</strong><br>${chartData.unit || 'N/A'}
+                        </div>
+                        <div class="col-4">
+                            <strong>Días:</strong><br>${chartData.days_count || 0}
+                        </div>
+                        <div class="col-4">
+                            <strong>Cobertura:</strong><br>${chartData.coverage?.toFixed(0) || 0}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Filtrar gráficos por tipo
+function filterChartsByType() {
+    const filter = document.getElementById('chartTypeFilter')?.value || '';
+    const chartCards = document.querySelectorAll('.chart-card');
+    
+    chartCards.forEach(card => {
+        const cardType = card.dataset.type;
+        if (!filter || cardType === filter) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
         }
     });
-});
+}
 
-// Print functionality
+// ==========================================
+// GESTIÓN DE PERFORMANCE Y MEMORIA
+// ==========================================
+function checkPerformance() {
+    if ('performance' in window && 'memory' in performance) {
+        const memoryUsage = performance.memory.usedJSHeapSize / 1048576;
+        console.log(`Memory usage: ${memoryUsage.toFixed(2)} MB`);
+        
+        if (memoryUsage > 500) {
+            console.warn('High memory usage detected. Consider closing other tabs.');
+        }
+    }
+}
+
+// Monitorear rendimiento cada 30 segundos
+setInterval(checkPerformance, 30000);
+
+// Lazy loading de imágenes
+function setupLazyLoading() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        });
+        
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+}
+
+// ==========================================
+// EVENTOS DE IMPRESIÓN
+// ==========================================
 window.addEventListener('beforeprint', function() {
-    // Expand all collapsed sections for printing
+    // Expandir secciones colapsadas para impresión
     document.querySelectorAll('.collapse').forEach(el => {
         el.classList.add('show');
+    });
+    
+    // Mostrar todos los días para impresión
+    document.querySelectorAll('.daily-result-item').forEach(item => {
+        item.style.display = 'block';
     });
 });
 
 window.addEventListener('afterprint', function() {
-    // Restore collapsed state after printing
-    document.querySelectorAll('.collapse').forEach(el => {
-        if (!el.classList.contains('show')) {
-            el.classList.remove('show');
-        }
+    // Restaurar estado después de impresión
+    document.querySelectorAll('.daily-result-item').forEach((item, index) => {
+        item.style.display = index === currentDay - 1 ? 'block' : 'none';
     });
 });
+
+// ==========================================
+// GESTIÓN DE ERRORES GLOBAL
+// ==========================================
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.error);
+    
+    // Manejar errores de carga de imágenes
+    if (e.target.tagName === 'IMG' && e.target.classList.contains('chart-image')) {
+        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yIGNhcmdhbmRvIGdyw6FmaWNvPC90ZXh0Pgo8L3N2Zz4=';
+        e.target.classList.remove('lazy');
+    }
+});
+
+// ==========================================
+// INICIALIZACIÓN FINAL
+// ==========================================
+console.log('Simulate Result Unified Script loaded successfully');
+
+// Exportar funciones globales necesarias
+window.downloadChart = downloadChart;
+window.openFullscreen = openFullscreen;
+window.downloadCurrentChart = downloadCurrentChart;
+window.exportToPDF = exportToPDF;
+window.exportToExcel = exportToExcel;
+window.shareResults = shareResults;
+window.hideTutorial = hideTutorial;
+window.showVariableDetails = showVariableDetails;
+window.expandChart = expandChart;
+window.updateVariableCounts = updateVariableCounts;
+window.toggleValidationChartType = toggleValidationChartType;
+window.downloadValidationChart = downloadValidationChart;
+window.exportValidationResults = exportValidationResults;
+window.exportVariablesValidation = exportVariablesValidation;
+window.exportEndogenousTable = exportEndogenousTable;
+window.loadInitialCharts = loadInitialCharts;
+window.loadMoreCharts = loadMoreCharts;
+window.filterChartsByType = filterChartsByType;
 </script>
 {% endblock extra_js %}
