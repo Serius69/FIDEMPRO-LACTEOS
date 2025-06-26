@@ -264,6 +264,31 @@ class SimulateResultView(LoginRequiredMixin, View):
             context.setdefault('financial_recommendations', financial_results.get('financial_recommendations', []))
             context.setdefault('daily_validation_results', daily_validation.get('daily_validation_results', []))
             
+            statistical_analysis = self._generate_statistical_analysis(
+                simulation_instance, results_simulation, historical_demand, all_variables_extracted
+            )
+            
+            statistical_charts = self._generate_enhanced_statistical_charts(
+                historical_demand, simulated_demands=[float(r.demand_mean) for r in results_simulation], 
+                all_variables_extracted=all_variables_extracted
+            )
+            
+            # PASO 13.7: Análisis de validación mejorado
+            enhanced_validation = self._enhanced_validation_analysis(
+                simulation_instance, results_simulation, historical_demand, all_variables_extracted
+            )
+            context.update({
+                'statistical_analysis': statistical_analysis,
+                'statistical_charts': statistical_charts,
+                'enhanced_validation': enhanced_validation,
+                'performance_metrics': statistical_analysis.get('performance_metrics', {}),
+                'statistical_tests': statistical_analysis.get('statistical_tests', {}),
+                'distribution_analysis': statistical_analysis.get('distribution_analysis', {}),
+                'correlation_analysis': statistical_analysis.get('correlation_analysis', {}),
+                'trend_analysis': statistical_analysis.get('trend_analysis', {}),
+            })
+                    
+            
             # Final logging
             self._log_context_summary(context)
             
@@ -300,6 +325,63 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'has_advanced_charts': False
             }
 
+    def _generate_enhanced_statistical_charts(self, historical_demand, simulated_demands, all_variables_extracted):
+        """Generar gráficos estadísticos completos"""
+        try:
+            chart_generator = ChartGenerator()
+            statistical_charts = {}
+            
+            # 1. Histograma con distribución
+            if simulated_demands:
+                statistical_charts['histogram'] = chart_generator._generate_histogram_chart(simulated_demands)
+            
+            # 2. Box plot comparativo
+            if historical_demand and simulated_demands:
+                statistical_charts['boxplot'] = chart_generator._generate_comparative_boxplot(
+                    historical_demand, simulated_demands
+                )
+            
+            # 3. Scatter plot de correlación
+            if historical_demand and simulated_demands:
+                statistical_charts['scatter'] = chart_generator._generate_scatter_plot(
+                    historical_demand, simulated_demands
+                )
+            
+            # 4. Gráfico de residuos
+            if historical_demand and simulated_demands:
+                statistical_charts['residuals'] = chart_generator._generate_residuals_plot(
+                    historical_demand, simulated_demands
+                )
+            
+            # 5. Q-Q plot para normalidad
+            if simulated_demands:
+                statistical_charts['qq_plot'] = chart_generator._generate_qq_plot(simulated_demands)
+            
+            # 6. Autocorrelación
+            if simulated_demands and len(simulated_demands) > 10:
+                statistical_charts['autocorrelation'] = chart_generator._generate_autocorrelation_plot(simulated_demands)
+            
+            # 7. Mapa de calor de correlaciones entre variables
+            correlation_analysis = self._analyze_variable_correlations(all_variables_extracted)
+            if correlation_analysis.get('correlation_matrix'):
+                statistical_charts['correlation_heatmap'] = chart_generator._generate_correlation_heatmap(
+                    correlation_analysis['correlation_matrix'],
+                    correlation_analysis['variables_analyzed']
+                )
+            
+            # 8. Dashboard de performance
+            performance_metrics = self._calculate_performance_metrics(historical_demand, simulated_demands)
+            if performance_metrics:
+                statistical_charts['performance_dashboard'] = chart_generator._generate_performance_dashboard(performance_metrics)
+            
+            logger.info(f"Generated {len(statistical_charts)} statistical charts")
+            return statistical_charts
+            
+        except Exception as e:
+            logger.error(f"Error generating enhanced statistical charts: {str(e)}")
+            return {}
+    
+    
     def _enhance_totales_acumulativos(self, totales_acumulativos, all_variables_extracted):
         """Enhanced totales with trends and additional statistics"""
         try:
@@ -2075,6 +2157,519 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error calculating trend analysis: {str(e)}")
             return {'direction': 'stable', 'strength': 0}
+
+    def _generate_statistical_analysis(self, simulation_instance, results_simulation, historical_demand, all_variables_extracted):
+        """Generar análisis estadístico completo"""
+        try:
+            statistical_data = {}
+            
+            # Extraer datos de demanda
+            simulated_demands = [float(r.demand_mean) for r in results_simulation if hasattr(r, 'demand_mean')]
+            
+            if not simulated_demands:
+                return {'statistical_analysis': {}, 'statistical_tests': {}}
+            
+            # 1. Análisis de distribución
+            statistical_data['distribution_analysis'] = self._analyze_distribution(simulated_demands)
+            
+            # 2. Pruebas estadísticas
+            if historical_demand and len(historical_demand) > 0:
+                statistical_data['statistical_tests'] = self._perform_statistical_tests(
+                    historical_demand, simulated_demands
+                )
+            else:
+                statistical_data['statistical_tests'] = {}
+            
+            # 3. Métricas de performance
+            statistical_data['performance_metrics'] = self._calculate_performance_metrics(
+                historical_demand, simulated_demands
+            )
+            
+            # 4. Análisis de correlación entre variables
+            statistical_data['correlation_analysis'] = self._analyze_variable_correlations(
+                all_variables_extracted
+            )
+            
+            # 5. Análisis de tendencias
+            statistical_data['trend_analysis'] = self._analyze_trends(simulated_demands)
+            
+            # 6. Gráficos estadísticos
+            statistical_data['statistical_charts'] = self._generate_statistical_charts(
+                historical_demand, simulated_demands, all_variables_extracted
+            )
+            
+            return statistical_data
+            
+        except Exception as e:
+            logger.error(f"Error generating statistical analysis: {str(e)}")
+            return {'statistical_analysis': {}, 'statistical_tests': {}}
+
+    def _enhanced_validation_analysis(self, simulation_instance, results_simulation, historical_demand, all_variables_extracted):
+        """Análisis de validación mejorado"""
+        try:
+            validation_data = {}
+            
+            # 1. Validación básica del modelo
+            basic_validation = self.validation_service.validate_simulation(simulation_instance.id)
+            validation_data['basic_validation'] = basic_validation
+            
+            # 2. Validación por variables
+            if all_variables_extracted:
+                variable_validation = self._validate_individual_variables(
+                    simulation_instance, all_variables_extracted
+                )
+                validation_data['variable_validation'] = variable_validation
+            
+            # 3. Validación temporal (por días)
+            temporal_validation = self._validate_temporal_consistency(
+                results_simulation, historical_demand
+            )
+            validation_data['temporal_validation'] = temporal_validation
+            
+            # 4. Métricas de confiabilidad
+            reliability_metrics = self._calculate_reliability_metrics(
+                historical_demand, results_simulation
+            )
+            validation_data['reliability_metrics'] = reliability_metrics
+            
+            # 5. Intervalos de confianza
+            if historical_demand:
+                confidence_intervals = self._calculate_confidence_intervals(
+                    historical_demand, [float(r.demand_mean) for r in results_simulation]
+                )
+                validation_data['confidence_intervals'] = confidence_intervals
+            
+            return validation_data
+            
+        except Exception as e:
+            logger.error(f"Error in enhanced validation analysis: {e}")
+            return {}
+    
+    
+    def _analyze_trends(self, data):
+        """Analizar tendencias en los datos"""
+        try:
+            if len(data) < 3:
+                return {}
+            
+            data_array = np.array(data)
+            x = np.arange(len(data_array))
+            
+            # Regresión lineal
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x, data_array)
+            
+            # Prueba de Mann-Kendall para tendencia
+            try:
+                from scipy.stats import kendalltau
+                tau, tau_p = kendalltau(x, data_array)
+                has_trend = tau_p < 0.05
+            except:
+                has_trend = p_value < 0.05
+            
+            # Clasificar tendencia
+            if abs(slope) < 0.01 * np.mean(data_array):
+                trend_type = 'Estable'
+            elif slope > 0:
+                trend_type = 'Creciente'
+            else:
+                trend_type = 'Decreciente'
+            
+            return {
+                'slope': float(slope),
+                'intercept': float(intercept),
+                'r_squared': float(r_value ** 2),
+                'p_value': float(p_value),
+                'std_error': float(std_err),
+                'trend_type': trend_type,
+                'has_significant_trend': has_trend,
+                'trend_strength': (
+                    'Fuerte' if abs(r_value) > 0.7 else
+                    'Moderada' if abs(r_value) > 0.4 else
+                    'Débil'
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing trends: {e}")
+            return {}
+
+    
+    def _generate_statistical_charts(self, historical_demand, simulated_demands, all_variables_extracted):
+        """Generar gráficos estadísticos"""
+        try:
+            charts = {}
+            
+            if not simulated_demands:
+                return charts
+            
+            # Usar el chart_generator existente
+            chart_generator = ChartGenerator()
+            
+            # 1. Histograma y distribución
+            try:
+                charts['histogram'] = chart_generator._generate_histogram_chart(simulated_demands)
+            except Exception as e:
+                logger.warning(f"Error generating histogram: {e}")
+            
+            # 2. Box plot comparativo
+            if historical_demand:
+                try:
+                    charts['boxplot'] = chart_generator._generate_comparative_boxplot(
+                        historical_demand, simulated_demands
+                    )
+                except Exception as e:
+                    logger.warning(f"Error generating boxplot: {e}")
+            
+            # 3. Scatter plot (si hay datos históricos)
+            if historical_demand:
+                try:
+                    charts['scatter'] = chart_generator._generate_scatter_plot(
+                        historical_demand, simulated_demands
+                    )
+                except Exception as e:
+                    logger.warning(f"Error generating scatter plot: {e}")
+            
+            # 4. Gráfico de residuos
+            if historical_demand:
+                try:
+                    charts['residuals'] = chart_generator._generate_residuals_plot(
+                        historical_demand, simulated_demands
+                    )
+                except Exception as e:
+                    logger.warning(f"Error generating residuals plot: {e}")
+            
+            # 5. QQ plot para normalidad
+            try:
+                charts['qq_plot'] = chart_generator._generate_qq_plot(simulated_demands)
+            except Exception as e:
+                logger.warning(f"Error generating QQ plot: {e}")
+            
+            return charts
+            
+        except Exception as e:
+            logger.error(f"Error generating statistical charts: {e}")
+            return {}
+    
+    
+    def _analyze_variable_correlations(self, all_variables_extracted):
+        """Analizar correlaciones entre variables endógenas"""
+        try:
+            if not all_variables_extracted or len(all_variables_extracted) < 3:
+                return {}
+            
+            # Construir matriz de datos
+            variables_data = {}
+            numeric_vars = ['IT', 'GT', 'TG', 'TPV', 'NSC', 'EOG', 'NR', 'PVP', 'CVU', 'CFD']
+            
+            for var in numeric_vars:
+                values = []
+                for day_data in all_variables_extracted:
+                    if var in day_data and day_data[var] is not None:
+                        try:
+                            values.append(float(day_data[var]))
+                        except (ValueError, TypeError):
+                            values.append(np.nan)
+                    else:
+                        values.append(np.nan)
+                
+                if len(values) > 0 and not all(np.isnan(values)):
+                    variables_data[var] = values
+            
+            if len(variables_data) < 2:
+                return {}
+            
+            # Calcular matriz de correlación
+            correlation_matrix = {}
+            significant_correlations = []
+            
+            var_names = list(variables_data.keys())
+            for i, var1 in enumerate(var_names):
+                correlation_matrix[var1] = {}
+                for j, var2 in enumerate(var_names):
+                    if i != j:
+                        try:
+                            # Filtrar valores no nulos
+                            data1 = np.array(variables_data[var1])
+                            data2 = np.array(variables_data[var2])
+                            
+                            mask = ~(np.isnan(data1) | np.isnan(data2))
+                            if np.sum(mask) > 3:
+                                corr_coef, p_value = stats.pearsonr(data1[mask], data2[mask])
+                                correlation_matrix[var1][var2] = {
+                                    'coefficient': float(corr_coef),
+                                    'p_value': float(p_value),
+                                    'significant': p_value < 0.05
+                                }
+                                
+                                # Guardar correlaciones significativas y fuertes
+                                if p_value < 0.05 and abs(corr_coef) > 0.5:
+                                    significant_correlations.append({
+                                        'var1': var1,
+                                        'var2': var2,
+                                        'coefficient': float(corr_coef),
+                                        'strength': (
+                                            'Muy fuerte' if abs(corr_coef) > 0.8 else
+                                            'Fuerte' if abs(corr_coef) > 0.6 else
+                                            'Moderada'
+                                        ),
+                                        'direction': 'Positiva' if corr_coef > 0 else 'Negativa'
+                                    })
+                            else:
+                                correlation_matrix[var1][var2] = {
+                                    'coefficient': 0.0,
+                                    'p_value': 1.0,
+                                    'significant': False
+                                }
+                        except Exception:
+                            correlation_matrix[var1][var2] = {
+                                'coefficient': 0.0,
+                                'p_value': 1.0,
+                                'significant': False
+                            }
+                    else:
+                        correlation_matrix[var1][var2] = {
+                            'coefficient': 1.0,
+                            'p_value': 0.0,
+                            'significant': True
+                        }
+            
+            return {
+                'correlation_matrix': correlation_matrix,
+                'significant_correlations': significant_correlations,
+                'variables_analyzed': var_names
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing correlations: {e}")
+            return {}
+    
+    def _analyze_distribution(self, data):
+        """Analizar distribución de los datos"""
+        try:
+            if len(data) < 3:
+                return {}
+            
+            data_array = np.array(data)
+            
+            analysis = {
+                'basic_stats': {
+                    'mean': float(np.mean(data_array)),
+                    'std': float(np.std(data_array)),
+                    'variance': float(np.var(data_array)),
+                    'skewness': float(stats.skew(data_array)),
+                    'kurtosis': float(stats.kurtosis(data_array)),
+                    'min': float(np.min(data_array)),
+                    'max': float(np.max(data_array)),
+                    'median': float(np.median(data_array)),
+                    'q25': float(np.percentile(data_array, 25)),
+                    'q75': float(np.percentile(data_array, 75)),
+                    'iqr': float(np.percentile(data_array, 75) - np.percentile(data_array, 25))
+                },
+                'normality_test': {
+                    'shapiro_stat': None,
+                    'shapiro_p': None,
+                    'is_normal': False
+                },
+                'distribution_fit': {
+                    'best_fit': 'normal',
+                    'fit_params': {},
+                    'goodness_of_fit': 0.0
+                }
+            }
+            
+            # Prueba de normalidad (Shapiro-Wilk)
+            if len(data_array) <= 5000:  # Shapiro-Wilk es válido para n <= 5000
+                try:
+                    stat, p_value = stats.shapiro(data_array)
+                    analysis['normality_test'] = {
+                        'shapiro_stat': float(stat),
+                        'shapiro_p': float(p_value),
+                        'is_normal': p_value > 0.05
+                    }
+                except Exception as e:
+                    logger.warning(f"Error in normality test: {e}")
+            
+            # Ajuste de distribuciones
+            try:
+                distributions = [stats.norm, stats.lognorm, stats.expon, stats.gamma]
+                best_dist = None
+                best_fit = -np.inf
+                best_params = {}
+                
+                for dist in distributions:
+                    try:
+                        params = dist.fit(data_array)
+                        # Prueba de Kolmogorov-Smirnov
+                        ks_stat, ks_p = stats.kstest(data_array, lambda x: dist.cdf(x, *params))
+                        
+                        if ks_p > best_fit:
+                            best_fit = ks_p
+                            best_dist = dist.name
+                            best_params = params
+                            
+                    except Exception:
+                        continue
+                
+                if best_dist:
+                    analysis['distribution_fit'] = {
+                        'best_fit': best_dist,
+                        'fit_params': [float(p) for p in best_params],
+                        'goodness_of_fit': float(best_fit)
+                    }
+            except Exception as e:
+                logger.warning(f"Error in distribution fitting: {e}")
+            
+            return analysis
+            
+        except Exception as e:
+            logger.error(f"Error analyzing distribution: {e}")
+            return {}
+
+    def _perform_statistical_tests(self, historical_data, simulated_data):
+        """Realizar pruebas estadísticas comparativas"""
+        try:
+            tests = {}
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_trimmed = np.array(historical_data[:min_len])
+            sim_trimmed = np.array(simulated_data[:min_len])
+            
+            if min_len < 3:
+                return tests
+            
+            # 1. Prueba t de Student (medias)
+            try:
+                t_stat, t_p = stats.ttest_ind(hist_trimmed, sim_trimmed)
+                tests['t_test'] = {
+                    'statistic': float(t_stat),
+                    'p_value': float(t_p),
+                    'means_equal': t_p > 0.05,
+                    'interpretation': 'Las medias son estadísticamente iguales' if t_p > 0.05 else 'Las medias son significativamente diferentes'
+                }
+            except Exception as e:
+                logger.warning(f"Error in t-test: {e}")
+            
+            # 2. Prueba F (varianzas)
+            try:
+                f_stat = np.var(hist_trimmed, ddof=1) / np.var(sim_trimmed, ddof=1)
+                f_p = 2 * min(stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1),
+                            1 - stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1))
+                
+                tests['f_test'] = {
+                    'statistic': float(f_stat),
+                    'p_value': float(f_p),
+                    'variances_equal': f_p > 0.05,
+                    'interpretation': 'Las varianzas son homogéneas' if f_p > 0.05 else 'Las varianzas son heterogéneas'
+                }
+            except Exception as e:
+                logger.warning(f"Error in F-test: {e}")
+            
+            # 3. Prueba de Kolmogorov-Smirnov (distribuciones)
+            try:
+                ks_stat, ks_p = stats.ks_2samp(hist_trimmed, sim_trimmed)
+                tests['ks_test'] = {
+                    'statistic': float(ks_stat),
+                    'p_value': float(ks_p),
+                    'distributions_equal': ks_p > 0.05,
+                    'interpretation': 'Las distribuciones son similares' if ks_p > 0.05 else 'Las distribuciones son diferentes'
+                }
+            except Exception as e:
+                logger.warning(f"Error in KS-test: {e}")
+            
+            # 4. Correlación de Pearson
+            try:
+                corr_coef, corr_p = stats.pearsonr(hist_trimmed, sim_trimmed)
+                tests['correlation'] = {
+                    'coefficient': float(corr_coef),
+                    'p_value': float(corr_p),
+                    'is_significant': corr_p < 0.05,
+                    'strength': (
+                        'Muy fuerte' if abs(corr_coef) > 0.8 else
+                        'Fuerte' if abs(corr_coef) > 0.6 else
+                        'Moderada' if abs(corr_coef) > 0.4 else
+                        'Débil'
+                    ),
+                    'interpretation': f'Correlación {tests.get("correlation", {}).get("strength", "débil").lower()} entre histórico y simulado'
+                }
+            except Exception as e:
+                logger.warning(f"Error in correlation test: {e}")
+            
+            return tests
+            
+        except Exception as e:
+            logger.error(f"Error performing statistical tests: {e}")
+            return {}
+
+    def _calculate_performance_metrics(self, historical_data, simulated_data):
+        """Calcular métricas de performance del modelo"""
+        try:
+            if not historical_data or not simulated_data:
+                return {}
+            
+            min_len = min(len(historical_data), len(simulated_data))
+            hist = np.array(historical_data[:min_len])
+            sim = np.array(simulated_data[:min_len])
+            
+            if min_len == 0:
+                return {}
+            
+            # Métricas básicas
+            mae = np.mean(np.abs(hist - sim))
+            mse = np.mean((hist - sim) ** 2)
+            rmse = np.sqrt(mse)
+            
+            # MAPE (con manejo de zeros)
+            mape_values = []
+            for h, s in zip(hist, sim):
+                if h != 0:
+                    mape_values.append(abs((h - s) / h) * 100)
+            mape = np.mean(mape_values) if mape_values else 0
+            
+            # R²
+            ss_res = np.sum((hist - sim) ** 2)
+            ss_tot = np.sum((hist - np.mean(hist)) ** 2)
+            r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+            
+            # Índice de concordancia de Willmott
+            try:
+                willmott_d = 1 - (np.sum((sim - hist) ** 2) / 
+                                np.sum((np.abs(sim - np.mean(hist)) + np.abs(hist - np.mean(hist))) ** 2))
+            except:
+                willmott_d = 0
+            
+            # Eficiencia de Nash-Sutcliffe
+            try:
+                nash_sutcliffe = 1 - (np.sum((hist - sim) ** 2) / np.sum((hist - np.mean(hist)) ** 2))
+            except:
+                nash_sutcliffe = 0
+            
+            return {
+                'mae': float(mae),
+                'mse': float(mse),
+                'rmse': float(rmse),
+                'mape': float(mape),
+                'r_squared': float(r_squared),
+                'willmott_d': float(willmott_d),
+                'nash_sutcliffe': float(nash_sutcliffe),
+                'accuracy_level': (
+                    'Excelente' if mape < 10 else
+                    'Muy buena' if mape < 15 else
+                    'Buena' if mape < 20 else
+                    'Aceptable' if mape < 30 else
+                    'Pobre'
+                ),
+                'model_quality': (
+                    'Muy alta' if r_squared > 0.9 else
+                    'Alta' if r_squared > 0.8 else
+                    'Moderada' if r_squared > 0.6 else
+                    'Baja'
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating performance metrics: {e}")
+            return {}
 
 
 def simulate_result_simulation_view(request, simulation_id):

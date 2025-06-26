@@ -10,6 +10,7 @@ from io import BytesIO
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
 
 import matplotlib
 matplotlib.use('Agg')
@@ -18,6 +19,7 @@ import matplotlib.dates as mdates
 from matplotlib.figure import Figure
 import seaborn as sns
 from datetime import datetime, timedelta
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -2823,7 +2825,7 @@ class ChartGenerator:
                         fontsize=18, fontweight='bold', y=0.98)
             
             # Convert to base64
-            image_data = self._save_plot_as_base64(fig)
+            image_data = self._fig_to_base64(fig)
             plt.close(fig)
             
             return image_data
@@ -3599,3 +3601,481 @@ class ChartGenerator:
         buffer.close()
         plt.close(fig)
         return image_data
+    
+    def _generate_histogram_chart(self, data):
+        """Generar histograma con ajuste de distribución"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+            
+            # Histograma principal
+            n, bins, patches = ax1.hist(data, bins=20, density=True, alpha=0.7, 
+                                    color='skyblue', edgecolor='black')
+            
+            # Ajustar distribución normal
+            mu, sigma = np.mean(data), np.std(data)
+            x = np.linspace(min(data), max(data), 100)
+            normal_dist = stats.norm.pdf(x, mu, sigma)
+            ax1.plot(x, normal_dist, 'r-', linewidth=2, label=f'Normal (μ={mu:.2f}, σ={sigma:.2f})')
+            
+            # Líneas de estadísticas
+            ax1.axvline(mu, color='red', linestyle='--', alpha=0.7, label=f'Media: {mu:.2f}')
+            ax1.axvline(np.median(data), color='orange', linestyle='--', alpha=0.7, 
+                    label=f'Mediana: {np.median(data):.2f}')
+            
+            ax1.set_xlabel('Demanda (Litros)')
+            ax1.set_ylabel('Densidad')
+            ax1.set_title('Distribución de la Demanda Simulada')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Box plot
+            bp = ax2.boxplot(data, patch_artist=True, boxprops=dict(facecolor='lightblue'))
+            ax2.set_ylabel('Demanda (Litros)')
+            ax2.set_title('Diagrama de Cajas')
+            ax2.grid(True, alpha=0.3)
+            
+            # Estadísticas en el box plot
+            q1, median, q3 = np.percentile(data, [25, 50, 75])
+            iqr = q3 - q1
+            ax2.text(1.1, median, f'Q2: {median:.1f}', va='center')
+            ax2.text(1.1, q3, f'Q3: {q3:.1f}', va='center')
+            ax2.text(1.1, q1, f'Q1: {q1:.1f}', va='center')
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating histogram chart: {e}")
+            return None
+        
+    def _generate_comparative_boxplot(self, historical_data, simulated_data):
+        """Generar box plot comparativo"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Preparar datos
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_data = historical_data[:min_len]
+            sim_data = simulated_data[:min_len]
+            
+            # Box plots lado a lado
+            bp1 = ax.boxplot([hist_data], positions=[1], widths=0.6, patch_artist=True,
+                            boxprops=dict(facecolor='lightblue', alpha=0.7),
+                            medianprops=dict(color='red', linewidth=2))
+            
+            bp2 = ax.boxplot([sim_data], positions=[2], widths=0.6, patch_artist=True,
+                            boxprops=dict(facecolor='lightcoral', alpha=0.7),
+                            medianprops=dict(color='red', linewidth=2))
+            
+            # Etiquetas y formato
+            ax.set_xticklabels(['Histórico', 'Simulado'])
+            ax.set_ylabel('Demanda (Litros)')
+            ax.set_title('Comparación de Distribuciones: Histórico vs Simulado')
+            ax.grid(True, alpha=0.3)
+            
+            # Agregar estadísticas
+            hist_stats = f'Media: {np.mean(hist_data):.1f}\nMediana: {np.median(hist_data):.1f}\nStd: {np.std(hist_data):.1f}'
+            sim_stats = f'Media: {np.mean(sim_data):.1f}\nMediana: {np.median(sim_data):.1f}\nStd: {np.std(sim_data):.1f}'
+            
+            ax.text(0.7, 0.95, hist_stats, transform=ax.transAxes, va='top',
+                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
+            ax.text(0.7, 0.7, sim_stats, transform=ax.transAxes, va='top',
+                bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7))
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating comparative boxplot: {e}")
+            return None
+    
+    def _generate_scatter_plot(self, historical_data, simulated_data):
+        """Generar scatter plot con línea de regresión"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, ax = plt.subplots(figsize=(10, 8))
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_data = np.array(historical_data[:min_len])
+            sim_data = np.array(simulated_data[:min_len])
+            
+            # Scatter plot
+            ax.scatter(hist_data, sim_data, alpha=0.6, s=50, color='blue')
+            
+            # Línea de referencia (x=y)
+            min_val = min(np.min(hist_data), np.min(sim_data))
+            max_val = max(np.max(hist_data), np.max(sim_data))
+            ax.plot([min_val, max_val], [min_val, max_val], 'r--', 
+                label='Línea de referencia (y=x)', linewidth=2)
+            
+            # Línea de regresión
+            slope, intercept, r_value, p_value, std_err = stats.linregress(hist_data, sim_data)
+            line = slope * hist_data + intercept
+            ax.plot(hist_data, line, 'g-', label=f'Regresión (R²={r_value**2:.3f})', linewidth=2)
+            
+            # Formato y etiquetas
+            ax.set_xlabel('Demanda Histórica (Litros)')
+            ax.set_ylabel('Demanda Simulada (Litros)')
+            ax.set_title('Correlación: Demanda Histórica vs Simulada')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            
+            # Estadísticas en el gráfico
+            stats_text = f'R² = {r_value**2:.3f}\nR = {r_value:.3f}\np-valor = {p_value:.4f}'
+            ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, va='top',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating scatter plot: {e}")
+            return None
+        
+    def _generate_residuals_plot(self, historical_data, simulated_data):
+        """Generar gráfico de residuos"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_data = np.array(historical_data[:min_len])
+            sim_data = np.array(simulated_data[:min_len])
+            
+            # Calcular residuos
+            residuals = sim_data - hist_data
+            fitted = hist_data  # En este caso, los valores "fitted" son los históricos
+            
+            # 1. Residuos vs Valores ajustados
+            ax1.scatter(fitted, residuals, alpha=0.6)
+            ax1.axhline(y=0, color='red', linestyle='--', alpha=0.7)
+            ax1.set_xlabel('Valores Históricos')
+            ax1.set_ylabel('Residuos (Simulado - Histórico)')
+            ax1.set_title('Residuos vs Valores Históricos')
+            ax1.grid(True, alpha=0.3)
+            
+            # 2. Histograma de residuos
+            ax2.hist(residuals, bins=15, density=True, alpha=0.7, color='skyblue', edgecolor='black')
+            
+            # Superponer distribución normal
+            mu, sigma = np.mean(residuals), np.std(residuals)
+            x = np.linspace(np.min(residuals), np.max(residuals), 100)
+            ax2.plot(x, stats.norm.pdf(x, mu, sigma), 'r-', linewidth=2, label='Normal')
+            
+            ax2.set_xlabel('Residuos')
+            ax2.set_ylabel('Densidad')
+            ax2.set_title('Distribución de Residuos')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            # 3. Q-Q plot de residuos
+            stats.probplot(residuals, dist="norm", plot=ax3)
+            ax3.set_title('Q-Q Plot de Residuos')
+            ax3.grid(True, alpha=0.3)
+            
+            # 4. Residuos vs Orden (temporal)
+            order = np.arange(len(residuals))
+            ax4.plot(order, residuals, 'o-', alpha=0.6)
+            ax4.axhline(y=0, color='red', linestyle='--', alpha=0.7)
+            ax4.set_xlabel('Orden Temporal')
+            ax4.set_ylabel('Residuos')
+            ax4.set_title('Residuos vs Tiempo')
+            ax4.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating residuals plot: {e}")
+            return None
+        
+    def _generate_qq_plot(self, data):
+        """Generar Q-Q plot para prueba de normalidad"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+            
+            # Q-Q plot normal
+            stats.probplot(data, dist="norm", plot=ax1)
+            ax1.set_title('Q-Q Plot vs Distribución Normal')
+            ax1.grid(True, alpha=0.3)
+            
+            # Prueba de normalidad con histograma
+            ax2.hist(data, bins=20, density=True, alpha=0.7, color='lightblue', edgecolor='black')
+            
+            # Superponer distribución normal teórica
+            mu, sigma = np.mean(data), np.std(data)
+            x = np.linspace(np.min(data), np.max(data), 100)
+            ax2.plot(x, stats.norm.pdf(x, mu, sigma), 'r-', linewidth=2, label='Normal teórica')
+            
+            # Prueba de Shapiro-Wilk
+            if len(data) <= 5000:
+                shapiro_stat, shapiro_p = stats.shapiro(data)
+                interpretation = "Normal" if shapiro_p > 0.05 else "No Normal"
+                ax2.text(0.05, 0.95, f'Shapiro-Wilk:\nEstadístico: {shapiro_stat:.4f}\np-valor: {shapiro_p:.4f}\nInterpretación: {interpretation}',
+                        transform=ax2.transAxes, va='top',
+                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            ax2.set_xlabel('Valores')
+            ax2.set_ylabel('Densidad')
+            ax2.set_title('Prueba de Normalidad')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating Q-Q plot: {e}")
+            return None
+        
+    def _generate_correlation_heatmap(self, correlation_matrix, variables):
+        """Generar mapa de calor de correlaciones"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig, ax = plt.subplots(figsize=(10, 8))
+            
+            # Construir matriz numérica
+            n_vars = len(variables)
+            corr_array = np.zeros((n_vars, n_vars))
+            
+            for i, var1 in enumerate(variables):
+                for j, var2 in enumerate(variables):
+                    if var1 in correlation_matrix and var2 in correlation_matrix[var1]:
+                        corr_array[i, j] = correlation_matrix[var1][var2]['coefficient']
+                    elif i == j:
+                        corr_array[i, j] = 1.0
+            
+            # Crear heatmap
+            im = ax.imshow(corr_array, cmap='RdBu_r', aspect='auto', vmin=-1, vmax=1)
+            
+            # Configurar ticks y etiquetas
+            ax.set_xticks(np.arange(n_vars))
+            ax.set_yticks(np.arange(n_vars))
+            ax.set_xticklabels(variables, rotation=45, ha='right')
+            ax.set_yticklabels(variables)
+            
+            # Agregar valores de correlación
+            for i in range(n_vars):
+                for j in range(n_vars):
+                    text = ax.text(j, i, f'{corr_array[i, j]:.2f}',
+                                ha="center", va="center", color="black", fontsize=8)
+            
+            ax.set_title('Matriz de Correlación entre Variables')
+            
+            # Colorbar
+            cbar = plt.colorbar(im, ax=ax)
+            cbar.set_label('Coeficiente de Correlación')
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating correlation heatmap: {e}")
+            return None
+        
+    def _generate_autocorrelation_plot(self, data, max_lags=20):
+        """Generar gráfico de autocorrelación"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+            
+            # Calcular autocorrelación manual
+            def autocorrelation(x, max_lags):
+                n = len(x)
+                x = np.array(x) - np.mean(x)
+                autocorr = np.correlate(x, x, mode='full')
+                autocorr = autocorr[autocorr.size // 2:]
+                autocorr = autocorr / autocorr[0]  # Normalizar
+                return autocorr[:max_lags+1]
+            
+            # ACF
+            lags = np.arange(min(max_lags + 1, len(data)))
+            acf_values = autocorrelation(data, max_lags)[:len(lags)]
+            
+            ax1.bar(lags, acf_values, alpha=0.7, color='blue')
+            ax1.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+            ax1.axhline(y=0.05, color='red', linestyle='--', alpha=0.5, label='Umbral 5%')
+            ax1.axhline(y=-0.05, color='red', linestyle='--', alpha=0.5)
+            ax1.set_xlabel('Lag')
+            ax1.set_ylabel('Autocorrelación')
+            ax1.set_title('Función de Autocorrelación (ACF)')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Gráfico de lag-1
+            if len(data) > 1:
+                ax2.scatter(data[:-1], data[1:], alpha=0.6)
+                ax2.set_xlabel('Valor en t')
+                ax2.set_ylabel('Valor en t+1')
+                ax2.set_title('Gráfico de Lag-1')
+                ax2.grid(True, alpha=0.3)
+                
+                # Línea de regresión
+                from scipy import stats
+                slope, intercept, r_value, _, _ = stats.linregress(data[:-1], data[1:])
+                line = slope * np.array(data[:-1]) + intercept
+                ax2.plot(data[:-1], line, 'r-', label=f'R = {r_value:.3f}')
+                ax2.legend()
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating autocorrelation plot: {e}")
+            return None
+        
+    def _generate_performance_dashboard(self, performance_metrics):
+        """Generar dashboard de métricas de performance"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig = plt.figure(figsize=(15, 10))
+            
+            # Crear grid de subplots
+            gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
+            
+            # 1. Gauge de MAPE
+            ax1 = fig.add_subplot(gs[0, 0])
+            mape = performance_metrics.get('mape', 0)
+            self._create_gauge_chart(ax1, mape, 'MAPE (%)', max_val=50)
+            
+            # 2. Gauge de R²
+            ax2 = fig.add_subplot(gs[0, 1])
+            r_squared = performance_metrics.get('r_squared', 0)
+            self._create_gauge_chart(ax2, r_squared * 100, 'R² (%)', max_val=100)
+            
+            # 3. Gauge de Nash-Sutcliffe
+            ax3 = fig.add_subplot(gs[0, 2])
+            nash = performance_metrics.get('nash_sutcliffe', 0)
+            self._create_gauge_chart(ax3, nash * 100, 'Nash-Sutcliffe (%)', max_val=100)
+            
+            # 4. Barras de métricas de error
+            ax4 = fig.add_subplot(gs[1, :])
+            metrics = ['MAE', 'RMSE', 'MAPE']
+            values = [
+                performance_metrics.get('mae', 0),
+                performance_metrics.get('rmse', 0),
+                performance_metrics.get('mape', 0)
+            ]
+            colors = ['#FF9999', '#66B2FF', '#99FF99']
+            
+            bars = ax4.bar(metrics, values, color=colors, alpha=0.7, edgecolor='black')
+            ax4.set_ylabel('Valor')
+            ax4.set_title('Métricas de Error del Modelo')
+            ax4.grid(True, alpha=0.3, axis='y')
+            
+            # Agregar valores en las barras
+            for bar, value in zip(bars, values):
+                height = bar.get_height()
+                ax4.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{value:.2f}', ha='center', va='bottom')
+            
+            # 5. Texto de interpretación
+            ax5 = fig.add_subplot(gs[2, :])
+            ax5.axis('off')
+            
+            accuracy_level = performance_metrics.get('accuracy_level', 'N/A')
+            model_quality = performance_metrics.get('model_quality', 'N/A')
+            
+            interpretation_text = f"""
+            INTERPRETACIÓN DE RESULTADOS:
+            
+            Nivel de Precisión: {accuracy_level}
+            Calidad del Modelo: {model_quality}
+            
+            MAPE: {mape:.2f}% - {'Excelente' if mape < 10 else 'Bueno' if mape < 20 else 'Regular'}
+            R²: {r_squared:.3f} - {'Muy bueno' if r_squared > 0.8 else 'Bueno' if r_squared > 0.6 else 'Regular'}
+            
+            RECOMENDACIONES:
+            {'• El modelo muestra excelente precisión' if mape < 10 else '• Considerar ajustes para mejorar precisión'}
+            {'• Alta capacidad explicativa del modelo' if r_squared > 0.8 else '• Revisar variables explicativas'}
+            """
+            
+            ax5.text(0.05, 0.95, interpretation_text, transform=ax5.transAxes, va='top',
+                    fontfamily='monospace', fontsize=10,
+                    bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.8))
+            
+            plt.suptitle('Dashboard de Performance del Modelo', fontsize=16, fontweight='bold')
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating performance dashboard: {e}")
+            return None
+        
+    def _create_gauge_chart(self, ax, value, title, max_val=100):
+        """Crear gráfico de gauge (medidor)"""
+        try:
+            import matplotlib.patches as patches
+            import numpy as np
+            
+            # Configurar el gauge
+            ax.set_xlim(-1.1, 1.1)
+            ax.set_ylim(-1.1, 1.1)
+            ax.set_aspect('equal')
+            
+            # Crear semicírculo
+            theta = np.linspace(0, np.pi, 100)
+            x = np.cos(theta)
+            y = np.sin(theta)
+            
+            # Colorear segmentos según el valor
+            if 'MAPE' in title:
+                # Para MAPE, menor es mejor
+                if value < 10:
+                    color = 'green'
+                elif value < 20:
+                    color = 'orange'
+                else:
+                    color = 'red'
+            else:
+                # Para R² y Nash-Sutcliffe, mayor es mejor
+                if value > 80:
+                    color = 'green'
+                elif value > 60:
+                    color = 'orange'
+                else:
+                    color = 'red'
+            
+            # Dibujar el arco del gauge
+            arc = patches.Arc((0, 0), 2, 2, angle=0, theta1=0, theta2=180, 
+                            linewidth=10, color='lightgray', alpha=0.3)
+            ax.add_patch(arc)
+            
+            # Dibujar el valor actual
+            angle = np.pi * (1 - value / max_val) if max_val > 0 else np.pi/2
+            ax.plot([0, np.cos(angle)], [0, np.sin(angle)], 
+                color=color, linewidth=8, solid_capstyle='round')
+            
+            # Agregar texto
+            ax.text(0, -0.3, f'{value:.1f}', ha='center', va='center', 
+                fontsize=14, fontweight='bold')
+            ax.text(0, -0.5, title, ha='center', va='center', fontsize=10)
+            
+            ax.axis('off')
+            
+        except Exception as e:
+            logger.error(f"Error creating gauge chart: {e}")

@@ -1893,3 +1893,835 @@ class SimulationValidationService:
             'is_valid': False,
             'real_values': {}
         }
+        
+    def _validate_individual_variables(self, simulation_instance, all_variables_extracted):
+        """Validación detallada de variables individuales"""
+        try:
+            # Extraer valores reales
+            real_values = self._extract_real_values(simulation_instance)
+            
+            variable_validation = {
+                'summary': {
+                    'total_variables': 0,
+                    'validated_variables': 0,
+                    'precise_variables': 0,
+                    'acceptable_variables': 0,
+                    'inaccurate_variables': 0,
+                    'avg_accuracy': 0.0
+                },
+                'by_variable': {},
+                'recommendations': []
+            }
+            
+            accuracy_scores = []
+            
+            for var_key, real_value in real_values.items():
+                if var_key.startswith('_'):
+                    continue
+                    
+                variable_validation['summary']['total_variables'] += 1
+                
+                # Extraer valores simulados para esta variable
+                simulated_values = []
+                for day_data in all_variables_extracted:
+                    if var_key in day_data and day_data[var_key] is not None:
+                        try:
+                            simulated_values.append(float(day_data[var_key]))
+                        except (ValueError, TypeError):
+                            continue
+                
+                if not simulated_values:
+                    variable_validation['by_variable'][var_key] = {
+                        'status': 'NO_DATA',
+                        'error_pct': 100.0,
+                        'accuracy': 0.0,
+                        'recommendation': 'Sin datos simulados para validar'
+                    }
+                    continue
+                
+                variable_validation['summary']['validated_variables'] += 1
+                
+                # Calcular error promedio
+                avg_simulated = np.mean(simulated_values)
+                error_pct = abs((avg_simulated - real_value) / real_value * 100) if real_value != 0 else 100.0
+                accuracy = max(0, 100 - error_pct)
+                accuracy_scores.append(accuracy)
+                
+                # Determinar estado
+                if error_pct <= 5:
+                    status = 'PRECISA'
+                    variable_validation['summary']['precise_variables'] += 1
+                elif error_pct <= 15:
+                    status = 'ACEPTABLE'
+                    variable_validation['summary']['acceptable_variables'] += 1
+                else:
+                    status = 'INACCURATA'
+                    variable_validation['summary']['inaccurate_variables'] += 1
+                
+                # Análisis de tendencia
+                trend_analysis = self._analyze_variable_trend(simulated_values)
+                
+                # Análisis de variabilidad
+                variability = {
+                    'std': np.std(simulated_values),
+                    'cv': np.std(simulated_values) / np.mean(simulated_values) if np.mean(simulated_values) != 0 else 0,
+                    'range': np.max(simulated_values) - np.min(simulated_values)
+                }
+                
+                variable_validation['by_variable'][var_key] = {
+                    'real_value': real_value,
+                    'simulated_avg': avg_simulated,
+                    'simulated_values': simulated_values,
+                    'error_pct': error_pct,
+                    'accuracy': accuracy,
+                    'status': status,
+                    'trend': trend_analysis,
+                    'variability': variability,
+                    'recommendation': self._generate_variable_recommendation(var_key, status, error_pct, trend_analysis)
+                }
+            
+            # Calcular precisión promedio
+            if accuracy_scores:
+                variable_validation['summary']['avg_accuracy'] = np.mean(accuracy_scores)
+            
+            # Generar recomendaciones generales
+            variable_validation['recommendations'] = self._generate_validation_recommendations_detailed(
+                variable_validation['summary'], variable_validation['by_variable']
+            )
+            
+            return variable_validation
+            
+        except Exception as e:
+            logger.error(f"Error validating individual variables: {str(e)}")
+            return {'summary': {}, 'by_variable': {}, 'recommendations': []}
+        
+    def _analyze_variable_trend(self, values):
+        """Analizar tendencia de una variable"""
+        try:
+            if len(values) < 3:
+                return {'direction': 'stable', 'strength': 0, 'significance': False}
+            
+            x = np.arange(len(values))
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, values)
+            
+            # Determinar dirección
+            if abs(slope) < 0.01 * np.mean(values):
+                direction = 'stable'
+            elif slope > 0:
+                direction = 'increasing'
+            else:
+                direction = 'decreasing'
+            
+            return {
+                'direction': direction,
+                'slope': slope,
+                'strength': abs(r_value),
+                'significance': p_value < 0.05,
+                'r_squared': r_value ** 2
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing variable trend: {e}")
+            return {'direction': 'stable', 'strength': 0, 'significance': False}
+
+    def _generate_variable_recommendation(self, var_key, status, error_pct, trend_analysis):
+        """Generar recomendación específica para una variable"""
+        try:
+            recommendations = {
+                'IT': {
+                    'PRECISA': 'Los ingresos totales muestran alta precisión. Mantener parámetros actuales.',
+                    'ACEPTABLE': 'Ingresos con precisión aceptable. Revisar factores de demanda.',
+                    'INACCURATA': 'Ingresos requieren calibración. Verificar precios y volúmenes de venta.'
+                },
+                'GT': {
+                    'PRECISA': 'Ganancias totales bien calibradas. Modelo financiero confiable.',
+                    'ACEPTABLE': 'Ganancias con desviación moderada. Revisar estructura de costos.',
+                    'INACCURATA': 'Ganancias requieren ajuste significativo. Revisar todos los componentes financieros.'
+                },
+                'TPV': {
+                    'PRECISA': 'Volumen de ventas bien modelado. Demanda correctamente estimada.',
+                    'ACEPTABLE': 'Ventas con precisión aceptable. Considerar factores estacionales.',
+                    'INACCURATA': 'Volumen de ventas requiere recalibración. Revisar patrones de demanda.'
+                },
+                'NSC': {
+                    'PRECISA': 'Nivel de servicio al cliente bien estimado.',
+                    'ACEPTABLE': 'Servicio al cliente con precisión moderada. Revisar capacidad operativa.',
+                    'INACCURATA': 'Nivel de servicio requiere ajustes. Revisar procesos operativos.'
+                },
+                'EOG': {
+                    'PRECISA': 'Eficiencia operativa bien modelada.',
+                    'ACEPTABLE': 'Eficiencia con precisión aceptable. Considerar optimizaciones.',
+                    'INACCURATA': 'Eficiencia requiere recalibración. Revisar procesos y recursos.'
+                }
+            }
+            
+            base_recommendation = recommendations.get(var_key, {}).get(status, 
+                f'Variable {var_key}: revisar parámetros del modelo.')
+            
+            # Agregar información de tendencia
+            trend_text = ""
+            if trend_analysis['significance']:
+                if trend_analysis['direction'] == 'increasing':
+                    trend_text = " La variable muestra tendencia creciente significativa."
+                elif trend_analysis['direction'] == 'decreasing':
+                    trend_text = " La variable muestra tendencia decreciente significativa."
+            
+            return base_recommendation + trend_text
+            
+        except Exception as e:
+            logger.error(f"Error generating variable recommendation: {e}")
+            return f"Revisar variable {var_key} - error en análisis."
+
+    def _validate_temporal_consistency(self, results_simulation, historical_demand):
+        """Validar consistencia temporal del modelo"""
+        try:
+            temporal_validation = {
+                'overall_consistency': 0.0,
+                'daily_scores': [],
+                'temporal_patterns': {},
+                'anomalies': [],
+                'recommendations': []
+            }
+            
+            if not results_simulation:
+                return temporal_validation
+            
+            # Extraer demanda simulada
+            simulated_demands = [float(r.demand_mean) for r in results_simulation if hasattr(r, 'demand_mean')]
+            
+            if not simulated_demands:
+                return temporal_validation
+            
+            # 1. Análisis de consistencia día a día
+            daily_scores = []
+            for i, demand in enumerate(simulated_demands):
+                day_score = self._calculate_daily_consistency_score(demand, simulated_demands, i)
+                daily_scores.append(day_score)
+                temporal_validation['daily_scores'].append({
+                    'day': i + 1,
+                    'score': day_score,
+                    'demand': demand
+                })
+            
+            temporal_validation['overall_consistency'] = np.mean(daily_scores) if daily_scores else 0
+            
+            # 2. Análisis de patrones temporales
+            temporal_validation['temporal_patterns'] = self._analyze_temporal_patterns(simulated_demands)
+            
+            # 3. Detección de anomalías
+            temporal_validation['anomalies'] = self._detect_temporal_anomalies(simulated_demands)
+            
+            # 4. Comparación con histórico si disponible
+            if historical_demand:
+                temporal_validation['historical_comparison'] = self._compare_temporal_patterns(
+                    historical_demand, simulated_demands
+                )
+            
+            return temporal_validation
+            
+        except Exception as e:
+            logger.error(f"Error in temporal consistency validation: {e}")
+            return {'overall_consistency': 0.0, 'daily_scores': [], 'temporal_patterns': {}, 'anomalies': []}
+
+    def _calculate_daily_consistency_score(self, demand, all_demands, day_index):
+        """Calcular score de consistencia para un día específico"""
+        try:
+            if len(all_demands) < 3:
+                return 100.0
+            
+            # Calcular media y desviación móvil
+            window_size = min(7, len(all_demands))
+            start_idx = max(0, day_index - window_size // 2)
+            end_idx = min(len(all_demands), day_index + window_size // 2 + 1)
+            
+            window_demands = all_demands[start_idx:end_idx]
+            window_mean = np.mean(window_demands)
+            window_std = np.std(window_demands)
+            
+            if window_std == 0:
+                return 100.0
+            
+            # Z-score normalizado
+            z_score = abs((demand - window_mean) / window_std)
+            
+            # Convertir a score (0-100)
+            consistency_score = max(0, 100 - (z_score * 20))  # Penalizar desviaciones > 3σ
+            
+            return consistency_score
+            
+        except Exception as e:
+            logger.error(f"Error calculating daily consistency score: {e}")
+            return 50.0
+
+    def _analyze_temporal_patterns(self, demands):
+        """Analizar patrones temporales en la demanda"""
+        try:
+            patterns = {}
+            
+            if len(demands) < 7:
+                return patterns
+            
+            # 1. Análisis de tendencia general
+            x = np.arange(len(demands))
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, demands)
+            
+            patterns['trend'] = {
+                'direction': 'increasing' if slope > 0 else 'decreasing' if slope < 0 else 'stable',
+                'strength': abs(r_value),
+                'significance': p_value < 0.05,
+                'slope': slope
+            }
+            
+            # 2. Análisis de ciclos/estacionalidad
+            if len(demands) >= 14:  # Mínimo para detectar ciclos semanales
+                patterns['cyclical'] = self._detect_cyclical_patterns(demands)
+            
+            # 3. Análisis de volatilidad
+            patterns['volatility'] = {
+                'coefficient_variation': np.std(demands) / np.mean(demands) if np.mean(demands) != 0 else 0,
+                'average_change': np.mean(np.abs(np.diff(demands))),
+                'max_change': np.max(np.abs(np.diff(demands))) if len(demands) > 1 else 0
+            }
+            
+            return patterns
+            
+        except Exception as e:
+            logger.error(f"Error analyzing temporal patterns: {e}")
+            return {}
+
+    def _detect_cyclical_patterns(self, demands):
+        """Detectar patrones cíclicos en la demanda"""
+        try:
+            cyclical_info = {}
+            
+            # Análisis de autocorrelación para detectar ciclos
+            max_lag = min(len(demands) // 3, 14)  # Máximo 14 días o 1/3 de los datos
+            
+            autocorrelations = []
+            for lag in range(1, max_lag + 1):
+                if lag < len(demands):
+                    corr = np.corrcoef(demands[:-lag], demands[lag:])[0, 1]
+                    if not np.isnan(corr):
+                        autocorrelations.append((lag, corr))
+            
+            if autocorrelations:
+                # Encontrar el lag con mayor autocorrelación positiva
+                max_corr_lag = max(autocorrelations, key=lambda x: x[1] if x[1] > 0 else 0)
+                
+                cyclical_info = {
+                    'detected_cycle': max_corr_lag[0] if max_corr_lag[1] > 0.3 else None,
+                    'cycle_strength': max_corr_lag[1] if max_corr_lag[1] > 0 else 0,
+                    'weekly_pattern': self._analyze_weekly_pattern(demands) if len(demands) >= 7 else None
+                }
+            
+            return cyclical_info
+            
+        except Exception as e:
+            logger.error(f"Error detecting cyclical patterns: {e}")
+            return {}
+
+    def _analyze_weekly_pattern(self, demands):
+        """Analizar patrón semanal si hay suficientes datos"""
+        try:
+            if len(demands) < 7:
+                return None
+            
+            # Agrupar por día de la semana (asumiendo que el día 1 es lunes)
+            weekly_avg = []
+            for day_of_week in range(7):
+                day_values = [demands[i] for i in range(day_of_week, len(demands), 7)]
+                if day_values:
+                    weekly_avg.append(np.mean(day_values))
+                else:
+                    weekly_avg.append(0)
+            
+            # Calcular variabilidad semanal
+            weekly_std = np.std(weekly_avg)
+            overall_mean = np.mean(demands)
+            
+            return {
+                'weekly_averages': weekly_avg,
+                'weekly_variation': weekly_std / overall_mean if overall_mean != 0 else 0,
+                'peak_day': np.argmax(weekly_avg) + 1,  # 1-7 (lunes-domingo)
+                'low_day': np.argmin(weekly_avg) + 1
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing weekly pattern: {e}")
+            return None
+
+    def _detect_temporal_anomalies(self, demands):
+        """Detectar anomalías temporales en la demanda"""
+        try:
+            anomalies = []
+            
+            if len(demands) < 5:
+                return anomalies
+            
+            # Calcular límites usando método IQR
+            q1, q3 = np.percentile(demands, [25, 75])
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
+            
+            # Detectar outliers
+            for i, demand in enumerate(demands):
+                if demand < lower_bound or demand > upper_bound:
+                    anomaly_type = 'low' if demand < lower_bound else 'high'
+                    severity = 'moderate'
+                    
+                    # Calcular severidad
+                    if anomaly_type == 'low':
+                        severity = 'severe' if demand < (q1 - 3 * iqr) else 'moderate'
+                    else:
+                        severity = 'severe' if demand > (q3 + 3 * iqr) else 'moderate'
+                    
+                    anomalies.append({
+                        'day': i + 1,
+                        'value': demand,
+                        'type': anomaly_type,
+                        'severity': severity,
+                        'expected_range': (lower_bound, upper_bound),
+                        'deviation': abs(demand - np.mean(demands))
+                    })
+            
+            # Detectar cambios abruptos (punto de cambio)
+            if len(demands) > 10:
+                change_points = self._detect_change_points(demands)
+                for cp in change_points:
+                    anomalies.append({
+                        'day': cp['day'],
+                        'value': demands[cp['day'] - 1],
+                        'type': 'change_point',
+                        'severity': cp['severity'],
+                        'description': 'Cambio abrupto en el patrón de demanda'
+                    })
+            
+            return anomalies
+            
+        except Exception as e:
+            logger.error(f"Error detecting temporal anomalies: {e}")
+            return []
+
+    def _detect_change_points(self, demands):
+        """Detectar puntos de cambio en la serie temporal"""
+        try:
+            change_points = []
+            
+            # Usar método de ventana deslizante para detectar cambios
+            window_size = max(3, len(demands) // 5)
+            
+            for i in range(window_size, len(demands) - window_size):
+                before = demands[i - window_size:i]
+                after = demands[i:i + window_size]
+                
+                # Test t para medias diferentes
+                if len(before) > 2 and len(after) > 2:
+                    try:
+                        t_stat, p_value = scipy.stats.ttest_ind(before, after)
+                        
+                        if p_value < 0.05:  # Cambio significativo
+                            mean_diff = abs(np.mean(after) - np.mean(before))
+                            severity = 'severe' if mean_diff > np.std(demands) else 'moderate'
+                            
+                            change_points.append({
+                                'day': i + 1,
+                                'p_value': p_value,
+                                'mean_difference': mean_diff,
+                                'severity': severity
+                            })
+                    except:
+                        continue
+            
+            return change_points
+            
+        except Exception as e:
+            logger.error(f"Error detecting change points: {e}")
+            return []
+
+    def _compare_temporal_patterns(self, historical_demand, simulated_demand):
+        """Comparar patrones temporales entre histórico y simulado"""
+        try:
+            comparison = {}
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_demand), len(simulated_demand))
+            hist_data = historical_demand[:min_len]
+            sim_data = simulated_demand[:min_len]
+            
+            if min_len < 3:
+                return comparison
+            
+            # 1. Comparación de tendencias
+            hist_trend = self._calculate_trend(hist_data)
+            sim_trend = self._calculate_trend(sim_data)
+            
+            comparison['trend_comparison'] = {
+                'historical_trend': hist_trend,
+                'simulated_trend': sim_trend,
+                'trend_similarity': abs(hist_trend['slope'] - sim_trend['slope']),
+                'trend_match': (hist_trend['direction'] == sim_trend['direction'])
+            }
+            
+            # 2. Comparación de volatilidad
+            hist_cv = np.std(hist_data) / np.mean(hist_data) if np.mean(hist_data) != 0 else 0
+            sim_cv = np.std(sim_data) / np.mean(sim_data) if np.mean(sim_data) != 0 else 0
+            
+            comparison['volatility_comparison'] = {
+                'historical_cv': hist_cv,
+                'simulated_cv': sim_cv,
+                'volatility_difference': abs(hist_cv - sim_cv),
+                'volatility_match': abs(hist_cv - sim_cv) < 0.1
+            }
+            
+            # 3. Comparación de autocorrelación
+            comparison['autocorrelation_comparison'] = self._compare_autocorrelation(hist_data, sim_data)
+            
+            # 4. Score general de similitud temporal
+            trend_score = 100 if comparison['trend_comparison']['trend_match'] else 50
+            volatility_score = max(0, 100 - (comparison['volatility_comparison']['volatility_difference'] * 100))
+            autocorr_score = comparison['autocorrelation_comparison'].get('similarity_score', 50)
+            
+            comparison['overall_temporal_similarity'] = (trend_score + volatility_score + autocorr_score) / 3
+            
+            return comparison
+            
+        except Exception as e:
+            logger.error(f"Error comparing temporal patterns: {e}")
+            return {}
+
+    def _calculate_trend(self, data):
+        """Calcular tendencia de una serie temporal"""
+        try:
+            x = np.arange(len(data))
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, data)
+            
+            direction = 'stable'
+            if abs(slope) > 0.01 * np.mean(data):
+                direction = 'increasing' if slope > 0 else 'decreasing'
+            
+            return {
+                'slope': slope,
+                'direction': direction,
+                'strength': abs(r_value),
+                'significance': p_value < 0.05
+            }
+        except Exception as e:
+            logger.error(f"Error calculating trend: {e}")
+            return {'slope': 0, 'direction': 'stable', 'strength': 0, 'significance': False}
+
+    def _compare_autocorrelation(self, hist_data, sim_data):
+        """Comparar autocorrelación entre series históricas y simuladas"""
+        try:
+            max_lag = min(len(hist_data) // 3, 10)
+            
+            hist_autocorr = []
+            sim_autocorr = []
+            
+            for lag in range(1, max_lag + 1):
+                if lag < len(hist_data) and lag < len(sim_data):
+                    # Histórico
+                    hist_corr = np.corrcoef(hist_data[:-lag], hist_data[lag:])[0, 1]
+                    hist_autocorr.append(hist_corr if not np.isnan(hist_corr) else 0)
+                    
+                    # Simulado
+                    sim_corr = np.corrcoef(sim_data[:-lag], sim_data[lag:])[0, 1]
+                    sim_autocorr.append(sim_corr if not np.isnan(sim_corr) else 0)
+            
+            if hist_autocorr and sim_autocorr:
+                # Calcular similitud usando correlación entre las series de autocorrelación
+                similarity = np.corrcoef(hist_autocorr, sim_autocorr)[0, 1]
+                similarity_score = max(0, similarity * 100) if not np.isnan(similarity) else 50
+            else:
+                similarity_score = 50
+            
+            return {
+                'historical_autocorr': hist_autocorr,
+                'simulated_autocorr': sim_autocorr,
+                'similarity_score': similarity_score,
+                'interpretation': (
+                    'Excelente' if similarity_score > 80 else
+                    'Buena' if similarity_score > 60 else
+                    'Regular' if similarity_score > 40 else
+                    'Pobre'
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error comparing autocorrelation: {e}")
+            return {'similarity_score': 50, 'interpretation': 'No disponible'}
+
+    def _calculate_reliability_metrics(self, historical_demand, results_simulation):
+        """Calcular métricas de confiabilidad del modelo"""
+        try:
+            reliability_metrics = {}
+            
+            if not historical_demand or not results_simulation:
+                return reliability_metrics
+            
+            # Extraer demanda simulada
+            simulated_demands = [float(r.demand_mean) for r in results_simulation if hasattr(r, 'demand_mean')]
+            
+            if not simulated_demands:
+                return reliability_metrics
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_demand), len(simulated_demands))
+            hist_data = np.array(historical_demand[:min_len])
+            sim_data = np.array(simulated_demands[:min_len])
+            
+            if min_len == 0:
+                return reliability_metrics
+            
+            # 1. Estabilidad del modelo (consistencia interna)
+            if len(simulated_demands) > 10:
+                # Dividir en mitades y comparar
+                mid = len(simulated_demands) // 2
+                first_half = simulated_demands[:mid]
+                second_half = simulated_demands[mid:]
+                
+                # Comparar medias y varianzas
+                mean_stability = abs(np.mean(first_half) - np.mean(second_half)) / np.mean(simulated_demands)
+                var_stability = abs(np.var(first_half) - np.var(second_half)) / np.var(simulated_demands)
+                
+                reliability_metrics['stability'] = {
+                    'mean_stability': 1 - min(1, mean_stability),  # 1 = muy estable, 0 = inestable
+                    'variance_stability': 1 - min(1, var_stability),
+                    'overall_stability': 1 - min(1, (mean_stability + var_stability) / 2)
+                }
+            
+            # 2. Precisión predictiva
+            errors = np.abs(sim_data - hist_data)
+            relative_errors = errors / hist_data
+            relative_errors = relative_errors[hist_data != 0]  # Evitar división por cero
+            
+            if len(relative_errors) > 0:
+                reliability_metrics['predictive_accuracy'] = {
+                    'mean_absolute_error': np.mean(errors),
+                    'mean_relative_error': np.mean(relative_errors),
+                    'accuracy_score': max(0, 1 - np.mean(relative_errors)),  # 1 = perfecto, 0 = muy malo
+                    'precision_class': (
+                        'Muy alta' if np.mean(relative_errors) < 0.05 else
+                        'Alta' if np.mean(relative_errors) < 0.10 else
+                        'Media' if np.mean(relative_errors) < 0.20 else
+                        'Baja'
+                    )
+                }
+            
+            # 3. Robustez (resistencia a outliers)
+            reliability_metrics['robustness'] = self._calculate_robustness_score(hist_data, sim_data)
+            
+            # 4. Score general de confiabilidad
+            stability_score = reliability_metrics.get('stability', {}).get('overall_stability', 0.5) * 100
+            accuracy_score = reliability_metrics.get('predictive_accuracy', {}).get('accuracy_score', 0.5) * 100
+            robustness_score = reliability_metrics.get('robustness', {}).get('score', 50)
+            
+            reliability_metrics['overall_reliability'] = {
+                'score': (stability_score + accuracy_score + robustness_score) / 3,
+                'classification': (
+                    'Muy confiable' if (stability_score + accuracy_score + robustness_score) / 3 > 80 else
+                    'Confiable' if (stability_score + accuracy_score + robustness_score) / 3 > 60 else
+                    'Moderadamente confiable' if (stability_score + accuracy_score + robustness_score) / 3 > 40 else
+                    'Poco confiable'
+                ),
+                'components': {
+                    'stability': stability_score,
+                    'accuracy': accuracy_score,
+                    'robustness': robustness_score
+                }
+            }
+            
+            return reliability_metrics
+            
+        except Exception as e:
+            logger.error(f"Error calculating reliability metrics: {e}")
+            return {}
+
+    def _calculate_robustness_score(self, historical_data, simulated_data):
+        """Calcular score de robustez del modelo"""
+        try:
+            # Identificar outliers en datos históricos
+            q1, q3 = np.percentile(historical_data, [25, 75])
+            iqr = q3 - q1
+            outlier_threshold = 1.5 * iqr
+            
+            outlier_indices = []
+            for i, val in enumerate(historical_data):
+                if val < (q1 - outlier_threshold) or val > (q3 + outlier_threshold):
+                    outlier_indices.append(i)
+            
+            if not outlier_indices:
+                return {'score': 100, 'interpretation': 'Sin outliers detectados'}
+            
+            # Calcular errores en outliers vs errores en datos normales
+            outlier_errors = []
+            normal_errors = []
+            
+            for i, (hist, sim) in enumerate(zip(historical_data, simulated_data)):
+                error = abs(sim - hist) / hist if hist != 0 else abs(sim - hist)
+                
+                if i in outlier_indices:
+                    outlier_errors.append(error)
+                else:
+                    normal_errors.append(error)
+            
+            if outlier_errors and normal_errors:
+                outlier_mean_error = np.mean(outlier_errors)
+                normal_mean_error = np.mean(normal_errors)
+                
+                # Robustez: el modelo es robusto si los errores en outliers no son mucho mayores
+                robustness_ratio = outlier_mean_error / normal_mean_error if normal_mean_error != 0 else 1
+                score = max(0, 100 - (robustness_ratio - 1) * 50)  # Score decrece si ratio > 1
+                
+                interpretation = (
+                    'Muy robusto' if score > 80 else
+                    'Robusto' if score > 60 else
+                    'Moderadamente robusto' if score > 40 else
+                    'Poco robusto'
+                )
+                
+                return {
+                    'score': score,
+                    'interpretation': interpretation,
+                    'outlier_count': len(outlier_indices),
+                    'robustness_ratio': robustness_ratio
+                }
+            
+            return {'score': 50, 'interpretation': 'Análisis incompleto'}
+            
+        except Exception as e:
+            logger.error(f"Error calculating robustness score: {e}")
+            return {'score': 50, 'interpretation': 'Error en cálculo'}
+
+    def _calculate_confidence_intervals(self, historical_data, simulated_data):
+        """Calcular intervalos de confianza para las predicciones"""
+        try:
+            confidence_intervals = {}
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_data = np.array(historical_data[:min_len])
+            sim_data = np.array(simulated_data[:min_len])
+            
+            if min_len < 3:
+                return confidence_intervals
+            
+            # Calcular errores
+            errors = sim_data - hist_data
+            
+            # Intervalos de confianza para los errores (bootstrap)
+            confidence_levels = [0.90, 0.95, 0.99]
+            
+            for conf_level in confidence_levels:
+                alpha = 1 - conf_level
+                
+                # Método paramétrico (asumiendo normalidad de errores)
+                error_mean = np.mean(errors)
+                error_std = np.std(errors, ddof=1)
+                
+                # t-student para muestras pequeñas
+                from scipy.stats import t
+                t_value = t.ppf(1 - alpha/2, df=len(errors)-1)
+                
+                margin_of_error = t_value * error_std / np.sqrt(len(errors))
+                
+                confidence_intervals[f'ci_{int(conf_level*100)}'] = {
+                    'lower_bound': error_mean - margin_of_error,
+                    'upper_bound': error_mean + margin_of_error,
+                    'margin_of_error': margin_of_error,
+                    'interpretation': f'Con {conf_level*100}% de confianza, el error promedio está entre {error_mean - margin_of_error:.2f} y {error_mean + margin_of_error:.2f}'
+                }
+            
+            # Intervalos de predicción para nuevas observaciones
+            prediction_std = np.sqrt(error_std**2 + error_std**2/len(errors))  # Incertidumbre adicional
+            
+            for conf_level in confidence_levels:
+                alpha = 1 - conf_level
+                t_value = t.ppf(1 - alpha/2, df=len(errors)-1)
+                
+                prediction_margin = t_value * prediction_std
+                
+                confidence_intervals[f'pi_{int(conf_level*100)}'] = {
+                    'lower_bound': error_mean - prediction_margin,
+                    'upper_bound': error_mean + prediction_margin,
+                    'margin': prediction_margin,
+                    'interpretation': f'Intervalo de predicción del {conf_level*100}%: ±{prediction_margin:.2f}'
+                }
+            
+            # Estadísticas generales
+            confidence_intervals['summary'] = {
+                'mean_error': error_mean,
+                'std_error': error_std,
+                'sample_size': len(errors),
+                'recommendation': (
+                    'Intervalos estrechos indican alta precisión' if error_std < np.mean(hist_data) * 0.1 else
+                    'Intervalos amplios sugieren revisar modelo'
+                )
+            }
+            
+            return confidence_intervals
+            
+        except Exception as e:
+            logger.error(f"Error calculating confidence intervals: {e}")
+            return {}
+
+    def _generate_validation_recommendations_detailed(self, summary, by_variable):
+        """Generar recomendaciones detalladas basadas en validación"""
+        try:
+            recommendations = []
+            
+            # Recomendaciones basadas en el resumen general
+            avg_accuracy = summary.get('avg_accuracy', 0)
+            
+            if avg_accuracy > 90:
+                recommendations.append({
+                    'type': 'success',
+                    'priority': 'low',
+                    'message': 'El modelo muestra excelente precisión general. Mantener configuración actual.',
+                    'action': 'Monitorear periódicamente para mantener calidad.'
+                })
+            elif avg_accuracy > 70:
+                recommendations.append({
+                    'type': 'warning',
+                    'priority': 'medium',
+                    'message': 'Precisión aceptable pero mejorable. Revisar variables con mayor error.',
+                    'action': 'Calibrar variables específicas identificadas como problemáticas.'
+                })
+            else:
+                recommendations.append({
+                    'type': 'error',
+                    'priority': 'high',
+                    'message': 'Precisión insuficiente. Requiere recalibración significativa.',
+                    'action': 'Revisar completamente parámetros del modelo y datos de entrada.'
+                })
+            
+            # Recomendaciones específicas por variable
+            inaccurate_vars = []
+            for var_key, var_data in by_variable.items():
+                if var_data.get('status') == 'INACCURATA':
+                    inaccurate_vars.append(var_key)
+            
+            if inaccurate_vars:
+                recommendations.append({
+                    'type': 'error',
+                    'priority': 'high',
+                    'message': f'Variables críticas: {", ".join(inaccurate_vars)}',
+                    'action': 'Revisar ecuaciones y parámetros de estas variables prioritariamente.'
+                })
+            
+            # Recomendaciones por número de variables validadas
+            validated_ratio = summary.get('validated_variables', 0) / max(1, summary.get('total_variables', 1))
+            
+            if validated_ratio < 0.7:
+                recommendations.append({
+                    'type': 'warning',
+                    'priority': 'medium',
+                    'message': f'Solo {validated_ratio*100:.1f}% de variables pudieron ser validadas.',
+                    'action': 'Verificar disponibilidad de datos de referencia para más variables.'
+                })
+            
+            return recommendations
+            
+        except Exception as e:
+            logger.error(f"Error generating detailed recommendations: {e}")
+            return []
