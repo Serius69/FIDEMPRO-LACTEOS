@@ -80,13 +80,18 @@ def questionnaire_main_view(request):
     
     # Handle questionnaire start
     if request.method == 'POST' and 'start' in request.POST:
-        selected_questionary_id = request.session.get('selected_questionary_id')
+        # Obtener el ID desde POST o desde session
+        selected_questionary_id = request.POST.get('selected_questionary_id') or request.session.get('selected_questionary_id')
         
         if not selected_questionary_id:
             messages.error(request, "Debe seleccionar un cuestionario primero.")
             return redirect('questionary:questionary.main')
         
         try:
+            # Convertir a entero y actualizar session
+            selected_questionary_id = int(selected_questionary_id)
+            request.session['selected_questionary_id'] = selected_questionary_id
+            
             questionary_selected = Questionary.objects.get(
                 pk=selected_questionary_id,
                 is_active=True,
@@ -105,6 +110,9 @@ def questionnaire_main_view(request):
             messages.success(request, f"Cuestionario '{questionary_selected.questionary}' iniciado correctamente.")
             return redirect('questionary:questionary.main')
             
+        except (ValueError, TypeError):
+            messages.error(request, "ID de cuestionario inválido.")
+            return redirect('questionary:questionary.main')
         except Questionary.DoesNotExist:
             messages.error(request, "El cuestionario seleccionado no existe o no tiene permisos para acceder.")
             return redirect('questionary:questionary.main')
