@@ -2725,3 +2725,592 @@ class SimulationValidationService:
         except Exception as e:
             logger.error(f"Error generating detailed recommendations: {e}")
             return []
+        
+    # AGREGAR AL FINAL DE validation_service.py
+
+    def validate_distribution_consistency(self, simulation_instance, results_simulation, distribution_params=None):
+        """
+        Validación específica usando prueba Kolmogorov-Smirnov para verificar
+        que los resultados sigan las distribuciones esperadas del modelo
+        """
+        try:
+            validation_results = {
+                'summary': {
+                    'total_tests': 0,
+                    'passed_tests': 0,
+                    'critical_failures': 0,
+                    'confidence_level': 0.95,
+                    'overall_validity': False
+                },
+                'ks_tests': {},
+                'confidence_intervals': {},
+                'distribution_analysis': {},
+                'alerts': [],
+                'reliability_report': {}
+            }
+            
+            # Extraer datos simulados
+            simulated_demands = [float(r.demand_mean) for r in results_simulation if hasattr(r, 'demand_mean')]
+            all_variables = self._extract_all_variables_for_ks(list(results_simulation))
+            
+            if not simulated_demands:
+                validation_results['alerts'].append({
+                    'type': 'ERROR',
+                    'severity': 'high',
+                    'message': 'No se encontraron datos de demanda para validar',
+                    'recommendation': 'Verificar que la simulación haya generado resultados válidos'
+                })
+                return validation_results
+            
+            # 1. Validación de la demanda contra distribución teórica
+            demand_ks_result = self._perform_ks_test_demand(
+                simulated_demands, simulation_instance, validation_results
+            )
+            validation_results['ks_tests']['demand'] = demand_ks_result
+            
+            # 2. Validación de variables financieras clave
+            financial_vars = ['IT', 'GT', 'TG', 'NR']
+            for var_name in financial_vars:
+                if var_name in all_variables:
+                    var_values = [day.get(var_name) for day in all_variables if day.get(var_name) is not None]
+                    if len(var_values) > 10:  # Mínimo para KS test
+                        var_ks_result = self._perform_ks_test_variable(
+                            var_values, var_name, validation_results
+                        )
+                        validation_results['ks_tests'][var_name] = var_ks_result
+            
+            # 3. Calcular intervalos de confianza
+            validation_results['confidence_intervals'] = self._calculate_enhanced_confidence_intervals(
+                simulated_demands, all_variables
+            )
+            
+            # 4. Análisis de distribución detallado
+            validation_results['distribution_analysis'] = self._analyze_distribution_consistency(
+                simulated_demands, all_variables
+            )
+            
+            # 5. Generar reporte de confiabilidad
+            validation_results['reliability_report'] = self._generate_reliability_report(
+                validation_results
+            )
+            
+            # 6. Calcular validez general
+            self._calculate_overall_validity(validation_results)
+            
+            logger.info(f"KS Validation completed: {validation_results['summary']['passed_tests']}/{validation_results['summary']['total_tests']} tests passed")
+            
+            return validation_results
+            
+        except Exception as e:
+            logger.error(f"Error in KS distribution validation: {str(e)}")
+            return self._create_empty_ks_validation_result()
+
+    def _perform_ks_test_demand(self, simulated_demands, simulation_instance, validation_results):
+        """Realizar prueba KS específica para demanda"""
+        try:
+            from scipy import stats
+            import numpy as np
+            
+            # Obtener distribución teórica esperada
+            expected_distribution = self._get_expected_distribution(simulation_instance)
+            
+            # Normalizar datos
+            data_normalized = np.array(simulated_demands)
+            
+            # Realizar prueba KS contra diferentes distribuciones
+            distributions_to_test = [
+                ('normal', stats.norm),
+                ('lognormal', stats.lognorm),
+                ('exponential', stats.expon),
+                ('gamma', stats.gamma)
+            ]
+            
+            best_fit = None
+            best_p_value = 0
+            
+            ks_results = {}
+            
+            for dist_name, dist_func in distributions_to_test:
+                try:
+                    # Ajustar parámetros de la distribución
+                    if dist_name == 'normal':
+                        params = (np.mean(data_normalized), np.std(data_normalized))
+                        ks_stat, p_value = stats.kstest(
+                            data_normalized, 
+                            lambda x: dist_func.cdf(x, loc=params[0], scale=params[1])
+                        )
+                    elif dist_name == 'lognormal':
+                        # Evitar valores negativos o cero
+                        positive_data = data_normalized[data_normalized > 0]
+                        if len(positive_data) > 0:
+                            params = stats.lognorm.fit(positive_data)
+                            ks_stat, p_value = stats.kstest(
+                                positive_data,
+                                lambda x: dist_func.cdf(x, *params)
+                            )
+                        else:
+                            continue
+                    else:
+                        params = dist_func.fit(data_normalized)
+                        ks_stat, p_value = stats.kstest(
+                            data_normalized,
+                            lambda x: dist_func.cdf(x, *params)
+                        )
+                    
+                    ks_results[dist_name] = {
+                        'statistic': float(ks_stat),
+                        'p_value': float(p_value),
+                        'params': [float(p) for p in params],
+                        'passes_test': p_value > 0.05,
+                        'confidence_level': 0.95
+                    }
+                    
+                    # Trackear mejor ajuste
+                    if p_value > best_p_value:
+                        best_p_value = p_value
+                        best_fit = dist_name
+                        
+                    validation_results['summary']['total_tests'] += 1
+                    if p_value > 0.05:
+                        validation_results['summary']['passed_tests'] += 1
+                        
+                except Exception as e:
+                    logger.warning(f"Error testing {dist_name} distribution: {e}")
+                    continue
+            
+            # Generar alertas basadas en resultados
+            if best_p_value < 0.01:
+                validation_results['alerts'].append({
+                    'type': 'ERROR',
+                    'severity': 'high',
+                    'message': f'Los datos de demanda no siguen ninguna distribución conocida (mejor p-value: {best_p_value:.4f})',
+                    'recommendation': 'Revisar el modelo de generación de demanda y sus parámetros'
+                })
+                validation_results['summary']['critical_failures'] += 1
+            elif best_p_value < 0.05:
+                validation_results['alerts'].append({
+                    'type': 'WARNING',
+                    'severity': 'medium',
+                    'message': f'Los datos de demanda muestran desviaciones de distribuciones teóricas (mejor ajuste: {best_fit})',
+                    'recommendation': 'Considerar ajustar parámetros del modelo de demanda'
+                })
+            
+            return {
+                'test_type': 'kolmogorov_smirnov_demand',
+                'sample_size': len(simulated_demands),
+                'distributions_tested': ks_results,
+                'best_fit_distribution': best_fit,
+                'best_p_value': best_p_value,
+                'overall_passes': best_p_value > 0.05,
+                'interpretation': self._interpret_ks_result(best_p_value, best_fit)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in demand KS test: {str(e)}")
+            return {'error': str(e), 'overall_passes': False}
+
+    def _perform_ks_test_variable(self, var_values, var_name, validation_results):
+        """Realizar prueba KS para variables específicas"""
+        try:
+            from scipy import stats
+            import numpy as np
+            
+            if len(var_values) < 10:
+                return {'error': 'Insufficient data for KS test', 'overall_passes': False}
+            
+            data = np.array([float(v) for v in var_values if v is not None])
+            
+            # Determinar distribución esperada por tipo de variable
+            expected_dist = self._get_expected_distribution_for_variable(var_name)
+            
+            # Realizar test KS
+            if expected_dist == 'normal':
+                ks_stat, p_value = stats.kstest(
+                    data, 
+                    lambda x: stats.norm.cdf(x, loc=np.mean(data), scale=np.std(data))
+                )
+            elif expected_dist == 'lognormal' and all(data > 0):
+                params = stats.lognorm.fit(data)
+                ks_stat, p_value = stats.kstest(
+                    data,
+                    lambda x: stats.lognorm.cdf(x, *params)
+                )
+            else:
+                # Test genérico contra distribución empírica
+                ks_stat, p_value = stats.kstest(data, 'norm')
+            
+            passes_test = p_value > 0.05
+            
+            validation_results['summary']['total_tests'] += 1
+            if passes_test:
+                validation_results['summary']['passed_tests'] += 1
+            else:
+                # Generar alerta específica para la variable
+                validation_results['alerts'].append({
+                    'type': 'WARNING',
+                    'severity': 'medium',
+                    'message': f'Variable {var_name} no sigue la distribución esperada (p-value: {p_value:.4f})',
+                    'recommendation': f'Revisar cálculos y parámetros para {var_name}'
+                })
+            
+            return {
+                'variable': var_name,
+                'test_type': 'kolmogorov_smirnov',
+                'statistic': float(ks_stat),
+                'p_value': float(p_value),
+                'expected_distribution': expected_dist,
+                'sample_size': len(data),
+                'passes_test': passes_test,
+                'interpretation': f"{'Acepta' if passes_test else 'Rechaza'} hipótesis nula de distribución esperada"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in variable {var_name} KS test: {str(e)}")
+            return {'error': str(e), 'overall_passes': False}
+
+    def _calculate_enhanced_confidence_intervals(self, simulated_demands, all_variables):
+        """Calcular intervalos de confianza mejorados para proyecciones"""
+        try:
+            from scipy import stats
+            import numpy as np
+            
+            confidence_intervals = {}
+            confidence_levels = [0.90, 0.95, 0.99]
+            
+            # Intervalos para demanda
+            if simulated_demands:
+                demand_array = np.array(simulated_demands)
+                demand_mean = np.mean(demand_array)
+                demand_std = np.std(demand_array, ddof=1)
+                n = len(demand_array)
+                
+                for conf_level in confidence_levels:
+                    alpha = 1 - conf_level
+                    t_critical = stats.t.ppf(1 - alpha/2, df=n-1)
+                    margin_error = t_critical * (demand_std / np.sqrt(n))
+                    
+                    confidence_intervals[f'demand_{int(conf_level*100)}'] = {
+                        'mean': float(demand_mean),
+                        'lower_bound': float(demand_mean - margin_error),
+                        'upper_bound': float(demand_mean + margin_error),
+                        'margin_error': float(margin_error),
+                        'confidence_level': conf_level,
+                        'interpretation': f'Con {conf_level*100}% de confianza, la demanda promedio está entre {demand_mean - margin_error:.2f} y {demand_mean + margin_error:.2f}'
+                    }
+            
+            # Intervalos para variables clave
+            key_variables = ['IT', 'GT', 'TG', 'NR']
+            for var_name in key_variables:
+                var_values = []
+                for day in all_variables:
+                    if var_name in day and day[var_name] is not None:
+                        try:
+                            var_values.append(float(day[var_name]))
+                        except:
+                            continue
+                
+                if len(var_values) > 3:
+                    var_array = np.array(var_values)
+                    var_mean = np.mean(var_array)
+                    var_std = np.std(var_array, ddof=1)
+                    n = len(var_array)
+                    
+                    # Solo calcular intervalo de 95% para variables
+                    conf_level = 0.95
+                    alpha = 1 - conf_level
+                    t_critical = stats.t.ppf(1 - alpha/2, df=n-1)
+                    margin_error = t_critical * (var_std / np.sqrt(n))
+                    
+                    confidence_intervals[f'{var_name}_95'] = {
+                        'variable': var_name,
+                        'mean': float(var_mean),
+                        'lower_bound': float(var_mean - margin_error),
+                        'upper_bound': float(var_mean + margin_error),
+                        'margin_error': float(margin_error),
+                        'sample_size': n,
+                        'confidence_level': conf_level
+                    }
+            
+            return confidence_intervals
+            
+        except Exception as e:
+            logger.error(f"Error calculating confidence intervals: {str(e)}")
+            return {}
+
+    def _analyze_distribution_consistency(self, simulated_demands, all_variables):
+        """Analizar consistencia de distribuciones en el tiempo"""
+        try:
+            import numpy as np
+            from scipy import stats
+            
+            analysis = {
+                'temporal_stability': {},
+                'distribution_drift': {},
+                'consistency_metrics': {}
+            }
+            
+            if len(simulated_demands) < 20:
+                return analysis
+            
+            # Dividir en ventanas temporales
+            window_size = max(10, len(simulated_demands) // 4)
+            windows = []
+            
+            for i in range(0, len(simulated_demands) - window_size + 1, window_size // 2):
+                window_data = simulated_demands[i:i + window_size]
+                windows.append({
+                    'start_day': i + 1,
+                    'end_day': i + window_size,
+                    'data': window_data,
+                    'mean': np.mean(window_data),
+                    'std': np.std(window_data),
+                    'size': len(window_data)
+                })
+            
+            # Analizar estabilidad temporal
+            if len(windows) >= 2:
+                # Comparar ventanas usando KS test
+                for i in range(len(windows) - 1):
+                    ks_stat, p_value = stats.ks_2samp(windows[i]['data'], windows[i+1]['data'])
+                    
+                    analysis['temporal_stability'][f'window_{i+1}_vs_{i+2}'] = {
+                        'ks_statistic': float(ks_stat),
+                        'p_value': float(p_value),
+                        'distributions_similar': p_value > 0.05,
+                        'window1_period': f"Días {windows[i]['start_day']}-{windows[i]['end_day']}",
+                        'window2_period': f"Días {windows[i+1]['start_day']}-{windows[i+1]['end_day']}"
+                    }
+                
+                # Calcular drift de distribución
+                first_window_mean = windows[0]['mean']
+                last_window_mean = windows[-1]['mean']
+                
+                analysis['distribution_drift'] = {
+                    'initial_mean': float(first_window_mean),
+                    'final_mean': float(last_window_mean),
+                    'absolute_drift': float(abs(last_window_mean - first_window_mean)),
+                    'relative_drift_pct': float((last_window_mean - first_window_mean) / first_window_mean * 100) if first_window_mean != 0 else 0,
+                    'drift_direction': 'increasing' if last_window_mean > first_window_mean else 'decreasing' if last_window_mean < first_window_mean else 'stable'
+                }
+            
+            # Métricas de consistencia general
+            overall_mean = np.mean(simulated_demands)
+            overall_std = np.std(simulated_demands)
+            cv = overall_std / overall_mean if overall_mean != 0 else 0
+            
+            analysis['consistency_metrics'] = {
+                'coefficient_of_variation': float(cv),
+                'stability_assessment': 'high' if cv < 0.1 else 'medium' if cv < 0.3 else 'low',
+                'data_quality': 'excellent' if cv < 0.05 else 'good' if cv < 0.15 else 'fair' if cv < 0.3 else 'poor'
+            }
+            
+            return analysis
+            
+        except Exception as e:
+            logger.error(f"Error in distribution consistency analysis: {str(e)}")
+            return {}
+
+    def _generate_reliability_report(self, validation_results):
+        """Generar reporte de confiabilidad comprehensive"""
+        try:
+            summary = validation_results.get('summary', {})
+            ks_tests = validation_results.get('ks_tests', {})
+            
+            # Calcular score de confiabilidad
+            total_tests = summary.get('total_tests', 0)
+            passed_tests = summary.get('passed_tests', 0)
+            critical_failures = summary.get('critical_failures', 0)
+            
+            if total_tests > 0:
+                pass_rate = passed_tests / total_tests
+                reliability_score = max(0, (pass_rate * 100) - (critical_failures * 10))
+            else:
+                reliability_score = 0
+                pass_rate = 0
+            
+            # Determinar nivel de confiabilidad
+            if reliability_score >= 90:
+                reliability_level = 'Muy Alta'
+                recommendation = 'Los resultados son altamente confiables y pueden usarse con confianza para toma de decisiones.'
+            elif reliability_score >= 75:
+                reliability_level = 'Alta'
+                recommendation = 'Los resultados son confiables con algunas consideraciones menores.'
+            elif reliability_score >= 60:
+                reliability_level = 'Media'
+                recommendation = 'Los resultados requieren interpretación cuidadosa y validación adicional.'
+            elif reliability_score >= 40:
+                reliability_level = 'Baja'
+                recommendation = 'Los resultados deben usarse con precaución y requieren mejoras en el modelo.'
+            else:
+                reliability_level = 'Muy Baja'
+                recommendation = 'Los resultados no son confiables y el modelo requiere revisión completa.'
+            
+            # Análisis específico por componente
+            component_analysis = {}
+            
+            # Análisis de demanda
+            if 'demand' in ks_tests:
+                demand_test = ks_tests['demand']
+                best_p_value = demand_test.get('best_p_value', 0)
+                
+                component_analysis['demand'] = {
+                    'component': 'Modelo de Demanda',
+                    'reliability': 'high' if best_p_value > 0.05 else 'medium' if best_p_value > 0.01 else 'low',
+                    'confidence': f"{min(best_p_value * 100, 99):.1f}%",
+                    'status': 'validated' if best_p_value > 0.05 else 'needs_review'
+                }
+            
+            # Análisis de variables financieras
+            financial_reliability = []
+            for var_name, var_test in ks_tests.items():
+                if var_name in ['IT', 'GT', 'TG', 'NR'] and 'p_value' in var_test:
+                    financial_reliability.append(var_test['passes_test'])
+            
+            if financial_reliability:
+                fin_pass_rate = sum(financial_reliability) / len(financial_reliability)
+                component_analysis['financial'] = {
+                    'component': 'Variables Financieras',
+                    'reliability': 'high' if fin_pass_rate > 0.8 else 'medium' if fin_pass_rate > 0.6 else 'low',
+                    'pass_rate': f"{fin_pass_rate * 100:.1f}%",
+                    'variables_tested': len(financial_reliability),
+                    'status': 'validated' if fin_pass_rate > 0.7 else 'needs_review'
+                }
+            
+            return {
+                'reliability_score': round(reliability_score, 1),
+                'reliability_level': reliability_level,
+                'pass_rate': round(pass_rate * 100, 1),
+                'tests_summary': {
+                    'total_conducted': total_tests,
+                    'successful_validations': passed_tests,
+                    'critical_issues': critical_failures
+                },
+                'component_analysis': component_analysis,
+                'overall_recommendation': recommendation,
+                'certification_status': 'CERTIFIED' if reliability_score >= 75 else 'CONDITIONAL' if reliability_score >= 60 else 'NOT_CERTIFIED',
+                'generated_at': datetime.now().isoformat(),
+                'validity_period': '30 days from generation'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating reliability report: {str(e)}")
+            return {'error': str(e)}
+
+    def _get_expected_distribution(self, simulation_instance):
+        """Obtener distribución esperada basada en la configuración del modelo"""
+        try:
+            if hasattr(simulation_instance, 'fk_fdp') and simulation_instance.fk_fdp:
+                fdp_name = simulation_instance.fk_fdp.name.lower()
+                if 'normal' in fdp_name:
+                    return 'normal'
+                elif 'lognormal' in fdp_name or 'log' in fdp_name:
+                    return 'lognormal'
+                elif 'exponential' in fdp_name or 'exp' in fdp_name:
+                    return 'exponential'
+                elif 'gamma' in fdp_name:
+                    return 'gamma'
+            
+            return 'normal'  # Default
+        except:
+            return 'normal'
+
+    def _get_expected_distribution_for_variable(self, var_name):
+        """Obtener distribución esperada para variables específicas"""
+        variable_distributions = {
+            'IT': 'lognormal',  # Ingresos típicamente log-normal
+            'GT': 'normal',     # Ganancias pueden ser normales
+            'TG': 'lognormal',  # Gastos típicamente log-normal
+            'NR': 'normal',     # Ratios típicamente normales
+            'TPV': 'lognormal', # Cantidades vendidas
+            'NSC': 'normal',    # Porcentajes de servicio
+            'EOG': 'normal'     # Eficiencias
+        }
+        
+        return variable_distributions.get(var_name, 'normal')
+
+    def _interpret_ks_result(self, p_value, distribution_name):
+        """Interpretar resultado de prueba KS"""
+        if p_value > 0.1:
+            return f"Excelente ajuste a distribución {distribution_name} (p-value: {p_value:.4f})"
+        elif p_value > 0.05:
+            return f"Buen ajuste a distribución {distribution_name} (p-value: {p_value:.4f})"
+        elif p_value > 0.01:
+            return f"Ajuste marginal a distribución {distribution_name} (p-value: {p_value:.4f})"
+        else:
+            return f"Pobre ajuste a distribución {distribution_name} (p-value: {p_value:.4f})"
+
+    def _calculate_overall_validity(self, validation_results):
+        """Calcular validez general del modelo"""
+        try:
+            summary = validation_results['summary']
+            total_tests = summary['total_tests']
+            passed_tests = summary['passed_tests']
+            critical_failures = summary['critical_failures']
+            
+            if total_tests == 0:
+                summary['overall_validity'] = False
+                return
+            
+            pass_rate = passed_tests / total_tests
+            
+            # El modelo es válido si:
+            # 1. Al menos 70% de tests pasan
+            # 2. No hay fallas críticas
+            # 3. La demanda pasa el test KS
+            
+            demand_valid = False
+            if 'demand' in validation_results['ks_tests']:
+                demand_valid = validation_results['ks_tests']['demand'].get('overall_passes', False)
+            
+            summary['overall_validity'] = (
+                pass_rate >= 0.7 and 
+                critical_failures == 0 and 
+                demand_valid
+            )
+            
+        except Exception as e:
+            logger.error(f"Error calculating overall validity: {str(e)}")
+            validation_results['summary']['overall_validity'] = False
+
+    def _extract_all_variables_for_ks(self, results_simulation):
+        """Extraer variables para análisis KS"""
+        try:
+            extracted_vars = []
+            
+            for result in results_simulation:
+                day_vars = {'day': len(extracted_vars) + 1}
+                
+                if hasattr(result, 'variables') and result.variables:
+                    if isinstance(result.variables, dict):
+                        day_vars.update(result.variables)
+                    elif isinstance(result.variables, str):
+                        try:
+                            vars_dict = json.loads(result.variables)
+                            day_vars.update(vars_dict)
+                        except:
+                            pass
+                
+                extracted_vars.append(day_vars)
+            
+            return extracted_vars
+            
+        except Exception as e:
+            logger.error(f"Error extracting variables for KS: {str(e)}")
+            return []
+
+    def _create_empty_ks_validation_result(self):
+        """Crear resultado vacío para validación KS"""
+        return {
+            'summary': {
+                'total_tests': 0,
+                'passed_tests': 0,
+                'critical_failures': 0,
+                'confidence_level': 0.95,
+                'overall_validity': False
+            },
+            'ks_tests': {},
+            'confidence_intervals': {},
+            'distribution_analysis': {},
+            'alerts': [{'type': 'ERROR', 'message': 'No se pudo realizar validación KS'}],
+            'reliability_report': {'error': 'Validation failed'}
+        }

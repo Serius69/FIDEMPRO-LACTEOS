@@ -277,6 +277,12 @@ class SimulateResultView(LoginRequiredMixin, View):
             enhanced_validation = self._enhanced_validation_analysis(
                 simulation_instance, results_simulation, historical_demand, all_variables_extracted
             )
+            
+            # NUEVO: Validación KS específica para distribuciones
+            ks_validation_results = self._perform_ks_validation(
+                simulation_instance, results_simulation, all_variables_extracted
+            )
+            
             context.update({
                 'statistical_analysis': statistical_analysis,
                 'statistical_charts': statistical_charts,
@@ -287,7 +293,20 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'correlation_analysis': statistical_analysis.get('correlation_analysis', {}),
                 'trend_analysis': statistical_analysis.get('trend_analysis', {}),
             })
-                    
+            
+            
+            # PASO XX: Agregar validación KS al contexto
+            context.update({
+                'ks_validation': ks_validation_results,
+                'has_ks_validation': bool(ks_validation_results),
+                'distribution_alerts': ks_validation_results.get('alerts', []),
+                'confidence_intervals': ks_validation_results.get('confidence_intervals', {}),
+                'reliability_report': ks_validation_results.get('reliability_report', {}),
+                'ks_test_results': ks_validation_results.get('ks_tests', {}),
+                'distribution_analysis': ks_validation_results.get('distribution_analysis', {}),
+            })
+
+              
             
             # Final logging
             self._log_context_summary(context)
@@ -2670,6 +2689,582 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error calculating performance metrics: {e}")
             return {}
+
+
+    # AGREGAR ESTE NUEVO MÉTODO AL FINAL DE LA CLASE SimulateResultView:
+
+    def _perform_ks_validation(self, simulation_instance, results_simulation, all_variables_extracted):
+        """
+        Realizar validación específica con pruebas Kolmogorov-Smirnov
+        """
+        try:
+            logger.info("Starting Kolmogorov-Smirnov validation of simulation results")
+            
+            # Usar el servicio de validación para realizar pruebas KS
+            ks_validation = self.validation_service.validate_distribution_consistency(
+                simulation_instance, 
+                results_simulation, 
+                distribution_params=None
+            )
+            
+            # Generar gráficos de validación KS
+            ks_charts = self._generate_ks_validation_charts(ks_validation, all_variables_extracted)
+            ks_validation['ks_charts'] = ks_charts
+            
+            # Log resultados importantes
+            summary = ks_validation.get('summary', {})
+            logger.info(f"KS Validation Summary: {summary.get('passed_tests', 0)}/{summary.get('total_tests', 0)} tests passed")
+            logger.info(f"Overall validity: {summary.get('overall_validity', False)}")
+            
+            return ks_validation
+            
+        except Exception as e:
+            logger.error(f"Error in KS validation: {str(e)}")
+            return {
+                'summary': {'total_tests': 0, 'passed_tests': 0, 'overall_validity': False},
+                'alerts': [{'type': 'ERROR', 'message': f'Error en validación KS: {str(e)}'}],
+                'ks_tests': {},
+                'confidence_intervals': {},
+                'reliability_report': {},
+                'distribution_analysis': {}
+            }
+
+    def _generate_ks_validation_charts(self, ks_validation, all_variables_extracted):
+        """
+        Generar gráficos específicos para la validación KS
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            import numpy as np
+            from scipy import stats
+            import base64
+            from io import BytesIO
+            
+            charts = {}
+            
+            # 1. Gráfico Q-Q plot para distribuciones
+            ks_tests = ks_validation.get('ks_tests', {})
+            
+            if 'demand' in ks_tests:
+                demand_chart = self._create_distribution_comparison_chart(ks_tests['demand'])
+                if demand_chart:
+                    charts['demand_distribution'] = demand_chart
+            
+            # 2. Gráfico de intervalos de confianza
+            confidence_intervals = ks_validation.get('confidence_intervals', {})
+            if confidence_intervals:
+                ci_chart = self._create_confidence_intervals_chart(confidence_intervals)
+                if ci_chart:
+                    charts['confidence_intervals'] = ci_chart
+            
+            # 3. Gráfico de consistencia temporal
+            distribution_analysis = ks_validation.get('distribution_analysis', {})
+            if distribution_analysis.get('temporal_stability'):
+                temporal_chart = self._create_temporal_stability_chart(distribution_analysis)
+                if temporal_chart:
+                    charts['temporal_stability'] = temporal_chart
+            
+            # 4. Dashboard de validación KS
+            reliability_chart = self._create_reliability_dashboard(ks_validation)
+            if reliability_chart:
+                charts['reliability_dashboard'] = reliability_chart
+            
+            logger.info(f"Generated {len(charts)} KS validation charts")
+            return charts
+            
+        except Exception as e:
+            logger.error(f"Error generating KS validation charts: {str(e)}")
+            return {}
+
+    def _create_distribution_comparison_chart(self, demand_ks_test):
+        """Crear gráfico de comparación de distribuciones"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            import base64
+            from io import BytesIO
+            
+            distributions_tested = demand_ks_test.get('distributions_tested', {})
+            if not distributions_tested:
+                return None
+            
+            # Crear figura con subplots
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+            fig.suptitle('Validación de Distribuciones - Prueba Kolmogorov-Smirnov', fontsize=16, fontweight='bold')
+            
+            # Datos de muestra (simulados)
+            sample_data = np.random.normal(100, 20, 1000)  # Placeholder - usar datos reales
+            
+            # Subplot 1: Histograma con distribuciones ajustadas
+            ax1.hist(sample_data, bins=30, density=True, alpha=0.7, color='lightblue', edgecolor='black')
+            
+            x = np.linspace(sample_data.min(), sample_data.max(), 100)
+            colors = ['red', 'green', 'orange', 'purple']
+            
+            for i, (dist_name, dist_info) in enumerate(distributions_tested.items()):
+                if 'params' in dist_info and dist_info['passes_test']:
+                    if dist_name == 'normal':
+                        y = stats.norm.pdf(x, loc=dist_info['params'][0], scale=dist_info['params'][1])
+                        ax1.plot(x, y, color=colors[i % len(colors)], linewidth=2, 
+                                label=f"{dist_name.title()} (p={dist_info['p_value']:.3f})")
+            
+            ax1.set_title('Distribuciones Ajustadas vs Datos Observados')
+            ax1.set_xlabel('Valor')
+            ax1.set_ylabel('Densidad')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Subplot 2: P-values de pruebas KS
+            dist_names = list(distributions_tested.keys())
+            p_values = [distributions_tested[name]['p_value'] for name in dist_names]
+            colors_bar = ['green' if p > 0.05 else 'orange' if p > 0.01 else 'red' for p in p_values]
+            
+            bars = ax2.bar(dist_names, p_values, color=colors_bar, alpha=0.7, edgecolor='black')
+            ax2.axhline(y=0.05, color='red', linestyle='--', label='Umbral α=0.05')
+            ax2.set_title('P-values de Pruebas Kolmogorov-Smirnov')
+            ax2.set_ylabel('P-value')
+            ax2.set_xlabel('Distribución')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            # Agregar valores en las barras
+            for bar, p_val in zip(bars, p_values):
+                height = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.005,
+                        f'{p_val:.3f}', ha='center', va='bottom', fontweight='bold')
+            
+            # Subplot 3: Q-Q plot para mejor distribución
+            best_dist = max(distributions_tested.items(), key=lambda x: x[1]['p_value'])[0]
+            best_info = distributions_tested[best_dist]
+            
+            if best_dist == 'normal' and 'params' in best_info:
+                theoretical_quantiles = stats.norm.ppf(np.linspace(0.01, 0.99, len(sample_data)), 
+                                                      loc=best_info['params'][0], 
+                                                      scale=best_info['params'][1])
+                sample_quantiles = np.sort(sample_data)
+                
+                ax3.scatter(theoretical_quantiles, sample_quantiles, alpha=0.6, color='blue', s=20)
+                min_val = min(theoretical_quantiles.min(), sample_quantiles.min())
+                max_val = max(theoretical_quantiles.max(), sample_quantiles.max())
+                ax3.plot([min_val, max_val], [min_val, max_val], 'r-', linewidth=2, label='Línea ideal')
+                
+                ax3.set_title(f'Q-Q Plot: {best_dist.title()} (Mejor Ajuste)')
+                ax3.set_xlabel('Cuantiles Teóricos')
+                ax3.set_ylabel('Cuantiles Observados')
+                ax3.legend()
+                ax3.grid(True, alpha=0.3)
+            
+            # Subplot 4: Resumen de validación
+            ax4.axis('off')
+            
+            # Crear tabla de resumen
+            summary_data = []
+            for dist_name, dist_info in distributions_tested.items():
+                status = "✓ Pasa" if dist_info['passes_test'] else "✗ Falla"
+                summary_data.append([
+                    dist_name.title(),
+                    f"{dist_info['p_value']:.4f}",
+                    status
+                ])
+            
+            table = ax4.table(cellText=summary_data,
+                             colLabels=['Distribución', 'P-value', 'Estado'],
+                             cellLoc='center',
+                             loc='center',
+                             bbox=[0.1, 0.3, 0.8, 0.6])
+            
+            table.auto_set_font_size(False)
+            table.set_fontsize(12)
+            table.scale(1, 2)
+            
+            # Colorear filas según resultado
+            for i, (_, dist_info) in enumerate(distributions_tested.items()):
+                if dist_info['passes_test']:
+                    table[(i+1, 2)].set_facecolor('#90EE90')  # Verde claro
+                else:
+                    table[(i+1, 2)].set_facecolor('#FFB6C1')  # Rosa claro
+            
+            ax4.set_title('Resumen de Validación KS', fontsize=14, fontweight='bold', pad=20)
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating distribution comparison chart: {str(e)}")
+            return None
+
+    def _create_confidence_intervals_chart(self, confidence_intervals):
+        """Crear gráfico de intervalos de confianza"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import base64
+            from io import BytesIO
+            
+            # Filtrar intervalos de demanda
+            demand_intervals = {k: v for k, v in confidence_intervals.items() if 'demand' in k}
+            variable_intervals = {k: v for k, v in confidence_intervals.items() if 'demand' not in k}
+            
+            if not demand_intervals and not variable_intervals:
+                return None
+            
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+            fig.suptitle('Intervalos de Confianza para Proyecciones', fontsize=16, fontweight='bold')
+            
+            # Subplot 1: Intervalos de confianza para demanda
+            if demand_intervals:
+                conf_levels = []
+                means = []
+                lower_bounds = []
+                upper_bounds = []
+                margins = []
+                
+                for key, interval in demand_intervals.items():
+                    conf_level = int(key.split('_')[1])
+                    conf_levels.append(f"{conf_level}%")
+                    means.append(interval['mean'])
+                    lower_bounds.append(interval['lower_bound'])
+                    upper_bounds.append(interval['upper_bound'])
+                    margins.append(interval['margin_error'])
+                
+                x_pos = np.arange(len(conf_levels))
+                
+                # Gráfico de barras de error
+                ax1.errorbar(x_pos, means, yerr=margins, fmt='o', linewidth=2, markersize=8, 
+                           capsize=5, capthick=2, ecolor='red', markerfacecolor='blue', 
+                           markeredgecolor='darkblue', markeredgewidth=2)
+                
+                # Agregar área sombreada para intervalos
+                for i, (mean, lower, upper) in enumerate(zip(means, lower_bounds, upper_bounds)):
+                    ax1.fill_between([i-0.2, i+0.2], [lower, lower], [upper, upper], 
+                                   alpha=0.3, color='lightblue')
+                
+                ax1.set_xticks(x_pos)
+                ax1.set_xticklabels(conf_levels)
+                ax1.set_title('Intervalos de Confianza - Demanda Promedio')
+                ax1.set_xlabel('Nivel de Confianza')
+                ax1.set_ylabel('Demanda (L)')
+                ax1.grid(True, alpha=0.3)
+                
+                # Agregar valores en el gráfico
+                for i, (mean, margin) in enumerate(zip(means, margins)):
+                    ax1.text(i, mean + margin + (max(means) * 0.02), 
+                           f'{mean:.1f} ± {margin:.1f}', 
+                           ha='center', va='bottom', fontweight='bold')
+            
+            # Subplot 2: Intervalos para variables clave
+            if variable_intervals:
+                var_names = []
+                var_means = []
+                var_margins = []
+                
+                for key, interval in variable_intervals.items():
+                    if '95' in key:  # Solo intervalos de 95%
+                        var_name = interval.get('variable', key.split('_')[0])
+                        var_names.append(var_name)
+                        var_means.append(interval['mean'])
+                        var_margins.append(interval['margin_error'])
+                
+                if var_names:
+                    x_pos = np.arange(len(var_names))
+                    
+                    bars = ax2.bar(x_pos, var_means, yerr=var_margins, capsize=5, 
+                                 alpha=0.7, color='lightgreen', edgecolor='darkgreen', 
+                                 linewidth=1.5, error_kw={'elinewidth': 2, 'ecolor': 'red'})
+                    
+                    ax2.set_xticks(x_pos)
+                    ax2.set_xticklabels(var_names, rotation=45, ha='right')
+                    ax2.set_title('Intervalos de Confianza (95%) - Variables Clave')
+                    ax2.set_xlabel('Variable')
+                    ax2.set_ylabel('Valor')
+                    ax2.grid(True, alpha=0.3, axis='y')
+                    
+                    # Agregar valores en las barras
+                    for i, (bar, mean, margin) in enumerate(zip(bars, var_means, var_margins)):
+                        height = bar.get_height()
+                        ax2.text(bar.get_x() + bar.get_width()/2., height + margin + (max(var_means) * 0.02),
+                               f'{mean:.1f}', ha='center', va='bottom', fontweight='bold')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating confidence intervals chart: {str(e)}")
+            return None
+
+    def _create_temporal_stability_chart(self, distribution_analysis):
+        """Crear gráfico de estabilidad temporal"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import base64
+            from io import BytesIO
+            
+            temporal_stability = distribution_analysis.get('temporal_stability', {})
+            distribution_drift = distribution_analysis.get('distribution_drift', {})
+            
+            if not temporal_stability:
+                return None
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+            fig.suptitle('Análisis de Estabilidad Temporal de Distribuciones', fontsize=16, fontweight='bold')
+            
+            # Subplot 1: P-values de comparaciones temporales
+            comparisons = list(temporal_stability.keys())
+            p_values = [temporal_stability[comp]['p_value'] for comp in comparisons]
+            similarity = [temporal_stability[comp]['distributions_similar'] for comp in comparisons]
+            
+            colors = ['green' if sim else 'red' for sim in similarity]
+            
+            bars = ax1.bar(range(len(comparisons)), p_values, color=colors, alpha=0.7, edgecolor='black')
+            ax1.axhline(y=0.05, color='red', linestyle='--', linewidth=2, label='Umbral α=0.05')
+            
+            ax1.set_xticks(range(len(comparisons)))
+            ax1.set_xticklabels([comp.replace('window_', 'W').replace('_vs_', ' vs W') 
+                               for comp in comparisons], rotation=45, ha='right')
+            ax1.set_title('Comparaciones de Estabilidad Temporal (KS Test)')
+            ax1.set_xlabel('Ventanas Comparadas')
+            ax1.set_ylabel('P-value')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Agregar valores en las barras
+            for bar, p_val in zip(bars, p_values):
+                height = bar.get_height()
+                ax1.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                        f'{p_val:.3f}', ha='center', va='bottom', fontweight='bold')
+            
+            # Subplot 2: Drift de distribución
+            if distribution_drift:
+                initial_mean = distribution_drift.get('initial_mean', 0)
+                final_mean = distribution_drift.get('final_mean', 0)
+                drift_pct = distribution_drift.get('relative_drift_pct', 0)
+                
+                # Crear gráfico de drift
+                periods = ['Período Inicial', 'Período Final']
+                means = [initial_mean, final_mean]
+                
+                bars = ax2.bar(periods, means, color=['lightblue', 'lightcoral'], 
+                             alpha=0.7, edgecolor='black', linewidth=1.5)
+                
+                # Agregar flecha indicando drift
+                if abs(drift_pct) > 1:  # Solo si hay drift significativo
+                    arrow_props = dict(arrowstyle='->', connectionstyle='arc3', 
+                                     color='red' if drift_pct > 0 else 'green', linewidth=2)
+                    ax2.annotate('', xy=(1, final_mean), xytext=(0, initial_mean), arrowprops=arrow_props)
+                    
+                    # Agregar texto del drift
+                    mid_y = (initial_mean + final_mean) / 2
+                    ax2.text(0.5, mid_y, f'Drift: {drift_pct:+.1f}%', 
+                           ha='center', va='center', fontweight='bold', 
+                           bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7))
+                
+                ax2.set_title('Drift de la Media Temporal')
+                ax2.set_ylabel('Media de la Distribución')
+                ax2.grid(True, alpha=0.3, axis='y')
+                
+                # Agregar valores en las barras
+                for bar, mean in zip(bars, means):
+                    height = bar.get_height()
+                    ax2.text(bar.get_x() + bar.get_width()/2., height + (max(means) * 0.02),
+                           f'{mean:.1f}', ha='center', va='bottom', fontweight='bold')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating temporal stability chart: {str(e)}")
+            return None
+
+    def _create_reliability_dashboard(self, ks_validation):
+        """Crear dashboard de confiabilidad"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import base64
+            from io import BytesIO
+            
+            summary = ks_validation.get('summary', {})
+            reliability_report = ks_validation.get('reliability_report', {})
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            fig.suptitle('Dashboard de Confiabilidad - Validación Kolmogorov-Smirnov', 
+                        fontsize=18, fontweight='bold')
+            
+            # Subplot 1: Score de confiabilidad (gauge)
+            reliability_score = reliability_report.get('reliability_score', 0)
+            
+            # Crear gauge chart
+            theta = np.linspace(0, np.pi, 100)
+            r = np.ones_like(theta)
+            
+            # Colores por nivel de confiabilidad
+            if reliability_score >= 90:
+                color = 'green'
+            elif reliability_score >= 75:
+                color = 'orange'
+            else:
+                color = 'red'
+            
+            ax1 = plt.subplot(2, 2, 1, projection='polar')
+            ax1.fill_between(theta, 0, r, alpha=0.3, color='lightgray')
+            
+            # Llenar según el score
+            score_theta = np.linspace(0, np.pi * (reliability_score / 100), 50)
+            score_r = np.ones_like(score_theta)
+            ax1.fill_between(score_theta, 0, score_r, alpha=0.7, color=color)
+            
+            ax1.set_theta_zero_location('W')
+            ax1.set_theta_direction(1)
+            ax1.set_thetagrids([0, 45, 90, 135, 180], ['100%', '75%', '50%', '25%', '0%'])
+            ax1.set_ylim(0, 1)
+            ax1.set_rticks([])
+            ax1.set_title(f'Score de Confiabilidad\n{reliability_score:.1f}%', 
+                         fontsize=14, fontweight='bold', pad=20)
+            
+            # Subplot 2: Resumen de tests
+            ax2 = plt.subplot(2, 2, 2)
+            
+            total_tests = summary.get('total_tests', 0)
+            passed_tests = summary.get('passed_tests', 0)
+            failed_tests = total_tests - passed_tests
+            
+            if total_tests > 0:
+                sizes = [passed_tests, failed_tests]
+                labels = [f'Pasaron ({passed_tests})', f'Fallaron ({failed_tests})']
+                colors = ['green', 'red']
+                explode = (0.05, 0.05)
+                
+                wedges, texts, autotexts = ax2.pie(sizes, labels=labels, colors=colors, 
+                                                  autopct='%1.1f%%', explode=explode,
+                                                  shadow=True, startangle=90)
+                
+                for autotext in autotexts:
+                    autotext.set_color('white')
+                    autotext.set_fontweight('bold')
+            else:
+                ax2.text(0.5, 0.5, 'Sin datos de tests', ha='center', va='center', 
+                        transform=ax2.transAxes, fontsize=14)
+            
+            ax2.set_title('Distribución de Tests KS', fontsize=14, fontweight='bold')
+            
+            # Subplot 3: Nivel de certificación
+            ax3 = plt.subplot(2, 2, 3)
+            ax3.axis('off')
+            
+            certification_status = reliability_report.get('certification_status', 'NOT_CERTIFIED')
+            reliability_level = reliability_report.get('reliability_level', 'Desconocido')
+            
+            # Crear "certificado"
+            cert_colors = {
+                'CERTIFIED': '#90EE90',
+                'CONDITIONAL': '#FFD700', 
+                'NOT_CERTIFIED': '#FFB6C1'
+            }
+            
+            cert_color = cert_colors.get(certification_status, '#FFFFFF')
+            
+            # Crear rectángulo del certificado
+            rect = plt.Rectangle((0.1, 0.2), 0.8, 0.6, facecolor=cert_color, 
+                               edgecolor='black', linewidth=2)
+            ax3.add_patch(rect)
+            
+            # Texto del certificado
+            ax3.text(0.5, 0.7, 'CERTIFICACIÓN DE', ha='center', va='center', 
+                    fontsize=12, fontweight='bold', transform=ax3.transAxes)
+            ax3.text(0.5, 0.6, 'CONFIABILIDAD', ha='center', va='center', 
+                    fontsize=14, fontweight='bold', transform=ax3.transAxes)
+            ax3.text(0.5, 0.45, certification_status.replace('_', ' '), ha='center', va='center', 
+                    fontsize=16, fontweight='bold', transform=ax3.transAxes)
+            ax3.text(0.5, 0.35, f'Nivel: {reliability_level}', ha='center', va='center', 
+                    fontsize=12, transform=ax3.transAxes)
+            ax3.text(0.5, 0.25, f'Score: {reliability_score:.1f}/100', ha='center', va='center', 
+                    fontsize=12, transform=ax3.transAxes)
+            
+            # Subplot 4: Componentes analizados
+            ax4 = plt.subplot(2, 2, 4)
+            
+            component_analysis = reliability_report.get('component_analysis', {})
+            if component_analysis:
+                components = list(component_analysis.keys())
+                reliabilities = []
+                
+                for comp_key, comp_data in component_analysis.items():
+                    rel = comp_data.get('reliability', 'unknown')
+                    if rel == 'high':
+                        reliabilities.append(3)
+                    elif rel == 'medium':
+                        reliabilities.append(2)
+                    elif rel == 'low':
+                        reliabilities.append(1)
+                    else:
+                        reliabilities.append(0)
+                
+                colors_comp = ['green' if r == 3 else 'orange' if r == 2 else 'red' if r == 1 else 'gray' 
+                              for r in reliabilities]
+                
+                bars = ax4.barh(components, reliabilities, color=colors_comp, alpha=0.7, edgecolor='black')
+                
+                ax4.set_xlim(0, 3)
+                ax4.set_xticks([0, 1, 2, 3])
+                ax4.set_xticklabels(['N/A', 'Baja', 'Media', 'Alta'])
+                ax4.set_title('Confiabilidad por Componente')
+                ax4.set_xlabel('Nivel de Confiabilidad')
+                ax4.grid(True, alpha=0.3, axis='x')
+                
+                # Agregar etiquetas
+                for i, (bar, rel) in enumerate(zip(bars, reliabilities)):
+                    width = bar.get_width()
+                    label = ['N/A', 'Baja', 'Media', 'Alta'][rel]
+                    ax4.text(width + 0.05, bar.get_y() + bar.get_height()/2, 
+                           label, ha='left', va='center', fontweight='bold')
+            else:
+                ax4.text(0.5, 0.5, 'Sin análisis de componentes', ha='center', va='center', 
+                        transform=ax4.transAxes)
+                ax4.set_title('Análisis de Componentes')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating reliability dashboard: {str(e)}")
+            return None
+
 
 
 def simulate_result_simulation_view(request, simulation_id):
