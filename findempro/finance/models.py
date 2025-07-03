@@ -414,7 +414,6 @@ class FinanceRecommendationSimulation(models.Model):
     """
     Modelo para almacenar simulaciones de recomendaciones financieras
     """
-    # CORRECCIÓN: Agregar campos category, severity, title, description, actions, impact, metric_value
     category = models.CharField(
         max_length=50,
         choices=[
@@ -422,6 +421,7 @@ class FinanceRecommendationSimulation(models.Model):
             ('profitability', 'Rentabilidad'),
             ('costs', 'Costos'),
             ('efficiency', 'Eficiencia'),
+            ('trends', 'Tendencias'),  # AGREGADO: Faltaba esta opción
             ('financial', 'Financiero'),
         ],
         default='financial',
@@ -457,6 +457,13 @@ class FinanceRecommendationSimulation(models.Model):
         help_text='Descripción detallada de la recomendación'
     )
     
+    recommendation = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Recomendación',
+        help_text='Texto de la recomendación específica'
+    )
+    
     actions = models.JSONField(
         default=list,
         verbose_name='Acciones',
@@ -476,7 +483,7 @@ class FinanceRecommendationSimulation(models.Model):
         help_text='Nivel de impacto de la recomendación'
     )
     
-    # CORRECCIÓN: Cambiar data por metric_value como se usa en el log
+    # CORREGIDO: Agregar tanto metric_value como data para compatibilidad
     metric_value = models.FloatField(
         null=True,
         blank=True,
@@ -484,17 +491,65 @@ class FinanceRecommendationSimulation(models.Model):
         help_text='Valor numérico asociado a la recomendación'
     )
     
+    # AGREGADO: Campo data para compatibilidad temporal
+    data = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Datos',
+        help_text='Campo de datos numéricos (deprecado, usar metric_value)'
+    )
+    
+    # AGREGADO: Campos adicionales que se usan en el código
+    variable = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name='Variable',
+        help_text='Variable asociada a la recomendación'
+    )
+    
+    threshold = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Umbral',
+        help_text='Valor umbral para la recomendación'
+    )
+    
+    value = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Valor',
+        help_text='Valor actual de la métrica'
+    )
+    
+    priority = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Baja'),
+            ('medium', 'Media'),
+            ('high', 'Alta'),
+        ],
+        default='medium',
+        verbose_name='Prioridad',
+        help_text='Prioridad de la recomendación'
+    )
+    
     fk_simulation = models.ForeignKey(
-        Simulation,
+        'simulate.Simulation',  # String reference para evitar imports circulares
         on_delete=models.CASCADE,
         related_name='finance_recommendation_simulations',
         verbose_name='Simulación'
     )
     
-    # Campos de auditoría - FIXED: Use only default for existing records
+    # Campos de auditoría
     date_created = models.DateTimeField(
-        default=timezone.now,  # Use only default, not auto_now_add with default
+        default=timezone.now,
         verbose_name='Fecha de Creación'
+    )
+    
+    date_updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Fecha de Actualización'
     )
     
     is_active = models.BooleanField(
@@ -506,6 +561,38 @@ class FinanceRecommendationSimulation(models.Model):
         verbose_name = 'Simulación de Recomendación Financiera'
         verbose_name_plural = 'Simulaciones de Recomendaciones Financieras'
         ordering = ['-date_created']
+        indexes = [
+            models.Index(fields=['fk_simulation', 'category']),
+            models.Index(fields=['severity', 'priority']),
+            models.Index(fields=['date_created']),
+        ]
     
     def __str__(self):
-        return f"{self.title} - {self.category} ({self.severity})"
+        return f"{self.title or 'Recomendación'} - {self.get_category_display()} ({self.get_severity_display()})"
+    
+    def save(self, *args, **kwargs):
+        """Override save para sincronizar data y metric_value"""
+        # Si se proporciona data pero no metric_value, copiar data a metric_value
+        if self.data is not None and self.metric_value is None:
+            self.metric_value = self.data
+        # Si se proporciona metric_value pero no data, copiar metric_value a data
+        elif self.metric_value is not None and self.data is None:
+            self.data = self.metric_value
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def impact_score(self):
+        """Calcular puntuación de impacto basada en severidad y prioridad"""
+        severity_scores = {'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
+        priority_scores = {'low': 1, 'medium': 2, 'high': 3}
+        
+        severity_score = severity_scores.get(self.severity, 2)
+        priority_score = priority_scores.get(self.priority, 2)
+        
+        return (severity_score * 2 + priority_score) / 3
+    
+    @property
+    def needs_immediate_attention(self):
+        """Determinar si la recomendación necesita atención inmediata"""
+        return self.severity in ['high', 'critical'] and self.priority == 'high'

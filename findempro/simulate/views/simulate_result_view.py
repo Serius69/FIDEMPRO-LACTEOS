@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Dict, List, Any, Optional
 import scipy.stats
+from scipy import stats
 from simulate.services.statistical_service import StatisticalService
 from simulate.utils.chart_demand_utils import ChartDemand
 import numpy as np
@@ -2143,14 +2144,14 @@ class SimulateResultView(LoginRequiredMixin, View):
             }
 
     def _calculate_trend_analysis(self, values):
-        """Calcular análisis de tendencia detallado"""
+        """Calcular análisis de tendencia detallado - CORREGIDO"""
         try:
             if len(values) < 3:
                 return {'direction': 'stable', 'strength': 0}
             
             # Usar regresión lineal para determinar tendencia
             x = np.arange(len(values))
-            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, values)
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, values)  # CORREGIDO: scipy.stats
             
             # Determinar dirección
             threshold = 0.01 * np.mean(values)  # 1% del valor medio
@@ -2234,26 +2235,26 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # 2. Validación por variables
             if all_variables_extracted:
-                variable_validation = self._validate_individual_variables(
+                variable_validation = self.validation_service._validate_individual_variables(
                     simulation_instance, all_variables_extracted
                 )
                 validation_data['variable_validation'] = variable_validation
             
             # 3. Validación temporal (por días)
-            temporal_validation = self._validate_temporal_consistency(
+            temporal_validation = self.validation_service._validate_temporal_consistency(
                 results_simulation, historical_demand
             )
             validation_data['temporal_validation'] = temporal_validation
             
             # 4. Métricas de confiabilidad
-            reliability_metrics = self._calculate_reliability_metrics(
+            reliability_metrics = self.validation_service._calculate_reliability_metrics(
                 historical_demand, results_simulation
             )
             validation_data['reliability_metrics'] = reliability_metrics
             
             # 5. Intervalos de confianza
             if historical_demand:
-                confidence_intervals = self._calculate_confidence_intervals(
+                confidence_intervals = self.validation_service._calculate_confidence_intervals(
                     historical_demand, [float(r.demand_mean) for r in results_simulation]
                 )
                 validation_data['confidence_intervals'] = confidence_intervals
@@ -2266,7 +2267,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     
     
     def _analyze_trends(self, data):
-        """Analizar tendencias en los datos"""
+        """Analizar tendencias en los datos - CORREGIDO"""
         try:
             if len(data) < 3:
                 return {}
@@ -2275,14 +2276,13 @@ class SimulateResultView(LoginRequiredMixin, View):
             x = np.arange(len(data_array))
             
             # Regresión lineal
-            slope, intercept, r_value, p_value, std_err = stats.linregress(x, data_array)
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, data_array)  # CORREGIDO: scipy.stats
             
             # Prueba de Mann-Kendall para tendencia
             try:
-                from scipy.stats import kendalltau
-                tau, tau_p = kendalltau(x, data_array)
+                tau, tau_p = scipy.stats.kendalltau(x, data_array)  # CORREGIDO: scipy.stats
                 has_trend = tau_p < 0.05
-            except:
+            except Exception:
                 has_trend = p_value < 0.05
             
             # Clasificar tendencia
@@ -2371,7 +2371,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     
     
     def _analyze_variable_correlations(self, all_variables_extracted):
-        """Analizar correlaciones entre variables endógenas"""
+        """Analizar correlaciones entre variables endógenas - CORREGIDO"""
         try:
             if not all_variables_extracted or len(all_variables_extracted) < 3:
                 return {}
@@ -2413,7 +2413,9 @@ class SimulateResultView(LoginRequiredMixin, View):
                             
                             mask = ~(np.isnan(data1) | np.isnan(data2))
                             if np.sum(mask) > 3:
-                                corr_coef, p_value = stats.pearsonr(data1[mask], data2[mask])
+                                corr_coef, p_value = scipy.stats.pearsonr(  # CORREGIDO: scipy.stats
+                                    data1[mask], data2[mask]
+                                )
                                 correlation_matrix[var1][var2] = {
                                     'coefficient': float(corr_coef),
                                     'p_value': float(p_value),
@@ -2463,7 +2465,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             return {}
     
     def _analyze_distribution(self, data):
-        """Analizar distribución de los datos"""
+        """Analizar distribución de los datos - CORREGIDO"""
         try:
             if len(data) < 3:
                 return {}
@@ -2475,8 +2477,8 @@ class SimulateResultView(LoginRequiredMixin, View):
                     'mean': float(np.mean(data_array)),
                     'std': float(np.std(data_array)),
                     'variance': float(np.var(data_array)),
-                    'skewness': float(stats.skew(data_array)),
-                    'kurtosis': float(stats.kurtosis(data_array)),
+                    'skewness': float(scipy.stats.skew(data_array)),  # CORREGIDO: scipy.stats
+                    'kurtosis': float(scipy.stats.kurtosis(data_array)),  # CORREGIDO: scipy.stats
                     'min': float(np.min(data_array)),
                     'max': float(np.max(data_array)),
                     'median': float(np.median(data_array)),
@@ -2499,7 +2501,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Prueba de normalidad (Shapiro-Wilk)
             if len(data_array) <= 5000:  # Shapiro-Wilk es válido para n <= 5000
                 try:
-                    stat, p_value = stats.shapiro(data_array)
+                    stat, p_value = scipy.stats.shapiro(data_array)  # CORREGIDO: scipy.stats
                     analysis['normality_test'] = {
                         'shapiro_stat': float(stat),
                         'shapiro_p': float(p_value),
@@ -2510,7 +2512,12 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Ajuste de distribuciones
             try:
-                distributions = [stats.norm, stats.lognorm, stats.expon, stats.gamma]
+                distributions = [
+                    scipy.stats.norm,      # CORREGIDO: scipy.stats
+                    scipy.stats.lognorm,   # CORREGIDO: scipy.stats
+                    scipy.stats.expon,     # CORREGIDO: scipy.stats
+                    scipy.stats.gamma      # CORREGIDO: scipy.stats
+                ]
                 best_dist = None
                 best_fit = -np.inf
                 best_params = {}
@@ -2519,7 +2526,9 @@ class SimulateResultView(LoginRequiredMixin, View):
                     try:
                         params = dist.fit(data_array)
                         # Prueba de Kolmogorov-Smirnov
-                        ks_stat, ks_p = stats.kstest(data_array, lambda x: dist.cdf(x, *params))
+                        ks_stat, ks_p = scipy.stats.kstest(  # CORREGIDO: scipy.stats
+                            data_array, lambda x: dist.cdf(x, *params)
+                        )
                         
                         if ks_p > best_fit:
                             best_fit = ks_p
@@ -2543,9 +2552,9 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error analyzing distribution: {e}")
             return {}
-
+        
     def _perform_statistical_tests(self, historical_data, simulated_data):
-        """Realizar pruebas estadísticas comparativas"""
+        """Realizar pruebas estadísticas comparativas - CORREGIDO"""
         try:
             tests = {}
             
@@ -2559,7 +2568,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # 1. Prueba t de Student (medias)
             try:
-                t_stat, t_p = stats.ttest_ind(hist_trimmed, sim_trimmed)
+                t_stat, t_p = scipy.stats.ttest_ind(hist_trimmed, sim_trimmed)  # CORREGIDO: scipy.stats
                 tests['t_test'] = {
                     'statistic': float(t_stat),
                     'p_value': float(t_p),
@@ -2572,8 +2581,10 @@ class SimulateResultView(LoginRequiredMixin, View):
             # 2. Prueba F (varianzas)
             try:
                 f_stat = np.var(hist_trimmed, ddof=1) / np.var(sim_trimmed, ddof=1)
-                f_p = 2 * min(stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1),
-                            1 - stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1))
+                f_p = 2 * min(
+                    scipy.stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1),  # CORREGIDO: scipy.stats
+                    1 - scipy.stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1)  # CORREGIDO: scipy.stats
+                )
                 
                 tests['f_test'] = {
                     'statistic': float(f_stat),
@@ -2586,7 +2597,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # 3. Prueba de Kolmogorov-Smirnov (distribuciones)
             try:
-                ks_stat, ks_p = stats.ks_2samp(hist_trimmed, sim_trimmed)
+                ks_stat, ks_p = scipy.stats.ks_2samp(hist_trimmed, sim_trimmed)  # CORREGIDO: scipy.stats
                 tests['ks_test'] = {
                     'statistic': float(ks_stat),
                     'p_value': float(ks_p),
@@ -2598,7 +2609,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # 4. Correlación de Pearson
             try:
-                corr_coef, corr_p = stats.pearsonr(hist_trimmed, sim_trimmed)
+                corr_coef, corr_p = scipy.stats.pearsonr(hist_trimmed, sim_trimmed)  # CORREGIDO: scipy.stats
                 tests['correlation'] = {
                     'coefficient': float(corr_coef),
                     'p_value': float(corr_p),
@@ -2779,11 +2790,11 @@ class SimulateResultView(LoginRequiredMixin, View):
             return {}
 
     def _create_distribution_comparison_chart(self, demand_ks_test):
-        """Crear gráfico de comparación de distribuciones"""
+        """Crear gráfico de comparación de distribuciones - CORREGIDO"""
         try:
             import matplotlib.pyplot as plt
             import numpy as np
-            from scipy import stats
+            from scipy import stats as scipy_stats  # IMPORTACIÓN LOCAL EXPLÍCITA
             import base64
             from io import BytesIO
             
@@ -2807,7 +2818,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             for i, (dist_name, dist_info) in enumerate(distributions_tested.items()):
                 if 'params' in dist_info and dist_info['passes_test']:
                     if dist_name == 'normal':
-                        y = stats.norm.pdf(x, loc=dist_info['params'][0], scale=dist_info['params'][1])
+                        y = scipy_stats.norm.pdf(x, loc=dist_info['params'][0], scale=dist_info['params'][1])  # CORREGIDO
                         ax1.plot(x, y, color=colors[i % len(colors)], linewidth=2, 
                                 label=f"{dist_name.title()} (p={dist_info['p_value']:.3f})")
             
@@ -2841,9 +2852,11 @@ class SimulateResultView(LoginRequiredMixin, View):
             best_info = distributions_tested[best_dist]
             
             if best_dist == 'normal' and 'params' in best_info:
-                theoretical_quantiles = stats.norm.ppf(np.linspace(0.01, 0.99, len(sample_data)), 
-                                                      loc=best_info['params'][0], 
-                                                      scale=best_info['params'][1])
+                theoretical_quantiles = scipy_stats.norm.ppf(  # CORREGIDO
+                    np.linspace(0.01, 0.99, len(sample_data)), 
+                    loc=best_info['params'][0], 
+                    scale=best_info['params'][1]
+                )
                 sample_quantiles = np.sort(sample_data)
                 
                 ax3.scatter(theoretical_quantiles, sample_quantiles, alpha=0.6, color='blue', s=20)

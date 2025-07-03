@@ -46,6 +46,52 @@ class ChartGenerator:
             'real': '#2ca02c'
         }
     
+    def _set_smart_x_ticks(self, ax, data_length, max_ticks=10):
+        """
+        Establece ticks del eje X de forma inteligente para evitar errores
+        """
+        try:
+            if data_length <= max_ticks:
+                tick_positions = list(range(data_length))
+                tick_labels = [f'D{i+1}' for i in range(data_length)]
+            else:
+                interval = max(1, data_length // max_ticks)
+                tick_positions = list(range(0, data_length, interval))
+                if tick_positions[-1] != data_length - 1:
+                    tick_positions.append(data_length - 1)
+                tick_labels = [f'D{i+1}' for i in tick_positions]
+            
+            ax.set_xticks(tick_positions)
+            ax.set_xticklabels(tick_labels, rotation=45, ha='right')
+            return True
+        except Exception as e:
+            logger.error(f"Error setting smart ticks: {e}")
+            return False
+    
+    def _apply_safe_layout(self, fig=None):
+        """
+        CORRECCIÓN: Aplicar layout seguro sin warnings de matplotlib
+        """
+        try:
+            if fig is not None:
+                fig.tight_layout(pad=1.0)
+            else:
+                import matplotlib.pyplot as plt
+                plt.tight_layout(pad=1.0)
+        except Exception as e:
+            # Fallback a subplots_adjust manual
+            try:
+                if fig is not None:
+                    fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15, 
+                                    hspace=0.3, wspace=0.3)
+                else:
+                    import matplotlib.pyplot as plt
+                    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15, 
+                                    hspace=0.3, wspace=0.3)
+            except Exception as e2:
+                logger.warning(f"Could not apply layout adjustments: {e2}")
+    
+    
     def _generate_complete_variable_chart(self, var_key, var_data, var_type, all_variables_extracted):
         """
         Genera un gráfico COMPLETO mostrando la evolución de una variable a lo largo de TODOS los días

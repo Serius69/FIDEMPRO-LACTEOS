@@ -36,17 +36,23 @@ class SimulationFinancialAnalyzer:
             'target_efficiency': 0.85,      # 85% operational efficiency
         }
     
+    # MÉTODO ALTERNATIVO: Actualizar el método que genera las recomendaciones
     def _generate_dynamic_recommendations(self, simulation_instance, 
                                     totales_acumulativos, financial_results):
-        """Generate dynamic recommendations based on simulation results"""
+        """Generate dynamic recommendations based on simulation results - CORREGIDO"""
         recommendations = []
         business = simulation_instance.fk_questionary_result.fk_questionary.fk_product.fk_business
         
         # Get finance recommendations from database
-        db_recommendations = FinanceRecommendation.objects.filter(
-            fk_business=business,
-            is_active=True
-        ).order_by('threshold_value')
+        try:
+            from finance.models import FinanceRecommendation
+            db_recommendations = FinanceRecommendation.objects.filter(
+                fk_business=business,
+                is_active=True
+            ).order_by('threshold_value')
+        except Exception as e:
+            logger.error(f"Error getting database recommendations: {e}")
+            db_recommendations = []
         
         # Check each recommendation against results
         for rec in db_recommendations:
@@ -60,15 +66,18 @@ class SimulationFinancialAnalyzer:
                     
                     recommendations.append({
                         'name': rec.name,
+                        'title': rec.name,  # AGREGADO: title explícito
                         'description': rec.description or rec.recommendation,
                         'recommendation': rec.recommendation,
                         'severity': min(100, severity),
-                        'value': value,
+                        'metric_value': value,  # CORREGIDO: usar metric_value en lugar de data
                         'threshold': threshold,
+                        'value': value,  # AGREGADO: campo value
                         'variable': rec.variable_name,
+                        'category': 'financial',  # AGREGADO: categoría por defecto
                         'priority': 'high' if severity > 50 else 'medium' if severity > 20 else 'low',
-                        # 'icon': self._get_recommendation_icon(rec.variable_name),
-                        # 'color': self._get_recommendation_color(severity)
+                        'impact': 'high' if severity > 50 else 'medium' if severity > 20 else 'low',
+                        'actions': [rec.recommendation] if rec.recommendation else []  # AGREGADO
                     })
         
         # Add dynamic recommendations based on calculated metrics
@@ -82,13 +91,21 @@ class SimulationFinancialAnalyzer:
                 if efficiency < 80:
                     recommendations.append({
                         'name': 'Eficiencia de Ventas Baja',
+                        'title': 'Eficiencia de Ventas Baja',
                         'description': f'Solo se está vendiendo el {efficiency:.1f}% de la producción',
                         'recommendation': 'Revisar estrategias de ventas y marketing. Considerar promociones o ajustar producción.',
                         'severity': 90 - efficiency,
                         'priority': 'high' if efficiency < 60 else 'medium',
+                        'category': 'efficiency',
                         'variable': 'EFICIENCIA_VENTAS',
-                        'icon': 'bx-trending-down',
-                        'color': 'danger' if efficiency < 60 else 'warning'
+                        'metric_value': efficiency,
+                        'value': efficiency,
+                        'impact': 'high' if efficiency < 60 else 'medium',
+                        'actions': [
+                            'Revisar estrategias de ventas y marketing',
+                            'Considerar promociones',
+                            'Ajustar producción'
+                        ]
                     })
         
         # 2. Profitability Analysis
@@ -101,98 +118,82 @@ class SimulationFinancialAnalyzer:
                 if profit_margin < 10:
                     recommendations.append({
                         'name': 'Margen de Ganancia Bajo',
+                        'title': 'Margen de Ganancia Bajo',
                         'description': f'El margen de ganancia es solo {profit_margin:.1f}%',
                         'recommendation': 'Analizar estructura de costos y considerar optimizaciones o ajuste de precios.',
                         'severity': 80,
                         'priority': 'high',
+                        'category': 'profitability',
                         'variable': 'MARGEN_GANANCIA',
-                        'icon': 'bx-dollar-circle',
-                        'color': 'danger'
+                        'metric_value': profit_margin,
+                        'value': profit_margin,
+                        'impact': 'high',
+                        'actions': [
+                            'Analizar estructura de costos',
+                            'Considerar optimizaciones',
+                            'Ajustar precios'
+                        ]
                     })
                 elif profit_margin > 40:
                     recommendations.append({
                         'name': 'Excelente Margen de Ganancia',
+                        'title': 'Excelente Margen de Ganancia',
                         'description': f'El margen de ganancia es {profit_margin:.1f}%',
                         'recommendation': 'Mantener estrategia actual. Considerar expansión o inversión en crecimiento.',
                         'severity': 20,
                         'priority': 'low',
+                        'category': 'profitability',
                         'variable': 'MARGEN_GANANCIA',
-                        'icon': 'bx-trophy',
-                        'color': 'success'
+                        'metric_value': profit_margin,
+                        'value': profit_margin,
+                        'impact': 'low',
+                        'actions': [
+                            'Mantener estrategia actual',
+                            'Considerar expansión',
+                            'Invertir en crecimiento'
+                        ]
                     })
         
-        # 3. Inventory Analysis
-        if 'DEMANDA INSATISFECHA' in totales_acumulativos:
-            demanda_insatisfecha = totales_acumulativos['DEMANDA INSATISFECHA']['total']
-            if demanda_insatisfecha > 0:
-                recommendations.append({
-                    'name': 'Demanda Insatisfecha Detectada',
-                    'description': f'Se dejó de atender {demanda_insatisfecha:.0f} unidades de demanda',
-                    'recommendation': 'Aumentar capacidad de producción o mejorar gestión de inventarios.',
-                    'severity': min(100, demanda_insatisfecha / 100),
-                    'priority': 'high',
-                    'variable': 'DEMANDA_INSATISFECHA',
-                    'icon': 'bx-error-circle',
-                    'color': 'danger'
-                })
-        
-        # 4. Cost Structure Analysis
-        if 'GASTOS OPERATIVOS' in totales_acumulativos and 'INGRESOS TOTALES' in totales_acumulativos:
-            gastos_op = totales_acumulativos['GASTOS OPERATIVOS']['total']
-            ingresos = totales_acumulativos['INGRESOS TOTALES']['total']
-            if ingresos > 0:
-                cost_ratio = (gastos_op / ingresos) * 100
-                if cost_ratio > 70:
-                    recommendations.append({
-                        'name': 'Costos Operativos Elevados',
-                        'description': f'Los costos operativos representan el {cost_ratio:.1f}% de los ingresos',
-                        'recommendation': 'Revisar y optimizar procesos operativos. Buscar eficiencias en la cadena de suministro.',
-                        'severity': cost_ratio,
-                        'priority': 'high',
-                        'variable': 'COSTOS_OPERATIVOS',
-                        'icon': 'bx-receipt',
-                        'color': 'warning'
-                    })
-        
-        # 5. Growth Analysis
+        # 3. Growth Analysis
         if 'growth_rate' in financial_results:
             growth = financial_results['growth_rate']
             if growth < -5:
                 recommendations.append({
                     'name': 'Tendencia Negativa en Demanda',
+                    'title': 'Tendencia Negativa en Demanda',
                     'description': f'La demanda muestra una caída del {abs(growth):.1f}%',
                     'recommendation': 'Implementar estrategias de retención y recuperación de clientes. Revisar competitividad.',
                     'severity': min(100, abs(growth) * 2),
                     'priority': 'high',
+                    'category': 'trends',
                     'variable': 'CRECIMIENTO',
-                    'icon': 'bx-down-arrow-alt',
-                    'color': 'danger'
+                    'metric_value': growth,
+                    'value': growth,
+                    'impact': 'high',
+                    'actions': [
+                        'Implementar estrategias de retención de clientes',
+                        'Estrategias de recuperación',
+                        'Revisar competitividad'
+                    ]
                 })
             elif growth > 20:
                 recommendations.append({
                     'name': 'Crecimiento Acelerado',
+                    'title': 'Crecimiento Acelerado',
                     'description': f'La demanda crece al {growth:.1f}%',
                     'recommendation': 'Preparar infraestructura para expansión. Asegurar capital de trabajo suficiente.',
                     'severity': 30,
                     'priority': 'medium',
+                    'category': 'trends',
                     'variable': 'CRECIMIENTO',
-                    'icon': 'bx-up-arrow-alt',
-                    'color': 'info'
-                })
-        
-        # 6. ROI Analysis
-        if 'Retorno Inversión' in totales_acumulativos:
-            roi = totales_acumulativos['Retorno Inversión']['total']
-            if roi < 1:
-                recommendations.append({
-                    'name': 'ROI Bajo',
-                    'description': f'El retorno de inversión es {roi:.2f}',
-                    'recommendation': 'Revisar estrategia de inversión y buscar oportunidades de mejora en eficiencia.',
-                    'severity': 70,
-                    'priority': 'medium',
-                    'variable': 'ROI',
-                    'icon': 'bx-line-chart-down',
-                    'color': 'warning'
+                    'metric_value': growth,
+                    'value': growth,
+                    'impact': 'medium',
+                    'actions': [
+                        'Preparar infraestructura para expansión',
+                        'Asegurar capital de trabajo',
+                        'Planificar crecimiento'
+                    ]
                 })
         
         # Sort by priority and severity
@@ -947,36 +948,105 @@ class SimulationFinancialAnalyzer:
             return 'Se requieren ajustes operativos para mejorar la rentabilidad'
     
     def _save_recommendations_to_db(self, simulation: Simulation,
-                                recommendations: List[Dict],
-                                business: Business) -> None:
-        """Save financial recommendations to database"""
+                            recommendations: List[Dict],
+                            business: Business) -> None:
+        """Save financial recommendations to database - CORREGIDO"""
         try:
             logger.info(f"Attempting to save {len(recommendations[:5])} recommendations")
+            
+            # Importar aquí para evitar importación circular
+            from finance.models import FinanceRecommendationSimulation
             
             for i, rec in enumerate(recommendations[:5]):
                 logger.info(f"Processing recommendation {i+1}: {rec}")
                 
-                if 'metric_value' in rec:
-                    try:
-                        metric_value = float(rec['metric_value'])
-                        logger.info(f"Converting metric_value: {rec['metric_value']} -> {metric_value}")
-                        
-                        # Create the simulation record
-                        sim_rec = FinanceRecommendationSimulation.objects.create(
-                            data=metric_value,
-                            fk_simulation=simulation,
-                        )
-                        logger.info(f"Successfully created FinanceRecommendationSimulation ID: {sim_rec.id}")
-                        
-                    except ValueError as ve:
-                        logger.error(f"Error converting metric_value to float: {rec['metric_value']} - {ve}")
-                    except Exception as creation_error:
-                        logger.error(f"Error creating FinanceRecommendationSimulation: {creation_error}")
-                        logger.error(f"Simulation ID: {simulation.id}")
-                        logger.error(f"Data: {metric_value}")
-                else:
-                    logger.warning(f"Missing 'metric_value' in recommendation: {rec}")
+                try:
+                    # Preparar datos para creación
+                    creation_data = {
+                        'fk_simulation': simulation,
+                        'category': rec.get('category', 'financial'),
+                        'severity': rec.get('severity', 'medium'),
+                        'title': rec.get('title', rec.get('name', 'Recomendación Financiera')),
+                        'description': rec.get('description', ''),
+                        'recommendation': rec.get('recommendation', rec.get('actions', [])),
+                        'impact': rec.get('impact', 'medium'),
+                        'priority': rec.get('priority', 'medium'),
+                        'variable': rec.get('variable', ''),
+                        'is_active': True
+                    }
                     
+                    # Manejar metric_value/data
+                    if 'metric_value' in rec:
+                        try:
+                            metric_value = float(rec['metric_value'])
+                            creation_data['metric_value'] = metric_value
+                            creation_data['data'] = metric_value  # Para compatibilidad
+                            logger.info(f"Using metric_value: {metric_value}")
+                        except (ValueError, TypeError) as ve:
+                            logger.error(f"Error converting metric_value to float: {rec['metric_value']} - {ve}")
+                            creation_data['metric_value'] = 0.0
+                            creation_data['data'] = 0.0
+                    
+                    # Fallback para 'data' si no hay 'metric_value'
+                    elif 'data' in rec:
+                        try:
+                            data_value = float(rec['data'])
+                            creation_data['data'] = data_value
+                            creation_data['metric_value'] = data_value  # Sincronizar
+                            logger.info(f"Using data: {data_value}")
+                        except (ValueError, TypeError) as ve:
+                            logger.error(f"Error converting data to float: {rec['data']} - {ve}")
+                            creation_data['data'] = 0.0
+                            creation_data['metric_value'] = 0.0
+                    
+                    # Manejar campos opcionales
+                    if 'threshold' in rec:
+                        try:
+                            creation_data['threshold'] = float(rec['threshold'])
+                        except (ValueError, TypeError):
+                            creation_data['threshold'] = None
+                    
+                    if 'value' in rec:
+                        try:
+                            creation_data['value'] = float(rec['value'])
+                        except (ValueError, TypeError):
+                            creation_data['value'] = None
+                    
+                    # Manejar actions (convertir lista a string si es necesario)
+                    if 'actions' in rec:
+                        actions = rec['actions']
+                        if isinstance(actions, list):
+                            creation_data['actions'] = actions
+                            # También guardar como texto en recommendation si está vacío
+                            if not creation_data.get('recommendation'):
+                                creation_data['recommendation'] = '; '.join(actions) if actions else ''
+                        elif isinstance(actions, str):
+                            creation_data['recommendation'] = actions
+                            creation_data['actions'] = [actions]
+                    
+                    # Crear la instancia
+                    sim_rec = FinanceRecommendationSimulation.objects.create(**creation_data)
+                    logger.info(f"Successfully created FinanceRecommendationSimulation ID: {sim_rec.id}")
+                    
+                except Exception as creation_error:
+                    logger.error(f"Error creating FinanceRecommendationSimulation: {creation_error}")
+                    logger.error(f"Attempted data: {creation_data}")
+                    
+                    # Crear registro mínimo en caso de error
+                    try:
+                        minimal_data = {
+                            'fk_simulation': simulation,
+                            'title': rec.get('title', rec.get('name', 'Error en recomendación')),
+                            'description': f"Error al procesar: {str(creation_error)}",
+                            'category': 'financial',
+                            'severity': 'medium',
+                            'is_active': True
+                        }
+                        FinanceRecommendationSimulation.objects.create(**minimal_data)
+                        logger.info("Created minimal recommendation record after error")
+                    except Exception as minimal_error:
+                        logger.error(f"Failed to create even minimal record: {minimal_error}")
+                        
         except Exception as e:
             logger.error(f"Error saving recommendations: {str(e)}")
             logger.error(f"Simulation: {simulation}")

@@ -1614,7 +1614,7 @@
                                                 {% endif %}
 
                             </div>
-                            <!-- Operations Tab - Versión Corregida -->
+                            <!-- Operations Tab -->
                             <div class="tab-pane fade" id="operations" role="tabpanel">         
                                 <!-- Header operativo -->
                                 <div class="row mb-4">
@@ -3170,519 +3170,580 @@
                                 
                             </div>
                             <!-- Validation Tab -->
-                            <div class="tab-pane fade" id="validation" role="tabpanel">
-                                
-                                <!-- Resumen de Validación -->
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        {% if validation_summary and validation_summary.success_rate %}
-                                            <div class="alert {% if validation_summary.success_rate >= 80 %}alert-success{% elif validation_summary.success_rate >= 60 %}alert-warning{% else %}alert-danger{% endif %}">
-                                                <h5 class="alert-heading">
-                                                    <i class="bx {% if validation_summary.success_rate >= 80 %}bx-check-circle{% elif validation_summary.success_rate >= 60 %}bx-error-circle{% else %}bx-x-circle{% endif %} me-2"></i>
-                                                    Estado General de Validación del Modelo
-                                                </h5>
-                                                <hr>
-                                                <div class="row text-center">
-                                                    <div class="col-md-3">
-                                                        <div class="validation-kpi">
-                                                            <div class="validation-kpi-value {% if validation_summary.success_rate > 80 %}text-success{% elif validation_summary.success_rate > 60 %}text-warning{% else %}text-danger{% endif %}">
-                                                                {{ validation_summary.success_rate|floatformat:1 }}%
-                                                            </div>
-                                                            <div class="validation-kpi-label">Tasa de Éxito Global</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="validation-kpi">
-                                                            <div class="validation-kpi-value {% if validation_summary.avg_mape < 10 %}text-success{% elif validation_summary.avg_mape < 20 %}text-warning{% else %}text-danger{% endif %}">
-                                                                {{ validation_summary.avg_mape|default:"N/A"|floatformat:2 }}%
-                                                            </div>
-                                                            <div class="validation-kpi-label">Error Promedio (MAPE)</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="validation-kpi">
-                                                            <div class="validation-kpi-value text-success">
-                                                                {{ validation_summary.precise_count|default:0 }}
-                                                            </div>
-                                                            <div class="validation-kpi-label">Días Precisos (&lt;10%)</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="validation-kpi">
-                                                            <div class="validation-kpi-value text-danger">
-                                                                {{ validation_summary.inaccurate_count|default:0 }}
-                                                            </div>
-                                                            <div class="validation-kpi-label">Días Inexactos (&gt;20%)</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <div class="alert alert-info">
-                                                <h5 class="alert-heading">
-                                                    <i class="bx bx-info-circle me-2"></i>
-                                                    Validación del Modelo en Proceso
-                                                </h5>
-                                                <p class="mb-0">
-                                                    El sistema está procesando la validación del modelo. Los resultados se mostrarán cuando estén disponibles.
-                                                </p>
-                                            </div>
-                                        {% endif %}
-                                    </div>
+                            <!-- Validation Tab - COMPLETE IMPROVED VERSION -->
+<div class="tab-pane fade" id="validation" role="tabpanel">
+    
+    <!-- Resumen Principal de Validación con Variables Reales -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if model_validation_summary and model_validation_summary.total_variables > 0 %}
+                <div class="alert {% if model_validation_summary.success_rate >= 70 %}alert-success{% elif model_validation_summary.success_rate >= 50 %}alert-warning{% elif model_validation_summary.success_rate >= 25 %}alert-info{% else %}alert-danger{% endif %}">
+                    <h5 class="alert-heading">
+                        <i class="bx {% if model_validation_summary.success_rate >= 70 %}bx-check-circle{% elif model_validation_summary.success_rate >= 50 %}bx-error-circle{% else %}bx-x-circle{% endif %} me-2"></i>
+                        Validación del Modelo vs Datos Reales
+                    </h5>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="validation-kpi">
+                                <div class="validation-kpi-value {% if model_validation_summary.success_rate > 70 %}text-success{% elif model_validation_summary.success_rate > 50 %}text-warning{% elif model_validation_summary.success_rate > 25 %}text-info{% else %}text-danger{% endif %}">
+                                    {{ model_validation_summary.success_rate|floatformat:1 }}%
                                 </div>
-
-                                <!-- Gráfico de Distribución de Precisión -->
-                                {% if validation_summary and validation_summary.success_rate %}
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <div class="chart-container">
-                                            <h6 class="mb-3">
-                                                <i class="bx bx-bar-chart-alt-2 me-2"></i>
-                                                Distribución de Precisión - Error Porcentual por Día
-                                            </h6>
-                                            <div class="chart-controls">
-                                                <div class="chart-control-btn" onclick="downloadValidationChart()" title="Descargar">
-                                                    <i class="bx bx-download"></i>
-                                                </div>
-                                                <div class="chart-control-btn" onclick="toggleValidationChartType()" title="Cambiar tipo de gráfico">
-                                                    <i class="bx bx-refresh"></i>
-                                                </div>
-                                            </div>
-                                            <div style="position: relative; height: 400px;">
-                                                <canvas id="validationPrecisionChart"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Métricas de Error Detalladas -->
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <div class="metric-card">
-                                            <div class="card-header">
-                                                <h5 class="card-title mb-0">
-                                                    <i class="bx bx-calculator me-2"></i>
-                                                    Métricas de Error del Modelo
-                                                </h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-6">
-                                                        <div class="text-center p-3 border rounded mb-3">
-                                                            <h6 class="text-muted mb-1">MAE</h6>
-                                                            <h4 class="mb-0">{{ validation_metrics.mae|default:"N/A"|floatformat:2 }} L</h4>
-                                                            <small class="text-muted">Error Absoluto Medio</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="text-center p-3 border rounded mb-3">
-                                                            <h6 class="text-muted mb-1">MAPE</h6>
-                                                            <h4 class="mb-0 {% if validation_metrics.mape < 10 %}text-success{% elif validation_metrics.mape < 20 %}text-warning{% else %}text-danger{% endif %}">
-                                                                {{ validation_metrics.mape|default:"N/A"|floatformat:2 }}%
-                                                            </h4>
-                                                            <small class="text-muted">Error Porcentual Medio</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="text-center p-3 border rounded">
-                                                            <h6 class="text-muted mb-1">RMSE</h6>
-                                                            <h4 class="mb-0">{{ validation_metrics.rmse|default:"N/A"|floatformat:2 }} L</h4>
-                                                            <small class="text-muted">Error Cuadrático Medio</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="text-center p-3 border rounded">
-                                                            <h6 class="text-muted mb-1">R²</h6>
-                                                            <h4 class="mb-0 {% if validation_metrics.r_squared > 0.8 %}text-success{% elif validation_metrics.r_squared > 0.6 %}text-warning{% else %}text-danger{% endif %}">
-                                                                {{ validation_metrics.r_squared|default:"N/A"|floatformat:3 }}
-                                                            </h4>
-                                                            <small class="text-muted">Coeficiente de Determinación</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6">
-                                        <div class="metric-card">
-                                            <div class="card-header">
-                                                <h5 class="card-title mb-0">
-                                                    <i class="bx bx-pie-chart-alt-2 me-2"></i>
-                                                    Resumen de Precisión por Categoría
-                                                </h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <canvas id="validationSummaryChart" height="200"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Three-Line Validation Chart Section -->
-                                {% if has_three_line_chart and three_line_validation_chart %}
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <div class="card shadow-sm">
-                                            <div class="card-header bg-success text-white">
-                                                <h4 class="mb-0">
-                                                    <i class="bx bx-check-circle me-2"></i> 
-                                                    Validación del Modelo: Comparación de Tres Líneas
-                                                </h4>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-lg-9">
-                                                        <img src="data:image/png;base64,{{ three_line_validation_chart }}" 
-                                                            class="img-fluid rounded shadow" 
-                                                            alt="Gráfico de Validación de Tres Líneas">
-                                                    </div>
-                                                    <div class="col-lg-3">
-                                                        <div class="validation-metrics">
-                                                            <h5>Métricas de Validación</h5>
-                                                            
-                                                            {% if three_line_validation_metrics.historical_vs_simulated %}
-                                                            <div class="metric-card mb-3 p-3 bg-light rounded">
-                                                                <h6 class="text-muted">Histórico vs Simulado</h6>
-                                                                <p class="mb-1">MAPE: <strong class="text-{% if three_line_validation_metrics.historical_vs_simulated.mape < 10 %}success{% else %}warning{% endif %}">{{ three_line_validation_metrics.historical_vs_simulated.mape|floatformat:2 }}%</strong></p>
-                                                                <p class="mb-0">Precisión: <strong class="text-{% if three_line_validation_metrics.historical_vs_simulated.accuracy_level == 'Excelente' %}success{% else %}info{% endif %}">{{ three_line_validation_metrics.historical_vs_simulated.accuracy_level|default:"Buena" }}</strong></p>
-                                                            </div>
-                                                            {% endif %}
-                                                            
-                                                            {% if three_line_validation_metrics.overall_validation %}
-                                                            <div class="metric-card p-3 bg-primary text-white rounded">
-                                                                <h6>Validación General</h6>
-                                                                <h3 class="mb-1">{{ three_line_validation_metrics.overall_validation.score|default:85|floatformat:1 }}%</h3>
-                                                                <p class="mb-0">{{ three_line_validation_metrics.overall_validation.status|default:"Validación Exitosa" }}</p>
-                                                            </div>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="mt-3 p-3 bg-light rounded">
-                                                    <h6>Interpretación del Gráfico:</h6>
-                                                    <ul class="mb-0">
-                                                        <li><span style="color: blue; font-weight: bold;">Línea Azul</span>: Demanda Real Histórica</li>
-                                                        <li><span style="color: red; font-weight: bold;">Línea Roja</span>: Demanda Proyectada (tendencia futura)</li>
-                                                        <li><span style="color: green; font-weight: bold;">Línea Verde (punteada)</span>: Demanda Simulada (validación del modelo)</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Tabla de Validación Completa por Día -->
-                                {% if all_variables_extracted %}
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <div class="data-table-container">
-                                            <div class="card-header d-flex justify-content-between align-items-center">
-                                                <h5 class="card-title mb-0">
-                                                    <i class="bx bx-list-check me-2"></i>
-                                                    Detalle de Validación por Día
-                                                    <span class="badge bg-info ms-2">{{ all_variables_extracted|length }} días</span>
-                                                </h5>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="exportValidationResults()">
-                                                    <i class="bx bx-download me-1"></i>Exportar CSV
-                                                </button>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                                                    <table class="table table-hover table-sm" id="validationDetailTable">
-                                                        <thead class="sticky-top bg-white">
-                                                            <tr>
-                                                                <th style="width: 80px;">Día</th>
-                                                                <th>Fecha</th>
-                                                                <th>Producto</th>
-                                                                <th class="text-end">Demanda Simulada</th>
-                                                                <th class="text-end">Variables Procesadas</th>
-                                                                <th class="text-center">Estado Simulación</th>
-                                                                <th class="text-center">Calidad Datos</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {% for item in all_variables_extracted %}
-                                                            <tr class="validation-row" data-day="{{ item.day }}">
-                                                                <td class="fw-bold">{{ item.day }}</td>
-                                                                <td>
-                                                                    {% if item.date %}
-                                                                        {{ item.date|date:"d/m/Y" }}
-                                                                    {% else %}
-                                                                        Día {{ item.day }}
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td>
-                                                                    <small>{{ product_instance.name|default:"Producto" }}</small>
-                                                                    <br>
-                                                                    <span class="text-muted" style="font-size: 0.75rem;">{{ business_instance.name|default:"Empresa" }}</span>
-                                                                </td>
-                                                                <td class="text-end text-primary fw-bold">
-                                                                    {{ item.demand_mean|floatformat:2 }} L
-                                                                    <br>
-                                                                    <small class="text-muted">±{{ item.demand_std|floatformat:2 }}</small>
-                                                                </td>
-                                                                <td class="text-end">
-                                                                    {% with var_count=0 %}
-                                                                        {% for key, value in item.items %}
-                                                                            {% if key != 'day' and key != 'date' and key != 'demand_mean' and key != 'demand_std' %}
-                                                                                {% with var_count=var_count|add:1 %}{% endwith %}
-                                                                            {% endif %}
-                                                                        {% endfor %}
-                                                                        <span class="badge bg-info">{{ item.items|length|add:-4 }} variables</span>
-                                                                    {% endwith %}
-                                                                    <br>
-                                                                    <small class="text-muted">Calculadas</small>
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    {% if item.demand_mean > 0 %}
-                                                                        <span class="badge bg-success">
-                                                                            <i class="bx bx-check-circle"></i> Válida
-                                                                        </span>
-                                                                    {% else %}
-                                                                        <span class="badge bg-warning">
-                                                                            <i class="bx bx-error-circle"></i> Revisar
-                                                                        </span>
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    {% if item.items|length > 10 %}
-                                                                        <span class="badge bg-success">
-                                                                            <i class="bx bx-check"></i> Completa
-                                                                        </span>
-                                                                    {% elif item.items|length > 5 %}
-                                                                        <span class="badge bg-warning">
-                                                                            <i class="bx bx-time"></i> Parcial
-                                                                        </span>
-                                                                    {% else %}
-                                                                        <span class="badge bg-danger">
-                                                                            <i class="bx bx-x"></i> Limitada
-                                                                        </span>
-                                                                    {% endif %}
-                                                                </td>
-                                                            </tr>
-                                                            {% endfor %}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Validación de Variables del Modelo -->
-                                {% if model_validation_summary %}
-                                <div class="validation-section variables-validation mt-5">
-                                    <h4 class="mb-3">
-                                        <i class="bx bx-calculator"></i> Validación de Variables del Modelo
-                                    </h4>
-                                    
-                                    <!-- Resumen General -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h5 class="card-title">Variables Totales</h5>
-                                                    <h2 class="text-primary">{{ model_validation_summary.total_variables|default:0 }}</h2>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h5 class="card-title">Precisas</h5>
-                                                    <h2 class="text-success">{{ model_validation_summary.precise_count|default:0 }}</h2>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h5 class="card-title">Aceptables</h5>
-                                                    <h2 class="text-warning">{{ model_validation_summary.acceptable_count|default:0 }}</h2>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h5 class="card-title">Inexactas</h5>
-                                                    <h2 class="text-danger">{{ model_validation_summary.inaccurate_count|default:0 }}</h2>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Score de Validación -->
-                                    <div class="row mb-4">
-                                        <div class="col-12">
-                                            <div class="progress" style="height: 30px;">
-                                                <div class="progress-bar {% if model_validation_summary.success_rate >= 90 %}bg-success{% elif model_validation_summary.success_rate >= 70 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                                    role="progressbar" 
-                                                    style="width: {{ model_validation_summary.success_rate|default:0 }}%;"
-                                                    aria-valuenow="{{ model_validation_summary.success_rate|default:0 }}" 
-                                                    aria-valuemin="0" 
-                                                    aria-valuemax="100">
-                                                    <strong>{{ model_validation_summary.success_rate|default:0|floatformat:1 }}% de Precisión</strong>
-                                                </div>
-                                            </div>
-                                            <p class="text-center mt-2">
-                                                <strong>Score de Validación: {{ model_validation_summary.validation_score|default:0|floatformat:1 }}/100</strong>
-                                                {% if model_validation_summary.is_valid %}
-                                                    <span class="badge bg-success">Modelo Válido</span>
-                                                {% else %}
-                                                    <span class="badge bg-danger">Modelo Requiere Calibración</span>
-                                                {% endif %}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="validation-section variables-validation mt-5">
-                                    <div class="alert alert-info">
-                                        <h4 class="alert-heading">
-                                            <i class="bx bx-info-circle me-2"></i>
-                                            Validación de Variables en Proceso
-                                        </h4>
-                                        <p class="mb-0">
-                                            El sistema está procesando la validación de variables del modelo. 
-                                            Esta información estará disponible cuando se complete el análisis.
-                                        </p>
-                                    </div>
-                                </div>
-                                {% endif %}
-
-                                <!-- Gráficos de Validación por Variable -->
-                                {% if model_validation_charts %}
-                                <div class="card mt-4">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0">
-                                            <i class="bx bx-line-chart"></i> Gráficos de Validación por Variable
-                                        </h5>
-                                        <span class="badge bg-info">
-                                            {{ model_validation_charts|length }} tipos de variables
-                                        </span>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            {% for chart_type, charts_list in model_validation_charts.items %}
-                                                {% if chart_type != 'summary' and charts_list %}
-                                                    {% for chart_data in charts_list %}
-                                                    <div class="col-lg-6 mb-4">
-                                                        <div class="card h-100 shadow-sm">
-                                                            <div class="card-header d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    <h6 class="mb-0">{{ chart_data.variable }}</h6>
-                                                                    <small class="text-muted">{{ chart_data.description|truncatechars:50 }}</small>
-                                                                </div>
-                                                                <div class="text-end">
-                                                                    <span class="badge bg-{% if chart_data.status == 'PRECISA' %}success{% elif chart_data.status == 'ACEPTABLE' %}warning{% else %}danger{% endif %}">
-                                                                        {{ chart_data.error_pct|floatformat:1 }}% error
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="card-body p-2">
-                                                                <img src="data:image/png;base64,{{ chart_data.chart }}" 
-                                                                    class="img-fluid validation-chart-img" 
-                                                                    alt="Gráfico de {{ chart_data.variable }}"
-                                                                    onclick="openFullscreen('{{ chart_data.chart }}', '{{ chart_data.variable }}')">
-                                                            </div>
-                                                            <div class="card-footer bg-light">
-                                                                <div class="row text-center small">
-                                                                    <div class="col-4">
-                                                                        <strong>Unidad:</strong><br>{{ chart_data.unit|default:"N/A" }}
-                                                                    </div>
-                                                                    <div class="col-4">
-                                                                        <strong>Días:</strong><br>{{ chart_data.days_count|default:0 }}
-                                                                    </div>
-                                                                    <div class="col-4">
-                                                                        <strong>Cobertura:</strong><br>{{ chart_data.coverage|default:0|floatformat:0 }}%
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="alert alert-info mt-4">
-                                    <i class="bx bx-info-circle"></i> 
-                                    Los gráficos de validación por variable se generarán cuando el análisis esté completo.
-                                </div>
-                                {% endif %}
-
-                                <!-- Recomendaciones de Validación -->
-                                {% if validation_recommendations %}
-                                <div class="row mt-4">
-                                    <div class="col-12">
-                                        <div class="alert alert-info">
-                                            <h5 class="alert-heading">
-                                                <i class="bx bx-bulb me-2"></i>
-                                                Recomendaciones basadas en la Validación
-                                            </h5>
-                                            <hr>
-                                            <div class="row">
-                                                {% for recommendation in validation_recommendations %}
-                                                <div class="col-md-6 mb-2">
-                                                    <div class="d-flex align-items-start">
-                                                        <i class="bx bx-check-circle text-info me-2 mt-1"></i>
-                                                        <p class="mb-0">{{ recommendation }}</p>
-                                                    </div>
-                                                </div>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="row mt-4">
-                                    <div class="col-12">
-                                        <div class="alert alert-success">
-                                            <h5 class="alert-heading">
-                                                <i class="bx bx-check-double me-2"></i>
-                                                Recomendaciones Generales
-                                            </h5>
-                                            <hr>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-2">
-                                                    <div class="d-flex align-items-start">
-                                                        <i class="bx bx-check-circle text-success me-2 mt-1"></i>
-                                                        <p class="mb-0">El modelo muestra un comportamiento estable durante el período simulado</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6 mb-2">
-                                                    <div class="d-flex align-items-start">
-                                                        <i class="bx bx-check-circle text-success me-2 mt-1"></i>
-                                                        <p class="mb-0">Las variables principales mantienen valores dentro de rangos esperados</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6 mb-2">
-                                                    <div class="d-flex align-items-start">
-                                                        <i class="bx bx-info-circle text-info me-2 mt-1"></i>
-                                                        <p class="mb-0">Continuar monitoreando las métricas clave para futuras simulaciones</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6 mb-2">
-                                                    <div class="d-flex align-items-start">
-                                                        <i class="bx bx-info-circle text-info me-2 mt-1"></i>
-                                                        <p class="mb-0">Considerar ajustes menores en parámetros para optimización</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-
+                                <div class="validation-kpi-label">Precisión del Modelo</div>
                             </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="validation-kpi">
+                                <div class="validation-kpi-value text-primary">
+                                    {{ model_validation_summary.total_variables|default:0 }}
+                                </div>
+                                <div class="validation-kpi-label">Variables Validadas</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="validation-kpi">
+                                <div class="validation-kpi-value text-success">
+                                    {{ model_validation_summary.precise_count|default:0 }}
+                                </div>
+                                <div class="validation-kpi-label">Variables Precisas</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="validation-kpi">
+                                <div class="validation-kpi-value text-warning">
+                                    {{ model_validation_summary.acceptable_count|default:0 }}
+                                </div>
+                                <div class="validation-kpi-label">Variables Aceptables</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensaje de Interpretación -->
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="mb-2">💡 Interpretación del Resultado:</h6>
+                        {% if model_validation_summary.success_rate >= 70 %}
+                            <p class="mb-0 text-success">
+                                <strong>Excelente:</strong> El modelo muestra alta precisión comparado con los datos reales de su empresa. 
+                                Las predicciones son confiables para la toma de decisiones.
+                            </p>
+                        {% elif model_validation_summary.success_rate >= 50 %}
+                            <p class="mb-0 text-warning">
+                                <strong>Bueno:</strong> El modelo tiene precisión aceptable con los datos reales. 
+                                Algunas variables pueden necesitar ajustes para mejorar la exactitud.
+                            </p>
+                        {% elif model_validation_summary.success_rate >= 25 %}
+                            <p class="mb-0 text-info">
+                                <strong>Moderado:</strong> El modelo captura tendencias generales pero requiere calibración. 
+                                Las predicciones son útiles como estimaciones preliminares.
+                            </p>
+                        {% else %}
+                            <p class="mb-0 text-danger">
+                                <strong>Necesita Mejoras:</strong> El modelo requiere ajustes significativos para alinearse mejor con los datos reales.
+                                Se recomienda revisar los parámetros de entrada.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">
+                        <i class="bx bx-info-circle me-2"></i>
+                        Estado de la Validación
+                    </h5>
+                    <p class="mb-2">
+                        {% if model_validation_summary.validation_details %}
+                            Se encontraron <strong>{{ model_validation_summary.validation_details|length }}</strong> variables para validar.
+                        {% else %}
+                            El sistema está procesando la validación del modelo contra sus datos reales.
+                        {% endif %}
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>🎯 Variables Disponibles para Validación:</h6>
+                            {% if model_validation_summary.validation_details %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for var_name, details in model_validation_summary.validation_details.items %}
+                                        <li><i class="bx bx-check text-success"></i> {{ var_name }}: {{ details.real_value|floatformat:2 }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted">Procesando datos del cuestionario...</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>📊 Variables Simuladas Disponibles:</h6>
+                            {% if all_variables_extracted and all_variables_extracted.0 %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for key, value in all_variables_extracted.0.items %}
+                                        {% if key != 'day' and key != 'date' and key != 'demand_mean' and key != 'demand_std' %}
+                                            <li><i class="bx bx-check text-info"></i> {{ key }}</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted">Cargando variables simuladas...</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Detalle de Variables Validadas -->
+    {% if model_validation_by_variable %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bx bx-calculator me-2"></i>
+                        Validación Detallada por Variable
+                    </h5>
+                    <span class="badge bg-primary">{{ model_validation_by_variable|length }} variables</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Valor Real</th>
+                                    <th>Valor Simulado</th>
+                                    <th>Error %</th>
+                                    <th>Estado</th>
+                                    <th>Método</th>
+                                    <th>Interpretación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for var_name, var_data in model_validation_by_variable.items %}
+                                <tr class="clickable" onclick="showVariableDetails('{{ var_name }}', {{ var_data|safe }})">
+                                    <td>
+                                        <strong>{{ var_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ var_data.description|default:var_name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="text-primary">{{ var_data.real_value|floatformat:2 }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ var_data.unit|default:"" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="text-info">{{ var_data.simulated_avg|floatformat:2 }}</span>
+                                        <br>
+                                        <small class="text-muted">({{ var_data.simulated_values_count }} días)</small>
+                                    </td>
+                                    <td>
+                                        <span class="{% if var_data.error_pct <= 10 %}text-success{% elif var_data.error_pct <= 25 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ var_data.error_pct|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if var_data.status == 'PRECISE' %}success{% elif var_data.status == 'ACCEPTABLE' or var_data.status == 'MARGINAL' %}warning{% else %}danger{% endif %}">
+                                            {% if var_data.status == 'PRECISE' %}
+                                                Precisa
+                                            {% elif var_data.status == 'ACCEPTABLE' %}
+                                                Aceptable
+                                            {% elif var_data.status == 'MARGINAL' %}
+                                                Marginal
+                                            {% elif var_data.status == 'NO_DATA' %}
+                                                Sin Datos
+                                            {% else %}
+                                                Inexacta
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ var_data.comparison_method|default:"Promedio" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if var_data.status == 'PRECISE' %}
+                                            <small class="text-success">Excelente precisión</small>
+                                        {% elif var_data.status == 'ACCEPTABLE' %}
+                                            <small class="text-warning">Precisión aceptable</small>
+                                        {% elif var_data.status == 'MARGINAL' %}
+                                            <small class="text-info">Necesita ajuste menor</small>
+                                        {% else %}
+                                            <small class="text-danger">Requiere calibración</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Gráfico de Comparación de Variables -->
+    {% if model_validation_by_variable %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bx bx-bar-chart-alt-2 me-2"></i>
+                        Comparación Visual: Real vs Simulado
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="realVsSimulatedChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bx bx-pie-chart-alt-2 me-2"></i>
+                        Distribución de Precisión
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="precisionDistributionChart"></canvas>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-success">Precisas</span>
+                            <span class="badge bg-success">{{ model_validation_summary.precise_count|default:0 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-warning">Aceptables</span>
+                            <span class="badge bg-warning">{{ model_validation_summary.acceptable_count|default:0 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-danger">Inexactas</span>
+                            <span class="badge bg-danger">{{ model_validation_summary.inaccurate_count|default:0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Simulación vs Datos Históricos (si existen) -->
+    {% if historical_demand and comparison_chart %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bx bx-line-chart me-2"></i>
+                        Validación con Datos Históricos de Demanda
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <img src="data:image/png;base64,{{ comparison_chart }}" 
+                         class="img-fluid rounded" 
+                         alt="Comparación Histórica vs Simulada">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Three-Line Validation Chart (si está disponible) -->
+    {% if has_three_line_chart and three_line_validation_chart %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bx bx-check-circle me-2"></i> 
+                        Validación Completa del Modelo
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-9">
+                            <img src="data:image/png;base64,{{ three_line_validation_chart }}" 
+                                class="img-fluid rounded shadow" 
+                                alt="Gráfico de Validación Completa">
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="validation-metrics">
+                                <h5>Métricas de Validación</h5>
+                                
+                                {% if three_line_validation_metrics.historical_vs_simulated %}
+                                <div class="metric-card mb-3 p-3 bg-light rounded">
+                                    <h6 class="text-muted">Histórico vs Simulado</h6>
+                                    <p class="mb-1">MAPE: <strong class="text-{% if three_line_validation_metrics.historical_vs_simulated.mape < 10 %}success{% else %}warning{% endif %}">{{ three_line_validation_metrics.historical_vs_simulated.mape|floatformat:2 }}%</strong></p>
+                                    <p class="mb-0">Precisión: <strong class="text-{% if three_line_validation_metrics.historical_vs_simulated.accuracy_level == 'Excelente' %}success{% else %}info{% endif %}">{{ three_line_validation_metrics.historical_vs_simulated.accuracy_level|default:"Buena" }}</strong></p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if three_line_validation_metrics.overall_validation %}
+                                <div class="metric-card p-3 bg-primary text-white rounded">
+                                    <h6>Validación General</h6>
+                                    <h3 class="mb-1">{{ three_line_validation_metrics.overall_validation.score|default:85|floatformat:1 }}%</h3>
+                                    <p class="mb-0">{{ three_line_validation_metrics.overall_validation.status|default:"Validación Exitosa" }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Análisis de Calidad de Datos -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bx bx-data me-2"></i>
+                        Calidad de Datos de Entrada
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Datos Reales Disponibles:</h6>
+                        <div class="progress mb-2">
+                            {% with real_count=model_validation_summary.total_variables|default:0 %}
+                            {% if real_count > 0 %}
+                                {% if real_count >= 10 %}
+                                    <div class="progress-bar bg-success" style="width: 85%">
+                                        {{ real_count }} de 15 variables
+                                    </div>
+                                {% elif real_count >= 5 %}
+                                    <div class="progress-bar bg-warning" style="width: 60%">
+                                        {{ real_count }} de 15 variables
+                                    </div>
+                                {% else %}
+                                    <div class="progress-bar bg-info" style="width: 35%">
+                                        {{ real_count }} de 15 variables
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="progress-bar bg-light" style="width: 10%">
+                                    0 de 15 variables
+                                </div>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                        
+                        <h6>Variables Simuladas:</h6>
+                        {% if all_variables_extracted and all_variables_extracted.0 %}
+                            {% with sim_count=all_variables_extracted.0.items|length %}
+                            {% if sim_count > 15 %}
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: 90%">
+                                        {{ sim_count|add:-4 }} variables calculadas
+                                    </div>
+                                </div>
+                            {% elif sim_count > 10 %}
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" style="width: 70%">
+                                        {{ sim_count|add:-4 }} variables calculadas
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="progress">
+                                    <div class="progress-bar bg-info" style="width: 45%">
+                                        {{ sim_count|add:-4 }} variables calculadas
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <div class="progress">
+                                <div class="progress-bar bg-light" style="width: 10%">
+                                    0 variables calculadas
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-light">
+                        <h6>Recomendaciones para Mejorar:</h6>
+                        <ul class="mb-0">
+                            {% if model_validation_summary.total_variables < 5 %}
+                                <li>Completar más información en el cuestionario inicial</li>
+                            {% endif %}
+                            {% if model_validation_summary.success_rate < 70 %}
+                                <li>Revisar y ajustar los parámetros del modelo</li>
+                            {% endif %}
+                            <li>Verificar la consistencia de los datos de entrada</li>
+                            <li>Considerar datos históricos adicionales si están disponibles</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bx bx-trending-up me-2"></i>
+                        Evolución de Variables Clave
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="variableEvolutionChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Radar de Confianza (si hay datos de validación detallados) -->
+    {% if model_validation_summary.validation_details %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card hover-lift">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bx bx-radar me-2"></i>
+                        Radar de Confianza por Variable
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="confidenceMetricsChart" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabla Detallada de Variables Simuladas -->
+    {% if all_variables_extracted %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bx bx-list-check me-2"></i>
+                        Evolución Diaria de Variables
+                        <span class="badge bg-info ms-2">{{ all_variables_extracted|length }} días</span>
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary no-print" onclick="exportValidationResults()">
+                        <i class="bx bx-download me-1"></i>Exportar CSV
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover" id="validationDetailTable">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th>Día</th>
+                                    <th>Demanda</th>
+                                    {% if all_variables_extracted.0 %}
+                                        {% for key, value in all_variables_extracted.0.items %}
+                                            {% if key != 'day' and key != 'date' and key != 'demand_mean' and key != 'demand_std' %}
+                                                <th class="text-end">{{ key }}</th>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in all_variables_extracted %}
+                                <tr class="validation-row">
+                                    <td class="fw-bold">{{ item.day }}</td>
+                                    <td class="text-primary">{{ item.demand_mean|floatformat:1 }} L</td>
+                                    {% for key, value in item.items %}
+                                        {% if key != 'day' and key != 'date' and key != 'demand_mean' and key != 'demand_std' %}
+                                            <td class="text-end">
+                                                {% if value != None %}
+                                                    {{ value|floatformat:2 }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <td class="text-center">
+                                        {% if item.demand_mean > 0 %}
+                                            <span class="badge bg-success status-indicator success">✓</span>
+                                        {% else %}
+                                            <span class="badge bg-warning status-indicator warning">⚠</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recomendaciones Específicas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bx bx-bulb me-2"></i>
+                        Recomendaciones Personalizadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if model_validation_summary.success_rate >= 70 %}
+                        <div class="alert alert-success success-glow">
+                            <h6><i class="bx bx-check-circle me-2"></i>Excelente Rendimiento del Modelo</h6>
+                            <ul class="mb-0">
+                                <li>Su modelo muestra alta precisión comparado con sus datos reales</li>
+                                <li>Las predicciones son confiables para la toma de decisiones operativas</li>
+                                <li>Puede usar estos resultados para planificación a corto y mediano plazo</li>
+                                <li>Considere ejecutar simulaciones con diferentes escenarios</li>
+                            </ul>
+                        </div>
+                    {% elif model_validation_summary.success_rate >= 50 %}
+                        <div class="alert alert-warning warning-glow">
+                            <h6><i class="bx bx-error-circle me-2"></i>Rendimiento Aceptable con Oportunidades de Mejora</h6>
+                            <ul class="mb-0">
+                                <li>El modelo captura las tendencias principales de su negocio</li>
+                                <li>Algunas variables pueden beneficiarse de ajustes de calibración</li>
+                                <li>Use los resultados como estimaciones con un margen de error considerado</li>
+                                <li>Recolecte más datos históricos para mejorar la precisión</li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <h6><i class="bx bx-info-circle me-2"></i>Oportunidades de Calibración</h6>
+                            <ul class="mb-0">
+                                <li>El modelo necesita ajustes para alinearse mejor con sus datos específicos</li>
+                                <li>Revise los parámetros de entrada en el cuestionario inicial</li>
+                                <li>Considere proporcionar datos históricos más detallados</li>
+                                <li>Los resultados actuales son útiles para análisis de tendencias generales</li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6>📈 Para Mejorar la Precisión:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bx bx-check text-success"></i> Actualizar datos del cuestionario con información más reciente</li>
+                                <li><i class="bx bx-check text-success"></i> Incluir más datos históricos de demanda (mínimo 30 datos)</li>
+                                <li><i class="bx bx-check text-success"></i> Verificar la consistencia de precios y costos</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🎯 Próximos Pasos Recomendados:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bx bx-check text-info"></i> Ejecutar simulaciones con diferentes períodos de tiempo</li>
+                                <li><i class="bx bx-check text-info"></i> Comparar resultados con datos reales post-simulación</li>
+                                <li><i class="bx bx-check text-info"></i> Usar insights para optimizar operaciones</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                             <!-- Kolmogorov-Smirnov Validation Tab -->
                             <div class="tab-pane fade" id="ks-validation" role="tabpanel">
                                 <!-- Header del análisis KS -->
@@ -4480,6 +4541,592 @@
 
 <script>
 
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar gráficos solo si Chart.js está disponible
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js no está disponible');
+        showNotification('Algunos gráficos pueden no mostrarse correctamente', 'info');
+        return;
+    }
+
+    // Gráfico de Comparación Real vs Simulado
+    {% if model_validation_by_variable %}
+    const realVsSimCtx = document.getElementById('realVsSimulatedChart');
+    if (realVsSimCtx) {
+        const variables = [
+            {% for var_name, var_data in model_validation_by_variable.items %}
+            '{{ var_name }}',
+            {% endfor %}
+        ];
+        
+        const realValues = [
+            {% for var_name, var_data in model_validation_by_variable.items %}
+            {{ var_data.real_value|default:0 }},
+            {% endfor %}
+        ];
+        
+        const simulatedValues = [
+            {% for var_name, var_data in model_validation_by_variable.items %}
+            {{ var_data.simulated_avg|default:0 }},
+            {% endfor %}
+        ];
+        
+        new Chart(realVsSimCtx, {
+            type: 'bar',
+            data: {
+                labels: variables,
+                datasets: [{
+                    label: 'Valores Reales',
+                    data: realValues,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Valores Simulados',
+                    data: simulatedValues,
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Comparación de Variables: Real vs Simulado'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Gráfico de Distribución de Precisión
+    const precisionCtx = document.getElementById('precisionDistributionChart');
+    if (precisionCtx) {
+        new Chart(precisionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Precisas', 'Aceptables', 'Inexactas'],
+                datasets: [{
+                    data: [
+                        {{ model_validation_summary.precise_count|default:0 }},
+                        {{ model_validation_summary.acceptable_count|default:0 }},
+                        {{ model_validation_summary.inaccurate_count|default:0 }}
+                    ],
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(251, 191, 36, 0.8)',
+                        'rgba(239, 68, 68, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribución de Precisión'
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+    
+    // Gráfico de Evolución de Variables
+    {% if all_variables_extracted %}
+    const evolutionCtx = document.getElementById('variableEvolutionChart');
+    if (evolutionCtx) {
+        const days = [
+            {% for item in all_variables_extracted %}
+            {{ item.day }},
+            {% endfor %}
+        ];
+        
+        const demandData = [
+            {% for item in all_variables_extracted %}
+            {{ item.demand_mean|default:0 }},
+            {% endfor %}
+        ];
+        
+        // Obtener una variable financiera para mostrar evolución
+        {% if all_variables_extracted.0.IT %}
+        const financialData = [
+            {% for item in all_variables_extracted %}
+            {{ item.IT|default:0 }},
+            {% endfor %}
+        ];
+        const financialLabel = 'Ingresos Totales (Bs)';
+        {% elif all_variables_extracted.0.GT %}
+        const financialData = [
+            {% for item in all_variables_extracted %}
+            {{ item.GT|default:0 }},
+            {% endfor %}
+        ];
+        const financialLabel = 'Ganancias Totales (Bs)';
+        {% else %}
+        const financialData = demandData.map(d => d * 15);
+        const financialLabel = 'Estimación Financiera (Bs)';
+        {% endif %}
+        
+        new Chart(evolutionCtx, {
+            type: 'line',
+            data: {
+                labels: days,
+                datasets: [{
+                    label: 'Demanda (L)',
+                    data: demandData,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y'
+                }, {
+                    label: financialLabel,
+                    data: financialData,
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Día de Simulación'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Demanda (Litros)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Valor Financiero (Bs)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Evolución de Variables Clave'
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+    
+    // Gráfico de Radar de Confianza
+    {% if model_validation_summary.validation_details %}
+    const confidenceCtx = document.getElementById('confidenceMetricsChart');
+    if (confidenceCtx) {
+        const variables = [
+            {% for var_name, details in model_validation_summary.validation_details.items %}
+            '{{ var_name }}',
+            {% endfor %}
+        ];
+        
+        const confidenceScores = [
+            {% for var_name, details in model_validation_summary.validation_details.items %}
+            {{ details.error_pct|default:100|floatformat:1 }},
+            {% endfor %}
+        ].map(error => Math.max(0, 100 - error));
+        
+        new Chart(confidenceCtx, {
+            type: 'radar',
+            data: {
+                labels: variables,
+                datasets: [{
+                    label: 'Score de Confianza (%)',
+                    data: confidenceScores,
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                    pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(34, 197, 94, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Radar de Confianza por Variable'
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+    
+    // Inicializar animaciones de progreso
+    updateValidationProgress();
+    
+    // Agregar tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    if (typeof bootstrap !== 'undefined') {
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+
+// Función para exportar resultados a CSV
+function exportValidationResults() {
+    const table = document.getElementById('validationDetailTable');
+    if (!table) {
+        showNotification('No hay tabla de datos para exportar', 'warning');
+        return;
+    }
+    
+    let csv = '';
+    
+    // Headers
+    const headers = [];
+    table.querySelectorAll('thead th').forEach(th => {
+        headers.push(th.textContent.trim());
+    });
+    csv += headers.join(',') + '\n';
+    
+    // Rows
+    table.querySelectorAll('tbody tr').forEach(tr => {
+        const row = [];
+        tr.querySelectorAll('td').forEach(td => {
+            let text = td.textContent.trim();
+            text = text.replace(/\s+/g, ' ');
+            text = text.replace(/\n/g, ' ');
+            if (text.includes('✓')) text = 'Válido';
+            if (text.includes('⚠')) text = 'Advertencia';
+            if (text.includes('L')) text = text.replace(' L', '');
+            row.push('"' + text.replace(/"/g, '""') + '"');
+        });
+        csv += row.join(',') + '\n';
+    });
+    
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'validacion_simulacion_' + new Date().toISOString().slice(0,10) + '.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Archivo CSV exportado exitosamente', 'success');
+    } else {
+        showNotification('Su navegador no soporta la descarga de archivos', 'error');
+    }
+}
+
+// Función para mostrar detalles de una variable en modal
+function showVariableDetails(varName, varData) {
+    // Crear modal dinámicamente
+    const modalId = 'variableModal_' + varName;
+    let modal = document.getElementById(modalId);
+    
+    if (modal) {
+        modal.remove();
+    }
+    
+    modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = modalId;
+    modal.setAttribute('tabindex', '-1');
+    
+    const varDataSafe = typeof varData === 'string' ? JSON.parse(varData) : varData;
+    
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-calculator me-2"></i>
+                        Detalles de Variable: ${varName}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Información General</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Variable:</strong></td><td>${varName}</td></tr>
+                                        <tr><td><strong>Descripción:</strong></td><td>${varDataSafe.description || varName}</td></tr>
+                                        <tr><td><strong>Unidad:</strong></td><td>${varDataSafe.unit || 'N/A'}</td></tr>
+                                        <tr><td><strong>Tipo:</strong></td><td>${varDataSafe.type || 'Numérica'}</td></tr>
+                                        <tr><td><strong>Método:</strong></td><td>${varDataSafe.comparison_method || 'Promedio'}</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Métricas de Validación</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Valor Real:</strong></td><td>${varDataSafe.real_value?.toFixed(2) || 'N/A'}</td></tr>
+                                        <tr><td><strong>Valor Simulado:</strong></td><td>${varDataSafe.simulated_avg?.toFixed(2) || 'N/A'}</td></tr>
+                                        <tr><td><strong>Error (%):</strong></td><td>${varDataSafe.error_pct?.toFixed(1) || 'N/A'}%</td></tr>
+                                        <tr><td><strong>Días Analizados:</strong></td><td>${varDataSafe.simulated_values_count || 'N/A'}</td></tr>
+                                        <tr><td><strong>Estado:</strong></td><td>
+                                            <span class="badge bg-${varDataSafe.status === 'PRECISE' ? 'success' : varDataSafe.status === 'ACCEPTABLE' || varDataSafe.status === 'MARGINAL' ? 'warning' : 'danger'}">
+                                                ${varDataSafe.status || 'N/A'}
+                                            </span>
+                                        </td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${varDataSafe.validation_notes ? `
+                    <div class="mt-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Notas de Validación</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info mb-0">
+                                    ${varDataSafe.validation_notes}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${varDataSafe.all_comparisons ? `
+                    <div class="mt-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Métodos de Comparación Evaluados</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Método</th>
+                                                <th>Error (%)</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${Object.entries(varDataSafe.all_comparisons).map(([method, data]) => `
+                                                <tr>
+                                                    <td>${method.replace('_', ' ').toUpperCase()}</td>
+                                                    <td>${data.error?.toFixed(1) || 'N/A'}%</td>
+                                                    <td>
+                                                        <span class="badge bg-${data.status === 'PRECISE' ? 'success' : data.status === 'ACCEPTABLE' || data.status === 'MARGINAL' ? 'warning' : 'danger'}">
+                                                            ${data.status || 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bx bx-x me-1"></i>Cerrar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="downloadVariableReport('${varName}')">
+                        <i class="bx bx-download me-1"></i>Descargar Reporte
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    if (typeof bootstrap !== 'undefined') {
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+        
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
+    } else {
+        console.warn('Bootstrap no está disponible para mostrar el modal');
+        showNotification('Detalles de ' + varName + ': Error ' + (varDataSafe.error_pct?.toFixed(1) || 'N/A') + '%', 'info');
+    }
+}
+
+// Función para descargar reporte de variable específica
+function downloadVariableReport(varName) {
+    const content = `REPORTE DE VALIDACIÓN - VARIABLE ${varName}
+Generado: ${new Date().toLocaleString()}
+
+INFORMACIÓN GENERAL:
+- Variable: ${varName}
+- Descripción: Variable del modelo de simulación
+- Estado: En análisis
+
+MÉTRICAS DE VALIDACIÓN:
+- Días analizados: Consultar tabla detallada
+- Método de comparación: Múltiples métodos evaluados
+- Estado de validación: Ver detalles en sistema
+
+Para más información, consulte el sistema completo de validación.
+`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `reporte_${varName}_${new Date().toISOString().slice(0,10)}.txt`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification(`Reporte de ${varName} descargado`, 'success');
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
+    
+    const icon = type === 'success' ? 'bx-check-circle' : 
+                 type === 'error' || type === 'danger' ? 'bx-error-circle' : 
+                 type === 'warning' ? 'bx-error-circle' : 'bx-info-circle';
+    
+    notification.innerHTML = `
+        <i class="bx ${icon} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (notification && notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Función para actualizar el progreso de validación
+function updateValidationProgress() {
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 300);
+    });
+}
+
+// Función para alternar vista de tabla
+function toggleTableView() {
+    const table = document.getElementById('validationDetailTable');
+    const container = table?.closest('.table-responsive');
+    
+    if (container) {
+        if (container.style.maxHeight === 'none') {
+            container.style.maxHeight = '400px';
+            showNotification('Vista compacta activada', 'info');
+        } else {
+            container.style.maxHeight = 'none';
+            showNotification('Vista expandida activada', 'info');
+        }
+    }
+}
+
+// Error handling
+window.addEventListener('error', function(e) {
+    console.error('Error en validación:', e.error);
+    showNotification('Error al cargar algunos componentes de validación', 'warning');
+});
+
+// Función para imprimir sección de validación
+function printValidation() {
+    const printContent = document.getElementById('validation').innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    document.body.innerHTML = `
+        <div class="container-fluid">
+            <h1>Reporte de Validación - ${new Date().toLocaleDateString()}</h1>
+            ${printContent}
+        </div>
+    `;
+    
+    window.print();
+    document.body.innerHTML = originalContent;
+    location.reload();
+}
 
 // AGREGAR ESTAS FUNCIONES AL SCRIPT EXISTENTE EN simulate-result.html
 
