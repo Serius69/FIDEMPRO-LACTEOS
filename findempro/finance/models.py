@@ -11,7 +11,6 @@ from product.models import Product
 from business.models import Business
 from .data.finance_test_data import recommendation_data
 
-
 class FinancialDecision(models.Model):
     """
     Modelo para gestionar decisiones financieras empresariales.
@@ -370,6 +369,12 @@ class FinanceRecommendation(models.Model):
         verbose_name='Última Actualización', 
         help_text='La fecha en que se actualizó la recomendación por última vez'
     )
+    metric_value = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Valor de Métrica',
+        help_text='Valor numérico asociado a la recomendación'
+    )
     
     class Meta:
         verbose_name = 'Recomendación Financiera'
@@ -403,18 +408,191 @@ class FinanceRecommendation(models.Model):
             finance_recommendation.save()
 
 
+
+
 class FinanceRecommendationSimulation(models.Model):
     """
     Modelo para almacenar simulaciones de recomendaciones financieras
     """
-    data = models.FloatField(
-        verbose_name='Datos',
-        help_text='Datos numéricos de la simulación'
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('critical', 'Crítico'),
+            ('profitability', 'Rentabilidad'),
+            ('costs', 'Costos'),
+            ('efficiency', 'Eficiencia'),
+            ('trends', 'Tendencias'),  # AGREGADO: Faltaba esta opción
+            ('financial', 'Financiero'),
+        ],
+        default='financial',
+        verbose_name='Categoría',
+        help_text='Categoría de la recomendación'
     )
+    
+    severity = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Bajo'),
+            ('medium', 'Medio'),
+            ('high', 'Alto'),
+            ('critical', 'Crítico'),
+        ],
+        default='medium',
+        verbose_name='Severidad',
+        help_text='Nivel de severidad de la recomendación'
+    )
+    
+    title = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name='Título',
+        help_text='Título de la recomendación'
+    )
+    
+    description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Descripción',
+        help_text='Descripción detallada de la recomendación'
+    )
+    
+    recommendation = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Recomendación',
+        help_text='Texto de la recomendación específica'
+    )
+    
+    actions = models.JSONField(
+        default=list,
+        verbose_name='Acciones',
+        help_text='Lista de acciones recomendadas (JSON array)'
+    )
+    
+    impact = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Bajo'),
+            ('medium', 'Medio'),
+            ('high', 'Alto'),
+            ('critical', 'Crítico'),
+        ],
+        default='medium',
+        verbose_name='Impacto',
+        help_text='Nivel de impacto de la recomendación'
+    )
+    
+    # CORREGIDO: Agregar tanto metric_value como data para compatibilidad
+    metric_value = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Valor de Métrica',
+        help_text='Valor numérico asociado a la recomendación'
+    )
+    
+    # AGREGADO: Campo data para compatibilidad temporal
+    data = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Datos',
+        help_text='Campo de datos numéricos (deprecado, usar metric_value)'
+    )
+    
+    # AGREGADO: Campos adicionales que se usan en el código
+    variable = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name='Variable',
+        help_text='Variable asociada a la recomendación'
+    )
+    
+    threshold = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Umbral',
+        help_text='Valor umbral para la recomendación'
+    )
+    
+    value = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='Valor',
+        help_text='Valor actual de la métrica'
+    )
+    
+    priority = models.CharField(
+        max_length=20,
+        choices=[
+            ('low', 'Baja'),
+            ('medium', 'Media'),
+            ('high', 'Alta'),
+        ],
+        default='medium',
+        verbose_name='Prioridad',
+        help_text='Prioridad de la recomendación'
+    )
+    
     fk_simulation = models.ForeignKey(
-        Simulation,
+        'simulate.Simulation',  # String reference para evitar imports circulares
         on_delete=models.CASCADE,
         related_name='finance_recommendation_simulations',
-        verbose_name='Simulación',
-        help_text='Simulación asociada a la recomendación financiera'
+        verbose_name='Simulación'
     )
+    
+    # Campos de auditoría
+    date_created = models.DateTimeField(
+        default=timezone.now,
+        verbose_name='Fecha de Creación'
+    )
+    
+    date_updated = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Fecha de Actualización'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Activo'
+    )
+    
+    class Meta:
+        verbose_name = 'Simulación de Recomendación Financiera'
+        verbose_name_plural = 'Simulaciones de Recomendaciones Financieras'
+        ordering = ['-date_created']
+        indexes = [
+            models.Index(fields=['fk_simulation', 'category']),
+            models.Index(fields=['severity', 'priority']),
+            models.Index(fields=['date_created']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title or 'Recomendación'} - {self.get_category_display()} ({self.get_severity_display()})"
+    
+    def save(self, *args, **kwargs):
+        """Override save para sincronizar data y metric_value"""
+        # Si se proporciona data pero no metric_value, copiar data a metric_value
+        if self.data is not None and self.metric_value is None:
+            self.metric_value = self.data
+        # Si se proporciona metric_value pero no data, copiar metric_value a data
+        elif self.metric_value is not None and self.data is None:
+            self.data = self.metric_value
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def impact_score(self):
+        """Calcular puntuación de impacto basada en severidad y prioridad"""
+        severity_scores = {'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
+        priority_scores = {'low': 1, 'medium': 2, 'high': 3}
+        
+        severity_score = severity_scores.get(self.severity, 2)
+        priority_score = priority_scores.get(self.priority, 2)
+        
+        return (severity_score * 2 + priority_score) / 3
+    
+    @property
+    def needs_immediate_attention(self):
+        """Determinar si la recomendación necesita atención inmediata"""
+        return self.severity in ['high', 'critical'] and self.priority == 'high'

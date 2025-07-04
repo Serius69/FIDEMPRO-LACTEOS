@@ -1,0 +1,259 @@
+<div class="simulation-form" id="simulationFormContainer">
+    <form id="simulationConfigForm" method="GET" action="{% url 'simulate:simulate.show' %}" novalidate>
+        {% csrf_token %}
+        
+        <!-- Step 1: Questionary Selection -->
+        <div class="form-group mb-4" id="questionaryField">
+            <label for="selected_questionary_result" class="form-label fw-semibold">
+                <i class="bx bx-file-find text-primary"></i>
+                Paso 1: Seleccionar Cuestionario
+            </label>
+            <select 
+                id="selected_questionary_result" 
+                name="selected_questionary_result" 
+                class="form-select shadow-sm" 
+                data-choices 
+                data-choices-sorting="true"
+                required
+                aria-describedby="questionaryHelp">
+                <option value="">Seleccione un cuestionario...</option>
+                {% for questionary_result in questionnaires_result %}
+                <option value="{{ questionary_result.id }}" 
+                    {% if questionary_result.id == selected_questionary_result_id %} selected {% endif %}
+                    data-product="{{ questionary_result.fk_questionary.fk_product.name }}"
+                    data-date="{{ questionary_result.date_created|date:'Y-m-d H:i:s' }}"
+                    data-business="{{ questionary_result.fk_questionary.fk_product.fk_business.name }}">
+                    {{ questionary_result.fk_questionary.questionary }} - {{ questionary_result.date_created|date:"d/m/Y" }}
+                    <small>({{ questionary_result.fk_questionary.fk_product.name }})</small>
+                </option>
+                {% empty %}
+                <option disabled>No hay cuestionarios disponibles</option>
+                {% endfor %}    
+            </select>
+            <div id="questionaryHelp" class="form-text">
+                <i class="bx bx-info-circle me-1"></i>
+                Seleccione el cuestionario que contiene los datos históricos de demanda para el análisis estadístico
+            </div>
+            <div class="invalid-feedback">
+                Por favor seleccione un cuestionario válido.
+            </div>
+        </div>
+
+        <!-- Step 2: Time Configuration -->
+        <div class="row" id="timeConfigFields">
+            <div class="col-md-6">
+                <div class="form-group mb-4">
+                    <label for="selected_quantity_time" class="form-label fw-semibold">
+                        <i class="bx bx-time text-primary"></i>
+                        Paso 2: Duración
+                    </label>
+                    <div class="input-group">
+                        <input 
+                            type="number" 
+                            class="form-control shadow-sm" 
+                            name="selected_quantity_time" 
+                            id="selected_quantity_time"
+                            placeholder="Ej: 30" 
+                            required 
+                            min="1" 
+                            max="365"
+                            value="{{ selected_quantity_time|default:'' }}"
+                            aria-describedby="quantityHelp">
+                        <span class="input-group-text">
+                            <i class="bx bx-calendar-alt"></i>
+                        </span>
+                    </div>
+                    <div id="quantityHelp" class="form-text">
+                        <i class="bx bx-info-circle me-1"></i>
+                        Entre 1 y 365 unidades de tiempo para la simulación
+                    </div>
+                    <div class="invalid-feedback">
+                        Ingrese un valor entre 1 y 365.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group mb-4">
+                    <label for="selected_unit_time" class="form-label fw-semibold">
+                        <i class="bx bx-calendar text-primary"></i>
+                        Unidad de Tiempo
+                    </label>
+                    <select id="selected_unit_time" name="selected_unit_time" class="form-select shadow-sm" required>
+                        <option value="days" {% if selected_unit_time == 'days' %}selected{% endif %}>Días</option>
+                        <option value="weeks" {% if selected_unit_time == 'weeks' %}selected{% endif %}>Semanas</option>
+                        <option value="months" {% if selected_unit_time == 'months' %}selected{% endif %}>Meses</option>
+                    </select>
+                    <div class="form-text">
+                        <i class="bx bx-info-circle me-1"></i>
+                        Define el período de cada unidad temporal para la simulación
+                    </div>
+                    <div class="invalid-feedback">
+                        Seleccione una unidad de tiempo válida.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Options (Collapsible) -->
+        <div class="accordion mb-4" id="advancedOptionsAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="advancedOptionsHeader">
+                    <button class="accordion-button collapsed" type="button" 
+                            data-bs-toggle="collapse" data-bs-target="#advancedOptionsCollapse" 
+                            aria-expanded="false" aria-controls="advancedOptionsCollapse">
+                        <i class="bx bx-cog me-2"></i>
+                        Opciones Avanzadas
+                    </button>
+                </h2>
+                <div id="advancedOptionsCollapse" class="accordion-collapse collapse" 
+                     aria-labelledby="advancedOptionsHeader" data-bs-parent="#advancedOptionsAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="confidence_level" class="form-label">
+                                        <i class="bx bx-trending-up me-1"></i>
+                                        Nivel de Confianza
+                                    </label>
+                                    <select id="confidence_level" name="confidence_level" class="form-select">
+                                        <option value="0.90">90%</option>
+                                        <option value="0.95" selected>95%</option>
+                                        <option value="0.99">99%</option>
+                                    </select>
+                                    <div class="form-text">
+                                        Nivel de confianza para intervalos estadísticos
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="random_seed" class="form-label">
+                                        <i class="bx bx-shuffle me-1"></i>
+                                        Semilla Aleatoria (Opcional)
+                                    </label>
+                                    <input type="number" id="random_seed" name="random_seed" 
+                                           class="form-control" placeholder="Ej: 12345">
+                                    <div class="form-text">
+                                        Para resultados reproducibles (opcional)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-grid">
+            <button type="submit" name="select" class="btn btn-primary btn-lg shadow" id="configureButton">
+                <i class="bx bx-cog me-2"></i>
+                <span class="button-text">Configurar Modelo de Simulación</span>
+                <div class="button-loading d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Analizando...
+                </div>
+            </button>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="progress mt-3" style="height: 4px;">
+            <div class="progress-bar" role="progressbar" style="width: 33%" 
+                 aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="text-center mt-2">
+            <small class="text-muted">Paso 1 de 3: Configuración de parámetros</small>
+        </div>
+    </form>
+</div>
+
+<!-- Validation Messages Container -->
+<div id="formValidationMessages" class="mt-3"></div>
+
+<script>
+// Mejorar la validación en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('simulationConfigForm');
+    const quantityInput = document.getElementById('selected_quantity_time');
+    const questionarySelect = document.getElementById('selected_questionary_result');
+    
+    // Validación de cantidad en tiempo real
+    if (quantityInput) {
+        quantityInput.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            const isValid = value >= 1 && value <= 365;
+            
+            this.classList.toggle('is-valid', isValid && this.value);
+            this.classList.toggle('is-invalid', !isValid && this.value);
+            
+            // Actualizar texto de ayuda dinámicamente
+            const helpText = document.getElementById('quantityHelp');
+            if (helpText && this.value) {
+                const unit = document.getElementById('selected_unit_time').value;
+                const unitText = unit === 'days' ? 'días' : unit === 'weeks' ? 'semanas' : 'meses';
+                helpText.innerHTML = `
+                    <i class="bx bx-info-circle me-1"></i>
+                    Simulación de ${this.value} ${unitText}
+                `;
+            }
+        });
+    }
+    
+    // Mejorar selector de cuestionario
+    if (questionarySelect) {
+        questionarySelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+                
+                // Mostrar información del cuestionario seleccionado
+                const product = selectedOption.dataset.product;
+                const business = selectedOption.dataset.business;
+                const date = new Date(selectedOption.dataset.date).toLocaleDateString('es-ES');
+                
+                // Crear o actualizar info card
+                let infoCard = document.getElementById('questionaryInfo');
+                if (!infoCard) {
+                    infoCard = document.createElement('div');
+                    infoCard.id = 'questionaryInfo';
+                    infoCard.className = 'alert alert-info mt-2 fade-in-up';
+                    this.parentNode.appendChild(infoCard);
+                }
+                
+                infoCard.innerHTML = `
+                    <i class="bx bx-check-circle me-2"></i>
+                    <strong>Cuestionario seleccionado:</strong><br>
+                    <small>
+                        <strong>Producto:</strong> ${product}<br>
+                        <strong>Empresa:</strong> ${business}<br>
+                        <strong>Fecha:</strong> ${date}
+                    </small>
+                `;
+            } else {
+                this.classList.remove('is-valid');
+                const infoCard = document.getElementById('questionaryInfo');
+                if (infoCard) {
+                    infoCard.remove();
+                }
+            }
+        });
+    }
+    
+    // Animaciones del botón de envío
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('configureButton');
+            const buttonText = submitBtn.querySelector('.button-text');
+            const buttonLoading = submitBtn.querySelector('.button-loading');
+            
+            if (buttonText && buttonLoading) {
+                buttonText.classList.add('d-none');
+                buttonLoading.classList.remove('d-none');
+                submitBtn.disabled = true;
+            }
+        });
+    }
+});
+</script>

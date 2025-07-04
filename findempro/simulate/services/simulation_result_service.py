@@ -1,11 +1,11 @@
-from venv import logger
+import logging
 from simulate.models import ResultSimulation
 from simulate.services.chart_service import ChartService
 from simulate.utils.simulation_math_utils import SimulationMathEngine
 from simulate.utils.simulation_financial_utils import SimulationFinancialAnalyzer
 from services.validation_service import SimulationValidationService
 
-
+logger = logging.getLogger(__name__)
 class SimulationResultService:
     """Service for handling simulation results and analysis"""
     

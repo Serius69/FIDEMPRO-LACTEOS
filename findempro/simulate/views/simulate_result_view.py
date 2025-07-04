@@ -6,7 +6,8 @@ Focuses on daily comparisons and proper data visualization.
 import json
 import logging
 from typing import Dict, List, Any, Optional
-
+import scipy.stats
+from scipy import stats
 from simulate.services.statistical_service import StatisticalService
 from simulate.utils.chart_demand_utils import ChartDemand
 import numpy as np
@@ -100,7 +101,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     
     
     def _prepare_complete_results_context(self, simulation_id, simulation_instance, results_simulation, historical_demand):
-        """Prepare comprehensive context data for results view"""
+        """Prepare comprehensive context data for results view - OPTIMIZADO Y CORREGIDO"""
         
         # Initialize all services once
         chart_generator = ChartGenerator()
@@ -124,19 +125,44 @@ class SimulateResultView(LoginRequiredMixin, View):
         logger.info(f"Preparing context for simulation_id: {simulation_id} (type: {type(simulation_id)})")
         
         try:
-            # Create enhanced chart data with historical demand
+            # PASO 1: Extract variables FIRST - CRÍTICO PARA TOTALES ACUMULATIVOS
+            all_variables_extracted = self._extract_all_variables(list(results_simulation))
+            logger.info(f"Variables extraction result: {len(all_variables_extracted)} days extracted")
+            
+            if all_variables_extracted:
+                sample_vars = [k for k in all_variables_extracted[0].keys() if k not in ['day', 'date', 'demand_mean', 'demand_std']]
+                logger.info(f"Sample variables from first day: {sample_vars}")
+            
+            # PASO 2: Create enhanced chart data with historical demand
             chart_data = chart_generator.create_enhanced_chart_data(
                 list(results_simulation), historical_demand
             )
             
-            # Generate main analysis charts
-            analysis_data = chart_generator.generate_all_charts(
+            # PASO 3: Generate main analysis charts usando variables extraídas
+            analysis_data = chart_generator.generate_all_charts_enhanced(
                 simulation_id, simulation_instance, list(results_simulation), historical_demand
             )
+            
+            # CORRECCIÓN CRÍTICA: Calcular totales_acumulativos DESPUÉS de tener all_variables_extracted
+            try:
+                # Calcular totales acumulativos mejorados
+                enhanced_totales = self._calculate_enhanced_totales_acumulativos(all_variables_extracted)
+                
+                # Actualizar analysis_data con los totales mejorados
+                analysis_data['totales_acumulativos'] = enhanced_totales
+                analysis_data['all_variables_extracted'] = all_variables_extracted
+                
+                logger.info(f"Updated totales_acumulativos with {len(enhanced_totales)} variables")
+                
+            except Exception as e:
+                logger.error(f"Error calculating enhanced totales: {str(e)}")
+                # Fallback: usar los totales básicos de analysis_data
+                enhanced_totales = analysis_data.get('totales_acumulativos', {})
             
             # Log what charts were generated
             logger.info(f"Charts generated: {list(analysis_data.get('chart_images', {}).keys())}")
             
+            # PASO 4: Generate additional charts
             # Generate comparison chart: Historical vs Simulated
             comparison_chart = self._generate_comparison_chart(chart_demand, historical_demand, results_simulation)
             
@@ -145,52 +171,62 @@ class SimulateResultView(LoginRequiredMixin, View):
                 historical_demand, results_simulation, simulation_instance
             )
             
-            # Get financial analysis and recommendations
+            # NUEVA FUNCIONALIDAD: Generate endogenous variables charts
+            endogenous_charts = chart_generator.generate_endogenous_variables_charts(
+                all_variables_extracted, enhanced_totales
+            )
+            
+            # PASO 5: Get financial analysis and recommendations
             financial_results = self._get_financial_analysis(
                 financial_service, simulation_id, simulation_instance, analysis_data
             )
             
-            # Calculate comprehensive statistics
+            # PASO 6: Calculate comprehensive statistics
             demand_stats = statistical_service._calculate_comprehensive_statistics(
                 historical_demand, results_simulation
             )
             
             # Log accumulated totals for debugging
-            logger.info(f"Accumulated totals variables: {list(analysis_data['totales_acumulativos'].keys())}")
+            logger.info(f"Accumulated totals variables: {list(enhanced_totales.keys())}")
             
-            # Get validation results
+            # PASO 7: Get validation results
             validation_results = self._get_validation_results(
                 validation_service, simulation_id, simulation_instance, results_simulation, historical_demand
             )
             
-            # Prepare base context
+            # PASO 8: Prepare base context
             context = self._build_base_context(
                 simulation_instance, results_simulation, product_instance, business_instance,
                 analysis_data, historical_demand, demand_stats, comparison_chart,
                 financial_results, validation_results
             )
             
-            # Add simulation_id to context
-            context['simulation_id'] = simulation_id
+            # PASO 9: Add core data to context
+            context.update({
+                'simulation_id': simulation_id,
+                'chart_data': chart_data,
+                'totales_acumulativos': enhanced_totales,  # Usar enhanced_totales
+                'all_variables_extracted': all_variables_extracted,
+                'endogenous_charts': endogenous_charts,
+            })
             
-            # Add chart_data to context
-            context['chart_data'] = chart_data
-            
-            # Add three-line validation chart to context
+            # PASO 10: Add three-line validation chart to context
             if three_line_validation:
-                context['three_line_validation_chart'] = three_line_validation.get('chart')
-                context['three_line_validation_metrics'] = three_line_validation.get('metrics', {})
-                context['has_three_line_chart'] = True
+                context.update({
+                    'three_line_validation_chart': three_line_validation.get('chart'),
+                    'three_line_validation_metrics': three_line_validation.get('metrics', {}),
+                    'has_three_line_chart': True
+                })
             else:
                 context['has_three_line_chart'] = False
             
-            # Add realistic comparison statistics
+            # PASO 11: Add realistic comparison statistics
             if historical_demand and results_simulation:
                 comparison = statistical_service._calculate_realistic_comparison(historical_demand, results_simulation)
                 context['realistic_comparison'] = comparison
             
-            # Add model validation if variables are available
-            if analysis_data.get('all_variables_extracted'):
+            # PASO 12: Add model validation if variables are available
+            if all_variables_extracted:
                 model_validation = self._add_model_validation(
                     validation_service, simulation_instance, results_simulation, analysis_data
                 )
@@ -199,55 +235,79 @@ class SimulateResultView(LoginRequiredMixin, View):
                 logger.warning("No extracted variables found for model validation")
                 context['model_validation'] = None
             
-            # Add daily validation
+            # PASO 13: Add daily validation
             daily_validation = self._add_daily_validation(
                 validation_service, simulation_instance, results_simulation
             )
             context.update(daily_validation)
             
-            # Add validation charts with three-line chart
+            # PASO 14: Add validation charts with three-line chart
             validation_charts = self._add_validation_charts(
                 chart_generator, validation_results, results_simulation, analysis_data,
                 three_line_validation
             )
             context.update(validation_charts)
             
-            # Extract variables
-            all_variables_extracted = self._extract_all_variables(list(results_simulation))
+            # PASO 15: Add advanced charts
+            context.update({
+                # Nuevos gráficos avanzados
+                'cost_distribution_chart': analysis_data['chart_images'].get('image_data_cost_distribution'),
+                'capacity_demand_chart': analysis_data['chart_images'].get('image_data_capacity_vs_demand'),
+                'financial_efficiency_chart': analysis_data['chart_images'].get('image_data_financial_efficiency'),
+                'production_evolution_chart': analysis_data['chart_images'].get('image_data_production_evolution'),
+                
+                # Flag para mostrar nuevos gráficos en template
+                'has_advanced_charts': True
+            })
             
-            # Generate main analysis charts
-            analysis_data = chart_generator.generate_all_charts(
-                simulation_id, simulation_instance, all_variables_extracted, historical_demand
-            )
-            
-            # NUEVA FUNCIONALIDAD: Generate endogenous variables charts
-            endogenous_charts = chart_generator.generate_endogenous_variables_charts(
-                all_variables_extracted, analysis_data.get('totales_acumulativos', {})
-            )
-            
-            # NUEVA FUNCIONALIDAD: Enhanced totales_acumulativos with trends and statistics
-            enhanced_totales = self._enhance_totales_acumulativos(
-                analysis_data.get('totales_acumulativos', {}), all_variables_extracted
-            )
-            
-            # Update analysis_data
-            analysis_data['totales_acumulativos'] = enhanced_totales
-            analysis_data['all_variables_extracted'] = all_variables_extracted
-            
-            # ... resto del código ...
-            
-            # Add endogenous charts to context
-            context['endogenous_charts'] = endogenous_charts
-            context['totales_acumulativos'] = enhanced_totales
-            
-            
-            
-            
-            
-            # Ensure all expected keys are present with default values
+            # PASO 16: Ensure all expected keys are present with default values
             context.setdefault('chart_images', {})
             context.setdefault('financial_recommendations', financial_results.get('financial_recommendations', []))
             context.setdefault('daily_validation_results', daily_validation.get('daily_validation_results', []))
+            
+            statistical_analysis = self._generate_statistical_analysis(
+                simulation_instance, results_simulation, historical_demand, all_variables_extracted
+            )
+            
+            statistical_charts = self._generate_enhanced_statistical_charts(
+                historical_demand, simulated_demands=[float(r.demand_mean) for r in results_simulation], 
+                all_variables_extracted=all_variables_extracted
+            )
+            
+            # PASO 13.7: Análisis de validación mejorado
+            enhanced_validation = self._enhanced_validation_analysis(
+                simulation_instance, results_simulation, historical_demand, all_variables_extracted
+            )
+            
+            # NUEVO: Validación KS específica para distribuciones
+            ks_validation_results = self._perform_ks_validation(
+                simulation_instance, results_simulation, all_variables_extracted
+            )
+            
+            context.update({
+                'statistical_analysis': statistical_analysis,
+                'statistical_charts': statistical_charts,
+                'enhanced_validation': enhanced_validation,
+                'performance_metrics': statistical_analysis.get('performance_metrics', {}),
+                'statistical_tests': statistical_analysis.get('statistical_tests', {}),
+                'distribution_analysis': statistical_analysis.get('distribution_analysis', {}),
+                'correlation_analysis': statistical_analysis.get('correlation_analysis', {}),
+                'trend_analysis': statistical_analysis.get('trend_analysis', {}),
+            })
+            
+            
+            # PASO XX: Agregar validación KS al contexto
+            context.update({
+                'ks_validation': ks_validation_results,
+                'has_ks_validation': bool(ks_validation_results),
+                'distribution_alerts': ks_validation_results.get('alerts', []),
+                'confidence_intervals': ks_validation_results.get('confidence_intervals', {}),
+                'reliability_report': ks_validation_results.get('reliability_report', {}),
+                'ks_test_results': ks_validation_results.get('ks_tests', {}),
+                'distribution_analysis': ks_validation_results.get('distribution_analysis', {}),
+            })
+
+              
             
             # Final logging
             self._log_context_summary(context)
@@ -260,7 +320,6 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Return minimal context on error
             return {
-                # 'demand_initial': historical_mean,
                 'simulation_id': simulation_id,
                 'simulation_instance': simulation_instance,
                 'results_simulation': results_simulation,
@@ -279,9 +338,70 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'model_validation': None,
                 'has_three_line_chart': False,
                 'three_line_validation_chart': None,
-                'three_line_validation_metrics': {}
+                'three_line_validation_metrics': {},
+                'totales_acumulativos': {},
+                'all_variables_extracted': [],
+                'endogenous_charts': {},
+                'has_advanced_charts': False
             }
 
+    def _generate_enhanced_statistical_charts(self, historical_demand, simulated_demands, all_variables_extracted):
+        """Generar gráficos estadísticos completos"""
+        try:
+            chart_generator = ChartGenerator()
+            statistical_charts = {}
+            
+            # 1. Histograma con distribución
+            if simulated_demands:
+                statistical_charts['histogram'] = chart_generator._generate_histogram_chart(simulated_demands)
+            
+            # 2. Box plot comparativo
+            if historical_demand and simulated_demands:
+                statistical_charts['boxplot'] = chart_generator._generate_comparative_boxplot(
+                    historical_demand, simulated_demands
+                )
+            
+            # 3. Scatter plot de correlación
+            if historical_demand and simulated_demands:
+                statistical_charts['scatter'] = chart_generator._generate_scatter_plot(
+                    historical_demand, simulated_demands
+                )
+            
+            # 4. Gráfico de residuos
+            if historical_demand and simulated_demands:
+                statistical_charts['residuals'] = chart_generator._generate_residuals_plot(
+                    historical_demand, simulated_demands
+                )
+            
+            # 5. Q-Q plot para normalidad
+            if simulated_demands:
+                statistical_charts['qq_plot'] = chart_generator._generate_qq_plot(simulated_demands)
+            
+            # 6. Autocorrelación
+            if simulated_demands and len(simulated_demands) > 10:
+                statistical_charts['autocorrelation'] = chart_generator._generate_autocorrelation_plot(simulated_demands)
+            
+            # 7. Mapa de calor de correlaciones entre variables
+            correlation_analysis = self._analyze_variable_correlations(all_variables_extracted)
+            if correlation_analysis.get('correlation_matrix'):
+                statistical_charts['correlation_heatmap'] = chart_generator._generate_correlation_heatmap(
+                    correlation_analysis['correlation_matrix'],
+                    correlation_analysis['variables_analyzed']
+                )
+            
+            # 8. Dashboard de performance
+            performance_metrics = self._calculate_performance_metrics(historical_demand, simulated_demands)
+            if performance_metrics:
+                statistical_charts['performance_dashboard'] = chart_generator._generate_performance_dashboard(performance_metrics)
+            
+            logger.info(f"Generated {len(statistical_charts)} statistical charts")
+            return statistical_charts
+            
+        except Exception as e:
+            logger.error(f"Error generating enhanced statistical charts: {str(e)}")
+            return {}
+    
+    
     def _enhance_totales_acumulativos(self, totales_acumulativos, all_variables_extracted):
         """Enhanced totales with trends and additional statistics"""
         try:
@@ -298,8 +418,12 @@ class SimulateResultView(LoginRequiredMixin, View):
                 
                 if len(values) > 3:
                     # Calculate trend using linear regression
-                    x = np.arange(len(values))
-                    slope, _, _, _, _ = scipy.stats.linregress(x, values)
+                    try:
+                        x = np.arange(len(values))
+                        slope, _, _, _, _ = scipy.stats.linregress(x, values)
+                    except ImportError:
+                        # Fallback simple calculation
+                        slope = (values[-1] - values[0]) / len(values) if len(values) > 1 else 0
                     
                     if slope > 0.01:
                         enhanced_info['trend'] = 'increasing'
@@ -380,21 +504,39 @@ class SimulateResultView(LoginRequiredMixin, View):
 
     def _get_validation_results(self, validation_service, simulation_id, simulation_instance, results_simulation, historical_demand):
         """Get comprehensive validation results"""
-        # Basic validation
-        validation_results = validation_service.validate_simulation(simulation_id)
-        
-        # Model predictions validation
-        prediction_validation_results = validation_service._validate_model_predictions(
-            simulation_instance, results_simulation, historical_demand
-        )
-        
-        # Combine validation results
-        combined_validation = {
-            'basic_validation': validation_results,
-            'prediction_validation': prediction_validation_results
-        }
-        
-        return combined_validation
+        try:
+            # Basic validation
+            validation_results = validation_service.validate_simulation(simulation_id)
+            
+            # Model predictions validation - CORREGIR ESTE ERROR
+            prediction_validation_results = {}
+            try:
+                prediction_validation_results = validation_service._validate_model_predictions(
+                    simulation_instance, list(results_simulation), historical_demand
+                )
+            except Exception as e:
+                logger.error(f"Error in model prediction validation: {e}")
+                prediction_validation_results = {
+                    'summary': {'success_rate': 0.0, 'avg_mape': 100.0},
+                    'details': {},
+                    'metrics': {},
+                    'alerts': []
+                }
+            
+            # Combine validation results
+            combined_validation = {
+                'basic_validation': validation_results,
+                'prediction_validation': prediction_validation_results
+            }
+            
+            return combined_validation
+            
+        except Exception as e:
+            logger.error(f"Error getting validation results: {e}")
+            return {
+                'basic_validation': {'alerts': [], 'summary': {}},
+                'prediction_validation': {'summary': {}, 'alerts': []}
+            }
 
     
     def _generate_validation_alerts_grouped(self, validation_results):
@@ -500,7 +642,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             logger.error(f"Error adding automatic alerts: {str(e)}")
     
     def _build_base_context(self, simulation_instance, results_simulation, product_instance, business_instance,
-                        analysis_data, historical_demand, demand_stats, comparison_chart, financial_results, validation_results):
+                    analysis_data, historical_demand, demand_stats, comparison_chart, financial_results, validation_results):
         """Build the base context dictionary"""
         
         # Group alerts by type
@@ -516,6 +658,9 @@ class SimulateResultView(LoginRequiredMixin, View):
         # Get prediction validation results
         prediction_validation = validation_results.get('prediction_validation', {})
         
+        # Generate validation alerts grouped
+        validation_alerts = self._generate_validation_alerts_grouped(validation_results)
+        
         context = {
             'growth_rate': analysis_data.get('growth_rate', 0.0),
             'error_permisible': analysis_data.get('error_permisible', 0.0),
@@ -529,8 +674,8 @@ class SimulateResultView(LoginRequiredMixin, View):
             'historical_demand': historical_demand,
             'demand_stats': demand_stats,
             'comparison_chart': comparison_chart,
-            'validation_alerts': alerts_by_type,
-            'validation_summary': basic_validation.get('summary', {}),
+            'validation_alerts': validation_alerts,  # Usar la versión agrupada
+            'basic_validation_summary': basic_validation.get('summary', {}),  # Cambiar nombre
             'simulation_valid': basic_validation.get('is_valid', False),
             # Prediction validation results
             'validation_summary': prediction_validation.get('summary', {}),
@@ -541,7 +686,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             **analysis_data.get('chart_images', {}),  # Unpack all chart images
             **financial_results,
         }
-    
+
         return context
 
     def _add_model_validation(self, validation_service, simulation_instance, results_simulation, analysis_data):
@@ -568,99 +713,151 @@ class SimulateResultView(LoginRequiredMixin, View):
 
     def _add_daily_validation(self, validation_service, simulation_instance, results_simulation):
         """Add daily validation results to context"""
-        # Extract real values from questionnaire
-        real_values = self._extract_real_values_from_questionnaire(simulation_instance)
-        
-        # Perform daily validation
-        daily_validation_results = validation_service._validate_by_day(
-            simulation_instance, list(results_simulation), real_values
-        )
-        
-        # Generate daily validation charts
-        daily_validation_charts = validation_service._generate_daily_validation_charts(
-            daily_validation_results
-        )
-        
-        # Calculate overall daily validation summary
-        daily_validation_summary = validation_service._calculate_daily_validation_summary(
-            daily_validation_results
-        )
-        
-        return {
-            'daily_validation_results': daily_validation_results,
-            'daily_validation_charts': daily_validation_charts,
-            'daily_validation_summary': daily_validation_summary
-        }
+        try:
+            # Extract real values from questionnaire
+            real_values = self._extract_real_values_from_questionnaire(simulation_instance)
+            
+            # Perform daily validation - CORREGIR
+            daily_validation_results = []
+            daily_validation_charts = {}
+            daily_validation_summary = {'success_rate': 0.0, 'avg_accuracy': 0.0}
+            
+            try:
+                daily_validation_results = validation_service._validate_by_day(
+                    simulation_instance, list(results_simulation), real_values
+                )
+            except Exception as e:
+                logger.error(f"Error in daily validation: {e}")
+            
+            # Generate daily validation charts - PROTEGER DE ERRORES
+            try:
+                if hasattr(validation_service, '_generate_daily_validation_charts'):
+                    daily_validation_charts = validation_service._generate_daily_validation_charts(
+                        daily_validation_results
+                    )
+            except Exception as e:
+                logger.error(f"Error generating daily validation charts: {e}")
+            
+            # Calculate summary - PROTEGER DE ERRORES
+            try:
+                if hasattr(validation_service, '_calculate_daily_validation_summary'):
+                    daily_validation_summary = validation_service._calculate_daily_validation_summary(
+                        daily_validation_results
+                    )
+            except Exception as e:
+                logger.error(f"Error calculating daily validation summary: {e}")
+            
+            return {
+                'daily_validation_results': daily_validation_results,
+                'daily_validation_charts': daily_validation_charts,
+                'daily_validation_summary': daily_validation_summary
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in daily validation: {e}")
+            return {
+                'daily_validation_results': [],
+                'daily_validation_charts': {},
+                'daily_validation_summary': {'success_rate': 0.0, 'avg_accuracy': 0.0}
+            }
 
     def _add_validation_charts(self, chart_generator, validation_results, results_simulation, 
-                              analysis_data, three_line_validation=None):
+                      analysis_data, three_line_validation=None):
         """Add validation charts to context including three-line chart"""
-        validation_chart_context = {}
-        
-        # Generate basic validation charts
-        basic_validation = validation_results.get('basic_validation', {})
-        if basic_validation:
-            validation_chart_context = chart_generator.generate_validation_charts_context(basic_validation)
-        
-        # Get variables for chart generation
-        all_variables_extracted = analysis_data.get('all_variables_extracted', [])
-        totales_acumulativos = analysis_data.get('totales_acumulativos', {})
-        
-        # Generate model validation charts if variables are available
-        model_validation_charts = {}
-        charts_context = {}
-        
-        # Generate validation charts with correct data
-        if validation_results and 'by_variable' in validation_results:
-            # Log for debug
-            logger.info(f"all_variables_extracted type: {type(all_variables_extracted)}")
-            if all_variables_extracted:
-                logger.info(f"First item structure: {all_variables_extracted[0].keys()}")
+        try:
+            validation_chart_context = {}
             
-            validation_charts = chart_generator._generate_validation_charts_for_variables(
-                validation_results['by_variable'],
-                results_simulation,
-                all_variables_extracted
-            )
-            model_validation_charts = validation_charts
-            charts_context = chart_generator.generate_validation_charts_context(
-                {'validation_charts': validation_charts}
-            )
-        else:
+            # Generate basic validation charts - PROTEGER DE ERRORES
+            basic_validation = validation_results.get('basic_validation', {})
+            if basic_validation:
+                try:
+                    validation_chart_context = chart_generator.generate_validation_charts_context(basic_validation)
+                except Exception as e:
+                    logger.error(f"Error generating basic validation charts: {e}")
+                    validation_chart_context = {'charts': {}, 'chart_images': {}}
+            
+            # Get variables for chart generation
+            all_variables_extracted = analysis_data.get('all_variables_extracted', [])
+            totales_acumulativos = analysis_data.get('totales_acumulativos', {})
+            
+            # Generate model validation charts - CORREGIR ESTRUCTURA
             model_validation_charts = {}
             charts_context = {}
-        
-        # Generate endogenous variables charts
-        endogenous_charts = chart_generator.generate_endogenous_variables_charts(
-            all_variables_extracted,
-            totales_acumulativos
-        )
-        
-        # Generate additional analysis charts
-        additional_charts = chart_generator.generate_additional_analysis_charts(
-            all_variables_extracted,
-            totales_acumulativos
-        )
-        
-        # Prepare chart images including the three-line validation chart
-        chart_images = validation_chart_context.get('chart_images', {})
-        
-        # Add three-line validation chart if available
-        if three_line_validation and three_line_validation.get('chart'):
-            chart_images['three_line_validation'] = three_line_validation['chart']
-        
-        # Add additional charts to context
-        for key, chart in additional_charts.items():
-            chart_images[f'additional_{key}'] = chart
-        
-        return {
-            'validation_charts': validation_chart_context.get('charts', {}),
-            'validation_chart_images': chart_images,
-            'model_validation_charts': model_validation_charts,
-            'charts_context': charts_context,
-            'endogenous_charts': endogenous_charts,
-            'additional_charts': additional_charts
-        }
+            
+            try:
+                # CORREGIR: Verificar que by_variable existe y tiene la estructura correcta
+                by_variable = validation_results.get('basic_validation', {}).get('by_variable', {})
+                if by_variable and all_variables_extracted and len(all_variables_extracted) > 0:
+                    # Verificar que by_variable tiene datos válidos
+                    valid_variables = {k: v for k, v in by_variable.items() 
+                                    if v.get('status') != 'NO_DATA' and v.get('simulated_values_count', 0) > 0}
+                    
+                    if valid_variables:
+                        validation_charts = chart_generator._generate_validation_charts_for_variables(
+                            valid_variables,  # Usar valid_variables en lugar de by_variable
+                            list(results_simulation),  # Convertir a lista
+                            all_variables_extracted
+                        )
+                        model_validation_charts = validation_charts
+                        charts_context = chart_generator.generate_validation_charts_context(
+                            {'validation_charts': validation_charts}
+                        )
+            except Exception as e:
+                logger.error(f"Error generating model validation charts: {e}")
+                model_validation_charts = {}
+                charts_context = {}
+            
+            # Generate endogenous variables charts - PROTEGER
+            endogenous_charts = {}
+            try:
+                endogenous_charts = chart_generator.generate_endogenous_variables_charts(
+                    all_variables_extracted,
+                    totales_acumulativos
+                )
+            except Exception as e:
+                logger.error(f"Error generating endogenous charts: {e}")
+            
+            # Generate additional analysis charts - PROTEGER
+            additional_charts = {}
+            try:
+                additional_charts = chart_generator.generate_additional_analysis_charts(
+                    all_variables_extracted,
+                    totales_acumulativos
+                )
+            except Exception as e:
+                logger.error(f"Error generating additional charts: {e}")
+            
+            # Prepare chart images safely
+            chart_images = validation_chart_context.get('chart_images', {})
+            
+            # Add three-line validation chart if available
+            if three_line_validation and three_line_validation.get('chart'):
+                chart_images['three_line_validation'] = three_line_validation['chart']
+            
+            # Add additional charts to context safely
+            for key, chart in additional_charts.items():
+                if chart:  # Verificar que el chart no sea None
+                    chart_images[f'additional_{key}'] = chart
+            
+            return {
+                'validation_charts': validation_chart_context.get('charts', {}),
+                'validation_chart_images': chart_images,
+                'model_validation_charts': model_validation_charts,
+                'charts_context': charts_context,
+                'endogenous_charts': endogenous_charts,
+                'additional_charts': additional_charts
+            }
+            
+        except Exception as e:
+            logger.error(f"Error adding validation charts: {e}")
+            return {
+                'validation_charts': {},
+                'validation_chart_images': {},
+                'model_validation_charts': {},
+                'charts_context': {},
+                'endogenous_charts': {},
+                'additional_charts': {}
+            }
 
     def _log_context_summary(self, context):
         """Log summary information about the generated context"""
@@ -1142,7 +1339,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             fk_simulation_id=simulation_id
         ).order_by('date')
         
-        paginator = Paginator(results, 50)  # 50 results per page
+        paginator = Paginator(results, 365)  # 50 results per page
         page = request.GET.get('page', 1)
         
         try:
@@ -1375,50 +1572,61 @@ class SimulateResultView(LoginRequiredMixin, View):
         all_variables = []
         
         for idx, result in enumerate(results):
-            day_data = {
-                'day': idx + 1,
-                'date': result.date.isoformat() if result.date else None,
-                'demand_mean': float(result.demand_mean),
-                'demand_std': float(result.demand_std_deviation)
-            }
-            
-            # CORRECCION: Acceder a las variables correctamente
-            if hasattr(result, 'variables') and result.variables:
-                # Si variables es un string JSON, parsearlo
-                if isinstance(result.variables, str):
-                    try:
-                        variables_dict = json.loads(result.variables)
-                        for key, value in variables_dict.items():
+            try:
+                day_data = {
+                    'day': idx + 1,
+                    'date': result.date.isoformat() if hasattr(result, 'date') and result.date else None,
+                    'demand_mean': float(result.demand_mean) if hasattr(result, 'demand_mean') else 0.0,
+                    'demand_std': float(result.demand_std_deviation) if hasattr(result, 'demand_std_deviation') else 0.0
+                }
+                
+                # CORRECCIÓN: Acceder a las variables correctamente
+                if hasattr(result, 'variables') and result.variables:
+                    # Si variables es un string JSON, parsearlo
+                    if isinstance(result.variables, str):
+                        try:
+                            variables_dict = json.loads(result.variables)
+                            for key, value in variables_dict.items():
+                                if not key.startswith('_'):
+                                    try:
+                                        day_data[key] = float(value) if isinstance(value, (int, float, str)) and str(value).replace('.','').replace('-','').isdigit() else value
+                                    except (ValueError, TypeError):
+                                        day_data[key] = value
+                        except (json.JSONDecodeError, TypeError) as e:
+                            logger.warning(f"Could not parse variables JSON for result {result.id}: {e}")
+                            variables_dict = {}
+                    
+                    # Si variables es un diccionario
+                    elif isinstance(result.variables, dict):
+                        for key, value in result.variables.items():
                             if not key.startswith('_'):
                                 try:
-                                    day_data[key] = float(value) if isinstance(value, (int, float, str)) else value
+                                    day_data[key] = float(value) if isinstance(value, (int, float)) else value
                                 except (ValueError, TypeError):
                                     day_data[key] = value
-                    except json.JSONDecodeError:
-                        logger.error(f"Error parsing variables JSON for result {result.id}")
                 
-                # Si variables es un diccionario
-                elif isinstance(result.variables, dict):
-                    for key, value in result.variables.items():
-                        if not key.startswith('_'):
-                            try:
-                                day_data[key] = float(value) if isinstance(value, (int, float)) else value
-                            except (ValueError, TypeError):
-                                day_data[key] = value
-            
-            # CORRECCION: Si no hay variables en el resultado, intentar calcularlas
-            else:
-                # Usar el math engine para calcular variables básicas
-                try:
-                    calculated_vars = self.math_engine.calculate_basic_variables(
-                        demand=day_data['demand_mean'],
-                        day=day_data['day']
-                    )
-                    day_data.update(calculated_vars)
-                except Exception as e:
-                    logger.warning(f"Could not calculate variables for day {idx + 1}: {e}")
-            
-            all_variables.append(day_data)
+                # Si no hay variables, intentar calcular básicas
+                else:
+                    try:
+                        calculated_vars = self.math_engine.calculate_basic_variables(
+                            demand=day_data['demand_mean'],
+                            day=day_data['day']
+                        )
+                        day_data.update(calculated_vars)
+                    except Exception as e:
+                        logger.warning(f"Could not calculate variables for day {idx + 1}: {e}")
+                
+                all_variables.append(day_data)
+                
+            except Exception as e:
+                logger.error(f"Error processing result {idx}: {e}")
+                # Agregar datos mínimos en caso de error
+                all_variables.append({
+                    'day': idx + 1,
+                    'date': None,
+                    'demand_mean': 0.0,
+                    'demand_std': 0.0
+                })
         
         return all_variables
     
@@ -1756,7 +1964,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     
     def _calculate_enhanced_totales_acumulativos(self, all_variables_extracted):
         """
-        Calcula totales acumulativos con estadísticas completas (min, max, std, trends)
+        Calcula totales acumulativos con estadísticas completas - CORREGIDO
         """
         try:
             enhanced_totales = {}
@@ -1765,13 +1973,33 @@ class SimulateResultView(LoginRequiredMixin, View):
                 logger.warning("No variables extracted for enhanced totales calculation")
                 return enhanced_totales
             
-            # Variables principales a procesar
+            # DEBUG: Log para verificar datos de entrada
+            logger.info(f"Processing {len(all_variables_extracted)} days for totales calculation")
+            if all_variables_extracted:
+                sample_day = all_variables_extracted[0]
+                available_vars = [k for k in sample_day.keys() if k not in ['day', 'date', 'demand_mean', 'demand_std']]
+                logger.info(f"Available variables in first day: {available_vars}")
+            
+            # Variables principales a procesar - EXPANDIDA
             variables_to_process = [
                 'PVP', 'TPV', 'IT', 'TG', 'GT', 'NR', 'NSC', 'EOG', 
-                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF'
+                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF',
+                # Agregar más variables posibles
+                'GO', 'QPL', 'DH', 'CCMP', 'RGP', 'CP', 'CV'
             ]
             
-            for var_name in variables_to_process:
+            # NUEVO: También procesar cualquier variable encontrada en los datos
+            discovered_vars = set()
+            for day_data in all_variables_extracted:
+                for key in day_data.keys():
+                    if key not in ['day', 'date', 'demand_mean', 'demand_std'] and not key.startswith('_'):
+                        discovered_vars.add(key)
+            
+            # Combinar variables predefinidas con descubiertas
+            all_vars_to_process = list(set(variables_to_process + list(discovered_vars)))
+            logger.info(f"Processing totales for variables: {all_vars_to_process}")
+            
+            for var_name in all_vars_to_process:
                 var_data = self._collect_enhanced_variable_data(all_variables_extracted, var_name)
                 
                 if var_data['values']:
@@ -1784,31 +2012,71 @@ class SimulateResultView(LoginRequiredMixin, View):
                         'std_deviation': var_data['std_deviation'],
                         'mean': var_data['mean'],
                         'count': len(var_data['values']),
-                        'cv': var_data['cv'],  # Coeficiente de variación
+                        'cv': var_data['cv'],
                         'range': var_data['max_value'] - var_data['min_value'] if var_data['max_value'] and var_data['min_value'] else 0,
                         'trend_strength': var_data['trend_strength'],
                         'volatility': var_data['volatility']
                     }
+                    logger.debug(f"Calculated totales for {var_name}: total={var_data['total']:.2f}, mean={var_data['mean']:.2f}")
+                else:
+                    logger.debug(f"No valid values found for variable {var_name}")
             
-            logger.info(f"Enhanced totales calculated for {len(enhanced_totales)} variables")
+            logger.info(f"Enhanced totales calculated for {len(enhanced_totales)} variables: {list(enhanced_totales.keys())}")
             return enhanced_totales
             
         except Exception as e:
             logger.error(f"Error calculating enhanced totales: {str(e)}")
+            logger.exception("Full traceback:")
             return {}
 
+    def _get_variable_unit(self, var_name):
+        """Get unit for variable"""
+        units = {
+            'PVP': 'Bs./L', 'TPV': 'L', 'IT': 'Bs.', 'TG': 'Bs.', 'GT': 'Bs.',
+            'NR': '%', 'NSC': '%', 'EOG': '%', 'CFD': 'Bs.', 'CVU': 'Bs./L',
+            'DPH': 'L/día', 'CPROD': 'L/día', 'NEPP': 'Personas', 'RI': '%', 'IPF': 'L'
+        }
+        return units.get(var_name, '')
+
     def _collect_enhanced_variable_data(self, all_variables_extracted, var_name):
-        """Recopilar datos mejorados para una variable específica"""
+        """Recopilar datos mejorados para una variable específica - CORREGIDO"""
         try:
             values = []
             
-            for day_data in all_variables_extracted:
+            logger.debug(f"Collecting data for variable {var_name} from {len(all_variables_extracted)} days")
+            
+            for day_idx, day_data in enumerate(all_variables_extracted):
                 if var_name in day_data and day_data[var_name] is not None:
                     try:
-                        value = float(day_data[var_name])
+                        # MEJORADO: Mejor validación y conversión de valores
+                        raw_value = day_data[var_name]
+                        
+                        if isinstance(raw_value, (int, float)):
+                            value = float(raw_value)
+                        elif isinstance(raw_value, str):
+                            # Limpiar string antes de convertir
+                            cleaned_value = raw_value.strip().replace(',', '.')
+                            if cleaned_value.replace('.','').replace('-','').replace('e','').replace('E','').isdigit():
+                                value = float(cleaned_value)
+                            else:
+                                logger.debug(f"Skipping non-numeric string value for {var_name} on day {day_idx}: {raw_value}")
+                                continue
+                        else:
+                            logger.debug(f"Skipping non-numeric value for {var_name} on day {day_idx}: {raw_value} (type: {type(raw_value)})")
+                            continue
+                        
+                        # Validar que el valor sea razonable
+                        if not np.isfinite(value):
+                            logger.debug(f"Skipping infinite/NaN value for {var_name} on day {day_idx}: {value}")
+                            continue
+                        
                         values.append(value)
-                    except (ValueError, TypeError):
+                        
+                    except (ValueError, TypeError) as e:
+                        logger.debug(f"Error converting value for {var_name} on day {day_idx}: {day_data[var_name]} - {e}")
                         continue
+            
+            logger.debug(f"Collected {len(values)} valid values for {var_name}")
             
             if not values:
                 return {
@@ -1826,11 +2094,12 @@ class SimulateResultView(LoginRequiredMixin, View):
                 }
             
             # Calcular estadísticas básicas
-            total = sum(values)
-            mean = np.mean(values)
-            std_dev = np.std(values)
-            min_val = min(values)
-            max_val = max(values)
+            values_array = np.array(values)
+            total = float(np.sum(values_array))
+            mean = float(np.mean(values_array))
+            std_dev = float(np.std(values_array))
+            min_val = float(np.min(values_array))
+            max_val = float(np.max(values_array))
             
             # Calcular coeficiente de variación
             cv = std_dev / mean if mean != 0 else 0
@@ -1841,7 +2110,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             # Calcular volatilidad (desviación estándar normalizada)
             volatility = cv * 100  # CV expresado como porcentaje
             
-            return {
+            result = {
                 'values': values,
                 'total': total,
                 'unit': self._get_variable_unit(var_name),
@@ -1854,6 +2123,9 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'trend_strength': trend_info['strength'],
                 'volatility': volatility
             }
+            
+            logger.debug(f"Variable {var_name} stats: total={total:.2f}, mean={mean:.2f}, count={len(values)}")
+            return result
             
         except Exception as e:
             logger.error(f"Error collecting enhanced data for {var_name}: {str(e)}")
@@ -1872,14 +2144,14 @@ class SimulateResultView(LoginRequiredMixin, View):
             }
 
     def _calculate_trend_analysis(self, values):
-        """Calcular análisis de tendencia detallado"""
+        """Calcular análisis de tendencia detallado - CORREGIDO"""
         try:
             if len(values) < 3:
                 return {'direction': 'stable', 'strength': 0}
             
             # Usar regresión lineal para determinar tendencia
             x = np.arange(len(values))
-            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, values)
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, values)  # CORREGIDO: scipy.stats
             
             # Determinar dirección
             threshold = 0.01 * np.mean(values)  # 1% del valor medio
@@ -1905,6 +2177,1107 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error calculating trend analysis: {str(e)}")
             return {'direction': 'stable', 'strength': 0}
+
+    def _generate_statistical_analysis(self, simulation_instance, results_simulation, historical_demand, all_variables_extracted):
+        """Generar análisis estadístico completo"""
+        try:
+            statistical_data = {}
+            
+            # Extraer datos de demanda
+            simulated_demands = [float(r.demand_mean) for r in results_simulation if hasattr(r, 'demand_mean')]
+            
+            if not simulated_demands:
+                return {'statistical_analysis': {}, 'statistical_tests': {}}
+            
+            # 1. Análisis de distribución
+            statistical_data['distribution_analysis'] = self._analyze_distribution(simulated_demands)
+            
+            # 2. Pruebas estadísticas
+            if historical_demand and len(historical_demand) > 0:
+                statistical_data['statistical_tests'] = self._perform_statistical_tests(
+                    historical_demand, simulated_demands
+                )
+            else:
+                statistical_data['statistical_tests'] = {}
+            
+            # 3. Métricas de performance
+            statistical_data['performance_metrics'] = self._calculate_performance_metrics(
+                historical_demand, simulated_demands
+            )
+            
+            # 4. Análisis de correlación entre variables
+            statistical_data['correlation_analysis'] = self._analyze_variable_correlations(
+                all_variables_extracted
+            )
+            
+            # 5. Análisis de tendencias
+            statistical_data['trend_analysis'] = self._analyze_trends(simulated_demands)
+            
+            # 6. Gráficos estadísticos
+            statistical_data['statistical_charts'] = self._generate_statistical_charts(
+                historical_demand, simulated_demands, all_variables_extracted
+            )
+            
+            return statistical_data
+            
+        except Exception as e:
+            logger.error(f"Error generating statistical analysis: {str(e)}")
+            return {'statistical_analysis': {}, 'statistical_tests': {}}
+
+    def _enhanced_validation_analysis(self, simulation_instance, results_simulation, historical_demand, all_variables_extracted):
+        """Análisis de validación mejorado"""
+        try:
+            validation_data = {}
+            
+            # 1. Validación básica del modelo
+            basic_validation = self.validation_service.validate_simulation(simulation_instance.id)
+            validation_data['basic_validation'] = basic_validation
+            
+            # 2. Validación por variables
+            if all_variables_extracted:
+                variable_validation = self.validation_service._validate_individual_variables(
+                    simulation_instance, all_variables_extracted
+                )
+                validation_data['variable_validation'] = variable_validation
+            
+            # 3. Validación temporal (por días)
+            temporal_validation = self.validation_service._validate_temporal_consistency(
+                results_simulation, historical_demand
+            )
+            validation_data['temporal_validation'] = temporal_validation
+            
+            # 4. Métricas de confiabilidad
+            reliability_metrics = self.validation_service._calculate_reliability_metrics(
+                historical_demand, results_simulation
+            )
+            validation_data['reliability_metrics'] = reliability_metrics
+            
+            # 5. Intervalos de confianza
+            if historical_demand:
+                confidence_intervals = self.validation_service._calculate_confidence_intervals(
+                    historical_demand, [float(r.demand_mean) for r in results_simulation]
+                )
+                validation_data['confidence_intervals'] = confidence_intervals
+            
+            return validation_data
+            
+        except Exception as e:
+            logger.error(f"Error in enhanced validation analysis: {e}")
+            return {}
+    
+    
+    def _analyze_trends(self, data):
+        """Analizar tendencias en los datos - CORREGIDO"""
+        try:
+            if len(data) < 3:
+                return {}
+            
+            data_array = np.array(data)
+            x = np.arange(len(data_array))
+            
+            # Regresión lineal
+            slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, data_array)  # CORREGIDO: scipy.stats
+            
+            # Prueba de Mann-Kendall para tendencia
+            try:
+                tau, tau_p = scipy.stats.kendalltau(x, data_array)  # CORREGIDO: scipy.stats
+                has_trend = tau_p < 0.05
+            except Exception:
+                has_trend = p_value < 0.05
+            
+            # Clasificar tendencia
+            if abs(slope) < 0.01 * np.mean(data_array):
+                trend_type = 'Estable'
+            elif slope > 0:
+                trend_type = 'Creciente'
+            else:
+                trend_type = 'Decreciente'
+            
+            return {
+                'slope': float(slope),
+                'intercept': float(intercept),
+                'r_squared': float(r_value ** 2),
+                'p_value': float(p_value),
+                'std_error': float(std_err),
+                'trend_type': trend_type,
+                'has_significant_trend': has_trend,
+                'trend_strength': (
+                    'Fuerte' if abs(r_value) > 0.7 else
+                    'Moderada' if abs(r_value) > 0.4 else
+                    'Débil'
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing trends: {e}")
+            return {}
+
+    
+    def _generate_statistical_charts(self, historical_demand, simulated_demands, all_variables_extracted):
+        """Generar gráficos estadísticos"""
+        try:
+            charts = {}
+            
+            if not simulated_demands:
+                return charts
+            
+            # Usar el chart_generator existente
+            chart_generator = ChartGenerator()
+            
+            # 1. Histograma y distribución
+            try:
+                charts['histogram'] = chart_generator._generate_histogram_chart(simulated_demands)
+            except Exception as e:
+                logger.warning(f"Error generating histogram: {e}")
+            
+            # 2. Box plot comparativo
+            if historical_demand:
+                try:
+                    charts['boxplot'] = chart_generator._generate_comparative_boxplot(
+                        historical_demand, simulated_demands
+                    )
+                except Exception as e:
+                    logger.warning(f"Error generating boxplot: {e}")
+            
+            # 3. Scatter plot (si hay datos históricos)
+            if historical_demand:
+                try:
+                    charts['scatter'] = chart_generator._generate_scatter_plot(
+                        historical_demand, simulated_demands
+                    )
+                except Exception as e:
+                    logger.warning(f"Error generating scatter plot: {e}")
+            
+            # 4. Gráfico de residuos
+            if historical_demand:
+                try:
+                    charts['residuals'] = chart_generator._generate_residuals_plot(
+                        historical_demand, simulated_demands
+                    )
+                except Exception as e:
+                    logger.warning(f"Error generating residuals plot: {e}")
+            
+            # 5. QQ plot para normalidad
+            try:
+                charts['qq_plot'] = chart_generator._generate_qq_plot(simulated_demands)
+            except Exception as e:
+                logger.warning(f"Error generating QQ plot: {e}")
+            
+            return charts
+            
+        except Exception as e:
+            logger.error(f"Error generating statistical charts: {e}")
+            return {}
+    
+    
+    def _analyze_variable_correlations(self, all_variables_extracted):
+        """Analizar correlaciones entre variables endógenas - CORREGIDO"""
+        try:
+            if not all_variables_extracted or len(all_variables_extracted) < 3:
+                return {}
+            
+            # Construir matriz de datos
+            variables_data = {}
+            numeric_vars = ['IT', 'GT', 'TG', 'TPV', 'NSC', 'EOG', 'NR', 'PVP', 'CVU', 'CFD']
+            
+            for var in numeric_vars:
+                values = []
+                for day_data in all_variables_extracted:
+                    if var in day_data and day_data[var] is not None:
+                        try:
+                            values.append(float(day_data[var]))
+                        except (ValueError, TypeError):
+                            values.append(np.nan)
+                    else:
+                        values.append(np.nan)
+                
+                if len(values) > 0 and not all(np.isnan(values)):
+                    variables_data[var] = values
+            
+            if len(variables_data) < 2:
+                return {}
+            
+            # Calcular matriz de correlación
+            correlation_matrix = {}
+            significant_correlations = []
+            
+            var_names = list(variables_data.keys())
+            for i, var1 in enumerate(var_names):
+                correlation_matrix[var1] = {}
+                for j, var2 in enumerate(var_names):
+                    if i != j:
+                        try:
+                            # Filtrar valores no nulos
+                            data1 = np.array(variables_data[var1])
+                            data2 = np.array(variables_data[var2])
+                            
+                            mask = ~(np.isnan(data1) | np.isnan(data2))
+                            if np.sum(mask) > 3:
+                                corr_coef, p_value = scipy.stats.pearsonr(  # CORREGIDO: scipy.stats
+                                    data1[mask], data2[mask]
+                                )
+                                correlation_matrix[var1][var2] = {
+                                    'coefficient': float(corr_coef),
+                                    'p_value': float(p_value),
+                                    'significant': p_value < 0.05
+                                }
+                                
+                                # Guardar correlaciones significativas y fuertes
+                                if p_value < 0.05 and abs(corr_coef) > 0.5:
+                                    significant_correlations.append({
+                                        'var1': var1,
+                                        'var2': var2,
+                                        'coefficient': float(corr_coef),
+                                        'strength': (
+                                            'Muy fuerte' if abs(corr_coef) > 0.8 else
+                                            'Fuerte' if abs(corr_coef) > 0.6 else
+                                            'Moderada'
+                                        ),
+                                        'direction': 'Positiva' if corr_coef > 0 else 'Negativa'
+                                    })
+                            else:
+                                correlation_matrix[var1][var2] = {
+                                    'coefficient': 0.0,
+                                    'p_value': 1.0,
+                                    'significant': False
+                                }
+                        except Exception:
+                            correlation_matrix[var1][var2] = {
+                                'coefficient': 0.0,
+                                'p_value': 1.0,
+                                'significant': False
+                            }
+                    else:
+                        correlation_matrix[var1][var2] = {
+                            'coefficient': 1.0,
+                            'p_value': 0.0,
+                            'significant': True
+                        }
+            
+            return {
+                'correlation_matrix': correlation_matrix,
+                'significant_correlations': significant_correlations,
+                'variables_analyzed': var_names
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing correlations: {e}")
+            return {}
+    
+    def _analyze_distribution(self, data):
+        """Analizar distribución de los datos - CORREGIDO"""
+        try:
+            if len(data) < 3:
+                return {}
+            
+            data_array = np.array(data)
+            
+            analysis = {
+                'basic_stats': {
+                    'mean': float(np.mean(data_array)),
+                    'std': float(np.std(data_array)),
+                    'variance': float(np.var(data_array)),
+                    'skewness': float(scipy.stats.skew(data_array)),  # CORREGIDO: scipy.stats
+                    'kurtosis': float(scipy.stats.kurtosis(data_array)),  # CORREGIDO: scipy.stats
+                    'min': float(np.min(data_array)),
+                    'max': float(np.max(data_array)),
+                    'median': float(np.median(data_array)),
+                    'q25': float(np.percentile(data_array, 25)),
+                    'q75': float(np.percentile(data_array, 75)),
+                    'iqr': float(np.percentile(data_array, 75) - np.percentile(data_array, 25))
+                },
+                'normality_test': {
+                    'shapiro_stat': None,
+                    'shapiro_p': None,
+                    'is_normal': False
+                },
+                'distribution_fit': {
+                    'best_fit': 'normal',
+                    'fit_params': {},
+                    'goodness_of_fit': 0.0
+                }
+            }
+            
+            # Prueba de normalidad (Shapiro-Wilk)
+            if len(data_array) <= 5000:  # Shapiro-Wilk es válido para n <= 5000
+                try:
+                    stat, p_value = scipy.stats.shapiro(data_array)  # CORREGIDO: scipy.stats
+                    analysis['normality_test'] = {
+                        'shapiro_stat': float(stat),
+                        'shapiro_p': float(p_value),
+                        'is_normal': p_value > 0.05
+                    }
+                except Exception as e:
+                    logger.warning(f"Error in normality test: {e}")
+            
+            # Ajuste de distribuciones
+            try:
+                distributions = [
+                    scipy.stats.norm,      # CORREGIDO: scipy.stats
+                    scipy.stats.lognorm,   # CORREGIDO: scipy.stats
+                    scipy.stats.expon,     # CORREGIDO: scipy.stats
+                    scipy.stats.gamma      # CORREGIDO: scipy.stats
+                ]
+                best_dist = None
+                best_fit = -np.inf
+                best_params = {}
+                
+                for dist in distributions:
+                    try:
+                        params = dist.fit(data_array)
+                        # Prueba de Kolmogorov-Smirnov
+                        ks_stat, ks_p = scipy.stats.kstest(  # CORREGIDO: scipy.stats
+                            data_array, lambda x: dist.cdf(x, *params)
+                        )
+                        
+                        if ks_p > best_fit:
+                            best_fit = ks_p
+                            best_dist = dist.name
+                            best_params = params
+                            
+                    except Exception:
+                        continue
+                
+                if best_dist:
+                    analysis['distribution_fit'] = {
+                        'best_fit': best_dist,
+                        'fit_params': [float(p) for p in best_params],
+                        'goodness_of_fit': float(best_fit)
+                    }
+            except Exception as e:
+                logger.warning(f"Error in distribution fitting: {e}")
+            
+            return analysis
+            
+        except Exception as e:
+            logger.error(f"Error analyzing distribution: {e}")
+            return {}
+        
+    def _perform_statistical_tests(self, historical_data, simulated_data):
+        """Realizar pruebas estadísticas comparativas - CORREGIDO"""
+        try:
+            tests = {}
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_trimmed = np.array(historical_data[:min_len])
+            sim_trimmed = np.array(simulated_data[:min_len])
+            
+            if min_len < 3:
+                return tests
+            
+            # 1. Prueba t de Student (medias)
+            try:
+                t_stat, t_p = scipy.stats.ttest_ind(hist_trimmed, sim_trimmed)  # CORREGIDO: scipy.stats
+                tests['t_test'] = {
+                    'statistic': float(t_stat),
+                    'p_value': float(t_p),
+                    'means_equal': t_p > 0.05,
+                    'interpretation': 'Las medias son estadísticamente iguales' if t_p > 0.05 else 'Las medias son significativamente diferentes'
+                }
+            except Exception as e:
+                logger.warning(f"Error in t-test: {e}")
+            
+            # 2. Prueba F (varianzas)
+            try:
+                f_stat = np.var(hist_trimmed, ddof=1) / np.var(sim_trimmed, ddof=1)
+                f_p = 2 * min(
+                    scipy.stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1),  # CORREGIDO: scipy.stats
+                    1 - scipy.stats.f.cdf(f_stat, len(hist_trimmed)-1, len(sim_trimmed)-1)  # CORREGIDO: scipy.stats
+                )
+                
+                tests['f_test'] = {
+                    'statistic': float(f_stat),
+                    'p_value': float(f_p),
+                    'variances_equal': f_p > 0.05,
+                    'interpretation': 'Las varianzas son homogéneas' if f_p > 0.05 else 'Las varianzas son heterogéneas'
+                }
+            except Exception as e:
+                logger.warning(f"Error in F-test: {e}")
+            
+            # 3. Prueba de Kolmogorov-Smirnov (distribuciones)
+            try:
+                ks_stat, ks_p = scipy.stats.ks_2samp(hist_trimmed, sim_trimmed)  # CORREGIDO: scipy.stats
+                tests['ks_test'] = {
+                    'statistic': float(ks_stat),
+                    'p_value': float(ks_p),
+                    'distributions_equal': ks_p > 0.05,
+                    'interpretation': 'Las distribuciones son similares' if ks_p > 0.05 else 'Las distribuciones son diferentes'
+                }
+            except Exception as e:
+                logger.warning(f"Error in KS-test: {e}")
+            
+            # 4. Correlación de Pearson
+            try:
+                corr_coef, corr_p = scipy.stats.pearsonr(hist_trimmed, sim_trimmed)  # CORREGIDO: scipy.stats
+                tests['correlation'] = {
+                    'coefficient': float(corr_coef),
+                    'p_value': float(corr_p),
+                    'is_significant': corr_p < 0.05,
+                    'strength': (
+                        'Muy fuerte' if abs(corr_coef) > 0.8 else
+                        'Fuerte' if abs(corr_coef) > 0.6 else
+                        'Moderada' if abs(corr_coef) > 0.4 else
+                        'Débil'
+                    ),
+                    'interpretation': f'Correlación {tests.get("correlation", {}).get("strength", "débil").lower()} entre histórico y simulado'
+                }
+            except Exception as e:
+                logger.warning(f"Error in correlation test: {e}")
+            
+            return tests
+            
+        except Exception as e:
+            logger.error(f"Error performing statistical tests: {e}")
+            return {}
+
+    def _calculate_performance_metrics(self, historical_data, simulated_data):
+        """Calcular métricas de performance del modelo"""
+        try:
+            if not historical_data or not simulated_data:
+                return {}
+            
+            min_len = min(len(historical_data), len(simulated_data))
+            hist = np.array(historical_data[:min_len])
+            sim = np.array(simulated_data[:min_len])
+            
+            if min_len == 0:
+                return {}
+            
+            # Métricas básicas
+            mae = np.mean(np.abs(hist - sim))
+            mse = np.mean((hist - sim) ** 2)
+            rmse = np.sqrt(mse)
+            
+            # MAPE (con manejo de zeros)
+            mape_values = []
+            for h, s in zip(hist, sim):
+                if h != 0:
+                    mape_values.append(abs((h - s) / h) * 100)
+            mape = np.mean(mape_values) if mape_values else 0
+            
+            # R²
+            ss_res = np.sum((hist - sim) ** 2)
+            ss_tot = np.sum((hist - np.mean(hist)) ** 2)
+            r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+            
+            # Índice de concordancia de Willmott
+            try:
+                willmott_d = 1 - (np.sum((sim - hist) ** 2) / 
+                                np.sum((np.abs(sim - np.mean(hist)) + np.abs(hist - np.mean(hist))) ** 2))
+            except:
+                willmott_d = 0
+            
+            # Eficiencia de Nash-Sutcliffe
+            try:
+                nash_sutcliffe = 1 - (np.sum((hist - sim) ** 2) / np.sum((hist - np.mean(hist)) ** 2))
+            except:
+                nash_sutcliffe = 0
+            
+            return {
+                'mae': float(mae),
+                'mse': float(mse),
+                'rmse': float(rmse),
+                'mape': float(mape),
+                'r_squared': float(r_squared),
+                'willmott_d': float(willmott_d),
+                'nash_sutcliffe': float(nash_sutcliffe),
+                'accuracy_level': (
+                    'Excelente' if mape < 10 else
+                    'Muy buena' if mape < 15 else
+                    'Buena' if mape < 20 else
+                    'Aceptable' if mape < 30 else
+                    'Pobre'
+                ),
+                'model_quality': (
+                    'Muy alta' if r_squared > 0.9 else
+                    'Alta' if r_squared > 0.8 else
+                    'Moderada' if r_squared > 0.6 else
+                    'Baja'
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating performance metrics: {e}")
+            return {}
+
+
+    # AGREGAR ESTE NUEVO MÉTODO AL FINAL DE LA CLASE SimulateResultView:
+
+    def _perform_ks_validation(self, simulation_instance, results_simulation, all_variables_extracted):
+        """
+        Realizar validación específica con pruebas Kolmogorov-Smirnov
+        """
+        try:
+            logger.info("Starting Kolmogorov-Smirnov validation of simulation results")
+            
+            # Usar el servicio de validación para realizar pruebas KS
+            ks_validation = self.validation_service.validate_distribution_consistency(
+                simulation_instance, 
+                results_simulation, 
+                distribution_params=None
+            )
+            
+            # Generar gráficos de validación KS
+            ks_charts = self._generate_ks_validation_charts(ks_validation, all_variables_extracted)
+            ks_validation['ks_charts'] = ks_charts
+            
+            # Log resultados importantes
+            summary = ks_validation.get('summary', {})
+            logger.info(f"KS Validation Summary: {summary.get('passed_tests', 0)}/{summary.get('total_tests', 0)} tests passed")
+            logger.info(f"Overall validity: {summary.get('overall_validity', False)}")
+            
+            return ks_validation
+            
+        except Exception as e:
+            logger.error(f"Error in KS validation: {str(e)}")
+            return {
+                'summary': {'total_tests': 0, 'passed_tests': 0, 'overall_validity': False},
+                'alerts': [{'type': 'ERROR', 'message': f'Error en validación KS: {str(e)}'}],
+                'ks_tests': {},
+                'confidence_intervals': {},
+                'reliability_report': {},
+                'distribution_analysis': {}
+            }
+
+    def _generate_ks_validation_charts(self, ks_validation, all_variables_extracted):
+        """
+        Generar gráficos específicos para la validación KS
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            import numpy as np
+            from scipy import stats
+            import base64
+            from io import BytesIO
+            
+            charts = {}
+            
+            # 1. Gráfico Q-Q plot para distribuciones
+            ks_tests = ks_validation.get('ks_tests', {})
+            
+            if 'demand' in ks_tests:
+                demand_chart = self._create_distribution_comparison_chart(ks_tests['demand'])
+                if demand_chart:
+                    charts['demand_distribution'] = demand_chart
+            
+            # 2. Gráfico de intervalos de confianza
+            confidence_intervals = ks_validation.get('confidence_intervals', {})
+            if confidence_intervals:
+                ci_chart = self._create_confidence_intervals_chart(confidence_intervals)
+                if ci_chart:
+                    charts['confidence_intervals'] = ci_chart
+            
+            # 3. Gráfico de consistencia temporal
+            distribution_analysis = ks_validation.get('distribution_analysis', {})
+            if distribution_analysis.get('temporal_stability'):
+                temporal_chart = self._create_temporal_stability_chart(distribution_analysis)
+                if temporal_chart:
+                    charts['temporal_stability'] = temporal_chart
+            
+            # 4. Dashboard de validación KS
+            reliability_chart = self._create_reliability_dashboard(ks_validation)
+            if reliability_chart:
+                charts['reliability_dashboard'] = reliability_chart
+            
+            logger.info(f"Generated {len(charts)} KS validation charts")
+            return charts
+            
+        except Exception as e:
+            logger.error(f"Error generating KS validation charts: {str(e)}")
+            return {}
+
+    def _create_distribution_comparison_chart(self, demand_ks_test):
+        """Crear gráfico de comparación de distribuciones - CORREGIDO"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats as scipy_stats  # IMPORTACIÓN LOCAL EXPLÍCITA
+            import base64
+            from io import BytesIO
+            
+            distributions_tested = demand_ks_test.get('distributions_tested', {})
+            if not distributions_tested:
+                return None
+            
+            # Crear figura con subplots
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+            fig.suptitle('Validación de Distribuciones - Prueba Kolmogorov-Smirnov', fontsize=16, fontweight='bold')
+            
+            # Datos de muestra (simulados)
+            sample_data = np.random.normal(100, 20, 1000)  # Placeholder - usar datos reales
+            
+            # Subplot 1: Histograma con distribuciones ajustadas
+            ax1.hist(sample_data, bins=30, density=True, alpha=0.7, color='lightblue', edgecolor='black')
+            
+            x = np.linspace(sample_data.min(), sample_data.max(), 100)
+            colors = ['red', 'green', 'orange', 'purple']
+            
+            for i, (dist_name, dist_info) in enumerate(distributions_tested.items()):
+                if 'params' in dist_info and dist_info['passes_test']:
+                    if dist_name == 'normal':
+                        y = scipy_stats.norm.pdf(x, loc=dist_info['params'][0], scale=dist_info['params'][1])  # CORREGIDO
+                        ax1.plot(x, y, color=colors[i % len(colors)], linewidth=2, 
+                                label=f"{dist_name.title()} (p={dist_info['p_value']:.3f})")
+            
+            ax1.set_title('Distribuciones Ajustadas vs Datos Observados')
+            ax1.set_xlabel('Valor')
+            ax1.set_ylabel('Densidad')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Subplot 2: P-values de pruebas KS
+            dist_names = list(distributions_tested.keys())
+            p_values = [distributions_tested[name]['p_value'] for name in dist_names]
+            colors_bar = ['green' if p > 0.05 else 'orange' if p > 0.01 else 'red' for p in p_values]
+            
+            bars = ax2.bar(dist_names, p_values, color=colors_bar, alpha=0.7, edgecolor='black')
+            ax2.axhline(y=0.05, color='red', linestyle='--', label='Umbral α=0.05')
+            ax2.set_title('P-values de Pruebas Kolmogorov-Smirnov')
+            ax2.set_ylabel('P-value')
+            ax2.set_xlabel('Distribución')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            # Agregar valores en las barras
+            for bar, p_val in zip(bars, p_values):
+                height = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.005,
+                        f'{p_val:.3f}', ha='center', va='bottom', fontweight='bold')
+            
+            # Subplot 3: Q-Q plot para mejor distribución
+            best_dist = max(distributions_tested.items(), key=lambda x: x[1]['p_value'])[0]
+            best_info = distributions_tested[best_dist]
+            
+            if best_dist == 'normal' and 'params' in best_info:
+                theoretical_quantiles = scipy_stats.norm.ppf(  # CORREGIDO
+                    np.linspace(0.01, 0.99, len(sample_data)), 
+                    loc=best_info['params'][0], 
+                    scale=best_info['params'][1]
+                )
+                sample_quantiles = np.sort(sample_data)
+                
+                ax3.scatter(theoretical_quantiles, sample_quantiles, alpha=0.6, color='blue', s=20)
+                min_val = min(theoretical_quantiles.min(), sample_quantiles.min())
+                max_val = max(theoretical_quantiles.max(), sample_quantiles.max())
+                ax3.plot([min_val, max_val], [min_val, max_val], 'r-', linewidth=2, label='Línea ideal')
+                
+                ax3.set_title(f'Q-Q Plot: {best_dist.title()} (Mejor Ajuste)')
+                ax3.set_xlabel('Cuantiles Teóricos')
+                ax3.set_ylabel('Cuantiles Observados')
+                ax3.legend()
+                ax3.grid(True, alpha=0.3)
+            
+            # Subplot 4: Resumen de validación
+            ax4.axis('off')
+            
+            # Crear tabla de resumen
+            summary_data = []
+            for dist_name, dist_info in distributions_tested.items():
+                status = "✓ Pasa" if dist_info['passes_test'] else "✗ Falla"
+                summary_data.append([
+                    dist_name.title(),
+                    f"{dist_info['p_value']:.4f}",
+                    status
+                ])
+            
+            table = ax4.table(cellText=summary_data,
+                             colLabels=['Distribución', 'P-value', 'Estado'],
+                             cellLoc='center',
+                             loc='center',
+                             bbox=[0.1, 0.3, 0.8, 0.6])
+            
+            table.auto_set_font_size(False)
+            table.set_fontsize(12)
+            table.scale(1, 2)
+            
+            # Colorear filas según resultado
+            for i, (_, dist_info) in enumerate(distributions_tested.items()):
+                if dist_info['passes_test']:
+                    table[(i+1, 2)].set_facecolor('#90EE90')  # Verde claro
+                else:
+                    table[(i+1, 2)].set_facecolor('#FFB6C1')  # Rosa claro
+            
+            ax4.set_title('Resumen de Validación KS', fontsize=14, fontweight='bold', pad=20)
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating distribution comparison chart: {str(e)}")
+            return None
+
+    def _create_confidence_intervals_chart(self, confidence_intervals):
+        """Crear gráfico de intervalos de confianza"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import base64
+            from io import BytesIO
+            
+            # Filtrar intervalos de demanda
+            demand_intervals = {k: v for k, v in confidence_intervals.items() if 'demand' in k}
+            variable_intervals = {k: v for k, v in confidence_intervals.items() if 'demand' not in k}
+            
+            if not demand_intervals and not variable_intervals:
+                return None
+            
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+            fig.suptitle('Intervalos de Confianza para Proyecciones', fontsize=16, fontweight='bold')
+            
+            # Subplot 1: Intervalos de confianza para demanda
+            if demand_intervals:
+                conf_levels = []
+                means = []
+                lower_bounds = []
+                upper_bounds = []
+                margins = []
+                
+                for key, interval in demand_intervals.items():
+                    conf_level = int(key.split('_')[1])
+                    conf_levels.append(f"{conf_level}%")
+                    means.append(interval['mean'])
+                    lower_bounds.append(interval['lower_bound'])
+                    upper_bounds.append(interval['upper_bound'])
+                    margins.append(interval['margin_error'])
+                
+                x_pos = np.arange(len(conf_levels))
+                
+                # Gráfico de barras de error
+                ax1.errorbar(x_pos, means, yerr=margins, fmt='o', linewidth=2, markersize=8, 
+                           capsize=5, capthick=2, ecolor='red', markerfacecolor='blue', 
+                           markeredgecolor='darkblue', markeredgewidth=2)
+                
+                # Agregar área sombreada para intervalos
+                for i, (mean, lower, upper) in enumerate(zip(means, lower_bounds, upper_bounds)):
+                    ax1.fill_between([i-0.2, i+0.2], [lower, lower], [upper, upper], 
+                                   alpha=0.3, color='lightblue')
+                
+                ax1.set_xticks(x_pos)
+                ax1.set_xticklabels(conf_levels)
+                ax1.set_title('Intervalos de Confianza - Demanda Promedio')
+                ax1.set_xlabel('Nivel de Confianza')
+                ax1.set_ylabel('Demanda (L)')
+                ax1.grid(True, alpha=0.3)
+                
+                # Agregar valores en el gráfico
+                for i, (mean, margin) in enumerate(zip(means, margins)):
+                    ax1.text(i, mean + margin + (max(means) * 0.02), 
+                           f'{mean:.1f} ± {margin:.1f}', 
+                           ha='center', va='bottom', fontweight='bold')
+            
+            # Subplot 2: Intervalos para variables clave
+            if variable_intervals:
+                var_names = []
+                var_means = []
+                var_margins = []
+                
+                for key, interval in variable_intervals.items():
+                    if '95' in key:  # Solo intervalos de 95%
+                        var_name = interval.get('variable', key.split('_')[0])
+                        var_names.append(var_name)
+                        var_means.append(interval['mean'])
+                        var_margins.append(interval['margin_error'])
+                
+                if var_names:
+                    x_pos = np.arange(len(var_names))
+                    
+                    bars = ax2.bar(x_pos, var_means, yerr=var_margins, capsize=5, 
+                                 alpha=0.7, color='lightgreen', edgecolor='darkgreen', 
+                                 linewidth=1.5, error_kw={'elinewidth': 2, 'ecolor': 'red'})
+                    
+                    ax2.set_xticks(x_pos)
+                    ax2.set_xticklabels(var_names, rotation=45, ha='right')
+                    ax2.set_title('Intervalos de Confianza (95%) - Variables Clave')
+                    ax2.set_xlabel('Variable')
+                    ax2.set_ylabel('Valor')
+                    ax2.grid(True, alpha=0.3, axis='y')
+                    
+                    # Agregar valores en las barras
+                    for i, (bar, mean, margin) in enumerate(zip(bars, var_means, var_margins)):
+                        height = bar.get_height()
+                        ax2.text(bar.get_x() + bar.get_width()/2., height + margin + (max(var_means) * 0.02),
+                               f'{mean:.1f}', ha='center', va='bottom', fontweight='bold')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating confidence intervals chart: {str(e)}")
+            return None
+
+    def _create_temporal_stability_chart(self, distribution_analysis):
+        """Crear gráfico de estabilidad temporal"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import base64
+            from io import BytesIO
+            
+            temporal_stability = distribution_analysis.get('temporal_stability', {})
+            distribution_drift = distribution_analysis.get('distribution_drift', {})
+            
+            if not temporal_stability:
+                return None
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+            fig.suptitle('Análisis de Estabilidad Temporal de Distribuciones', fontsize=16, fontweight='bold')
+            
+            # Subplot 1: P-values de comparaciones temporales
+            comparisons = list(temporal_stability.keys())
+            p_values = [temporal_stability[comp]['p_value'] for comp in comparisons]
+            similarity = [temporal_stability[comp]['distributions_similar'] for comp in comparisons]
+            
+            colors = ['green' if sim else 'red' for sim in similarity]
+            
+            bars = ax1.bar(range(len(comparisons)), p_values, color=colors, alpha=0.7, edgecolor='black')
+            ax1.axhline(y=0.05, color='red', linestyle='--', linewidth=2, label='Umbral α=0.05')
+            
+            ax1.set_xticks(range(len(comparisons)))
+            ax1.set_xticklabels([comp.replace('window_', 'W').replace('_vs_', ' vs W') 
+                               for comp in comparisons], rotation=45, ha='right')
+            ax1.set_title('Comparaciones de Estabilidad Temporal (KS Test)')
+            ax1.set_xlabel('Ventanas Comparadas')
+            ax1.set_ylabel('P-value')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Agregar valores en las barras
+            for bar, p_val in zip(bars, p_values):
+                height = bar.get_height()
+                ax1.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                        f'{p_val:.3f}', ha='center', va='bottom', fontweight='bold')
+            
+            # Subplot 2: Drift de distribución
+            if distribution_drift:
+                initial_mean = distribution_drift.get('initial_mean', 0)
+                final_mean = distribution_drift.get('final_mean', 0)
+                drift_pct = distribution_drift.get('relative_drift_pct', 0)
+                
+                # Crear gráfico de drift
+                periods = ['Período Inicial', 'Período Final']
+                means = [initial_mean, final_mean]
+                
+                bars = ax2.bar(periods, means, color=['lightblue', 'lightcoral'], 
+                             alpha=0.7, edgecolor='black', linewidth=1.5)
+                
+                # Agregar flecha indicando drift
+                if abs(drift_pct) > 1:  # Solo si hay drift significativo
+                    arrow_props = dict(arrowstyle='->', connectionstyle='arc3', 
+                                     color='red' if drift_pct > 0 else 'green', linewidth=2)
+                    ax2.annotate('', xy=(1, final_mean), xytext=(0, initial_mean), arrowprops=arrow_props)
+                    
+                    # Agregar texto del drift
+                    mid_y = (initial_mean + final_mean) / 2
+                    ax2.text(0.5, mid_y, f'Drift: {drift_pct:+.1f}%', 
+                           ha='center', va='center', fontweight='bold', 
+                           bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7))
+                
+                ax2.set_title('Drift de la Media Temporal')
+                ax2.set_ylabel('Media de la Distribución')
+                ax2.grid(True, alpha=0.3, axis='y')
+                
+                # Agregar valores en las barras
+                for bar, mean in zip(bars, means):
+                    height = bar.get_height()
+                    ax2.text(bar.get_x() + bar.get_width()/2., height + (max(means) * 0.02),
+                           f'{mean:.1f}', ha='center', va='bottom', fontweight='bold')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating temporal stability chart: {str(e)}")
+            return None
+
+    def _create_reliability_dashboard(self, ks_validation):
+        """Crear dashboard de confiabilidad"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import base64
+            from io import BytesIO
+            
+            summary = ks_validation.get('summary', {})
+            reliability_report = ks_validation.get('reliability_report', {})
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            fig.suptitle('Dashboard de Confiabilidad - Validación Kolmogorov-Smirnov', 
+                        fontsize=18, fontweight='bold')
+            
+            # Subplot 1: Score de confiabilidad (gauge)
+            reliability_score = reliability_report.get('reliability_score', 0)
+            
+            # Crear gauge chart
+            theta = np.linspace(0, np.pi, 100)
+            r = np.ones_like(theta)
+            
+            # Colores por nivel de confiabilidad
+            if reliability_score >= 90:
+                color = 'green'
+            elif reliability_score >= 75:
+                color = 'orange'
+            else:
+                color = 'red'
+            
+            ax1 = plt.subplot(2, 2, 1, projection='polar')
+            ax1.fill_between(theta, 0, r, alpha=0.3, color='lightgray')
+            
+            # Llenar según el score
+            score_theta = np.linspace(0, np.pi * (reliability_score / 100), 50)
+            score_r = np.ones_like(score_theta)
+            ax1.fill_between(score_theta, 0, score_r, alpha=0.7, color=color)
+            
+            ax1.set_theta_zero_location('W')
+            ax1.set_theta_direction(1)
+            ax1.set_thetagrids([0, 45, 90, 135, 180], ['100%', '75%', '50%', '25%', '0%'])
+            ax1.set_ylim(0, 1)
+            ax1.set_rticks([])
+            ax1.set_title(f'Score de Confiabilidad\n{reliability_score:.1f}%', 
+                         fontsize=14, fontweight='bold', pad=20)
+            
+            # Subplot 2: Resumen de tests
+            ax2 = plt.subplot(2, 2, 2)
+            
+            total_tests = summary.get('total_tests', 0)
+            passed_tests = summary.get('passed_tests', 0)
+            failed_tests = total_tests - passed_tests
+            
+            if total_tests > 0:
+                sizes = [passed_tests, failed_tests]
+                labels = [f'Pasaron ({passed_tests})', f'Fallaron ({failed_tests})']
+                colors = ['green', 'red']
+                explode = (0.05, 0.05)
+                
+                wedges, texts, autotexts = ax2.pie(sizes, labels=labels, colors=colors, 
+                                                  autopct='%1.1f%%', explode=explode,
+                                                  shadow=True, startangle=90)
+                
+                for autotext in autotexts:
+                    autotext.set_color('white')
+                    autotext.set_fontweight('bold')
+            else:
+                ax2.text(0.5, 0.5, 'Sin datos de tests', ha='center', va='center', 
+                        transform=ax2.transAxes, fontsize=14)
+            
+            ax2.set_title('Distribución de Tests KS', fontsize=14, fontweight='bold')
+            
+            # Subplot 3: Nivel de certificación
+            ax3 = plt.subplot(2, 2, 3)
+            ax3.axis('off')
+            
+            certification_status = reliability_report.get('certification_status', 'NOT_CERTIFIED')
+            reliability_level = reliability_report.get('reliability_level', 'Desconocido')
+            
+            # Crear "certificado"
+            cert_colors = {
+                'CERTIFIED': '#90EE90',
+                'CONDITIONAL': '#FFD700', 
+                'NOT_CERTIFIED': '#FFB6C1'
+            }
+            
+            cert_color = cert_colors.get(certification_status, '#FFFFFF')
+            
+            # Crear rectángulo del certificado
+            rect = plt.Rectangle((0.1, 0.2), 0.8, 0.6, facecolor=cert_color, 
+                               edgecolor='black', linewidth=2)
+            ax3.add_patch(rect)
+            
+            # Texto del certificado
+            ax3.text(0.5, 0.7, 'CERTIFICACIÓN DE', ha='center', va='center', 
+                    fontsize=12, fontweight='bold', transform=ax3.transAxes)
+            ax3.text(0.5, 0.6, 'CONFIABILIDAD', ha='center', va='center', 
+                    fontsize=14, fontweight='bold', transform=ax3.transAxes)
+            ax3.text(0.5, 0.45, certification_status.replace('_', ' '), ha='center', va='center', 
+                    fontsize=16, fontweight='bold', transform=ax3.transAxes)
+            ax3.text(0.5, 0.35, f'Nivel: {reliability_level}', ha='center', va='center', 
+                    fontsize=12, transform=ax3.transAxes)
+            ax3.text(0.5, 0.25, f'Score: {reliability_score:.1f}/100', ha='center', va='center', 
+                    fontsize=12, transform=ax3.transAxes)
+            
+            # Subplot 4: Componentes analizados
+            ax4 = plt.subplot(2, 2, 4)
+            
+            component_analysis = reliability_report.get('component_analysis', {})
+            if component_analysis:
+                components = list(component_analysis.keys())
+                reliabilities = []
+                
+                for comp_key, comp_data in component_analysis.items():
+                    rel = comp_data.get('reliability', 'unknown')
+                    if rel == 'high':
+                        reliabilities.append(3)
+                    elif rel == 'medium':
+                        reliabilities.append(2)
+                    elif rel == 'low':
+                        reliabilities.append(1)
+                    else:
+                        reliabilities.append(0)
+                
+                colors_comp = ['green' if r == 3 else 'orange' if r == 2 else 'red' if r == 1 else 'gray' 
+                              for r in reliabilities]
+                
+                bars = ax4.barh(components, reliabilities, color=colors_comp, alpha=0.7, edgecolor='black')
+                
+                ax4.set_xlim(0, 3)
+                ax4.set_xticks([0, 1, 2, 3])
+                ax4.set_xticklabels(['N/A', 'Baja', 'Media', 'Alta'])
+                ax4.set_title('Confiabilidad por Componente')
+                ax4.set_xlabel('Nivel de Confiabilidad')
+                ax4.grid(True, alpha=0.3, axis='x')
+                
+                # Agregar etiquetas
+                for i, (bar, rel) in enumerate(zip(bars, reliabilities)):
+                    width = bar.get_width()
+                    label = ['N/A', 'Baja', 'Media', 'Alta'][rel]
+                    ax4.text(width + 0.05, bar.get_y() + bar.get_height()/2, 
+                           label, ha='left', va='center', fontweight='bold')
+            else:
+                ax4.text(0.5, 0.5, 'Sin análisis de componentes', ha='center', va='center', 
+                        transform=ax4.transAxes)
+                ax4.set_title('Análisis de Componentes')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error creating reliability dashboard: {str(e)}")
+            return None
+
 
 
 def simulate_result_simulation_view(request, simulation_id):

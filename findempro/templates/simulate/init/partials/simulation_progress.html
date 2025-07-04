@@ -1,0 +1,762 @@
+<!-- Simulation Progress Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-primary simulation-progress-card">
+            <div class="card-body">
+                <!-- Progress Header -->
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-md rounded-circle bg-primary d-flex align-items-center justify-content-center me-3">
+                            <i class="bx bx-cog bx-spin text-white fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-primary mb-1">
+                                Simulación en Progreso
+                            </h5>
+                            <p class="text-muted mb-0">
+                                El sistema está procesando su simulación. Esto puede tomar algunos minutos.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="progress-badge">
+                        <span class="badge bg-primary-subtle text-primary fs-6">
+                            <i class="bx bx-time me-1"></i>En proceso
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="simulation-steps mb-4">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="step-item completed">
+                                <div class="step-icon">
+                                    <i class="bx bx-check"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h6 class="step-title">Validación</h6>
+                                    <small class="step-desc">Datos verificados</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="step-item completed">
+                                <div class="step-icon">
+                                    <i class="bx bx-check"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h6 class="step-title">Análisis</h6>
+                                    <small class="step-desc">Modelo configurado</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="step-item active">
+                                <div class="step-icon">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <h6 class="step-title">Simulación</h6>
+                                    <small class="step-desc">Generando predicciones</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="step-item pending">
+                                <div class="step-icon">
+                                    <i class="bx bx-time"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h6 class="step-title">Resultados</h6>
+                                    <small class="step-desc">Pendiente</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-section mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0 fw-semibold">Progreso de la Simulación</label>
+                        <span class="text-muted" id="progressPercentage">75%</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                             role="progressbar" style="width: 75%" 
+                             aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"
+                             id="simulationProgressBar">
+                        </div>
+                    </div>
+                    <div class="progress-info mt-2">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">
+                                    <i class="bx bx-time me-1"></i>
+                                    Tiempo transcurrido: <span id="elapsedTime">2min 30s</span>
+                                </small>
+                            </div>
+                            <div class="col-6 text-end">
+                                <small class="text-muted">
+                                    <i class="bx bx-hourglass me-1"></i>
+                                    Tiempo estimado restante: <span id="remainingTime">1min 15s</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Process Info -->
+                <div class="current-process mb-4">
+                    <div class="alert alert-primary d-flex align-items-center" role="alert">
+                        <div class="spinner-border spinner-border-sm me-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="alert-heading mb-1">
+                                <span id="currentProcessTitle">Ejecutando Simulación Monte Carlo</span>
+                            </h6>
+                            <p class="mb-0" id="currentProcessDesc">
+                                Generando 10,000 escenarios basados en la distribución estadística óptima identificada...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Summary -->
+                <div class="stats-summary mb-4">
+                    <h6 class="fw-semibold mb-3">
+                        <i class="bx bx-bar-chart-alt me-2"></i>
+                        Estadísticas del Proceso
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-success-subtle">
+                                    <i class="bx bx-check-circle text-success"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number">7,500</div>
+                                    <div class="stat-label">Escenarios procesados</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-primary-subtle">
+                                    <i class="bx bx-trending-up text-primary"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number">{{ selected_quantity_time|default:"30" }}</div>
+                                    <div class="stat-label">Períodos a simular</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-info-subtle">
+                                    <i class="bx bx-math text-info"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number">{{ best_distribution|default:"Normal"|title }}</div>
+                                    <div class="stat-label">Distribución usada</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-warning-subtle">
+                                    <i class="bx bx-cpu text-warning"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number">95%</div>
+                                    <div class="stat-label">Nivel confianza</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Process Log -->
+                <div class="process-log mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-semibold mb-0">
+                            <i class="bx bx-list-ul me-2"></i>
+                            Log del Proceso
+                        </h6>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleLog()">
+                            <i class="bx bx-chevron-down" id="logToggleIcon"></i>
+                        </button>
+                    </div>
+                    <div class="log-container collapse" id="processLogContainer">
+                        <div class="log-content p-3 bg-dark text-light rounded" style="max-height: 200px; overflow-y: auto;">
+                            <div class="log-entry">
+                                <span class="log-time text-muted">[14:32:15]</span>
+                                <span class="log-level text-info">[INFO]</span>
+                                <span class="log-message">Iniciando simulación con 30 períodos</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time text-muted">[14:32:16]</span>
+                                <span class="log-level text-success">[SUCCESS]</span>
+                                <span class="log-message">Datos históricos validados: 45 registros</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time text-muted">[14:32:18]</span>
+                                <span class="log-level text-info">[INFO]</span>
+                                <span class="log-message">Distribución óptima identificada: Normal (μ=2500, σ=350)</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time text-muted">[14:34:45]</span>
+                                <span class="log-level text-warning">[PROCESS]</span>
+                                <span class="log-message">Ejecutando simulación Monte Carlo: 7500/10000 escenarios</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <form method="POST" action="{% url 'simulate:simulate.show' %}" class="w-100">
+                                {% csrf_token %}
+                                <button type="submit" name="cancel" class="btn btn-outline-danger w-100"
+                                        onclick="return confirm('¿Está seguro de que desea cancelar la simulación? Se perderá todo el progreso.')">
+                                    <i class="bx bx-x me-2"></i>
+                                    Cancelar Simulación
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="refreshStatus()">
+                                <i class="bx bx-refresh me-2"></i>
+                                Actualizar Estado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips Section -->
+                <div class="tips-section mt-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bx bx-bulb text-warning me-2"></i>
+                                Consejos mientras espera
+                            </h6>
+                            <div class="tips-content">
+                                <div class="tip-item active" id="tip1">
+                                    <small class="text-muted">
+                                        <strong>¿Sabía que?</strong> El sistema está utilizando algoritmos Monte Carlo 
+                                        para generar miles de escenarios posibles basados en sus datos históricos.
+                                    </small>
+                                </div>
+                                <div class="tip-item" id="tip2">
+                                    <small class="text-muted">
+                                        <strong>Próximo paso:</strong> Una vez completada la simulación, podrá descargar 
+                                        reportes detallados en formato PDF y Excel.
+                                    </small>
+                                </div>
+                                <div class="tip-item" id="tip3">
+                                    <small class="text-muted">
+                                        <strong>Optimización:</strong> Para simulaciones futuras, considere ajustar 
+                                        el nivel de confianza según sus necesidades de precisión.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Simulation Progress Styles */
+.simulation-progress-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.15);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.avatar-md {
+    width: 48px;
+    height: 48px;
+}
+
+.progress-badge .badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+/* Progress Steps */
+.simulation-steps {
+    background: rgba(33, 150, 243, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(33, 150, 243, 0.1);
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: white;
+    border: 1px solid #e9ecef;
+}
+
+.step-item.completed {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+}
+
+.step-item.active {
+    background: linear-gradient(135deg, #cce5ff 0%, #b3d9ff 100%);
+    border-color: #007bff;
+    transform: scale(1.02);
+}
+
+.step-item.pending {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    opacity: 0.7;
+}
+
+.step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+.step-item.completed .step-icon {
+    background: #28a745;
+    color: white;
+}
+
+.step-item.active .step-icon {
+    background: #007bff;
+    color: white;
+}
+
+.step-item.pending .step-icon {
+    background: #6c757d;
+    color: white;
+}
+
+.step-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.step-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: #495057;
+}
+
+.step-desc {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Progress Section */
+.progress-section {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.progress {
+    background: rgba(33, 150, 243, 0.1);
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Stats Cards */
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.stat-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Process Log */
+.log-container {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.log-content {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.log-entry {
+    display: block;
+    margin-bottom: 4px;
+    padding: 2px 0;
+}
+
+.log-time {
+    font-weight: 600;
+}
+
+.log-level {
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+.log-message {
+    margin-left: 8px;
+}
+
+/* Tips Section */
+.tips-section .card {
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.tips-content {
+    position: relative;
+    min-height: 40px;
+}
+
+.tip-item {
+    position: absolute;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease;
+}
+
+.tip-item.active {
+    opacity: 1;
+    transform: translateY(0);
+    position: relative;
+}
+
+/* Action Buttons */
+.action-buttons .btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .simulation-steps {
+        padding: 15px;
+    }
+    
+    .step-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px 8px;
+    }
+    
+    .step-icon {
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+    
+    .stat-card {
+        padding: 12px;
+    }
+    
+    .stat-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1rem;
+    }
+    
+    .progress-info .row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .progress-info .col-6:last-child {
+        text-align: start !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .avatar-md {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .progress-section,
+    .simulation-steps {
+        padding: 15px;
+    }
+    
+    .log-content {
+        font-size: 0.7rem;
+    }
+}
+</style>
+
+<script>
+// Simulation Progress Management
+class SimulationProgress {
+    constructor() {
+        this.updateInterval = null;
+        this.startTime = new Date();
+        this.estimatedDuration = 5 * 60 * 1000; // 5 minutes
+        this.currentTip = 1;
+        this.totalTips = 3;
+        
+        this.init();
+    }
+    
+    init() {
+        this.startProgressTracking();
+        this.startTipRotation();
+        this.bindEvents();
+    }
+    
+    startProgressTracking() {
+        this.updateInterval = setInterval(() => {
+            this.updateProgress();
+            this.updateTimer();
+        }, 2000);
+    }
+    
+    updateProgress() {
+        // Simulate progress update
+        const progressBar = document.getElementById('simulationProgressBar');
+        const progressText = document.getElementById('progressPercentage');
+        
+        if (progressBar && progressText) {
+            let currentProgress = parseInt(progressBar.style.width) || 75;
+            
+            // Simulate incremental progress
+            if (currentProgress < 95) {
+                currentProgress += Math.random() * 3 + 1;
+                currentProgress = Math.min(currentProgress, 95);
+                
+                progressBar.style.width = currentProgress + '%';
+                progressBar.setAttribute('aria-valuenow', currentProgress);
+                progressText.textContent = Math.round(currentProgress) + '%';
+            }
+        }
+    }
+    
+    updateTimer() {
+        const elapsed = new Date() - this.startTime;
+        const elapsedElement = document.getElementById('elapsedTime');
+        const remainingElement = document.getElementById('remainingTime');
+        
+        if (elapsedElement) {
+            elapsedElement.textContent = this.formatTime(elapsed);
+        }
+        
+        if (remainingElement) {
+            const progress = parseInt(document.getElementById('simulationProgressBar')?.style.width) || 75;
+            const estimatedRemaining = (this.estimatedDuration * (100 - progress)) / 100;
+            remainingElement.textContent = this.formatTime(Math.max(0, estimatedRemaining));
+        }
+    }
+    
+    formatTime(milliseconds) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        
+        if (minutes > 0) {
+            return `${minutes}min ${seconds}s`;
+        } else {
+            return `${seconds}s`;
+        }
+    }
+    
+    startTipRotation() {
+        setInterval(() => {
+            this.rotateTips();
+        }, 5000);
+    }
+    
+    rotateTips() {
+        const currentTipEl = document.getElementById(`tip${this.currentTip}`);
+        if (currentTipEl) {
+            currentTipEl.classList.remove('active');
+        }
+        
+        this.currentTip = (this.currentTip % this.totalTips) + 1;
+        
+        const nextTipEl = document.getElementById(`tip${this.currentTip}`);
+        if (nextTipEl) {
+            nextTipEl.classList.add('active');
+        }
+    }
+    
+    bindEvents() {
+        // Bind refresh button
+        window.refreshStatus = () => {
+            this.refreshStatus();
+        };
+        
+        // Bind log toggle
+        window.toggleLog = () => {
+            this.toggleLog();
+        };
+    }
+    
+    refreshStatus() {
+        // Add visual feedback
+        const refreshBtn = document.querySelector('[onclick="refreshStatus()"]');
+        if (refreshBtn) {
+            const icon = refreshBtn.querySelector('i');
+            icon.classList.add('bx-spin');
+            
+            setTimeout(() => {
+                icon.classList.remove('bx-spin');
+                this.showRefreshMessage();
+            }, 1000);
+        }
+        
+        // In a real implementation, this would make an AJAX call to check status
+        console.log('Refreshing simulation status...');
+    }
+    
+    showRefreshMessage() {
+        // Create temporary success message
+        const messageEl = document.createElement('div');
+        messageEl.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        messageEl.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 250px;';
+        messageEl.innerHTML = `
+            <i class="bx bx-check-circle me-2"></i>
+            Estado actualizado correctamente
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(messageEl);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (messageEl.parentNode) {
+                messageEl.remove();
+            }
+        }, 3000);
+    }
+    
+    toggleLog() {
+        const logContainer = document.getElementById('processLogContainer');
+        const toggleIcon = document.getElementById('logToggleIcon');
+        
+        if (logContainer && toggleIcon) {
+            if (logContainer.classList.contains('show')) {
+                logContainer.classList.remove('show');
+                toggleIcon.classList.remove('bx-chevron-up');
+                toggleIcon.classList.add('bx-chevron-down');
+            } else {
+                logContainer.classList.add('show');
+                toggleIcon.classList.remove('bx-chevron-down');
+                toggleIcon.classList.add('bx-chevron-up');
+                
+                // Scroll to bottom of log
+                setTimeout(() => {
+                    const logContent = logContainer.querySelector('.log-content');
+                    if (logContent) {
+                        logContent.scrollTop = logContent.scrollHeight;
+                    }
+                }, 350);
+            }
+        }
+    }
+    
+    destroy() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+        }
+    }
+}
+
+// Initialize progress tracking
+document.addEventListener('DOMContentLoaded', function() {
+    const progressTracker = new SimulationProgress();
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        progressTracker.destroy();
+    });
+});
+</script>

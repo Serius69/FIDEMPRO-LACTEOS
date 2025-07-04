@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+import warnings
 from scipy import stats
 from scipy.stats import (
     kstest, norm, expon, lognorm, gaussian_kde,
@@ -34,6 +35,36 @@ from ..utils.data_parsers_utils import DataParser
 matplotlib.use('Agg')
 
 logger = logging.getLogger(__name__)
+
+
+# Configurar matplotlib para evitar errores de fuentes y caracteres
+matplotlib.use('Agg')  # Backend sin GUI
+matplotlib.rcParams['font.family'] = ['DejaVu Sans', 'Liberation Sans', 'sans-serif']
+matplotlib.rcParams['font.size'] = 10
+matplotlib.rcParams['axes.unicode_minus'] = False
+
+# Suprimir warnings específicos de matplotlib
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+warnings.filterwarnings('ignore', message='Glyph.*missing from current font')
+
+def safe_text(text):
+    """Convertir caracteres unicode problemáticos a ASCII seguros"""
+    replacements = {
+        '✓': 'OK',
+        '❌': 'ERROR', 
+        '⚠️': 'WARNING',
+        '📊': 'Chart',
+        '📈': 'Trend',
+        '📉': 'Down',
+        '🔴': 'RED',
+        '🟢': 'GREEN',
+        '🟡': 'YELLOW'
+    }
+    
+    for unicode_char, ascii_replacement in replacements.items():
+        text = text.replace(unicode_char, ascii_replacement)
+    
+    return text
 
 
 class StatisticalService:
@@ -288,20 +319,17 @@ class StatisticalService:
         ).select_related('fk_question').first()
     
     def _perform_demand_analysis(self, demand_data: np.ndarray, 
-                                user, validation_result: Dict) -> Dict[str, Any]:
-        """
-        Perform comprehensive analysis of demand data.
-        Focus on understanding patterns for simulation.
-        """
+                            user, validation_result: Dict) -> Dict[str, Any]:
+        """Perform comprehensive analysis of demand data - VERSIÓN CORREGIDA"""
         # Basic statistics
         basic_stats = self._calculate_basic_statistics(demand_data)
         
         # Time series analysis
         time_series_stats = self._analyze_time_series_properties(demand_data)
         
-        # Distribution fitting
+        # CORRECCIÓN: Cambiar el orden de parámetros
         best_distribution = self._find_best_distribution(
-            demand_data, user, basic_stats
+            user, demand_data, basic_stats  # ✅ CORRECTO: user primero, luego demand_data
         )
         
         # Generate visualizations
@@ -399,12 +427,13 @@ class StatisticalService:
         
         return results
     
-    def _find_best_distribution(self, data: np.ndarray, 
-                               user, basic_stats: Dict) -> Dict[str, Any]:
-        """Find best fitting probability distribution"""
+    def _find_best_distribution(self, user, data: np.ndarray, 
+                           basic_stats: Dict) -> Dict[str, Any]:
+        """Find best fitting probability distribution - VERSIÓN CORREGIDA"""
+        # CORRECCIÓN: Usar user para filtrar, no data
         distributions = ProbabilisticDensityFunction.objects.filter(
             is_active=True,
-            fk_business__fk_user=user
+            fk_business__fk_user=user  # ✅ CORRECTO: user en lugar de data
         ).order_by('-id')
         
         best_result = {
@@ -421,7 +450,7 @@ class StatisticalService:
             # Select best based on p-value and AIC
             if (fit_result['ks_p_value'] > best_result['ks_p_value'] or
                 (fit_result['ks_p_value'] == best_result['ks_p_value'] and
-                 fit_result['aic'] < best_result['aic'])):
+                fit_result['aic'] < best_result['aic'])):
                 best_result = fit_result
                 best_result['distribution'] = dist
         

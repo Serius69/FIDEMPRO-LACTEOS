@@ -359,6 +359,10 @@ class Simulation(models.Model):
         blank=True,
         help_text='Random seed for reproducible results'
     )
+    is_completed = models.BooleanField(
+        default=False,
+        help_text='Whether the simulation has been completed'
+    )
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)

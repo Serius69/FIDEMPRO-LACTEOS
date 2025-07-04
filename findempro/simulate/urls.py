@@ -1,7 +1,7 @@
 from django.urls import path
-from .views.simulate_show_view import AppsView, simulate_show_view
+from .views.simulate_init_view import AppsView, simulate_show_view
 from .views.simulate_result_view import simulate_result_simulation_view
-from .views.simulate_list_add_view import SimulateListView, simulate_add_view
+from .views.simulate_list_view import SimulateListView, simulate_add_view
 
 from .views.api_views import (
     SimulationProgressView,

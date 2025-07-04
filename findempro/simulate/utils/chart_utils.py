@@ -10,11 +10,16 @@ from io import BytesIO
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.figure import Figure
 import seaborn as sns
 from datetime import datetime, timedelta
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +45,52 @@ class ChartGenerator:
             'simulated': '#1f77b4',
             'real': '#2ca02c'
         }
+    
+    def _set_smart_x_ticks(self, ax, data_length, max_ticks=10):
+        """
+        Establece ticks del eje X de forma inteligente para evitar errores
+        """
+        try:
+            if data_length <= max_ticks:
+                tick_positions = list(range(data_length))
+                tick_labels = [f'D{i+1}' for i in range(data_length)]
+            else:
+                interval = max(1, data_length // max_ticks)
+                tick_positions = list(range(0, data_length, interval))
+                if tick_positions[-1] != data_length - 1:
+                    tick_positions.append(data_length - 1)
+                tick_labels = [f'D{i+1}' for i in tick_positions]
+            
+            ax.set_xticks(tick_positions)
+            ax.set_xticklabels(tick_labels, rotation=45, ha='right')
+            return True
+        except Exception as e:
+            logger.error(f"Error setting smart ticks: {e}")
+            return False
+    
+    def _apply_safe_layout(self, fig=None):
+        """
+        CORRECCIÓN: Aplicar layout seguro sin warnings de matplotlib
+        """
+        try:
+            if fig is not None:
+                fig.tight_layout(pad=1.0)
+            else:
+                import matplotlib.pyplot as plt
+                plt.tight_layout(pad=1.0)
+        except Exception as e:
+            # Fallback a subplots_adjust manual
+            try:
+                if fig is not None:
+                    fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15, 
+                                    hspace=0.3, wspace=0.3)
+                else:
+                    import matplotlib.pyplot as plt
+                    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15, 
+                                    hspace=0.3, wspace=0.3)
+            except Exception as e2:
+                logger.warning(f"Could not apply layout adjustments: {e2}")
+    
     
     def _generate_complete_variable_chart(self, var_key, var_data, var_type, all_variables_extracted):
         """
@@ -296,7 +347,10 @@ class ChartGenerator:
             ax.grid(True, alpha=0.3)
             ax.set_ylim(0, 110)
             
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             buffer = BytesIO()
             fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
@@ -344,7 +398,8 @@ class ChartGenerator:
             distribution_chart = self._generate_variables_distribution(all_variables_extracted, key_variables)
             if distribution_chart:
                 endogenous_charts['variables_distribution'] = distribution_chart
-            
+                
+            logger.info(f"Available variables in first day: {list(all_variables_extracted[0].keys()) if all_variables_extracted else 'No data'}")           
             logger.info(f"Generated {len(endogenous_charts)} endogenous variable charts")
             return endogenous_charts
             
@@ -389,7 +444,10 @@ class ChartGenerator:
                 plt.legend()
             
             # Mejorar el formato
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = io.BytesIO()
@@ -430,7 +488,10 @@ class ChartGenerator:
             sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0,
                        square=True, fmt='.2f', cbar_kws={'shrink': 0.8})
             plt.title('Matriz de Correlación - Variables Financieras', fontsize=14, fontweight='bold')
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = io.BytesIO()
@@ -479,6 +540,12 @@ class ChartGenerator:
             # Agregar línea de tendencia
             if len(efficiency) > 3:
                 z = np.polyfit(efficiency, satisfaction, 1)
+
+                # SOLUCIÓN: Agregar validación
+                if len(efficiency) > 1 and np.var(efficiency) > 1e-10:
+                    z = np.polyfit(efficiency, satisfaction, 1)
+                else:
+                    z = [0, np.mean(satisfaction) if satisfaction else 0]
                 p = np.poly1d(z)
                 x_trend = np.linspace(min(efficiency), max(efficiency), 100)
                 plt.plot(x_trend, p(x_trend), "--", alpha=0.8, color='red', 
@@ -486,7 +553,10 @@ class ChartGenerator:
                 plt.legend()
             
             plt.grid(True, alpha=0.3)
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = io.BytesIO()
@@ -542,7 +612,10 @@ class ChartGenerator:
             plt.ylabel('Valor Normalizado (%)', fontsize=12)
             plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
             plt.grid(True, alpha=0.3)
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = io.BytesIO()
@@ -614,7 +687,10 @@ class ChartGenerator:
                 axes[i].set_visible(False)
             
             plt.suptitle('Distribuciones de Variables Endógenas', fontsize=16, fontweight='bold')
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = io.BytesIO()
@@ -740,7 +816,10 @@ class ChartGenerator:
             ax.legend(loc='upper right', fontsize=10, framealpha=0.9)
             
             # Layout
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = BytesIO()
@@ -953,7 +1032,10 @@ class ChartGenerator:
             # Leyenda
             ax.legend(loc='upper right', fontsize=10, framealpha=0.9)
             
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = BytesIO()
@@ -1044,7 +1126,10 @@ class ChartGenerator:
             # Mejorar etiquetas del eje x
             plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
             
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convertir a base64
             buffer = BytesIO()
@@ -1274,8 +1359,10 @@ class ChartGenerator:
             if real_value != 0 or simulated_avg != 0:
                 ax.legend(loc='upper right', fontsize=10, framealpha=0.9)
             
-            # Improve layout
-            plt.tight_layout()
+            try:
+                plt.tight_layout()
+            except:
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
             
             # Convert to base64 with higher quality
             buffer = BytesIO()
@@ -1447,7 +1534,10 @@ class ChartGenerator:
                 ax.legend()
                 ax.grid(True, alpha=0.3, axis='y')
                 
-                plt.tight_layout()
+                try:
+                    plt.tight_layout()
+                except:
+                    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
                 
                 # Convertir a base64
                 buffer = BytesIO()
@@ -1709,7 +1799,11 @@ class ChartGenerator:
         ax4.grid(True, alpha=0.3)
         ax4.set_ylim(0, 110)
         
-        plt.tight_layout()
+        try:
+            plt.tight_layout()
+        except:
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+            
         return self._fig_to_base64(fig)
     
     def _generate_income_expenses_chart(self, dates: List, 
@@ -2170,6 +2264,235 @@ class ChartGenerator:
         plt.tight_layout()
         return self._fig_to_base64(fig)
     
+    def _apply_safe_layout(self, fig=None):
+        """
+        CORRECCIÓN: Aplicar layout seguro sin warnings de matplotlib
+        """
+        try:
+            if fig is not None:
+                fig.tight_layout(pad=1.0)
+            else:
+                import matplotlib.pyplot as plt
+                plt.tight_layout(pad=1.0)
+        except Exception as e:
+            # Fallback a subplots_adjust manual
+            try:
+                if fig is not None:
+                    fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, 
+                                    hspace=0.3, wspace=0.3)
+                else:
+                    import matplotlib.pyplot as plt
+                    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, 
+                                    hspace=0.3, wspace=0.3)
+            except Exception as e2:
+                logger.warning(f"Could not apply layout adjustments: {e2}")
+    
+    
+    def generate_dashboard_charts_fixed(self, all_variables_extracted, totales_acumulativos):
+        """CORRECCIÓN: Generar gráficos del dashboard con datos reales"""
+        
+        charts = {}
+        
+        try:
+            # CORRECCIÓN 1: Verificar que hay datos
+            if not all_variables_extracted or len(all_variables_extracted) == 0:
+                logger.warning("No data available for chart generation")
+                return {}
+            
+            # CORRECCIÓN 2: Extraer datos de forma segura
+            days = [d.get('day', i+1) for i, d in enumerate(all_variables_extracted)]
+            
+            # CORRECCIÓN 3: Gráfico financiero con validación
+            revenues = []
+            profits = []
+            for day_data in all_variables_extracted:
+                revenues.append(float(day_data.get('IT', 0)))
+                profits.append(float(day_data.get('GT', 0)))
+            
+            if any(revenues) or any(profits):
+                charts['financial_overview'] = self._create_financial_chart(days, revenues, profits)
+            
+            # CORRECCIÓN 4: Gráfico de eficiencia con validación
+            efficiencies = []
+            service_levels = []
+            for day_data in all_variables_extracted:
+                efficiencies.append(float(day_data.get('EOG', 0.8)) * 100)
+                service_levels.append(float(day_data.get('NSC', 0.85)) * 100)
+            
+            if any(efficiencies) or any(service_levels):
+                charts['efficiency_overview'] = self._create_efficiency_chart(days, efficiencies, service_levels)
+            
+            # CORRECCIÓN 5: Gráfico de producción
+            production = [float(d.get('QPL', 0)) for d in all_variables_extracted]
+            sales = [float(d.get('TPV', 0)) for d in all_variables_extracted]
+            
+            if any(production) or any(sales):
+                charts['production_overview'] = self._create_production_chart(days, production, sales)
+            
+            logger.info(f"Generated {len(charts)} dashboard charts successfully")
+            return charts
+            
+        except Exception as e:
+            logger.error(f"Error generating dashboard charts: {str(e)}")
+            return {}
+    
+    
+    def _safe_fig_to_base64(self, fig):
+        """Convertir figura a base64 de forma segura"""
+        try:
+            from io import BytesIO
+            import base64
+            
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight',
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            buffer.close()
+            
+            import matplotlib.pyplot as plt
+            plt.close(fig)
+            
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error converting figure to base64: {str(e)}")
+            import matplotlib.pyplot as plt
+            plt.close(fig)
+            return None
+    
+    
+    def _process_accumulated_variables_safely(self, all_variables_extracted):
+        """
+        CORRECCIÓN: Procesar variables acumuladas con manejo de errores robusto
+        """
+        try:
+            # Lista de variables esperadas (verificar que existan)
+            expected_variables = [
+                'PVP', 'TPV', 'IT', 'TG', 'GT', 'NR', 'NSC', 'EOG', 
+                'CFD', 'CVU', 'DPH', 'CPROD', 'NEPP', 'RI', 'IPF'
+            ]
+            
+            totales_acumulativos = {}
+            
+            # Verificar qué variables están realmente disponibles
+            available_variables = set()
+            for day_data in all_variables_extracted:
+                if isinstance(day_data, dict):
+                    available_variables.update(day_data.keys())
+            
+            logger.info(f"Available variables: {list(available_variables)}")
+            
+            # Procesar solo variables que existen
+            for var_name in expected_variables:
+                if var_name in available_variables:
+                    try:
+                        var_data = self._calculate_variable_totals_safe(all_variables_extracted, var_name)
+                        if var_data['total'] != 0 or var_data['count'] > 0:
+                            totales_acumulativos[var_name] = var_data
+                    except Exception as e:
+                        logger.warning(f"Error processing variable {var_name}: {e}")
+                        continue
+                else:
+                    logger.debug(f"Variable {var_name} not found in extracted data")
+            
+            logger.info(f"Successfully processed {len(totales_acumulativos)} accumulated variables")
+            return totales_acumulativos
+            
+        except Exception as e:
+            logger.error(f"Error processing accumulated variables: {e}")
+            return {}
+    
+    def _calculate_variable_totals_safe(self, all_variables_extracted, var_name):
+        """
+        CORRECCIÓN: Calcular totales de variable con manejo de errores
+        """
+        try:
+            values = []
+            
+            for day_data in all_variables_extracted:
+                if isinstance(day_data, dict) and var_name in day_data:
+                    try:
+                        value = day_data[var_name]
+                        if value is not None:
+                            # Intentar conversión a float
+                            numeric_value = float(value)
+                            values.append(numeric_value)
+                    except (ValueError, TypeError) as e:
+                        logger.debug(f"Could not convert {var_name} value '{value}' to float: {e}")
+                        continue
+            
+            # Calcular estadísticas
+            if values:
+                total = sum(values)
+                count = len(values)
+                average = total / count
+                min_val = min(values)
+                max_val = max(values)
+                
+                # Calcular tendencia simple
+                if len(values) >= 3:
+                    first_half = values[:len(values)//2]
+                    second_half = values[len(values)//2:]
+                    first_avg = sum(first_half) / len(first_half) if first_half else 0
+                    second_avg = sum(second_half) / len(second_half) if second_half else 0
+                    
+                    if second_avg > first_avg * 1.05:  # 5% threshold
+                        trend = 'increasing'
+                    elif second_avg < first_avg * 0.95:
+                        trend = 'decreasing'
+                    else:
+                        trend = 'stable'
+                else:
+                    trend = 'stable'
+            else:
+                total = count = average = min_val = max_val = 0
+                trend = 'stable'
+            
+            return {
+                'total': total,
+                'count': count,
+                'average': average,
+                'min_value': min_val,
+                'max_value': max_val,
+                'trend': trend,
+                'unit': self._get_safe_variable_unit(var_name)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating totals for {var_name}: {e}")
+            return {
+                'total': 0,
+                'count': 0,
+                'average': 0,
+                'min_value': 0,
+                'max_value': 0,
+                'trend': 'stable',
+                'unit': ''
+            }
+    
+    def _get_safe_variable_unit(self, var_name):
+        """Obtener unidad de variable de forma segura"""
+        units = {
+            'PVP': 'Bs./L',
+            'TPV': 'L',
+            'IT': 'Bs.',
+            'TG': 'Bs.',
+            'GT': 'Bs.',
+            'NR': '%',
+            'NSC': '%',
+            'EOG': '%',
+            'CFD': 'Bs.',
+            'CVU': 'Bs./L',
+            'DPH': 'L/día',
+            'CPROD': 'L/día',
+            'NEPP': 'empleados',
+            'RI': '%',
+            'IPF': 'L'
+        }
+        return units.get(var_name, '')
+    
+    
     def generate_validation_comparison_chart(self, real_values, projected_values, simulated_values, dates=None):
         """
         Generate validation comparison chart with proper overlay of three lines
@@ -2548,7 +2871,7 @@ class ChartGenerator:
                         fontsize=18, fontweight='bold', y=0.98)
             
             # Convert to base64
-            image_data = self._save_plot_as_base64(fig)
+            image_data = self._fig_to_base64(fig)
             plt.close(fig)
             
             return image_data
@@ -2560,6 +2883,760 @@ class ChartGenerator:
             return None    
 
     
+    def generate_cost_distribution_chart(self, all_variables_extracted):
+        """
+        Genera gráfico de distribución de costos con análisis detallado
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            
+            # Extraer datos de costos
+            days = list(range(1, len(all_variables_extracted) + 1))
+            costos_produccion = [d.get('CPROD', 0) for d in all_variables_extracted]
+            costos_operativos = [d.get('GO', 0) for d in all_variables_extracted]
+            costos_materiales = [d.get('MP', 0) for d in all_variables_extracted]
+            costos_transporte = [d.get('CTTL', 0) for d in all_variables_extracted]
+            costos_totales = [d.get('TG', 0) for d in all_variables_extracted]
+            
+            # 1. Gráfico de barras apiladas - Composición de costos por día
+            ax1.bar(days, costos_produccion, label='Producción', alpha=0.8, color='#3498DB')
+            ax1.bar(days, costos_operativos, bottom=costos_produccion, 
+                    label='Operativos', alpha=0.8, color='#E74C3C')
+            
+            bottom_so_far = [p + o for p, o in zip(costos_produccion, costos_operativos)]
+            ax1.bar(days, costos_materiales, bottom=bottom_so_far, 
+                    label='Materiales', alpha=0.8, color='#F39C12')
+            
+            bottom_final = [b + m for b, m in zip(bottom_so_far, costos_materiales)]
+            ax1.bar(days, costos_transporte, bottom=bottom_final, 
+                    label='Transporte', alpha=0.8, color='#9B59B6')
+            
+            ax1.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax1.set_ylabel('Costos (Bs)', fontsize=12, fontweight='bold')
+            ax1.set_title('Composición Diaria de Costos', fontsize=14, fontweight='bold')
+            ax1.legend(loc='upper right')
+            ax1.grid(True, alpha=0.3, axis='y')
+            
+            # 2. Gráfico circular - Distribución promedio de costos
+            costos_promedio = {
+                'Producción': np.mean(costos_produccion) if costos_produccion else 0,
+                'Operativos': np.mean(costos_operativos) if costos_operativos else 0,
+                'Materiales': np.mean(costos_materiales) if costos_materiales else 0,
+                'Transporte': np.mean(costos_transporte) if costos_transporte else 0
+            }
+            
+            # Filtrar costos no nulos
+            costos_filtered = {k: v for k, v in costos_promedio.items() if v > 0}
+            
+            if costos_filtered:
+                colors = ['#3498DB', '#E74C3C', '#F39C12', '#9B59B6'][:len(costos_filtered)]
+                wedges, texts, autotexts = ax2.pie(
+                    costos_filtered.values(), 
+                    labels=costos_filtered.keys(),
+                    colors=colors,
+                    autopct='%1.1f%%',
+                    startangle=90,
+                    explode=[0.05] * len(costos_filtered)
+                )
+                
+                # Mejorar el texto
+                for autotext in autotexts:
+                    autotext.set_color('white')
+                    autotext.set_fontweight('bold')
+                    autotext.set_fontsize(10)
+            
+            ax2.set_title('Distribución Promedio de Costos', fontsize=14, fontweight='bold')
+            
+            # 3. Evolución de costos unitarios
+            ingresos = [d.get('IT', 0) for d in all_variables_extracted]
+            ventas = [d.get('TPV', 0) for d in all_variables_extracted]
+            
+            # Calcular costo por unidad vendida
+            costo_unitario = []
+            for i, (costo, venta) in enumerate(zip(costos_totales, ventas)):
+                if venta > 0:
+                    costo_unitario.append(costo / venta)
+                else:
+                    costo_unitario.append(0)
+            
+            ax3.plot(days, costo_unitario, 'b-', linewidth=3, marker='o', 
+                    markersize=5, label='Costo Unitario')
+            
+            # Agregar línea de tendencia
+            if len(costo_unitario) > 3:
+                z = np.polyfit(days, costo_unitario, 1)
+                p = np.poly1d(z)
+                ax3.plot(days, p(days), '--', alpha=0.7, color='red', 
+                        linewidth=2, label=f'Tendencia: {z[0]:.3f}')
+            
+            ax3.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax3.set_ylabel('Costo por Unidad (Bs/L)', fontsize=12, fontweight='bold')
+            ax3.set_title('Evolución del Costo Unitario', fontsize=14, fontweight='bold')
+            ax3.legend()
+            ax3.grid(True, alpha=0.3)
+            
+            # 4. Análisis de eficiencia de costos
+            margen_bruto = []
+            eficiencia_costos = []
+            
+            for ingreso, costo in zip(ingresos, costos_totales):
+                if ingreso > 0:
+                    margen = ((ingreso - costo) / ingreso) * 100
+                    margen_bruto.append(margen)
+                    eficiencia = (ingreso / costo) * 100 if costo > 0 else 0
+                    eficiencia_costos.append(eficiencia)
+                else:
+                    margen_bruto.append(0)
+                    eficiencia_costos.append(0)
+            
+            # Gráfico dual
+            ax4_twin = ax4.twinx()
+            
+            line1 = ax4.plot(days, margen_bruto, 'g-', linewidth=3, marker='s', 
+                            markersize=4, label='Margen Bruto %')
+            line2 = ax4_twin.plot(days, eficiencia_costos, 'orange', linewidth=3, 
+                                marker='^', markersize=4, label='Eficiencia Costos %')
+            
+            # Líneas de referencia
+            ax4.axhline(y=20, color='green', linestyle='--', alpha=0.5, label='Meta Margen 20%')
+            ax4_twin.axhline(y=150, color='orange', linestyle='--', alpha=0.5, label='Meta Eficiencia 150%')
+            
+            ax4.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax4.set_ylabel('Margen Bruto (%)', color='green', fontsize=12, fontweight='bold')
+            ax4_twin.set_ylabel('Eficiencia de Costos (%)', color='orange', fontsize=12, fontweight='bold')
+            ax4.set_title('Análisis de Rentabilidad y Eficiencia', fontsize=14, fontweight='bold')
+            
+            # Combinar leyendas
+            lines = line1 + line2
+            labels = [l.get_label() for l in lines]
+            ax4.legend(lines, labels, loc='upper left')
+            ax4.grid(True, alpha=0.3)
+            
+            plt.suptitle('ANÁLISIS INTEGRAL DE COSTOS', fontsize=18, fontweight='bold', y=0.98)
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                        facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            logger.info("Cost distribution chart generated successfully")
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating cost distribution chart: {str(e)}")
+            plt.close('all')
+            return None
+    
+    
+    def generate_production_vs_sales_evolution_chart(self, all_variables_extracted):
+        """
+        Genera gráfico de evolución de producción vs ventas con análisis detallado
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            
+            days = list(range(1, len(all_variables_extracted) + 1))
+            
+            # Extraer datos de producción y ventas
+            produccion = [d.get('QPL', 0) for d in all_variables_extracted]
+            ventas = [d.get('TPV', 0) for d in all_variables_extracted]
+            demanda = [d.get('demand_mean', 0) for d in all_variables_extracted]
+            inventario = [d.get('IPF', 0) for d in all_variables_extracted]
+            demanda_insatisfecha = [d.get('DI', 0) for d in all_variables_extracted]
+            
+            # 1. Evolución temporal de Producción vs Ventas vs Demanda
+            ax1.plot(days, demanda, 'gray', linewidth=3, marker='o', markersize=5, 
+                    alpha=0.7, label='Demanda', linestyle='--')
+            ax1.plot(days, produccion, 'b-', linewidth=3, marker='s', markersize=6, 
+                    label='Producción', alpha=0.8)
+            ax1.plot(days, ventas, 'g-', linewidth=3, marker='^', markersize=6,
+                    label='Ventas', alpha=0.8)
+            
+            # Áreas de análisis
+            ax1.fill_between(days, ventas, produccion, 
+                            where=[v < p for v, p in zip(ventas, produccion)],
+                            color='blue', alpha=0.2, label='Inventario Generado')
+            ax1.fill_between(days, ventas, demanda,
+                            where=[v < d for v, d in zip(ventas, demanda)],
+                            color='red', alpha=0.3, label='Demanda Insatisfecha')
+            
+            ax1.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax1.set_ylabel('Cantidad (Litros)', fontsize=12, fontweight='bold')
+            ax1.set_title('Evolución: Producción vs Ventas vs Demanda', fontsize=14, fontweight='bold')
+            ax1.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            ax1.grid(True, alpha=0.3)
+            
+            # 2. Análisis de eficiencia de conversión
+            eficiencia_ventas = []  # Ventas / Producción
+            satisfaccion_demanda = []  # Ventas / Demanda
+            
+            for prod, vent, dem in zip(produccion, ventas, demanda):
+                efic_vent = (vent / prod * 100) if prod > 0 else 0
+                eficiencia_ventas.append(min(efic_vent, 100))  # Cap at 100%
+                
+                satisf_dem = (vent / dem * 100) if dem > 0 else 100
+                satisfaccion_demanda.append(min(satisf_dem, 100))  # Cap at 100%
+            
+            # Gráfico de barras agrupadas
+            x_pos = np.arange(len(days))
+            width = 0.35
+            
+            bars1 = ax2.bar(x_pos - width/2, eficiencia_ventas, width, 
+                        alpha=0.7, color='steelblue', label='Eficiencia Ventas (%)')
+            bars2 = ax2.bar(x_pos + width/2, satisfaccion_demanda, width, 
+                        alpha=0.7, color='darkgreen', label='Satisfacción Demanda (%)')
+            
+            # Líneas de referencia
+            ax2.axhline(y=95, color='green', linestyle='--', alpha=0.7, label='Meta 95%')
+            ax2.axhline(y=85, color='orange', linestyle='--', alpha=0.7, label='Mínimo 85%')
+            
+            ax2.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax2.set_ylabel('Porcentaje (%)', fontsize=12, fontweight='bold')
+            ax2.set_title('Eficiencia de Conversión y Satisfacción', fontsize=14, fontweight='bold')
+            ax2.set_ylim(0, 110)
+            ax2.set_xticks(x_pos[::max(1, len(days)//10)])
+            ax2.set_xticklabels([f'D{d}' for d in days[::max(1, len(days)//10)]], rotation=45)
+            ax2.legend()
+            ax2.grid(True, alpha=0.3, axis='y')
+            
+            # 3. Gestión de inventarios y flujo
+            inventario_optimo = [d.get('IOP', 0) for d in all_variables_extracted]
+            rotacion_inventario = []
+            
+            for i, (vent, inv) in enumerate(zip(ventas, inventario)):
+                if inv > 0:
+                    # Rotación = Ventas / Inventario promedio (aproximación)
+                    rotacion = (vent / inv) * 30  # Proyección mensual
+                    rotacion_inventario.append(rotacion)
+                else:
+                    rotacion_inventario.append(0)
+            
+            ax3_twin = ax3.twinx()
+            
+            # Inventario actual vs óptimo
+            line1 = ax3.plot(days, inventario, 'b-', linewidth=3, marker='o', markersize=5, 
+                            label='Inventario Real')
+            line2 = ax3.plot(days, inventario_optimo, 'r--', linewidth=3, marker='s', markersize=5, 
+                            label='Inventario Óptimo')
+            
+            # Rotación de inventario
+            line3 = ax3_twin.plot(days, rotacion_inventario, 'purple', linewidth=3, 
+                                marker='^', markersize=5, alpha=0.8, label='Rotación (veces/mes)')
+            
+            # Área de exceso/déficit
+            ax3.fill_between(days, inventario, inventario_optimo,
+                            where=[i > o for i, o in zip(inventario, inventario_optimo)],
+                            color='red', alpha=0.2, label='Exceso de Inventario')
+            ax3.fill_between(days, inventario, inventario_optimo,
+                            where=[i < o for i, o in zip(inventario, inventario_optimo)],
+                            color='orange', alpha=0.2, label='Déficit de Inventario')
+            
+            ax3.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax3.set_ylabel('Inventario (Litros)', color='blue', fontsize=12, fontweight='bold')
+            ax3_twin.set_ylabel('Rotación (veces/mes)', color='purple', fontsize=12, fontweight='bold')
+            ax3.set_title('Gestión de Inventarios y Rotación', fontsize=14, fontweight='bold')
+            
+            # Combinar leyendas
+            lines = line1 + line2 + line3
+            labels = [l.get_label() for l in lines]
+            ax3.legend(lines, labels, loc='upper left')
+            ax3.grid(True, alpha=0.3)
+            
+            # 4. Dashboard de productividad y tendencias
+            productividad_diaria = [d.get('PE', 0) * 100 for d in all_variables_extracted]
+            
+            # Calcular tendencias usando promedio móvil
+            window = min(7, len(days))  # Ventana de 7 días o menos
+            
+            def moving_average(data, window):
+                if len(data) < window:
+                    return data
+                result = []
+                for i in range(len(data)):
+                    start = max(0, i - window + 1)
+                    end = i + 1
+                    result.append(np.mean(data[start:end]))
+                return result
+            
+            trend_produccion = moving_average(produccion, window)
+            trend_ventas = moving_average(ventas, window)
+            trend_productividad = moving_average(productividad_diaria, window)
+            
+            # Gráfico de múltiples métricas normalizadas
+            # Normalizar para comparación visual
+            def normalize_data(data):
+                if max(data) == min(data):
+                    return [50] * len(data)
+                return [(x - min(data)) / (max(data) - min(data)) * 100 for x in data]
+            
+            norm_prod = normalize_data(trend_produccion)
+            norm_ventas = normalize_data(trend_ventas)
+            norm_productividad = trend_productividad  # Ya está en porcentaje
+            
+            ax4.plot(days, norm_prod, 'b-', linewidth=3, marker='o', markersize=4, 
+                    alpha=0.8, label='Tendencia Producción (norm.)')
+            ax4.plot(days, norm_ventas, 'g-', linewidth=3, marker='s', markersize=4, 
+                    alpha=0.8, label='Tendencia Ventas (norm.)')
+            ax4.plot(days, norm_productividad, 'purple', linewidth=3, marker='^', markersize=4, 
+                    alpha=0.8, label='Productividad (%)')
+            
+            # Zonas de rendimiento
+            ax4.axhspan(80, 100, alpha=0.1, color='green', label='Alto Rendimiento')
+            ax4.axhspan(60, 80, alpha=0.1, color='yellow', label='Rendimiento Medio')
+            ax4.axhspan(0, 60, alpha=0.1, color='red', label='Bajo Rendimiento')
+            
+            # Calcular correlación entre producción y ventas
+            if len(produccion) > 3:
+                correlation = np.corrcoef(produccion, ventas)[0, 1]
+                correlation_text = f'Correlación Prod-Ventas: {correlation:.3f}'
+            else:
+                correlation_text = 'Correlación: N/A'
+            
+            ax4.text(0.02, 0.98, correlation_text, transform=ax4.transAxes,
+                    verticalalignment='top', fontsize=11, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.5', facecolor='wheat', alpha=0.8))
+            
+            ax4.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax4.set_ylabel('Índice Normalizado / Productividad (%)', fontsize=12, fontweight='bold')
+            ax4.set_title('Dashboard de Productividad y Tendencias', fontsize=14, fontweight='bold')
+            ax4.set_ylim(0, 105)
+            ax4.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            ax4.grid(True, alpha=0.3)
+            
+            plt.suptitle('EVOLUCIÓN: PRODUCCIÓN vs VENTAS', fontsize=18, fontweight='bold', y=0.98)
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                        facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            logger.info("Production vs sales evolution chart generated successfully")
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating production vs sales evolution chart: {str(e)}")
+            plt.close('all')
+            return None
+
+    
+    
+    def generate_financial_efficiency_indicators_chart(self, all_variables_extracted):
+        """
+        Genera gráfico de indicadores de eficiencia financiera
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            
+            days = list(range(1, len(all_variables_extracted) + 1))
+            
+            # Extraer datos financieros
+            ingresos = [d.get('IT', 0) for d in all_variables_extracted]
+            gastos = [d.get('TG', 0) for d in all_variables_extracted]
+            ganancias = [d.get('GT', 0) for d in all_variables_extracted]
+            margen_neto = [d.get('NR', 0) * 100 for d in all_variables_extracted]
+            roi = [d.get('RI', 0) * 100 for d in all_variables_extracted]
+            
+            # 1. ROI y Margen Neto Evolution
+            ax1_twin = ax1.twinx()
+            
+            line1 = ax1.plot(days, roi, 'g-', linewidth=3, marker='o', markersize=6, 
+                            label='ROI (%)', alpha=0.8)
+            line2 = ax1_twin.plot(days, margen_neto, 'b-', linewidth=3, marker='s', markersize=6, 
+                                label='Margen Neto (%)', alpha=0.8)
+            
+            # Zonas de rendimiento
+            ax1.axhspan(15, 100, alpha=0.1, color='green', label='ROI Excelente')
+            ax1.axhspan(8, 15, alpha=0.1, color='yellow', label='ROI Bueno')
+            ax1.axhspan(0, 8, alpha=0.1, color='red', label='ROI Bajo')
+            
+            ax1.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax1.set_ylabel('ROI (%)', color='green', fontsize=12, fontweight='bold')
+            ax1_twin.set_ylabel('Margen Neto (%)', color='blue', fontsize=12, fontweight='bold')
+            ax1.set_title('Rentabilidad: ROI y Margen Neto', fontsize=14, fontweight='bold')
+            
+            # Combinar leyendas
+            lines = line1 + line2
+            labels = [l.get_label() for l in lines]
+            ax1.legend(lines, labels, loc='upper left')
+            ax1.grid(True, alpha=0.3)
+            
+            # 2. Análisis de Cash Flow y Liquidez
+            cash_flow_acumulado = np.cumsum(ganancias)
+            ingresos_acumulados = np.cumsum(ingresos)
+            gastos_acumulados = np.cumsum(gastos)
+            
+            ax2.plot(days, cash_flow_acumulado, 'g-', linewidth=4, label='Cash Flow Acumulado')
+            ax2.fill_between(days, 0, cash_flow_acumulado, 
+                            where=[cf > 0 for cf in cash_flow_acumulado],
+                            color='green', alpha=0.3, label='Zona Positiva')
+            ax2.fill_between(days, cash_flow_acumulado, 0,
+                            where=[cf < 0 for cf in cash_flow_acumulado],
+                            color='red', alpha=0.3, label='Zona Negativa')
+            
+            ax2.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+            ax2.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax2.set_ylabel('Cash Flow Acumulado (Bs)', fontsize=12, fontweight='bold')
+            ax2.set_title('Evolución del Cash Flow', fontsize=14, fontweight='bold')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            # 3. Ratios de Eficiencia Financiera
+            ratio_ingresos_gastos = [i/g if g > 0 else 0 for i, g in zip(ingresos, gastos)]
+            punto_equilibrio = [d.get('PED', 0) for d in all_variables_extracted]
+            ventas_reales = [d.get('TPV', 0) for d in all_variables_extracted]
+            
+            # Gráfico de barras comparativo
+            x_pos = np.arange(len(days))
+            width = 0.35
+            
+            bars1 = ax3.bar(x_pos - width/2, ratio_ingresos_gastos, width, 
+                        alpha=0.7, color='steelblue', label='Ratio Ingresos/Gastos')
+            
+            # Línea de referencia para break-even
+            ax3_twin = ax3.twinx()
+            line3 = ax3_twin.plot(days, [v/pe if pe > 0 else 0 for v, pe in zip(ventas_reales, punto_equilibrio)], 
+                                'r-', linewidth=3, marker='^', markersize=5, 
+                                label='Ratio Ventas/Punto Equilibrio')
+            
+            ax3.axhline(y=1.2, color='green', linestyle='--', alpha=0.7, label='Meta Ratio 1.2')
+            ax3_twin.axhline(y=1.0, color='red', linestyle='--', alpha=0.7, label='Break-Even Point')
+            
+            ax3.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax3.set_ylabel('Ratio Ingresos/Gastos', color='steelblue', fontsize=12, fontweight='bold')
+            ax3_twin.set_ylabel('Ratio vs Break-Even', color='red', fontsize=12, fontweight='bold')
+            ax3.set_title('Ratios de Eficiencia Financiera', fontsize=14, fontweight='bold')
+            ax3.set_xticks(x_pos)
+            ax3.set_xticklabels([f'D{d}' for d in days[::max(1, len(days)//10)]], rotation=45)
+            
+            # Combinar leyendas
+            lines1, labels1 = ax3.get_legend_handles_labels()
+            lines2, labels2 = ax3_twin.get_legend_handles_labels()
+            ax3.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+            ax3.grid(True, alpha=0.3, axis='y')
+            
+            # 4. Dashboard de Salud Financiera
+            # Calcular score de salud financiera
+            health_scores = []
+            for i, (ing, gast, marg, r) in enumerate(zip(ingresos, gastos, margen_neto, roi)):
+                score = 0
+                
+                # Componente de rentabilidad (40%)
+                if marg > 15:
+                    score += 40
+                elif marg > 10:
+                    score += 30
+                elif marg > 5:
+                    score += 20
+                elif marg > 0:
+                    score += 10
+                
+                # Componente de ROI (30%)
+                if r > 15:
+                    score += 30
+                elif r > 10:
+                    score += 22
+                elif r > 5:
+                    score += 15
+                elif r > 0:
+                    score += 8
+                
+                # Componente de solvencia (30%)
+                ratio = ing / gast if gast > 0 else 0
+                if ratio > 1.3:
+                    score += 30
+                elif ratio > 1.15:
+                    score += 22
+                elif ratio > 1.05:
+                    score += 15
+                elif ratio > 1.0:
+                    score += 8
+                
+                health_scores.append(score)
+            
+            # Gráfico de área para health score
+            ax4.fill_between(days, 0, health_scores, alpha=0.3, color='lightblue')
+            ax4.plot(days, health_scores, 'b-', linewidth=3, marker='o', markersize=6)
+            
+            # Zonas de salud financiera
+            ax4.axhspan(80, 100, alpha=0.1, color='green', label='Salud Excelente')
+            ax4.axhspan(60, 80, alpha=0.1, color='yellow', label='Salud Buena')
+            ax4.axhspan(40, 60, alpha=0.1, color='orange', label='Salud Regular')
+            ax4.axhspan(0, 40, alpha=0.1, color='red', label='Salud Crítica')
+            
+            # Promedio móvil
+            if len(health_scores) >= 5:
+                window = min(5, len(health_scores))
+                moving_avg = []
+                for i in range(len(health_scores)):
+                    start = max(0, i - window + 1)
+                    end = i + 1
+                    moving_avg.append(np.mean(health_scores[start:end]))
+                
+                ax4.plot(days, moving_avg, 'r--', linewidth=2, alpha=0.8, 
+                        label=f'Promedio Móvil ({window} días)')
+            
+            ax4.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax4.set_ylabel('Score de Salud Financiera', fontsize=12, fontweight='bold')
+            ax4.set_title('Dashboard de Salud Financiera', fontsize=14, fontweight='bold')
+            ax4.set_ylim(0, 105)
+            ax4.legend(loc='lower right')
+            ax4.grid(True, alpha=0.3)
+            
+            plt.suptitle('INDICADORES DE EFICIENCIA FINANCIERA', fontsize=18, fontweight='bold', y=0.98)
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                        facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            logger.info("Financial efficiency indicators chart generated successfully")
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating financial efficiency indicators chart: {str(e)}")
+            plt.close('all')
+            return None
+    
+    
+    def generate_capacity_vs_demand_chart(self, all_variables_extracted):
+        """
+        Genera gráfico de análisis de capacidad vs demanda con utilización
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            
+            days = list(range(1, len(all_variables_extracted) + 1))
+            
+            # Extraer datos
+            demanda = [d.get('demand_mean', 0) for d in all_variables_extracted]
+            capacidad_prod = [d.get('CPROD', 0) for d in all_variables_extracted]
+            produccion_real = [d.get('QPL', 0) for d in all_variables_extracted]
+            ventas = [d.get('TPV', 0) for d in all_variables_extracted]
+            inventario = [d.get('IPF', 0) for d in all_variables_extracted]
+            
+            # 1. Comparación Demanda vs Capacidad vs Producción
+            ax1.plot(days, demanda, 'b-', linewidth=3, marker='o', markersize=5, 
+                    label='Demanda', alpha=0.8)
+            ax1.plot(days, capacidad_prod, 'r--', linewidth=3, marker='s', markersize=5, 
+                    label='Capacidad Máxima', alpha=0.8)
+            ax1.plot(days, produccion_real, 'g-', linewidth=3, marker='^', markersize=5, 
+                    label='Producción Real', alpha=0.8)
+            
+            # Área de capacidad no utilizada
+            ax1.fill_between(days, produccion_real, capacidad_prod, 
+                            where=[p < c for p, c in zip(produccion_real, capacidad_prod)],
+                            color='red', alpha=0.2, label='Capacidad No Utilizada')
+            
+            # Área de demanda insatisfecha
+            ax1.fill_between(days, ventas, demanda,
+                            where=[v < d for v, d in zip(ventas, demanda)],
+                            color='orange', alpha=0.3, label='Demanda Insatisfecha')
+            
+            ax1.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax1.set_ylabel('Cantidad (Litros)', fontsize=12, fontweight='bold')
+            ax1.set_title('Análisis de Capacidad vs Demanda', fontsize=14, fontweight='bold')
+            ax1.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            ax1.grid(True, alpha=0.3)
+            
+            # 2. Utilización de capacidad y level de servicio
+            utilizacion_capacidad = []
+            nivel_servicio = []
+            
+            for prod, cap, dem, vent in zip(produccion_real, capacidad_prod, demanda, ventas):
+                util = (prod / cap * 100) if cap > 0 else 0
+                utilizacion_capacidad.append(util)
+                
+                servicio = (vent / dem * 100) if dem > 0 else 100
+                nivel_servicio.append(min(servicio, 100))  # Cap at 100%
+            
+            ax2_twin = ax2.twinx()
+            
+            bars1 = ax2.bar([d - 0.2 for d in days], utilizacion_capacidad, 
+                        width=0.4, alpha=0.7, color='steelblue', 
+                        label='Utilización Capacidad %')
+            bars2 = ax2_twin.bar([d + 0.2 for d in days], nivel_servicio, 
+                                width=0.4, alpha=0.7, color='darkgreen', 
+                                label='Nivel de Servicio %')
+            
+            # Líneas de referencia
+            ax2.axhline(y=85, color='blue', linestyle='--', alpha=0.5, label='Meta Utilización 85%')
+            ax2_twin.axhline(y=95, color='green', linestyle='--', alpha=0.5, label='Meta Servicio 95%')
+            
+            ax2.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax2.set_ylabel('Utilización Capacidad (%)', color='steelblue', fontsize=12, fontweight='bold')
+            ax2_twin.set_ylabel('Nivel de Servicio (%)', color='darkgreen', fontsize=12, fontweight='bold')
+            ax2.set_title('Indicadores de Utilización', fontsize=14, fontweight='bold')
+            ax2.set_ylim(0, 110)
+            ax2_twin.set_ylim(0, 110)
+            
+            # Combinar leyendas
+            lines1, labels1 = ax2.get_legend_handles_labels()
+            lines2, labels2 = ax2_twin.get_legend_handles_labels()
+            ax2.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+            ax2.grid(True, alpha=0.3, axis='y')
+            
+            # 3. Análisis de brechas (Gap Analysis)
+            brecha_capacidad = [c - p for c, p in zip(capacidad_prod, produccion_real)]
+            brecha_demanda = [d - v for d, v in zip(demanda, ventas)]
+            
+            ax3.bar([d - 0.2 for d in days], brecha_capacidad, width=0.4, 
+                alpha=0.7, color='red', label='Capacidad No Utilizada')
+            ax3.bar([d + 0.2 for d in days], brecha_demanda, width=0.4, 
+                alpha=0.7, color='orange', label='Demanda Insatisfecha')
+            
+            ax3.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax3.set_ylabel('Brecha (Litros)', fontsize=12, fontweight='bold')
+            ax3.set_title('Análisis de Brechas Operativas', fontsize=14, fontweight='bold')
+            ax3.legend()
+            ax3.grid(True, alpha=0.3, axis='y')
+            
+            # 4. Eficiencia operativa integral
+            eficiencia_global = [d.get('EOG', 0) * 100 for d in all_variables_extracted]
+            eficiencia_produccion = [d.get('EP', 0) * 100 for d in all_variables_extracted]
+            factor_utilizacion = [d.get('FU', 0) * 100 for d in all_variables_extracted]
+            
+            ax4.plot(days, eficiencia_global, 'purple', linewidth=3, marker='o', 
+                    markersize=5, label='Eficiencia Global (OEE)')
+            ax4.plot(days, eficiencia_produccion, 'blue', linewidth=3, marker='s', 
+                    markersize=5, label='Eficiencia Producción')
+            ax4.plot(days, factor_utilizacion, 'green', linewidth=3, marker='^', 
+                    markersize=5, label='Factor Utilización')
+            
+            # Zona de excelencia
+            ax4.axhspan(85, 100, alpha=0.1, color='green', label='Zona Excelencia')
+            ax4.axhspan(70, 85, alpha=0.1, color='yellow', label='Zona Aceptable')
+            ax4.axhspan(0, 70, alpha=0.1, color='red', label='Zona Crítica')
+            
+            ax4.set_xlabel('Días', fontsize=12, fontweight='bold')
+            ax4.set_ylabel('Eficiencia (%)', fontsize=12, fontweight='bold')
+            ax4.set_title('Dashboard de Eficiencia Operativa', fontsize=14, fontweight='bold')
+            ax4.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            ax4.grid(True, alpha=0.3)
+            ax4.set_ylim(0, 105)
+            
+            plt.suptitle('ANÁLISIS INTEGRAL: CAPACIDAD vs DEMANDA', fontsize=18, fontweight='bold', y=0.98)
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                        facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            logger.info("Capacity vs demand chart generated successfully")
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating capacity vs demand chart: {str(e)}")
+            plt.close('all')
+            return None
+    
+    
+    def generate_all_charts_enhanced(self, simulation_id: int, 
+                      simulation_instance: Any,
+                      results: List[Any],
+                      historical_demand: List[float]) -> Dict[str, Any]:
+        """Generate all charts including new advanced charts"""
+        try:
+            # Extract data for charts
+            dates = [r.date for r in results]
+            daily_data = self._extract_daily_data(results)
+            
+            # Calculate accumulated totals
+            totales_acumulativos = self._calculate_accumulated_totals(daily_data)
+            
+            # Generate existing charts
+            charts = {
+                'image_data_simulation': self._generate_simulation_overview_chart(
+                    dates, daily_data, historical_demand
+                ),
+                'image_data_ingresos_gastos': self._generate_income_expenses_chart(
+                    dates, daily_data
+                ),
+                'image_data_produccion_ventas': self._generate_production_sales_chart(
+                    dates, daily_data
+                ),
+                'image_data_inventarios': self._generate_inventory_chart(
+                    dates, daily_data
+                ),
+                'image_data_eficiencia': self._generate_efficiency_chart(
+                    dates, daily_data
+                ),
+                'image_data_rentabilidad': self._generate_profitability_chart(
+                    dates, daily_data
+                ),
+                'image_data_demanda_comparativa': self._generate_demand_comparison_chart(
+                    dates, daily_data, historical_demand
+                ),
+                'image_data_kpis': self._generate_kpi_dashboard(
+                    daily_data, totales_acumulativos
+                ),
+                
+                # NUEVOS GRÁFICOS AVANZADOS
+                'image_data_cost_distribution': self.generate_cost_distribution_chart(daily_data),
+                'image_data_capacity_vs_demand': self.generate_capacity_vs_demand_chart(daily_data),
+                'image_data_financial_efficiency': self.generate_financial_efficiency_indicators_chart(daily_data),
+                'image_data_production_evolution': self.generate_production_vs_sales_evolution_chart(daily_data)
+            }
+            
+            # Add chart images to return dict
+            return {
+                'chart_images': charts,
+                'totales_acumulativos': totales_acumulativos,
+                'all_variables_extracted': daily_data
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating enhanced charts: {str(e)}")
+            return {
+                'chart_images': {},
+                'totales_acumulativos': {},
+                'all_variables_extracted': []
+            }
+    
+    
     def _fig_to_base64(self, fig: Figure) -> str:
         """Convert matplotlib figure to base64 string"""
         buffer = BytesIO()
@@ -2570,3 +3647,481 @@ class ChartGenerator:
         buffer.close()
         plt.close(fig)
         return image_data
+    
+    def _generate_histogram_chart(self, data):
+        """Generar histograma con ajuste de distribución"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+            
+            # Histograma principal
+            n, bins, patches = ax1.hist(data, bins=20, density=True, alpha=0.7, 
+                                    color='skyblue', edgecolor='black')
+            
+            # Ajustar distribución normal
+            mu, sigma = np.mean(data), np.std(data)
+            x = np.linspace(min(data), max(data), 100)
+            normal_dist = stats.norm.pdf(x, mu, sigma)
+            ax1.plot(x, normal_dist, 'r-', linewidth=2, label=f'Normal (μ={mu:.2f}, σ={sigma:.2f})')
+            
+            # Líneas de estadísticas
+            ax1.axvline(mu, color='red', linestyle='--', alpha=0.7, label=f'Media: {mu:.2f}')
+            ax1.axvline(np.median(data), color='orange', linestyle='--', alpha=0.7, 
+                    label=f'Mediana: {np.median(data):.2f}')
+            
+            ax1.set_xlabel('Demanda (Litros)')
+            ax1.set_ylabel('Densidad')
+            ax1.set_title('Distribución de la Demanda Simulada')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Box plot
+            bp = ax2.boxplot(data, patch_artist=True, boxprops=dict(facecolor='lightblue'))
+            ax2.set_ylabel('Demanda (Litros)')
+            ax2.set_title('Diagrama de Cajas')
+            ax2.grid(True, alpha=0.3)
+            
+            # Estadísticas en el box plot
+            q1, median, q3 = np.percentile(data, [25, 50, 75])
+            iqr = q3 - q1
+            ax2.text(1.1, median, f'Q2: {median:.1f}', va='center')
+            ax2.text(1.1, q3, f'Q3: {q3:.1f}', va='center')
+            ax2.text(1.1, q1, f'Q1: {q1:.1f}', va='center')
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating histogram chart: {e}")
+            return None
+        
+    def _generate_comparative_boxplot(self, historical_data, simulated_data):
+        """Generar box plot comparativo"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Preparar datos
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_data = historical_data[:min_len]
+            sim_data = simulated_data[:min_len]
+            
+            # Box plots lado a lado
+            bp1 = ax.boxplot([hist_data], positions=[1], widths=0.6, patch_artist=True,
+                            boxprops=dict(facecolor='lightblue', alpha=0.7),
+                            medianprops=dict(color='red', linewidth=2))
+            
+            bp2 = ax.boxplot([sim_data], positions=[2], widths=0.6, patch_artist=True,
+                            boxprops=dict(facecolor='lightcoral', alpha=0.7),
+                            medianprops=dict(color='red', linewidth=2))
+            
+            # Etiquetas y formato
+            ax.set_xticklabels(['Histórico', 'Simulado'])
+            ax.set_ylabel('Demanda (Litros)')
+            ax.set_title('Comparación de Distribuciones: Histórico vs Simulado')
+            ax.grid(True, alpha=0.3)
+            
+            # Agregar estadísticas
+            hist_stats = f'Media: {np.mean(hist_data):.1f}\nMediana: {np.median(hist_data):.1f}\nStd: {np.std(hist_data):.1f}'
+            sim_stats = f'Media: {np.mean(sim_data):.1f}\nMediana: {np.median(sim_data):.1f}\nStd: {np.std(sim_data):.1f}'
+            
+            ax.text(0.7, 0.95, hist_stats, transform=ax.transAxes, va='top',
+                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
+            ax.text(0.7, 0.7, sim_stats, transform=ax.transAxes, va='top',
+                bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7))
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating comparative boxplot: {e}")
+            return None
+    
+    def _generate_scatter_plot(self, historical_data, simulated_data):
+        """Generar scatter plot con línea de regresión"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, ax = plt.subplots(figsize=(10, 8))
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_data = np.array(historical_data[:min_len])
+            sim_data = np.array(simulated_data[:min_len])
+            
+            # Scatter plot
+            ax.scatter(hist_data, sim_data, alpha=0.6, s=50, color='blue')
+            
+            # Línea de referencia (x=y)
+            min_val = min(np.min(hist_data), np.min(sim_data))
+            max_val = max(np.max(hist_data), np.max(sim_data))
+            ax.plot([min_val, max_val], [min_val, max_val], 'r--', 
+                label='Línea de referencia (y=x)', linewidth=2)
+            
+            # Línea de regresión
+            slope, intercept, r_value, p_value, std_err = stats.linregress(hist_data, sim_data)
+            line = slope * hist_data + intercept
+            ax.plot(hist_data, line, 'g-', label=f'Regresión (R²={r_value**2:.3f})', linewidth=2)
+            
+            # Formato y etiquetas
+            ax.set_xlabel('Demanda Histórica (Litros)')
+            ax.set_ylabel('Demanda Simulada (Litros)')
+            ax.set_title('Correlación: Demanda Histórica vs Simulada')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            
+            # Estadísticas en el gráfico
+            stats_text = f'R² = {r_value**2:.3f}\nR = {r_value:.3f}\np-valor = {p_value:.4f}'
+            ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, va='top',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating scatter plot: {e}")
+            return None
+        
+    def _generate_residuals_plot(self, historical_data, simulated_data):
+        """Generar gráfico de residuos"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
+            
+            # Ajustar longitudes
+            min_len = min(len(historical_data), len(simulated_data))
+            hist_data = np.array(historical_data[:min_len])
+            sim_data = np.array(simulated_data[:min_len])
+            
+            # Calcular residuos
+            residuals = sim_data - hist_data
+            fitted = hist_data  # En este caso, los valores "fitted" son los históricos
+            
+            # 1. Residuos vs Valores ajustados
+            ax1.scatter(fitted, residuals, alpha=0.6)
+            ax1.axhline(y=0, color='red', linestyle='--', alpha=0.7)
+            ax1.set_xlabel('Valores Históricos')
+            ax1.set_ylabel('Residuos (Simulado - Histórico)')
+            ax1.set_title('Residuos vs Valores Históricos')
+            ax1.grid(True, alpha=0.3)
+            
+            # 2. Histograma de residuos
+            ax2.hist(residuals, bins=15, density=True, alpha=0.7, color='skyblue', edgecolor='black')
+            
+            # Superponer distribución normal
+            mu, sigma = np.mean(residuals), np.std(residuals)
+            x = np.linspace(np.min(residuals), np.max(residuals), 100)
+            ax2.plot(x, stats.norm.pdf(x, mu, sigma), 'r-', linewidth=2, label='Normal')
+            
+            ax2.set_xlabel('Residuos')
+            ax2.set_ylabel('Densidad')
+            ax2.set_title('Distribución de Residuos')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            # 3. Q-Q plot de residuos
+            stats.probplot(residuals, dist="norm", plot=ax3)
+            ax3.set_title('Q-Q Plot de Residuos')
+            ax3.grid(True, alpha=0.3)
+            
+            # 4. Residuos vs Orden (temporal)
+            order = np.arange(len(residuals))
+            ax4.plot(order, residuals, 'o-', alpha=0.6)
+            ax4.axhline(y=0, color='red', linestyle='--', alpha=0.7)
+            ax4.set_xlabel('Orden Temporal')
+            ax4.set_ylabel('Residuos')
+            ax4.set_title('Residuos vs Tiempo')
+            ax4.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating residuals plot: {e}")
+            return None
+        
+    def _generate_qq_plot(self, data):
+        """Generar Q-Q plot para prueba de normalidad"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            from scipy import stats
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+            
+            # Q-Q plot normal
+            stats.probplot(data, dist="norm", plot=ax1)
+            ax1.set_title('Q-Q Plot vs Distribución Normal')
+            ax1.grid(True, alpha=0.3)
+            
+            # Prueba de normalidad con histograma
+            ax2.hist(data, bins=20, density=True, alpha=0.7, color='lightblue', edgecolor='black')
+            
+            # Superponer distribución normal teórica
+            mu, sigma = np.mean(data), np.std(data)
+            x = np.linspace(np.min(data), np.max(data), 100)
+            ax2.plot(x, stats.norm.pdf(x, mu, sigma), 'r-', linewidth=2, label='Normal teórica')
+            
+            # Prueba de Shapiro-Wilk
+            if len(data) <= 5000:
+                shapiro_stat, shapiro_p = stats.shapiro(data)
+                interpretation = "Normal" if shapiro_p > 0.05 else "No Normal"
+                ax2.text(0.05, 0.95, f'Shapiro-Wilk:\nEstadístico: {shapiro_stat:.4f}\np-valor: {shapiro_p:.4f}\nInterpretación: {interpretation}',
+                        transform=ax2.transAxes, va='top',
+                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            ax2.set_xlabel('Valores')
+            ax2.set_ylabel('Densidad')
+            ax2.set_title('Prueba de Normalidad')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating Q-Q plot: {e}")
+            return None
+        
+    def _generate_correlation_heatmap(self, correlation_matrix, variables):
+        """Generar mapa de calor de correlaciones"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig, ax = plt.subplots(figsize=(10, 8))
+            
+            # Construir matriz numérica
+            n_vars = len(variables)
+            corr_array = np.zeros((n_vars, n_vars))
+            
+            for i, var1 in enumerate(variables):
+                for j, var2 in enumerate(variables):
+                    if var1 in correlation_matrix and var2 in correlation_matrix[var1]:
+                        corr_array[i, j] = correlation_matrix[var1][var2]['coefficient']
+                    elif i == j:
+                        corr_array[i, j] = 1.0
+            
+            # Crear heatmap
+            im = ax.imshow(corr_array, cmap='RdBu_r', aspect='auto', vmin=-1, vmax=1)
+            
+            # Configurar ticks y etiquetas
+            ax.set_xticks(np.arange(n_vars))
+            ax.set_yticks(np.arange(n_vars))
+            ax.set_xticklabels(variables, rotation=45, ha='right')
+            ax.set_yticklabels(variables)
+            
+            # Agregar valores de correlación
+            for i in range(n_vars):
+                for j in range(n_vars):
+                    text = ax.text(j, i, f'{corr_array[i, j]:.2f}',
+                                ha="center", va="center", color="black", fontsize=8)
+            
+            ax.set_title('Matriz de Correlación entre Variables')
+            
+            # Colorbar
+            cbar = plt.colorbar(im, ax=ax)
+            cbar.set_label('Coeficiente de Correlación')
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating correlation heatmap: {e}")
+            return None
+        
+    def _generate_autocorrelation_plot(self, data, max_lags=20):
+        """Generar gráfico de autocorrelación"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+            
+            # Calcular autocorrelación manual
+            def autocorrelation(x, max_lags):
+                n = len(x)
+                x = np.array(x) - np.mean(x)
+                autocorr = np.correlate(x, x, mode='full')
+                autocorr = autocorr[autocorr.size // 2:]
+                autocorr = autocorr / autocorr[0]  # Normalizar
+                return autocorr[:max_lags+1]
+            
+            # ACF
+            lags = np.arange(min(max_lags + 1, len(data)))
+            acf_values = autocorrelation(data, max_lags)[:len(lags)]
+            
+            ax1.bar(lags, acf_values, alpha=0.7, color='blue')
+            ax1.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+            ax1.axhline(y=0.05, color='red', linestyle='--', alpha=0.5, label='Umbral 5%')
+            ax1.axhline(y=-0.05, color='red', linestyle='--', alpha=0.5)
+            ax1.set_xlabel('Lag')
+            ax1.set_ylabel('Autocorrelación')
+            ax1.set_title('Función de Autocorrelación (ACF)')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Gráfico de lag-1
+            if len(data) > 1:
+                ax2.scatter(data[:-1], data[1:], alpha=0.6)
+                ax2.set_xlabel('Valor en t')
+                ax2.set_ylabel('Valor en t+1')
+                ax2.set_title('Gráfico de Lag-1')
+                ax2.grid(True, alpha=0.3)
+                
+                # Línea de regresión
+                from scipy import stats
+                slope, intercept, r_value, _, _ = stats.linregress(data[:-1], data[1:])
+                line = slope * np.array(data[:-1]) + intercept
+                ax2.plot(data[:-1], line, 'r-', label=f'R = {r_value:.3f}')
+                ax2.legend()
+            
+            plt.tight_layout()
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating autocorrelation plot: {e}")
+            return None
+        
+    def _generate_performance_dashboard(self, performance_metrics):
+        """Generar dashboard de métricas de performance"""
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig = plt.figure(figsize=(15, 10))
+            
+            # Crear grid de subplots
+            gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
+            
+            # 1. Gauge de MAPE
+            ax1 = fig.add_subplot(gs[0, 0])
+            mape = performance_metrics.get('mape', 0)
+            self._create_gauge_chart(ax1, mape, 'MAPE (%)', max_val=50)
+            
+            # 2. Gauge de R²
+            ax2 = fig.add_subplot(gs[0, 1])
+            r_squared = performance_metrics.get('r_squared', 0)
+            self._create_gauge_chart(ax2, r_squared * 100, 'R² (%)', max_val=100)
+            
+            # 3. Gauge de Nash-Sutcliffe
+            ax3 = fig.add_subplot(gs[0, 2])
+            nash = performance_metrics.get('nash_sutcliffe', 0)
+            self._create_gauge_chart(ax3, nash * 100, 'Nash-Sutcliffe (%)', max_val=100)
+            
+            # 4. Barras de métricas de error
+            ax4 = fig.add_subplot(gs[1, :])
+            metrics = ['MAE', 'RMSE', 'MAPE']
+            values = [
+                performance_metrics.get('mae', 0),
+                performance_metrics.get('rmse', 0),
+                performance_metrics.get('mape', 0)
+            ]
+            colors = ['#FF9999', '#66B2FF', '#99FF99']
+            
+            bars = ax4.bar(metrics, values, color=colors, alpha=0.7, edgecolor='black')
+            ax4.set_ylabel('Valor')
+            ax4.set_title('Métricas de Error del Modelo')
+            ax4.grid(True, alpha=0.3, axis='y')
+            
+            # Agregar valores en las barras
+            for bar, value in zip(bars, values):
+                height = bar.get_height()
+                ax4.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{value:.2f}', ha='center', va='bottom')
+            
+            # 5. Texto de interpretación
+            ax5 = fig.add_subplot(gs[2, :])
+            ax5.axis('off')
+            
+            accuracy_level = performance_metrics.get('accuracy_level', 'N/A')
+            model_quality = performance_metrics.get('model_quality', 'N/A')
+            
+            interpretation_text = f"""
+            INTERPRETACIÓN DE RESULTADOS:
+            
+            Nivel de Precisión: {accuracy_level}
+            Calidad del Modelo: {model_quality}
+            
+            MAPE: {mape:.2f}% - {'Excelente' if mape < 10 else 'Bueno' if mape < 20 else 'Regular'}
+            R²: {r_squared:.3f} - {'Muy bueno' if r_squared > 0.8 else 'Bueno' if r_squared > 0.6 else 'Regular'}
+            
+            RECOMENDACIONES:
+            {'• El modelo muestra excelente precisión' if mape < 10 else '• Considerar ajustes para mejorar precisión'}
+            {'• Alta capacidad explicativa del modelo' if r_squared > 0.8 else '• Revisar variables explicativas'}
+            """
+            
+            ax5.text(0.05, 0.95, interpretation_text, transform=ax5.transAxes, va='top',
+                    fontfamily='monospace', fontsize=10,
+                    bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.8))
+            
+            plt.suptitle('Dashboard de Performance del Modelo', fontsize=16, fontweight='bold')
+            return self._fig_to_base64(fig)
+            
+        except Exception as e:
+            logger.error(f"Error generating performance dashboard: {e}")
+            return None
+        
+    def _create_gauge_chart(self, ax, value, title, max_val=100):
+        """Crear gráfico de gauge (medidor)"""
+        try:
+            import matplotlib.patches as patches
+            import numpy as np
+            
+            # Configurar el gauge
+            ax.set_xlim(-1.1, 1.1)
+            ax.set_ylim(-1.1, 1.1)
+            ax.set_aspect('equal')
+            
+            # Crear semicírculo
+            theta = np.linspace(0, np.pi, 100)
+            x = np.cos(theta)
+            y = np.sin(theta)
+            
+            # Colorear segmentos según el valor
+            if 'MAPE' in title:
+                # Para MAPE, menor es mejor
+                if value < 10:
+                    color = 'green'
+                elif value < 20:
+                    color = 'orange'
+                else:
+                    color = 'red'
+            else:
+                # Para R² y Nash-Sutcliffe, mayor es mejor
+                if value > 80:
+                    color = 'green'
+                elif value > 60:
+                    color = 'orange'
+                else:
+                    color = 'red'
+            
+            # Dibujar el arco del gauge
+            arc = patches.Arc((0, 0), 2, 2, angle=0, theta1=0, theta2=180, 
+                            linewidth=10, color='lightgray', alpha=0.3)
+            ax.add_patch(arc)
+            
+            # Dibujar el valor actual
+            angle = np.pi * (1 - value / max_val) if max_val > 0 else np.pi/2
+            ax.plot([0, np.cos(angle)], [0, np.sin(angle)], 
+                color=color, linewidth=8, solid_capstyle='round')
+            
+            # Agregar texto
+            ax.text(0, -0.3, f'{value:.1f}', ha='center', va='center', 
+                fontsize=14, fontweight='bold')
+            ax.text(0, -0.5, title, ha='center', va='center', fontsize=10)
+            
+            ax.axis('off')
+            
+        except Exception as e:
+            logger.error(f"Error creating gauge chart: {e}")

@@ -1,72 +1,18 @@
 {% extends "partials/base.html" %} 
 {% load static %} 
 {% block title %}Lista de variables{% endblock title %}
+
 {% block extra_css %}
-<style>
-    .variable-card {
-        transition: all 0.3s ease;
-        border: 1px solid #e9ecef;
-        height: 100%;
-    }
-    
-    .variable-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        border-color: #dee2e6;
-    }
-    
-    .variable-dependencies {
-        font-size: 0.75rem;
-        color: #6c757d;
-    }
-    
-    .variable-impact-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-    }
-    
-    .search-highlight {
-        background-color: #fff3cd;
-        padding: 2px 4px;
-        border-radius: 3px;
-    }
-    
-    .variable-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .variable-type-icon {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-size: 1.2rem;
-    }
-    
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/variable-list.css' %}">
 {% endblock extra_css %} 
+
 {% block content %}
-<!-- Loading Overlay -->
+<!-- Loading Overlay Mejorado -->
 <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Cargando...</span>
+    <div class="text-center">
+        <div class="loading-spinner"></div>
+        <h5 class="text-white mt-3">Cargando variables...</h5>
+        <p class="text-white-50">Por favor espere un momento</p>
     </div>
 </div>
 
@@ -76,65 +22,130 @@
 <div class="main-content">
   <div class="page-content">
     <div class="container-fluid">
-      {% block pagetitle %} 
-        {% include "partials/page-title.html" with pagetitle="Variable" title="Lista de variables" %} 
-      {% endblock pagetitle %}
       
-      <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
-        <div class="px-4">
-          <div class="row">
-            <div class="col-xxl-9 align-self-center">
-              <div class="py-4">
-                <h4 class="display-6 text-dark">Lista de variables</h4>
-                <div class="container">                      
-                  <p>Gestione las variables que componen su modelo de simulación empresarial.</p>
-                
-                  <h2>Características mejoradas:</h2>
-                
-                  <ul>
-                    <li><span class="text-primary fw-bold">Vista Inteligente:</span> Visualice las dependencias y el impacto de cada variable en el sistema de simulación.</li>
-                    
-                    <li><span class="text-success fw-bold">Edición Segura:</span> Actualice variables con validación automática de dependencias y prevención de cambios que puedan romper el modelo.</li>
-                
-                    <li><span class="text-warning fw-bold">Análisis de Impacto:</span> Antes de eliminar, vea qué ecuaciones y variables dependen del elemento seleccionado.</li>
-                
-                    <li><span class="text-info fw-bold">Búsqueda Avanzada:</span> Encuentre variables por nombre, tipo, producto o ecuaciones relacionadas.</li>
-                  </ul>
-                  
-                  <div class="alert alert-warning d-flex align-items-center mt-3" role="alert">
-                    <i class="ri-alert-line me-2 fs-4"></i>
-                    <div>
-                        <strong>Importante:</strong> Las variables y ecuaciones son elementos críticos del modelo de simulación. 
-                        La eliminación de cualquier elemento puede afectar la integridad del sistema.
-                    </div>
-                  </div>
+      <!-- Header Mejorado -->
+      <div class="page-header">
+        <div class="header-content">
+          <div class="row align-items-center">
+            <div class="col-lg-8">
+              <h1 class="display-4 fw-bold mb-3">
+                <i class="ri-function-line me-3"></i>
+                Variables del Sistema
+              </h1>
+              <p class="lead mb-4">
+                Gestione las variables que componen su modelo de simulación empresarial con herramientas avanzadas de análisis y control.
+              </p>
+              <div class="d-flex flex-wrap gap-3">
+                <div class="d-flex align-items-center">
+                  <i class="ri-eye-line me-2 fs-5"></i>
+                  <span>Vista Inteligente</span>
+                </div>
+                <div class="d-flex align-items-center">
+                  <i class="ri-shield-check-line me-2 fs-5"></i>
+                  <span>Edición Segura</span>
+                </div>
+                <div class="d-flex align-items-center">
+                  <i class="ri-search-line me-2 fs-5"></i>
+                  <span>Búsqueda Avanzada</span>
                 </div>
               </div>
             </div>
-            <div class="col-xxl-3 ms-auto">
-              <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                <img src="{% static 'images/variable-img.webp' %}" alt="Variables" class="img-fluid" style="max-width: 60%; height: auto;">                    
+            <div class="col-lg-4 text-end">
+              <div class="d-none d-lg-block">
+                <img src="{% static 'images/variable-img.webp' %}" alt="Variables" class="img-fluid" style="max-width: 70%; opacity: 0.8;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas Rápidas -->
+      <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="card stats-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stats-icon me-3">
+                  <i class="ri-function-line"></i>
+                </div>
+                <div>
+                  <h3 class="mb-1">{{ variables.paginator.count }}</h3>
+                  <p class="mb-0">Total Variables</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card stats-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stats-icon me-3">
+                  <i class="ri-input-method-line"></i>
+                </div>
+                <div>
+                  <h3 class="mb-1">{{ stats.exogenas|default:0 }}</h3>
+                  <p class="mb-0">Exógenas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card stats-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stats-icon me-3">
+                  <i class="ri-git-repository-line"></i>
+                </div>
+                <div>
+                  <h3 class="mb-1">{{ stats.estado|default:0 }}</h3>
+                  <p class="mb-0">Estado</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card stats-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stats-icon me-3">
+                  <i class="ri-links-line"></i>
+                </div>
+                <div>
+                  <h3 class="mb-1">{{ stats.endogenas|default:0 }}</h3>
+                  <p class="mb-0">Endógenas</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
       
-      <!-- Enhanced Filters Section -->
+      <!-- Filtros Mejorados -->
       <div class="row">
         <div class="col-lg-12">
-          <div class="card shadow-sm">
-            <div class="card-header">
-              <h6 class="card-title mb-0">
-                <i class="ri-filter-3-line me-2"></i>
-                Filtros Avanzados
-              </h6>
+          <div class="card filter-card">
+            <div class="card-header border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                  <i class="ri-filter-3-line me-2"></i>
+                  Filtros Inteligentes
+                </h6>
+                <button class="btn btn-glassmorphism filter-toggle" data-bs-toggle="collapse" data-bs-target="#filterSection">
+                  <i class="ri-arrow-down-s-line"></i>
+                </button>
+              </div>
             </div>
             <div class="card-body">
               <form method="GET" action="{% url 'variable:variable.list' %}" id="filterForm">
-                <div class="row g-3">
-                  <div class="col-md-3">
-                    <label for="product-select" class="form-label">Producto</label>
+                <div class="row g-3 collapse show" id="filterSection">
+                  <div class="col-lg-3 col-md-6">
+                    <label for="product-select" class="form-label">
+                      <i class="ri-product-hunt-line me-1"></i>
+                      Producto
+                    </label>
                     <select class="form-control" id="product-select" name="product_id">
                       <option value="">Todos los productos</option>
                       {% for product in products %}
@@ -148,58 +159,84 @@
                     </select>
                   </div>
                   
-                  <div class="col-md-3">
-                    <label for="type-select" class="form-label">Tipo de Variable</label>
+                  <div class="col-lg-3 col-md-6">
+                    <label for="type-select" class="form-label">
+                      <i class="ri-node-tree me-1"></i>
+                      Tipo de Variable
+                    </label>
                     <select class="form-control" id="type-select" name="type">
                       <option value="">Todos los tipos</option>
-                      <option value="1" {% if request.GET.type == "1" %}selected{% endif %}>Exógena</option>
-                      <option value="2" {% if request.GET.type == "2" %}selected{% endif %}>Estado</option>
-                      <option value="3" {% if request.GET.type == "3" %}selected{% endif %}>Endógena</option>
+                      <option value="1" {% if request.GET.type == "1" %}selected{% endif %}>🔵 Exógena</option>
+                      <option value="2" {% if request.GET.type == "2" %}selected{% endif %}>🟢 Estado</option>
+                      <option value="3" {% if request.GET.type == "3" %}selected{% endif %}>🟡 Endógena</option>
                     </select>
                   </div>
                   
-                  <div class="col-md-3">
-                    <label for="search-input" class="form-label">Buscar</label>
-                    <input type="text" class="form-control" id="search-input" name="search" 
-                           placeholder="Nombre, iniciales o descripción..." 
-                           value="{{ request.GET.search }}">
+                  <div class="col-lg-4 col-md-8">
+                    <label for="search-input" class="form-label">
+                      <i class="ri-search-line me-1"></i>
+                      Búsqueda Inteligente
+                    </label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="search-input" name="search" 
+                             placeholder="Nombre, iniciales, descripción..." 
+                             value="{{ request.GET.search }}">
+                      <button class="btn btn-glassmorphism" type="button" id="clearSearch">
+                        <i class="ri-close-line"></i>
+                      </button>
+                    </div>
                   </div>
                   
-                  <div class="col-md-3">
-                    <label for="sort-select" class="form-label">Ordenar por</label>
+                  <div class="col-lg-2 col-md-4">
+                    <label for="sort-select" class="form-label">
+                      <i class="ri-sort-asc me-1"></i>
+                      Ordenar
+                    </label>
                     <select class="form-control" id="sort-select" name="sort">
-                      <option value="-date_created" {% if request.GET.sort == "-date_created" %}selected{% endif %}>Más recientes</option>
-                      <option value="date_created" {% if request.GET.sort == "date_created" %}selected{% endif %}>Más antiguos</option>
-                      <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>Nombre (A-Z)</option>
-                      <option value="-name" {% if request.GET.sort == "-name" %}selected{% endif %}>Nombre (Z-A)</option>
+                      <option value="-date_created" {% if request.GET.sort == "-date_created" %}selected{% endif %}>🕒 Más recientes</option>
+                      <option value="date_created" {% if request.GET.sort == "date_created" %}selected{% endif %}>🕐 Más antiguos</option>
+                      <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>📝 Nombre (A-Z)</option>
+                      <option value="-name" {% if request.GET.sort == "-name" %}selected{% endif %}>📝 Nombre (Z-A)</option>
+                      <option value="type" {% if request.GET.sort == "type" %}selected{% endif %}>🏷️ Por tipo</option>
                     </select>
                   </div>
                 </div>
                 
-                <div class="row g-3 mt-2">
+                <div class="row g-3 mt-3">
                   <div class="col-md-6">
                     <div class="btn-group" role="group">
-                      <button type="submit" class="btn btn-primary">
+                      <button type="submit" class="btn btn-glassmorphism">
                         <i class="ri-search-line me-1"></i>
                         Buscar
                       </button>
-                      <a href="{% url 'variable:variable.list' %}" class="btn btn-light">
+                      <a href="{% url 'variable:variable.list' %}" class="btn btn-glassmorphism">
                         <i class="ri-refresh-line me-1"></i>
                         Limpiar
                       </a>
+                      <button type="button" class="btn btn-glassmorphism" id="btnAdvancedFilters">
+                        <i class="ri-settings-3-line me-1"></i>
+                        Avanzado
+                      </button>
                     </div>
                   </div>
                   
                   <div class="col-md-6 text-end">
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
-                      <i class="ri-add-fill me-1 align-bottom"></i>
-                      Nueva Variable
-                    </button>
-                    
-                    <button type="button" class="btn btn-info ms-2" id="btnExportVariables">
-                      <i class="ri-download-2-line me-1"></i>
-                      Exportar
-                    </button>
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
+                        <i class="ri-add-fill me-1 align-bottom"></i>
+                        Nueva Variable
+                      </button>
+                      
+                      <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="ri-download-2-line me-1"></i>
+                        Exportar
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" id="exportCSV"><i class="ri-file-text-line me-2"></i>CSV</a></li>
+                        <li><a class="dropdown-item" href="#" id="exportExcel"><i class="ri-file-excel-line me-2"></i>Excel</a></li>
+                        <li><a class="dropdown-item" href="#" id="exportPDF"><i class="ri-file-pdf-line me-2"></i>PDF</a></li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </form>
@@ -208,23 +245,23 @@
         </div>
       </div>
 
-      <!-- Variables Grid -->
-      <div class="variable-grid mt-4">
+      <!-- Grid de Variables Mejorado -->
+      <div class="variable-grid">
         {% for variable in variables %}
-          <div class="card variable-card">
-            <!-- Impact Badge -->
+          <div class="card variable-card" data-variable-id="{{ variable.id }}">
+            <!-- Impact Badge Mejorado -->
             {% if variable.equation_count > 0 %}
-              <span class="variable-impact-badge badge bg-danger">
-                <i class="ri-links-line"></i> {{ variable.equation_count }} ecuaciones
+              <span class="variable-impact-badge badge">
+                <i class="ri-links-line"></i> {{ variable.equation_count }}
               </span>
             {% endif %}
             
-            <div class="card-body">
+            <div class="card-body p-4">
               <div class="d-flex align-items-start mb-3">
                 <div class="variable-type-icon 
-                  {% if variable.type == 1 %}bg-success-subtle text-success
-                  {% elif variable.type == 2 %}bg-info-subtle text-info
-                  {% elif variable.type == 3 %}bg-warning-subtle text-warning
+                  {% if variable.type == 1 %}exogena bg-success-subtle text-success
+                  {% elif variable.type == 2 %}estado bg-info-subtle text-info
+                  {% elif variable.type == 3 %}endogena bg-warning-subtle text-warning
                   {% endif %} me-3">
                   {% if variable.type == 1 %}
                     <i class="ri-input-method-line"></i>
@@ -236,22 +273,32 @@
                 </div>
                 
                 <div class="flex-grow-1">
-                  <h5 class="card-title mb-1">
-                    <a href="{% url 'variable:variable.overview' variable.id %}" class="text-dark">
+                  <h5 class="card-title mb-2">
+                    <a href="{% url 'variable:variable.overview' variable.id %}" class="text-dark text-decoration-none">
                       {{ variable.name }}
                     </a>
                   </h5>
-                  <p class="text-muted mb-0">
-                    <span class="badge bg-light text-dark">{{ variable.initials }}</span>
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-primary">{{ variable.initials }}</span>
                     {% if variable.unit %}
-                      <span class="ms-2">{{ variable.unit }}</span>
+                      <span class="text-muted small">📏 {{ variable.unit }}</span>
                     {% endif %}
-                  </p>
+                    <span class="badge 
+                      {% if variable.type == 1 %}bg-success-subtle text-success
+                      {% elif variable.type == 2 %}bg-info-subtle text-info
+                      {% elif variable.type == 3 %}bg-warning-subtle text-warning
+                      {% endif %}">
+                      {% if variable.type == 1 %}Exógena
+                      {% elif variable.type == 2 %}Estado
+                      {% elif variable.type == 3 %}Endógena
+                      {% endif %}
+                    </span>
+                  </div>
                 </div>
                 
                 <div class="dropdown">
-                  <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
-                    <i class="ri-more-2-fill"></i>
+                  <button class="btn btn-link text-muted p-1" data-bs-toggle="dropdown">
+                    <i class="ri-more-2-fill fs-5"></i>
                   </button>
                   <div class="dropdown-menu dropdown-menu-end">
                     <a class="dropdown-item" href="{% url 'variable:variable.overview' variable.id %}">
@@ -262,6 +309,9 @@
                        data-variable-id="{{ variable.id }}"
                        onclick="loadVariableDetails('{{ variable.id }}'); return false;">
                       <i class="ri-pencil-line me-2"></i> Editar
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="duplicateVariable('{{ variable.id }}')">
+                      <i class="ri-file-copy-line me-2"></i> Duplicar
                     </a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item text-danger delete-variable" href="#" 
@@ -274,14 +324,14 @@
                 </div>
               </div>
               
-              <p class="card-text text-muted small mb-3">
-                {{ variable.description|truncatechars:100 }}
+              <p class="card-text text-muted mb-3" style="line-height: 1.6;">
+                {{ variable.description|truncatechars:120 }}
               </p>
               
-              <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="text-muted small">
                   <i class="ri-building-line me-1"></i>
-                  {{ variable.fk_product.name|truncatechars:20 }}
+                  {{ variable.fk_product.name|truncatechars:25 }}
                 </div>
                 <div class="text-muted small">
                   <i class="ri-calendar-line me-1"></i>
@@ -290,61 +340,86 @@
               </div>
               
               {% if variable.related_variables %}
-                <div class="variable-dependencies mt-2 pt-2 border-top">
+                <div class="variable-dependencies">
                   <i class="ri-git-branch-line me-1"></i>
-                  Relacionada con: {{ variable.related_variables|join:", " }}
+                  <strong>Relacionada con:</strong> {{ variable.related_variables|join:", " }}
                 </div>
               {% endif %}
+              
+              <!-- Barra de progreso de uso -->
+              <div class="mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <small class="text-muted">Uso en ecuaciones</small>
+                  <small class="text-muted">{{ variable.equation_count }}/10</small>
+                </div>
+                <div class="progress" style="height: 4px;">
+                  <div class="progress-bar bg-primary" style="width: {{ variable.usage_progress|default:0 }}%"></div>
+                </div>
+              </div>
             </div>
           </div>
         {% empty %}
           <div class="col-12">
-            <div class="card">
-              <div class="card-body text-center py-5">
-                <lord-icon
-                  src="https://cdn.lordicon.com/msoeawqm.json"
-                  trigger="loop"
-                  colors="primary:#405189,secondary:#0ab39c"
-                  style="width: 120px; height: 120px">
-                </lord-icon>
-                <h5 class="mt-4">No se encontraron variables</h5>
-                <p class="text-muted">
-                  {% if request.GET.search or request.GET.product_id or request.GET.type %}
-                    No hay variables que coincidan con los filtros aplicados.
-                  {% else %}
-                    Comience creando su primera variable para el modelo de simulación.
-                  {% endif %}
-                </p>
-                <button class="btn btn-success mt-3" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
-                  <i class="ri-add-line me-1"></i>
-                  Crear Primera Variable
-                </button>
-              </div>
+            <div class="empty-state">
+              <lord-icon
+                src="https://cdn.lordicon.com/msoeawqm.json"
+                trigger="loop"
+                colors="primary:#ffffff,secondary:#ffffff"
+                style="width: 120px; height: 120px">
+              </lord-icon>
+              <h3 class="mt-4">No se encontraron variables</h3>
+              <p class="lead mb-4">
+                {% if request.GET.search or request.GET.product_id or request.GET.type %}
+                  No hay variables que coincidan con los filtros aplicados.
+                  <br>Intente ajustar los criterios de búsqueda.
+                {% else %}
+                  Comience creando su primera variable para el modelo de simulación.
+                  <br>Las variables son los elementos fundamentales de su sistema.
+                {% endif %}
+              </p>
+              <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#addOrUpdateVariable">
+                <i class="ri-add-line me-2"></i>
+                Crear Primera Variable
+              </button>
             </div>
           </div>
         {% endfor %}
       </div>
           
-      <!-- Enhanced Pagination -->
+      <!-- Paginación Mejorada -->
       {% if variables.has_other_pages %}
-        <div class="row mt-4">
+        <div class="row mt-5">
           <div class="col-md-6">
-            <p class="text-muted mb-0">
-              Mostrando <strong>{{ variables.start_index }}</strong> a 
-              <strong>{{ variables.end_index }}</strong> de 
-              <strong>{{ variables.paginator.count }}</strong> variables
-            </p>
+            <div class="d-flex align-items-center">
+              <div class="stats-icon me-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <i class="ri-file-list-line text-white"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">
+                  {{ variables.start_index }} - {{ variables.end_index }} de {{ variables.paginator.count }}
+                </h6>
+                <p class="text-muted mb-0 small">Variables encontradas</p>
+              </div>
+            </div>
           </div>
           <div class="col-md-6">
             <nav aria-label="Navegación de variables">
               <ul class="pagination justify-content-end mb-0">
                 {% if variables.has_previous %}
                   <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Primera">
+                      <i class="ri-skip-back-line"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
                     <a class="page-link" href="?page={{ variables.previous_page_number }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Anterior">
                       <i class="ri-arrow-left-s-line"></i>
                     </a>
                   </li>
                 {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link"><i class="ri-skip-back-line"></i></span>
+                  </li>
                   <li class="page-item disabled">
                     <span class="page-link"><i class="ri-arrow-left-s-line"></i></span>
                   </li>
@@ -368,9 +443,17 @@
                       <i class="ri-arrow-right-s-line"></i>
                     </a>
                   </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ variables.paginator.num_pages }}{% if request.GET.product_id %}&product_id={{ request.GET.product_id }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Última">
+                      <i class="ri-skip-forward-line"></i>
+                    </a>
+                  </li>
                 {% else %}
                   <li class="page-item disabled">
                     <span class="page-link"><i class="ri-arrow-right-s-line"></i></span>
+                  </li>
+                  <li class="page-item disabled">
+                    <span class="page-link"><i class="ri-skip-forward-line"></i></span>
                   </li>
                 {% endif %}
               </ul>
@@ -378,6 +461,25 @@
           </div>
         </div>
       {% endif %}
+
+      <!-- Información adicional -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="ri-information-line me-3 fs-4"></i>
+            <div>
+                <strong>💡 Consejo:</strong> Use los filtros inteligentes para encontrar variables específicas. 
+                Las variables con más ecuaciones asociadas tienen mayor impacto en el sistema.
+                <br>
+                <small class="text-muted">
+                  🔵 <strong>Exógenas:</strong> Variables de entrada externa &nbsp;&nbsp;
+                  🟢 <strong>Estado:</strong> Variables de estado actual &nbsp;&nbsp;
+                  🟡 <strong>Endógenas:</strong> Variables calculadas internamente
+                </small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <!-- container-fluid -->
   </div>
@@ -388,57 +490,134 @@
 </div>
 <!-- end main content-->
 
-<!-- Enhanced Delete Confirmation Modal -->
+<!-- Modal de Confirmación de Eliminación Mejorado -->
 <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-gradient-danger text-white border-0">
         <h5 class="modal-title">
           <i class="ri-alert-line me-2"></i>
-          Advertencia: Análisis de Impacto
+          Análisis de Impacto de Eliminación
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="text-center mb-4">
+          <div class="avatar-xl mx-auto mb-3" style="background: linear-gradient(135deg, #ff6b6b, #ee5a52); border-radius: 50%;">
+            <i class="ri-delete-bin-line text-white" style="font-size: 2rem; line-height: 80px;"></i>
+          </div>
+          <h4 class="text-danger">¿Confirmar eliminación?</h4>
+        </div>
+        
+        <div class="alert alert-warning border-0" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7);">
+          <div class="d-flex">
+            <i class="ri-alert-triangle-line text-warning me-3 fs-4"></i>
+            <div>
+              <h6 class="alert-heading mb-2">Variable a eliminar:</h6>
+              <p class="mb-0"><strong id="deleteVariableName"></strong></p>
+            </div>
+          </div>
+        </div>
+        
+        <div id="impactAnalysis" class="card border-0 shadow-sm">
+          <div class="card-header bg-gradient-primary text-white">
+            <h6 class="card-title mb-0">
+              <i class="ri-error-warning-line me-2"></i>
+              Análisis de Impacto en el Sistema
+            </h6>
+          </div>
+          <div class="card-body">
+            <div id="impactDetails"></div>
+          </div>
+        </div>
+        
+        <div class="alert alert-danger border-0 mt-3" style="background: linear-gradient(135deg, #ffebee, #ffcdd2);">
+          <div class="d-flex">
+            <i class="ri-error-warning-line text-danger me-3 fs-4"></i>
+            <div>
+              <strong>¡Advertencia Crítica!</strong> Esta acción es irreversible y puede comprometer 
+              la integridad del modelo de simulación. Asegúrese de que no existan dependencias críticas.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <form id="deleteVariableForm" method="POST" class="w-100">
+          {% csrf_token %}
+          <div class="d-flex gap-3 justify-content-end">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+              <i class="ri-close-line me-1"></i>
+              Cancelar y Revisar
+            </button>
+            <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
+              <i class="ri-delete-bin-line me-1"></i>
+              Confirmar Eliminación
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Filtros Avanzados -->
+<div class="modal fade" id="advancedFiltersModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-gradient-primary text-white">
+        <h5 class="modal-title">
+          <i class="ri-settings-3-line me-2"></i>
+          Filtros Avanzados
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="text-center mb-4">
-          <lord-icon
-            src="https://cdn.lordicon.com/gsqxdxog.json"
-            trigger="loop"
-            colors="primary:#f7b84b,secondary:#f06548"
-            style="width: 100px; height: 100px">
-          </lord-icon>
-        </div>
-        
-        <h6 class="text-danger">¿Está seguro de eliminar esta variable?</h6>
-        <p class="mb-3">
-          Variable: <strong id="deleteVariableName"></strong>
-        </p>
-        
-        <div id="impactAnalysis" class="alert alert-warning">
-          <h6 class="alert-heading">
-            <i class="ri-error-warning-line me-2"></i>
-            Impacto en el Sistema
-          </h6>
-          <div id="impactDetails"></div>
-        </div>
-        
-        <div class="alert alert-danger">
-          <i class="ri-alert-line me-2"></i>
-          <strong>¡Advertencia!</strong> Esta acción no se puede deshacer y puede afectar el funcionamiento del modelo de simulación.
-        </div>
+        <form id="advancedFilterForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Rango de fechas de creación</label>
+              <div class="input-group">
+                <input type="date" class="form-control" name="date_from" placeholder="Desde">
+                <input type="date" class="form-control" name="date_to" placeholder="Hasta">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Número de ecuaciones</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="equations_min" placeholder="Mínimo">
+                <input type="number" class="form-control" name="equations_max" placeholder="Máximo">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Unidad de medida</label>
+              <select class="form-select" name="unit">
+                <option value="">Todas las unidades</option>
+                <option value="Bs">Bs (Bolivianos)</option>
+                <option value="USD">USD (Dólares)</option>
+                <option value="L">L (Litros)</option>
+                <option value="Kg">Kg (Kilogramos)</option>
+                <option value="%">% (Porcentaje)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Estado de uso</label>
+              <select class="form-select" name="usage_status">
+                <option value="">Todos los estados</option>
+                <option value="unused">Sin usar</option>
+                <option value="low">Poco usado (1-2 ecuaciones)</option>
+                <option value="medium">Uso medio (3-5 ecuaciones)</option>
+                <option value="high">Muy usado (6+ ecuaciones)</option>
+              </select>
+            </div>
+          </div>
+        </form>
       </div>
       <div class="modal-footer">
-        <form id="deleteVariableForm" method="POST">
-          {% csrf_token %}
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-            <i class="ri-close-line me-1"></i>
-            Cancelar
-          </button>
-          <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
-            <i class="ri-delete-bin-line me-1"></i>
-            Eliminar de todos modos
-          </button>
-        </form>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="applyAdvancedFilters()">
+          <i class="ri-filter-line me-1"></i>
+          Aplicar Filtros
+        </button>
       </div>
     </div>
   </div>
@@ -456,87 +635,5 @@
 {% block extra_js %}
   <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
   <script src="{% static 'js/edit-add.js' %}"></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Enhanced delete functionality with impact analysis
-      const deleteButtons = document.querySelectorAll('.delete-variable');
-      const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
-      const deleteForm = document.getElementById('deleteVariableForm');
-      
-      deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-          e.preventDefault();
-          
-          const variableId = this.dataset.variableId;
-          const variableName = this.dataset.variableName;
-          const equationCount = parseInt(this.dataset.equationCount) || 0;
-          
-          // Set variable name
-          document.getElementById('deleteVariableName').textContent = variableName;
-          
-          // Set form action
-          deleteForm.action = `/variable/delete/${variableId}/`;
-          
-          // Impact analysis
-          const impactDetails = document.getElementById('impactDetails');
-          impactDetails.innerHTML = '';
-          
-          if (equationCount > 0) {
-            impactDetails.innerHTML = `
-              <p class="mb-0">
-                <strong>${equationCount}</strong> ecuación(es) dependen de esta variable.
-                <br>
-                <small>La eliminación de esta variable puede causar errores en el modelo de simulación.</small>
-              </p>
-            `;
-          } else {
-            impactDetails.innerHTML = `
-              <p class="mb-0">
-                Esta variable no tiene ecuaciones dependientes directas, pero puede estar 
-                relacionada con otros elementos del sistema.
-              </p>
-            `;
-          }
-          
-          deleteModal.show();
-        });
-      });
-      
-      // Auto-submit filter form on change
-      const filterInputs = document.querySelectorAll('#filterForm select, #filterForm input');
-      let filterTimeout;
-      
-      filterInputs.forEach(input => {
-        if (input.type === 'text') {
-          input.addEventListener('input', function() {
-            clearTimeout(filterTimeout);
-            filterTimeout = setTimeout(() => {
-              document.getElementById('loadingOverlay').style.display = 'flex';
-              document.getElementById('filterForm').submit();
-            }, 500);
-          });
-        } else {
-          input.addEventListener('change', function() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('filterForm').submit();
-          });
-        }
-      });
-      
-      // Export functionality
-      document.getElementById('btnExportVariables').addEventListener('click', function() {
-        const params = new URLSearchParams(window.location.search);
-        params.append('export', 'csv');
-        window.location.href = `${window.location.pathname}?${params.toString()}`;
-      });
-      
-      // Show loading overlay on form submit
-      document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function() {
-          document.getElementById('loadingOverlay').style.display = 'flex';
-        });
-      });
-    });
-  </script>
+  <script src="{% static 'js/variable/variable-list.js' %}"></script>
 {% endblock extra_js %}

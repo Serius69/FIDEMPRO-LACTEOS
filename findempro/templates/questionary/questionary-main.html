@@ -1,66 +1,12 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% load questionary_tags %}
 {% block title %}Cuestionario{% endblock title %}
+
 {% block extra_css %}
-<style>
-    .historical-data-table {
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #dee2e6;
-        border-radius: 0.25rem;
-    }
-    .question-card {
-        border-left: 4px solid #0066cc;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-    }
-    .question-card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15);
-        transform: translateY(-2px);
-    }
-    .variable-badge {
-        background-color: #e7f3ff;
-        color: #0066cc;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-    .question-number {
-        background-color: #0066cc;
-        color: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-right: 10px;
-    }
-    .progress-info {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    .data-input-row {
-        margin-bottom: 5px;
-    }
-    .success-message {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1050;
-        display: none;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/questionary-main.css' %}">
 {% endblock extra_css %}
+
 {% block content %}
-<!-- ============================================================== -->
-<!-- Start right Content here -->
-<!-- ============================================================== -->
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
@@ -68,110 +14,184 @@
             {% include "partials/page-title.html" with pagetitle="Cuestionario" title="Resolver Cuestionario" %}
             {% endblock pagetitle %}
             
-            <!-- Mensaje de éxito flotante -->
-            <div class="alert alert-success success-message" role="alert">
-                <i class="fa fa-check-circle"></i> <span id="success-text">Operación exitosa</span>
-            </div>
+            <!-- Mensajes flash -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fa fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
             
+            <!-- Header principal -->
             <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
                 <div class="px-4">
                     <div class="row">
                         <div class="col-xxl-9 align-self-center">
                             <div class="py-4">
-                                <h4 class="display-6 -text">CUESTIONARIO</h4>
+                                <h4 class="display-6 mb-3">CUESTIONARIO</h4>
                                 <div class="container">
-                                    <p>
+                                    <p class="lead">
                                         Elija el cuestionario del producto al que desea agregar información. Con esta información, le brindamos la posibilidad de hacer simulaciones y comprender el estado de su negocio.
                                     </p>
-                                    <h2>Características clave:</h2>
-                                    <ul>
-                                        <li><span class="text-success">Iniciar cuestionario:</span> Comience a responder preguntas sobre su producto.</li>
-                                        <li><span class="text-info">Opciones cuestionadoras:</span> Elija el cuestionario al que desee responder.</li>
-                                    </ul>
+                                    <div class="row mt-4">
+                                        <div class="col-md-6">
+                                            <h5>Características clave:</h5>
+                                            <ul class="list-unstyled">
+                                                <li class="mb-2">
+                                                    <i class="fa fa-play-circle text-success me-2"></i>
+                                                    <span class="fw-bold">Iniciar cuestionario:</span> Comience a responder preguntas sobre su producto.
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="fa fa-list-alt text-info me-2"></i>
+                                                    <span class="fw-bold">Opciones cuestionadoras:</span> Elija el cuestionario al que desee responder.
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>Atajos de teclado:</h5>
+                                            <ul class="list-unstyled small">
+                                                <li><kbd>Ctrl</kbd> + <kbd>S</kbd> Guardar respuestas</li>
+                                                <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> Finalizar cuestionario</li>
+                                                <li><kbd>Esc</kbd> Cancelar cuestionario</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-xxl-3 col-xl-4 col-lg-6 col-md-12 ms-auto">
                             <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
-                                <img src="{% static 'images/questionary-img.webp'%}" alt="Product Image" class="img-fluid" style="width: 200%; height: 150%;">
+                                <img src="{% static 'images/questionary-img.webp'%}" alt="Cuestionario" class="img-fluid" style="max-height: 200px; border-radius: 0.5rem;">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Contenido principal -->
             <div class="card w-100 h-100">
                 <div class="card-header border-0 rounded">
                     <div class="row g-6 mb-4">
-                        <!-- Panel izquierdo -->
+                        <!-- Panel izquierdo - Selección y control -->
                         <div class="col-md-4">                                        
                             {% if not started_questionary %}
-                                <form method="GET" action="{% url 'questionary:questionary.main' %}" onsubmit="return validateForm()">
-                                    {% csrf_token %}
-                                    <div class="input-group mb-2">
-                                        <label class="input-group-text" for="inputGroupSelect01">
-                                            <i class="fa fa-list"></i> Cuestionarios
-                                        </label>
-                                        <select class="form-select" id="inputGroupSelect01" name="selected_questionary_id">
-                                            <option value="">Escoja su opción</option>
-                                            {% for questionary in questionnaires %}
-                                                <option value="{{ questionary.id }}" 
-                                                {% if questionary.id|stringformat:"s" == selected_questionary_id|stringformat:"s" %} selected {% endif %}>
-                                                    {{ questionary.questionary }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div> 
-                                    <div class="d-grid gap-1">
-                                        <button type="submit" name="select" class="btn btn-primary">
-                                            <i class="fa fa-check"></i> Seleccionar
-                                        </button>
-                                    </div>
-                                </form>
-                                
-                                {% if selected_questionary_id %}
-                                    <div class="d-grid gap-1 mt-3">
-                                        <form method="POST" action="{% url 'questionary:questionary.main' %}">
-                                            {% csrf_token %}
-                                            <button type="submit" name="start" class="btn btn-success btn-lg w-100">
-                                                <i class="fa fa-play"></i> Iniciar cuestionario
-                                            </button>
-                                        </form>
-                                    </div>
-                                {% endif %}
-                            {% endif %}
-                            
-                            {% if started_questionary %}
+                                <!-- Formulario de selección -->
                                 <div class="card shadow-sm">
                                     <div class="card-header bg-primary text-white">
                                         <h5 class="card-title mb-0">
-                                            <i class="fa fa-info-circle"></i> Información del cuestionario
+                                            <i class="fa fa-list"></i> Seleccionar Cuestionario
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="GET" action="{% url 'questionary:questionary.main' %}">
+                                            <div class="form-group mb-3">
+                                                <label for="inputGroupSelect01" class="form-label">
+                                                    <i class="fa fa-list-alt"></i> Cuestionarios disponibles
+                                                </label>
+                                                <select class="form-select" id="inputGroupSelect01" name="selected_questionary_id" required>
+                                                    <option value="">Escoja su opción</option>
+                                                    {% for questionary in questionnaires %}
+                                                        <option value="{{ questionary.id }}" 
+                                                                data-product="{{ questionary.fk_product.name }}"
+                                                        {% if questionary.id|stringformat:"s" == selected_questionary_id|stringformat:"s" %} selected {% endif %}>
+                                                            {{ questionary.questionary }} - {{ questionary.fk_product.name }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                                <div class="form-text">
+                                                    Seleccione el cuestionario que desea completar
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-grid">
+                                                <button type="submit" name="select" class="btn btn-primary">
+                                                    <i class="fa fa-check"></i> Seleccionar Cuestionario
+                                                </button>
+                                            </div>
+                                        </form>
+                                        
+                                        {% if selected_questionary_id %}
+                                            <hr>
+                                            <div class="d-grid">
+                                                <form method="POST" action="{% url 'questionary:questionary.main' %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" name="start" class="btn btn-success btn-lg w-100">
+                                                        <i class="fa fa-play"></i> Iniciar Cuestionario
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Información adicional -->
+                                {% if questionnaires %}
+                                <div class="card shadow-sm mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="card-title mb-0">
+                                            <i class="fa fa-info-circle"></i> Información
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="small mb-2">
+                                            <strong>Total cuestionarios:</strong> {{ questionnaires|length }}
+                                        </p>
+                                        <p class="small mb-0">
+                                            Seleccione un cuestionario para ver el detalle de las preguntas.
+                                        </p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <!-- Panel de información del cuestionario activo -->
+                                <div class="card shadow-sm">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fa fa-info-circle"></i> Información del Cuestionario
                                         </h5>
                                     </div>
                                     <div class="card-body">
                                         <dl class="row">
                                             <dt class="col-sm-4">Nombre:</dt>
-                                            <dd class="col-sm-8">{{ show_questionary.questionary }}</dd>
+                                            <dd class="col-sm-8">{{ show_questionary.questionary|truncatechars:30 }}</dd>
                                             
                                             <dt class="col-sm-4">Producto:</dt>
                                             <dd class="col-sm-8">{{ show_questionary.fk_product.name }}</dd>
+                                            
+                                            <dt class="col-sm-4">Negocio:</dt>
+                                            <dd class="col-sm-8">{{ show_questionary.fk_product.fk_business.name|default:"No especificado" }}</dd>
                                         </dl>
                                         
                                         <hr>
                                         
                                         <h6><i class="fa fa-question-circle"></i> Instrucciones:</h6>
-                                        <ol class="small">
-                                            <li>Lea cada pregunta cuidadosamente</li>
-                                            <li>Complete todos los campos requeridos</li>
-                                            <li>Para datos históricos, ingrese mínimo 30 valores</li>
-                                            <li>Use "Guardar y continuar" para avanzar</li>
-                                            <li>Puede navegar entre páginas sin perder datos</li>
-                                        </ol>
+                                        <div class="alert alert-light">
+                                            <ol class="small mb-0">
+                                                <li>Lea cada pregunta cuidadosamente</li>
+                                                <li>Complete todos los campos requeridos</li>
+                                                <li>Para datos históricos, ingrese mínimo 30 valores</li>
+                                                <li>Use "Guardar y continuar" para avanzar</li>
+                                                <li>Puede navegar entre páginas sin perder datos</li>
+                                            </ol>
+                                        </div>
                                         
-                                        <!-- Progreso -->
+                                        <!-- Progreso mejorado -->
                                         <div class="progress-info mt-3">
-                                            <h6>Progreso del cuestionario</h6>
-                                            <div class="progress">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="mb-0">Progreso del cuestionario</h6>
+                                                <span class="badge bg-primary">
+                                                    {% if questions_to_answer.paginator.num_pages > 0 %}
+                                                        {% widthratio questions_to_answer.number questions_to_answer.paginator.num_pages 100 as progress %}
+                                                        {{ progress }}%
+                                                    {% else %}
+                                                        0%
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            <div class="progress mb-2" style="height: 8px;">
                                                 {% if questions_to_answer.paginator.num_pages > 0 %}
                                                     {% widthratio questions_to_answer.number questions_to_answer.paginator.num_pages 100 as progress %}
                                                     <div class="progress-bar bg-success" role="progressbar" 
@@ -179,193 +199,327 @@
                                                          aria-valuenow="{{ progress }}" 
                                                          aria-valuemin="0" 
                                                          aria-valuemax="100">
-                                                        {{ progress }}%
                                                     </div>
                                                 {% endif %}
                                             </div>
-                                            <small class="text-muted">
-                                                Página {{ questions_to_answer.number }} de {{ questions_to_answer.paginator.num_pages }}
-                                            </small>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted">
+                                                    Página {{ questions_to_answer.number }} de {{ questions_to_answer.paginator.num_pages }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    {{ questions_to_answer|length }} pregunta{{ questions_to_answer|length|pluralize }} en esta página
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="card-footer">
                                         <form method="POST" action="{% url 'questionary:questionary.main' %}">
                                             {% csrf_token %}
-                                            <button type="submit" name="cancel" class="btn btn-danger btn-sm w-100">
-                                                <i class="fa fa-times"></i> Cancelar cuestionario
+                                            <button type="submit" name="cancel" class="btn btn-danger btn-sm w-100"
+                                                    onclick="return confirm('¿Está seguro de que desea cancelar el cuestionario? Se guardará como borrador.')">
+                                                <i class="fa fa-times"></i> Cancelar Cuestionario
                                             </button>
                                         </form>
+                                    </div>
+                                </div>
+
+                                <!-- Panel de herramientas -->
+                                <div class="card shadow-sm mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="card-title mb-0">
+                                            <i class="fa fa-tools"></i> Herramientas
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-grid gap-2">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                    onclick="exportQuestionaryData()"
+                                                    data-bs-toggle="tooltip" title="Exportar datos del cuestionario">
+                                                <i class="fa fa-download"></i> Exportar Datos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                    onclick="printQuestionary()"
+                                                    data-bs-toggle="tooltip" title="Imprimir cuestionario">
+                                                <i class="fa fa-print"></i> Imprimir
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info btn-sm" 
+                                                    onclick="autoSave()"
+                                                    data-bs-toggle="tooltip" title="Guardar borrador">
+                                                <i class="fa fa-save"></i> Guardar Borrador
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             {% endif %}
                         </div>
                         
-                        <!-- Panel derecho -->
+                        <!-- Panel derecho - Contenido principal -->
                         <div class="col-md-8">
                             {% if not started_questionary %}
                                 {% if questions %}
-                                    <h5 class="mb-3">
-                                        <i class="fa fa-list-alt"></i> Preguntas del cuestionario
-                                    </h5>
-                                    {% for question in questions %}
-                                        <div class="card questionlist-card mb-2 shadow-sm">
-                                            <div class="card-body">
-                                                <div class="row align-items-center">
-                                                    <div class="col-md-1">
-                                                        <span class="question-number">{{ forloop.counter }}</span>
+                                    <div class="card shadow">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="fa fa-list-alt"></i> Preguntas del Cuestionario
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            {% for question in questions %}
+                                                <div class="questionlist-card card mb-3 shadow-sm" data-question-id="{{ question.id }}">
+                                                    <div class="card-body">
+                                                        <div class="row align-items-center">
+                                                            <div class="col-md-1">
+                                                                <span class="question-number">{{ forloop.counter }}</span>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="mb-2">
+                                                                    <span class="variable-badge">
+                                                                        <i class="fa fa-tag"></i> {{ question.fk_variable.name }}
+                                                                    </span>
+                                                                </div>
+                                                                <div class="small text-muted">
+                                                                    <i class="fa fa-ruler"></i> <strong>Unidad:</strong> 
+                                                                    <span class="unit-text">{{ question.fk_variable.unit|default:"No especificada" }}</span>
+                                                                </div>
+                                                                <div class="small text-muted mt-1">
+                                                                    <i class="fa fa-info-circle"></i> <strong>Tipo:</strong> 
+                                                                    {% if question.type == 1 %}
+                                                                        Numérico
+                                                                    {% elif question.type == 2 %}
+                                                                        Selección
+                                                                    {% elif question.type == 3 %}
+                                                                        Datos históricos
+                                                                    {% else %}
+                                                                        Texto
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-7">
+                                                                <p class="mb-0 fw-medium">{{ question.question }}</p>
+                                                                {% if question.type == 2 and question.possible_answers %}
+                                                                    <div class="mt-2">
+                                                                        <small class="text-muted">
+                                                                            <strong>Opciones:</strong> 
+                                                                            {{ question.possible_answers|join:", "|truncatechars:50 }}
+                                                                        </small>
+                                                                    </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-5">
-                                                        <span class="variable-badge">
-                                                            <i class="fa fa-tag"></i> {{ question.fk_variable.name }}
-                                                        </span>
-                                                        <p class="text-muted mb-0 mt-1">
-                                                            <small>Unidad: <strong>{{ question.fk_variable.unit }}</strong></small>
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <p class="mb-0">{{ question.question }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>                                                    
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="text-center py-5">
-                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                        <h5 class="mt-2">No hay preguntas disponibles</h5>
-                                        <p class="text-muted">Seleccione un cuestionario para ver las preguntas</p>
-                                    </div>
-                                {% endif %}
-                                
-                                <!-- Paginación -->
-                                {% if questions.has_other_pages %}
-                                <div class="d-flex justify-content-between align-items-center mt-4">
-                                    <div class="text-muted">
-                                        Página <span class="fw-semibold">{{ questions.number }}</span>
-                                        de <span class="fw-semibold">{{ questions.paginator.num_pages }}</span>
-                                    </div>
-                                    <nav>
-                                        <ul class="pagination pagination-sm mb-0">
-                                            {% if questions.has_previous %}
-                                            <li class="page-item">
-                                                <a href="?page={{ questions.previous_page_number }}" class="page-link">
-                                                    <i class="fa fa-chevron-left"></i>
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                            
-                                            {% for i in questions.paginator.page_range %}
-                                                {% if i > questions.number|add:'-3' and i < questions.number|add:'3' %}
-                                                <li class="page-item {% if i == questions.number %}active{% endif %}">
-                                                    <a href="?page={{ i }}" class="page-link">{{ i }}</a>
-                                                </li>
-                                                {% endif %}
+                                                </div>                                                    
                                             {% endfor %}
-                                            
-                                            {% if questions.has_next %}
-                                            <li class="page-item">
-                                                <a href="?page={{ questions.next_page_number }}" class="page-link">
-                                                    <i class="fa fa-chevron-right"></i>
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </nav>
-                                </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Paginación mejorada -->
+                                    {% if questions.has_other_pages %}
+                                    <div class="card mt-3">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="text-muted">
+                                                    <i class="fa fa-info-circle"></i>
+                                                    Página <span class="fw-semibold">{{ questions.number }}</span>
+                                                    de <span class="fw-semibold">{{ questions.paginator.num_pages }}</span>
+                                                    ({{ questions.paginator.count }} preguntas total)
+                                                </div>
+                                                <nav aria-label="Navegación de preguntas">
+                                                    <ul class="pagination pagination-sm mb-0">
+                                                        {% if questions.has_previous %}
+                                                        <li class="page-item">
+                                                            <a href="?page={{ questions.previous_page_number }}&select=1&selected_questionary_id={{ selected_questionary_id }}" 
+                                                               class="page-link" data-bs-toggle="tooltip" title="Página anterior">
+                                                                <i class="fa fa-chevron-left"></i>
+                                                            </a>
+                                                        </li>
+                                                        {% endif %}
+                                                        
+                                                        {% for i in questions.paginator.page_range %}
+                                                            {% if i > questions.number|add:'-3' and i < questions.number|add:'3' %}
+                                                            <li class="page-item {% if i == questions.number %}active{% endif %}">
+                                                                <a href="?page={{ i }}&select=1&selected_questionary_id={{ selected_questionary_id }}" 
+                                                                   class="page-link">{{ i }}</a>
+                                                            </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        
+                                                        {% if questions.has_next %}
+                                                        <li class="page-item">
+                                                            <a href="?page={{ questions.next_page_number }}&select=1&selected_questionary_id={{ selected_questionary_id }}" 
+                                                               class="page-link" data-bs-toggle="tooltip" title="Página siguiente">
+                                                                <i class="fa fa-chevron-right"></i>
+                                                            </a>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </nav>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Estado vacío mejorado -->
+                                    <div class="card shadow">
+                                        <div class="card-body text-center py-5">
+                                            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                                       trigger="loop" 
+                                                       colors="primary:#405189,secondary:#0ab39c" 
+                                                       style="width:100px;height:100px">
+                                            </lord-icon>
+                                            <h5 class="mt-3">No hay preguntas disponibles</h5>
+                                            <p class="text-muted mb-3">Seleccione un cuestionario para ver las preguntas</p>
+                                            <div class="alert alert-info">
+                                                <i class="fa fa-lightbulb"></i>
+                                                <strong>Sugerencia:</strong> Use el panel izquierdo para seleccionar un cuestionario de la lista.
+                                            </div>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             {% endif %}
                             
                             {% if started_questionary %}
+                                <!-- Formulario de respuestas -->
                                 <div class="card mb-3 shadow">
                                     <div class="card-header bg-light">
-                                        <h5 class="mb-0">
-                                            <i class="fa fa-edit"></i> Responder preguntas
-                                        </h5>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">
+                                                <i class="fa fa-edit"></i> Responder Preguntas
+                                            </h5>
+                                            <div class="badge bg-info">
+                                                {{ questions_to_answer.start_index }} - {{ questions_to_answer.end_index }} 
+                                                de {{ questions_to_answer.paginator.count }}
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="card-body">
                                         {% if questions_to_answer %}
-                                            <form method="POST" action="{% url 'questionary:questionary.main' %}" id="questionForm" onsubmit="return validateAnswers()">
+                                            <form method="POST" action="{% url 'questionary:questionary.main' %}" 
+                                                  id="questionForm" class="needs-validation" novalidate>
                                                 {% csrf_token %}
                                                 <input type="hidden" name="current_page" value="{{ questions_to_answer.number }}">
                                                 
                                                 {% for question in questions_to_answer %}
-                                                    <div class="question-card card mb-3">
+                                                    <div class="question-card card mb-4" id="question-{{ question.id }}" data-question-id="{{ question.id }}">
                                                         <div class="card-body">
-                                                            <div class="d-flex align-items-start mb-2">
-                                                                <span class="question-number me-3">{{ forloop.counter0|add:questions_to_answer.start_index }}</span>
+                                                            <div class="d-flex align-items-start mb-3">
+                                                                <span class="question-number me-3">
+                                                                    {{ forloop.counter0|add:questions_to_answer.start_index }}
+                                                                </span>
                                                                 <div class="flex-grow-1">
-                                                                    <h6 class="card-title mb-2">
-                                                                        Variable: <span class="variable-badge">{{ question.fk_variable.name }}</span>
-                                                                    </h6>
-                                                                    <input type="hidden" name="question_{{ question.id }}" value="{{ question.id }}">
-                                                                    <p class="card-text mb-3">{{ question.question }}</p>
+                                                                    <div class="mb-3">
+                                                                        <h6 class="card-title mb-2">
+                                                                            Variable: <span class="variable-badge">{{ question.fk_variable.name }}</span>
+                                                                            {% if question.fk_variable.unit %}
+                                                                                <span class="badge bg-light text-dark ms-2">
+                                                                                    <i class="fa fa-ruler"></i> {{ question.fk_variable.unit }}
+                                                                                </span>
+                                                                            {% endif %}
+                                                                        </h6>
+                                                                        <input type="hidden" name="question_{{ question.id }}" value="{{ question.id }}">
+                                                                        <p class="card-text mb-3">{{ question.question }}</p>
+                                                                    </div>
                                                                     
                                                                     {% if question.type == 1 %}
                                                                         <!-- Tipo numérico -->
-                                                                        <div class="input-group">
-                                                                            <input type="number" 
-                                                                                   value="{% if existing_answers %}{{ existing_answers|get_item:question.id|default:'' }}{% endif %}"
-                                                                                   class="form-control" 
-                                                                                   name="answer_{{ question.id }}"
-                                                                                   id="answer_{{ question.id }}"
-                                                                                   placeholder="Ingrese un valor numérico"
-                                                                                   required 
-                                                                                   min="0" 
-                                                                                   step="0.01">
-                                                                            <span class="input-group-text">{{ question.fk_variable.unit }}</span>
+                                                                        <div class="form-group">
+                                                                            <label for="answer_{{ question.id }}" class="form-label">
+                                                                                Ingrese el valor numérico
+                                                                                <span class="text-danger">*</span>
+                                                                            </label>
+                                                                            <div class="input-group">
+                                                                                <input type="number" 
+                                                                                       value="{% for ans_key, ans_value in existing_answers.items %}{% if ans_key == question.id %}{{ ans_value }}{% endif %}{% endfor %}"
+                                                                                       class="form-control" 
+                                                                                       name="answer_{{ question.id }}"
+                                                                                       id="answer_{{ question.id }}"
+                                                                                       placeholder="Ingrese un valor numérico"
+                                                                                       required 
+                                                                                       min="0" 
+                                                                                       step="0.01"
+                                                                                       data-bs-toggle="tooltip"
+                                                                                       title="Este campo es obligatorio">
+                                                                                <span class="input-group-text">{{ question.fk_variable.unit|default:"unidades" }}</span>
+                                                                            </div>
+                                                                            <div class="invalid-feedback">
+                                                                                Por favor ingrese un valor numérico válido.
+                                                                            </div>
                                                                         </div>
                                                                         
                                                                     {% elif question.type == 2 %}
                                                                         <!-- Tipo selección -->
                                                                         <div class="form-group">
-                                                                            <select class="form-control" id="answer_{{ question.id }}" name="answer_{{ question.id }}" required>
+                                                                            <label for="answer_{{ question.id }}" class="form-label">
+                                                                                Seleccione una opción
+                                                                                <span class="text-danger">*</span>
+                                                                            </label>
+                                                                            <select class="form-select" id="answer_{{ question.id }}" name="answer_{{ question.id }}" required>
                                                                                 <option value="">-- Seleccione una opción --</option>
                                                                                 {% for option in question.possible_answers %}
                                                                                     <option value="{{ option }}" 
-                                                                                            {% if existing_answers and existing_answers|get_item:question.id == option %}selected{% endif %}>
+                                                                                            {% for ans_key, ans_value in existing_answers.items %}{% if ans_key == question.id and ans_value == option %}selected{% endif %}{% endfor %}>
                                                                                         {{ option }}
                                                                                     </option>
                                                                                 {% endfor %}
                                                                             </select>
+                                                                            <div class="invalid-feedback">
+                                                                                Por favor seleccione una opción.
+                                                                            </div>
                                                                         </div>
                                                                         
                                                                     {% elif question.type == 3 %}
                                                                         <!-- Tipo datos históricos -->
                                                                         <div class="form-group">
                                                                             <div class="alert alert-info">
-                                                                                <i class="fa fa-info-circle"></i> Ingrese al menos 30 datos históricos de demanda
+                                                                                <i class="fa fa-info-circle"></i> 
+                                                                                <strong>Datos históricos requeridos:</strong> Ingrese al menos 30 datos históricos de demanda
                                                                             </div>
-                                                                            <div class="historical-data-table mb-2">
-                                                                                <table class="table table-sm" id="numberTable_{{ question.id }}">
-                                                                                    <thead class="table-light">
-                                                                                        <tr>
-                                                                                            <th width="60">Nro</th>
-                                                                                            <th>Valor</th>
-                                                                                            <th width="100">Unidad</th>
-                                                                                            <th width="100">Acción</th>
-                                                                                        </tr>
-                                                                                    </thead>
-                                                                                    <tbody id="tbody_{{ question.id }}">
-                                                                                        <!-- Filas dinámicas aquí -->
-                                                                                    </tbody>
-                                                                                </table>
+                                                                            
+                                                                            <div class="historical-data-container">
+                                                                                <div class="historical-data-table mb-3">
+                                                                                    <table class="table table-sm table-hover" id="numberTable_{{ question.id }}">
+                                                                                        <thead class="table-dark">
+                                                                                            <tr>
+                                                                                                <th width="60" class="text-center">Período</th>
+                                                                                                <th>Valor</th>
+                                                                                                <th width="100" class="text-center">Unidad</th>
+                                                                                                <th width="100" class="text-center">Acción</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody id="tbody_{{ question.id }}">
+                                                                                            <!-- Filas dinámicas aquí -->
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                                
+                                                                                <div class="btn-group mb-3" role="group" aria-label="Controles de datos históricos">
+                                                                                    <button type="button" onclick="agregarFila({{ question.id }})" 
+                                                                                            class="btn btn-sm btn-primary"
+                                                                                            data-bs-toggle="tooltip" title="Agregar una fila">
+                                                                                        <i class="fa fa-plus"></i> Agregar Fila
+                                                                                    </button>
+                                                                                    <button type="button" onclick="agregarMultiplesFila({{ question.id }}, 10)" 
+                                                                                            class="btn btn-sm btn-info"
+                                                                                            data-bs-toggle="tooltip" title="Agregar 10 filas rápidamente">
+                                                                                        <i class="fa fa-plus-circle"></i> +10 Filas
+                                                                                    </button>
+                                                                                    <button type="button" onclick="guardarDatosHistoricos({{ question.id }})" 
+                                                                                            class="btn btn-sm btn-success"
+                                                                                            data-bs-toggle="tooltip" title="Validar y guardar los datos">
+                                                                                        <i class="fa fa-save"></i> Validar Datos
+                                                                                    </button>
+                                                                                </div>
+                                                                                
+                                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                                    <span class="badge bg-secondary" id="contador_{{ question.id }}">0 datos ingresados</span>
+                                                                                    <div class="progress" style="width: 200px; height: 6px;">
+                                                                                        <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
-                                                                            <div class="btn-group" role="group">
-                                                                                <button type="button" onclick="agregarFila({{ question.id }})" class="btn btn-sm btn-primary">
-                                                                                    <i class="fa fa-plus"></i> Agregar Fila
-                                                                                </button>
-                                                                                <button type="button" onclick="agregarMultiplesFila({{ question.id }}, 10)" class="btn btn-sm btn-info">
-                                                                                    <i class="fa fa-plus-circle"></i> Agregar 10 Filas
-                                                                                </button>
-                                                                                <button type="button" onclick="guardarDatosHistoricos({{ question.id }})" class="btn btn-sm btn-success">
-                                                                                    <i class="fa fa-save"></i> Validar Datos
-                                                                                </button>
-                                                                            </div>
-                                                                            <div class="mt-2">
-                                                                                <span class="badge bg-secondary" id="contador_{{ question.id }}">0 datos ingresados</span>
-                                                                            </div>
-                                                                            <input type="hidden" name="historicalData_{{ question.id }}" id="historicalData_{{ question.id }}" 
-                                                                                   value="{% if existing_answers %}{{ existing_answers|get_item:question.id|default:'' }}{% endif %}">
+                                                                            
+                                                                            <input type="hidden" name="historicalData_{{ question.id }}" 
+                                                                                   id="historicalData_{{ question.id }}" 
+                                                                                   value="{% for ans_key, ans_value in existing_answers.items %}{% if ans_key == question.id %}{{ ans_value }}{% endif %}{% endfor %}">
                                                                         </div>
                                                                     {% endif %}
                                                                 </div>
@@ -374,37 +528,50 @@
                                                     </div>
                                                 {% endfor %}
                                                 
-                                                <div class="d-flex justify-content-between mt-4">
-                                                    {% if questions_to_answer.has_previous %}
-                                                        <a href="?page={{ questions_to_answer.previous_page_number }}" class="btn btn-outline-secondary">
-                                                            <i class="fa fa-arrow-left"></i> Página anterior
-                                                        </a>
-                                                    {% else %}
-                                                        <span></span>
-                                                    {% endif %}
-                                                    
-                                                    <div>
-                                                        <button type="submit" name="save" class="btn btn-primary">
-                                                            <i class="fa fa-save"></i> Guardar respuestas
-                                                        </button>
-                                                        
-                                                        {% if not questions_to_answer.has_next %}
-                                                            <button type="submit" name="finish" class="btn btn-success">
-                                                                <i class="fa fa-check-circle"></i> Finalizar cuestionario
-                                                            </button>
-                                                        {% endif %}
+                                                <!-- Botones de acción mejorados -->
+                                                <div class="card mt-4">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                {% if questions_to_answer.has_previous %}
+                                                                    <a href="?page={{ questions_to_answer.previous_page_number }}" 
+                                                                       class="btn btn-outline-secondary">
+                                                                        <i class="fa fa-arrow-left"></i> Página Anterior
+                                                                    </a>
+                                                                {% endif %}
+                                                            </div>
+                                                            
+                                                            <div class="text-center">
+                                                                <small class="text-muted">
+                                                                    Página {{ questions_to_answer.number }} de {{ questions_to_answer.paginator.num_pages }}
+                                                                </small>
+                                                            </div>
+                                                            
+                                                            <div class="btn-group">
+                                                                <button type="submit" name="save" class="btn btn-primary">
+                                                                    <i class="fa fa-save"></i> Guardar y Continuar
+                                                                </button>
+                                                                
+                                                                {% if not questions_to_answer.has_next %}
+                                                                    <button type="submit" name="finish" class="btn btn-success">
+                                                                        <i class="fa fa-check-circle"></i> Finalizar Cuestionario
+                                                                    </button>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </form>
                                         {% else %}
                                             <div class="alert alert-warning">
-                                                <i class="fa fa-exclamation-triangle"></i> No hay preguntas que responder.
+                                                <i class="fa fa-exclamation-triangle"></i> 
+                                                No hay preguntas que responder en esta página.
                                             </div>
                                         {% endif %}
                                     </div>
                                 </div>
                                 
-                                <!-- Navegación de páginas -->
+                                <!-- Navegación de páginas mejorada -->
                                 {% if questions_to_answer.has_other_pages %}
                                 <div class="card">
                                     <div class="card-body">
@@ -412,7 +579,8 @@
                                             <ul class="pagination justify-content-center mb-0">
                                                 {% if questions_to_answer.has_previous %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page={{ questions_to_answer.previous_page_number }}">
+                                                    <a class="page-link" href="?page={{ questions_to_answer.previous_page_number }}"
+                                                       data-bs-toggle="tooltip" title="Página anterior">
                                                         <i class="fa fa-chevron-left"></i> Anterior
                                                     </a>
                                                 </li>
@@ -421,14 +589,16 @@
                                                 {% for i in questions_to_answer.paginator.page_range %}
                                                     {% if i > questions_to_answer.number|add:'-5' and i < questions_to_answer.number|add:'5' %}
                                                     <li class="page-item {% if i == questions_to_answer.number %}active{% endif %}">
-                                                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                                        <a class="page-link" href="?page={{ i }}"
+                                                           data-bs-toggle="tooltip" title="Ir a página {{ i }}">{{ i }}</a>
                                                     </li>
                                                     {% endif %}
                                                 {% endfor %}
                                                 
                                                 {% if questions_to_answer.has_next %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?page={{ questions_to_answer.next_page_number }}">
+                                                    <a class="page-link" href="?page={{ questions_to_answer.next_page_number }}"
+                                                       data-bs-toggle="tooltip" title="Página siguiente">
                                                         Siguiente <i class="fa fa-chevron-right"></i>
                                                     </a>
                                                 </li>
@@ -456,190 +626,102 @@
 {% endblock content %}
 
 {% block extra_js %}
+<script src="{% static 'js/questionary-main.js' %}"></script>
+
+<!-- CSRF Token para AJAX -->
 <script>
-// Validación del formulario de selección
+    window.csrfToken = '{{ csrf_token }}';
+</script>
+
+<!-- Funciones globales para compatibilidad -->
+<script>
 function validateForm() {
-    var selectedQuestionary = document.getElementById('inputGroupSelect01').value;
-    if (selectedQuestionary === '') {
-        showAlert('Por favor seleccione un cuestionario.', 'warning');
-        return false;
-    }
-    return true;
+    return questionaryMain ? questionaryMain.validateForm() : true;
 }
 
-// Mostrar mensajes de alerta
-function showAlert(message, type = 'success') {
-    var alertDiv = document.querySelector('.success-message');
-    alertDiv.className = 'alert alert-' + type + ' success-message';
-    document.getElementById('success-text').textContent = message;
-    alertDiv.style.display = 'block';
-    
-    setTimeout(function() {
-        alertDiv.style.display = 'none';
-    }, 3000);
-}
-
-// Validar respuestas antes de enviar
 function validateAnswers() {
-    var form = document.getElementById('questionForm');
-    var historicalInputs = form.querySelectorAll('[id^="historicalData_"]');
-    
-    for (var i = 0; i < historicalInputs.length; i++) {
-        var input = historicalInputs[i];
-        if (input.value) {
-            var values = input.value.split(',').filter(v => v.trim() !== '');
-            if (values.length < 30) {
-                var questionId = input.id.replace('historicalData_', '');
-                showAlert('Los datos históricos deben contener al menos 30 valores. Pregunta con ' + values.length + ' valores.', 'danger');
-                document.getElementById('tbody_' + questionId).scrollIntoView({ behavior: 'smooth' });
-                return false;
-            }
-        }
-    }
-    
-    return true;
+    return questionaryMain ? questionaryMain.validateAnswers() : true;
 }
-
-// Manejo de datos históricos
-var historicalData = {};
 
 function agregarFila(questionId) {
-    var tbody = document.getElementById('tbody_' + questionId);
-    var rowCount = tbody.rows.length + 1;
-    
-    var newRow = tbody.insertRow(-1);
-    newRow.className = 'data-input-row';
-    newRow.innerHTML = `
-        <td class="text-center">${rowCount}</td>
-        <td><input type="number" class="form-control form-control-sm" step="0.01" 
-                   placeholder="Valor ${rowCount}" 
-                   onchange="actualizarContador(${questionId})"
-                   id="data_${questionId}_${rowCount}"></td>
-        <td class="text-center">{{ question.fk_variable.unit|default:"unidades" }}</td>
-        <td class="text-center">
-            <button type="button" onclick="eliminarFila(this, ${questionId})" 
-                    class="btn btn-sm btn-danger">
-                <i class="fa fa-trash"></i>
-            </button>
-        </td>
-    `;
-    
-    actualizarNumeros(questionId);
-    actualizarContador(questionId);
+    if (questionaryMain) {
+        questionaryMain.agregarFila(questionId);
+    }
 }
 
 function agregarMultiplesFila(questionId, cantidad) {
-    for (var i = 0; i < cantidad; i++) {
-        agregarFila(questionId);
+    if (questionaryMain) {
+        questionaryMain.agregarMultiplesFila(questionId, cantidad);
     }
-    showAlert(`Se agregaron ${cantidad} filas`, 'info');
 }
 
 function eliminarFila(button, questionId) {
-    var row = button.parentNode.parentNode;
-    row.parentNode.removeChild(row);
-    actualizarNumeros(questionId);
-    actualizarContador(questionId);
-}
-
-function actualizarNumeros(questionId) {
-    var tbody = document.getElementById('tbody_' + questionId);
-    var rows = tbody.rows;
-    
-    for (var i = 0; i < rows.length; i++) {
-        rows[i].cells[0].innerHTML = i + 1;
-        // Actualizar IDs de inputs
-        var input = rows[i].cells[1].querySelector('input');
-        if (input) {
-            input.id = `data_${questionId}_${i + 1}`;
-            input.placeholder = `Valor ${i + 1}`;
-        }
-    }
-}
-
-function actualizarContador(questionId) {
-    var tbody = document.getElementById('tbody_' + questionId);
-    var inputs = tbody.querySelectorAll('input[type="number"]');
-    var count = 0;
-    
-    inputs.forEach(function(input) {
-        if (input.value && input.value.trim() !== '') {
-            count++;
-        }
-    });
-    
-    var badge = document.getElementById('contador_' + questionId);
-    if (badge) {
-        badge.textContent = count + ' datos ingresados';
-        badge.className = count >= 30 ? 'badge bg-success' : 'badge bg-secondary';
+    if (questionaryMain) {
+        questionaryMain.eliminarFila(button, questionId);
     }
 }
 
 function guardarDatosHistoricos(questionId) {
-    var tbody = document.getElementById('tbody_' + questionId);
-    var rows = tbody.rows;
-    var data = [];
-    
-    for (var i = 0; i < rows.length; i++) {
-        var input = rows[i].cells[1].querySelector('input');
-        if (input && input.value && input.value.trim() !== '') {
-            data.push(parseFloat(input.value));
-        }
+    if (questionaryMain) {
+        questionaryMain.guardarDatosHistoricos(questionId);
     }
-    
-    if (data.length < 30) {
-        showAlert(`Debe ingresar al menos 30 datos históricos. Actualmente tiene: ${data.length}`, 'danger');
-        return;
-    }
-    
-    // Guardar en campo oculto
-    document.getElementById('historicalData_' + questionId).value = data.join(',');
-    showAlert(`Datos validados correctamente. Total: ${data.length} valores`, 'success');
 }
 
-// Cargar datos existentes al cargar la página
+function exportQuestionaryData() {
+    if (questionaryMain) {
+        questionaryMain.exportQuestionaryData();
+    }
+}
+
+function printQuestionary() {
+    if (questionaryMain) {
+        questionaryMain.printQuestionary();
+    }
+}
+
+function autoSave() {
+    if (questionaryMain) {
+        questionaryMain.autoSave();
+    }
+}
+
+// Inicializar datos históricos existentes cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
-    // Buscar todos los campos de datos históricos
-    var historicalFields = document.querySelectorAll('[id^="historicalData_"]');
+    // Cargar datos históricos existentes
+    {% for question in questions_to_answer %}
+        {% if question.type == 3 %}
+            {% for ans_key, ans_value in existing_answers.items %}
+                {% if ans_key == question.id %}
+                    const existingData_{{ question.id }} = '{{ ans_value }}';
+                    if (existingData_{{ question.id }}) {
+                        loadExistingHistoricalData({{ question.id }}, existingData_{{ question.id }});
+                    }
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+});
+
+function loadExistingHistoricalData(questionId, dataString) {
+    if (!dataString || !questionaryMain) return;
     
-    historicalFields.forEach(function(field) {
-        if (field.value) {
-            var questionId = field.id.replace('historicalData_', '');
-            var data = field.value.split(',').filter(v => v.trim() !== '');
-            
-            data.forEach(function(value, index) {
-                agregarFila(questionId);
-                var tbody = document.getElementById('tbody_' + questionId);
-                var lastRow = tbody.rows[tbody.rows.length - 1];
-                var input = lastRow.cells[1].querySelector('input');
+    try {
+        const values = dataString.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+        values.forEach((value, index) => {
+            questionaryMain.agregarFila(questionId);
+            const tbody = document.getElementById('tbody_' + questionId);
+            if (tbody && tbody.rows.length > 0) {
+                const lastRow = tbody.rows[tbody.rows.length - 1];
+                const input = lastRow.cells[1]?.querySelector('input');
                 if (input) {
                     input.value = value;
                 }
-            });
-            
-            actualizarContador(questionId);
-        }
-    });
-    
-    // Auto-guardar cada 30 segundos (opcional)
-    setInterval(function() {
-        var forms = document.querySelectorAll('form');
-        forms.forEach(function(form) {
-            var formData = new FormData(form);
-            // Aquí podrías implementar auto-guardado via AJAX
+            }
         });
-    }, 30000);
-});
-
-// Prevenir pérdida de datos al salir
-window.addEventListener('beforeunload', function (e) {
-    var confirmationMessage = '¿Está seguro de que desea salir? Los cambios no guardados se perderán.';
-    
-    if (document.querySelector('#questionForm')) {
-        e.preventDefault();
-        e.returnValue = confirmationMessage;
-        return confirmationMessage;
+        questionaryMain.updateCounter(questionId);
+    } catch (error) {
+        console.error('Error loading historical data for question ' + questionId + ':', error);
     }
-});
+}
 </script>
 {% endblock extra_js %}

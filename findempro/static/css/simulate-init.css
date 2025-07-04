@@ -1,0 +1,977 @@
+/* =============================
+   SIMULACIÓN - ESTILOS PRINCIPALES
+   ============================= */
+
+/* Variables CSS personalizadas */
+:root {
+    --primary-gradient: linear-gradient(135deg, #2196f3, #1976d2);
+    --success-gradient: linear-gradient(135deg, #4caf50, #388e3c);
+    --warning-gradient: linear-gradient(135deg, #ff9800, #f57c00);
+    --danger-gradient: linear-gradient(135deg, #f44336, #d32f2f);
+    --card-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    --card-shadow-hover: 0 12px 35px rgba(0,0,0,0.15);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =============================
+   CONTENEDORES PRINCIPALES
+   ============================= */
+
+.simulation-card {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.simulation-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.simulation-form {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.simulation-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.model-summary {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f8e9 100%);
+    border-radius: 15px;
+    border-left: 5px solid #4caf50;
+    transition: var(--transition);
+}
+
+.model-summary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* =============================
+   FORMULARIOS Y CONTROLES
+   ============================= */
+
+.form-control:focus, 
+.form-select:focus {
+    border-color: #4caf50;
+    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+    transform: scale(1.02);
+    transition: var(--transition);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #37474f;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-label i {
+    color: #2196f3;
+    margin-right: 0.5rem;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(33, 150, 243, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid #2196f3;
+}
+
+.invalid-feedback {
+    display: block;
+    background: #ffebee;
+    color: #c62828;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.is-invalid {
+    border-color: #f44336 !important;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* =============================
+   BOTONES MEJORADOS
+   ============================= */
+
+.btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
+}
+
+.btn-success {
+    background: var(--success-gradient);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba(33, 150, 243, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+    }
+}
+
+/* =============================
+   GRÁFICOS Y VISUALIZACIONES
+   ============================= */
+
+.demand-chart-container {
+    max-height: 400px;
+    overflow: hidden;
+    border-radius: 10px;
+    position: relative;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: var(--transition);
+}
+
+.demand-chart-container:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.demand-chart-container img {
+    width: 100%;
+    height: auto;
+    cursor: zoom-in;
+    transition: var(--transition);
+}
+
+.chart-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.demand-chart-container:hover .chart-overlay {
+    opacity: 1;
+}
+
+/* =============================
+   TARJETAS DE ECUACIONES
+   ============================= */
+
+.equation-card {
+    transition: var(--transition);
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.equation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.area-image {
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.equation-card:hover .area-image {
+    transform: scale(1.05);
+}
+
+.equations-container {
+    margin-top: 1rem;
+}
+
+.equation {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    transition: var(--transition);
+}
+
+.equation:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.equation code {
+    background: #fff;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+/* =============================
+   OVERLAYS Y MODALES
+   ============================= */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #2196f3;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-overlay .text-center {
+    background: rgba(255,255,255,0.1);
+    padding: 2rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+/* =============================
+   MENSAJES Y ALERTAS
+   ============================= */
+
+.message-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 400px;
+}
+
+.error-message,
+.success-message {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.error-message {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    color: #c62828;
+    border-left: 4px solid #f44336;
+}
+
+.success-message {
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+    color: #2e7d32;
+    border-left: 4px solid #4caf50;
+}
+
+.btn-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* =============================
+   TUTORIAL INTERACTIVO
+   ============================= */
+
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    display: none;
+    backdrop-filter: blur(3px);
+}
+
+.tutorial-spotlight {
+    position: absolute;
+    border-radius: 8px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid #2196f3;
+}
+
+.tutorial-tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    max-width: 420px;
+    z-index: 10001;
+    border: 1px solid #e9ecef;
+}
+
+.tutorial-tooltip h5 {
+    color: #2196f3;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.tutorial-tooltip p {
+    margin-bottom: 16px;
+    line-height: 1.6;
+    color: #37474f;
+}
+
+.tutorial-tooltip .btn-group {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.help-icon {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+    transition: var(--transition);
+    z-index: 1000;
+}
+
+.help-icon:hover {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.6);
+}
+
+/* =============================
+   INDICADORES DE PROGRESO
+   ============================= */
+
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+.step {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin: 0 15px;
+    position: relative;
+    transition: var(--transition);
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.step:hover {
+    transform: scale(1.05);
+}
+
+.step.active {
+    background: var(--primary-gradient);
+    color: white;
+    transform: scale(1.15);
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.step.completed {
+    background: var(--success-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.step.completed::before {
+    content: '✓';
+    font-size: 1.2rem;
+}
+
+.step::after {
+    content: '';
+    position: absolute;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, #e0e0e0, #bdbdbd);
+    left: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 2px;
+}
+
+.step:last-child::after {
+    display: none;
+}
+
+.step.completed ~ .step::after {
+    background: linear-gradient(90deg, #4caf50, #81c784);
+}
+
+/* =============================
+   TARJETAS INFORMATIVAS
+   ============================= */
+
+.info-card {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-left: 4px solid #2196f3;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+    transition: var(--transition);
+}
+
+.info-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.25);
+}
+
+.info-card i {
+    color: #2196f3;
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+/* =============================
+   TABLAS RESPONSIVAS
+   ============================= */
+
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background: linear-gradient(135deg, #37474f 0%, #455a64 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 12px 15px;
+}
+
+.table td {
+    padding: 12px 15px;
+    border-color: #e9ecef;
+    vertical-align: middle;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(33, 150, 243, 0.03);
+}
+
+.table tbody tr:hover {
+    background: rgba(33, 150, 243, 0.08);
+    transform: scale(1.01);
+    transition: var(--transition);
+}
+
+/* =============================
+   BADGES Y ETIQUETAS
+   ============================= */
+
+.badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.badge.bg-success {
+    background: var(--success-gradient) !important;
+}
+
+.badge.bg-danger {
+    background: var(--danger-gradient) !important;
+}
+
+.badge.bg-info {
+    background: linear-gradient(135deg, #00bcd4, #0097a7) !important;
+}
+
+.badge.bg-primary {
+    background: var(--primary-gradient) !important;
+}
+
+/* =============================
+   PROGRESS BARS
+   ============================= */
+
+.progress {
+    height: 8px;
+    border-radius: 10px;
+    background: #e9ecef;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* =============================
+   RESPONSIVE DESIGN
+   ============================= */
+
+@media (max-width: 768px) {
+    .simulation-form {
+        padding: 1.5rem;
+    }
+    
+    .step-indicator {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .step {
+        width: 40px;
+        height: 40px;
+        margin: 5px;
+    }
+    
+    .step::after {
+        display: none;
+    }
+    
+    .tutorial-tooltip {
+        max-width: 90vw;
+        margin: 0 15px;
+    }
+    
+    .help-icon {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .message-container {
+        left: 15px;
+        right: 15px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .simulation-form {
+        padding: 1rem;
+        margin: 0 -15px;
+        border-radius: 0;
+    }
+    
+    .demand-chart-container {
+        max-height: 250px;
+    }
+    
+    .equation-card .card-body {
+        padding: 1rem;
+    }
+}
+
+/* =============================
+   ANIMACIONES ADICIONALES
+   ============================= */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.bounce-in {
+    animation: bounceIn 0.8s ease-out;
+}
+
+/* =============================
+   UTILIDADES
+   ============================= */
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-gradient {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+
+.shadow {
+    box-shadow: var(--card-shadow) !important;
+}
+
+.shadow-lg {
+    box-shadow: var(--card-shadow-hover) !important;
+}
+
+.border-radius {
+    border-radius: var(--border-radius) !important;
+}
+
+.transition {
+    transition: var(--transition) !important;
+}
+
+/* Areas Section Styles */
+.areas-card {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.equation-card {
+    transition: all 0.3s ease;
+    border-radius: 12px !important;
+    overflow: hidden;
+    background: #fff;
+}
+
+.equation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.area-image-container {
+    position: relative;
+    overflow: hidden;
+    height: 200px;
+}
+
+.area-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.equation-card:hover .area-image {
+    transform: scale(1.05);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.8), rgba(25, 118, 210, 0.8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.equation-card:hover .image-overlay {
+    opacity: 1;
+}
+
+.area-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.area-meta {
+    margin-top: 4px;
+}
+
+.equations-container {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 16px;
+}
+
+.equation {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent !important;
+}
+
+.equation:hover {
+    background: #e3f2fd !important;
+    border-left-color: #2196f3 !important;
+    transform: translateX(2px);
+}
+
+.equation-code {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    font-family: 'Courier New', 'Monaco', monospace;
+    font-size: 0.9rem;
+    color: #495057;
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.variables-list {
+    background: rgba(33, 150, 243, 0.05);
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.areas-stats .badge {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+}
+
+.areas-summary {
+    border: 1px solid #e9ecef;
+}
+
+.summary-item {
+    transition: transform 0.2s ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+}
+
+.summary-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.no-areas-state {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.area-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .area-image-container {
+        height: 150px;
+    }
+    
+    .equation-card .card-body {
+        padding: 1rem;
+    }
+    
+    .equation {
+        padding: 12px !important;
+    }
+    
+    .summary-number {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .areas-summary .row {
+        gap: 8px;
+    }
+    
+    .summary-item {
+        margin-bottom: 8px;
+    }
+    
+    .equation-code {
+        font-size: 0.8rem;
+    }
+}

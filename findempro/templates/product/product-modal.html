@@ -1,651 +1,251 @@
-<!-- Modal para Crear/Editar Producto -->
 {% load static %}
-<div class="modal fade zoomIn" id="addOrUpdateProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
+
+<!-- Modal para Crear/Editar Producto -->
+<div class="modal fade modal-zoom-in" id="addOrUpdateProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
+            <!-- Modal Header -->
             <div class="modal-header">
                 <h5 class="modal-title" id="addOrUpdateProductLabel">Crear Producto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
+            
+            <!-- Modal Body -->
             <div class="modal-body">
-                <div class="tab-content">
-                    <div class="tab-pane active" id="productDetails" role="tabpanel">
-                        <form id="productForm">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="text-center mb-4 mt-n5 pt-2">
-                                        <div class="position-relative d-inline-block">
-                                            <div class="position-absolute bottom-0 end-0">
-                                                <label for="product_image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Seleccionar Imagen">
-                                                    <div class="avatar-xs cursor-pointer">
-                                                        <div class="avatar-title bg-light border rounded-circle text-muted">
-                                                            <i class="ri-image-fill"></i>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                                <input class="form-control d-none" value="" id="product_image_src" type="file" 
-                                                       accept="image/png, image/jpeg, image/jpg" name="image_src"/>
-                                            </div>
-                                            <div class="avatar-lg p-1">
-                                                <div class="avatar-title bg-light rounded-circle">
-                                                    <img src="{% static 'images/default-product.png' %}" id="product_logo_img" 
-                                                         class="avatar-md rounded-circle object-fit-cover"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <h5 class="fs-13 mt-3">Imagen del Producto</h5>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="product_name" class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="product_name" name="name"
-                                            placeholder="Introduce el nombre del producto" required />
-                                        <div class="invalid-feedback">
-                                            Por favor, introduce el nombre del producto.
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="product_type" class="form-label">Tipo de Producto <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="product_type" name="type" required>
-                                            <option value="">Selecciona tipo</option>
-                                            <option value="1">Lácteos</option>
-                                        </select>
-                                        <div class="invalid-feedback">
-                                            Por favor, selecciona un tipo de producto.
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="product_fk_business" class="form-label">Negocio <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="product_fk_business" name="fk_business" required>
-                                            <option value="">Selecciona negocio</option>
-                                            {% for business in businesses %}
-                                                <option value="{{ business.id }}">{{ business.name }}</option>
-                                            {% empty %}
-                                                <option disabled>No hay negocios disponibles</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="invalid-feedback">
-                                            Por favor, selecciona un negocio.
-                                        </div>
-                                    </div>
-                                </div>       
-                                <div class="col-lg-12">
-                                    <div class="mb-3">
-                                        <label for="product_description" class="form-label">Descripción del Producto <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="product_description" name="description" rows="3"
-                                            placeholder="Introduce la descripción del producto" required></textarea>
-                                        <div class="invalid-feedback">
-                                            Por favor, introduce una descripción para el producto.
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                                <div class="col-lg-12">
-                                    <div class="hstack gap-2 justify-content-end">
-                                        <button class="btn btn-link link-success text-decoration-none fw-medium"
-                                            data-bs-dismiss="modal" type="button">
-                                            <i class="ri-close-line me-1 align-middle"></i>
-                                            Cerrar
-                                        </button>
-                                        <input type="hidden" name="product_id" id="product_id" value="">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="ri-save-3-line align-bottom me-1"></i>
-                                            Guardar
-                                        </button>
-                                    </div>
-                                </div>
-                                <!--end col-->
-                            </div>
-                            <!--end row-->
-                        </form>
+                <!-- Loading Indicator -->
+                <div id="modalLoading" class="modal-loading-state">
+                    <div class="loading-content">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="loading-text">Cargando datos del producto...</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!--end modal-->
-
-<!-- Modal para Confirmar Eliminación de Producto -->
-<div id="removeProductModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Icon and text content -->
-                <div class="mt-2 text-center">
-                    <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
-                               colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
-                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                        <h4>¿Está seguro?</h4>
-                        <p class="text-muted mx-4 mb-0">
-                            ¿Estás seguro de que quieres eliminar este producto?
-                        </p>
-                    </div>
-                </div>
-                <!-- Form for deletion -->
-                <form id="deleteProductForm" method="POST">
-                    {% csrf_token %}
-                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-                            Cerrar
-                        </button>
-                        <button type="submit" class="btn w-sm btn-danger delete-product-btn">
-                            ¡Sí, borrarlo!
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Crear/Editar Área -->
-<div class="modal fade zoomIn" id="addOrUpdateArea" tabindex="-1" aria-labelledby="addOrUpdateArealabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-header p-3 ps-4 bg-success-subtle">
-                <h5 class="modal-title" id="addOrUpdateArealabel">Crear Área</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form id="areaForm" novalidate>
-                    {% csrf_token %}
-                    <input type="hidden" name="area_id" id="area_id" value="">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="text-center mb-4 mt-n5 pt-2">
-                                <div class="position-relative d-inline-block">
-                                    <div class="position-absolute bottom-0 end-0">
-                                        <label for="area_image_src" class="mb-0" data-bs-toggle="tooltip" data-bs-placement="right" title="Seleccionar Imagen">
-                                            <div class="avatar-xs cursor-pointer">
-                                                <div class="avatar-title bg-light border rounded-circle text-muted">
+                
+                <!-- Form Content -->
+                <div id="modalContent" class="modal-form-content">
+                    <!-- Form Alerts -->
+                    <div id="formAlerts" class="form-alerts-container"></div>
+                    
+                    <!-- Product Form -->
+                    <form id="productForm" class="product-form" method="POST" enctype="multipart/form-data" action="{% if product %}{% url 'product:product.edit' product.id %}{% else %}{% url 'product:product.create' %}{% endif %}">
+                        {% csrf_token %}
+                        
+                        <div class="form-sections">
+                            <!-- Image Upload Section -->
+                            <div class="image-upload-section">
+                                <div class="image-upload-container">
+                                    <div class="image-preview-wrapper">
+                                        <div class="image-preview-container">
+                                            <img src="{% static 'images/default-product.png' %}" 
+                                                 id="product_logo_img" 
+                                                 class="image-preview"
+                                                 alt="Vista previa del producto"/>
+                                        </div>
+                                        <div class="image-upload-overlay">
+                                            <label for="product_image_src" class="image-upload-label" 
+                                                   data-bs-toggle="tooltip" data-bs-placement="right" 
+                                                   title="Seleccionar Imagen">
+                                                <div class="upload-icon-container">
                                                     <i class="ri-image-fill"></i>
                                                 </div>
-                                            </div>
-                                        </label>
-                                        <input class="form-control d-none" value="" id="area_image_src" type="file" 
-                                               accept="image/png, image/jpeg, image/jpg" name="image_src"/>
+                                            </label>
+                                            <input class="image-upload-input" 
+                                                   id="product_image_src" 
+                                                   type="file" 
+                                                   accept="image/png, image/jpeg, image/jpg" 
+                                                   name="image_src"/>
+                                        </div>
                                     </div>
-                                    <div class="avatar-lg p-1">
-                                        <div class="avatar-title bg-light rounded-circle">
-                                            <img src="{% static 'images/default-area.png' %}" id="area_logo_img" 
-                                                 class="avatar-md rounded-circle object-fit-cover"/>
+                                    <div class="image-upload-info">
+                                        <h5 class="upload-title">Imagen del Producto</h5>
+                                        <p class="upload-description">Formatos permitidos: JPG, PNG (máx. 2MB)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Basic Information Section -->
+                            <div class="basic-info-section">
+                                <h6 class="section-title">
+                                    <i class="ri-information-line me-2"></i>Información Básica
+                                </h6>
+                                
+                                <div class="row g-3">
+                                    <!-- Product Name -->
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label for="product_name" class="form-label required">
+                                                Nombre del Producto
+                                            </label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="product_name" 
+                                                   name="name"
+                                                   value="{% if product %}{{ product.name }}{% endif %}"
+                                                   placeholder="Introduce el nombre del producto" 
+                                                   required 
+                                                   maxlength="100"/>
+                                            <div class="invalid-feedback"></div>
+                                            <div class="form-text">Mínimo 3 caracteres, máximo 100</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Product Type -->
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="product_type" class="form-label required">
+                                                Tipo de Producto
+                                            </label>
+                                            <select class="form-select" id="product_type" name="type" required>
+                                                <option value="">Selecciona tipo</option>
+                                                <option value="1" {% if product.type == 1 %}selected{% endif %}>Lácteos</option>
+                                                <option value="2" {% if product.type == 2 %}selected{% endif %}>Servicio</option>
+                                            </select></option>
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Business Selection -->
+                                    <div class="col-lg-6">
+                                        <div class="form-group">
+                                            <label for="product_fk_business" class="form-label required">
+                                                Negocio
+                                            </label>
+                                            <select class="form-select" id="product_fk_business" name="fk_business" required>
+                                                <option value="">Selecciona negocio</option>
+                                                {% for business in businesses %}
+                                                    <option value="{{ business.id }}" {% if product and product.fk_business.id == business.id %}selected{% endif %}>
+                                                        {% if business.name %}{{ business.name }}{% else %}Negocio sin nombre{% endif %}
+                                                    </option>
+                                                {% empty %}
+                                                    <option disabled>No hay negocios disponibles</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                            {% if not businesses %}
+                                            <div class="form-text text-warning">
+                                                <i class="ri-warning-line me-1"></i>
+                                                Debe crear un negocio antes de agregar productos.
+                                            </div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
-                                <h5 class="fs-13 mt-3">Imagen del Área</h5>
                             </div>
-                            <div class="mb-3">
-                                <label for="area_name" class="form-label">Nombre del Área <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="area_name" name="name" 
-                                       placeholder="Introduce el nombre del área" required />
-                                <div class="invalid-feedback">
-                                    Por favor, introduce el nombre del área.
+                            
+                            <!-- Description Section -->
+                            <div class="description-section">
+                                <h6 class="section-title">
+                                    <i class="ri-file-text-line me-2"></i>Descripción
+                                </h6>
+                                
+                                <div class="form-group">
+                                    <label for="product_description" class="form-label required">
+                                        Descripción del Producto
+                                    </label>
+                                    <textarea class="form-control description-textarea" 
+                                              id="product_description" 
+                                              name="description" 
+                                              rows="4"
+                                              placeholder="Introduce una descripción detallada del producto" 
+                                              required 
+                                              maxlength="500"></textarea>
+                                    <div class="invalid-feedback"></div>
+                                    <div class="form-text character-counter">
+                                        <span id="charCount">0</span>/500 caracteres
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Product Status Information -->
+                            <div class="status-info-section">
+                                <div class="status-alert">
+                                    <div class="alert-icon">
+                                        <i class="ri-information-line"></i>
+                                    </div>
+                                    <div class="alert-content">
+                                        <h6 class="alert-title">Estado del Producto</h6>
+                                        <p class="alert-text">
+                                            El producto estará "En desarrollo" hasta que agregue al menos una área y variable.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <!--end col-->
-                        <div class="col-lg-12">
-                            <div class="mb-3">
-                                <label for="area_fk_product" class="form-label">Producto Asociado <span class="text-danger">*</span></label>
-                                <select class="form-control" id="area_fk_product" name="fk_product" required>
-                                    <option value="">Selecciona el producto</option>
-                                    {% for product in products %}
-                                    <option value="{{ product.id }}">{{ product.name }}</option>
-                                    {% empty %}
-                                    <option disabled>No hay productos disponibles</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">
-                                    Por favor, selecciona un producto.
-                                </div>
-                            </div>
-                        </div>
-                        <!--end col-->
-                        <div class="col-lg-12">
-                            <div class="mb-3">
-                                <label for="area_description" class="form-label">Descripción del Área <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="area_description" name="description" rows="3" 
-                                          placeholder="Introduce la descripción del área" required></textarea>
-                                <div class="invalid-feedback">
-                                    Por favor, introduce una descripción del área.
-                                </div>
-                            </div>
-                        </div>
-                        <!--end col-->
-                    </div>
-                    <!--end row-->
-                    <div class="col-lg-12">
-                        <div class="hstack gap-2 justify-content-end">
-                            <button class="btn btn-link link-success text-decoration-none fw-medium" data-bs-dismiss="modal" type="button">
-                                <i class="ri-close-line me-1 align-middle"></i>
-                                Cerrar
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ri-save-3-line align-bottom me-1"></i>
-                                Guardar
-                            </button>
-                        </div>
-                    </div>
-                    <!--end col-->
-                </form>
+                        
+                        <!-- Hidden Fields -->
+                        <input type="hidden" name="product_id" id="product_id" value="{% if product %}{{ product.id }}{% endif %}">
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <div class="footer-actions">
+                    <button class="btn btn-link cancel-btn" data-bs-dismiss="modal" type="button">
+                        <i class="ri-close-line me-1 align-middle"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary submit-btn" id="submitProductBtn" form="productForm">
+                        <i class="ri-save-3-line align-bottom me-1"></i>
+                        <span id="submitBtnText">Guardar</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-<!--end modal-->
 
-<!-- Modal para Confirmar Eliminación de Área -->
-<div id="removeAreaModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+<!-- Modal para Confirmar Eliminación de Producto -->
+<div id="removeProductModal" class="modal fade modal-zoom-in" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <!-- Modal Header -->
+            <div class="modal-header border-0">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
             </div>
+            
+            <!-- Modal Body -->
             <div class="modal-body">
-                <!-- Icon and text content -->
-                <div class="mt-2 text-center">
-                    <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
-                               colors="primary:#f7b84b,secondary:#f06548" style="width: 100px; height: 100px"></lord-icon>
-                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                        <h4>¿Está seguro?</h4>
-                        <p class="text-muted mx-4 mb-0">
-                            ¿Estás seguro de que quieres eliminar esta área?
-                        </p>
+                <div class="deletion-confirmation">
+                    <!-- Warning Icon -->
+                    <div class="warning-icon-container">
+                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" 
+                                   trigger="loop" 
+                                   colors="primary:#f7b84b,secondary:#f06548" 
+                                   style="width: 100px; height: 100px">
+                        </lord-icon>
                     </div>
+                    
+                    <!-- Confirmation Content -->
+                    <div class="confirmation-content">
+                        <h4 class="confirmation-title">¿Está seguro?</h4>
+                        <div class="confirmation-text">
+                            <p class="warning-message">
+                                ¿Estás seguro de que quieres eliminar este producto?
+                            </p>
+                            <p class="danger-notice">
+                                <strong>Esta acción no se puede deshacer.</strong>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Deletion Form -->
+                    <form id="deleteProductForm" class="deletion-form" method="POST">
+                        {% csrf_token %}
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-light cancel-delete-btn" data-bs-dismiss="modal">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-danger delete-confirm-btn">
+                                <i class="ri-delete-bin-line me-1"></i>
+                                ¡Sí, eliminar!
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <!-- Form for deletion -->
-                <form id="deleteAreaForm" method="POST">
-                    {% csrf_token %}
-                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
-                            Cerrar
-                        </button>
-                        <button type="submit" class="btn w-sm btn-danger delete-area-btn">
-                            ¡Sí, borrarlo!
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 </div>
-
-<!-- JavaScript para manejar los modales -->
-<script>
-// Objeto que maneja las operaciones del producto
-const productForm = {
-    modal: document.getElementById('addOrUpdateProduct'),
-    form: document.getElementById('productForm'),
-    modalTitle: document.getElementById('addOrUpdateProductLabel'),
-    productIdField: document.getElementById('product_id'),
-    imagePreview: document.getElementById('product_logo_img'),
-    imageInput: document.getElementById('product_image_src'),
-    
-    // Inicializar eventos
-    init: function() {
-        // Configurar vista previa de imagen
-        if (this.imageInput) {
-            this.imageInput.addEventListener('change', this.handleImagePreview.bind(this));
-        }
-        
-        // Configurar envío del formulario
-        if (this.form) {
-            this.form.addEventListener('submit', this.submitForm.bind(this));
-        }
-        
-        // Configurar limpieza del formulario al cerrar el modal
-        if (this.modal) {
-            this.modal.addEventListener('hidden.bs.modal', this.resetForm.bind(this));
-        }
-    },
-    
-    // Manejar vista previa de la imagen
-    handleImagePreview: function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.imagePreview.src = e.target.result;
-                this.imagePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    },
-    
-    // Abrir modal para crear producto
-    create: function() {
-        this.modalTitle.textContent = 'Crear Nuevo Producto';
-        this.productIdField.value = '';
-        this.resetForm();
-        
-        // Mostrar modal
-        const bsModal = new bootstrap.Modal(this.modal);
-        bsModal.show();
-    },
-    
-    // Abrir modal para editar producto
-    edit: function(productId) {
-        this.modalTitle.textContent = 'Actualizar Producto';
-        this.productIdField.value = productId;
-        
-        // Cargar datos del producto
-        fetch(`/product/get_details/${productId}/`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al obtener detalles del producto');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Rellenar formulario con datos
-                document.getElementById('product_name').value = data.name;
-                document.getElementById('product_type').value = data.type;
-                document.getElementById('product_fk_business').value = data.fk_business;
-                document.getElementById('product_description').value = data.description;
-                
-                // Mostrar imagen si existe
-                if (data.image_src && data.image_src !== 'None') {
-                    this.imagePreview.src = data.image_src;
-                    this.imagePreview.style.display = 'block';
-                }
-                
-                // Mostrar modal
-                const bsModal = new bootstrap.Modal(this.modal);
-                bsModal.show();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'No se pudieron cargar los detalles del producto',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            });
-    },
-    
-    // Enviar formulario
-    submitForm: function(e) {
-        e.preventDefault();
-        
-        const isUpdate = this.productIdField.value !== '';
-        const formData = new FormData(this.form);
-        
-        const url = isUpdate 
-            ? `/product/${this.productIdField.value}/update/` 
-            : '/product/create/';
-        
-        fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Cerrar modal
-                bootstrap.Modal.getInstance(this.modal).hide();
-                
-                // Mostrar mensaje de éxito
-                Swal.fire({
-                    title: isUpdate ? 'Producto Actualizado' : 'Producto Creado',
-                    text: isUpdate ? 'El producto ha sido actualizado con éxito' : 'El producto ha sido creado con éxito',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.reload();
-                    }
-                });
-            } else {
-                // Mostrar errores
-                let errorMessage = 'Se encontraron los siguientes errores:\n';
-                for (const field in data.errors) {
-                    if (Array.isArray(data.errors[field])) {
-                        errorMessage += `- ${data.errors[field].join(', ')}\n`;
-                    } else {
-                        errorMessage += `- ${data.errors[field]}\n`;
-                    }
-                }
-                
-                Swal.fire({
-                    title: 'Error',
-                    text: errorMessage,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Ocurrió un error al procesar la solicitud',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        });
-    },
-    
-    // Resetear formulario
-    resetForm: function() {
-        this.form.reset();
-        this.imagePreview.src = "{% static 'images/default-product.png' %}";
-        
-        // Limpiar clases de validación
-        const inputs = this.form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.classList.remove('is-invalid', 'is-valid');
-        });
-    },
-    
-    // Manejar eliminación de producto
-    delete: function(productId) {
-        // Configurar URL de eliminación
-        const deleteForm = document.getElementById('deleteProductForm');
-        deleteForm.action = `/product/delete/${productId}/`;
-        
-        // Mostrar modal de confirmación
-        const bsModal = new bootstrap.Modal(document.getElementById('removeProductModal'));
-        bsModal.show();
-    }
-};
-
-// Objeto que maneja las operaciones del área
-const areaForm = {
-    modal: document.getElementById('addOrUpdateArea'),
-    form: document.getElementById('areaForm'),
-    modalTitle: document.getElementById('addOrUpdateArealabel'),
-    areaIdField: document.getElementById('area_id'),
-    imagePreview: document.getElementById('area_logo_img'),
-    imageInput: document.getElementById('area_image_src'),
-    
-    // Inicializar eventos
-    init: function() {
-        // Configurar vista previa de imagen
-        if (this.imageInput) {
-            this.imageInput.addEventListener('change', this.handleImagePreview.bind(this));
-        }
-        
-        // Configurar envío del formulario
-        if (this.form) {
-            this.form.addEventListener('submit', this.submitForm.bind(this));
-        }
-        
-        // Configurar limpieza del formulario al cerrar el modal
-        if (this.modal) {
-            this.modal.addEventListener('hidden.bs.modal', this.resetForm.bind(this));
-        }
-    },
-    
-    // Manejar vista previa de la imagen
-    handleImagePreview: function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.imagePreview.src = e.target.result;
-                this.imagePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    },
-    
-    // Abrir modal para crear área
-    create: function() {
-        this.modalTitle.textContent = 'Crear Nueva Área';
-        this.areaIdField.value = '';
-        this.resetForm();
-        
-        // Mostrar modal
-        const bsModal = new bootstrap.Modal(this.modal);
-        bsModal.show();
-    },
-    
-    // Abrir modal para editar área
-    edit: function(areaId) {
-        this.modalTitle.textContent = 'Actualizar Área';
-        this.areaIdField.value = areaId;
-        
-        // Cargar datos del área
-        fetch(`/product/area/get_details/${areaId}/`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al obtener detalles del área');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Rellenar formulario con datos
-                document.getElementById('area_name').value = data.name;
-                document.getElementById('area_fk_product').value = data.fk_product;
-                document.getElementById('area_description').value = data.description;
-                
-                // Mostrar imagen si existe
-                if (data.image_src && data.image_src !== 'None') {
-                    this.imagePreview.src = data.image_src;
-                    this.imagePreview.style.display = 'block';
-                }
-                
-                // Mostrar modal
-                const bsModal = new bootstrap.Modal(this.modal);
-                bsModal.show();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'No se pudieron cargar los detalles del área',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            });
-    },
-    
-    // Enviar formulario
-    submitForm: function(e) {
-        e.preventDefault();
-        
-        const isUpdate = this.areaIdField.value !== '';
-        const formData = new FormData(this.form);
-        
-        const url = isUpdate 
-            ? `/product/area/update/${this.areaIdField.value}/` 
-            : '/product/area/create/';
-        
-        fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Cerrar modal
-                bootstrap.Modal.getInstance(this.modal).hide();
-                
-                // Mostrar mensaje de éxito
-                Swal.fire({
-                    title: isUpdate ? 'Área Actualizada' : 'Área Creada',
-                    text: isUpdate ? 'El área ha sido actualizada con éxito' : 'El área ha sido creada con éxito',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.reload();
-                    }
-                });
-            } else {
-                // Mostrar errores
-                let errorMessage = 'Se encontraron los siguientes errores:\n';
-                for (const field in data.errors) {
-                    if (Array.isArray(data.errors[field])) {
-                        errorMessage += `- ${data.errors[field].join(', ')}\n`;
-                    } else {
-                        errorMessage += `- ${data.errors[field]}\n`;
-                    }
-                }
-                
-                Swal.fire({
-                    title: 'Error',
-                    text: errorMessage,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Ocurrió un error al procesar la solicitud',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        });
-    },
-    
-    // Resetear formulario
-    resetForm: function() {
-        this.form.reset();
-        this.imagePreview.src = "{% static 'images/default-area.png' %}";
-        
-        // Limpiar clases de validación
-        const inputs = this.form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.classList.remove('is-invalid', 'is-valid');
-        });
-    },
-    
-    // Manejar eliminación de área
-    delete: function(areaId) {
-        // Configurar URL de eliminación
-        const deleteForm = document.getElementById('deleteAreaForm');
-        deleteForm.action = `/product/area/delete/${areaId}/`;
-        
-        // Mostrar modal de confirmación
-        const bsModal = new bootstrap.Modal(document.getElementById('removeAreaModal'));
-        bsModal.show();
-    }
-};
-
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    productForm.init();
-    areaForm.init();
-});
-</script>

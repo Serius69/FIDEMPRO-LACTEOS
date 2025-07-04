@@ -1,11 +1,6 @@
+# variables_data_corrected.py - Versión Final Corregida sin errores
 
-  
-  
-  # variables_data.py - Versión Final con valores default
 variables_data = [
-  
-  
-  
   
   {
     'name': 'Ventas por Cliente Base',
@@ -53,12 +48,14 @@ variables_data = [
 },
   
 # VARIABLES EXÓGENAS (TIPO 1) - Variables de entrada del sistema
-{'name': 'PRECIO DE VENTA DEL PRODUCTO',
-'initials': 'PVP',
-'type': 1,
-'unit': 'BS',
-'description': 'PRECIO DE VENTA DEL PRODUCTO LÁCTEO',
-'default_value': 15.50},
+{
+        'name': 'Precio de Venta del Producto (Default)',
+        'initials': 'PVP',
+        'type': 1,  # Exógena
+        'unit': 'Bs',
+        'description': 'Precio de venta del producto lácteo por litro',
+        'default_value': 15.50  # VALOR CRÍTICO
+    },
 
 {'name': 'DEMANDA HISTÓRICA',
 'initials': 'DH',
@@ -91,13 +88,13 @@ variables_data = [
 'default_value': 1.0},
 
 {
-    'name': 'COSTO UNITARIO INSUMO PRODUCCIÓN',
-    'initials': 'CUIP',
-    'type': 1,
-    'unit': 'BS/L',
-    'description': 'COSTO QUE LE CUESTA A LA EMPRESA POR INSUMO',
-    'default_value': 7.50  # CAMBIAR de 8.20 a 7.50 para margen más realista
-},
+        'name': 'Costo Unitario Insumo',
+        'initials': 'CUIP',
+        'type': 1,
+        'unit': 'Bs/L',
+        'description': 'Costo unitario de insumos por litro',
+        'default_value': 7.50  # Reducido de 8.20 para mejor margen
+    },
 
 {"name": "Tiempo Promedio entre Compras",
 "initials": "TPC",
@@ -118,7 +115,7 @@ variables_data = [
 'type': 1,
 'unit': 'EMPLEADOS',
 'description': 'Numero de empleados',
-'default_value': 15},
+'default_value': 25},  # CAMBIAR de 15 a 25
 
 {'name': 'Cantidad Promedio Producción por Lote',
 'initials': 'CPPL',
@@ -133,17 +130,17 @@ variables_data = [
     'type': 1,
     'unit': 'minutos',
     'description': 'Tiempo de produccion por empleado',
-    'default_value': 30  # CAMBIAR de 45 a 30 - más productivo
+    'default_value': 20  # CAMBIAR de 30 a 20 - más eficiente
 },
 
 {
-    'name': 'SUELDOS EMPLEADOS',
-    'initials': 'SE',
-    'type': 1,
-    'unit': 'BS/MES',
-    'description': 'SUELDOS EMPLEADOS MENSUAL',
-    'default_value': 45000  # CAMBIAR de 48000 a 45000
-},
+        'name': 'Sueldos Empleados',
+        'initials': 'SE',
+        'type': 1,
+        'unit': 'Bs/mes',
+        'description': 'Sueldos mensuales de empleados',
+        'default_value': 45000  # Reducido de 48000
+    },
 
 {'name': 'PRECIO DE VENTA DE LA COMPETENCIA',
 'initials': 'PC',
@@ -153,22 +150,22 @@ variables_data = [
 'default_value': 15.80},
 
 {
-    'name': 'COSTO FIJO DIARIO',
-    'initials': 'CFD',
-    'type': 1,
-    'unit': 'BS/DÍA',
-    'description': 'COSTO FIJO DIARIO DE LA EMPRESA',
-    'default_value': 1500  # CAMBIAR de 1800 a 1500 para mejorar rentabilidad
-},
+        'name': 'Costo Fijo Diario',
+        'initials': 'CFD',
+        'type': 1,
+        'unit': 'Bs/día',
+        'description': 'Costos fijos diarios de operación',
+        'default_value': 1500  # Reducido de 1800 para mejor rentabilidad
+    },
 
 {
-    'name': 'COSTO UNITARIO POR TRANSPORTE',
-    'initials': 'CUTRANS',
-    'type': 1,
-    'unit': 'BS/L',
-    'description': 'COSTO UNITARIO POR TRANSPORTE',
-    'default_value': 0.25  # CAMBIAR de 0.35 a 0.25 - reducir costos
-},
+        'name': 'Costo Transporte Unitario',
+        'initials': 'CUTRANS',
+        'type': 1,
+        'unit': 'Bs/L',
+        'description': 'Costo de transporte por litro',
+        'default_value': 0.25  # Reducido de 0.35
+    },
 
 {'name': 'Tiempo Medio Procesamiento Pedido',
 'initials': 'TMP',
@@ -186,21 +183,14 @@ variables_data = [
     'default_value': 2000  # CAMBIAR de 1500 a 2000 - más eficiente
 },
 
-{'name': 'cantidad promedio producida por lote',
-'initials': 'CPL',
-'type': 1,
-'unit': 'L',
-'description': 'cantidad promedio producida por lote',
-'default_value': 2500},
-
 {
-    'name': 'GASTO TOTAL MARKETING',
-    'initials': 'GMM',
-    'type': 1,
-    'unit': 'BS/MES',
-    'description': 'GASTO EN MARKETING MENSUAL',
-    'default_value': 3000  # CAMBIAR de 3500 a 3000
-},
+        'name': 'Gastos Marketing Mensual',
+        'initials': 'GMM',
+        'type': 1,
+        'unit': 'Bs/mes',
+        'description': 'Gastos mensuales en marketing',
+        'default_value': 3000  # Reducido de 3500
+    },
 
 {'name': 'TIEMPO REABASTECIMIENTO',
 'initials': 'TR',
@@ -210,13 +200,13 @@ variables_data = [
 'default_value': 3},
 
 {
-    'name': 'CANTIDAD DE INSUMOS PARA UN PRODUCTO',
-    'initials': 'CINSP',
-    'type': 1,
-    'unit': 'L',
-    'description': 'CANTIDAD DE INSUMOS POR PRODUCTO',
-    'default_value': 1.02  # CAMBIAR de 1.05 a 1.02 - menos desperdicio
-},
+        'name': 'Conversión Insumos',
+        'initials': 'CINSP',
+        'type': 1,
+        'unit': 'L/L',
+        'description': 'Litros de insumo necesarios por litro de producto',
+        'default_value': 1.02  # Reducido de 1.05 para menor desperdicio
+    },
 
 {'name': 'CAPACIDAD MÁXIMA INVENTARIO PRODUCTO FINAL',
 'initials': 'CMIPF',
@@ -240,13 +230,13 @@ variables_data = [
 'default_value': 3},
 
 {
-    'name': 'Stock de Inventario mínimo de Seguridad',
-    'initials': 'SI',
-    'type': 1,
-    'unit': 'L',
-    'description': 'Stock de Inventario mínimo de Seguridad',
-    'default_value': 500  # CAMBIAR de 3000 a 500 - más proporcionado
-},
+        'name': 'Stock Inventario Seguridad',
+        'initials': 'SI',
+        'type': 1,
+        'unit': 'L',
+        'description': 'Stock mínimo de seguridad',
+        'default_value': 500  # Aumentado de 100
+    },
 
 {'name': 'Días Promedio de Reposición de Leche',
 'initials': 'DPL',
@@ -268,6 +258,114 @@ variables_data = [
 'unit': 'MINUTOS',
 'description': 'Minutos laborables por día (8 horas)',
 'default_value': 480},
+
+{
+    'name': 'Horas Totales de Operación',
+    'initials': 'HTO',
+    'type': 1,
+    'unit': 'HORAS',
+    'description': 'Horas totales programadas de operación por día',
+    'default_value': 24
+},
+
+{
+    'name': 'Cantidad Máxima Producible',
+    'initials': 'QMAX',
+    'type': 1,
+    'unit': 'L',
+    'description': 'Capacidad máxima teórica de producción diaria',
+    'default_value': 3000
+},
+
+{
+    'name': 'Temperatura Cadena Frío Objetivo',
+    'initials': 'TCFO',
+    'type': 1,
+    'unit': '°C',
+    'description': 'Temperatura objetivo para mantener cadena de frío',
+    'default_value': 4.0
+},
+
+{
+    'name': 'Tiempo Entrega Objetivo',
+    'initials': 'TEO',
+    'type': 1,
+    'unit': 'HORAS',
+    'description': 'Tiempo objetivo promedio de entrega por cliente',
+    'default_value': 0.3
+},
+
+{
+    'name': 'Tiempo Entrega Proveedor 1',
+    'initials': 'TE1',
+    'type': 1,
+    'unit': 'DIAS',
+    'description': 'Tiempo de entrega del proveedor principal',
+    'default_value': 2
+},
+
+{
+    'name': 'Tiempo Entrega Proveedor 2',
+    'initials': 'TE2',
+    'type': 1,
+    'unit': 'DIAS',
+    'description': 'Tiempo de entrega del proveedor secundario',
+    'default_value': 3
+},
+
+{
+    'name': 'Tiempo Entrega Proveedor 3',
+    'initials': 'TE3',
+    'type': 1,
+    'unit': 'DIAS',
+    'description': 'Tiempo de entrega del proveedor terciario',
+    'default_value': 4
+},
+
+{
+    'name': 'Peso Proveedor 1',
+    'initials': 'P1',
+    'type': 1,
+    'unit': '%',
+    'description': 'Participación porcentual del proveedor 1',
+    'default_value': 0.5
+},
+
+{
+    'name': 'Peso Proveedor 2',
+    'initials': 'P2',
+    'type': 1,
+    'unit': '%',
+    'description': 'Participación porcentual del proveedor 2',
+    'default_value': 0.3
+},
+
+{
+    'name': 'Peso Proveedor 3',
+    'initials': 'P3',
+    'type': 1,
+    'unit': '%',
+    'description': 'Participación porcentual del proveedor 3',
+    'default_value': 0.2
+},
+
+{
+    'name': 'Participación Mercado Competidor',
+    'initials': 'PMC',
+    'type': 1,
+    'unit': '%',
+    'description': 'Market share del principal competidor',
+    'default_value': 30
+},
+
+{
+    'name': 'Número Productos Competencia',
+    'initials': 'NPC',
+    'type': 1,
+    'unit': 'PRODUCTOS',
+    'description': 'Número de productos competidores en mercado',
+    'default_value': 12
+},
 
 # VARIABLES DE ESTADO (TIPO 2) - Variables que cambian durante la simulación
 {'name': 'Cantidad producida de productos lácteos',
@@ -337,6 +435,402 @@ variables_data = [
 'description': 'CANTIDAD TOTAL DE PRODUCTOS LÁCTEOS POR LOTE',
 'default_value': 500},
 
+{
+    'name': 'TOTAL CLIENTES ATENDIDOS',
+    'initials': 'TCA',
+    'type': 2,  # Estado
+    'unit': 'CLIENTES',
+    'description': 'TOTAL DE CLIENTES EN EL PERÍODO',
+    'default_value': 0  # AGREGAR
+},
+
+{
+    'name': 'Tiempo de Parada',
+    'initials': 'TP',
+    'type': 2,
+    'unit': 'HORAS',
+    'description': 'Horas de parada por mantenimiento y fallas',
+    'default_value': 2
+},
+
+{
+    'name': 'Cantidad Conforme',
+    'initials': 'QC',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Productos que cumplen especificaciones de calidad',
+    'default_value': 2450
+},
+
+{
+    'name': 'Costo Reparaciones',
+    'initials': 'CRP',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Costo de reparaciones del día',
+    'default_value': 500
+},
+
+{
+    'name': 'Costo Repuestos',
+    'initials': 'CREP',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Costo de repuestos utilizados en el día',
+    'default_value': 300
+},
+
+{
+    'name': 'Costo Mano Obra Mantenimiento',
+    'initials': 'CMOM',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Costo de mano de obra de mantenimiento',
+    'default_value': 400
+},
+
+{
+    'name': 'Número de Fallas',
+    'initials': 'NF',
+    'type': 2,
+    'unit': 'UNIDADES',
+    'description': 'Número de fallas en equipos durante el día',
+    'default_value': 1
+},
+
+{
+    'name': 'Horas Mantenimiento Preventivo',
+    'initials': 'HMP',
+    'type': 2,
+    'unit': 'HORAS',
+    'description': 'Horas dedicadas a mantenimiento preventivo',
+    'default_value': 1.5
+},
+
+{
+    'name': 'Horas Mantenimiento Correctivo',
+    'initials': 'HMC',
+    'type': 2,
+    'unit': 'HORAS',
+    'description': 'Horas dedicadas a mantenimiento correctivo',
+    'default_value': 0.5
+},
+
+{
+    'name': 'Costo de Compra',
+    'initials': 'CC',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Costo de compra de materias primas del día',
+    'default_value': 18000
+},
+
+{
+    'name': 'Costo de Transporte Insumos',
+    'initials': 'CTI',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Costo de transporte de insumos',
+    'default_value': 500
+},
+
+{
+    'name': 'Costo de Almacenamiento',
+    'initials': 'CAL',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Costo de almacenamiento de insumos',
+    'default_value': 200
+},
+
+{
+    'name': 'Calidad Materia Prima 1',
+    'initials': 'CMP1',
+    'type': 2,
+    'unit': 'PUNTOS',
+    'description': 'Calificación de calidad proveedor 1 (1-10)',
+    'default_value': 8.5
+},
+
+{
+    'name': 'Calidad Materia Prima 2',
+    'initials': 'CMP2',
+    'type': 2,
+    'unit': 'PUNTOS',
+    'description': 'Calificación de calidad proveedor 2 (1-10)',
+    'default_value': 7.8
+},
+
+{
+    'name': 'Calidad Materia Prima 3',
+    'initials': 'CMP3',
+    'type': 2,
+    'unit': 'PUNTOS',
+    'description': 'Calificación de calidad proveedor 3 (1-10)',
+    'default_value': 8.2
+},
+
+{
+    'name': 'Volumen Proveedor 1',
+    'initials': 'V1',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Volumen suministrado por proveedor 1',
+    'default_value': 1250
+},
+
+{
+    'name': 'Volumen Proveedor 2',
+    'initials': 'V2',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Volumen suministrado por proveedor 2',
+    'default_value': 750
+},
+
+{
+    'name': 'Volumen Proveedor 3',
+    'initials': 'V3',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Volumen suministrado por proveedor 3',
+    'default_value': 500
+},
+
+{
+    'name': 'Inventario Final Insumos',
+    'initials': 'IIF',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Inventario final de insumos del día',
+    'default_value': 8000
+},
+
+{
+    'name': 'Entregas a Tiempo',
+    'initials': 'EAT',
+    'type': 2,
+    'unit': 'UNIDADES',
+    'description': 'Número de entregas realizadas a tiempo',
+    'default_value': 28
+},
+
+{
+    'name': 'Total de Entregas Proveedores',
+    'initials': 'TTEP',
+    'type': 2,
+    'unit': 'UNIDADES',
+    'description': 'Total de entregas programadas de proveedores',
+    'default_value': 30
+},
+
+{
+    'name': 'Empleados Salieron',
+    'initials': 'ES',
+    'type': 2,
+    'unit': 'EMPLEADOS',
+    'description': 'Empleados que salieron en el período',
+    'default_value': 1
+},
+
+{
+    'name': 'Empleados Entraron',
+    'initials': 'EE',  # CORREGIDO: Cambiado de ED a EE para evitar duplicado
+    'type': 2,
+    'unit': 'EMPLEADOS',
+    'description': 'Empleados que entraron en el período',
+    'default_value': 1
+},
+
+{
+    'name': 'Costo Capacitación Mensual',
+    'initials': 'CCAP',
+    'type': 2,
+    'unit': 'BS/MES',
+    'description': 'Costo mensual de capacitación de empleados',
+    'default_value': 2000
+},
+
+{
+    'name': 'Horas Ausentismo',
+    'initials': 'HAU',
+    'type': 2,
+    'unit': 'HORAS',
+    'description': 'Horas de ausentismo laboral del día',
+    'default_value': 10
+},
+
+{
+    'name': 'Horas Trabajadas Programadas',
+    'initials': 'HTP',
+    'type': 2,
+    'unit': 'HORAS',
+    'description': 'Horas programadas de trabajo del día',
+    'default_value': 480
+},
+
+{
+    'name': 'Leads Generados',
+    'initials': 'LG',
+    'type': 2,
+    'unit': 'LEADS',
+    'description': 'Número de leads generados por marketing',
+    'default_value': 50
+},
+
+{
+    'name': 'Nuevos Clientes',
+    'initials': 'NC',
+    'type': 2,
+    'unit': 'CLIENTES',
+    'description': 'Número de nuevos clientes adquiridos',
+    'default_value': 15
+},
+
+{
+    'name': 'Alcance de Campañas',
+    'initials': 'AC',
+    'type': 2,
+    'unit': 'PERSONAS',
+    'description': 'Alcance de las campañas publicitarias',
+    'default_value': 10000
+},
+
+{
+    'name': 'Alcance Campañas',
+    'initials': 'ALC',  # AGREGADA: Variable faltante
+    'type': 2,
+    'unit': 'PERSONAS',
+    'description': 'Alcance real de las campañas publicitarias',
+    'default_value': 10000
+},
+
+{
+    'name': 'Marca Reconocimiento Espontáneo',
+    'initials': 'MRE',
+    'type': 2,
+    'unit': '%',
+    'description': 'Reconocimiento espontáneo de marca',
+    'default_value': 25
+},
+
+{
+    'name': 'Marca Reconocimiento Asistido',
+    'initials': 'MRA',
+    'type': 2,
+    'unit': '%',
+    'description': 'Reconocimiento asistido de marca',
+    'default_value': 45
+},
+
+{
+    'name': 'Calidad Diferenciada Producto',
+    'initials': 'CDP',
+    'type': 2,
+    'unit': 'PUNTOS',
+    'description': 'Calificación diferenciación por calidad (1-10)',
+    'default_value': 7.5
+},
+
+{
+    'name': 'Costo Competitivo Producto',
+    'initials': 'CCP',
+    'type': 2,
+    'unit': 'PUNTOS',
+    'description': 'Competitividad en costos (1-10)',
+    'default_value': 8.0
+},
+
+{
+    'name': 'Servicio Competitivo Producto',
+    'initials': 'CSP',
+    'type': 2,
+    'unit': 'PUNTOS',
+    'description': 'Competitividad en servicio (1-10)',
+    'default_value': 8.5
+},
+
+{
+    'name': 'Intensidad Campañas Competencia',
+    'initials': 'ICC',
+    'type': 2,
+    'unit': 'INDICE',
+    'description': 'Intensidad de campañas de competencia (1-10)',
+    'default_value': 6
+},
+
+{
+    'name': 'Kilómetros Totales',
+    'initials': 'KMT',
+    'type': 2,
+    'unit': 'KM',
+    'description': 'Kilómetros totales recorridos en distribución',
+    'default_value': 250
+},
+
+{
+    'name': 'Costo Cadena Frío',
+    'initials': 'CCF',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Costo de mantener cadena de frío',
+    'default_value': 300
+},
+
+{
+    'name': 'Costo Logístico',
+    'initials': 'CLOG',
+    'type': 2,
+    'unit': 'BS',
+    'description': 'Otros costos logísticos del día',
+    'default_value': 200
+},
+
+{
+    'name': 'Tiempo Total Entregas Distribución',
+    'initials': 'TTED',  # AGREGADA: Variable faltante
+    'type': 2,
+    'unit': 'HORAS',
+    'description': 'Tiempo total empleado en entregas de distribución',
+    'default_value': 8
+},
+
+{
+    'name': 'Número de Entregas',
+    'initials': 'NE',
+    'type': 2,
+    'unit': 'ENTREGAS',
+    'description': 'Número total de entregas realizadas',
+    'default_value': 25
+},
+
+{
+    'name': 'Temperatura Cadena Frío',
+    'initials': 'TCF',
+    'type': 2,
+    'unit': '°C',
+    'description': 'Temperatura promedio mantenida en cadena frío',
+    'default_value': 4.2
+},
+
+{
+    'name': 'Tiempo Entrega Real',
+    'initials': 'TER',
+    'type': 2,
+    'unit': 'HORAS',
+    'description': 'Tiempo real promedio de entrega por cliente',
+    'default_value': 0.32
+},
+
+{
+    'name': 'Productos Devueltos',
+    'initials': 'PD',
+    'type': 2,
+    'unit': 'L',
+    'description': 'Litros de productos devueltos por problemas',
+    'default_value': 25
+},
+
 # VARIABLES ENDÓGENAS (TIPO 3) - Variables calculadas
 {'name': 'COSTO TOTAL REORDEN',
 'initials': 'CTR',
@@ -386,15 +880,6 @@ variables_data = [
 'unit': 'BS',
 'description': 'MONTO TOTAL DE GANANCIAS GENERADAS',
 'default_value': 0},
-
-{
-    'name': 'TOTAL CLIENTES ATENDIDOS',
-    'initials': 'TCA',
-    'type': 2,  # Estado
-    'unit': 'CLIENTES',
-    'description': 'TOTAL DE CLIENTES EN EL PERÍODO',
-    'default_value': 0  # AGREGAR
-},
 
 {'name': 'NIVEL DE RENTABILIDAD',
 'initials': 'NR',
@@ -749,44 +1234,44 @@ variables_data = [
 },
 
 {
-    "name": "Merma Producción",
-    "initials": "MP",
+    "name": "Merma Producción Calculada",
+    "initials": "MP",  # AGREGADA: Variable faltante
     "type": 3,
     "unit": "L",
     "description": "Pérdida en el proceso de producción",
-    "default_value": 37.5  # 1.5% de 2500
+    "default_value": 0  # Calculada
 },
   {
-    "name": "Merma Inventario",
-    "initials": "MI",
+    "name": "Merma Inventario Calculada",
+    "initials": "MI",  # AGREGADA: Variable faltante
     "type": 3,
     "unit": "L",
     "description": "Pérdida en inventario por deterioro o vencimiento",
-    "default_value": 5  # 0.5% de 1000
+    "default_value": 0  # Calculada
 },
   {
-    "name": "Costo Total Mermas",
-    "initials": "CTM",
+    "name": "Costo Total Mermas Calculado",
+    "initials": "CTM",  # AGREGADA: Variable faltante
     "type": 3,
     "unit": "Bs",
     "description": "Costo monetario total de las mermas en producción e inventario",
-    "default_value": 460  # (37.5 + 5) * 15.50 * 0.7
+    "default_value": 0  # Calculada
 },
   {
-    "name": "Eficiencia Operativa Global",
-    "initials": "EOG",
+    "name": "Eficiencia Operativa Global Calculada",
+    "initials": "EOG",  # AGREGADA: Variable faltante
     "type": 3,
     "unit": "%",
     "description": "Índice de eficiencia general de las operaciones",
-    "default_value": 0.85
+    "default_value": 0  # Calculada
 },
   {
-    "name": "Índice Satisfacción Cliente",
-    "initials": "ISC",
+    "name": "Índice Satisfacción Cliente Calculado",
+    "initials": "ISC",  # AGREGADA: Variable faltante
     "type": 3,
     "unit": "%",
     "description": "Medición del nivel de satisfacción de los clientes",
-    "default_value": 0.9
+    "default_value": 0  # Calculada
 },
   {
     'name': 'Punto de Equilibrio Diario',
@@ -795,7 +1280,286 @@ variables_data = [
     'unit': 'L',
     'description': 'Punto de equilibrio financiero calculado diariamente',
     'default_value': 1800  # CAMBIAR de 2000 a 1800
-}
+},
 
+# ================================================================
+# VARIABLES CALCULADAS ADICIONALES (TIPO 3) - KPIS POR ÁREA
+# ================================================================
+
+# MANTENIMIENTO - KPIs
+{
+    'name': 'Disponibilidad',
+    'initials': 'DISP',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje de disponibilidad de equipos',
+    'default_value': 0
+},
+
+{
+    'name': 'Efectividad General Equipos',
+    'initials': 'OEE',
+    'type': 3,
+    'unit': '%',
+    'description': 'Overall Equipment Effectiveness',
+    'default_value': 0
+},
+
+{
+    'name': 'Costo Mantenimiento por Litro',
+    'initials': 'CML',
+    'type': 3,
+    'unit': 'BS/L',
+    'description': 'Costo unitario de mantenimiento',
+    'default_value': 0
+},
+
+{
+    'name': 'Frecuencia de Fallas',
+    'initials': 'FF',
+    'type': 3,
+    'unit': 'FALLAS/1000H',
+    'description': 'Fallas por cada 1000 horas de operación',
+    'default_value': 0
+},
+
+{
+    'name': 'Ratio Mantenimiento Preventivo',
+    'initials': 'RMP',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje de mantenimiento preventivo',
+    'default_value': 0
+},
+
+# ABASTECIMIENTO - KPIs
+{
+    'name': 'Costo Total de Adquisición',
+    'initials': 'CTA',
+    'type': 3,
+    'unit': 'BS',
+    'description': 'Costo total de adquisición de insumos',
+    'default_value': 0
+},
+
+{
+    'name': 'Tiempo Promedio Entrega Proveedores',
+    'initials': 'TPEP',  # AGREGADA: Variable faltante
+    'type': 3,
+    'unit': 'DIAS',
+    'description': 'Tiempo promedio ponderado de entrega de proveedores',
+    'default_value': 0
+},
+
+{
+    'name': 'Índice Calidad Proveedores',
+    'initials': 'ICP',
+    'type': 3,
+    'unit': 'PUNTOS',
+    'description': 'Calidad promedio ponderada de proveedores',
+    'default_value': 0
+},
+
+{
+    'name': 'Rotación Inventario Materias Primas',
+    'initials': 'RIMP',
+    'type': 3,
+    'unit': 'VECES/AÑO',
+    'description': 'Rotación anual de inventario de materias primas',
+    'default_value': 0
+},
+
+{
+    'name': 'Cumplimiento Entregas',
+    'initials': 'CDE',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje de entregas a tiempo',
+    'default_value': 0
+},
+
+# RECURSOS HUMANOS - KPIs
+{
+    'name': 'Índice Rotación Personal',
+    'initials': 'IRP',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje anual de rotación de personal',
+    'default_value': 0
+},
+
+{
+    'name': 'Productividad por Empleado',
+    'initials': 'PPE',
+    'type': 3,
+    'unit': 'L/EMPLEADO',
+    'description': 'Productividad diaria por empleado',
+    'default_value': 0
+},
+
+{
+    'name': 'Costo Capacitación por Empleado',
+    'initials': 'CCE',
+    'type': 3,
+    'unit': 'BS/EMPLEADO',
+    'description': 'Inversión anual en capacitación por empleado',
+    'default_value': 0
+},
+
+{
+    'name': 'Tasa Ausentismo',
+    'initials': 'TAU',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje de ausentismo laboral',
+    'default_value': 0
+},
+
+{
+    'name': 'Costo Laboral por Litro',
+    'initials': 'CLL',
+    'type': 3,
+    'unit': 'BS/L',
+    'description': 'Costo de mano de obra por litro producido',
+    'default_value': 0
+},
+
+# MARKETING - KPIs
+{
+    'name': 'ROI Inversión Publicitaria',
+    'initials': 'ROIA',
+    'type': 3,
+    'unit': '%',
+    'description': 'Retorno de inversión publicitaria',
+    'default_value': 0
+},
+
+{
+    'name': 'Costo por Lead',
+    'initials': 'CPL_MKT',  # Renombrado para evitar conflicto con CPL
+    'type': 3,
+    'unit': 'BS/LEAD',
+    'description': 'Costo por lead generado',
+    'default_value': 0
+},
+
+{
+    'name': 'Tasa Conversión Leads',
+    'initials': 'TCL',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje de conversión de leads a clientes',
+    'default_value': 0
+},
+
+{
+    'name': 'Alcance Efectivo Campañas',
+    'initials': 'AEC',
+    'type': 3,
+    'unit': 'PERSONAS',
+    'description': 'Alcance efectivo ponderado por conversión',
+    'default_value': 0
+},
+
+{
+    'name': 'Reconocimiento Marca Índice',
+    'initials': 'RMI',
+    'type': 3,
+    'unit': 'PUNTOS',
+    'description': 'Índice global de reconocimiento de marca',
+    'default_value': 0
+},
+
+# COMPETENCIA - KPIs
+{
+    'name': 'Ventaja Competitiva Precio',
+    'initials': 'VCP',
+    'type': 3,
+    'unit': '%',
+    'description': 'Ventaja o desventaja en precio vs competencia',
+    'default_value': 0
+},
+
+{
+    'name': 'Participación Mercado Relativa',
+    'initials': 'PMR',
+    'type': 3,
+    'unit': 'RATIO',
+    'description': 'Market share relativo vs principal competidor',
+    'default_value': 0
+},
+
+{
+    'name': 'Índice Diferenciación Producto',
+    'initials': 'IDP',
+    'type': 3,
+    'unit': 'PUNTOS',
+    'description': 'Nivel de diferenciación del producto',
+    'default_value': 0
+},
+
+{
+    'name': 'Efectividad Estrategia Competitiva',
+    'initials': 'EEC',
+    'type': 3,
+    'unit': 'PUNTOS',
+    'description': 'Efectividad estratégica global vs competencia',
+    'default_value': 0
+},
+
+{
+    'name': 'Amenaza Competitiva',
+    'initials': 'AMEN',  # AGREGADA: Variable faltante
+    'type': 3,
+    'unit': 'INDICE',
+    'description': 'Nivel de amenaza competitiva en el mercado',
+    'default_value': 0
+},
+
+# DISTRIBUCIÓN - KPIs
+{
+    'name': 'Eficiencia Rutas Entrega',
+    'initials': 'ERE',
+    'type': 3,
+    'unit': 'L/KM',
+    'description': 'Litros entregados por kilómetro recorrido',
+    'default_value': 0
+},
+
+{
+    'name': 'Costo Distribución por Litro',
+    'initials': 'CDL',
+    'type': 3,
+    'unit': 'BS/L',
+    'description': 'Costo unitario de distribución',
+    'default_value': 0
+},
+
+{
+    'name': 'Tiempo Promedio Entrega Cliente',
+    'initials': 'TPEC',
+    'type': 3,
+    'unit': 'HORAS',
+    'description': 'Tiempo promedio de entrega por cliente',
+    'default_value': 0
+},
+
+{
+    'name': 'Índice Calidad Entrega',
+    'initials': 'ICE',
+    'type': 3,
+    'unit': 'INDICE',
+    'description': 'Calidad del proceso de entrega',
+    'default_value': 0
+},
+
+{
+    'name': 'Tasa Devoluciones',
+    'initials': 'TD',
+    'type': 3,
+    'unit': '%',
+    'description': 'Porcentaje de productos devueltos',
+    'default_value': 0
+}
 
 ]

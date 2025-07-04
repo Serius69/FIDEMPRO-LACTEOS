@@ -1,0 +1,480 @@
+<div class="card model-summary h-100 fade-in-up">
+    <div class="card-body">
+        <div class="d-flex align-items-center mb-4">
+            <div class="flex-shrink-0">
+                <div class="avatar-sm rounded-circle bg-success d-flex align-items-center justify-content-center">
+                    <i class="bx bx-check-circle text-white fs-4"></i>
+                </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <h5 class="card-title text-success mb-1">
+                    Modelo Estadístico Configurado
+                </h5>
+                <p class="text-muted mb-0">Análisis completado exitosamente</p>
+            </div>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="progress mb-4" style="height: 8px;">
+            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
+                 role="progressbar" style="width: 75%;" aria-valuenow="75" 
+                 aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="text-center mb-4">
+            <small class="text-muted">Paso 2 de 3 completado - Listo para ejecutar</small>
+        </div>
+        
+        <!-- Model Details -->
+        <div class="model-details mb-4">
+            <h6 class="text-muted mb-3">
+                <i class="bx bx-info-circle me-2"></i>
+                Información del Modelo
+            </h6>
+            
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Cuestionario:</span>
+                        <strong class="text-end">{{ questionary_result_instance.fk_questionary.questionary }}</strong>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Fecha de creación:</span>
+                        <span class="badge bg-light text-dark">{{ questionary_result_instance.date_created|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Producto:</span>
+                        <strong class="text-primary">{{ questionary_result_instance.fk_questionary.fk_product.name }}</strong>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Empresa:</span>
+                        <span>{{ questionary_result_instance.fk_questionary.fk_product.fk_business.name }}</span>
+                    </div>
+                </div>
+                
+                {% if demand_mean %}
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Media de demanda:</span>
+                        <span class="badge bg-info">{{ demand_mean|floatformat:"2" }} L</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if best_distribution %}
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Distribución óptima:</span>
+                        <span class="badge bg-success">{{ best_distribution|title }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if best_ks_p_value_floor %}
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">P-Value KS:</span>
+                        <span class="badge bg-warning text-dark" title="Valor p de la prueba Kolmogorov-Smirnov">
+                            {{ best_ks_p_value_floor|floatformat:"4" }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted">Duración simulación:</span>
+                        <strong class="text-success">
+                            {{ selected_quantity_time }} 
+                            {% if selected_unit_time == 'days' %}
+                                día{{ selected_quantity_time|pluralize }}
+                            {% elif selected_unit_time == 'weeks' %}
+                                semana{{ selected_quantity_time|pluralize }}
+                            {% elif selected_unit_time == 'months' %}
+                                mes{{ selected_quantity_time|pluralize:"es" }}
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistical Charts Section -->
+        {% if image_data or image_data_histogram or image_data_qq %}
+        <div class="charts-section mb-4">
+            <h6 class="text-muted mb-3">
+                <i class="bx bx-chart me-2"></i>
+                Análisis Estadístico
+            </h6>
+            
+            <!-- Demand Statistics Summary -->
+            {% if demand_stats %}
+            <div class="stats-summary mb-3 p-3 bg-light rounded">
+                <div class="row g-2">
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            <div class="h6 mb-0 text-primary">{{ demand_stats.count }}</div>
+                            <small class="text-muted">Registros</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            <div class="h6 mb-0 text-success">{{ demand_stats.mean|floatformat:1 }}</div>
+                            <small class="text-muted">Media (L)</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            <div class="h6 mb-0 text-info">{{ demand_stats.std|floatformat:1 }}</div>
+                            <small class="text-muted">Desv. Est.</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            <div class="h6 mb-0 text-warning">{{ demand_stats.cv|floatformat:2 }}</div>
+                            <small class="text-muted">Coef. Var.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Chart Tabs -->
+            <ul class="nav nav-pills nav-sm mb-3" id="statChartTabs" role="tablist">
+                {% if image_data %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="scatter-tab" data-bs-toggle="pill" 
+                            data-bs-target="#scatter-chart" type="button" role="tab">
+                        <i class="bx bx-scatter-chart me-1"></i>
+                        <span class="d-none d-md-inline">Dispersión</span>
+                    </button>
+                </li>
+                {% endif %}
+                {% if image_data_histogram %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if not image_data %}active{% endif %}" 
+                            id="histogram-tab" data-bs-toggle="pill" 
+                            data-bs-target="#histogram-chart" type="button" role="tab">
+                        <i class="bx bx-bar-chart-alt-2 me-1"></i>
+                        <span class="d-none d-md-inline">Histograma</span>
+                    </button>
+                </li>
+                {% endif %}
+                {% if image_data_qq %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if not image_data and not image_data_histogram %}active{% endif %}" 
+                            id="qq-tab" data-bs-toggle="pill" 
+                            data-bs-target="#qq-chart" type="button" role="tab">
+                        <i class="bx bx-line-chart me-1"></i>
+                        <span class="d-none d-md-inline">Q-Q Plot</span>
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <!-- Tab Content -->
+            <div class="tab-content" id="statChartTabContent">
+                {% if image_data %}
+                <div class="tab-pane fade show active" id="scatter-chart" role="tabpanel">
+                    <div class="demand-chart-container mb-2">
+                        <img src="data:image/png;base64,{{ image_data }}" 
+                            class="img-fluid rounded shadow-sm chart-image" 
+                            alt="Gráfico de dispersión de demanda histórica"
+                            loading="lazy"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Click para ampliar">
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="bx bx-info-circle me-1"></i>
+                            Tendencia de la demanda histórica
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if image_data_histogram %}
+                <div class="tab-pane fade {% if not image_data %}show active{% endif %}" 
+                    id="histogram-chart" role="tabpanel">
+                    <div class="demand-chart-container mb-2">
+                        <img src="data:image/png;base64,{{ image_data_histogram }}" 
+                            class="img-fluid rounded shadow-sm chart-image" 
+                            alt="Histograma y función de densidad"
+                            loading="lazy"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Click para ampliar">
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="bx bx-info-circle me-1"></i>
+                            Distribución con curva de densidad ajustada
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if image_data_qq %}
+                <div class="tab-pane fade {% if not image_data and not image_data_histogram %}show active{% endif %}" 
+                    id="qq-chart" role="tabpanel">
+                    <div class="demand-chart-container mb-2">
+                        <img src="data:image/png;base64,{{ image_data_qq }}" 
+                            class="img-fluid rounded shadow-sm chart-image" 
+                            alt="Q-Q Plot de validación"
+                            loading="lazy"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Click para ampliar">
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="bx bx-info-circle me-1"></i>
+                            Validación del ajuste {{ best_distribution|title }}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bx bx-info-circle me-2"></i>
+            <strong>Gráficos no disponibles:</strong> No se pudieron generar los análisis estadísticos. 
+            Verifique que los datos históricos sean válidos.
+        </div>
+        {% endif %}
+
+        <!-- Distribution Parameters -->
+        {% if best_distribution and distribution_params %}
+        <div class="distribution-params mb-4">
+            <h6 class="text-muted mb-3">
+                <i class="bx bx-math me-2"></i>
+                Parámetros - Distribución {{ best_distribution|title }}
+            </h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0">Parámetro</th>
+                            <th class="border-0 text-end">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for param, value in distribution_params.items %}
+                        <tr>
+                            <td class="fw-medium">{{ param|title }}</td>
+                            <td class="text-end font-monospace">{{ value|floatformat:4 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="action-buttons mb-4">
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'questionary:questionary.result' questionary_result_instance.id %}" 
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bx bx-show me-1"></i>
+                    Ver Cuestionario
+                </a>
+                
+                <button type="button" class="btn btn-outline-info btn-sm" 
+                        onclick="downloadCharts()" title="Descargar gráficos">
+                    <i class="bx bx-download me-1"></i>
+                    Descargar Gráficos
+                </button>
+                
+                <button type="button" class="btn btn-outline-secondary btn-sm" 
+                        data-bs-toggle="modal" data-bs-target="#statisticsModal">
+                    <i class="bx bx-calculator me-1"></i>
+                    Ver Estadísticas
+                </button>
+            </div>
+        </div>
+
+        <!-- Start Simulation Form -->
+        <div class="simulation-start">
+            <form id="simulationStartForm" action="{% url 'simulate:simulate.add' %}" method="post">
+                {% csrf_token %}  
+                <input type="hidden" name="fk_questionary_result" value="{{ questionary_result_instance_id }}">
+                <input type="hidden" name="quantity_time" value="{{ selected_quantity_time }}">
+                <input type="hidden" name="unit_time" value="days">
+                <input type="hidden" name="demand_history" value="{{ demand_history }}">
+                <input type="hidden" name="fk_fdp" value="{{ selected_fdp }}">
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg pulse-animation shadow" id="startSimulationBtn">
+                        <i class="bx bx-play me-2"></i>
+                        <span class="button-text">Iniciar Simulación</span>
+                        <div class="button-loading d-none">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Iniciando...
+                        </div>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Simulation Info -->
+            <div class="simulation-info mt-3 p-3 bg-light rounded">
+                <h6 class="mb-2">
+                    <i class="bx bx-info-circle text-info me-1"></i>
+                    ¿Qué sucederá al iniciar?
+                </h6>
+                <ul class="mb-0 small text-muted">
+                    <li>Se ejecutarán cálculos estadísticos complejos</li>
+                    <li>Se generarán predicciones para {{ selected_quantity_time }} períodos</li>
+                    <li>Se crearán múltiples escenarios de demanda</li>
+                    <li>El proceso puede tomar 2-5 minutos</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Modal -->
+<div class="modal fade" id="statisticsModal" tabindex="-1" aria-labelledby="statisticsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statisticsModalLabel">
+                    <i class="bx bx-chart me-2"></i>
+                    Estadísticas Detalladas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if demand_stats %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h4 class="text-primary">{{ demand_stats.count }}</h4>
+                                <p class="mb-0">Total de Registros</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h4 class="text-success">{{ demand_stats.mean|floatformat:2 }}</h4>
+                                <p class="mb-0">Media (Litros)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h4 class="text-info">{{ demand_stats.std|floatformat:2 }}</h4>
+                                <p class="mb-0">Desviación Estándar</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h4 class="text-warning">{{ demand_stats.cv|floatformat:3 }}</h4>
+                                <p class="mb-0">Coeficiente de Variación</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h4 class="text-danger">{{ demand_stats.min|floatformat:2 }}</h4>
+                                <p class="mb-0">Mínimo</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h4 class="text-secondary">{{ demand_stats.max|floatformat:2 }}</h4>
+                                <p class="mb-0">Máximo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funcionalidades adicionales para el modelo summary
+document.addEventListener('DOMContentLoaded', function() {
+    // Animación del botón de iniciar simulación
+    const startForm = document.getElementById('simulationStartForm');
+    if (startForm) {
+        startForm.addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('startSimulationBtn');
+            const buttonText = submitBtn.querySelector('.button-text');
+            const buttonLoading = submitBtn.querySelector('.button-loading');
+            
+            if (buttonText && buttonLoading) {
+                buttonText.classList.add('d-none');
+                buttonLoading.classList.remove('d-none');
+                submitBtn.disabled = true;
+            }
+        });
+    }
+    
+    // Funcionalidad de descarga de gráficos
+    window.downloadCharts = function() {
+        const charts = document.querySelectorAll('.chart-image');
+        charts.forEach((chart, index) => {
+            const link = document.createElement('a');
+            link.download = `grafico_${index + 1}.png`;
+            link.href = chart.src;
+            link.click();
+        });
+    };
+    
+    // Tooltip mejorado para gráficos
+    const chartImages = document.querySelectorAll('.chart-image');
+    chartImages.forEach(img => {
+        img.addEventListener('click', function() {
+            // Crear modal para vista ampliada
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${this.alt}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${this.src}" class="img-fluid" alt="${this.alt}">
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+            
+            // Limpiar al cerrar
+            modal.addEventListener('hidden.bs.modal', function() {
+                modal.remove();
+            });
+        });
+    });
+});
+</script>

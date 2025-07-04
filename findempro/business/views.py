@@ -199,7 +199,7 @@ def delete_business_view(request, pk):
     if request.method == 'POST':
         try:
             business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
-            business.is_active = False  # Eliminación lógica
+            business.is_active = False  # Eliminación lógica (soft delete)
             business.save(update_fields=['is_active'])
             
             # Si es una petición AJAX, devolver JSON
@@ -234,24 +234,42 @@ def delete_business_view(request, pk):
 
 @login_required
 def get_business_details_view(request, pk):
+    """
+    CORREGIDA: Vista para obtener detalles de negocio para editar
+    Retorna datos en formato correcto para el frontend
+    """
     try:
         business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
         
-        # Construir URL de imagen si existe
+        # Construir URL de imagen correctamente
         image_url = business.get_photo_url()
         
+        # CORREGIDO: Asegurar que los campos coincidan con el frontend
         business_details = {
             "id": business.id,
-            "name": business.name,
-            "type": business.type,
-            "location": business.location,
-            "image_src": image_url,
-            "description": business.description,
+            "name": business.name or "",  # Evitar None
+            "type": str(business.type),   # Convertir a string para el select
+            "location": business.location or "",  # Evitar None
+            "image_src": image_url,       # Campo correcto para imagen
+            "description": business.description or "",  # Evitar None
+            # Campos adicionales que podrían ser útiles
+            "date_created": business.date_created.isoformat() if business.date_created else None,
+            "last_updated": business.last_updated.isoformat() if business.last_updated else None,
         }
+        
+        # Log para debugging
+        logger.info(f"Returning business details for ID {pk}: {business_details}")
+        
         return JsonResponse(business_details)
         
     except Business.DoesNotExist:
-        return JsonResponse({"error": "El negocio no existe o no tienes permisos para verlo"}, status=404)
+        logger.warning(f"Business with ID {pk} not found for user {request.user.id}")
+        return JsonResponse({
+            "error": "El negocio no existe o no tienes permisos para verlo"
+        }, status=404)
     except Exception as e:
-        logger.error(f"Error in get_business_details_view: {str(e)}")
-        return JsonResponse({"error": "Error interno del servidor"}, status=500)
+        logger.error(f"Error in get_business_details_view for ID {pk}: {str(e)}")
+        return JsonResponse({
+            "error": "Error interno del servidor",
+            "details": str(e)  # Cambiar por settings.DEBUG check si es necesario
+        }, status=500)

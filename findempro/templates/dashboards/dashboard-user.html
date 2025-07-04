@@ -4,38 +4,7 @@
 {% block extra_css %}
     <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
-    <style>
-        .metric-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        .chart-container {
-            min-height: 300px;
-            position: relative;
-        }
-        .chart-loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .business-selector {
-            min-width: 250px;
-        }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/dashboard-user.css' %}">
 {% endblock extra_css %}
 
 {% block content %}
@@ -93,9 +62,15 @@
                             Bs. <span class="counter-value" data-target="{{ total_revenue|floatformat:2 }}">0</span>
                         </h3>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-success-subtle text-success">
-                                <i class="ri-arrow-up-line"></i>  {{ business_count|default:"0" }}%%
-                            </span>
+                            {% if revenue_change > 0 %}
+                                <span class="badge bg-success-subtle text-success">
+                                    <i class="ri-arrow-up-line"></i> {{ revenue_change|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">
+                                    <i class="ri-arrow-down-line"></i> {{ revenue_change|floatformat:1 }}%
+                                </span>
+                            {% endif %}
                             <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
@@ -116,9 +91,15 @@
                             Bs. <span class="counter-value" data-target="{{ total_costs|floatformat:2 }}">0</span>
                         </h3>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-danger-subtle text-danger">
-                                <i class="ri-arrow-up-line"></i> {{ business_count|default:"0" }}%
-                            </span>
+                            {% if costs_change > 0 %}
+                                <span class="badge bg-danger-subtle text-danger">
+                                    <i class="ri-arrow-up-line"></i> {{ costs_change|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success-subtle text-success">
+                                    <i class="ri-arrow-down-line"></i> {{ costs_change|floatformat:1 }}%
+                                </span>
+                            {% endif %}
                             <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
@@ -139,9 +120,15 @@
                             Bs. <span class="counter-value" data-target="{{ total_profit_margin|floatformat:2 }}">0</span>
                         </h3>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-primary-subtle text-primary">
-                                <i class="ri-arrow-up-line"></i>  {{ business_count|default:"0" }}%%
-                            </span>
+                            {% if profit_change > 0 %}
+                                <span class="badge bg-primary-subtle text-primary">
+                                    <i class="ri-arrow-up-line"></i> {{ profit_change|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">
+                                    <i class="ri-arrow-down-line"></i> {{ profit_change|floatformat:1 }}%
+                                </span>
+                            {% endif %}
                             <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
@@ -162,9 +149,15 @@
                             <span class="counter-value" data-target="{{ total_inventory_levels|floatformat:0 }}">0</span> unidades
                         </h3>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-info-subtle text-info">
-                                <i class="ri-arrow-down-line"></i>  {{ business_count|default:"0" }}%%
-                            </span>
+                            {% if inventory_change > 0 %}
+                                <span class="badge bg-info-subtle text-info">
+                                    <i class="ri-arrow-up-line"></i> {{ inventory_change|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning">
+                                    <i class="ri-arrow-down-line"></i> {{ inventory_change|floatformat:1 }}%
+                                </span>
+                            {% endif %}
                             <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
@@ -185,9 +178,15 @@
                             <span class="counter-value" data-target="{{ total_demand|floatformat:0 }}">0</span>
                         </h3>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-warning-subtle text-warning">
-                                <i class="ri-arrow-up-line"></i>  {{ business_count|default:"0" }}%%
-                            </span>
+                            {% if demand_change > 0 %}
+                                <span class="badge bg-warning-subtle text-warning">
+                                    <i class="ri-arrow-up-line"></i> {{ demand_change|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">
+                                    <i class="ri-arrow-down-line"></i> {{ demand_change|floatformat:1 }}%
+                                </span>
+                            {% endif %}
                             <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
@@ -208,9 +207,15 @@
                             <span class="counter-value" data-target="{{ total_production_output|floatformat:0 }}">0</span>
                         </h3>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-secondary-subtle text-secondary">
-                                <i class="ri-arrow-up-line"></i>  {{ business_count|default:"0" }}%%
-                            </span>
+                            {% if production_change > 0 %}
+                                <span class="badge bg-secondary-subtle text-secondary">
+                                    <i class="ri-arrow-up-line"></i> {{ production_change|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">
+                                    <i class="ri-arrow-down-line"></i> {{ production_change|floatformat:1 }}%
+                                </span>
+                            {% endif %}
                             <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
@@ -223,8 +228,16 @@
                 <div class="col-lg-3 mb-4">
                     <div class="card h-100">
                         <div class="card-body text-center">
-                            <img src="{{ business.get_photo_url }}" alt="{{ business.name }}" 
-                                 class="img-fluid rounded mb-3" style="max-height: 150px;">
+                            {% if business.get_photo_url %}
+                                <img src="{{ business.get_photo_url }}" alt="{{ business.name }}" 
+                                     class="img-fluid rounded mb-3" style="max-height: 150px;">
+                            {% else %}
+                                <div class="avatar-xl mx-auto mb-3">
+                                    <div class="avatar-title bg-primary-subtle text-primary rounded">
+                                        <i class="las la-building fs-2"></i>
+                                    </div>
+                                </div>
+                            {% endif %}
                             <h5 class="mb-1">{{ business.name }}</h5>
                             <p class="text-muted small">{{ business.fk_user.get_full_name|default:business.fk_user.username }}</p>
                             
@@ -232,24 +245,18 @@
                             
                             <div class="text-start">
                                 <h6 class="text-muted text-uppercase fw-semibold mb-3">Información</h6>
-                                <p class="text-muted mb-3">{{ business.description|truncatewords:20 }}</p>
+                                <p class="text-muted mb-3">{{ business_description|truncatewords:20 }}</p>
                                 
                                 <div class="table-responsive">
                                     <table class="table table-sm table-borderless">
                                         <tbody>
                                             <tr>
                                                 <td class="fw-medium">Industria:</td>
-                                                <td class="text-end">
-                                                    {% if business.type == 1 %}
-                                                        Lácteos
-                                                    {% else %}
-                                                        {{ business.get_type_display|default:"Otros" }}
-                                                    {% endif %}
-                                                </td>
+                                                <td class="text-end">{{ business_type_display }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Ubicación:</td>
-                                                <td class="text-end">{{ business.location|default:"No especificada" }}</td>
+                                                <td class="text-end">{{ business_location }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Email:</td>
@@ -260,6 +267,14 @@
                                             <tr>
                                                 <td class="fw-medium">Desde:</td>
                                                 <td class="text-end">{{ business.date_created|date:"d/m/Y" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Productos:</td>
+                                                <td class="text-end">{{ products_count }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-medium">Simulaciones:</td>
+                                                <td class="text-end">{{ simulations_count }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -287,12 +302,16 @@
                                     <i class="ri-more-2-fill"></i>
                                 </button>
                                 <ul class="dropdown-menu">
+                                    {% if can_export %}
                                     <li><a class="dropdown-item" href="#" onclick="exportRecommendations()">
                                         <i class="ri-download-2-line me-2"></i>Exportar
                                     </a></li>
-                                    <li><a class="dropdown-item" href="#">
+                                    {% endif %}
+                                    {% if can_print %}
+                                    <li><a class="dropdown-item" href="#" onclick="window.print()">
                                         <i class="ri-printer-line me-2"></i>Imprimir
                                     </a></li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </div>
@@ -314,27 +333,27 @@
                                         <tbody>
                                             {% for rec in page_obj %}
                                             <tr>
-                                                <td>{{ rec.fk_simulation__date_created|date:"d/m/Y" }}</td>
+                                                <td>{{ rec.simulation_date|date:"d/m/Y" }}</td>
                                                 <td>
                                                     <span class="badge bg-info-subtle text-info">
-                                                        {{ rec.fk_simulation__fk_questionary_result__fk_questionary__fk_product__name|truncatechars:20 }}
+                                                        {{ rec.product_name|truncatechars:20 }}
                                                     </span>
                                                 </td>
-                                                <td>{{ rec.fk_finance_recommendation__variable_name|truncatechars:15 }}</td>
+                                                <td>Análisis General</td>
                                                 <td>
                                                     <div class="progress" style="height: 20px;">
                                                         <div class="progress-bar" role="progressbar" 
-                                                             style="width: {{ rec.data|floatformat:0 }}%"
-                                                             aria-valuenow="{{ rec.data|floatformat:0 }}" 
+                                                             style="width: {{ rec.data_percentage|floatformat:0 }}%"
+                                                             aria-valuenow="{{ rec.data_percentage|floatformat:0 }}" 
                                                              aria-valuemin="0" aria-valuemax="100">
-                                                            {{ rec.data|floatformat:1 }}%
+                                                            {{ rec.data_percentage|floatformat:1 }}%
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>{{ rec.fk_finance_recommendation__threshold_value|floatformat:2 }}</td>
+                                                <td>N/A</td>
                                                 <td>
                                                     <span class="text-wrap" style="max-width: 200px; display: inline-block;">
-                                                        {{ rec.fk_finance_recommendation__recommendation|truncatechars:50 }}
+                                                        Simulación realizada el {{ rec.simulation_date|date:"d/m/Y" }}
                                                     </span>
                                                 </td>
                                                 <td>

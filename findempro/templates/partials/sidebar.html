@@ -108,6 +108,9 @@
                     <div class="collapse menu-dropdown" id="sidebarQuestionary">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
+                                <a href="{% url 'questionary:questionary.main' %}" class="nav-link" data-key="t-questionary">Registrar datos mediante cuestionario</a>
+                            </li> 
+                            <li class="nav-item">
                                 <a href="{% url 'questionary:questionary.list' %}" class="nav-link" data-key="t-questionary">Lista</a>
                             </li> 
                         </ul>
@@ -121,9 +124,7 @@
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarSimulate">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{% url 'questionary:questionary.main' %}" class="nav-link" data-key="t-questionary">Registrar datos mediante cuestionario</a>
-                            </li> 
+                            
                             <li class="nav-item">
                                 <a href="{% url 'simulate:simulate.show' %}" class="nav-link" data-key="t-simulate-init">Realizar Simulacion con datos registrados</a>
                             </li>
@@ -168,7 +169,7 @@
                     </div> 
                 </li>
                 {% endif %}
-                <!-- Reports Menu -->
+                {% comment %} <!-- Reports Menu -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarReport" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarReport">
@@ -181,7 +182,7 @@
                             </li>                             
                         </ul>
                     </div> 
-                </li>
+                </li> {% endcomment %}
                 {% endif %}
             </ul>
         </div>
