@@ -630,121 +630,176 @@ class SimulateShowView(BaseSimulationView, View):
             return []
     
     def _perform_statistical_analysis(self, questionary_result: QuestionaryResult, 
-                                user, demand_data: List[float]) -> Dict[str, Any]:
-        """Realizar análisis estadístico completo - CORRECCIÓN CRÍTICA"""
+                            user, demand_data: List[float]) -> Dict[str, Any]:
+        """Realizar análisis estadístico completo - VERSIÓN CORREGIDA"""
         try:
             if not demand_data:
                 return {'analysis_error': 'No hay datos de demanda disponibles'}
             
+            # 🔧 CRÍTICO: Log de datos de entrada
+            logger.info(f"Starting statistical analysis with {len(demand_data)} demand values")
+            logger.debug(f"Demand data sample: {demand_data[:5]}... (showing first 5)")
+            logger.debug(f"Demand data stats: min={min(demand_data)}, max={max(demand_data)}, mean={np.mean(demand_data):.2f}")
+            
             # Usar servicio estadístico si existe
             if self.statistical_service:
                 try:
-                    # CORRECCIÓN CRÍTICA: Verificar la firma del método y llamar correctamente
-                    import inspect
+                    # 🔧 CORRECCIÓN CRÍTICA: Pasar demand_data como parámetro
+                    logger.info("Using StatisticalService for analysis")
+                    analysis_results = self.statistical_service.analyze_demand_history(
+                        questionary_result.id, user, demand_data  # ✅ Agregar demand_data
+                    )
                     
-                    # Verificar qué método existe
-                    if hasattr(self.statistical_service, 'analyze_demand_history'):
-                        method = getattr(self.statistical_service, 'analyze_demand_history')
-                        sig = inspect.signature(method)
-                        params = list(sig.parameters.keys())
-                        
-                        logger.debug(f"StatisticalService method signature: {params}")
-                        
-                        # CORRECCIÓN: Pasar los argumentos en el orden correcto
-                        if len(params) >= 3:  # Método espera (self, questionary_id, demand_data) o similar
-                            # CRUCIAL: Pasar questionary_id como ENTERO, no como lista
-                            analysis_results = self.statistical_service.analyze_demand_history(
-                                questionary_result.id, user
-                            )
-                        elif len(params) == 2:  # Solo (self, demand_data)
-                            analysis_results = self.statistical_service.analyze_demand_history(
-                                questionary_result.id, user
-                            )
-                        else:
-                            # Fallback: usar análisis básico
-                            logger.warning("StatisticalService method signature not recognized")
-                            return self._basic_statistical_analysis(demand_data)
-                        
-                        # Verificar que analysis_results sea un diccionario válido
-                        if not isinstance(analysis_results, dict):
-                            logger.error(f"StatisticalService returned invalid result type: {type(analysis_results)}")
-                            return self._basic_statistical_analysis(demand_data)
-                        
-                        # Agregar análisis adicional si hay métodos disponibles
-                        if (len(demand_data) >= 10 and 
-                            hasattr(self.statistical_service, 'perform_distribution_fitting')):
-                            try:
-                                additional_results = self.statistical_service.perform_distribution_fitting(demand_data)
-                                if isinstance(additional_results, dict):
-                                    analysis_results.update(additional_results)
-                            except Exception as e:
-                                logger.warning(f"Error in additional statistical analysis: {e}")
-                        
-                        # Asegurar que tenemos campos mínimos requeridos
-                        required_fields = ['demand_mean', 'demand_std', 'best_distribution']
-                        for field in required_fields:
-                            if field not in analysis_results:
-                                logger.warning(f"Missing field {field} in statistical analysis, adding default")
-                                if field == 'demand_mean':
-                                    analysis_results[field] = float(np.mean(demand_data))
-                                elif field == 'demand_std':
-                                    analysis_results[field] = float(np.std(demand_data))
-                                elif field == 'best_distribution':
-                                    analysis_results[field] = 'Normal'
-                        
-                        # Agregar datos originales
-                        analysis_results['demand_data'] = demand_data
-                        analysis_results['analysis_method'] = 'statistical_service'
-                        
-                        logger.info(f"Statistical analysis completed successfully with {len(analysis_results)} fields")
-                        return analysis_results
-                        
-                    else:
-                        logger.warning("StatisticalService.analyze_demand_history method not found")
+                    # 🔧 VERIFICACIÓN POST-ANÁLISIS
+                    if 'demand_std' not in analysis_results:
+                        logger.error("demand_std missing from statistical service results!")
+                        analysis_results['demand_std'] = float(np.std(demand_data, ddof=1))
+                    
+                    if 'demand_mean' not in analysis_results:
+                        logger.error("demand_mean missing from statistical service results!")
+                        analysis_results['demand_mean'] = float(np.mean(demand_data))
+                    
+                    # 🔧 LOG VERIFICACIÓN
+                    logger.info(f"Statistical service result - mean: {analysis_results.get('demand_mean'):.2f}, std: {analysis_results.get('demand_std'):.2f}")
+                    
+                    # Verificar que analysis_results sea un diccionario válido
+                    if not isinstance(analysis_results, dict):
+                        logger.error(f"StatisticalService returned invalid result type: {type(analysis_results)}")
                         return self._basic_statistical_analysis(demand_data)
+                    
+                    # Agregar análisis adicional si hay métodos disponibles
+                    if (len(demand_data) >= 10 and 
+                        hasattr(self.statistical_service, 'perform_distribution_fitting')):
+                        try:
+                            additional_results = self.statistical_service.perform_distribution_fitting(demand_data)
+                            if isinstance(additional_results, dict):
+                                analysis_results.update(additional_results)
+                        except Exception as e:
+                            logger.warning(f"Error in additional statistical analysis: {e}")
+                    
+                    # Asegurar que tenemos campos mínimos requeridos
+                    required_fields = ['demand_mean', 'demand_std', 'best_distribution']
+                    for field in required_fields:
+                        if field not in analysis_results:
+                            logger.warning(f"Missing field {field} in statistical analysis, adding default")
+                            if field == 'demand_mean':
+                                analysis_results[field] = float(np.mean(demand_data))
+                            elif field == 'demand_std':
+                                analysis_results[field] = float(np.std(demand_data, ddof=1))
+                            elif field == 'best_distribution':
+                                analysis_results[field] = 'Normal'
+                    
+                    # Agregar datos originales y metadatos
+                    analysis_results['demand_data'] = demand_data
+                    analysis_results['analysis_method'] = 'statistical_service'
+                    analysis_results['data_count'] = len(demand_data)
+                    
+                    # 🔧 VERIFICACIÓN FINAL CRÍTICA
+                    final_std = analysis_results.get('demand_std')
+                    if final_std is None or np.isnan(final_std):
+                        logger.error("Final demand_std is None or NaN, recalculating...")
+                        analysis_results['demand_std'] = float(np.std(demand_data, ddof=1))
+                    
+                    logger.info(f"Statistical analysis completed successfully with {len(analysis_results)} fields")
+                    logger.info(f"Final verification - demand_mean: {analysis_results['demand_mean']:.2f}, demand_std: {analysis_results['demand_std']:.2f}")
+                    
+                    return analysis_results
                     
                 except Exception as e:
                     logger.error(f"Error using statistical service: {e}")
                     logger.exception("Full traceback:")
                     # En caso de error, usar análisis básico
+                    logger.info("Falling back to basic statistical analysis due to service error")
                     return self._basic_statistical_analysis(demand_data)
             else:
                 # Análisis básico sin servicio estadístico
                 logger.info("Using basic statistical analysis (no service available)")
                 return self._basic_statistical_analysis(demand_data)
-            
+                
         except Exception as e:
             logger.error(f"Error in statistical analysis: {e}")
             logger.exception("Full traceback:")
             return {
                 'analysis_error': f'Error en análisis estadístico: {str(e)}',
                 'demand_data': demand_data,
-                'analysis_method': 'error_fallback'
+                'analysis_method': 'error_fallback',
+                # 🔧 FALLBACK CRÍTICO: Asegurar campos esenciales
+                'demand_std': float(np.std(demand_data, ddof=1)) if len(demand_data) > 1 else 0,
+                'demand_mean': float(np.mean(demand_data)) if demand_data else 0,
+                'best_distribution': 'Normal',
+                'data_count': len(demand_data)
             }
     
     def _basic_statistical_analysis(self, demand_data: List[float]) -> Dict[str, Any]:
-        """Análisis estadístico básico mejorado y completo"""
+        """🔧 MEJORADO: Análisis estadístico básico completo y robusto"""
         try:
             if not demand_data:
+                logger.warning("No demand data provided for basic analysis")
                 return {
                     'analysis_error': 'No hay datos de demanda',
-                    'analysis_method': 'basic_empty'
+                    'analysis_method': 'basic_empty',
+                    'demand_std': 0,
+                    'demand_mean': 0,
+                    'best_distribution': 'Normal',
+                    'data_count': 0
                 }
             
-            data_array = np.array(demand_data)
+            # 🔧 LOG DETALLADO
+            logger.info(f"Basic statistical analysis starting with {len(demand_data)} values")
+            logger.debug(f"Data range: {min(demand_data):.2f} to {max(demand_data):.2f}")
             
-            # Estadísticas básicas
+            # Convertir a numpy array para cálculos
+            data_array = np.array(demand_data, dtype=float)
+            
+            # Verificar datos válidos
+            if np.any(np.isnan(data_array)) or np.any(np.isinf(data_array)):
+                logger.error("Data contains NaN or infinite values, cleaning...")
+                # Limpiar datos inválidos
+                data_array = data_array[~np.isnan(data_array) & ~np.isinf(data_array)]
+                if len(data_array) == 0:
+                    logger.error("No valid data after cleaning")
+                    return {
+                        'analysis_error': 'Todos los datos son inválidos (NaN o infinito)',
+                        'analysis_method': 'basic_invalid_data',
+                        'demand_std': 0,
+                        'demand_mean': 0,
+                        'best_distribution': 'Normal',
+                        'data_count': 0
+                    }
+            
+            # 🔧 CÁLCULOS ESTADÍSTICOS CON VERIFICACIÓN
             mean_val = float(np.mean(data_array))
-            std_val = float(np.std(data_array))
+            
+            # Calcular desviación estándar con ddof=1 (muestra)
+            if len(data_array) > 1:
+                std_val = float(np.std(data_array, ddof=1))
+            else:
+                std_val = 0.0
+                logger.warning("Only one data point, setting std to 0")
+            
+            # Verificar cálculos
+            if np.isnan(mean_val):
+                logger.error("Mean calculation resulted in NaN")
+                mean_val = 0.0
+            
+            if np.isnan(std_val):
+                logger.error("Std calculation resulted in NaN")
+                std_val = 0.0
+            
+            logger.info(f"Basic calculations - Mean: {mean_val:.2f}, Std: {std_val:.2f}")
+            
+            # Estadísticas adicionales
             median_val = float(np.median(data_array))
             min_val = float(np.min(data_array))
             max_val = float(np.max(data_array))
             
-            # Estadísticas adicionales
+            # Coeficiente de variación
             cv = std_val / mean_val if mean_val > 0 else 0
+            
+            # Percentiles
             q25 = float(np.percentile(data_array, 25))
             q75 = float(np.percentile(data_array, 75))
-            variance = float(np.var(data_array))
+            variance = float(np.var(data_array, ddof=1)) if len(data_array) > 1 else 0
             
             # Detección simple de distribución basada en características
             skewness = self._calculate_skewness(data_array)
@@ -761,17 +816,18 @@ class SimulateShowView(BaseSimulationView, View):
             ks_statistic = min(0.15, abs(skewness) * 0.1)  # Simulado
             ks_p_value = max(0.1, 1.0 - abs(skewness) * 0.2)  # Simulado
             
+            # 🔧 CONSTRUIR RESULTADO COMPLETO
             result = {
-                # Campos requeridos por el sistema
+                # 🔧 CAMPOS CRÍTICOS PRIMERO (requeridos por el sistema)
                 'demand_mean': mean_val,
-                'demand_std': std_val,
-                'demand_data': demand_data,
+                'demand_std': std_val,  # ✅ CRÍTICO: Asegurar que está presente
+                'demand_data': demand_data,  # Datos originales
                 'best_distribution': best_distribution,
                 'best_ks_p_value_floor': ks_p_value,
                 'best_ks_statistic_floor': ks_statistic,
                 'distribution_params': distribution_params,
                 
-                # Estadísticas adicionales
+                # Estadísticas adicionales detalladas
                 'demand_median': median_val,
                 'demand_min': min_val,
                 'demand_max': max_val,
@@ -783,25 +839,66 @@ class SimulateShowView(BaseSimulationView, View):
                 'demand_range': max_val - min_val,
                 'demand_skewness': skewness,
                 
-                # Metadatos
+                # Metadatos del análisis
                 'analysis_method': 'basic',
                 'analysis_timestamp': datetime.now().isoformat(),
-                'data_quality': self._assess_data_quality(data_array)
+                'data_quality': self._assess_data_quality(data_array),
+                'data_count': len(demand_data),
+                'original_data_count': len(demand_data),
+                'cleaned_data_count': len(data_array),
+                
+                # Campos de compatibilidad (legacy)
+                'data_list': demand_data,
+                'selected_fdp': None,  # No hay selección automática en análisis básico
             }
             
-            logger.info(f"Basic statistical analysis completed: mean={mean_val:.2f}, std={std_val:.2f}, distribution={best_distribution}")
+            # 🔧 VERIFICACIÓN FINAL CRÍTICA
+            if result['demand_std'] is None or np.isnan(result['demand_std']):
+                logger.error("demand_std is None or NaN in basic analysis result!")
+                result['demand_std'] = std_val if not np.isnan(std_val) else 0
+            
+            if result['demand_mean'] is None or np.isnan(result['demand_mean']):
+                logger.error("demand_mean is None or NaN in basic analysis result!")
+                result['demand_mean'] = mean_val if not np.isnan(mean_val) else 0
+            
+            # Log final de verificación
+            logger.info(f"Basic analysis completed successfully:")
+            logger.info(f"  - Data points: {result['data_count']}")
+            logger.info(f"  - Mean: {result['demand_mean']:.2f}")
+            logger.info(f"  - Std: {result['demand_std']:.2f}")
+            logger.info(f"  - CV: {result['demand_cv']:.2%}")
+            logger.info(f"  - Distribution: {result['best_distribution']}")
+            logger.info(f"  - Quality: {result['data_quality']}")
+            
             return result
             
         except Exception as e:
             logger.error(f"Error in basic statistical analysis: {e}")
             logger.exception("Full traceback:")
+            
+            # 🔧 FALLBACK ULTRA-BÁSICO
+            try:
+                fallback_mean = np.mean(demand_data) if demand_data else 0
+                fallback_std = np.std(demand_data, ddof=1) if len(demand_data) > 1 else 0
+            except:
+                fallback_mean = 0
+                fallback_std = 0
+            
             return {
                 'analysis_error': f'Error en análisis básico: {str(e)}',
                 'demand_data': demand_data or [],
                 'analysis_method': 'basic_error',
-                'demand_mean': np.mean(demand_data) if demand_data else 0,
-                'demand_std': np.std(demand_data) if demand_data else 0,
-                'best_distribution': 'Normal'
+                'demand_mean': float(fallback_mean),
+                'demand_std': float(fallback_std),
+                'best_distribution': 'Normal',
+                'data_count': len(demand_data) if demand_data else 0,
+                'distribution_params': {
+                    'mean': float(fallback_mean),
+                    'std': float(fallback_std)
+                },
+                'best_ks_p_value_floor': 0.5,
+                'best_ks_statistic_floor': 0.1,
+                'analysis_timestamp': datetime.now().isoformat()
             }
     
     

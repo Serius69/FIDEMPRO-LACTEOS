@@ -4125,3 +4125,187 @@ class ChartGenerator:
             
         except Exception as e:
             logger.error(f"Error creating gauge chart: {e}")
+            
+    
+    def generate_validation_charts_complete(self, validation_results: Dict) -> Dict[str, Any]:
+        """
+        MÉTODO PRINCIPAL para generar todos los gráficos de validación
+        """
+        try:
+            logger.info("Iniciando generación completa de gráficos de validación")
+            
+            by_variable = validation_results.get('by_variable', {})
+            all_variables_extracted = validation_results.get('all_variables_extracted', [])
+            
+            if not by_variable:
+                logger.error("Sin variables para validar en by_variable")
+                return {}
+            
+            if not all_variables_extracted:
+                logger.error("Sin datos extraídos en all_variables_extracted")
+                return {}
+            
+            # Generar gráficos por tipo de variable
+            charts_by_type = {}
+            
+            # Agrupar variables por tipo
+            variables_by_type = {}
+            for var_key, var_data in by_variable.items():
+                var_type = var_data.get('type', 'Otra')
+                if var_type not in variables_by_type:
+                    variables_by_type[var_type] = {}
+                variables_by_type[var_type][var_key] = var_data
+            
+            logger.info(f"Variables agrupadas en {len(variables_by_type)} tipos")
+            
+            # Generar gráficos para cada tipo
+            total_charts_generated = 0
+            
+            for var_type, variables in variables_by_type.items():
+                type_charts = []
+                
+                # Limitar a máximo 15 variables por tipo
+                variables_limited = dict(list(variables.items())[:15])
+                
+                for var_key, var_data in variables_limited.items():
+                    try:
+                        # Generar gráfico individual
+                        chart_data = self._generate_complete_variable_chart_corrected(
+                            var_key, var_data, var_type, all_variables_extracted
+                        )
+                        
+                        if chart_data and chart_data.get('chart'):
+                            type_charts.append(chart_data)
+                            total_charts_generated += 1
+                            logger.debug(f"Gráfico generado para {var_key}")
+                        else:
+                            logger.warning(f"No se pudo generar gráfico para {var_key}")
+                            
+                    except Exception as e:
+                        logger.error(f"Error generando gráfico para {var_key}: {str(e)}")
+                        continue
+                
+                if type_charts:
+                    charts_by_type[var_type] = type_charts
+                    logger.info(f"Generados {len(type_charts)} gráficos para tipo {var_type}")
+            
+            # Generar gráfico resumen
+            summary_chart = self._generate_validation_summary_chart(variables_by_type)
+            if summary_chart:
+                charts_by_type['summary'] = summary_chart
+                total_charts_generated += 1
+            
+            logger.info(f"TOTAL: {total_charts_generated} gráficos de validación generados")
+            
+            return charts_by_type
+            
+        except Exception as e:
+            logger.error(f"Error en generación completa de gráficos: {str(e)}")
+            return {}
+        
+    def _generate_validation_summary_chart(self, variables_by_type: Dict) -> str:
+        """
+        Generar gráfico resumen de validación
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            import numpy as np
+            from io import BytesIO
+            import base64
+            
+            if not variables_by_type:
+                return None
+            
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+            
+            # Gráfico 1: Distribución por estado
+            all_statuses = []
+            for var_type, variables in variables_by_type.items():
+                for var_key, var_data in variables.items():
+                    status = var_data.get('status', 'UNKNOWN')
+                    all_statuses.append(status)
+            
+            status_counts = {}
+            for status in all_statuses:
+                status_counts[status] = status_counts.get(status, 0) + 1
+            
+            # Colores para estados
+            status_colors = {
+                'PRECISE': '#27AE60',
+                'ACCEPTABLE': '#F39C12', 
+                'MARGINAL': '#E67E22',
+                'INACCURATE': '#E74C3C',
+                'NO_DATA': '#7F8C8D'
+            }
+            
+            statuses = list(status_counts.keys())
+            counts = list(status_counts.values())
+            colors = [status_colors.get(s, '#95A5A6') for s in statuses]
+            
+            wedges, texts, autotexts = ax1.pie(counts, labels=statuses, colors=colors, 
+                                            autopct='%1.1f%%', startangle=90)
+            ax1.set_title('Distribución de Estados de Validación', fontsize=14, fontweight='bold')
+            
+            # Gráfico 2: Error promedio por tipo
+            type_errors = {}
+            for var_type, variables in variables_by_type.items():
+                errors = []
+                for var_data in variables.values():
+                    error_pct = var_data.get('error_pct', 0)
+                    if error_pct is not None:
+                        errors.append(error_pct)
+                
+                if errors:
+                    type_errors[var_type] = np.mean(errors)
+            
+            if type_errors:
+                types = list(type_errors.keys())
+                avg_errors = list(type_errors.values())
+                
+                # Colores basados en error
+                bar_colors = []
+                for error in avg_errors:
+                    if error < 5:
+                        bar_colors.append('#27AE60')
+                    elif error < 15:
+                        bar_colors.append('#F39C12')
+                    else:
+                        bar_colors.append('#E74C3C')
+                
+                bars = ax2.bar(types, avg_errors, color=bar_colors, alpha=0.8, edgecolor='black')
+                
+                # Agregar valores en barras
+                for bar, error in zip(bars, avg_errors):
+                    height = bar.get_height()
+                    ax2.text(bar.get_x() + bar.get_width()/2., height + max(avg_errors) * 0.01,
+                            f'{error:.1f}%', ha='center', va='bottom', fontsize=10, fontweight='bold')
+                
+                ax2.set_ylabel('Error Promedio (%)', fontsize=12, fontweight='bold')
+                ax2.set_title('Error Promedio por Tipo de Variable', fontsize=14, fontweight='bold')
+                ax2.set_xticklabels(types, rotation=45, ha='right')
+                
+                # Líneas de referencia
+                ax2.axhline(y=5, color='green', linestyle='--', alpha=0.7, label='Preciso (≤5%)')
+                ax2.axhline(y=15, color='orange', linestyle='--', alpha=0.7, label='Aceptable (≤15%)')
+                ax2.legend()
+            
+            ax2.grid(True, alpha=0.3, axis='y')
+            
+            plt.suptitle('RESUMEN DE VALIDACIÓN DEL MODELO', fontsize=18, fontweight='bold')
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generando gráfico resumen: {str(e)}")
+            plt.close('all')
+            return None
