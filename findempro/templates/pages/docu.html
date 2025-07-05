@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generación de Modelos de Simulación con Respecto a la Demanda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            font-style: italic;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            margin-bottom: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section-header {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            font-size: 1.4em;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .section-header:hover::before {
+            left: 100%;
+        }
+
+        .section-content {
+            padding: 25px;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+        }
+
+        .step-number {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .formula {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .formula::before {
+            content: 'Fórmula';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: 'Código';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #27ae60;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+            margin: 15px 0;
+        }
+
+        .distribution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .distribution-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .distribution-card:hover {
+            transform: scale(1.05);
+        }
+
+        .distribution-title {
+            color: #2c3e50;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:hover {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .collapsible {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.active {
+            max-height: 2000px;
+        }
+
+        .diagram {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #3498db;
+            margin: 10px 0;
+        }
+
+        .process-box {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .section-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Generación de Modelos de Simulación</h1>
+            <p class="subtitle">Enfoque Técnico en la Modelización de la Demanda</p>
+        </div>
+
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('overview')">
+                📊 Descripción General del Sistema
+            </div>
+            <div class="section-content collapsible" id="overview">
+                <p>Los modelos de simulación de demanda son herramientas fundamentales para predecir y analizar el comportamiento de la demanda en sistemas complejos. Este documento explica el proceso técnico de generación de estos modelos.</p>
+                
+                <div class="highlight">
+                    <strong>Objetivo Principal:</strong> Crear modelos estocásticos que repliquen fielmente el comportamiento histórico de la demanda y permitan generar escenarios futuros confiables.
+                </div>
+
+                <div class="diagram">
+                    <div class="process-box">Datos Históricos de Demanda</div>
+                    <div class="arrow">↓</div>
+                    <div class="process-box">Análisis Estadístico</div>
+                    <div class="arrow">↓</div>
+                    <div class="process-box">Identificación de Distribución</div>
+                    <div class="arrow">↓</div>
+                    <div class="process-box">Generación del Modelo</div>
+                    <div class="arrow">↓</div>
+                    <div class="process-box">Validación y Ajuste</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('methodology')">
+                🔬 Metodología de Generación
+            </div>
+            <div class="section-content collapsible" id="methodology">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Recolección y Preparación de Datos</strong>
+                    <p>Se recopilan datos históricos de demanda, eliminando outliers y normalizando los valores.</p>
+                    <div class="code-block">
+// Ejemplo de preparación de datos
+let demandData = rawData.filter(d => d.value > 0 && d.value < threshold);
+let normalizedData = demandData.map(d => ({
+    ...d,
+    normalized: (d.value - mean) / standardDeviation
+}));
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Análisis de Distribución de Probabilidad</strong>
+                    <p>Se determina qué distribución estadística mejor se ajusta a los datos históricos.</p>
+                    <div class="formula">
+                        Test de Kolmogorov-Smirnov: D = max|F(x) - S(x)|
+                        <br>donde F(x) es la función teórica y S(x) es la empírica
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Estimación de Parámetros</strong>
+                    <p>Se calculan los parámetros específicos de la distribución identificada.</p>
+                    <div class="code-block">
+// Estimación de parámetros para distribución normal
+function estimateParameters(data) {
+    const mean = data.reduce((sum, val) => sum + val, 0) / data.length;
+    const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (data.length - 1);
+    const stdDev = Math.sqrt(variance);
+    return { mean, stdDev };
+}
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Generación del Modelo de Simulación</strong>
+                    <p>Se implementa el generador de números aleatorios basado en la distribución identificada.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <strong>Validación y Calibración</strong>
+                    <p>Se verifica que el modelo generado reproduce adecuadamente las características estadísticas originales.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('distributions')">
+                📈 Distribuciones de Probabilidad Utilizadas
+            </div>
+            <div class="section-content collapsible" id="distributions">
+                <div class="distribution-grid">
+                    <div class="distribution-card">
+                        <div class="distribution-title">Distribución Normal</div>
+                        <div class="formula">
+                            f(x) = (1/σ√2π) * e^(-½((x-μ)/σ)²)
+                        </div>
+                        <p><strong>Uso:</strong> Demanda con variación simétrica alrededor de la media</p>
+                        <div class="code-block">
+function normalRandom(mean, stdDev) {
+    let u = Math.random();
+    let v = Math.random();
+    let z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    return z * stdDev + mean;
+}
+                        </div>
+                    </div>
+
+                    <div class="distribution-card">
+                        <div class="distribution-title">Distribución Exponencial</div>
+                        <div class="formula">
+                            f(x) = λe^(-λx)
+                        </div>
+                        <p><strong>Uso:</strong> Tiempos entre llegadas de demanda</p>
+                        <div class="code-block">
+function exponentialRandom(lambda) {
+    let u = Math.random();
+    return -Math.log(1 - u) / lambda;
+}
+                        </div>
+                    </div>
+
+                    <div class="distribution-card">
+                        <div class="distribution-title">Distribución Poisson</div>
+                        <div class="formula">
+                            P(X = k) = (λᵏ * e^(-λ)) / k!
+                        </div>
+                        <p><strong>Uso:</strong> Número de eventos de demanda en un período</p>
+                        <div class="code-block">
+function poissonRandom(lambda) {
+    let L = Math.exp(-lambda);
+    let k = 0;
+    let p = 1;
+    do {
+        k++;
+        p *= Math.random();
+    } while (p > L);
+    return k - 1;
+}
+                        </div>
+                    </div>
+
+                    <div class="distribution-card">
+                        <div class="distribution-title">Distribución Gamma</div>
+                        <div class="formula">
+                            f(x) = (β^α/Γ(α)) * x^(α-1) * e^(-βx)
+                        </div>
+                        <p><strong>Uso:</strong> Demanda con asimetría positiva</p>
+                        <div class="code-block">
+function gammaRandom(shape, scale) {
+    // Implementación usando el método de Marsaglia-Tsang
+    // Simplificado para propósitos educativos
+    return generateGamma(shape, scale);
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('implementation')">
+                💻 Implementación del Sistema
+            </div>
+            <div class="section-content collapsible" id="implementation">
+                <div class="highlight">
+                    <strong>Arquitectura del Sistema:</strong> El sistema está diseñado con una arquitectura modular que permite la fácil integración de nuevas distribuciones y métodos de validación.
+                </div>
+
+                <div class="code-block">
+class DemandSimulationModel {
+    constructor(historicalData) {
+        this.data = historicalData;
+        this.distribution = null;
+        this.parameters = null;
+        this.generator = null;
+    }
+
+    analyzeDistribution() {
+        // Análisis estadístico de los datos
+        const candidates = [
+            { name: 'normal', test: this.testNormal.bind(this) },
+            { name: 'exponential', test: this.testExponential.bind(this) },
+            { name: 'gamma', test: this.testGamma.bind(this) },
+            { name: 'poisson', test: this.testPoisson.bind(this) }
+        ];
+
+        let bestFit = null;
+        let bestScore = Infinity;
+
+        candidates.forEach(candidate => {
+            const score = candidate.test();
+            if (score < bestScore) {
+                bestScore = score;
+                bestFit = candidate.name;
+            }
+        });
+
+        this.distribution = bestFit;
+        return bestFit;
+    }
+
+    estimateParameters() {
+        switch(this.distribution) {
+            case 'normal':
+                this.parameters = this.estimateNormalParameters();
+                break;
+            case 'exponential':
+                this.parameters = this.estimateExponentialParameters();
+                break;
+            case 'gamma':
+                this.parameters = this.estimateGammaParameters();
+                break;
+            case 'poisson':
+                this.parameters = this.estimatePoissonParameters();
+                break;
+        }
+        return this.parameters;
+    }
+
+    generateModel() {
+        switch(this.distribution) {
+            case 'normal':
+                this.generator = () => this.normalRandom(
+                    this.parameters.mean, 
+                    this.parameters.stdDev
+                );
+                break;
+            case 'exponential':
+                this.generator = () => this.exponentialRandom(
+                    this.parameters.lambda
+                );
+                break;
+            // ... otros casos
+        }
+        return this.generator;
+    }
+
+    validateModel(samples = 1000) {
+        const simulatedData = Array.from(
+            {length: samples}, 
+            () => this.generator()
+        );
+        
+        const ksTest = this.kolmogorovSmirnovTest(
+            this.data, 
+            simulatedData
+        );
+        
+        return {
+            passed: ksTest.pValue > 0.05,
+            pValue: ksTest.pValue,
+            statistic: ksTest.statistic,
+            meanError: this.calculateMeanError(simulatedData),
+            convergenceNorm: this.calculateConvergenceNorm(simulatedData)
+        };
+    }
+
+    calculateMeanError(simulatedData) {
+        const realMean = this.data.reduce((sum, val) => sum + val, 0) / this.data.length;
+        const simulatedMean = simulatedData.reduce((sum, val) => sum + val, 0) / simulatedData.length;
+        return Math.abs(realMean - simulatedMean) / realMean;
+    }
+
+    calculateConvergenceNorm(simulatedData) {
+        let totalError = 0;
+        const minLength = Math.min(this.data.length, simulatedData.length);
+        
+        for (let i = 0; i < minLength; i++) {
+            const error = Math.abs(this.data[i] - simulatedData[i]) / this.data[i];
+            totalError += error;
+        }
+        
+        return totalError / minLength;
+    }
+}
+                </div>
+
+                <div class="step">
+                    <span class="step-number">💡</span>
+                    <strong>Uso del Sistema</strong>
+                    <div class="code-block">
+// Ejemplo de uso completo
+const historicalDemand = [23, 45, 67, 34, 56, 78, 23, 45, 67, 89, 34, 56];
+const model = new DemandSimulationModel(historicalDemand);
+
+// Análisis y generación del modelo
+const distribution = model.analyzeDistribution();
+const parameters = model.estimateParameters();
+const generator = model.generateModel();
+
+// Validación
+const validation = model.validateModel(1000);
+console.log('Validación:', validation);
+
+// Generación de nuevos valores
+const futuredemand = Array.from({length: 30}, () => generator());
+console.log('Demanda futura simulada:', futuredemand);
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('validation')">
+                ✅ Criterios de Validación
+            </div>
+            <div class="section-content collapsible" id="validation">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Prueba de Kolmogorov-Smirnov</strong>
+                    <p>Verifica que la distribución generada coincida con la distribución teórica.</p>
+                    <div class="formula">
+                        H₀: Los datos siguen la distribución especificada
+                        <br>H₁: Los datos no siguen la distribución especificada
+                        <br>Criterio de aceptación: p-valor > 0.05
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Error de Media</strong>
+                    <p>La diferencia entre la media real y simulada debe ser menor al 5%.</p>
+                    <div class="formula">
+                        Error_Media = |μ_real - μ_simulado| / μ_real < 0.05
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Norma de Convergencia</strong>
+                    <p>El error promedio entre valores reales y simulados debe ser aceptable.</p>
+                    <div class="formula">
+                        Norma_Convergencia = (1/n) * Σ|x_real - x_simulado| / x_real
+                    </div>
+                </div>
+
+                <div class="code-block">
+function performValidation(realData, simulatedData, threshold = 0.05) {
+    const results = {
+        ksTest: kolmogorovSmirnovTest(realData, simulatedData),
+        meanError: calculateMeanError(realData, simulatedData),
+        convergenceNorm: calculateConvergenceNorm(realData, simulatedData),
+        passed: false
+    };
+
+    // Criterios de aceptación
+    results.passed = (
+        results.ksTest.pValue > 0.05 &&
+        results.meanError < threshold &&
+        results.convergenceNorm < threshold
+    );
+
+    return results;
+}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('results')">
+                📊 Interpretación de Resultados
+            </div>
+            <div class="section-content collapsible" id="results">
+                <div class="highlight">
+                    <strong>Criterios de Aceptación del Modelo:</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>✅ Prueba KS: p-valor > 0.05</li>
+                        <li>✅ Error de media < 5%</li>
+                        <li>✅ Norma de convergencia < umbral definido</li>
+                        <li>✅ Varianza simulada similar a la real</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">📈</span>
+                    <strong>Métricas de Calidad</strong>
+                    <div class="code-block">
+function generateQualityReport(model, validation) {
+    return {
+        distribution: model.distribution,
+        parameters: model.parameters,
+        validation: {
+            ksStatistic: validation.ksTest.statistic,
+            pValue: validation.ksTest.pValue,
+            meanError: (validation.meanError * 100).toFixed(2) + '%',
+            convergenceNorm: validation.convergenceNorm.toFixed(4),
+            overallStatus: validation.passed ? 'APROBADO' : 'RECHAZADO'
+        },
+        recommendations: generateRecommendations(validation)
+    };
+}
+
+function generateRecommendations(validation) {
+    const recommendations = [];
+    
+    if (validation.meanError > 0.05) {
+        recommendations.push('Ajustar parámetros para reducir error de media');
+    }
+    
+    if (validation.ksTest.pValue < 0.05) {
+        recommendations.push('Considerar una distribución alternativa');
+    }
+    
+    if (validation.convergenceNorm > 0.05) {
+        recommendations.push('Aumentar el tamaño de muestra para mejorar convergencia');
+    }
+    
+    return recommendations;
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                🚀 Conclusiones y Próximos Pasos
+            </div>
+            <div class="section-content">
+                <p>El sistema de generación de modelos de simulación de demanda proporciona una base sólida para la predicción y análisis de patrones de demanda. Los componentes clave incluyen:</p>
+                
+                <div class="distribution-grid">
+                    <div class="distribution-card">
+                        <div class="distribution-title">Robustez Estadística</div>
+                        <p>Múltiples pruebas de validación aseguran la calidad del modelo</p>
+                    </div>
+                    <div class="distribution-card">
+                        <div class="distribution-title">Flexibilidad</div>
+                        <p>Soporte para múltiples distribuciones de probabilidad</p>
+                    </div>
+                    <div class="distribution-card">
+                        <div class="distribution-title">Escalabilidad</div>
+                        <p>Arquitectura modular para fácil extensión</p>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <strong>Próximos Desarrollos:</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>Implementación de modelos de series temporales</li>
+                        <li>Integración con datos en tiempo real</li>
+                        <li>Optimización de parámetros mediante algoritmos genéticos</li>
+                        <li>Interfaz web para configuración y monitoreo</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="button" onclick="exportModel()">📥 Exportar Modelo</button>
+                    <button class="button" onclick="runSimulation()">▶️ Ejecutar Simulación</button>
+                    <button class="button" onclick="validateResults()">✅ Validar Resultados</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            content.classList.toggle('active');
+        }
+
+        function exportModel() {
+            alert('Funcionalidad de exportación será implementada próximamente');
+        }
+
+        function runSimulation() {
+            alert('Ejecutando simulación... (Demo)');
+        }
+
+        function validateResults() {
+            alert('Validando resultados... (Demo)');
+        }
+
+        // Inicializar secciones colapsables
+        document.addEventListener('DOMContentLoaded', function() {
+            const collapsibles = document.querySelectorAll('.collapsible');
+            collapsibles.forEach(function(collapsible) {
+                collapsible.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

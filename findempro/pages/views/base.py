@@ -275,7 +275,7 @@ class PagesPrivacyPolicyView(PagesView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Política de Privacidad'
-        context['last_updated'] = datetime(2023, 11, 20)
+        context['last_updated'] = datetime(2025, 11, 20)
         return context
 
 
@@ -285,7 +285,7 @@ class PagesTermsConditionsView(PagesView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Términos y Condiciones'
-        context['last_updated'] = datetime(2023, 11, 20)
+        context['last_updated'] = datetime(2025, 11, 20)
         return context
 
 
