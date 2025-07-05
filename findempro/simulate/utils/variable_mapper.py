@@ -324,10 +324,6 @@ class VariableMapper:
             'CCAP': 1000,
         }
     
-    
-    
-    
-    
     def extract_all_variables(self, questionary_result: QuestionaryResult) -> Dict[str, Any]:
         """Extraer todas las variables necesarias desde la base de datos"""
         
