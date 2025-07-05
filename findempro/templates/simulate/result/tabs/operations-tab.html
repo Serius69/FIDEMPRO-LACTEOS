@@ -1,0 +1,1221 @@
+<!-- Operations Tab -->
+<div class="tab-pane fade" id="operations" role="tabpanel">         
+    <!-- Header operativo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h4 class="alert-heading mb-3">
+                    <i class="bx bx-cog me-2"></i>
+                    Análisis Operativo Integral
+                </h4>
+                <p class="mb-2">
+                    Análisis completo de la eficiencia operativa, costos de producción y métricas clave 
+                    durante {{ all_variables_extracted|length|default:0 }} días de simulación.
+                </p>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <strong>Productos Vendidos:</strong> 
+                        <span class="text-primary">
+                            {% if totales_acumulativos.TPV %}
+                                {{ totales_acumulativos.TPV.total|floatformat:0 }}
+                            {% else %}
+                                0
+                            {% endif %} unidades
+                        </span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Eficiencia Promedio:</strong> 
+                        {% if totales_acumulativos.EOG and all_variables_extracted|length > 0 %}
+                            <span class="text-success">{{ totales_acumulativos.EOG.total|floatformat:1 }}%</span>
+                        {% else %}
+                            <span class="text-muted">Calculando...</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Personal:</strong>
+                        {% if totales_acumulativos.NEPP %}
+                            <span class="text-info">{{ totales_acumulativos.NEPP.total|floatformat:0 }} empleados</span>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Días Analizados:</strong>
+                        <span class="text-warning">{{ all_variables_extracted|length|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Métricas operativas principales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Productos Vendidos</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.TPV %}
+                                    {{ totales_acumulativos.TPV.total|floatformat:0 }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </h3>
+                            <small class="text-white-75">Total del período</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-package display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Eficiencia Operativa</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.EOG %}
+                                    {{ totales_acumulativos.EOG.total|floatformat:1 }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </h3>
+                            <small class="text-white-75">Promedio general</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-tachometer display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-gradient-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Capacidad Total</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.CPROD %}
+                                    {{ totales_acumulativos.CPROD.total|floatformat:0 }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <small class="text-white-75">Litros/período</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-bar-chart display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-gradient-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Costo Variable Unit.</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.CVU %}
+                                    Bs. {{ totales_acumulativos.CVU.total|floatformat:2 }}
+                                {% else %}
+                                    Bs. 0.00
+                                {% endif %}
+                            </h3>
+                            <small class="text-white-75">Promedio</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-calculator display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos operativos principales -->
+    <div class="row mb-4">
+        <!-- Gráfico de Eficiencia Operativa -->
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-tachometer me-2"></i>
+                        Indicadores de Eficiencia Operativa
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_eficiencia %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_eficiencia }}', 'eficiencia-operativa.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_eficiencia }}', 'Eficiencia Operativa')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if image_data_eficiencia %}
+                <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                    class="chart-image" 
+                    alt="Indicadores de Eficiencia Operativa"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder">
+                    <i class="bx bx-tachometer text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">Indicadores de eficiencia</p>
+                    <small class="text-muted">Métricas de rendimiento operativo</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de variables operativas endógenas -->
+    {% if endogenous_charts %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-cog me-2"></i>
+                Variables Operativas Endógenas
+            </h5>
+        </div>
+        
+        {% for chart_name, chart_data in endogenous_charts.items %}
+            {% if 'TPV' in chart_name or 'EOG' in chart_name or 'CPROD' in chart_name or 'NEPP' in chart_name %}
+            <div class="col-lg-6 mb-4">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h6 class="chart-title mb-3">
+                            {% if 'TPV' in chart_name %}
+                                <i class="bx bx-package text-primary me-2"></i>Total Productos Vendidos
+                            {% elif 'EOG' in chart_name %}
+                                <i class="bx bx-tachometer text-success me-2"></i>Eficiencia Operativa
+                            {% elif 'CPROD' in chart_name %}
+                                <i class="bx bx-factory text-info me-2"></i>Capacidad de Producción
+                            {% elif 'NEPP' in chart_name %}
+                                <i class="bx bx-group text-warning me-2"></i>Personal en Producción
+                            {% endif %}
+                        </h6>
+                        <div class="chart-controls">
+                            <div class="chart-control-btn" onclick="downloadChart('{{ chart_data }}', '{{ chart_name }}.png')" title="Descargar">
+                                <i class="bx bx-download"></i>
+                            </div>
+                            <div class="chart-control-btn" onclick="openFullscreen('{{ chart_data }}', '{{ chart_name }}')" title="Pantalla completa">
+                                <i class="bx bx-fullscreen"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <img src="data:image/png;base64,{{ chart_data }}" 
+                        class="chart-image" 
+                        alt="{{ chart_name }}"
+                        loading="lazy">
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Tabla resumen operativo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-table me-2"></i>
+                        Resumen Operativo por Variable
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Variable Operativa</th>
+                                    <th>Promedio Diario</th>
+                                    <th>Unidad</th>
+                                    <th>Valor Total</th>
+                                    <th>Tendencia</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for name_variable, info_variable in totales_acumulativos.items %}
+                                    {% if 'TPV' in name_variable or 'EOG' in name_variable or 'CPROD' in name_variable or 'NEPP' in name_variable or 'CFD' in name_variable or 'CVU' in name_variable %}
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                {% if name_variable == 'TPV' %}Total Productos Vendidos
+                                                {% elif name_variable == 'EOG' %}Eficiencia Operativa General
+                                                {% elif name_variable == 'CPROD' %}Capacidad de Producción
+                                                {% elif name_variable == 'NEPP' %}Empleados en Producción
+                                                {% elif name_variable == 'CFD' %}Costo Fijo Diario
+                                                {% elif name_variable == 'CVU' %}Costo Variable Unitario
+                                                {% else %}{{ name_variable }}
+                                                {% endif %}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">{{ name_variable }}</small>
+                                        </td>
+                                        <td class="fw-bold">
+                                            {% if info_variable.unit == "BS" %}
+                                                <span class="text-warning">Bs. {{ info_variable.total|floatformat:2 }}</span>
+                                            {% elif info_variable.unit == "L" %}
+                                                <span class="text-primary">{{ info_variable.total|floatformat:0 }} L</span>
+                                            {% elif "%" in info_variable.unit %}
+                                                <span class="text-info">{{ info_variable.total|floatformat:3 }}</span>
+                                            {% else %}
+                                                {{ info_variable.total|floatformat:2 }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">
+                                                {% if info_variable.unit == "BS" %}Bolivianos
+                                                {% elif info_variable.unit == "L" %}Litros
+                                                {% elif info_variable.unit == "%" %}Porcentaje
+                                                {% elif "Personas" in info_variable.unit %}Empleados
+                                                {% else %}{{ info_variable.unit }}
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if all_variables_extracted|length > 0 %}
+                                                {% widthratio info_variable.total 1 all_variables_extracted|length as daily_avg %}
+                                                {% if info_variable.unit == "BS" %}
+                                                    Bs. {{ daily_avg|floatformat:2 }}
+                                                {% elif info_variable.unit == "L" %}
+                                                    {{ daily_avg|floatformat:1 }} L
+                                                {% elif "%" in info_variable.unit %}
+                                                    {{ daily_avg|floatformat:3 }}
+                                                {% else %}
+                                                    {{ daily_avg|floatformat:2 }}
+                                                {% endif %}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if info_variable.trend == "increasing" %}
+                                                <span class="badge bg-success">
+                                                    <i class="bx bx-trending-up me-1"></i>Creciente
+                                                </span>
+                                            {% elif info_variable.trend == "decreasing" %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bx bx-trending-down me-1"></i>Decreciente
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bx bx-minus me-1"></i>Estable
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if name_variable == 'EOG' %}
+                                                {% if info_variable.total > 80 %}
+                                                    <span class="badge bg-success">Excelente</span>
+                                                {% elif info_variable.total > 60 %}
+                                                    <span class="badge bg-warning">Bueno</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Bajo</span>
+                                                {% endif %}
+                                            {% elif name_variable == 'TPV' %}
+                                                {% if info_variable.trend == "increasing" %}
+                                                    <span class="badge bg-success">Creciendo</span>
+                                                {% elif info_variable.trend == "decreasing" %}
+                                                    <span class="badge bg-warning">Decreciendo</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">Estable</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-info">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="bx bx-info-circle display-4 text-muted"></i>
+                                        <h6 class="mt-2 text-muted">No hay datos operativos disponibles</h6>
+                                        <small class="text-muted">Los datos se generarán durante el procesamiento.</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// FUNCIONES ESPECÍFICAS PARA OPERACIONES
+// ==========================================
+
+let operationsChart = null;
+let efficiencyChart = null;
+let capacityChart = null;
+
+function initializeOperationsTab() {
+    try {
+        initializeOperationsCharts();
+        calculateOperationalMetrics();
+        setupOperationsFilters();
+        initializeCapacityAnalysis();
+        setupOperationsAlerts();
+        
+        console.log('Operations tab initialized successfully');
+    } catch (error) {
+        console.error('Error initializing operations tab:', error);
+    }
+}
+
+function initializeOperationsCharts() {
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js no está disponible para gráficos operacionales');
+        return;
+    }
+    
+    initializeProductionChart();
+    initializeEfficiencyChart();
+    initializeCapacityUtilizationChart();
+    initializeOperationalTrendsChart();
+}
+
+function initializeProductionChart() {
+    const ctx = document.getElementById('productionChart');
+    if (!ctx) return;
+    
+    if (operationsChart) {
+        operationsChart.destroy();
+    }
+    
+    const operationalData = extractOperationalData();
+    
+    const config = {
+        type: 'bar',
+        data: {
+            labels: operationalData.labels,
+            datasets: [{
+                label: 'Producción Real (L)',
+                data: operationalData.production,
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Demanda (L)',
+                data: operationalData.demand,
+                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Capacidad Máxima (L)',
+                data: operationalData.capacity,
+                type: 'line',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 0,
+                borderDash: [5, 5]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Producción vs Demanda vs Capacidad'
+                },
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Litros'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Días de Simulación'
+                    }
+                }
+            }
+        }
+    };
+    
+    operationsChart = new Chart(ctx, config);
+}
+
+function initializeEfficiencyChart() {
+    const ctx = document.getElementById('efficiencyChart');
+    if (!ctx) return;
+    
+    if (efficiencyChart) {
+        efficiencyChart.destroy();
+    }
+    
+    const operationalData = extractOperationalData();
+    const efficiencyData = operationalData.production.map((prod, index) => {
+        const capacity = operationalData.capacity[index];
+        return capacity > 0 ? (prod / capacity) * 100 : 0;
+    });
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: operationalData.labels,
+            datasets: [{
+                label: 'Eficiencia de Producción (%)',
+                data: efficiencyData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Eficiencia de Producción Diaria'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Eficiencia (%)'
+                    }
+                }
+            }
+        }
+    };
+    
+    efficiencyChart = new Chart(ctx, config);
+}
+
+function initializeCapacityUtilizationChart() {
+    const ctx = document.getElementById('capacityUtilizationChart');
+    if (!ctx) return;
+    
+    if (capacityChart) {
+        capacityChart.destroy();
+    }
+    
+    const utilizationData = calculateCapacityUtilization();
+    
+    const config = {
+        type: 'doughnut',
+        data: {
+            labels: ['Capacidad Utilizada', 'Capacidad Disponible'],
+            datasets: [{
+                data: [utilizationData.used, utilizationData.available],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 220, 220, 0.8)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Utilización de Capacidad Promedio'
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    };
+    
+    capacityChart = new Chart(ctx, config);
+}
+
+function initializeOperationalTrendsChart() {
+    const ctx = document.getElementById('operationalTrendsChart');
+    if (!ctx) return;
+    
+    const operationalData = extractOperationalData();
+    
+    // Calcular indicadores operacionales
+    const satisfactionRate = operationalData.production.map((prod, index) => {
+        const demand = operationalData.demand[index];
+        return demand > 0 ? Math.min((prod / demand) * 100, 100) : 100;
+    });
+    
+    const wasteRate = operationalData.production.map((prod, index) => {
+        const capacity = operationalData.capacity[index];
+        const demand = operationalData.demand[index];
+        const excess = Math.max(0, prod - demand);
+        return capacity > 0 ? (excess / capacity) * 100 : 0;
+    });
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: operationalData.labels,
+            datasets: [{
+                label: 'Tasa de Satisfacción (%)',
+                data: satisfactionRate,
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'transparent',
+                yAxisID: 'y'
+            }, {
+                label: 'Tasa de Desperdicio (%)',
+                data: wasteRate,
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'transparent',
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Indicadores Operacionales'
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Satisfacción (%)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Desperdicio (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    };
+    
+    new Chart(ctx, config);
+}
+
+function extractOperationalData() {
+    const dailyItems = document.querySelectorAll('.daily-result-item');
+    const labels = [];
+    const production = [];
+    const demand = [];
+    const capacity = [];
+    
+    dailyItems.forEach((item, index) => {
+        const day = index + 1;
+        labels.push(`Día ${day}`);
+        
+        const prod = parseFloat(item.querySelector('[data-production]')?.dataset.production || 
+                               item.querySelector('[data-demand]')?.dataset.demand || 0);
+        const dem = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
+        const cap = parseFloat(document.querySelector('[data-variable="CPROD"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 1000);
+        
+        production.push(prod);
+        demand.push(dem);
+        capacity.push(cap);
+    });
+    
+    return { labels, production, demand, capacity };
+}
+
+function calculateOperationalMetrics() {
+    const operationalData = extractOperationalData();
+    
+    // Métricas clave
+    const totalProduction = operationalData.production.reduce((a, b) => a + b, 0);
+    const totalDemand = operationalData.demand.reduce((a, b) => a + b, 0);
+    const avgCapacityUtilization = operationalData.production.reduce((sum, prod, index) => {
+        const cap = operationalData.capacity[index];
+        return sum + (cap > 0 ? (prod / cap) * 100 : 0);
+    }, 0) / operationalData.production.length;
+    
+    const fulfillmentRate = totalDemand > 0 ? Math.min((totalProduction / totalDemand) * 100, 100) : 100;
+    const avgEfficiency = calculateAverageEfficiency(operationalData);
+    const wasteRate = calculateWasteRate(operationalData);
+    
+    // Tiempo de inactividad estimado
+    const downtime = calculateDowntime(operationalData);
+    
+    // OEE (Overall Equipment Effectiveness)
+    const oee = calculateOEE(avgCapacityUtilization, avgEfficiency, (100 - downtime));
+    
+    updateOperationalMetricsDisplay({
+        totalProduction,
+        totalDemand,
+        avgCapacityUtilization,
+        fulfillmentRate,
+        avgEfficiency,
+        wasteRate,
+        downtime,
+        oee
+    });
+}
+
+function calculateAverageEfficiency(data) {
+    const efficiencies = data.production.map((prod, index) => {
+        const demand = data.demand[index];
+        const capacity = data.capacity[index];
+        
+        if (capacity === 0) return 0;
+        
+        const targetProduction = Math.min(demand, capacity);
+        return targetProduction > 0 ? (prod / targetProduction) * 100 : 100;
+    });
+    
+    return efficiencies.reduce((a, b) => a + b, 0) / efficiencies.length;
+}
+
+function calculateWasteRate(data) {
+    let totalWaste = 0;
+    let totalProduction = 0;
+    
+    data.production.forEach((prod, index) => {
+        const demand = data.demand[index];
+        const waste = Math.max(0, prod - demand);
+        totalWaste += waste;
+        totalProduction += prod;
+    });
+    
+    return totalProduction > 0 ? (totalWaste / totalProduction) * 100 : 0;
+}
+
+function calculateDowntime(data) {
+    // Estimar tiempo de inactividad basado en eficiencia
+    const avgEfficiency = calculateAverageEfficiency(data);
+    return Math.max(0, 100 - avgEfficiency);
+}
+
+function calculateOEE(availability, performance, quality) {
+    return (availability / 100) * (performance / 100) * (quality / 100) * 100;
+}
+
+function calculateCapacityUtilization() {
+    const operationalData = extractOperationalData();
+    const avgUtilization = operationalData.production.reduce((sum, prod, index) => {
+        const capacity = operationalData.capacity[index];
+        return sum + (capacity > 0 ? (prod / capacity) * 100 : 0);
+    }, 0) / operationalData.production.length;
+    
+    return {
+        used: avgUtilization,
+        available: 100 - avgUtilization
+    };
+}
+
+function updateOperationalMetricsDisplay(metrics) {
+    const elements = {
+        totalProduction: document.getElementById('totalProductionValue'),
+        capacityUtilization: document.getElementById('capacityUtilizationValue'),
+        fulfillmentRate: document.getElementById('fulfillmentRateValue'),
+        efficiency: document.getElementById('operationalEfficiencyValue'),
+        wasteRate: document.getElementById('wasteRateValue'),
+        oee: document.getElementById('oeeValue')
+    };
+    
+    if (elements.totalProduction) {
+        elements.totalProduction.textContent = `${formatNumber(metrics.totalProduction, 0)} L`;
+    }
+    if (elements.capacityUtilization) {
+        elements.capacityUtilization.textContent = `${metrics.avgCapacityUtilization.toFixed(1)}%`;
+        elements.capacityUtilization.className = getEfficiencyClass(metrics.avgCapacityUtilization);
+    }
+    if (elements.fulfillmentRate) {
+        elements.fulfillmentRate.textContent = `${metrics.fulfillmentRate.toFixed(1)}%`;
+        elements.fulfillmentRate.className = getEfficiencyClass(metrics.fulfillmentRate);
+    }
+    if (elements.efficiency) {
+        elements.efficiency.textContent = `${metrics.avgEfficiency.toFixed(1)}%`;
+        elements.efficiency.className = getEfficiencyClass(metrics.avgEfficiency);
+    }
+    if (elements.wasteRate) {
+        elements.wasteRate.textContent = `${metrics.wasteRate.toFixed(1)}%`;
+        elements.wasteRate.className = getWasteClass(metrics.wasteRate);
+    }
+    if (elements.oee) {
+        elements.oee.textContent = `${metrics.oee.toFixed(1)}%`;
+        elements.oee.className = getOEEClass(metrics.oee);
+    }
+    
+    updateOperationalProgressBars(metrics);
+}
+
+function getEfficiencyClass(value) {
+    if (value >= 90) return 'text-success fw-bold';
+    if (value >= 70) return 'text-warning fw-bold';
+    return 'text-danger fw-bold';
+}
+
+function getWasteClass(value) {
+    if (value <= 5) return 'text-success fw-bold';
+    if (value <= 15) return 'text-warning fw-bold';
+    return 'text-danger fw-bold';
+}
+
+function getOEEClass(value) {
+    if (value >= 85) return 'text-success fw-bold';
+    if (value >= 60) return 'text-warning fw-bold';
+    return 'text-danger fw-bold';
+}
+
+function updateOperationalProgressBars(metrics) {
+    const progressBars = {
+        capacity: document.getElementById('capacityProgress'),
+        efficiency: document.getElementById('efficiencyProgress'),
+        fulfillment: document.getElementById('fulfillmentProgress'),
+        oee: document.getElementById('oeeProgress')
+    };
+    
+    if (progressBars.capacity) {
+        updateProgressBar(progressBars.capacity, metrics.avgCapacityUtilization);
+    }
+    if (progressBars.efficiency) {
+        updateProgressBar(progressBars.efficiency, metrics.avgEfficiency);
+    }
+    if (progressBars.fulfillment) {
+        updateProgressBar(progressBars.fulfillment, metrics.fulfillmentRate);
+    }
+    if (progressBars.oee) {
+        updateProgressBar(progressBars.oee, metrics.oee);
+    }
+}
+
+function updateProgressBar(progressBar, value) {
+    const percentage = Math.min(100, Math.max(0, value));
+    progressBar.style.width = `${percentage}%`;
+    progressBar.setAttribute('aria-valuenow', percentage);
+    
+    // Cambiar color según el valor
+    progressBar.className = 'progress-bar';
+    if (percentage >= 80) {
+        progressBar.classList.add('bg-success');
+    } else if (percentage >= 60) {
+        progressBar.classList.add('bg-warning');
+    } else {
+        progressBar.classList.add('bg-danger');
+    }
+}
+
+function setupOperationsFilters() {
+    // Filtro por tipo de métrica operacional
+    const metricFilter = document.getElementById('operationsMetricFilter');
+    if (metricFilter) {
+        metricFilter.addEventListener('change', function() {
+            const metric = this.value;
+            highlightOperationalMetric(metric);
+        });
+    }
+    
+    // Filtro por eficiencia
+    const efficiencyFilter = document.getElementById('efficiencyRangeFilter');
+    if (efficiencyFilter) {
+        efficiencyFilter.addEventListener('change', function() {
+            const range = this.value;
+            filterByEfficiencyRange(range);
+        });
+    }
+}
+
+function highlightOperationalMetric(metric) {
+    // Resaltar métrica específica
+    document.querySelectorAll('.operations-metric-card').forEach(card => {
+        card.classList.remove('border-primary');
+    });
+    
+    const targetCard = document.querySelector(`[data-metric="${metric}"]`);
+    if (targetCard) {
+        targetCard.classList.add('border-primary');
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Actualizar gráfico si es necesario
+    updateChartHighlight(metric);
+}
+
+function updateChartHighlight(metric) {
+    // Cambiar el gráfico principal según la métrica seleccionada
+    if (!operationsChart) return;
+    
+    const datasets = operationsChart.data.datasets;
+    datasets.forEach((dataset, index) => {
+        if (metric === 'production' && index === 0) {
+            dataset.borderWidth = 3;
+        } else if (metric === 'demand' && index === 1) {
+            dataset.borderWidth = 3;
+        } else if (metric === 'capacity' && index === 2) {
+            dataset.borderWidth = 3;
+        } else {
+            dataset.borderWidth = 1;
+        }
+    });
+    
+    operationsChart.update();
+}
+
+function filterByEfficiencyRange(range) {
+    const operationalData = extractOperationalData();
+    
+    let threshold = 0;
+    switch(range) {
+        case 'high': threshold = 80; break;
+        case 'medium': threshold = 60; break;
+        case 'low': threshold = 0; break;
+    }
+    
+    const filteredDays = [];
+    operationalData.production.forEach((prod, index) => {
+        const capacity = operationalData.capacity[index];
+        const efficiency = capacity > 0 ? (prod / capacity) * 100 : 0;
+        
+        if ((range === 'high' && efficiency >= 80) ||
+            (range === 'medium' && efficiency >= 60 && efficiency < 80) ||
+            (range === 'low' && efficiency < 60)) {
+            filteredDays.push(index + 1);
+        }
+    });
+    
+    if (filteredDays.length > 0) {
+        showNotification(`Encontrados ${filteredDays.length} días con eficiencia ${range}`, 'info');
+        highlightDaysInTimeline(filteredDays);
+    } else {
+        showNotification(`No se encontraron días con eficiencia ${range}`, 'warning');
+    }
+}
+
+function highlightDaysInTimeline(days) {
+    // Resaltar días específicos en la timeline
+    document.querySelectorAll('.timeline-dot').forEach((dot, index) => {
+        dot.classList.remove('highlighted');
+        if (days.includes(index + 1)) {
+            dot.classList.add('highlighted');
+        }
+    });
+}
+
+function initializeCapacityAnalysis() {
+    const operationalData = extractOperationalData();
+    
+    // Análisis de cuellos de botella
+    const bottlenecks = identifyBottlenecks(operationalData);
+    displayBottleneckAnalysis(bottlenecks);
+    
+    // Recomendaciones de optimización
+    const recommendations = generateOptimizationRecommendations(operationalData);
+    displayOptimizationRecommendations(recommendations);
+}
+
+function identifyBottlenecks(data) {
+    const bottlenecks = [];
+    
+    data.production.forEach((prod, index) => {
+        const demand = data.demand[index];
+        const capacity = data.capacity[index];
+        const day = index + 1;
+        
+        if (demand > capacity) {
+            bottlenecks.push({
+                day: day,
+                type: 'capacity',
+                shortage: demand - capacity,
+                severity: ((demand - capacity) / demand) * 100
+            });
+        } else if (prod < demand && prod < capacity * 0.9) {
+            bottlenecks.push({
+                day: day,
+                type: 'efficiency',
+                shortage: demand - prod,
+                severity: ((demand - prod) / demand) * 100
+            });
+        }
+    });
+    
+    return bottlenecks;
+}
+
+function displayBottleneckAnalysis(bottlenecks) {
+    const container = document.getElementById('bottleneckAnalysis');
+    if (!container) return;
+    
+    if (bottlenecks.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bx bx-check-circle me-2"></i>
+                No se detectaron cuellos de botella significativos en la producción.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<h6>Cuellos de Botella Identificados:</h6>';
+    html += '<div class="row g-2">';
+    
+    bottlenecks.forEach(bottleneck => {
+        const severityClass = bottleneck.severity > 30 ? 'danger' : 
+                             bottleneck.severity > 15 ? 'warning' : 'info';
+        
+        html += `
+            <div class="col-md-6">
+                <div class="card border-${severityClass}">
+                    <div class="card-body p-2">
+                        <h6 class="card-title">Día ${bottleneck.day}</h6>
+                        <p class="card-text small">
+                            <strong>Tipo:</strong> ${bottleneck.type === 'capacity' ? 'Capacidad' : 'Eficiencia'}<br>
+                            <strong>Déficit:</strong> ${bottleneck.shortage.toFixed(0)} L<br>
+                            <strong>Severidad:</strong> ${bottleneck.severity.toFixed(1)}%
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function generateOptimizationRecommendations(data) {
+    const recommendations = [];
+    const avgCapacityUtilization = calculateCapacityUtilization().used;
+    const avgEfficiency = calculateAverageEfficiency(data);
+    const wasteRate = calculateWasteRate(data);
+    
+    if (avgCapacityUtilization < 70) {
+        recommendations.push({
+            type: 'capacity',
+            priority: 'medium',
+            title: 'Optimizar Utilización de Capacidad',
+            description: `La utilización promedio de capacidad es ${avgCapacityUtilization.toFixed(1)}%. Considere aumentar la producción o ajustar la capacidad.`
+        });
+    }
+    
+    if (avgEfficiency < 80) {
+        recommendations.push({
+            type: 'efficiency',
+            priority: 'high',
+            title: 'Mejorar Eficiencia Operacional',
+            description: `La eficiencia promedio es ${avgEfficiency.toFixed(1)}%. Revise los procesos de producción y capacitación del personal.`
+        });
+    }
+    
+    if (wasteRate > 10) {
+        recommendations.push({
+            type: 'waste',
+            priority: 'high',
+            title: 'Reducir Desperdicio',
+            description: `La tasa de desperdicio es ${wasteRate.toFixed(1)}%. Implemente sistemas de control de calidad y planificación de demanda.`
+        });
+    }
+    
+    return recommendations;
+}
+
+function displayOptimizationRecommendations(recommendations) {
+    const container = document.getElementById('optimizationRecommendations');
+    if (!container) return;
+    
+    if (recommendations.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bx bx-thumbs-up me-2"></i>
+                Las operaciones están funcionando de manera óptima. ¡Excelente trabajo!
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<h6>Recomendaciones de Optimización:</h6>';
+    html += '<div class="accordion" id="recommendationsAccordion">';
+    
+    recommendations.forEach((rec, index) => {
+        const priorityClass = rec.priority === 'high' ? 'danger' : 
+                             rec.priority === 'medium' ? 'warning' : 'info';
+        
+        html += `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading${index}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapse${index}">
+                        <span class="badge bg-${priorityClass} me-2">${rec.priority.toUpperCase()}</span>
+                        ${rec.title}
+                    </button>
+                </h2>
+                <div id="collapse${index}" class="accordion-collapse collapse" 
+                     data-bs-parent="#recommendationsAccordion">
+                    <div class="accordion-body">
+                        ${rec.description}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function setupOperationsAlerts() {
+    const operationalData = extractOperationalData();
+    const alerts = [];
+    
+    // Verificar alertas de capacidad
+    operationalData.demand.forEach((demand, index) => {
+        const capacity = operationalData.capacity[index];
+        const day = index + 1;
+        
+        if (demand > capacity * 1.1) {
+            alerts.push({
+                type: 'danger',
+                day: day,
+                message: `Día ${day}: Demanda excede capacidad en ${((demand/capacity - 1) * 100).toFixed(1)}%`
+            });
+        } else if (demand > capacity * 0.9) {
+            alerts.push({
+                type: 'warning',
+                day: day,
+                message: `Día ${day}: Demanda cerca del límite de capacidad`
+            });
+        }
+    });
+    
+    displayOperationsAlerts(alerts);
+}
+
+function displayOperationsAlerts(alerts) {
+    const container = document.getElementById('operationsAlerts');
+    if (!container) return;
+    
+    if (alerts.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bx bx-shield-check me-2"></i>
+                No hay alertas operacionales activas.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    alerts.forEach(alert => {
+        html += `
+            <div class="alert alert-${alert.type} alert-dismissible fade show">
+                <i class="bx bx-error-circle me-2"></i>
+                ${alert.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function exportOperationsReport() {
+    try {
+        const operationalData = extractOperationalData();
+        const metrics = extractOperationalMetrics();
+        const csvContent = generateOperationsCSV(operationalData, metrics);
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `reporte_operaciones_${new Date().getTime()}.csv`;
+        link.click();
+        
+        showNotification('Reporte de operaciones exportado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exporting operations report:', error);
+        showNotification('Error al exportar reporte de operaciones', 'error');
+    }
+}
+
+function extractOperationalMetrics() {
+    return {
+        totalProduction: parseFloat(document.getElementById('totalProductionValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        capacityUtilization: parseFloat(document.getElementById('capacityUtilizationValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        fulfillmentRate: parseFloat(document.getElementById('fulfillmentRateValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        efficiency: parseFloat(document.getElementById('operationalEfficiencyValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        wasteRate: parseFloat(document.getElementById('wasteRateValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        oee: parseFloat(document.getElementById('oeeValue')?.textContent.replace(/[^\d.-]/g, '') || 0)
+    };
+}
+
+function generateOperationsCSV(operationalData, metrics) {
+    let csv = 'Reporte de Operaciones - Simulación\n\n';
+    csv += 'Resumen de Métricas\n';
+    csv += 'Métrica,Valor\n';
+    csv += `Producción Total,"${metrics.totalProduction} L"\n`;
+    csv += `Utilización de Capacidad,"${metrics.capacityUtilization}%"\n`;
+    csv += `Tasa de Cumplimiento,"${metrics.fulfillmentRate}%"\n`;
+    csv += `Eficiencia Operacional,"${metrics.efficiency}%"\n`;
+    csv += `Tasa de Desperdicio,"${metrics.wasteRate}%"\n`;
+    csv += `OEE,"${metrics.oee}%"\n\n`;
+    
+    csv += 'Datos Diarios\n';
+    csv += 'Día,Producción (L),Demanda (L),Capacidad (L),Utilización (%)\n';
+    
+    operationalData.production.forEach((prod, index) => {
+        const day = index + 1;
+        const demand = operationalData.demand[index];
+        const capacity = operationalData.capacity[index];
+        const utilization = capacity > 0 ? (prod / capacity) * 100 : 0;
+        
+        csv += `${day},${prod},${demand},${capacity},${utilization.toFixed(1)}\n`;
+   });
+   
+   csv += `\nFecha de Generación,"${new Date().toLocaleDateString()}"\n`;
+   
+   return csv;
+}
+
+// Inicializar cuando se muestre el tab
+document.addEventListener('shown.bs.tab', function(e) {
+   if (e.target.getAttribute('aria-controls') === 'operations') {
+       setTimeout(initializeOperationsTab, 100);
+   }
+});
+
+// Exportar funciones globales
+window.initializeOperationsTab = initializeOperationsTab;
+window.exportOperationsReport = exportOperationsReport;
+window.highlightOperationalMetric = highlightOperationalMetric;
+window.filterByEfficiencyRange = filterByEfficiencyRange;
+</script>

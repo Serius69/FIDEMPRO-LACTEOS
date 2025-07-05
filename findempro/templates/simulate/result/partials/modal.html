@@ -1,0 +1,647 @@
+<!-- Modal para expandir gráficos -->
+<div class="modal fade" id="chartModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chartModalTitle">Gráfico de Variable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="chartModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="downloadChart()">
+                    <i class="bx bx-download me-1"></i>Descargar
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal para detalles de variable -->
+<div class="modal fade" id="variableDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variableDetailsTitle">Detalles de Variable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="variableDetailsBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal para Detalles de Variable -->
+<div class="modal fade" id="variableDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de Validación por Día</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="variableDetailsContent">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- SOLO ESTOS DOS MODALES AL FINAL DEL TEMPLATE -->
+<div class="modal fade" id="mainFullscreenModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mainFullscreenModalTitle">Gráfico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="mainFullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
+                    <i class="bx bx-download me-1"></i>Descargar
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mainDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mainDetailsModalTitle">Detalles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="mainDetailsModalBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// ==========================================
+// FUNCIONES DE MODALES UNIFICADOS
+// ==========================================
+
+function initializeModals() {
+    // Cerrar con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
+    });
+    
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            closeAllModals();
+        }
+    });
+    
+    // Inicializar modales específicos
+    initializeFullscreenModal();
+    initializeDetailsModal();
+    initializeExportModal();
+    initializeConfirmationModal();
+}
+
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modal => {
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) bsModal.hide();
+    });
+}
+
+// ==========================================
+// MODAL DE PANTALLA COMPLETA
+// ==========================================
+
+function initializeFullscreenModal() {
+    const modal = document.getElementById('mainFullscreenModal');
+    if (!modal) return;
+    
+    // Agregar controles de zoom
+    const modalBody = modal.querySelector('.modal-body');
+    if (modalBody && !modalBody.querySelector('.zoom-controls')) {
+        const zoomControls = document.createElement('div');
+        zoomControls.className = 'zoom-controls position-absolute top-0 end-0 m-3';
+        zoomControls.innerHTML = `
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="zoomImage('in')">
+                    <i class="bx bx-zoom-in"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="zoomImage('out')">
+                    <i class="bx bx-zoom-out"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="resetZoom()">
+                    <i class="bx bx-reset"></i>
+                </button>
+            </div>
+        `;
+        modalBody.style.position = 'relative';
+        modalBody.appendChild(zoomControls);
+    }
+    
+    // Agregar controles de descarga mejorados
+    const downloadBtn = modal.querySelector('.btn-download-chart');
+    if (downloadBtn) {
+        downloadBtn.innerHTML = `
+            <div class="dropdown">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bx bx-download me-2"></i>Descargar
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="downloadCurrentChart('png')">
+                        <i class="bx bx-image me-2"></i>PNG
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="downloadCurrentChart('jpg')">
+                        <i class="bx bx-image me-2"></i>JPG
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="downloadCurrentChart('svg')">
+                        <i class="bx bx-vector me-2"></i>SVG
+                    </a></li>
+                </ul>
+            </div>
+        `;
+    }
+}
+
+function openFullscreen(chartData, title, options = {}) {
+    try {
+        if (!chartData) {
+            console.warn('No chart data provided for fullscreen');
+            return;
+        }
+        
+        const modal = document.getElementById('mainFullscreenModal');
+        const modalTitle = document.getElementById('mainFullscreenModalTitle');
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        
+        if (modal && modalTitle && modalImage) {
+            modalTitle.textContent = title || 'Gráfico';
+            modalImage.src = 'data:image/png;base64,' + chartData;
+            modalImage.setAttribute('data-chart-data', chartData);
+            modalImage.setAttribute('data-chart-title', title || 'grafico');
+            
+            // Agregar metadatos opcionales
+            if (options.type) modalImage.setAttribute('data-chart-type', options.type);
+            if (options.variable) modalImage.setAttribute('data-variable', options.variable);
+            if (options.description) modalImage.setAttribute('data-description', options.description);
+            
+            // Resetear zoom
+            resetZoom();
+            
+            // Mostrar modal
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            // Agregar información adicional si está disponible
+            updateModalMetadata(options);
+        }
+    } catch (error) {
+        console.error('Error opening fullscreen:', error);
+        showNotification('Error al abrir el gráfico', 'error');
+    }
+}
+
+function updateModalMetadata(options) {
+    const modal = document.getElementById('mainFullscreenModal');
+    const modalBody = modal.querySelector('.modal-body');
+    
+    // Remover metadata anterior
+    const existingMetadata = modalBody.querySelector('.chart-metadata');
+    if (existingMetadata) {
+        existingMetadata.remove();
+    }
+    
+    // Agregar nueva metadata si está disponible
+    if (options.showMetadata && (options.variable || options.description || options.stats)) {
+        const metadata = document.createElement('div');
+        metadata.className = 'chart-metadata mt-3 p-3 bg-light rounded';
+        
+        let metadataContent = '';
+        if (options.variable) {
+            metadataContent += `<div><strong>Variable:</strong> ${options.variable}</div>`;
+        }
+        if (options.description) {
+            metadataContent += `<div><strong>Descripción:</strong> ${options.description}</div>`;
+        }
+        if (options.stats) {
+            metadataContent += `<div class="mt-2"><strong>Estadísticas:</strong></div>`;
+            Object.entries(options.stats).forEach(([key, value]) => {
+                metadataContent += `<div class="ms-3">${key}: ${value}</div>`;
+            });
+        }
+        
+        metadata.innerHTML = metadataContent;
+        modalBody.appendChild(metadata);
+    }
+}
+
+// Funciones de zoom
+let currentZoom = 1;
+
+function zoomImage(direction) {
+    const modalImage = document.getElementById('mainFullscreenModalImage');
+    if (!modalImage) return;
+    
+    const step = 0.25;
+    const maxZoom = 3;
+    const minZoom = 0.5;
+    
+    if (direction === 'in' && currentZoom < maxZoom) {
+        currentZoom += step;
+    } else if (direction === 'out' && currentZoom > minZoom) {
+        currentZoom -= step;
+    }
+    
+    modalImage.style.transform = `scale(${currentZoom})`;
+    modalImage.style.transformOrigin = 'center center';
+    modalImage.style.transition = 'transform 0.2s ease';
+    
+    // Actualizar cursor
+    modalImage.style.cursor = currentZoom > 1 ? 'grab' : 'default';
+}
+
+function resetZoom() {
+    currentZoom = 1;
+    const modalImage = document.getElementById('mainFullscreenModalImage');
+    if (modalImage) {
+        modalImage.style.transform = 'scale(1)';
+        modalImage.style.cursor = 'default';
+    }
+}
+
+function downloadCurrentChart(format = 'png') {
+    try {
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        const chartData = modalImage?.getAttribute('data-chart-data');
+        const title = modalImage?.getAttribute('data-chart-title') || 'grafico';
+        
+        if (chartData) {
+            const filename = title.toLowerCase().replace(/\s+/g, '-') + '.' + format;
+            
+            if (format === 'svg') {
+                // Para SVG, necesitaríamos datos diferentes
+                showNotification('Formato SVG no disponible para esta imagen', 'warning');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = 'data:image/' + format + ';base64,' + chartData;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification(`Gráfico descargado como ${format.toUpperCase()}`, 'success');
+        }
+    } catch (error) {
+        console.error('Error downloading current chart:', error);
+        showNotification('Error al descargar el gráfico', 'error');
+    }
+}
+
+// ==========================================
+// MODAL DE DETALLES
+// ==========================================
+
+function initializeDetailsModal() {
+    const modal = document.getElementById('mainDetailsModal');
+    if (!modal) return;
+    
+    // Agregar funcionalidad de tabs si no existe
+    const modalBody = modal.querySelector('.modal-body');
+    if (modalBody && !modalBody.querySelector('.detail-tabs')) {
+        // Se agregará dinámicamente cuando sea necesario
+    }
+}
+
+function showDetailsModal(title, content, options = {}) {
+    const modal = document.getElementById('mainDetailsModal');
+    const modalTitle = document.getElementById('mainDetailsModalTitle');
+    const modalBody = document.getElementById('mainDetailsModalBody');
+    
+    if (modal && modalTitle && modalBody) {
+        modalTitle.textContent = title;
+        
+        if (options.useTabs && options.tabs) {
+            modalBody.innerHTML = createTabbedContent(options.tabs);
+        } else {
+            modalBody.innerHTML = content;
+        }
+        
+        // Agregar botones personalizados si existen
+        if (options.customButtons) {
+            addCustomModalButtons(modal, options.customButtons);
+        }
+        
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+}
+
+function createTabbedContent(tabs) {
+    const tabsHtml = `
+        <ul class="nav nav-tabs" id="detailTabs" role="tablist">
+            ${tabs.map((tab, index) => `
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link ${index === 0 ? 'active' : ''}" 
+                            id="${tab.id}-tab" data-bs-toggle="tab" 
+                            data-bs-target="#${tab.id}" type="button" role="tab">
+                        ${tab.icon ? `<i class="${tab.icon} me-2"></i>` : ''}
+                        ${tab.title}
+                    </button>
+                </li>
+            `).join('')}
+        </ul>
+        <div class="tab-content mt-3" id="detailTabsContent">
+            ${tabs.map((tab, index) => `
+                <div class="tab-pane fade ${index === 0 ? 'show active' : ''}" 
+                     id="${tab.id}" role="tabpanel">
+                    ${tab.content}
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    return tabsHtml;
+}
+
+function addCustomModalButtons(modal, buttons) {
+    const footer = modal.querySelector('.modal-footer');
+    if (!footer) return;
+    
+    // Limpiar botones existentes excepto el de cerrar
+    const closeBtn = footer.querySelector('[data-bs-dismiss="modal"]');
+    footer.innerHTML = '';
+    
+    // Agregar botones personalizados
+    buttons.forEach(button => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `btn btn-${button.variant || 'primary'}`;
+        btn.innerHTML = `${button.icon ? `<i class="${button.icon} me-2"></i>` : ''}${button.text}`;
+        
+        if (button.onclick) {
+            btn.addEventListener('click', button.onclick);
+        }
+        
+        footer.appendChild(btn);
+    });
+    
+    // Volver a agregar botón de cerrar
+    if (closeBtn) {
+        footer.appendChild(closeBtn);
+    }
+}
+
+// ==========================================
+// MODAL DE EXPORTACIÓN
+// ==========================================
+
+function initializeExportModal() {
+    // Se inicializará dinámicamente cuando sea necesario
+}
+
+function showExportModal(exportOptions) {
+    const modalId = 'exportModal';
+    let modal = document.getElementById(modalId);
+    
+    // Crear modal si no existe
+    if (!modal) {
+        modal = createExportModal(modalId, exportOptions);
+        document.body.appendChild(modal);
+    }
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+function createExportModal(modalId, options) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = modalId;
+    modal.setAttribute('tabindex', '-1');
+    
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-export me-2"></i>
+                        Exportar Datos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-options">
+                        <h6>Seleccionar formato:</h6>
+                        <div class="row g-3">
+                            ${options.formats.map(format => `
+                                <div class="col-6">
+                                    <div class="card export-format-card" data-format="${format.type}">
+                                        <div class="card-body text-center">
+                                            <i class="${format.icon} display-6 text-primary"></i>
+                                            <h6 class="mt-2">${format.name}</h6>
+                                            <small class="text-muted">${format.description}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        ${options.customOptions ? `
+                            <div class="mt-4">
+                                <h6>Opciones adicionales:</h6>
+                                ${options.customOptions}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="executeExport()">
+                        <i class="bx bx-download me-2"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Agregar eventos de selección
+    modal.addEventListener('click', function(e) {
+        const formatCard = e.target.closest('.export-format-card');
+        if (formatCard) {
+            // Remover selección anterior
+            modal.querySelectorAll('.export-format-card').forEach(card => {
+                card.classList.remove('border-primary', 'bg-light');
+            });
+            
+            // Agregar selección actual
+            formatCard.classList.add('border-primary', 'bg-light');
+            formatCard.setAttribute('data-selected', 'true');
+        }
+    });
+    
+    return modal;
+}
+
+function executeExport() {
+    const selectedCard = document.querySelector('.export-format-card[data-selected="true"]');
+    if (!selectedCard) {
+        showNotification('Por favor selecciona un formato de exportación', 'warning');
+        return;
+    }
+    
+    const format = selectedCard.dataset.format;
+    
+    // Cerrar modal
+    const modal = selectedCard.closest('.modal');
+    const bsModal = bootstrap.Modal.getInstance(modal);
+    if (bsModal) bsModal.hide();
+    
+    // Ejecutar exportación según el formato
+    switch(format) {
+        case 'pdf':
+            if (typeof exportToPDF === 'function') exportToPDF();
+            break;
+        case 'excel':
+            if (typeof exportToExcel === 'function') exportToExcel();
+            break;
+        case 'csv':
+            if (typeof exportValidationResults === 'function') exportValidationResults();
+            break;
+        default:
+            showNotification('Formato de exportación no soportado', 'error');
+    }
+}
+
+// ==========================================
+// MODAL DE CONFIRMACIÓN
+// ==========================================
+
+function initializeConfirmationModal() {
+    // Se creará dinámicamente cuando sea necesario
+}
+
+function showConfirmationModal(message, onConfirm, options = {}) {
+    const modalId = 'confirmationModal_' + Date.now();
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = modalId;
+    modal.setAttribute('tabindex', '-1');
+    
+    const variant = options.variant || 'danger';
+    const confirmText = options.confirmText || 'Confirmar';
+    const cancelText = options.cancelText || 'Cancelar';
+    
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-question-mark me-2"></i>
+                        Confirmación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bx bx-error-circle display-6 text-${variant} me-3"></i>
+                        <div>
+                            <p class="mb-0">${message}</p>
+                            ${options.details ? `<small class="text-muted">${options.details}</small>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        ${cancelText}
+                    </button>
+                    <button type="button" class="btn btn-${variant}" id="confirmBtn">
+                        ${confirmText}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Agregar eventos
+    const confirmBtn = modal.querySelector('#confirmBtn');
+    confirmBtn.addEventListener('click', function() {
+        if (onConfirm) onConfirm();
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) bsModal.hide();
+    });
+    
+    // Limpiar modal después de cerrar
+    modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+    });
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+// ==========================================
+// UTILIDADES DE MODAL
+// ==========================================
+
+function getModalInstance(modalId) {
+    const modal = document.getElementById(modalId);
+    return modal ? bootstrap.Modal.getInstance(modal) : null;
+}
+
+function isModalOpen(modalId) {
+    const modal = document.getElementById(modalId);
+    return modal ? modal.classList.contains('show') : false;
+}
+
+function closeModal(modalId) {
+    const bsModal = getModalInstance(modalId);
+    if (bsModal) bsModal.hide();
+}
+
+function toggleModal(modalId) {
+    const bsModal = getModalInstance(modalId);
+    if (bsModal) {
+        bsModal.toggle();
+    }
+}
+
+// Exportar funciones globales
+window.initializeModals = initializeModals;
+window.closeAllModals = closeAllModals;
+window.openFullscreen = openFullscreen;
+window.downloadCurrentChart = downloadCurrentChart;
+window.zoomImage = zoomImage;
+window.resetZoom = resetZoom;
+window.showDetailsModal = showDetailsModal;
+window.showExportModal = showExportModal;
+window.showConfirmationModal = showConfirmationModal;
+window.executeExport = executeExport;
+window.getModalInstance = getModalInstance;
+window.isModalOpen = isModalOpen;
+window.closeModal = closeModal;
+window.toggleModal = toggleModal;
+
+// Auto-inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initializeModals, 100);
+});
+</script>

@@ -1,0 +1,918 @@
+<!-- Sidebar with Parameters and Controls -->
+<div class="col-lg-3">
+    <!-- Simulation Parameters -->
+    <div class="metric-card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="bx bx-cog me-2"></i>
+                Parámetros de Simulación
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-4">
+                    <img src="{{ product_instance.get_photo_url }}" 
+                            class="img-fluid rounded" 
+                            alt="{{ product_instance.name }}"
+                            loading="lazy">
+                </div>
+                <div class="col-8">
+                    <h6 class="mb-1">{{ business_instance.name }}</h6>
+                    <p class="text-muted mb-0">{{ product_instance.name }}</p>
+                </div>
+            </div>
+            <dl class="row mb-0">
+                <dt class="col-6">Horizonte:</dt>
+                <dd class="col-6">{{ simulation_instance.quantity_time }} {{ simulation_instance.unit_time }}</dd>
+                
+                <dt class="col-6">Inicio:</dt>
+                <dd class="col-6">{{ simulation_instance.date_created|date:"d/m/Y" }}</dd>
+                
+                <dt class="col-6">Estado:</dt>
+                <dd class="col-6">
+                    <span class="badge bg-success">Completada</span>
+                </dd>
+            </dl>
+            <!-- Quick Actions -->
+            <hr>
+            <div class="d-grid gap-2">
+                <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                    <i class="bx bx-printer me-1"></i>Imprimir
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="shareResults()">
+                    <i class="bx bx-share-alt me-1"></i>Compartir
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Financial Recommendations -->
+    {% if financial_recommendations_to_show %}
+    <div class="recommendation-card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="bx bx-lightbulb me-2"></i>
+                Recomendaciones Financieras
+            </h5>
+        </div>
+        <div class="card-body">
+            {% for recommendation in financial_recommendations_to_show %}
+            <div class="mb-3 p-3 bg-white rounded">
+                <h6 class="fw-bold text-primary">{{ recommendation.name }}</h6>
+                <p class="mb-2">{{ recommendation.recommendation }}</p>
+                <small class="text-muted">
+                    <i class="bx bx-info-circle me-1"></i>
+                    Variable: {{ recommendation.variable_name }}
+                </small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Daily Results Navigation -->
+    <div class="container mt-12">
+        <div class="data-table-container">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-calendar me-2"></i>
+                    Resultados Diarios
+                    <span class="badge bg-info ms-2" id="currentDayIndicator">Día 1</span>
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 900px; overflow-y: auto;">
+                <div id="dailyResultsContainer">
+                    {% for item in all_variables_extracted %}
+                    <div class="daily-result-item" 
+                        data-day="{{ forloop.counter }}" 
+                        style="{% if not forloop.first %}display: none;{% endif %}">
+                        <h6 class="text-primary mb-3">
+                            <i class="bx bx-calendar-event me-2"></i>
+                            {% if item.date %}
+                                {{ item.date|date:"d/m/Y" }}
+                            {% else %}
+                                Día {{ forloop.counter }}
+                            {% endif %}
+                        </h6>
+                        
+                        <!-- Demanda del día -->
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="p-3 bg-primary text-white rounded">
+                                        <small class="d-block opacity-75">Demanda Media</small>
+                                        <h4 class="mb-0">{{ item.demand_mean|floatformat:2 }}</h4>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-info text-white rounded">
+                                        <small class="d-block opacity-75">Desviación Estándar</small>
+                                        <h4 class="mb-0">{{ item.demand_std|floatformat:2 }}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%">Variable</th>
+                                        <th style="width: 30%">Valor</th>
+                                        <th style="width: 20%">Unidad</th>
+                                        <th style="width: 10%">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, value in item.items %}
+                                        {% if key != 'day' and key != 'date' and key != 'demand_mean' and key != 'demand_std' %}
+                                        <tr>
+                                            <td class="small">
+                                                <strong>{{ key }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                {% if key == 'PVP' %}Precio de Venta al Público
+                                                {% elif key == 'TPV' %}Total Productos Vendidos
+                                                {% elif key == 'IT' %}Ingresos Totales
+                                                {% elif key == 'TG' %}Total Gastos
+                                                {% elif key == 'GT' %}Ganancia Total
+                                                {% elif key == 'NR' %}Nivel de Rentabilidad
+                                                {% elif key == 'NSC' %}Nivel de Satisfacción del Cliente
+                                                {% elif key == 'EOG' %}Eficiencia Operativa General
+                                                {% elif key == 'DPH' %}Demanda Promedio Histórica
+                                                {% elif key == 'CFD' %}Costo Fijo Diario
+                                                {% elif key == 'CVU' %}Costo Variable Unitario
+                                                {% elif key == 'CPROD' %}Capacidad de Producción
+                                                {% elif key == 'NEPP' %}Número de Empleados en Producción
+                                                {% elif key == 'VPC_BASE' %}Ventas por Cliente Base
+                                                {% elif key == 'IPF_INICIAL' %}Inventario Productos Finales Inicial
+                                                {% elif key == 'II_INICIAL' %}Inventario Insumos Inicial
+                                                {% elif key == 'IPF_NEW' %}Inventario Productos Finales Nuevo
+                                                {% elif key == 'DPE' %}Distancia Promedio de Entrega
+                                                {% elif key == 'DH' %}Demanda Histórica
+                                                {% elif key == 'DE' %}Demanda Esperada
+                                                {% elif key == 'CIP' %}Capacidad Inventario Productos
+                                                {% elif key == 'ED' %}Estacionalidad de la Demanda
+                                                {% elif key == 'CUIP' %}Costo Unitario Insumo
+                                                {% elif key == 'TPC' %}Tiempo Promedio entre Compras
+                                                {% elif key == 'CPD' %}Clientes Por Día
+                                                {% elif key == 'CPPL' %}Cantidad Promedio Producción por Lote
+                                                {% elif key == 'TPE' %}Tiempo de producción por empleado
+                                                {% elif key == 'SE' %}Sueldos Empleados
+                                                {% elif key == 'PC' %}Precio de Venta de la Competencia
+                                                {% elif key == 'CUTRANS' %}Costo Transporte Unitario
+                                                {% elif key == 'TMP' %}Tiempo Medio Procesamiento Pedido
+                                                {% elif key == 'CTPLV' %}Cantidad transportada por viaje
+                                                {% elif key == 'GMM' %}Gastos Marketing Mensual
+                                                {% elif key == 'TR' %}Tiempo Reabastecimiento
+                                                {% elif key == 'CINSP' %}Conversión Insumos
+                                                {% elif key == 'CMIPF' %}Capacidad Máxima Inventario Producto Final
+                                                {% elif key == 'NMD' %}Número Máximo de Días
+                                                {% elif key == 'NPD' %}Número de Proveedores de Leche
+                                                {% elif key == 'SI' %}Stock Inventario Seguridad
+                                                {% elif key == 'DPL' %}Días Promedio de Reposición de Leche
+                                                {% elif key == 'CTL' %}Consumo diario promedio
+                                                {% elif key == 'MLP' %}Minutos Laborables Por Día
+                                                {% elif key == 'HTO' %}Horas Totales de Operación
+                                                {% elif key == 'QMAX' %}Cantidad Máxima Producible
+                                                {% elif key == 'TCFO' %}Temperatura Cadena Frío Objetivo
+                                                {% elif key == 'TEO' %}Tiempo Entrega Objetivo
+                                                {% elif key == 'TE1' %}Tiempo Entrega Proveedor 1
+                                                {% elif key == 'TE2' %}Tiempo Entrega Proveedor 2
+                                                {% elif key == 'TE3' %}Tiempo Entrega Proveedor 3
+                                                {% elif key == 'P1' %}Peso Proveedor 1
+                                                {% elif key == 'P2' %}Peso Proveedor 2
+                                                {% elif key == 'P3' %}Peso Proveedor 3
+                                                {% elif key == 'PMC' %}Participación Mercado Competidor
+                                                {% elif key == 'NPC' %}Número Productos Competencia
+                                                {% elif key == 'QPL' %}Cantidad producida de productos lácteos
+                                                {% elif key == 'VPC' %}Ventas Por Cliente
+                                                {% elif key == 'TCAE' %}Total Clientes Atendidos en el Día
+                                                {% elif key == 'II' %}Inventario Insumos
+                                                {% elif key == 'IPF' %}Inventario Productos Finales
+                                                {% elif key == 'PI' %}Pedido Insumos
+                                                {% elif key == 'UII' %}Uso de Inventario Insumos
+                                                {% elif key == 'PPL' %}Productos Producidos por Lote
+                                                {% elif key == 'TCA' %}Total Clientes Atendidos
+                                                {% elif key == 'TP' %}Tiempo de Parada
+                                                {% elif key == 'QC' %}Cantidad Conforme
+                                                {% elif key == 'CRP' %}Costo Reparaciones
+                                                {% elif key == 'CREP' %}Costo Repuestos
+                                                {% elif key == 'CMOM' %}Costo Mano Obra Mantenimiento
+                                                {% elif key == 'NF' %}Número de Fallas
+                                                {% elif key == 'HMP' %}Horas Mantenimiento Preventivo
+                                                {% elif key == 'HMC' %}Horas Mantenimiento Correctivo
+                                                {% elif key == 'CC' %}Costo de Compra
+                                                {% elif key == 'CTI' %}Costo de Transporte Insumos
+                                                {% elif key == 'CAL' %}Costo de Almacenamiento
+                                                {% elif key == 'CMP1' %}Calidad Materia Prima 1
+                                                {% elif key == 'CMP2' %}Calidad Materia Prima 2
+                                                {% elif key == 'CMP3' %}Calidad Materia Prima 3
+                                                {% elif key == 'V1' %}Volumen Proveedor 1
+                                                {% elif key == 'V2' %}Volumen Proveedor 2
+                                                {% elif key == 'V3' %}Volumen Proveedor 3
+                                                {% elif key == 'IIF' %}Inventario Final Insumos
+                                                {% elif key == 'EAT' %}Entregas a Tiempo
+                                                {% elif key == 'TTEP' %}Total de Entregas Proveedores
+                                                {% elif key == 'ES' %}Empleados Salieron
+                                                {% elif key == 'EE' %}Empleados Entraron
+                                                {% elif key == 'CCAP' %}Costo Capacitación Mensual
+                                                {% elif key == 'HAU' %}Horas Ausentismo
+                                                {% elif key == 'HTP' %}Horas Trabajadas Programadas
+                                                {% elif key == 'LG' %}Leads Generados
+                                                {% elif key == 'NC' %}Nuevos Clientes
+                                                {% elif key == 'AC' %}Alcance de Campañas
+                                                {% elif key == 'ALC' %}Alcance Campañas
+                                                {% elif key == 'MRE' %}Marca Reconocimiento Espontáneo
+                                                {% elif key == 'MRA' %}Marca Reconocimiento Asistido
+                                                {% elif key == 'CDP' %}Calidad Diferenciada Producto
+                                                {% elif key == 'CCP' %}Costo Competitivo Producto
+                                                {% elif key == 'CSP' %}Servicio Competitivo Producto
+                                                {% elif key == 'ICC' %}Intensidad Campañas Competencia
+                                                {% elif key == 'KMT' %}Kilómetros Totales
+                                                {% elif key == 'CCF' %}Costo Cadena Frío
+                                                {% elif key == 'CLOG' %}Costo Logístico
+                                                {% elif key == 'TTED' %}Tiempo Total Entregas Distribución
+                                                {% elif key == 'NE' %}Número de Entregas
+                                                {% elif key == 'TCF' %}Temperatura Cadena Frío
+                                                {% elif key == 'TER' %}Tiempo Entrega Real
+                                                {% elif key == 'PD' %}Productos Devueltos
+                                                {% elif key == 'CTR' %}Costo Total Reorden
+                                                {% elif key == 'CTAI' %}Costo Total Adquisición Insumos
+                                                {% elif key == 'TPPRO' %}Total Productos Producidos
+                                                {% elif key == 'DI' %}Demanda Insatisfecha
+                                                {% elif key == 'GO' %}Gastos Operativos
+                                                {% elif key == 'GG' %}Gastos Generales
+                                                {% elif key == 'CTTL' %}Costo Total Transporte
+                                                {% elif key == 'CPP' %}Costo Promedio Producción
+                                                {% elif key == 'CPV' %}Costo Promedio Venta
+                                                {% elif key == 'CPI' %}Costo Promedio Insumos
+                                                {% elif key == 'CPMO' %}Costo Promedio Mano Obra
+                                                {% elif key == 'CUP' %}Costo Unitario Producción
+                                                {% elif key == 'PVR' %}Precio Venta Recomendado
+                                                {% elif key == 'FU' %}Factor Utilización
+                                                {% elif key == 'IB' %}Ingreso Bruto
+                                                {% elif key == 'MB' %}Margen Bruto
+                                                {% elif key == 'RI' %}Retorno Inversión
+                                                {% elif key == 'RTI' %}Rotación Inventario
+                                                {% elif key == 'RTC' %}Rotación Clientes
+                                                {% elif key == 'PM' %}Participación Mercado
+                                                {% elif key == 'PE' %}Productividad Empleados
+                                                {% elif key == 'HO' %}Horas Ociosas
+                                                {% elif key == 'CHO' %}Costo Horas Ociosas
+                                                {% elif key == 'CA' %}Costo Almacenamiento
+                                                {% elif key == 'DT' %}Demanda Total
+                                                {% elif key == 'NCM' %}Nivel de Competencia en el Mercado
+                                                {% elif key == 'FC' %}Frecuencia de Compra
+                                                {% elif key == 'CUAC' %}Costo Unitario de Adquisición de Clientes
+                                                {% elif key == 'CUI' %}Costo Unitario Inventario
+                                                {% elif key == 'NIL' %}Nivel Ideal del Inventario Leche
+                                                {% elif key == 'DF' %}Tiempo Formulación Pedido
+                                                {% elif key == 'PRL' %}Pedido Reabastecimiento Leche
+                                                {% elif key == 'DSD' %}Desviación Estándar Demanda
+                                                {% elif key == 'CVD' %}Coeficiente Variación Demanda
+                                                {% elif key == 'DDP' %}Demanda Diaria Proyectada
+                                                {% elif key == 'POD' %}Producción Objetivo Diaria
+                                                {% elif key == 'EP' %}Eficiencia Producción
+                                                {% elif key == 'IOP' %}Inventario Objetivo Productos
+                                                {% elif key == 'DCI' %}Días Cobertura Inventario
+                                                {% elif key == 'IOI' %}Inventario Objetivo Insumos
+                                                {% elif key == 'IE' %}Ingresos Esperados
+                                                {% elif key == 'RVE' %}Rentabilidad vs Esperada
+                                                {% elif key == 'HNP' %}Horas Necesarias Producción
+                                                {% elif key == 'EM' %}Efectividad Marketing
+                                                {% elif key == 'IC' %}Índice Competitividad
+                                                {% elif key == 'IDG' %}Índice Desempeño Global
+                                                {% elif key == 'MP' %}Merma Producción Calculada
+                                                {% elif key == 'MI' %}Merma Inventario Calculada
+                                                {% elif key == 'CTM' %}Costo Total Mermas Calculado
+                                                {% elif key == 'ISC' %}Índice Satisfacción Cliente Calculado
+                                                {% elif key == 'PED' %}Punto de Equilibrio Diario
+                                                {% elif key == 'DISP' %}Disponibilidad
+                                                {% elif key == 'OEE' %}Efectividad General Equipos
+                                                {% elif key == 'CML' %}Costo Mantenimiento por Litro
+                                                {% elif key == 'FF' %}Frecuencia de Fallas
+                                                {% elif key == 'RMP' %}Ratio Mantenimiento Preventivo
+                                                {% elif key == 'CTA' %}Costo Total de Adquisición
+                                                {% elif key == 'TPEP' %}Tiempo Promedio Entrega Proveedores
+                                                {% elif key == 'ICP' %}Índice Calidad Proveedores
+                                                {% elif key == 'RIMP' %}Rotación Inventario Materias Primas
+                                                {% elif key == 'CDE' %}Cumplimiento Entregas
+                                                {% elif key == 'IRP' %}Índice Rotación Personal
+                                                {% elif key == 'PPE' %}Productividad por Empleado
+                                                {% elif key == 'CCE' %}Costo Capacitación por Empleado
+                                                {% elif key == 'TAU' %}Tasa Ausentismo
+                                                {% elif key == 'CLL' %}Costo Laboral por Litro
+                                                {% elif key == 'ROIA' %}ROI Inversión Publicitaria
+                                                {% elif key == 'CPL_MKT' %}Costo por Lead
+                                                {% elif key == 'TCL' %}Tasa Conversión Leads
+                                                {% elif key == 'AEC' %}Alcance Efectivo Campañas
+                                                {% elif key == 'RMI' %}Reconocimiento Marca Índice
+                                                {% elif key == 'VCP' %}Ventaja Competitiva Precio
+                                                {% elif key == 'PMR' %}Participación Mercado Relativa
+                                                {% elif key == 'IDP' %}Índice Diferenciación Producto
+                                                {% elif key == 'EEC' %}Efectividad Estrategia Competitiva
+                                                {% elif key == 'AMEN' %}Amenaza Competitiva
+                                                {% elif key == 'ERE' %}Eficiencia Rutas Entrega
+                                                {% elif key == 'CDL' %}Costo Distribución por Litro
+                                                {% elif key == 'TPEC' %}Tiempo Promedio Entrega Cliente
+                                                {% elif key == 'ICE' %}Índice Calidad Entrega
+                                                {% elif key == 'TD' %}Tasa Devoluciones
+                                                {% else %}{{ key }}
+                                                {% endif %}
+                                            </small>
+                                                                                                        </td>
+                                                                                                        <td class="fw-bold">
+                                                {% if key == 'NR' or key == 'NSC' or key == 'EOG' or key == 'EP' or key == 'RVE' or key == 'EM' or key == 'IC' or key == 'IDG' or key == 'ISC' or key == 'DISP' or key == 'OEE' or key == 'RMP' or key == 'TAU' or key == 'ROIA' or key == 'TCL' or key == 'TD' or key == 'MB' or key == 'RI' or key == 'PM' or key == 'FU' or key == 'VCP' or key == 'PMR' or key == 'EEC' or key == 'CVD' %}
+                                                    {{ value|floatformat:3 }}
+                                                {% elif key == 'PVP' or key == 'IT' or key == 'TG' or key == 'GT' or key == 'CFD' or key == 'CVU' or key == 'CUIP' or key == 'SE' or key == 'PC' or key == 'CUTRANS' or key == 'GMM' or key == 'CINSP' or key == 'TCFO' or key == 'TEO' or key == 'P1' or key == 'P2' or key == 'P3' or key == 'CRP' or key == 'CREP' or key == 'CMOM' or key == 'HMP' or key == 'HMC' or key == 'CC' or key == 'CTI' or key == 'CAL' or key == 'CMP1' or key == 'CMP2' or key == 'CMP3' or key == 'CCAP' or key == 'CCF' or key == 'CLOG' or key == 'TCF' or key == 'TER' or key == 'CTR' or key == 'CTAI' or key == 'GO' or key == 'GG' or key == 'CTTL' or key == 'CPP' or key == 'CPV' or key == 'CPI' or key == 'CPMO' or key == 'CUP' or key == 'PVR' or key == 'IB' or key == 'CHO' or key == 'CA' or key == 'CUAC' or key == 'CUI' or key == 'IE' or key == 'CTM' or key == 'CTA' or key == 'CCE' or key == 'CLL' or key == 'CPL_MKT' or key == 'CDL' or key == 'CML' %}
+                                                    {{ value|floatformat:2 }}
+                                                {% else %}
+                                                    {{ value|floatformat:2 }}
+                                                {% endif %}
+                                            </td>
+                                                                                                        <td class="small text-muted">
+                                                {% if key == 'TPV' or key == 'DPH' or key == 'DH' or key == 'DE' or key == 'CIP' or key == 'CPPL' or key == 'QMAX' or key == 'QPL' or key == 'VPC' or key == 'VPC_BASE' or key == 'IPF_INICIAL' or key == 'II_INICIAL' or key == 'IPF_NEW' or key == 'II' or key == 'IPF' or key == 'PI' or key == 'UII' or key == 'PPL' or key == 'QC' or key == 'V1' or key == 'V2' or key == 'V3' or key == 'IIF' or key == 'KMT' or key == 'PD' or key == 'TPPRO' or key == 'DI' or key == 'DT' or key == 'NIL' or key == 'PRL' or key == 'DSD' or key == 'DDP' or key == 'POD' or key == 'IOP' or key == 'IOI' or key == 'MP' or key == 'MI' or key == 'PED' or key == 'CTL' or key == 'CMIPF' or key == 'SI' %}Litros
+                                                {% elif key == 'PVP' or key == 'IT' or key == 'TG' or key == 'GT' or key == 'CFD' or key == 'CVU' or key == 'CUIP' or key == 'SE' or key == 'PC' or key == 'CUTRANS' or key == 'GMM' or key == 'CRP' or key == 'CREP' or key == 'CMOM' or key == 'CC' or key == 'CTI' or key == 'CAL' or key == 'CCAP' or key == 'CCF' or key == 'CLOG' or key == 'CTR' or key == 'CTAI' or key == 'GO' or key == 'GG' or key == 'CTTL' or key == 'CPP' or key == 'CPV' or key == 'CPI' or key == 'CPMO' or key == 'CUP' or key == 'PVR' or key == 'IB' or key == 'CHO' or key == 'CA' or key == 'CUAC' or key == 'CUI' or key == 'IE' or key == 'CTM' or key == 'CTA' or key == 'CCE' or key == 'CLL' or key == 'CPL_MKT' or key == 'CDL' or key == 'CML' %}Bs.
+                                                {% elif key == 'NR' or key == 'NSC' or key == 'EOG' or key == 'ED' or key == 'P1' or key == 'P2' or key == 'P3' or key == 'PMC' or key == 'MRE' or key == 'MRA' or key == 'NCM' or key == 'EP' or key == 'CVD' or key == 'RVE' or key == 'EM' or key == 'IC' or key == 'IDG' or key == 'ISC' or key == 'DISP' or key == 'OEE' or key == 'RMP' or key == 'CDE' or key == 'IRP' or key == 'TAU' or key == 'ROIA' or key == 'TCL' or key == 'VCP' or key == 'EEC' or key == 'TD' or key == 'MB' or key == 'RI' or key == 'PM' or key == 'FU' %}%
+                                                {% elif key == 'CPROD' %}L/día
+                                                {% elif key == 'NEPP' or key == 'CPD' or key == 'TCAE' or key == 'TCA' or key == 'NPC' or key == 'EAT' or key == 'TTEP' or key == 'ES' or key == 'EE' or key == 'LG' or key == 'NC' or key == 'AC' or key == 'ALC' or key == 'NE' or key == 'NF' or key == 'NPD' %}Personas
+                                                {% elif key == 'DPE' %}KM
+                                                {% elif key == 'TPC' or key == 'TMP' or key == 'TR' or key == 'NMD' or key == 'DPL' or key == 'TE1' or key == 'TE2' or key == 'TE3' or key == 'DCI' or key == 'DF' %}DÍAS
+                                                {% elif key == 'TPE' or key == 'MLP' or key == 'HNP' %}minutos
+                                                {% elif key == 'HTO' or key == 'TEO' or key == 'TP' or key == 'HMP' or key == 'HMC' or key == 'HAU' or key == 'HTP' or key == 'TTED' or key == 'TER' or key == 'TPEC' or key == 'HO' %}HORAS
+                                                {% elif key == 'CINSP' %}L/L
+                                                {% elif key == 'TCFO' or key == 'TCF' %}°C
+                                                {% elif key == 'CUIP' or key == 'CUTRANS' or key == 'CVU' or key == 'CML' or key == 'CDL' or key == 'CLL' %}Bs/L
+                                                {% elif key == 'SE' or key == 'GMM' or key == 'CCAP' %}Bs/mes
+                                                {% elif key == 'CMP1' or key == 'CMP2' or key == 'CMP3' or key == 'CDP' or key == 'CCP' or key == 'CSP' or key == 'ICP' or key == 'RMI' or key == 'IDP' %}PUNTOS
+                                                {% elif key == 'ICC' or key == 'AMEN' or key == 'ICE' %}INDICE
+                                                {% elif key == 'FC' %}VECES/DÍA
+                                                {% elif key == 'RTI' or key == 'RTC' or key == 'PMR' %}VECES
+                                                {% elif key == 'PE' or key == 'PPE' %}L/EMPLEADO
+                                                {% elif key == 'FF' %}FALLAS/1000H
+                                                {% elif key == 'RIMP' %}VECES/AÑO
+                                                {% elif key == 'CCE' %}BS/EMPLEADO
+                                                {% elif key == 'CPL_MKT' %}BS/LEAD
+                                                {% elif key == 'CUAC' %}BS/CLIENTE
+                                                {% elif key == 'ERE' %}L/KM
+                                                {% else %}Unidad
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if key == 'NR' %}
+                                                    {% if value >= 0.2 %}
+                                                        <span class="badge bg-success">Óptimo</span>
+                                                    {% elif value >= 0.1 %}
+                                                        <span class="badge bg-warning">Aceptable</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Crítico</span>
+                                                    {% endif %}
+                                                {% elif key == 'NSC' %}
+                                                    {% if value >= 0.9 %}
+                                                        <span class="badge bg-success">Excelente</span>
+                                                    {% elif value >= 0.7 %}
+                                                        <span class="badge bg-warning">Bueno</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Bajo</span>
+                                                    {% endif %}
+                                                {% elif key == 'EOG' %}
+                                                    {% if value >= 0.8 %}
+                                                        <span class="badge bg-success">Alta</span>
+                                                    {% elif value >= 0.6 %}
+                                                        <span class="badge bg-warning">Media</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Baja</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-info">Normal</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Additional daily stats -->
+                        <div class="mt-4">
+                            <h6 class="text-muted mb-3">Estadísticas del día</h6>
+                            <div class="row g-3">
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-light rounded text-center">
+                                        <small class="d-block text-muted">Total Variables</small>
+                                        <h5 class="mb-0">
+                                            {% with total_vars=0 %}
+                                                {% for key, value in item.items %}
+                                                    {% if key != 'day' and key != 'date' and key != 'demand_mean' and key != 'demand_std' %}
+                                                        {% with total_vars=total_vars|add:1 %}{% endwith %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {{ item.items|length|add:-4 }}
+                                            {% endwith %}
+                                        </h5>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-light rounded text-center">
+                                        <small class="d-block text-muted">Día de Simulación</small>
+                                        <h5 class="mb-0">{{ forloop.counter }}</h5>
+                                    </div>
+                                </div>
+                                {% if item.GT %}
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-light rounded text-center">
+                                        <small class="d-block text-muted">Ganancia</small>
+                                        <h5 class="mb-0 {% if item.GT > 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ item.GT|floatformat:0 }} Bs.
+                                        </h5>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if item.NR %}
+                                <div class="col-6 col-md-3">
+                                    <div class="p-3 bg-light rounded text-center">
+                                        <small class="d-block text-muted">Rentabilidad</small>
+                                        <h5 class="mb-0 {% if item.NR >= 0.2 %}text-success{% elif item.NR >= 0.1 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ item.NR|floatformat:1 }}%
+                                        </h5>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Daily notes section -->
+                        <div class="mt-4">
+                            <div class="alert alert-info">
+                                <h6 class="mb-2"><i class="bx bx-info-circle me-2"></i>Análisis del día {{ forloop.counter }}</h6>
+                                <small>
+                                    {% if item.GT and item.NR %}
+                                        Ganancia del día: <strong>{{ item.GT|floatformat:2 }} Bs.</strong> 
+                                        con rentabilidad de <strong>{{ item.NR|floatformat:1 }}%</strong>.
+                                        {% if item.NSC %}
+                                            Satisfacción del cliente: <strong>{{ item.NSC|floatformat:1 }}%</strong>.
+                                        {% endif %}
+                                    {% else %}
+                                        Datos correspondientes a la simulación del día {{ forloop.counter }}. 
+                                        Variables calculadas según el modelo de simulación.
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="bx bx-info-circle display-4 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No hay datos de variables disponibles</h5>
+                        <p class="text-muted">Los resultados de la simulación no contienen datos de variables para mostrar.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="pagination-controls p-3 bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevDayBtn">
+                        <i class="bx bx-chevron-left me-1"></i>Anterior
+                    </button>
+                    <span class="text-center small text-muted" id="dayCounter">
+                        Día 1 de {{ all_variables_extracted|length }}
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextDayBtn">
+                        Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// ==========================================
+// FUNCIONES DE NAVEGACIÓN DE DÍAS (SIDEBAR)
+// ==========================================
+
+// Variables globales para navegación
+let currentDay = 1;
+let totalDays = 0;
+
+function initializeDailyResultsPagination() {
+    const prevBtn = document.getElementById('prevDayBtn');
+    const nextBtn = document.getElementById('nextDayBtn');
+    const dayCounter = document.getElementById('dayCounter');
+    const currentDayIndicator = document.getElementById('currentDayIndicator');
+    
+    if (!prevBtn || !nextBtn) return;
+    
+    function updateDayDisplay() {
+        // Ocultar todos los items
+        document.querySelectorAll('.daily-result-item').forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        // Mostrar item actual con animación
+        const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
+        if (currentItem) {
+            currentItem.style.display = 'block';
+            currentItem.style.animation = 'fadeIn 0.3s ease';
+        }
+        
+        // Actualizar contadores
+        if (dayCounter) dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
+        if (currentDayIndicator) currentDayIndicator.textContent = `Día ${currentDay}`;
+        
+        // Actualizar estado de botones
+        prevBtn.disabled = currentDay === 1;
+        nextBtn.disabled = currentDay === totalDays;
+        
+        // Clases de botones
+        prevBtn.className = currentDay === 1 ? 
+            'btn btn-sm btn-outline-secondary btn-pagination' : 
+            'btn btn-sm btn-outline-primary btn-pagination';
+        nextBtn.className = currentDay === totalDays ? 
+            'btn btn-sm btn-outline-secondary btn-pagination' : 
+            'btn btn-sm btn-outline-primary btn-pagination';
+        
+        // Actualizar progreso en sidebar
+        updateSidebarProgress();
+        
+        // Scroll al top
+        const cardBody = document.querySelector('.card-body');
+        if (cardBody) cardBody.scrollTop = 0;
+        
+        // Trigger evento personalizado
+        document.dispatchEvent(new CustomEvent('dayChanged', {
+            detail: { currentDay, totalDays }
+        }));
+    }
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentDay > 1) {
+            currentDay--;
+            updateDayDisplay();
+            showNotification(`Navegando al día ${currentDay}`, 'info');
+        }
+    });
+    
+    nextBtn.addEventListener('click', function() {
+        if (currentDay < totalDays) {
+            currentDay++;
+            updateDayDisplay();
+            showNotification(`Navegando al día ${currentDay}`, 'info');
+        }
+    });
+    
+    // Atajos de teclado para navegación
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'ArrowLeft' && currentDay > 1) {
+                e.preventDefault();
+                currentDay--;
+                updateDayDisplay();
+            } else if (e.key === 'ArrowRight' && currentDay < totalDays) {
+                e.preventDefault();
+                currentDay++;
+                updateDayDisplay();
+            }
+        }
+    });
+    
+    // Inicializar vista
+    updateDayDisplay();
+}
+
+function updateDayCounters() {
+    const dayCounter = document.getElementById('dayCounter');
+    const currentDayIndicator = document.getElementById('currentDayIndicator');
+    
+    if (dayCounter) dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
+    if (currentDayIndicator) currentDayIndicator.textContent = `Día ${currentDay}`;
+}
+
+function updateSidebarProgress() {
+    const progressBar = document.getElementById('simulationProgress');
+    const progressText = document.getElementById('progressText');
+    
+    if (progressBar && totalDays > 0) {
+        const percentage = (currentDay / totalDays) * 100;
+        progressBar.style.width = `${percentage}%`;
+        progressBar.setAttribute('aria-valuenow', percentage);
+        
+        if (progressText) {
+            progressText.textContent = `${currentDay}/${totalDays} días completados`;
+        }
+    }
+}
+
+// Navegación directa a un día específico
+function goToDay(dayNumber) {
+    if (dayNumber >= 1 && dayNumber <= totalDays) {
+        currentDay = dayNumber;
+        
+        // Ocultar todos los items
+        document.querySelectorAll('.daily-result-item').forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        // Mostrar día específico
+        const targetItem = document.querySelector(`[data-day="${currentDay}"]`);
+        if (targetItem) {
+            targetItem.style.display = 'block';
+            targetItem.style.animation = 'fadeIn 0.3s ease';
+        }
+        
+        updateDayCounters();
+        updateSidebarProgress();
+        
+        // Actualizar botones
+        const prevBtn = document.getElementById('prevDayBtn');
+        const nextBtn = document.getElementById('nextDayBtn');
+        
+        if (prevBtn) prevBtn.disabled = currentDay === 1;
+        if (nextBtn) nextBtn.disabled = currentDay === totalDays;
+        
+        showNotification(`Mostrando resultados del día ${currentDay}`, 'success');
+    }
+}
+
+// Crear selector de día
+function createDaySelector() {
+    const sidebarContainer = document.querySelector('.sidebar-content');
+    if (!sidebarContainer || totalDays <= 1) return;
+    
+    const daySelector = document.createElement('div');
+    daySelector.className = 'day-selector mt-3';
+    daySelector.innerHTML = `
+        <label class="form-label small">Ir al día:</label>
+        <select class="form-select form-select-sm" id="daySelect">
+            ${Array.from({length: totalDays}, (_, i) => 
+                `<option value="${i + 1}" ${i + 1 === currentDay ? 'selected' : ''}>
+                    Día ${i + 1}
+                </option>`
+            ).join('')}
+        </select>
+    `;
+    
+    sidebarContainer.appendChild(daySelector);
+    
+    // Agregar evento de cambio
+    const select = daySelector.querySelector('#daySelect');
+    select.addEventListener('change', function() {
+        goToDay(parseInt(this.value));
+    });
+}
+
+// Resumen rápido del día actual
+function updateQuickSummary() {
+    const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
+    if (!currentItem) return;
+    
+    const summaryContainer = document.getElementById('quickDaySummary');
+    if (!summaryContainer) return;
+    
+    // Extraer datos del día actual
+    const demandValue = currentItem.querySelector('[data-demand]')?.dataset.demand || 'N/A';
+    const revenueValue = currentItem.querySelector('[data-revenue]')?.dataset.revenue || 'N/A';
+    const profitValue = currentItem.querySelector('[data-profit]')?.dataset.profit || 'N/A';
+    
+    summaryContainer.innerHTML = `
+        <div class="quick-summary-card">
+            <h6 class="mb-2">Resumen Día ${currentDay}</h6>
+            <div class="row g-2">
+                <div class="col-12">
+                    <small class="text-muted">Demanda:</small>
+                    <div class="fw-bold">${demandValue} L</div>
+                </div>
+                <div class="col-12">
+                    <small class="text-muted">Ingresos:</small>
+                    <div class="fw-bold text-success">${revenueValue} Bs</div>
+                </div>
+                <div class="col-12">
+                    <small class="text-muted">Ganancia:</small>
+                    <div class="fw-bold text-primary">${profitValue} Bs</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Crear mini timeline de días
+function createDayTimeline() {
+    const timelineContainer = document.getElementById('dayTimeline');
+    if (!timelineContainer || totalDays <= 1) return;
+    
+    const timeline = document.createElement('div');
+    timeline.className = 'day-timeline';
+    
+    for (let i = 1; i <= totalDays; i++) {
+        const dayDot = document.createElement('div');
+        dayDot.className = `timeline-dot ${i === currentDay ? 'active' : ''} ${i < currentDay ? 'completed' : ''}`;
+        dayDot.dataset.day = i;
+        dayDot.title = `Día ${i}`;
+        
+        // Agregar click handler
+        dayDot.addEventListener('click', function() {
+            goToDay(i);
+            updateDayTimeline();
+        });
+        
+        timeline.appendChild(dayDot);
+    }
+    
+    timelineContainer.innerHTML = '';
+    timelineContainer.appendChild(timeline);
+}
+
+function updateDayTimeline() {
+    const dots = document.querySelectorAll('.timeline-dot');
+    dots.forEach((dot, index) => {
+        const dayNumber = index + 1;
+        dot.classList.remove('active', 'completed');
+        
+        if (dayNumber === currentDay) {
+            dot.classList.add('active');
+        } else if (dayNumber < currentDay) {
+            dot.classList.add('completed');
+        }
+    });
+}
+
+// Configurar filtros rápidos en sidebar
+function setupQuickFilters() {
+    const filtersContainer = document.getElementById('quickFilters');
+    if (!filtersContainer) return;
+    
+    const filters = [
+        { label: 'Alta Demanda', filter: 'high-demand', icon: 'bx-trending-up' },
+        { label: 'Baja Demanda', filter: 'low-demand', icon: 'bx-trending-down' },
+        { label: 'Días Rentables', filter: 'profitable', icon: 'bx-dollar' },
+        { label: 'Días Críticos', filter: 'critical', icon: 'bx-error' }
+    ];
+    
+    filtersContainer.innerHTML = `
+        <h6 class="sidebar-section-title">Filtros Rápidos</h6>
+        <div class="quick-filters">
+            ${filters.map(filter => `
+                <button class="btn btn-outline-secondary btn-sm w-100 mb-2 quick-filter-btn" 
+                        data-filter="${filter.filter}">
+                    <i class="bx ${filter.icon} me-1"></i>
+                    ${filter.label}
+                </button>
+            `).join('')}
+        </div>
+    `;
+    
+    // Agregar eventos a los filtros
+    filtersContainer.querySelectorAll('.quick-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filterType = this.dataset.filter;
+            applyQuickFilter(filterType);
+            
+            // Toggle active state
+            filtersContainer.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+function applyQuickFilter(filterType) {
+    const dayItems = document.querySelectorAll('.daily-result-item');
+    let matchingDays = [];
+    
+    dayItems.forEach((item, index) => {
+        const dayNumber = index + 1;
+        const demandValue = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
+        const profitValue = parseFloat(item.querySelector('[data-profit]')?.dataset.profit || 0);
+        
+        let matches = false;
+        
+        switch(filterType) {
+            case 'high-demand':
+                matches = demandValue > 500; // Ajustar según datos reales
+                break;
+            case 'low-demand':
+                matches = demandValue < 200; // Ajustar según datos reales
+                break;
+            case 'profitable':
+                matches = profitValue > 0;
+                break;
+            case 'critical':
+                matches = profitValue < 0 || demandValue < 100;
+                break;
+        }
+        
+        if (matches) {
+            matchingDays.push(dayNumber);
+        }
+    });
+    
+    if (matchingDays.length > 0) {
+        // Ir al primer día que coincide
+        goToDay(matchingDays[0]);
+        showNotification(`Se encontraron ${matchingDays.length} días que coinciden con el filtro`, 'info');
+    } else {
+        showNotification('No se encontraron días que coincidan con el filtro', 'warning');
+    }
+}
+
+// Estadísticas rápidas en sidebar
+function updateSidebarStats() {
+    const statsContainer = document.getElementById('sidebarStats');
+    if (!statsContainer) return;
+    
+    // Calcular estadísticas básicas
+    const allItems = document.querySelectorAll('.daily-result-item');
+    let totalDemand = 0;
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let profitableDays = 0;
+    
+    allItems.forEach(item => {
+        const demand = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
+        const revenue = parseFloat(item.querySelector('[data-revenue]')?.dataset.revenue || 0);
+        const profit = parseFloat(item.querySelector('[data-profit]')?.dataset.profit || 0);
+        
+        totalDemand += demand;
+        totalRevenue += revenue;
+        totalProfit += profit;
+        
+        if (profit > 0) profitableDays++;
+    });
+    
+    const avgDemand = totalDemand / allItems.length;
+    const avgRevenue = totalRevenue / allItems.length;
+    const profitabilityRate = (profitableDays / allItems.length) * 100;
+    
+    statsContainer.innerHTML = `
+        <h6 class="sidebar-section-title">Estadísticas Generales</h6>
+        <div class="sidebar-stats">
+            <div class="stat-item">
+                <small class="text-muted">Demanda Promedio</small>
+                <div class="fw-bold">${avgDemand.toFixed(0)} L</div>
+            </div>
+            <div class="stat-item">
+                <small class="text-muted">Ingresos Promedio</small>
+                <div class="fw-bold text-success">${avgRevenue.toFixed(0)} Bs</div>
+            </div>
+            <div class="stat-item">
+                <small class="text-muted">Ganancia Total</small>
+                <div class="fw-bold ${totalProfit >= 0 ? 'text-success' : 'text-danger'}">
+                    ${totalProfit.toFixed(0)} Bs
+                </div>
+            </div>
+            <div class="stat-item">
+                <small class="text-muted">Días Rentables</small>
+                <div class="fw-bold">${profitabilityRate.toFixed(1)}%</div>
+            </div>
+        </div>
+    `;
+}
+
+// Inicialización completa del sidebar
+function initializeSidebar() {
+    totalDays = parseInt(document.querySelector('[data-total-days]')?.dataset.totalDays) || 
+                document.querySelectorAll('.daily-result-item').length;
+    
+    // Inicializar componentes del sidebar
+    initializeDailyResultsPagination();
+    createDaySelector();
+    createDayTimeline();
+    setupQuickFilters();
+    updateSidebarStats();
+    
+    // Escuchar cambios de día
+    document.addEventListener('dayChanged', function(e) {
+        updateQuickSummary();
+        updateDayTimeline();
+        
+        // Actualizar selector
+        const daySelect = document.getElementById('daySelect');
+        if (daySelect) {
+            daySelect.value = e.detail.currentDay;
+        }
+    });
+}
+
+// Limpiar filtros activos
+function clearQuickFilters() {
+    document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    showNotification('Filtros limpiados', 'info');
+}
+
+// Exportar funciones globales
+window.initializeDailyResultsPagination = initializeDailyResultsPagination;
+window.updateDayCounters = updateDayCounters;
+window.goToDay = goToDay;
+window.initializeSidebar = initializeSidebar;
+window.clearQuickFilters = clearQuickFilters;
+window.updateSidebarStats = updateSidebarStats;
+
+// Auto-inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Pequeño delay para asegurar que otros scripts estén cargados
+    setTimeout(initializeSidebar, 100);
+});
+</script>

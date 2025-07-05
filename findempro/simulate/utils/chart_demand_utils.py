@@ -964,3 +964,133 @@ class ChartDemand(ChartBase):
         
         ax.grid(True, alpha=0.3)
         ax.legend()
+        
+    def create_qq_plot(self, demand_data: List[float]) -> Optional[str]:
+        """
+        Crear Q-Q plot para análisis de normalidad de demanda
+        
+        Args:
+            demand_data: Lista de valores de demanda
+            
+        Returns:
+            str: Imagen en base64 o None si hay error
+        """
+        try:
+            if not demand_data or len(demand_data) < 3:
+                logger.warning(f"Datos insuficientes para Q-Q plot: {len(demand_data) if demand_data else 0}")
+                return None
+            
+            # Limpiar datos - remover NaN, infinitos, etc.
+            clean_data = []
+            for value in demand_data:
+                try:
+                    float_val = float(value)
+                    if not (np.isnan(float_val) or np.isinf(float_val)):
+                        clean_data.append(float_val)
+                except (ValueError, TypeError):
+                    continue
+            
+            if len(clean_data) < 3:
+                logger.warning("Datos insuficientes después de limpieza")
+                return None
+            
+            # Crear figura con dos subplots
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+            
+            # Subplot 1: Q-Q Plot principal
+            stats.probplot(clean_data, dist="norm", plot=ax1)
+            
+            # Mejorar apariencia del Q-Q plot
+            ax1.set_title('Q-Q Plot vs Distribución Normal', fontsize=14, fontweight='bold')
+            ax1.grid(True, alpha=0.3)
+            
+            # Personalizar línea de referencia
+            line = ax1.get_lines()[0]
+            line.set_color('red')
+            line.set_linewidth(2.5)
+            line.set_alpha(0.8)
+            
+            # Mejorar puntos
+            if ax1.collections:
+                scatter = ax1.collections[0]
+                scatter.set_alpha(0.7)
+                scatter.set_s(40)
+                scatter.set_edgecolors('darkblue')
+            
+            # Calcular y mostrar R²
+            sample_quantiles = np.sort(clean_data)
+            theoretical_quantiles = stats.norm.ppf(np.linspace(0.01, 0.99, len(clean_data)))
+            
+            if len(theoretical_quantiles) == len(sample_quantiles):
+                correlation = np.corrcoef(theoretical_quantiles, sample_quantiles)[0, 1]
+                r_squared = correlation ** 2
+                
+                ax1.text(0.05, 0.95, f'R² = {r_squared:.4f}', 
+                    transform=ax1.transAxes, fontsize=12, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            # Subplot 2: Histograma con distribución normal
+            mu, sigma = np.mean(clean_data), np.std(clean_data)
+            
+            # Histograma
+            n, bins, patches = ax2.hist(clean_data, bins=15, density=True, alpha=0.7, 
+                                    color='skyblue', edgecolor='black', 
+                                    label='Datos Observados')
+            
+            # Distribución normal teórica
+            x_range = np.linspace(min(clean_data), max(clean_data), 100)
+            normal_pdf = stats.norm.pdf(x_range, mu, sigma)
+            ax2.plot(x_range, normal_pdf, 'r-', linewidth=2.5, 
+                label=f'Normal (μ={mu:.2f}, σ={sigma:.2f})')
+            
+            # Líneas de estadísticas
+            ax2.axvline(mu, color='red', linestyle='--', alpha=0.7, 
+                    label=f'Media: {mu:.2f}')
+            ax2.axvline(np.median(clean_data), color='orange', linestyle='--', alpha=0.7, 
+                    label=f'Mediana: {np.median(clean_data):.2f}')
+            
+            # Test de normalidad Shapiro-Wilk (solo para muestras <= 5000)
+            if len(clean_data) <= 5000:
+                try:
+                    shapiro_stat, shapiro_p = stats.shapiro(clean_data)
+                    interpretation = "Normal" if shapiro_p > 0.05 else "No Normal"
+                    color = 'lightgreen' if shapiro_p > 0.05 else 'lightcoral'
+                    
+                    ax2.text(0.05, 0.85, f'Shapiro-Wilk:\np={shapiro_p:.4f}\n{interpretation}', 
+                        transform=ax2.transAxes, fontsize=10,
+                        bbox=dict(boxstyle='round', facecolor=color, alpha=0.8))
+                except Exception as e:
+                    logger.warning(f"Error en test Shapiro-Wilk: {e}")
+            
+            ax2.set_xlabel('Valor')
+            ax2.set_ylabel('Densidad')
+            ax2.set_title('Histograma vs Distribución Normal')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+            
+            # Título general
+            plt.suptitle('Análisis de Normalidad - Q-Q Plot', fontsize=16, fontweight='bold')
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight',
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            buffer.close()
+            plt.close(fig)
+            
+            logger.info(f"Q-Q plot creado exitosamente para {len(clean_data)} puntos")
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error creando Q-Q plot: {str(e)}")
+            logger.exception("Full traceback:")
+            if 'fig' in locals():
+                plt.close(fig)
+            return None
+
+    def generate_qqplot(self, demand_data: List[float]) -> Optional[str]:
+        """Método alternativo para compatibilidad"""
+        return self.create_qq_plot(demand_data)

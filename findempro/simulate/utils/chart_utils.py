@@ -4309,3 +4309,20 @@ class ChartGenerator:
             logger.error(f"Error generando gráfico resumen: {str(e)}")
             plt.close('all')
             return None
+        
+    def generate_qqplot(self, demand_data: List[float]) -> Optional[str]:
+        """
+        Generar Q-Q plot usando ChartDemand
+        """
+        try:
+            # Usar ChartDemand para generar el Q-Q plot
+            from ..utils.chart_demand_utils import ChartDemand
+            chart_demand = ChartDemand()
+            return chart_demand.create_qq_plot(demand_data)
+        except Exception as e:
+            logger.error(f"Error en generate_qqplot: {e}")
+            return None
+
+    def create_qq_plot(self, demand_data: List[float]) -> Optional[str]:
+        """Método alternativo para crear Q-Q plot"""
+        return self.generate_qqplot(demand_data)
