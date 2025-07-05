@@ -324,10 +324,6 @@ class VariableMapper:
             'CCAP': 1000,
         }
     
-    
-    
-    
-    
     def extract_all_variables(self, questionary_result: QuestionaryResult) -> Dict[str, Any]:
         """Extraer todas las variables necesarias desde la base de datos"""
         
@@ -594,9 +590,11 @@ class VariableMapper:
         critical_financial_vars = ['IT', 'TG', 'GT', 'NR']
         
         for var_code, default_value in self.enhanced_defaults.items():
-            if var_code not in complete_vars or complete_vars[var_code] is None:
-                complete_vars[var_code] = default_value
-                defaults_applied += 1
+            value_from_db = extracted_variables.get(var_code)
+            if value_from_db is not None and value_from_db > 0:
+                complete_vars[var_code] = value_from_db  # ✅ PRIORIZAR BD
+            elif var_code not in complete_vars:
+                complete_vars[var_code] = default_value  # Solo default si BD vacía
                 
                 # Log especial para variables críticas
                 if var_code in critical_financial_vars:
@@ -640,11 +638,13 @@ class VariableMapper:
             tpe = adjusted_vars.get('TPE', 30)
             
             # Calcular empleados necesarios
-            required_employees = max(10, int((required_capacity * tpe) / mLP))
-            
-            if current_employees < required_employees:
+            nepp_from_db = variables.get('NEPP')
+            if nepp_from_db is not None and nepp_from_db > 0:
+                adjusted_vars['NEPP'] = nepp_from_db  # ✅ USAR BD
+            else:
+                # Solo calcular si BD está vacía
+                required_employees = max(10, int((required_capacity * tpe) / mLP))
                 adjusted_vars['NEPP'] = required_employees
-                logger.info(f"Ajustado NEPP de {current_employees} a {required_employees}")
         
         # Ajustar costos fijos según tamaño de operación
         if adjusted_vars.get('NEPP', 0) > 20:  # Operación grande
@@ -663,8 +663,12 @@ class VariableMapper:
         # Ajustar precios según contexto competitivo
         if adjusted_vars.get('PC', 0) > 0:  # Si hay precio de competencia
             comp_price = adjusted_vars['PC']
-            if 'PVP' not in variables:  # Solo si no fue definido explícitamente
-                adjusted_vars['PVP'] = comp_price * 0.95  # 5% más barato
+            # ✅ SOLUCIÓN: Verificar BD primero
+            pvp_from_db = variables.get('PVP')
+            if pvp_from_db is not None and pvp_from_db > 0:
+                adjusted_vars['PVP'] = pvp_from_db  # ✅ USAR BD
+            elif 'PVP' not in variables:
+                adjusted_vars['PVP'] = comp_price * 0.98  # Solo ajustar si BD vacía
         
         return adjusted_vars
     

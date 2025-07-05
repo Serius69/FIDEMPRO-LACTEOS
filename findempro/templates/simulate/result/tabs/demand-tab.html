@@ -1,0 +1,1217 @@
+<!-- Demand Tab -->
+<div class="tab-pane fade" id="demand" role="tabpanel">
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Demand Table -->
+            <div class="data-table-container">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-table me-2"></i>
+                        Tabla de Demanda Diaria
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-striped" id="demandTable">
+                            <thead>
+                                <tr>
+                                    <th>Día</th>
+                                    <th>Fecha</th>
+                                    <th>Demanda (L)</th>
+                                    <th>Desviación (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for simulate in results %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ simulate.date|date:"d/m/Y" }}</td>
+                                    <td class="fw-bold">{{ simulate.demand_mean|floatformat:"2" }}</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ simulate.demand_std_deviation|floatformat:"2" }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="pagination-controls">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevTablePage">
+                        <i class="bx bx-chevron-left me-1"></i>Anterior
+                    </button>
+                    <span class="flex-grow-1 text-center small text-muted" id="tablePageInfo">
+                        Página 1
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextTablePage">
+                        Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h6 class="mb-3">
+                    <i class="bx bx-line-chart-down me-2"></i>
+                    Análisis de Demanda con Tendencias
+                </h6>
+                {% if image_data_simulation %}
+                <img src="data:image/png;base64,{{ image_data_simulation }}" 
+                        class="chart-image" 
+                        alt="Análisis de demanda"
+                        loading="lazy">
+                {% endif %}
+            </div>
+        </div>
+        {% if comparison_chart %}
+        <div class="col-12 mb-4">
+            <div class="chart-container">
+                <h6 class="mb-3">
+                    <i class="bx bx-git-compare me-2"></i>
+                    Comparación: Demanda Histórica vs Simulada
+                </h6>
+                <div class="chart-controls">
+                    <div class="chart-control-btn" onclick="downloadChart('{{ comparison_chart }}', 'comparacion-demanda.png')" title="Descargar">
+                        <i class="bx bx-download"></i>
+                    </div>
+                    <div class="chart-control-btn" onclick="openFullscreen('{{ comparison_chart }}', 'Comparación de Demanda')" title="Pantalla completa">
+                        <i class="bx bx-fullscreen"></i>
+                    </div>
+                </div>
+                <img src="data:image/png;base64,{{ comparison_chart }}" 
+                    class="chart-image" 
+                    alt="Comparación de Demanda Histórica vs Simulada"
+                    loading="lazy">
+            </div>
+        </div>
+        {% endif %}
+        <!-- Three-Line Validation Chart Section -->
+        {% if has_three_line_chart %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-check-circle"></i> Validación del Modelo: Comparación de Tres Líneas
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-9">
+                                {% if three_line_validation_chart %}
+                                    <img src="data:image/png;base64,{{ three_line_validation_chart }}" 
+                                        class="img-fluid rounded shadow" 
+                                        alt="Gráfico de Validación de Tres Líneas">
+                                {% endif %}
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="validation-metrics">
+                                    <h5>Métricas de Validación</h5>
+                                    
+                                    {% if three_line_validation_metrics.historical_vs_simulated %}
+                                    <div class="metric-card mb-3 p-3 bg-light rounded">
+                                        <h6 class="text-muted">Histórico vs Simulado</h6>
+                                        <p class="mb-1">RMSE: <strong>{{ three_line_validation_metrics.historical_vs_simulated.rmse|floatformat:2 }}</strong></p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if three_line_validation_metrics.simulated_vs_projected %}
+                                    <div class="metric-card mb-3 p-3 bg-light rounded">
+                                        <h6 class="text-muted">Simulado vs Proyectado</h6>
+                                        <p class="mb-1">MAPE: <strong>{{ three_line_validation_metrics.simulated_vs_projected.mape }}%</strong></p>
+                                        <p class="mb-0">Alineación: <strong>{{ three_line_validation_metrics.simulated_vs_projected.alignment }}</strong></p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if three_line_validation_metrics.overall_validation %}
+                                    <div class="metric-card p-3 bg-primary text-white rounded">
+                                        <h6>Validación General</h6>
+                                        <h3 class="mb-1">{{ three_line_validation_metrics.overall_validation.score|floatformat:1 }}%</h3>
+                                        <p class="mb-0">{{ three_line_validation_metrics.overall_validation.status }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <h6>Interpretación del Gráfico:</h6>
+                            <ul class="mb-0">
+                                <li><span style="color: blue; font-weight: bold;">Línea Azul</span>: Demanda Real Histórica</li>
+                                <li><span style="color: red; font-weight: bold;">Línea Roja</span>: Demanda Proyectada (tendencia futura)</li>
+                                <li><span style="color: green; font-weight: bold;">Línea Verde (punteada)</span>: Demanda Simulada (validación del modelo)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// ==========================================
+// FUNCIONES ESPECÍFICAS PARA ANÁLISIS DE DEMANDA
+// ==========================================
+
+let demandChart = null;
+let demandDistributionChart = null;
+let demandForecastChart = null;
+
+function initializeDemandTab() {
+    try {
+        initializeDemandCharts();
+        calculateDemandMetrics();
+        setupDemandFilters();
+        analyzeDemandPatterns();
+        generateDemandForecast();
+        
+        console.log('Demand tab initialized successfully');
+    } catch (error) {
+        console.error('Error initializing demand tab:', error);
+    }
+}
+
+function initializeDemandCharts() {
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js no está disponible para gráficos de demanda');
+        return;
+    }
+    
+    initializeDemandEvolutionChart();
+    initializeDemandDistributionChart();
+    initializeDemandVariabilityChart();
+    initializeDemandForecastChart();
+}
+
+function initializeDemandEvolutionChart() {
+    const ctx = document.getElementById('demandEvolutionChart');
+    if (!ctx) return;
+    
+    if (demandChart) {
+        demandChart.destroy();
+    }
+    
+    const demandData = extractDemandData();
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: demandData.labels,
+            datasets: [{
+                label: 'Demanda Real (L)',
+                data: demandData.actual,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Demanda Histórica Promedio (L)',
+                data: demandData.historical,
+                borderColor: 'rgba(255, 206, 86, 1)',
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.4
+            }, {
+                label: 'Tendencia',
+                data: demandData.trend,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Evolución de la Demanda'
+                },
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Litros'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Días de Simulación'
+                    }
+                }
+            }
+        }
+    };
+    
+    demandChart = new Chart(ctx, config);
+}
+
+function initializeDemandDistributionChart() {
+    const ctx = document.getElementById('demandDistributionChart');
+    if (!ctx) return;
+    
+    if (demandDistributionChart) {
+        demandDistributionChart.destroy();
+    }
+    
+    const demandData = extractDemandData();
+    const distribution = calculateDemandDistribution(demandData.actual);
+    
+    const config = {
+        type: 'bar',
+        data: {
+            labels: distribution.ranges,
+            datasets: [{
+                label: 'Frecuencia de Demanda',
+                data: distribution.frequencies,
+                backgroundColor: 'rgba(153, 102, 255, 0.8)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribución de Frecuencia de Demanda'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Número de Días'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Rangos de Demanda (L)'
+                    }
+                }
+            }
+        }
+    };
+    
+    demandDistributionChart = new Chart(ctx, config);
+}
+
+function initializeDemandVariabilityChart() {
+    const ctx = document.getElementById('demandVariabilityChart');
+    if (!ctx) return;
+    
+    const demandData = extractDemandData();
+    const variability = calculateDemandVariability(demandData.actual);
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: demandData.labels,
+            datasets: [{
+                label: 'Demanda (L)',
+                data: demandData.actual,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'transparent',
+                yAxisID: 'y'
+            }, {
+                label: 'Variabilidad (%)',
+                data: variability,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'transparent',
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Demanda y Variabilidad'
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Demanda (L)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Variabilidad (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    };
+    
+    new Chart(ctx, config);
+}
+
+function initializeDemandForecastChart() {
+    const ctx = document.getElementById('demandForecastChart');
+    if (!ctx) return;
+    
+    if (demandForecastChart) {
+        demandForecastChart.destroy();
+    }
+    
+    const demandData = extractDemandData();
+    const forecast = generateSimpleForecast(demandData.actual, 7); // Pronosticar 7 días
+    
+    const forecastLabels = [];
+    const currentLength = demandData.labels.length;
+    for (let i = 1; i <= 7; i++) {
+        forecastLabels.push(`Día ${currentLength + i} (Pronóstico)`);
+    }
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: [...demandData.labels, ...forecastLabels],
+            datasets: [{
+                label: 'Demanda Histórica (L)',
+                data: [...demandData.actual, ...Array(7).fill(null)],
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Pronóstico (L)',
+                data: [...Array(currentLength).fill(null), ...forecast],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                borderDash: [5, 5],
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Pronóstico de Demanda'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Litros'
+                    }
+                }
+            }
+        }
+    };
+    
+    demandForecastChart = new Chart(ctx, config);
+}
+
+function extractDemandData() {
+    const dailyItems = document.querySelectorAll('.daily-result-item');
+    const labels = [];
+    const actual = [];
+    const historical = [];
+    const trend = [];
+    
+    const historicalAvg = parseFloat(document.querySelector('[data-variable="DPH"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 300);
+    
+    dailyItems.forEach((item, index) => {
+        const day = index + 1;
+        labels.push(`Día ${day}`);
+        
+        const demand = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
+        actual.push(demand);
+        historical.push(historicalAvg);
+        
+        // Calcular tendencia simple (promedio móvil)
+        if (index < 2) {
+            trend.push(demand);
+        } else {
+            const recentAvg = (actual[index-2] + actual[index-1] + demand) / 3;
+            trend.push(recentAvg);
+        }
+    });
+    
+    return { labels, actual, historical, trend };
+}
+
+function calculateDemandDistribution(demandData) {
+    // Crear rangos de demanda
+    const minDemand = Math.min(...demandData);
+    const maxDemand = Math.max(...demandData);
+    const range = maxDemand - minDemand;
+    const numBins = 6;
+    const binSize = range / numBins;
+    
+    const ranges = [];
+    const frequencies = Array(numBins).fill(0);
+    
+    for (let i = 0; i < numBins; i++) {
+        const start = minDemand + (i * binSize);
+        const end = start + binSize;
+        ranges.push(`${start.toFixed(0)}-${end.toFixed(0)}`);
+    }
+    
+    // Contar frecuencias
+    demandData.forEach(demand => {
+        const binIndex = Math.min(Math.floor((demand - minDemand) / binSize), numBins - 1);
+        frequencies[binIndex]++;
+    });
+    
+    return { ranges, frequencies };
+}
+
+function calculateDemandVariability(demandData) {
+    const variability = [];
+    const windowSize = 3;
+    
+    for (let i = 0; i < demandData.length; i++) {
+        if (i < windowSize - 1) {
+            variability.push(0);
+        } else {
+            const window = demandData.slice(i - windowSize + 1, i + 1);
+            const mean = window.reduce((a, b) => a + b, 0) / window.length;
+            const variance = window.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / window.length;
+            const stdDev = Math.sqrt(variance);
+            const cv = mean > 0 ? (stdDev / mean) * 100 : 0; // Coeficiente de variación
+            variability.push(cv);
+        }
+    }
+    
+    return variability;
+}
+
+function generateSimpleForecast(demandData, days) {
+    // Pronóstico simple usando promedio móvil y tendencia
+    const forecast = [];
+    const windowSize = Math.min(7, demandData.length);
+    
+    // Calcular promedio de los últimos días
+    const recentData = demandData.slice(-windowSize);
+    const avgDemand = recentData.reduce((a, b) => a + b, 0) / recentData.length;
+    
+    // Calcular tendencia
+    const firstHalf = recentData.slice(0, Math.floor(windowSize/2));
+    const secondHalf = recentData.slice(Math.floor(windowSize/2));
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    const trend = (secondAvg - firstAvg) / (windowSize/2);
+    
+    // Generar pronóstico
+    for (let i = 1; i <= days; i++) {
+        const forecastValue = avgDemand + (trend * i);
+        // Agregar un poco de variabilidad realista
+        const noise = (Math.random() - 0.5) * avgDemand * 0.1;
+        forecast.push(Math.max(0, forecastValue + noise));
+    }
+    
+    return forecast;
+}
+
+function calculateDemandMetrics() {
+    const demandData = extractDemandData();
+    
+    // Métricas básicas
+    const totalDemand = demandData.actual.reduce((a, b) => a + b, 0);
+    const avgDemand = totalDemand / demandData.actual.length;
+    const maxDemand = Math.max(...demandData.actual);
+    const minDemand = Math.min(...demandData.actual);
+    
+    // Desviación estándar
+    const variance = demandData.actual.reduce((sum, val) => sum + Math.pow(val - avgDemand, 2), 0) / demandData.actual.length;
+    const stdDev = Math.sqrt(variance);
+    const coefficientOfVariation = (stdDev / avgDemand) * 100;
+    
+    // Tendencia general
+    const firstWeek = demandData.actual.slice(0, 7);
+    const lastWeek = demandData.actual.slice(-7);
+    const firstWeekAvg = firstWeek.reduce((a, b) => a + b, 0) / firstWeek.length;
+    const lastWeekAvg = lastWeek.reduce((a, b) => a + b, 0) / lastWeek.length;
+    const trendPercentage = ((lastWeekAvg - firstWeekAvg) / firstWeekAvg) * 100;
+    
+    // Estacionalidad (días de la semana)
+    const weekdayPattern = analyzeWeekdayPattern(demandData.actual);
+    
+    // Picos de demanda
+    const demandPeaks = identifyDemandPeaks(demandData.actual, avgDemand + stdDev);
+    
+    updateDemandMetricsDisplay({
+        totalDemand,
+        avgDemand,
+        maxDemand,
+        minDemand,
+        stdDev,
+        coefficientOfVariation,
+        trendPercentage,
+        weekdayPattern,
+        demandPeaks
+    });
+}
+
+function analyzeWeekdayPattern(demandData) {
+    const weekdayDemands = Array(7).fill(0).map(() => []);
+    
+    demandData.forEach((demand, index) => {
+        const weekday = index % 7;
+        weekdayDemands[weekday].push(demand);
+    });
+    
+    const weekdayAverages = weekdayDemands.map(demands => {
+        return demands.length > 0 ? demands.reduce((a, b) => a + b, 0) / demands.length : 0;
+    });
+    
+    const weekdayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const pattern = {};
+    
+    weekdayNames.forEach((name, index) => {
+        pattern[name] = weekdayAverages[index];
+    });
+    
+    return pattern;
+}
+
+function identifyDemandPeaks(demandData, threshold) {
+    const peaks = [];
+    
+    demandData.forEach((demand, index) => {
+        if (demand > threshold) {
+            peaks.push({
+                day: index + 1,
+                demand: demand,
+                excess: demand - threshold
+            });
+        }
+    });
+    
+    return peaks;
+}
+
+function updateDemandMetricsDisplay(metrics) {
+    const elements = {
+        totalDemand: document.getElementById('totalDemandValue'),
+        avgDemand: document.getElementById('avgDemandValue'),
+        maxDemand: document.getElementById('maxDemandValue'),
+        minDemand: document.getElementById('minDemandValue'),
+        demandVariability: document.getElementById('demandVariabilityValue'),
+        demandTrend: document.getElementById('demandTrendValue')
+    };
+    
+    if (elements.totalDemand) {
+        elements.totalDemand.textContent = `${formatNumber(metrics.totalDemand, 0)} L`;
+    }
+    if (elements.avgDemand) {
+        elements.avgDemand.textContent = `${formatNumber(metrics.avgDemand, 1)} L`;
+    }
+    if (elements.maxDemand) {
+        elements.maxDemand.textContent = `${formatNumber(metrics.maxDemand, 0)} L`;
+    }
+    if (elements.minDemand) {
+        elements.minDemand.textContent = `${formatNumber(metrics.minDemand, 0)} L`;
+    }
+    if (elements.demandVariability) {
+        elements.demandVariability.textContent = `${metrics.coefficientOfVariation.toFixed(1)}%`;
+        elements.demandVariability.className = getVariabilityClass(metrics.coefficientOfVariation);
+    }
+    if (elements.demandTrend) {
+        const trendSymbol = metrics.trendPercentage > 0 ? '↗' : metrics.trendPercentage < 0 ? '↘' : '→';
+        elements.demandTrend.textContent = `${trendSymbol} ${Math.abs(metrics.trendPercentage).toFixed(1)}%`;
+        elements.demandTrend.className = getTrendClass(metrics.trendPercentage);
+    }
+    
+    // Mostrar patrón semanal
+    displayWeekdayPattern(metrics.weekdayPattern);
+    
+    // Mostrar picos de demanda
+    displayDemandPeaks(metrics.demandPeaks);
+}
+
+function getVariabilityClass(cv) {
+    if (cv <= 15) return 'text-success fw-bold';
+    if (cv <= 30) return 'text-warning fw-bold';
+    return 'text-danger fw-bold';
+}
+
+function getTrendClass(trend) {
+    if (trend > 5) return 'text-success fw-bold';
+    if (trend < -5) return 'text-danger fw-bold';
+    return 'text-muted fw-bold';
+}
+
+function displayWeekdayPattern(pattern) {
+    const container = document.getElementById('weekdayPattern');
+    if (!container) return;
+    
+    const weekdays = Object.keys(pattern);
+    const maxDemand = Math.max(...Object.values(pattern));
+    
+    let html = '<h6>Patrón Semanal de Demanda:</h6>';
+    html += '<div class="row g-2">';
+    
+    weekdays.forEach(day => {
+        const demand = pattern[day];
+        const percentage = maxDemand > 0 ? (demand / maxDemand) * 100 : 0;
+        const barClass = percentage > 80 ? 'bg-success' : percentage > 60 ? 'bg-warning' : 'bg-secondary';
+        
+        html += `
+            <div class="col">
+                <div class="text-center">
+                    <small class="d-block mb-1">${day}</small>
+                    <div class="progress" style="height: 60px;">
+                        <div class="progress-bar ${barClass}" role="progressbar" 
+                             style="width: ${percentage}%; writing-mode: vertical-lr; text-orientation: mixed;"
+                             title="${demand.toFixed(0)} L">
+                            ${demand.toFixed(0)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function displayDemandPeaks(peaks) {
+    const container = document.getElementById('demandPeaks');
+    if (!container) return;
+    
+    if (peaks.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <i class="bx bx-info-circle me-2"></i>
+                No se detectaron picos de demanda significativos.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<h6>Picos de Demanda Detectados:</h6>';
+    html += '<div class="row g-2">';
+    
+    peaks.slice(0, 6).forEach(peak => { // Mostrar solo los primeros 6
+        html += `
+            <div class="col-md-4">
+                <div class="card border-warning">
+                    <div class="card-body p-2">
+                        <h6 class="card-title">Día ${peak.day}</h6>
+                        <p class="card-text small">
+                            <strong>Demanda:</strong> ${peak.demand.toFixed(0)} L<br>
+                            <strong>Exceso:</strong> +${peak.excess.toFixed(0)} L
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (peaks.length > 6) {
+        html += `
+            <div class="col-12">
+                <small class="text-muted">... y ${peaks.length - 6} picos más</small>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function setupDemandFilters() {
+    // Filtro por rango de demanda
+    const rangeFilter = document.getElementById('demandRangeFilter');
+    if (rangeFilter) {
+        rangeFilter.addEventListener('change', function() {
+            const range = this.value;
+            filterDemandByRange(range);
+        });
+    }
+    
+    // Filtro por período
+    const periodFilter = document.getElementById('demandPeriodFilter');
+    if (periodFilter) {
+        periodFilter.addEventListener('change', function() {
+            const period = this.value;
+            filterDemandByPeriod(period);
+        });
+    }
+}
+
+function filterDemandByRange(range) {
+    const demandData = extractDemandData();
+    let filteredDays = [];
+    
+    const avgDemand = demandData.actual.reduce((a, b) => a + b, 0) / demandData.actual.length;
+    
+    demandData.actual.forEach((demand, index) => {
+        const day = index + 1;
+        
+        switch(range) {
+            case 'high':
+                if (demand > avgDemand * 1.2) filteredDays.push(day);
+                break;
+            case 'medium':
+                if (demand >= avgDemand * 0.8 && demand <= avgDemand * 1.2) filteredDays.push(day);
+                break;
+            case 'low':
+                if (demand < avgDemand * 0.8) filteredDays.push(day);
+                break;
+        }
+    });
+    
+    if (filteredDays.length > 0) {
+        showNotification(`Encontrados ${filteredDays.length} días con demanda ${range}`, 'info');
+        highlightDaysInChart(filteredDays);
+    } else {
+        showNotification(`No se encontraron días con demanda ${range}`, 'warning');
+    }
+}
+
+function filterDemandByPeriod(period) {
+    let startDay = 1, endDay = extractDemandData().actual.length;
+    
+    switch(period) {
+        case 'week1': startDay = 1; endDay = 7; break;
+        case 'week2': startDay = 8; endDay = 14; break;
+        case 'week3': startDay = 15; endDay = 21; break;
+        case 'week4': startDay = 22; endDay = 28; break;
+    }
+    
+    const filteredData = extractDemandDataForPeriod(startDay, endDay);
+    updateDemandChartsWithFilteredData(filteredData);
+    
+    showNotification(`Mostrando datos del día ${startDay} al ${endDay}`, 'info');
+}
+
+function extractDemandDataForPeriod(startDay, endDay) {
+    const allData = extractDemandData();
+    const startIndex = startDay - 1;
+    const endIndex = endDay;
+    
+    return {
+        labels: allData.labels.slice(startIndex, endIndex),
+        actual: allData.actual.slice(startIndex, endIndex),
+        historical: allData.historical.slice(startIndex, endIndex),
+        trend: allData.trend.slice(startIndex, endIndex)
+    };
+}
+
+function updateDemandChartsWithFilteredData(data) {
+    if (demandChart) {
+        demandChart.data.labels = data.labels;
+        demandChart.data.datasets[0].data = data.actual;
+        demandChart.data.datasets[1].data = data.historical;
+        demandChart.data.datasets[2].data = data.trend;
+        demandChart.update();
+    }
+}
+
+function highlightDaysInChart(days) {
+    if (!demandChart) return;
+    
+    const colors = demandChart.data.datasets[0].backgroundColor;
+    const newColors = demandChart.data.labels.map((label, index) => {
+        const day = index + 1;
+        return days.includes(day) ? 'rgba(255, 99, 132, 0.8)' : 'rgba(54, 162, 235, 0.1)';
+    });
+    
+    demandChart.data.datasets[0].backgroundColor = newColors;
+    demandChart.update();
+}
+
+function analyzeDemandPatterns() {
+    const demandData = extractDemandData();
+    
+    // Análisis de estacionalidad
+    const seasonalAnalysis = analyzeSeasonality(demandData.actual);
+    
+    // Análisis de autocorrelación
+    const autocorrelation = calculateAutocorrelation(demandData.actual);
+    
+    // Detección de anomalías
+    const anomalies = detectDemandAnomalies(demandData.actual);
+    
+    displayPatternAnalysis({
+        seasonal: seasonalAnalysis,
+        autocorrelation: autocorrelation,
+        anomalies: anomalies
+    });
+}
+
+function analyzeSeasonality(demandData) {
+    // Análisis simple de estacionalidad por semana
+    const weeklyPattern = [];
+    for (let week = 0; week < Math.floor(demandData.length / 7); week++) {
+        const weekData = demandData.slice(week * 7, (week + 1) * 7);
+        const weekAvg = weekData.reduce((a, b) => a + b, 0) / weekData.length;
+        weeklyPattern.push(weekAvg);
+    }
+    
+    return {
+        hasSeasonality: weeklyPattern.length > 1,
+        weeklyAverages: weeklyPattern,
+        seasonalStrength: calculateSeasonalStrength(weeklyPattern)
+    };
+}
+
+function calculateSeasonalStrength(weeklyPattern) {
+    if (weeklyPattern.length < 2) return 0;
+    
+    const overallMean = weeklyPattern.reduce((a, b) => a + b, 0) / weeklyPattern.length;
+    const variance = weeklyPattern.reduce((sum, val) => sum + Math.pow(val - overallMean, 2), 0) / weeklyPattern.length;
+    const stdDev = Math.sqrt(variance);
+    
+    return overallMean > 0 ? (stdDev / overallMean) * 100 : 0;
+}
+
+function calculateAutocorrelation(demandData) {
+    // Calcular autocorrelación para lag 1
+    if (demandData.length < 2) return 0;
+    
+    const mean = demandData.reduce((a, b) => a + b, 0) / demandData.length;
+    
+    let numerator = 0;
+    let denominator = 0;
+    
+    for (let i = 0; i < demandData.length - 1; i++) {
+        numerator += (demandData[i] - mean) * (demandData[i + 1] - mean);
+    }
+    
+    for (let i = 0; i < demandData.length; i++) {
+        denominator += Math.pow(demandData[i] - mean, 2);
+    }
+    
+    return denominator > 0 ? numerator / denominator : 0;
+}
+
+function detectDemandAnomalies(demandData) {
+    const mean = demandData.reduce((a, b) => a + b, 0) / demandData.length;
+    const variance = demandData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / demandData.length;
+    const stdDev = Math.sqrt(variance);
+    
+    const threshold = 2 * stdDev; // Umbral de 2 desviaciones estándar
+    const anomalies = [];
+    
+    demandData.forEach((demand, index) => {
+        const deviation = Math.abs(demand - mean);
+        if (deviation > threshold) {
+            anomalies.push({
+                day: index + 1,
+                demand: demand,
+                deviation: deviation,
+                type: demand > mean ? 'high' : 'low'
+            });
+        }
+    });
+    
+    return anomalies;
+}
+
+function displayPatternAnalysis(analysis) {
+    const container = document.getElementById('patternAnalysis');
+    if (!container) return;
+    
+    let html = '<h6>Análisis de Patrones de Demanda:</h6>';
+    
+    // Estacionalidad
+    html += '<div class="mb-3">';
+    html += '<strong>Estacionalidad:</strong>';
+   if (analysis.seasonal.hasSeasonality) {
+       html += `
+           <div class="alert alert-info">
+               <i class="bx bx-calendar me-2"></i>
+               Se detectó patrón estacional con intensidad del ${analysis.seasonal.seasonalStrength.toFixed(1)}%
+           </div>
+       `;
+   } else {
+       html += `
+           <div class="alert alert-secondary">
+               <i class="bx bx-calendar me-2"></i>
+               No se detectó patrón estacional significativo
+           </div>
+       `;
+   }
+   html += '</div>';
+   
+   // Autocorrelación
+   html += '<div class="mb-3">';
+   html += '<strong>Autocorrelación:</strong>';
+   const autocorrClass = Math.abs(analysis.autocorrelation) > 0.3 ? 'info' : 'secondary';
+   html += `
+       <div class="alert alert-${autocorrClass}">
+           <i class="bx bx-link me-2"></i>
+           Correlación entre días consecutivos: ${analysis.autocorrelation.toFixed(3)}
+           ${Math.abs(analysis.autocorrelation) > 0.3 ? ' (Dependencia temporal detectada)' : ' (Demanda independiente)'}
+       </div>
+   `;
+   html += '</div>';
+   
+   // Anomalías
+   html += '<div class="mb-3">';
+   html += '<strong>Anomalías Detectadas:</strong>';
+   if (analysis.anomalies.length === 0) {
+       html += `
+           <div class="alert alert-success">
+               <i class="bx bx-check-circle me-2"></i>
+               No se detectaron anomalías significativas en la demanda
+           </div>
+       `;
+   } else {
+       html += `
+           <div class="alert alert-warning">
+               <i class="bx bx-error-circle me-2"></i>
+               Se detectaron ${analysis.anomalies.length} anomalías:
+               <ul class="mb-0 mt-2">
+       `;
+       analysis.anomalies.slice(0, 5).forEach(anomaly => {
+           html += `
+               <li>Día ${anomaly.day}: ${anomaly.demand.toFixed(0)} L 
+                   (${anomaly.type === 'high' ? 'Pico alto' : 'Caída baja'})</li>
+           `;
+       });
+       if (analysis.anomalies.length > 5) {
+           html += `<li>... y ${analysis.anomalies.length - 5} más</li>`;
+       }
+       html += '</ul></div>';
+   }
+   html += '</div>';
+   
+   container.innerHTML = html;
+}
+
+function generateDemandForecast() {
+   const demandData = extractDemandData();
+   const forecastDays = 7;
+   
+   // Generar múltiples tipos de pronóstico
+   const forecasts = {
+       simple: generateSimpleForecast(demandData.actual, forecastDays),
+       exponential: generateExponentialSmoothing(demandData.actual, forecastDays),
+       linear: generateLinearTrend(demandData.actual, forecastDays)
+   };
+   
+   // Calcular pronóstico ensemble (promedio de métodos)
+   const ensembleForecast = [];
+   for (let i = 0; i < forecastDays; i++) {
+       const avg = (forecasts.simple[i] + forecasts.exponential[i] + forecasts.linear[i]) / 3;
+       ensembleForecast.push(avg);
+   }
+   
+   displayForecastResults({
+       historical: demandData.actual,
+       forecasts: forecasts,
+       ensemble: ensembleForecast,
+       days: forecastDays
+   });
+}
+
+function generateExponentialSmoothing(data, days, alpha = 0.3) {
+   const forecast = [];
+   let smoothed = data[0];
+   
+   // Calcular valores suavizados
+   for (let i = 1; i < data.length; i++) {
+       smoothed = alpha * data[i] + (1 - alpha) * smoothed;
+   }
+   
+   // Generar pronóstico
+   for (let i = 0; i < days; i++) {
+       forecast.push(smoothed);
+   }
+   
+   return forecast;
+}
+
+function generateLinearTrend(data, days) {
+   const n = data.length;
+   const x = Array.from({length: n}, (_, i) => i + 1);
+   const y = data;
+   
+   // Calcular regresión lineal
+   const sumX = x.reduce((a, b) => a + b, 0);
+   const sumY = y.reduce((a, b) => a + b, 0);
+   const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+   const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+   
+   const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+   const intercept = (sumY - slope * sumX) / n;
+   
+   // Generar pronóstico
+   const forecast = [];
+   for (let i = 1; i <= days; i++) {
+       const futureX = n + i;
+       forecast.push(slope * futureX + intercept);
+   }
+   
+   return forecast;
+}
+
+function displayForecastResults(results) {
+   const container = document.getElementById('forecastResults');
+   if (!container) return;
+   
+   const lastDemand = results.historical[results.historical.length - 1];
+   const avgForecast = results.ensemble.reduce((a, b) => a + b, 0) / results.ensemble.length;
+   const forecastChange = ((avgForecast - lastDemand) / lastDemand) * 100;
+   
+   let html = '<h6>Resultados del Pronóstico:</h6>';
+   
+   // Resumen del pronóstico
+   html += '<div class="row g-3 mb-3">';
+   html += `
+       <div class="col-md-4">
+           <div class="card">
+               <div class="card-body text-center">
+                   <h6 class="card-title">Pronóstico Promedio</h6>
+                   <h4 class="text-primary">${avgForecast.toFixed(0)} L</h4>
+               </div>
+           </div>
+       </div>
+       <div class="col-md-4">
+           <div class="card">
+               <div class="card-body text-center">
+                   <h6 class="card-title">Cambio Esperado</h6>
+                   <h4 class="${forecastChange >= 0 ? 'text-success' : 'text-danger'}">
+                       ${forecastChange >= 0 ? '+' : ''}${forecastChange.toFixed(1)}%
+                   </h4>
+               </div>
+           </div>
+       </div>
+       <div class="col-md-4">
+           <div class="card">
+               <div class="card-body text-center">
+                   <h6 class="card-title">Rango Esperado</h6>
+                   <h4 class="text-info">
+                       ${Math.min(...results.ensemble).toFixed(0)} - ${Math.max(...results.ensemble).toFixed(0)} L
+                   </h4>
+               </div>
+           </div>
+       </div>
+   `;
+   html += '</div>';
+   
+   // Tabla de pronósticos detallada
+   html += '<div class="table-responsive">';
+   html += '<table class="table table-sm">';
+   html += '<thead><tr><th>Día</th><th>Simple</th><th>Exponencial</th><th>Lineal</th><th>Ensemble</th></tr></thead>';
+   html += '<tbody>';
+   
+   for (let i = 0; i < results.days; i++) {
+       const currentLength = results.historical.length;
+       html += `
+           <tr>
+               <td>Día ${currentLength + i + 1}</td>
+               <td>${results.forecasts.simple[i].toFixed(0)} L</td>
+               <td>${results.forecasts.exponential[i].toFixed(0)} L</td>
+               <td>${results.forecasts.linear[i].toFixed(0)} L</td>
+               <td><strong>${results.ensemble[i].toFixed(0)} L</strong></td>
+           </tr>
+       `;
+   }
+   
+   html += '</tbody></table>';
+   html += '</div>';
+   
+   container.innerHTML = html;
+}
+
+function exportDemandReport() {
+   try {
+       const demandData = extractDemandData();
+       const metrics = extractDemandMetrics();
+       const csvContent = generateDemandCSV(demandData, metrics);
+       
+       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+       const link = document.createElement('a');
+       link.href = URL.createObjectURL(blob);
+       link.download = `reporte_demanda_${new Date().getTime()}.csv`;
+       link.click();
+       
+       showNotification('Reporte de demanda exportado exitosamente', 'success');
+   } catch (error) {
+       console.error('Error exporting demand report:', error);
+       showNotification('Error al exportar reporte de demanda', 'error');
+   }
+}
+
+function extractDemandMetrics() {
+   return {
+       totalDemand: parseFloat(document.getElementById('totalDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+       avgDemand: parseFloat(document.getElementById('avgDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+       maxDemand: parseFloat(document.getElementById('maxDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+       minDemand: parseFloat(document.getElementById('minDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+       variability: parseFloat(document.getElementById('demandVariabilityValue')?.textContent.replace(/[^\d.-]/g, '') || 0)
+   };
+}
+
+function generateDemandCSV(demandData, metrics) {
+   let csv = 'Reporte de Análisis de Demanda - Simulación\n\n';
+   csv += 'Resumen de Métricas\n';
+   csv += 'Métrica,Valor\n';
+   csv += `Demanda Total,"${metrics.totalDemand} L"\n`;
+   csv += `Demanda Promedio,"${metrics.avgDemand} L"\n`;
+   csv += `Demanda Máxima,"${metrics.maxDemand} L"\n`;
+   csv += `Demanda Mínima,"${metrics.minDemand} L"\n`;
+   csv += `Variabilidad,"${metrics.variability}%"\n\n`;
+   
+   csv += 'Datos Diarios de Demanda\n';
+   csv += 'Día,Demanda Real (L),Demanda Histórica (L),Tendencia (L)\n';
+   
+   demandData.actual.forEach((demand, index) => {
+       const day = index + 1;
+       const historical = demandData.historical[index];
+       const trend = demandData.trend[index];
+       
+       csv += `${day},${demand.toFixed(1)},${historical.toFixed(1)},${trend.toFixed(1)}\n`;
+   });
+   
+   csv += `\nFecha de Generación,"${new Date().toLocaleDateString()}"\n`;
+   
+   return csv;
+}
+
+// Inicializar cuando se muestre el tab
+document.addEventListener('shown.bs.tab', function(e) {
+   if (e.target.getAttribute('aria-controls') === 'demand') {
+       setTimeout(initializeDemandTab, 100);
+   }
+});
+
+// Exportar funciones globales
+window.initializeDemandTab = initializeDemandTab;
+window.exportDemandReport = exportDemandReport;
+window.filterDemandByRange = filterDemandByRange;
+window.filterDemandByPeriod = filterDemandByPeriod;
+window.generateDemandForecast = generateDemandForecast;
+</script>

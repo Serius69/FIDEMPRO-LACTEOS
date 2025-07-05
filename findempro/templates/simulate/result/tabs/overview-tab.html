@@ -1,0 +1,497 @@
+<!-- Overview Tab -->
+<div class="tab-pane fade show active" id="overview" role="tabpanel">
+    <!-- Header de resumen ejecutivo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="executive-summary">
+                <div class="summary-header">
+                    <h2 class="summary-title">
+                        <i class="bx bx-chart me-3"></i>
+                        Resumen Ejecutivo de la Simulación
+                    </h2>
+                    <div class="summary-badges">
+                        {% if simulation_instance.date_created %}
+                        <span class="badge bg-info">
+                            <i class="bx bx-calendar me-1"></i>
+                            {{ simulation_instance.date_created|date:"d/m/Y H:i" }}
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-success">
+                            <i class="bx bx-check-circle me-1"></i>
+                            Simulación Completada
+                        </span>
+                        {% if validation_summary.success_rate %}
+                        <span class="badge bg-{% if validation_summary.success_rate >= 80 %}success{% elif validation_summary.success_rate >= 60 %}warning{% else %}danger{% endif %}">
+                            <i class="bx bx-target-lock me-1"></i>
+                            Precisión: {{ validation_summary.success_rate|floatformat:1 }}%
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="summary-description">
+                    <p class="lead">
+                        Análisis integral de {{ all_variables_extracted|length|default:0 }} días de simulación 
+                        para <strong>{{ product_instance.name|default:"el producto" }}</strong> de 
+                        <strong>{{ business_instance.name|default:"la empresa" }}</strong>.
+                        {% if totales_acumulativos.GT %}
+                            {% if totales_acumulativos.GT.total > 0 %}
+                                La simulación proyecta un escenario <span class="text-success font-weight-bold">rentable</span> 
+                                con ganancias totales de <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}</strong>.
+                            {% else %}
+                                La simulación indica la necesidad de <span class="text-warning font-weight-bold">optimización</span> 
+                                en la estrategia operativa y financiera.
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                    
+                    <p class="lead">
+                        El análisis de demanda revela que la demanda histórica promedio es de 
+                        <strong>{{ demand_stats.historical.mean|floatformat:1 }} L diarios</strong>, mientras que la simulación 
+                        proyecta una demanda de <strong>{{ demand_stats.simulated.mean|floatformat:1 }} L diarios</strong>.
+                        {% if demand_stats.comparison.mean_diff > 0 %}
+                            Esto representa un <span class="text-success font-weight-bold">incremento esperado</span> de 
+                            <strong>{{ demand_stats.comparison.mean_diff|floatformat:1 }} L</strong>
+                            {% if demand_stats.comparison.mean_diff_pct %}
+                                ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
+                            {% endif %}, 
+                            indicando un crecimiento positivo en la demanda del producto.
+                        {% elif demand_stats.comparison.mean_diff < 0 %}
+                            Esto representa una <span class="text-danger font-weight-bold">disminución esperada</span> de 
+                            <strong>{{ demand_stats.comparison.mean_diff|floatformat:1 }} L</strong>
+                            {% if demand_stats.comparison.mean_diff_pct %}
+                                ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
+                            {% endif %}, 
+                            sugiriendo la necesidad de estrategias para estimular la demanda.
+                        {% else %}
+                            Esto muestra una <span class="text-info font-weight-bold">estabilidad</span> en los patrones de demanda, 
+                            manteniendo niveles consistentes con el comportamiento histórico.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos principales del overview -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+    <div class="chart-container">
+        <!-- TEXTO ARRIBA: Header con título y controles -->
+        <div class="chart-header">
+            <h6 class="chart-title mb-3">
+                <i class="bx bx-dollar me-2"></i>
+                Evolución Financiera: Ingresos vs Ganancias
+            </h6>
+            <div class="chart-controls">
+                {% if image_data_ingresos_gastos %}
+                <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
+                    <i class="bx bx-download"></i>
+                </div>
+                <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                    <i class="bx bx-fullscreen"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+        <div class="chart-content">
+            {% if image_data_ingresos_gastos %}
+            <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                class="chart-image" 
+                alt="Evolución Financiera: Ingresos vs Ganancias"
+                loading="lazy">
+            {% else %}
+            <div class="chart-placeholder">
+                <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">Gráfico financiero no disponible</p>
+                <small class="text-muted">Los datos se generarán durante el análisis</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- FOOTER ABAJO: Resumen y análisis -->
+        <div class="chart-footer">
+            <div class="chart-summary">
+                <small class="text-muted">
+                    {% if totales_acumulativos.IT and totales_acumulativos.GT %}
+                        Rendimiento financiero: 
+                        {% if totales_acumulativos.GT.total > 0 %}
+                            <span class="text-success">Positivo</span> - 
+                            Margen del {{ margin_percent|floatformat:1 }}%
+                        {% else %}
+                            <span class="text-danger">Requiere optimización</span>
+                        {% endif %}
+                    {% else %}
+                        Análisis financiero en proceso
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    </div>               
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <!-- TEXTO ARRIBA: Header con título y controles -->
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-line-chart me-2"></i>
+                        Comportamiento de la Demanda
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_simulation %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_simulation }}', 'tendencia-demanda.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_simulation }}', 'Tendencia de Demanda')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+                <div class="chart-content">
+                    {% if image_data_simulation %}
+                    <img src="data:image/png;base64,{{ image_data_simulation }}" 
+                        class="chart-image" 
+                        alt="Comportamiento de la Demanda"
+                        loading="lazy">
+                    {% elif comparison_chart %}
+                    <img src="data:image/png;base64,{{ comparison_chart }}" 
+                        class="chart-image" 
+                        alt="Comparación de Demanda"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder">
+                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Gráfico de demanda no disponible</p>
+                        <small class="text-muted">Los datos se generarán durante el análisis</small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- FOOTER ABAJO: Resumen y análisis -->
+                <div class="chart-footer">
+                    <div class="chart-summary">
+                        <small class="text-muted">
+                            {% if growth_rate %}
+                                Tendencia de crecimiento: 
+                                {% if growth_rate > 0 %}
+                                    <span class="text-success">+{{ growth_rate|floatformat:2 }}%</span> - Creciente
+                                {% elif growth_rate < 0 %}
+                                    <span class="text-danger">{{ growth_rate|floatformat:2 }}%</span> - Decreciente
+                                {% else %}
+                                    <span class="text-info">{{ growth_rate|floatformat:2 }}%</span> - Estable
+                                {% endif %}
+                            {% elif demand_stats.comparison.mean_diff_pct %}
+                                Cambio vs histórico: {{ demand_stats.comparison.mean_diff_pct|floatformat:2 }}%
+                            {% else %}
+                                Análisis de tendencia en proceso
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Gráficos adicionales de overview -->
+    <div class="row mb-6">
+        <div class="col-lg-6 mb-3">
+        <div class="chart-container compact">
+            <!-- TEXTO ARRIBA: Título -->
+            <div class="chart-header">
+                <h6 class="chart-title mb-3">
+                    <i class="bx bx-bar-chart me-2"></i>
+                    Eficiencia Operativa
+                </h6>
+            </div>
+
+            <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+            <div class="chart-content">
+                {% if image_data_eficiencia %}
+                <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                    class="chart-image" 
+                    alt="Eficiencia Operativa"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder compact">
+                    <i class="bx bx-bar-chart text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No disponible</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- FOOTER ABAJO: Podría agregarse aquí si se necesita -->
+            <div class="chart-footer">
+                <!-- Footer vacío para mantener consistencia -->
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-3">
+        <div class="chart-container compact">
+            <!-- TEXTO ARRIBA: Título -->
+            <div class="chart-header">
+                <h6 class="chart-title mb-3">
+                    <i class="bx bx-trending-up me-2"></i>
+                    Análisis de ROI
+                </h6>
+            </div>
+
+            <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+            <div class="chart-content">
+                {% if image_data_kpis %}
+                <img src="data:image/png;base64,{{ image_data_kpis }}" 
+                    class="chart-image" 
+                    alt="Análisis de KPIs"
+                    loading="lazy">
+                {% elif image_data_rentabilidad %}
+                <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
+                    class="chart-image" 
+                    alt="Análisis de Rentabilidad"
+                    loading="lazy">
+                {% else %}
+                <div class="chart-placeholder compact">
+                    <i class="bx bx-trending-up text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No disponible</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- FOOTER ABAJO: Podría agregarse aquí si se necesita -->
+            <div class="chart-footer">
+                <!-- Footer vacío para mantener consistencia -->
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Datos estadísticos adicionales si están disponibles -->
+    {% if demand_stats.comparison %}
+    <div class="row mb-9">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-calculator me-2"></i>
+                Estadísticas Comparativas
+            </h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center p-3 border rounded">
+                        <h6 class="text-muted mb-1">Correlación</h6>
+                        <h4 class="mb-0 {% if demand_stats.comparison.correlation > 0.8 %}text-success{% elif demand_stats.comparison.correlation > 0.6 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ demand_stats.comparison.correlation|floatformat:3 }}
+                        </h4>
+                        <small class="text-muted">Histórico vs Simulado</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 border rounded">
+                        <h6 class="text-muted mb-1">MAPE</h6>
+                        <h4 class="mb-0 {% if demand_stats.comparison.mape < 10 %}text-success{% elif demand_stats.comparison.mape < 20 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ demand_stats.comparison.mape|floatformat:2 }}%
+                        </h4>
+                        <small class="text-muted">Error promedio</small>
+                    </div>
+                </div>
+                {% if demand_stats.comparison.r_squared %}
+                <div class="col-md-3">
+                    <div class="text-center p-3 border rounded">
+                        <h6 class="text-muted mb-1">R²</h6>
+                        <h4 class="mb-0 {% if demand_stats.comparison.r_squared > 0.8 %}text-success{% elif demand_stats.comparison.r_squared > 0.6 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ demand_stats.comparison.r_squared|floatformat:3 }}
+                        </h4>
+                        <small class="text-muted">Bondad de ajuste</small>
+                    </div>
+                </div>
+                {% endif %}
+                {% if demand_stats.comparison.mean_diff_pct %}
+                <div class="col-md-3">
+                    <div class="text-center p-3 border rounded">
+                        <h6 class="text-muted mb-1">Cambio en Media</h6>
+                        <h4 class="mb-0 {% if demand_stats.comparison.mean_diff_pct > -5 and demand_stats.comparison.mean_diff_pct < 5 %}text-success{% else %}text-warning{% endif %}">
+                            {% if demand_stats.comparison.mean_diff_pct > 0 %}+{% endif %}{{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%
+                        </h4>
+                        <small class="text-muted">vs histórico</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEnhancedInsights();
+});
+
+function initializeEnhancedInsights() {
+    // Animar insights secuencialmente
+    const insightCards = document.querySelectorAll('.insight-card');
+    
+    // Intersection Observer para animar cuando sea visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '50px'
+    });
+    
+    insightCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'all 0.6s ease';
+        observer.observe(card);
+    });
+    
+    // Agregar tooltips a los insights
+    addInsightTooltips();
+    
+    // Actualizar insights en tiempo real si hay datos dinámicos
+    updateInsightsRealTime();
+}
+function addInsightTooltips() {
+    const tooltips = {
+        '.financial': 'Análisis de rentabilidad y performance financiera basado en ingresos, gastos y márgenes',
+        '.validation': 'Evaluación de la precisión y confiabilidad del modelo predictivo utilizado',
+        '.operational': 'Medición de la eficiencia en procesos operativos y uso de recursos',
+        '.demand': 'Análisis del comportamiento y tendencias de la demanda del producto',
+        '.customer': 'Evaluación del nivel de satisfacción y experiencia del cliente',
+        '.comparison': 'Comparación entre datos históricos reales y resultados de la simulación'
+    };
+    
+    Object.entries(tooltips).forEach(([selector, tooltip]) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+            element.title = tooltip;
+            element.style.cursor = 'help';
+        });
+    });
+}
+function updateInsightsRealTime() {
+    // Simular actualizaciones en tiempo real de insights
+    setInterval(() => {
+        updateInsightTrends();
+    }, 30000); // Cada 30 segundos
+}
+function updateInsightTrends() {
+    const trendElements = document.querySelectorAll('.insight-trend');
+    trendElements.forEach(element => {
+        if (element.querySelector('.trend-up, .trend-down')) {
+            element.style.animation = 'pulse-success 1s ease';
+            setTimeout(() => {
+                element.style.animation = '';
+            }, 1000);
+        }
+    });
+}
+
+function expandInsightDetails(insightType) {
+    const modal = document.getElementById('mainDetailsModal');
+    const modalTitle = document.getElementById('mainDetailsModalTitle');
+    const modalBody = document.getElementById('mainDetailsModalBody');
+    
+    if (!modal || !modalTitle || !modalBody) return;
+    
+    const insightDetails = {
+        financial: {
+            title: 'Detalles del Análisis Financiero',
+            content: generateFinancialDetails()
+        },
+        validation: {
+            title: 'Detalles de Validación del Modelo',
+            content: generateValidationDetails()
+        },
+        operational: {
+            title: 'Detalles de Eficiencia Operativa',
+            content: generateOperationalDetails()
+        },
+        demand: {
+            title: 'Detalles del Comportamiento de Demanda',
+            content: generateDemandDetails()
+        },
+        customer: {
+            title: 'Detalles de Satisfacción del Cliente',
+            content: generateCustomerDetails()
+        },
+        comparison: {
+            title: 'Detalles de Comparación Histórica',
+            content: generateComparisonDetails()
+        }
+    };
+    
+    const detail = insightDetails[insightType];
+    if (detail) {
+        modalTitle.textContent = detail.title;
+        modalBody.innerHTML = detail.content;
+        new bootstrap.Modal(modal).show();
+    }
+}
+function generateFinancialDetails() {
+    return `
+        <div class="financial-details">
+            <h6>Métricas Financieras Detalladas</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary">Ingresos</h6>
+                    <p>Total generado durante el período de simulación</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-success">Rentabilidad</h6>
+                    <p>Margen de ganancia sobre ingresos totales</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+function generateValidationDetails() {
+    return `
+        <div class="validation-details">
+            <h6>Métricas de Validación del Modelo</h6>
+            <p>El modelo ha sido validado comparando predicciones con datos históricos reales.</p>
+        </div>
+    `;
+}
+function generateOperationalDetails() {
+    return `
+        <div class="operational-details">
+            <h6>Análisis de Eficiencia Operativa</h6>
+            <p>Evaluación de la eficiencia en procesos de producción y operaciones.</p>
+        </div>
+    `;
+}
+function generateDemandDetails() {
+    return `
+        <div class="demand-details">
+            <h6>Análisis de Demanda</h6>
+            <p>Tendencias y patrones identificados en el comportamiento de la demanda.</p>
+        </div>
+    `;
+}
+function generateCustomerDetails() {
+    return `
+        <div class="customer-details">
+            <h6>Análisis de Satisfacción del Cliente</h6>
+            <p>Evaluación del nivel de satisfacción basado en métricas de servicio.</p>
+        </div>
+    `;
+}
+function generateComparisonDetails() {
+    return `
+        <div class="comparison-details">
+            <h6>Comparación con Datos Históricos</h6>
+            <p>Análisis de correlación entre datos reales y simulaciones.</p>
+        </div>
+    `;
+}
+</script>

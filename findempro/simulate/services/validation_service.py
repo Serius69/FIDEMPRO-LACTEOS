@@ -12,7 +12,7 @@ from simulate.services.statistical_service import StatisticalService
 import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
 from datetime import datetime, timedelta
-
+import scipy.stats
 from django.db.models import Avg, StdDev, Min, Max, Count
 from simulate.models import ResultSimulation, Simulation
 from questionary.models import Answer, QuestionaryResult
@@ -4345,3 +4345,78 @@ class SimulationValidationService:
             'alerts': [{'type': 'ERROR', 'message': 'No se pudo realizar validación KS'}],
             'reliability_report': {'error': 'Validation failed'}
         }
+        
+    def validate_simulation_with_charts(self, simulation_id: int, 
+                                   results_simulation: List[Any],
+                                   all_variables_extracted: List[Dict]) -> Dict[str, Any]:
+        """
+        MÉTODO PRINCIPAL CORREGIDO: Validación completa con generación de gráficos
+        """
+        try:
+            logger.info(f"Iniciando validación con gráficos para simulación {simulation_id}")
+            
+            # 1. Obtener instancia de simulación
+            simulation = Simulation.objects.get(id=simulation_id)
+            
+            # 2. Validar variables del modelo (método ya existe pero corregido)
+            model_validation = self._validate_model_variables(
+                simulation, results_simulation, all_variables_extracted
+            )
+            
+            # 3. CORRECCIÓN CRÍTICA: Generar gráficos de validación
+            validation_charts = self._generate_validation_charts_fixed(
+                model_validation, all_variables_extracted
+            )
+            
+            # 4. Agregar gráficos al resultado final
+            model_validation['validation_charts'] = validation_charts
+            model_validation['charts_generated'] = len(validation_charts)
+            
+            # 5. Log de éxito
+            logger.info(f"Validación completada: {len(validation_charts)} gráficos generados")
+            
+            return model_validation
+            
+        except Exception as e:
+            logger.error(f"Error en validación con gráficos: {str(e)}")
+            return self._create_empty_validation_result()
+        
+    def _generate_validation_charts_fixed(self, validation_results: Dict, 
+                                     all_variables_extracted: List[Dict]) -> Dict[str, Any]:
+        """
+        MÉTODO CORREGIDO: Generar gráficos de validación correctamente
+        """
+        try:
+            from simulate.utils.chart_utils import ChartGenerator
+            
+            # Inicializar generador de gráficos
+            chart_generator = ChartGenerator()
+            
+            # Obtener variables validadas
+            by_variable = validation_results.get('by_variable', {})
+            
+            if not by_variable:
+                logger.warning("No hay variables para generar gráficos")
+                return {}
+            
+            # CORRECCIÓN PRINCIPAL: Llamar al método correcto
+            validation_charts = chart_generator._generate_validation_charts_for_variables(
+                by_variable, 
+                validation_results,  # results_simulation 
+                all_variables_extracted
+            )
+            
+            # Verificar que se generaron gráficos
+            if not validation_charts:
+                logger.error("ChartGenerator no produjo gráficos")
+                return {}
+            
+            # Log de tipos de gráficos generados
+            chart_types = list(validation_charts.keys())
+            logger.info(f"Tipos de gráficos generados: {chart_types}")
+            
+            return validation_charts
+            
+        except Exception as e:
+            logger.error(f"Error generando gráficos de validación: {str(e)}")
+            return {}

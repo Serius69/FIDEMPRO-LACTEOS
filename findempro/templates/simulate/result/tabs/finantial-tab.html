@@ -1,0 +1,1179 @@
+<div class="tab-pane fade" id="financial" role="tabpanel">
+    <!-- Header con resumen financiero -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h4 class="alert-heading mb-3">
+                    <i class="bx bx-dollar-circle me-2"></i>
+                    Análisis Financiero Integral
+                </h4>
+                <p class="mb-2">
+                    Análisis completo de la performance financiera de la simulación, incluyendo ingresos, gastos, 
+                    rentabilidad y métricas clave de rendimiento financiero.
+                </p>
+                <small class="text-muted">
+                    Período analizado: <strong>{{ all_variables_extracted|length|default:0 }} días</strong> | 
+                    {% if totales_acumulativos.GT %}
+                        Ganancia total: <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2|default:"0.00" }}</strong>
+                    {% endif %}
+                    {% if validation_summary.success_rate %}
+                        | Precisión del modelo: <strong>{{ validation_summary.success_rate|floatformat:1 }}%</strong>
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas financieras principales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Ingresos Totales</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.IT %}
+                                    Bs. {{ totales_acumulativos.IT.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </h3>
+                            {% if totales_acumulativos.IT.trend %}
+                            <small class="text-white-75">
+                                Tendencia: {{ totales_acumulativos.IT.trend|capfirst }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-dollar display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Gastos Totales</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.TG %}
+                                    Bs. {{ totales_acumulativos.TG.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </h3>
+                            {% if totales_acumulativos.TG.trend %}
+                            <small class="text-white-75">
+                                Tendencia: {{ totales_acumulativos.TG.trend|capfirst }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-trending-down display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Ganancia Neta</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.GT %}
+                                    Bs. {{ totales_acumulativos.GT.total|floatformat:0|default:"0" }}
+                                {% else %}
+                                    Bs. 0
+                                {% endif %}
+                            </h3>
+                            {% if totales_acumulativos.GT.trend %}
+                            <small class="text-white-75">
+                                Tendencia: {{ totales_acumulativos.GT.trend|capfirst }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-trending-up display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Margen Promedio</h6>
+                            <h3 class="mb-0">
+                                {% if totales_acumulativos.NR and all_variables_extracted %}
+                                    {% if all_variables_extracted|length > 0 %}
+                                        {% with total_nr=totales_acumulativos.NR.total|default:0 %}
+                                        {% with days_count=all_variables_extracted|length %}
+                                        {% if days_count > 0 %}
+                                            {% with avg_margin_decimal=total_nr|floatformat:6 %}
+                                            {% if avg_margin_decimal != "0.000000" %}
+                                                {% with avg_margin_calc=total_nr|default:0 %}
+                                                {% with avg_margin_final=avg_margin_calc|default:0 %}
+                                                {{ avg_margin_final|floatformat:1 }}%
+                                                {% endwith %}
+                                                {% endwith %}
+                                            {% else %}
+                                                0.0%
+                                            {% endif %}
+                                            {% endwith %}
+                                        {% else %}
+                                            0.0%
+                                        {% endif %}
+                                        {% endwith %}
+                                        {% endwith %}
+                                    {% else %}
+                                        0.0%
+                                    {% endif %}
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </h3>
+                            {% if totales_acumulativos.NR.trend %}
+                            <small class="text-white-75">
+                                Tendencia: {{ totales_acumulativos.NR.trend|capfirst }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-percentage display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos principales -->
+    <div class="row mb-4">
+        <!-- Ingresos vs Ganancias -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <!-- TEXTO ARRIBA: Header con título y controles -->
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-dollar me-2"></i>
+                        Evolución de Ingresos vs Ganancias
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_ingresos_gastos %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
+                <div class="chart-content">
+                    {% if image_data_ingresos_gastos %}
+                    <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                        class="chart-image" 
+                        alt="Evolución de Ingresos vs Ganancias"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder">
+                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Gráfico de ingresos vs ganancias no disponible</p>
+                        <small class="text-muted">Los datos se generarán durante el análisis</small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- FOOTER ABAJO: Preparado para resumen -->
+                <div class="chart-footer">
+                    <!-- Footer disponible para agregar información de resumen -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Análisis de Gastos -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-trending-down me-2"></i>
+                        Composición y Evolución de Gastos
+                    </h6>
+                    <div class="chart-controls">
+                        {% if image_data_gastos %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_gastos }}', 'analisis-gastos.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_gastos }}', 'Análisis de Gastos')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% elif image_data_rentabilidad %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_rentabilidad }}', 'analisis-rentabilidad.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_rentabilidad }}', 'Análisis de Rentabilidad')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="chart-content">
+                    {% if image_data_gastos %}
+                    <img src="data:image/png;base64,{{ image_data_gastos }}" 
+                        class="chart-image" 
+                        alt="Análisis de gastos"
+                        loading="lazy">
+                    {% elif image_data_rentabilidad %}
+                    <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
+                        class="chart-image" 
+                        alt="Análisis de rentabilidad y gastos"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder">
+                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Gráfico de análisis de gastos no disponible</p>
+                        <small class="text-muted">Los datos se generarán durante el análisis</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Costos de Producción -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-calculator me-2"></i>
+                        Estructura de Costos de Producción
+                    </h6>
+                    <div class="chart-controls">
+                        {% if cost_distribution_chart %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ cost_distribution_chart }}', 'distribucion-costos.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ cost_distribution_chart }}', 'Distribución de Costos')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% elif image_data_costos %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_costos }}', 'costos-produccion.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_costos }}', 'Costos de Producción')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="chart-content">
+                    {% if cost_distribution_chart %}
+                    <img src="data:image/png;base64,{{ cost_distribution_chart }}" 
+                        class="chart-image" 
+                        alt="Distribución de costos"
+                        loading="lazy">
+                    {% elif image_data_costos %}
+                    <img src="data:image/png;base64,{{ image_data_costos }}" 
+                        class="chart-image" 
+                        alt="Costos de producción"
+                        loading="lazy">
+                    {% elif image_data_eficiencia %}
+                    <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                        class="chart-image" 
+                        alt="Eficiencia y costos"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder">
+                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Gráfico de costos de producción no disponible</p>
+                        <small class="text-muted">Los datos se generarán durante el análisis</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Rentabilidad y ROI -->
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="mb-3">
+                        <i class="bx bx-stats me-2"></i>
+                        Rentabilidad y ROI
+                    </h6>
+                    <div class="chart-controls">
+                        {% if financial_efficiency_chart %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ financial_efficiency_chart }}', 'eficiencia-financiera.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ financial_efficiency_chart }}', 'Eficiencia Financiera')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% elif image_data_kpis %}
+                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_kpis }}', 'roi-rentabilidad.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_kpis }}', 'ROI y Rentabilidad')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="chart-content">
+                    {% if financial_efficiency_chart %}
+                    <img src="data:image/png;base64,{{ financial_efficiency_chart }}" 
+                        class="chart-image" 
+                        alt="Eficiencia financiera"
+                        loading="lazy">
+                    {% elif image_data_kpis %}
+                    <img src="data:image/png;base64,{{ image_data_kpis }}" 
+                        class="chart-image" 
+                        alt="KPIs financieros"
+                        loading="lazy">
+                    {% elif image_data_rentabilidad %}
+                    <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
+                        class="chart-image" 
+                        alt="Análisis de rentabilidad"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder">
+                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Gráfico de ROI y rentabilidad no disponible</p>
+                        <small class="text-muted">Los datos se generarán durante el análisis</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de variables financieras endógenas -->
+    {% if endogenous_charts %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-line-chart me-2"></i>
+                Variables Financieras Endógenas
+            </h5>
+        </div>
+        
+        {% for chart_name, chart_data in endogenous_charts.items %}
+            {% if 'IT' in chart_name or 'GT' in chart_name or 'TG' in chart_name or 'NR' in chart_name %}
+            <div class="col-md-6 mb-4">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h6 class="mb-3">
+                            {% if 'IT' in chart_name %}
+                                <i class="bx bx-dollar text-success me-2"></i>Evolución de Ingresos Totales
+                            {% elif 'GT' in chart_name %}
+                                <i class="bx bx-trending-up text-primary me-2"></i>Evolución de Ganancia Total
+                            {% elif 'TG' in chart_name %}
+                                <i class="bx bx-trending-down text-danger me-2"></i>Evolución de Total Gastos
+                            {% elif 'NR' in chart_name %}
+                                <i class="bx bx-percentage text-info me-2"></i>Evolución del Nivel de Rentabilidad
+                            {% endif %}
+                        </h6>
+                        <div class="chart-controls">
+                            <div class="chart-control-btn" onclick="downloadChart('{{ chart_data }}', '{{ chart_name }}.png')" title="Descargar">
+                                <i class="bx bx-download"></i>
+                            </div>
+                            <div class="chart-control-btn" onclick="openFullscreen('{{ chart_data }}', '{{ chart_name }}')" title="Pantalla completa">
+                                <i class="bx bx-fullscreen"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <img src="data:image/png;base64,{{ chart_data }}" 
+                            class="chart-image" 
+                            alt="{{ chart_name }}"
+                            loading="lazy">
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Recomendaciones financieras -->
+    {% if financial_recommendations %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-lightbulb me-2"></i>
+                        Recomendaciones Financieras
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for recommendation in financial_recommendations %}
+                        <div class="col-md-6 mb-3">
+                            <div class="alert alert-{% if recommendation.severity == 'high' %}danger{% elif recommendation.severity == 'medium' %}warning{% else %}info{% endif %} alert-dismissible">
+                                <h6 class="alert-heading">
+                                    {% if recommendation.severity == 'high' %}
+                                        <i class="bx bx-error-circle me-2"></i>
+                                    {% elif recommendation.severity == 'medium' %}
+                                        <i class="bx bx-error me-2"></i>
+                                    {% else %}
+                                        <i class="bx bx-info-circle me-2"></i>
+                                    {% endif %}
+                                    {{ recommendation.name|default:'Recomendación Financiera' }}
+                                </h6>
+                                <p class="mb-2">{{ recommendation.description|default:recommendation.recommendation }}</p>
+                                {% if recommendation.priority %}
+                                <small class="fw-bold">
+                                    Prioridad: 
+                                    <span class="badge bg-{% if recommendation.priority == 'high' %}danger{% elif recommendation.priority == 'medium' %}warning{% else %}secondary{% endif %}">
+                                        {% if recommendation.priority == 'high' %}Alta
+                                        {% elif recommendation.priority == 'medium' %}Media
+                                        {% else %}Baja
+                                        {% endif %}
+                                    </span>
+                                </small>
+                                {% endif %}
+                                {% if recommendation.variable %}
+                                <br><small class="text-muted">Variable: {{ recommendation.variable }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Estadísticas de demanda financiera si están disponibles -->
+    {% if demand_stats.historical and demand_stats.simulated %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-stats me-2"></i>
+                        Impacto Financiero de la Demanda
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Demanda Histórica</h6>
+                                <h4 class="mb-0 text-primary">{{ demand_stats.historical.mean|floatformat:1 }} L</h4>
+                                <small class="text-muted">Promedio diario</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Demanda Simulada</h6>
+                                <h4 class="mb-0 text-success">{{ demand_stats.simulated.mean|floatformat:1 }} L</h4>
+                                <small class="text-muted">Promedio proyectado</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Cambio Esperado</h6>
+                                <h4 class="mb-0 {% if demand_stats.comparison.mean_diff > 0 %}text-success{% elif demand_stats.comparison.mean_diff < 0 %}text-danger{% else %}text-info{% endif %}">
+                                    {% if demand_stats.comparison.mean_diff > 0 %}+{% endif %}{{ demand_stats.comparison.mean_diff|floatformat:1 }} L
+                                </h4>
+                                <small class="text-muted">
+                                    {% if demand_stats.comparison.mean_diff_pct %}
+                                        ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% if demand_stats.comparison.correlation %}
+                    <div class="mt-3 text-center">
+                        <p class="mb-0">
+                            <strong>Correlación con histórico:</strong> 
+                            <span class="{% if demand_stats.comparison.correlation > 0.8 %}text-success{% elif demand_stats.comparison.correlation > 0.6 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ demand_stats.comparison.correlation|floatformat:3 }}
+                            </span>
+                            {% if demand_stats.comparison.mape %}
+                            | <strong>Error promedio:</strong> {{ demand_stats.comparison.mape|floatformat:2 }}%
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Métricas de validación financiera si están disponibles -->
+    {% if validation_summary %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-shield-quarter me-2"></i>
+                        Validación del Modelo Financiero
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if validation_summary.success_rate %}
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Tasa de Éxito</h6>
+                                <h4 class="mb-0 {% if validation_summary.success_rate >= 80 %}text-success{% elif validation_summary.success_rate >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ validation_summary.success_rate|floatformat:1 }}%
+                                </h4>
+                                <small class="text-muted">Validación general</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if validation_summary.avg_mape %}
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">MAPE</h6>
+                                <h4 class="mb-0 {% if validation_summary.avg_mape < 10 %}text-success{% elif validation_summary.avg_mape < 20 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ validation_summary.avg_mape|floatformat:2 }}%
+                                </h4>
+                                <small class="text-muted">Error promedio</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if validation_summary.precise_count %}
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Predicciones Precisas</h6>
+                                <h4 class="mb-0 text-success">{{ validation_summary.precise_count }}</h4>
+                                <small class="text-muted">Error &lt; 10%</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if validation_summary.inaccurate_count %}
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Predicciones Inexactas</h6>
+                                <h4 class="mb-0 text-danger">{{ validation_summary.inaccurate_count }}</h4>
+                                <small class="text-muted">Error &gt; 20%</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Análisis comparativo con simulaciones anteriores si existe -->
+    {% if comparison_chart %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-git-compare me-2"></i>
+                        Comparación con Datos Históricos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <img src="data:image/png;base64,{{ comparison_chart }}" 
+                            class="chart-image" 
+                            alt="Comparación de demanda histórica vs simulada"
+                            loading="lazy">
+                    </div>
+                    <div class="mt-3">
+                        <p class="text-muted mb-0">
+                            Este gráfico muestra la comparación entre la demanda histórica real y la demanda simulada por el modelo, 
+                            permitiendo evaluar la precisión de las proyecciones financieras.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// ==========================================
+// FUNCIONES ESPECÍFICAS PARA ANÁLISIS FINANCIERO
+// ==========================================
+
+let financialChart = null;
+let profitabilityChart = null;
+let costsChart = null;
+
+function initializeFinancialTab() {
+    try {
+        initializeFinancialCharts();
+        calculateFinancialMetrics();
+        setupFinancialFilters();
+        initializeFinancialComparisons();
+        
+        console.log('Financial tab initialized successfully');
+    } catch (error) {
+        console.error('Error initializing financial tab:', error);
+    }
+}
+
+function initializeFinancialCharts() {
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js no está disponible para gráficos financieros');
+        return;
+    }
+    
+    initializeRevenueChart();
+    initializeProfitabilityChart();
+    initializeCostsBreakdownChart();
+    initializeFinancialTrendsChart();
+}
+
+function initializeRevenueChart() {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    
+    if (financialChart) {
+        financialChart.destroy();
+    }
+    
+    // Obtener datos de ingresos por día
+    const dailyData = extractDailyFinancialData();
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: dailyData.labels,
+            datasets: [{
+                label: 'Ingresos Diarios (Bs)',
+                data: dailyData.revenues,
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Gastos Diarios (Bs)',
+                data: dailyData.expenses,
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Evolución de Ingresos y Gastos'
+                },
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Bolivianos (Bs)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Días de Simulación'
+                    }
+                }
+            }
+        }
+    };
+    
+    financialChart = new Chart(ctx, config);
+}
+
+function initializeProfitabilityChart() {
+    const ctx = document.getElementById('profitabilityChart');
+    if (!ctx) return;
+    
+    if (profitabilityChart) {
+        profitabilityChart.destroy();
+    }
+    
+    const dailyData = extractDailyFinancialData();
+    const profits = dailyData.revenues.map((revenue, index) => 
+        revenue - (dailyData.expenses[index] || 0)
+    );
+    
+    const config = {
+        type: 'bar',
+        data: {
+            labels: dailyData.labels,
+            datasets: [{
+                label: 'Ganancia Diaria (Bs)',
+                data: profits,
+                backgroundColor: profits.map(profit => 
+                    profit >= 0 ? 'rgba(40, 167, 69, 0.8)' : 'rgba(220, 53, 69, 0.8)'
+                ),
+                borderColor: profits.map(profit => 
+                    profit >= 0 ? 'rgba(40, 167, 69, 1)' : 'rgba(220, 53, 69, 1)'
+                ),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Rentabilidad Diaria'
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Ganancia (Bs)'
+                    }
+                }
+            }
+        }
+    };
+    
+    profitabilityChart = new Chart(ctx, config);
+}
+
+function initializeCostsBreakdownChart() {
+    const ctx = document.getElementById('costsBreakdownChart');
+    if (!ctx) return;
+    
+    if (costsChart) {
+        costsChart.destroy();
+    }
+    
+    const costsData = extractCostsBreakdown();
+    
+    const config = {
+        type: 'doughnut',
+        data: {
+            labels: costsData.labels,
+            datasets: [{
+                data: costsData.values,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribución de Costos'
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    };
+    
+    costsChart = new Chart(ctx, config);
+}
+
+function initializeFinancialTrendsChart() {
+    const ctx = document.getElementById('financialTrendsChart');
+    if (!ctx) return;
+    
+    const dailyData = extractDailyFinancialData();
+    
+    // Calcular promedios móviles
+    const movingAvgRevenue = calculateMovingAverage(dailyData.revenues, 3);
+    const movingAvgExpenses = calculateMovingAverage(dailyData.expenses, 3);
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: dailyData.labels,
+            datasets: [{
+                label: 'Ingresos (Promedio Móvil)',
+                data: movingAvgRevenue,
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.4
+            }, {
+                label: 'Gastos (Promedio Móvil)',
+                data: movingAvgExpenses,
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Tendencias Financieras (Promedio Móvil)'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Bolivianos (Bs)'
+                    }
+                }
+            }
+        }
+    };
+    
+    new Chart(ctx, config);
+}
+
+function extractDailyFinancialData() {
+    const dailyItems = document.querySelectorAll('.daily-result-item');
+    const labels = [];
+    const revenues = [];
+    const expenses = [];
+    
+    dailyItems.forEach((item, index) => {
+        const day = index + 1;
+        labels.push(`Día ${day}`);
+        
+        const revenue = parseFloat(item.querySelector('[data-revenue]')?.dataset.revenue || 0);
+        const expense = parseFloat(item.querySelector('[data-expenses]')?.dataset.expenses || 0);
+        
+        revenues.push(revenue);
+        expenses.push(expense);
+    });
+    
+    return { labels, revenues, expenses };
+}
+
+function extractCostsBreakdown() {
+    // Extraer breakdown de costos desde las variables endógenas
+    const labels = ['Costos Fijos', 'Costos Variables', 'Mano de Obra', 'Materiales', 'Otros'];
+    const values = [
+        parseFloat(document.querySelector('[data-variable="CFD"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        parseFloat(document.querySelector('[data-variable="CVU"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        parseFloat(document.querySelector('[data-variable="NEPP"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 0) * 100, // Estimación
+        500, // Estimación de materiales
+        200  // Otros costos estimados
+    ];
+    
+    return { labels, values };
+}
+
+function calculateMovingAverage(data, window) {
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+        if (i < window - 1) {
+            result.push(data[i]);
+        } else {
+            const sum = data.slice(i - window + 1, i + 1).reduce((a, b) => a + b, 0);
+            result.push(sum / window);
+        }
+    }
+    return result;
+}
+
+function calculateFinancialMetrics() {
+    const dailyData = extractDailyFinancialData();
+    
+    // Calcular métricas clave
+    const totalRevenue = dailyData.revenues.reduce((a, b) => a + b, 0);
+    const totalExpenses = dailyData.expenses.reduce((a, b) => a + b, 0);
+    const totalProfit = totalRevenue - totalExpenses;
+    const avgDailyRevenue = totalRevenue / dailyData.revenues.length;
+    const avgDailyExpenses = totalExpenses / dailyData.expenses.length;
+    const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    
+    // ROI estimado
+    const initialInvestment = parseFloat(document.querySelector('[data-initial-investment]')?.dataset.initialInvestment || 10000);
+    const roi = (totalProfit / initialInvestment) * 100;
+    
+    // Punto de equilibrio
+    const fixedCosts = parseFloat(document.querySelector('[data-variable="CFD"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 0);
+    const variableCostPerUnit = parseFloat(document.querySelector('[data-variable="CVU"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 0);
+    const pricePerUnit = parseFloat(document.querySelector('[data-variable="PVP"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 15);
+    const breakEvenPoint = fixedCosts / (pricePerUnit - variableCostPerUnit);
+    
+    // Actualizar métricas en el DOM
+    updateFinancialMetricsDisplay({
+        totalRevenue,
+        totalExpenses,
+        totalProfit,
+        avgDailyRevenue,
+        avgDailyExpenses,
+        profitMargin,
+        roi,
+        breakEvenPoint
+    });
+}
+
+function updateFinancialMetricsDisplay(metrics) {
+    // Actualizar tarjetas de métricas
+    const elements = {
+        totalRevenue: document.getElementById('totalRevenueValue'),
+        totalExpenses: document.getElementById('totalExpensesValue'),
+        totalProfit: document.getElementById('totalProfitValue'),
+        profitMargin: document.getElementById('profitMarginValue'),
+        roi: document.getElementById('roiValue'),
+        breakEven: document.getElementById('breakEvenValue')
+    };
+    
+    if (elements.totalRevenue) {
+        elements.totalRevenue.textContent = formatCurrency(metrics.totalRevenue);
+    }
+    if (elements.totalExpenses) {
+        elements.totalExpenses.textContent = formatCurrency(metrics.totalExpenses);
+    }
+    if (elements.totalProfit) {
+        elements.totalProfit.textContent = formatCurrency(metrics.totalProfit);
+        elements.totalProfit.className = metrics.totalProfit >= 0 ? 'text-success' : 'text-danger';
+    }
+    if (elements.profitMargin) {
+        elements.profitMargin.textContent = `${metrics.profitMargin.toFixed(1)}%`;
+        elements.profitMargin.className = metrics.profitMargin >= 0 ? 'text-success' : 'text-danger';
+    }
+    if (elements.roi) {
+        elements.roi.textContent = `${metrics.roi.toFixed(1)}%`;
+        elements.roi.className = metrics.roi >= 0 ? 'text-success' : 'text-danger';
+    }
+    if (elements.breakEven) {
+        elements.breakEven.textContent = `${Math.ceil(metrics.breakEvenPoint)} unidades`;
+    }
+    
+    // Actualizar barras de progreso
+    updateFinancialProgressBars(metrics);
+}
+
+function updateFinancialProgressBars(metrics) {
+    const profitabilityBar = document.getElementById('profitabilityProgress');
+    const efficiencyBar = document.getElementById('efficiencyProgress');
+    
+    if (profitabilityBar) {
+        const profitabilityPercent = Math.max(0, Math.min(100, metrics.profitMargin + 50)); // Normalizar a 0-100
+        profitabilityBar.style.width = `${profitabilityPercent}%`;
+        profitabilityBar.setAttribute('aria-valuenow', profitabilityPercent);
+    }
+    
+    if (efficiencyBar) {
+        const efficiency = metrics.totalRevenue > 0 ? 100 - (metrics.totalExpenses / metrics.totalRevenue * 100) : 0;
+        const efficiencyPercent = Math.max(0, Math.min(100, efficiency));
+        efficiencyBar.style.width = `${efficiencyPercent}%`;
+        efficiencyBar.setAttribute('aria-valuenow', efficiencyPercent);
+    }
+}
+
+function setupFinancialFilters() {
+    // Filtro por período
+    const periodFilter = document.getElementById('financialPeriodFilter');
+    if (periodFilter) {
+        periodFilter.addEventListener('change', function() {
+            const period = this.value;
+            filterFinancialDataByPeriod(period);
+        });
+    }
+    
+    // Filtro por tipo de métrica
+    const metricFilter = document.getElementById('financialMetricFilter');
+    if (metricFilter) {
+        metricFilter.addEventListener('change', function() {
+            const metric = this.value;
+            highlightFinancialMetric(metric);
+        });
+    }
+}
+
+function filterFinancialDataByPeriod(period) {
+    // Implementar filtrado por período (primera semana, segunda semana, etc.)
+    const allDays = document.querySelectorAll('.daily-result-item');
+    const totalDays = allDays.length;
+    
+    let startDay = 1, endDay = totalDays;
+    
+    switch(period) {
+        case 'week1':
+            startDay = 1; endDay = 7;
+            break;
+        case 'week2':
+            startDay = 8; endDay = 14;
+            break;
+        case 'week3':
+            startDay = 15; endDay = 21;
+            break;
+        case 'week4':
+            startDay = 22; endDay = 28;
+            break;
+        case 'month':
+            startDay = 1; endDay = 30;
+            break;
+    }
+    
+    // Recalcular métricas para el período seleccionado
+    const filteredData = extractFinancialDataForPeriod(startDay, endDay);
+    updateChartsWithFilteredData(filteredData);
+    
+    showNotification(`Mostrando datos del día ${startDay} al ${endDay}`, 'info');
+}
+
+function extractFinancialDataForPeriod(startDay, endDay) {
+    const labels = [];
+    const revenues = [];
+    const expenses = [];
+    
+    for (let day = startDay; day <= endDay; day++) {
+        const item = document.querySelector(`[data-day="${day}"]`);
+        if (item) {
+            labels.push(`Día ${day}`);
+            revenues.push(parseFloat(item.querySelector('[data-revenue]')?.dataset.revenue || 0));
+            expenses.push(parseFloat(item.querySelector('[data-expenses]')?.dataset.expenses || 0));
+        }
+    }
+    
+    return { labels, revenues, expenses };
+}
+
+function updateChartsWithFilteredData(data) {
+    if (financialChart) {
+        financialChart.data.labels = data.labels;
+        financialChart.data.datasets[0].data = data.revenues;
+        financialChart.data.datasets[1].data = data.expenses;
+        financialChart.update();
+    }
+    
+    if (profitabilityChart) {
+        const profits = data.revenues.map((revenue, index) => 
+            revenue - (data.expenses[index] || 0)
+        );
+        profitabilityChart.data.labels = data.labels;
+        profitabilityChart.data.datasets[0].data = profits;
+        profitabilityChart.update();
+    }
+}
+
+function highlightFinancialMetric(metric) {
+    // Resaltar métrica específica en los gráficos
+    document.querySelectorAll('.financial-metric-card').forEach(card => {
+        card.classList.remove('border-primary');
+    });
+    
+    const targetCard = document.querySelector(`[data-metric="${metric}"]`);
+    if (targetCard) {
+        targetCard.classList.add('border-primary');
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function initializeFinancialComparisons() {
+    // Comparación con objetivos
+    const revenueGoal = parseFloat(document.querySelector('[data-revenue-goal]')?.dataset.revenueGoal || 50000);
+    const profitGoal = parseFloat(document.querySelector('[data-profit-goal]')?.dataset.profitGoal || 15000);
+    
+    const actualRevenue = parseFloat(document.getElementById('totalRevenueValue')?.textContent.replace(/[^\d.-]/g, '') || 0);
+    const actualProfit = parseFloat(document.getElementById('totalProfitValue')?.textContent.replace(/[^\d.-]/g, '') || 0);
+    
+    updateGoalComparisons(revenueGoal, profitGoal, actualRevenue, actualProfit);
+}
+
+function updateGoalComparisons(revenueGoal, profitGoal, actualRevenue, actualProfit) {
+    const revenueAchievement = (actualRevenue / revenueGoal) * 100;
+    const profitAchievement = (actualProfit / profitGoal) * 100;
+    
+    // Actualizar barras de progreso hacia objetivos
+    const revenueGoalBar = document.getElementById('revenueGoalProgress');
+    const profitGoalBar = document.getElementById('profitGoalProgress');
+    
+    if (revenueGoalBar) {
+        revenueGoalBar.style.width = `${Math.min(100, revenueAchievement)}%`;
+        revenueGoalBar.textContent = `${revenueAchievement.toFixed(1)}%`;
+    }
+    
+    if (profitGoalBar) {
+        profitGoalBar.style.width = `${Math.min(100, profitAchievement)}%`;
+        profitGoalBar.textContent = `${profitAchievement.toFixed(1)}%`;
+    }
+}
+
+function exportFinancialReport() {
+    try {
+        const metrics = extractFinancialMetrics();
+        const csvContent = generateFinancialCSV(metrics);
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `reporte_financiero_${new Date().getTime()}.csv`;
+        link.click();
+        
+        showNotification('Reporte financiero exportado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exporting financial report:', error);
+        showNotification('Error al exportar reporte financiero', 'error');
+    }
+}
+
+function extractFinancialMetrics() {
+    return {
+        totalRevenue: parseFloat(document.getElementById('totalRevenueValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        totalExpenses: parseFloat(document.getElementById('totalExpensesValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        totalProfit: parseFloat(document.getElementById('totalProfitValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        profitMargin: parseFloat(document.getElementById('profitMarginValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        roi: parseFloat(document.getElementById('roiValue')?.textContent.replace(/[^\d.-]/g, '') || 0)
+    };
+}
+
+function generateFinancialCSV(metrics) {
+    let csv = 'Reporte Financiero - Simulación\n\n';
+    csv += 'Métrica,Valor\n';
+    csv += `Ingresos Totales,"${formatCurrency(metrics.totalRevenue)}"\n`;
+    csv += `Gastos Totales,"${formatCurrency(metrics.totalExpenses)}"\n`;
+    csv += `Ganancia Total,"${formatCurrency(metrics.totalProfit)}"\n`;
+    csv += `Margen de Ganancia,"${metrics.profitMargin.toFixed(2)}%"\n`;
+    csv += `ROI,"${metrics.roi.toFixed(2)}%"\n`;
+    csv += `Fecha de Generación,"${new Date().toLocaleDateString()}"\n`;
+    
+    return csv;
+}
+
+// Inicializar cuando se muestre el tab
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'financial') {
+        setTimeout(initializeFinancialTab, 100);
+    }
+});
+
+// Exportar funciones globales
+window.initializeFinancialTab = initializeFinancialTab;
+window.exportFinancialReport = exportFinancialReport;
+window.filterFinancialDataByPeriod = filterFinancialDataByPeriod;
+window.highlightFinancialMetric = highlightFinancialMetric;
+</script>

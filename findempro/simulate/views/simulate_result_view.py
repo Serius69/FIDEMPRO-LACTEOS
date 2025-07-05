@@ -3,19 +3,28 @@
 Refactored simulation results view.
 Focuses on daily comparisons and proper data visualization.
 """
+import base64
+from io import BytesIO
 import json
 import logging
 from typing import Dict, List, Any, Optional
-import scipy.stats
-from scipy import stats
+try:
+    from scipy import stats
+    import scipy.stats
+except ImportError:
+    raise ImportError("scipy es requerido para el análisis estadístico. Instalar con: pip install scipy")
 from simulate.services.statistical_service import StatisticalService
 from simulate.utils.chart_demand_utils import ChartDemand
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 from django.views.generic import View
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 from ..models import Simulation, ResultSimulation
 from ..utils.simulation_math_utils import SimulationMathEngine
@@ -507,6 +516,22 @@ class SimulateResultView(LoginRequiredMixin, View):
         try:
             # Basic validation
             validation_results = validation_service.validate_simulation(simulation_id)
+            all_variables_extracted = self._extract_variables_safe(results_simulation)
+
+            if hasattr(self.validation_service, 'validate_simulation_with_charts'):
+                validation_results = self.validation_service.validate_simulation_with_charts(
+                    simulation_id, results_simulation, all_variables_extracted
+                )
+            elif hasattr(self.validation_service, '_validate_model_variables'):
+                # Usar validación mejorada
+                validation_results = self.validation_service._validate_model_variables(
+                    simulation_instance, results_simulation, all_variables_extracted
+                )
+                # Intentar agregar gráficos
+                self._try_add_validation_charts(validation_results, all_variables_extracted)
+            else:
+                # Fallback a método original (si existe)
+                validation_results = getattr(self.validation_service, 'validate_simulation', lambda x: {})(simulation_id)
             
             # Model predictions validation - CORREGIR ESTE ERROR
             prediction_validation_results = {}
@@ -2745,13 +2770,8 @@ class SimulateResultView(LoginRequiredMixin, View):
         Generar gráficos específicos para la validación KS
         """
         try:
-            import matplotlib.pyplot as plt
-            import matplotlib
-            matplotlib.use('Agg')
-            import numpy as np
-            from scipy import stats
-            import base64
-            from io import BytesIO
+            
+            
             
             charts = {}
             
@@ -2792,11 +2812,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     def _create_distribution_comparison_chart(self, demand_ks_test):
         """Crear gráfico de comparación de distribuciones - CORREGIDO"""
         try:
-            import matplotlib.pyplot as plt
-            import numpy as np
-            from scipy import stats as scipy_stats  # IMPORTACIÓN LOCAL EXPLÍCITA
-            import base64
-            from io import BytesIO
+            
             
             distributions_tested = demand_ks_test.get('distributions_tested', {})
             if not distributions_tested:
@@ -2818,7 +2834,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             for i, (dist_name, dist_info) in enumerate(distributions_tested.items()):
                 if 'params' in dist_info and dist_info['passes_test']:
                     if dist_name == 'normal':
-                        y = scipy_stats.norm.pdf(x, loc=dist_info['params'][0], scale=dist_info['params'][1])  # CORREGIDO
+                        y = stats.norm.pdf(x, loc=dist_info['params'][0], scale=dist_info['params'][1])  # CORREGIDO
                         ax1.plot(x, y, color=colors[i % len(colors)], linewidth=2, 
                                 label=f"{dist_name.title()} (p={dist_info['p_value']:.3f})")
             
@@ -2852,7 +2868,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             best_info = distributions_tested[best_dist]
             
             if best_dist == 'normal' and 'params' in best_info:
-                theoretical_quantiles = scipy_stats.norm.ppf(  # CORREGIDO
+                theoretical_quantiles = stats.norm.ppf(  # CORREGIDO
                     np.linspace(0.01, 0.99, len(sample_data)), 
                     loc=best_info['params'][0], 
                     scale=best_info['params'][1]
@@ -2920,10 +2936,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     def _create_confidence_intervals_chart(self, confidence_intervals):
         """Crear gráfico de intervalos de confianza"""
         try:
-            import matplotlib.pyplot as plt
-            import numpy as np
-            import base64
-            from io import BytesIO
+            
             
             # Filtrar intervalos de demanda
             demand_intervals = {k: v for k, v in confidence_intervals.items() if 'demand' in k}
@@ -3027,10 +3040,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     def _create_temporal_stability_chart(self, distribution_analysis):
         """Crear gráfico de estabilidad temporal"""
         try:
-            import matplotlib.pyplot as plt
-            import numpy as np
-            import base64
-            from io import BytesIO
+            
             
             temporal_stability = distribution_analysis.get('temporal_stability', {})
             distribution_drift = distribution_analysis.get('distribution_drift', {})
@@ -3119,10 +3129,7 @@ class SimulateResultView(LoginRequiredMixin, View):
     def _create_reliability_dashboard(self, ks_validation):
         """Crear dashboard de confiabilidad"""
         try:
-            import matplotlib.pyplot as plt
-            import numpy as np
-            import base64
-            from io import BytesIO
+            
             
             summary = ks_validation.get('summary', {})
             reliability_report = ks_validation.get('reliability_report', {})
@@ -3277,6 +3284,56 @@ class SimulateResultView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error creating reliability dashboard: {str(e)}")
             return None
+        
+    def _extract_variables_safe(self, all_results):
+        """Método seguro para extraer variables sin afectar funcionalidad existente"""
+        try:
+            variables_extracted = []
+            
+            for idx, result in enumerate(all_results):
+                day_data = {'day': idx + 1}
+                
+                # Agregar datos básicos de forma segura
+                if hasattr(result, 'date'):
+                    day_data['date'] = str(result.date)
+                if hasattr(result, 'demand_mean'):
+                    day_data['demand_mean'] = float(result.demand_mean or 0)
+                
+                # Agregar variables adicionales si existen
+                if hasattr(result, 'variables') and result.variables:
+                    try:
+                        if isinstance(result.variables, dict):
+                            day_data.update(result.variables)
+                        elif isinstance(result.variables, str):
+                            import json
+                            day_data.update(json.loads(result.variables))
+                    except:
+                        pass  # Ignorar errores para no afectar funcionalidad
+                
+                variables_extracted.append(day_data)
+            
+            return variables_extracted
+        except:
+            return []  # Retorna lista vacía si falla
+
+    def _try_add_validation_charts(self, validation_results, all_variables_extracted):
+        """Intentar agregar gráficos sin afectar el flujo principal"""
+        try:
+            from simulate.utils.chart_utils import ChartGenerator
+            chart_generator = ChartGenerator()
+            
+            by_variable = validation_results.get('by_variable', {})
+            if by_variable and hasattr(chart_generator, '_generate_validation_charts_for_variables'):
+                charts = chart_generator._generate_validation_charts_for_variables(
+                    by_variable, validation_results, all_variables_extracted
+                )
+                if charts:
+                    validation_results['validation_charts'] = charts
+                    logger.info(f"Gráficos de validación agregados: {len(charts)}")
+        except Exception as e:
+            # No hacer nada si falla - mantener funcionalidad original
+            logger.debug(f"No se pudieron generar gráficos de validación: {e}")
+            pass
 
 
 

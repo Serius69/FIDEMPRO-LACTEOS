@@ -260,10 +260,11 @@ class StatisticalService:
             logger.error(f"Error calculating trend: {str(e)}")
             return 0
         
-    def analyze_demand_history(self, questionary_result_id: int, user) -> Dict[str, Any]:
+    def analyze_demand_history(self, questionary_result_id: int, user, 
+                         demand_data: Optional[List[float]] = None) -> Dict[str, Any]:
         """
-        Analyze historical demand data for distribution fitting.
-        This analysis is used to parameterize the simulation model.
+        🔧 MÉTODO CORREGIDO: Ahora acepta demand_data como parámetro opcional
+        para evitar doble parsing y asegurar consistencia en demand_std
         """
         try:
             # Check cache first
@@ -273,32 +274,49 @@ class StatisticalService:
                 logger.info("Returning cached demand analysis")
                 return cached_result
             
-            # Get demand history from questionnaire
-            demand_answer = self._get_demand_history_answer(questionary_result_id)
-            if not demand_answer:
-                raise ValueError("No se encontró historial de demanda en el cuestionario")
+            # 🔧 NUEVO: Usar demand_data si se proporciona, sino extraer
+            if demand_data is not None and len(demand_data) > 0:
+                logger.info(f"Using provided demand data: {len(demand_data)} values")
+                parsed_demand_data = demand_data
+                # Validar datos proporcionados
+                validation_result = self._validate_provided_demand_data(parsed_demand_data)
+            else:
+                # Fallback: extraer como antes
+                logger.info("No demand data provided, extracting from questionnaire...")
+                demand_answer = self._get_demand_history_answer(questionary_result_id)
+                if not demand_answer:
+                    raise ValueError("No se encontró historial de demanda en el cuestionario")
+                
+                # Parse demand data
+                parsed_demand_data = self.parser.parse_demand_history(demand_answer.answer)
+                if not parsed_demand_data:
+                    raise ValueError("No se pudieron extraer datos válidos del historial")
+                
+                validation_result = self.parser.validate_parsed_data(parsed_demand_data, 'demand')
             
-            # Parse demand data
-            logger.info("Parsing demand data...")
-            demand_data = self.parser.parse_demand_history(demand_answer.answer)
+            logger.info(f"Final demand data count: {len(parsed_demand_data)}")
             
-            if not demand_data:
-                raise ValueError("No se pudieron extraer datos válidos del historial")
-            
-            logger.info(f"Parsed {len(demand_data)} demand values")
-            
-            # Validate demand data
-            validation_result = self.parser.validate_parsed_data(demand_data, 'demand')
-            if not validation_result['is_valid']:
-                logger.warning(f"Demand data validation warnings: {validation_result['warnings']}")
+            # 🔧 VALIDACIÓN CRÍTICA: Asegurar que tenemos datos numéricos válidos
+            if not self._validate_demand_data_for_stats(parsed_demand_data):
+                raise ValueError("Los datos de demanda no son válidos para cálculos estadísticos")
             
             # Convert to numpy array for analysis
-            demand_array = np.array(demand_data)
+            demand_array = np.array(parsed_demand_data, dtype=float)
+            
+            # 🔧 LOG CRÍTICO: Verificar datos antes del análisis
+            logger.info(f"Demand array stats - Min: {np.min(demand_array)}, Max: {np.max(demand_array)}, Mean: {np.mean(demand_array)}")
             
             # Perform comprehensive statistical analysis
             analysis_results = self._perform_demand_analysis(
                 demand_array, user, validation_result
             )
+            
+            # 🔧 VERIFICACIÓN FINAL: Asegurar que demand_std está presente
+            if 'demand_std' not in analysis_results:
+                logger.error("demand_std missing from analysis results!")
+                analysis_results['demand_std'] = float(np.std(demand_array, ddof=1))
+            
+            logger.info(f"Final analysis - demand_mean: {analysis_results.get('demand_mean')}, demand_std: {analysis_results.get('demand_std')}")
             
             # Cache results
             cache.set(cache_key, analysis_results, self.cache_timeout)
@@ -310,6 +328,83 @@ class StatisticalService:
             import traceback
             logger.error(f"Full traceback: {traceback.format_exc()}")
             raise
+    
+    def _validate_demand_data_for_stats(self, demand_data: List[float]) -> bool:
+        """🔧 NUEVO: Validación crítica para asegurar que los datos son aptos para estadísticas"""
+        try:
+            if not demand_data or len(demand_data) < 2:
+                logger.error("Insufficient data for statistical calculations")
+                return False
+            
+            # Convertir a numpy
+            data_array = np.array(demand_data, dtype=float)
+            
+            # Verificar que no hay NaN o infinitos
+            if np.any(np.isnan(data_array)) or np.any(np.isinf(data_array)):
+                logger.error("Data contains NaN or infinite values")
+                return False
+            
+            # Verificar que hay variabilidad
+            if np.std(data_array) == 0:
+                logger.warning("Data has zero variance - all values are identical")
+                # Permitir, pero advertir
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error validating data for statistics: {e}")
+            return False
+    
+    
+    def _validate_provided_demand_data(self, demand_data: List[float]) -> Dict[str, Any]:
+        """🔧 NUEVO: Validar datos de demanda proporcionados externamente"""
+        try:
+            # Convertir a numpy para validación
+            data_array = np.array(demand_data, dtype=float)
+            
+            warnings = []
+            
+            # Validaciones básicas
+            if len(data_array) < 10:
+                warnings.append(f"Pocos datos: {len(data_array)} (recomendado: ≥30)")
+            
+            # Verificar valores negativos
+            negative_count = np.sum(data_array < 0)
+            if negative_count > 0:
+                warnings.append(f"Valores negativos encontrados: {negative_count}")
+            
+            # Verificar outliers extremos
+            q75, q25 = np.percentile(data_array, [75, 25])
+            iqr = q75 - q25
+            outlier_threshold = q75 + 3 * iqr
+            extreme_outliers = np.sum(data_array > outlier_threshold)
+            if extreme_outliers > 0:
+                warnings.append(f"Outliers extremos: {extreme_outliers}")
+            
+            # Calcular estadísticas básicas
+            stats = {
+                'count': len(data_array),
+                'mean': float(np.mean(data_array)),
+                'std': float(np.std(data_array, ddof=1)),
+                'cv': float(np.std(data_array, ddof=1) / np.mean(data_array)) if np.mean(data_array) > 0 else 0,
+                'min': float(np.min(data_array)),
+                'max': float(np.max(data_array))
+            }
+            
+            return {
+                'is_valid': len(warnings) == 0,
+                'warnings': warnings,
+                'stats': stats
+            }
+            
+        except Exception as e:
+            logger.error(f"Error validating provided demand data: {e}")
+            return {
+                'is_valid': False,
+                'warnings': [f"Error en validación: {str(e)}"],
+                'stats': {}
+            }
+    
     
     def _get_demand_history_answer(self, questionary_result_id: int) -> Optional[Answer]:
         """Get demand history answer from questionnaire"""
@@ -363,23 +458,51 @@ class StatisticalService:
         }
     
     def _calculate_basic_statistics(self, data: np.ndarray) -> Dict[str, float]:
-        """Calculate comprehensive basic statistics"""
-        return {
-            'mean': float(np.mean(data)),
-            'median': float(np.median(data)),
-            'std': float(np.std(data, ddof=1)),
-            'variance': float(np.var(data, ddof=1)),
-            'min': float(np.min(data)),
-            'max': float(np.max(data)),
-            'range': float(np.max(data) - np.min(data)),
-            'cv': float(np.std(data, ddof=1) / np.mean(data)) if np.mean(data) > 0 else 0,
-            'count': len(data),
-            'q1': float(np.percentile(data, 25)),
-            'q3': float(np.percentile(data, 75)),
-            'iqr': float(np.percentile(data, 75) - np.percentile(data, 25)),
-            'skewness': float(stats.skew(data)),
-            'kurtosis': float(stats.kurtosis(data)),
-        }
+        """🔧 MEJORADO: Calculate comprehensive basic statistics with detailed logging"""
+        try:
+            logger.debug(f"Calculating basic statistics for {len(data)} data points")
+            
+            # Cálculos estadísticos con logging
+            mean_val = float(np.mean(data))
+            std_val = float(np.std(data, ddof=1))  # 🔧 Usar ddof=1 para muestra
+            
+            logger.debug(f"Calculated - Mean: {mean_val}, Std: {std_val}")
+            
+            stats_result = {
+                'mean': mean_val,
+                'median': float(np.median(data)),
+                'std': std_val,  # 🔧 CRÍTICO: Asegurar que se incluye
+                'variance': float(np.var(data, ddof=1)),
+                'min': float(np.min(data)),
+                'max': float(np.max(data)),
+                'range': float(np.max(data) - np.min(data)),
+                'cv': float(std_val / mean_val) if mean_val > 0 else 0,
+                'count': len(data),
+                'q1': float(np.percentile(data, 25)),
+                'q3': float(np.percentile(data, 75)),
+                'iqr': float(np.percentile(data, 75) - np.percentile(data, 25)),
+                'skewness': float(stats.skew(data)),
+                'kurtosis': float(stats.kurtosis(data)),
+            }
+            
+            # 🔧 VERIFICACIÓN FINAL
+            if 'std' not in stats_result or stats_result['std'] is None:
+                logger.error("STD calculation failed!")
+                stats_result['std'] = std_val
+            
+            logger.info(f"Basic statistics completed - std: {stats_result['std']}")
+            return stats_result
+            
+        except Exception as e:
+            logger.error(f"Error calculating basic statistics: {e}")
+            # 🔧 FALLBACK con cálculo mínimo
+            return {
+                'mean': float(np.mean(data)) if len(data) > 0 else 0,
+                'std': float(np.std(data, ddof=1)) if len(data) > 1 else 0,
+                'count': len(data),
+                'min': float(np.min(data)) if len(data) > 0 else 0,
+                'max': float(np.max(data)) if len(data) > 0 else 0,
+            }
     
     def _analyze_time_series_properties(self, data: np.ndarray) -> Dict[str, Any]:
         """Analyze time series properties of demand data"""

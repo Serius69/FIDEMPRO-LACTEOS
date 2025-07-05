@@ -1,0 +1,1222 @@
+<!-- Kolmogorov-Smirnov Validation Tab -->
+<div class="tab-pane fade" id="ks-validation" role="tabpanel">
+    <!-- Header del análisis KS -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert {% if ks_validation.summary.overall_validity %}alert-success{% elif ks_validation.summary.passed_tests > 0 %}alert-warning{% else %}alert-danger{% endif %}">
+                <h4 class="alert-heading mb-3">
+                    <i class="bx bx-test-tube me-2"></i>
+                    Validación Estadística Kolmogorov-Smirnov
+                </h4>
+                <p class="mb-2">
+                    Validación específica de que los resultados de simulación siguen las distribuciones esperadas 
+                    del modelo matemático. Esta prueba certifica la validez estadística de las proyecciones generadas.
+                </p>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <strong>Tests Realizados:</strong> 
+                        <span class="text-primary">{{ ks_validation.summary.total_tests|default:0 }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Tests Aprobados:</strong> 
+                        <span class="text-success">{{ ks_validation.summary.passed_tests|default:0 }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Fallas Críticas:</strong> 
+                        <span class="text-danger">{{ ks_validation.summary.critical_failures|default:0 }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Validez General:</strong> 
+                        {% if ks_validation.summary.overall_validity %}
+                            <span class="text-success">✓ Válido</span>
+                        {% else %}
+                            <span class="text-danger">✗ Requiere Revisión</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard de Confiabilidad Principal -->
+    {% if ks_validation.ks_charts.reliability_dashboard %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h5 class="chart-title mb-3">
+                        <i class="bx bx-dashboard me-2"></i>
+                        Dashboard de Confiabilidad Estadística
+                    </h5>
+                    <div class="chart-controls">
+                        <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.reliability_dashboard }}', 'dashboard-confiabilidad.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.reliability_dashboard }}', 'Dashboard de Confiabilidad')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.reliability_dashboard }}" 
+                        class="chart-image" 
+                        alt="Dashboard de Confiabilidad"
+                        loading="lazy">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Reporte de Confiabilidad -->
+    {% if ks_validation.reliability_report %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-certificate me-2"></i>
+                        Reporte de Confiabilidad Estadística
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="reliability-summary">
+                                <h6 class="text-primary">Certificación del Modelo</h6>
+                                <div class="certification-badge mb-3">
+                                    <span class="badge {% if ks_validation.reliability_report.certification_status == 'CERTIFIED' %}bg-success{% elif ks_validation.reliability_report.certification_status == 'CONDITIONAL' %}bg-warning{% else %}bg-danger{% endif %} p-3 fs-6">
+                                        <i class="bx {% if ks_validation.reliability_report.certification_status == 'CERTIFIED' %}bx-check-circle{% elif ks_validation.reliability_report.certification_status == 'CONDITIONAL' %}bx-error-circle{% else %}bx-x-circle{% endif %} me-2"></i>
+                                        {{ ks_validation.reliability_report.certification_status|default:"NO_CERTIFIED" }}
+                                    </span>
+                                </div>
+                                
+                                <div class="reliability-metrics">
+                                    <div class="metric-item mb-2">
+                                        <strong>Score de Confiabilidad:</strong> 
+                                        <span class="fs-5 {% if ks_validation.reliability_report.reliability_score >= 75 %}text-success{% elif ks_validation.reliability_report.reliability_score >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ ks_validation.reliability_report.reliability_score|default:0|floatformat:1 }}/100
+                                        </span>
+                                    </div>
+                                    <div class="metric-item mb-2">
+                                        <strong>Nivel de Confiabilidad:</strong> 
+                                        <span class="badge bg-info">{{ ks_validation.reliability_report.reliability_level|default:"Desconocido" }}</span>
+                                    </div>
+                                    <div class="metric-item mb-2">
+                                        <strong>Tasa de Aprobación:</strong> 
+                                        <span class="text-primary">{{ ks_validation.reliability_report.pass_rate|default:0|floatformat:1 }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-success">Recomendación del Sistema</h6>
+                            <div class="recommendation-box p-3 bg-light rounded">
+                                <p class="mb-0">{{ ks_validation.reliability_report.overall_recommendation|default:"Sin recomendaciones disponibles." }}</p>
+                            </div>
+                            
+                            {% if ks_validation.reliability_report.tests_summary %}
+                            <div class="tests-summary mt-3">
+                                <h6>Resumen de Validaciones</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="bx bx-check text-success me-2"></i>Tests Exitosos: {{ ks_validation.reliability_report.tests_summary.successful_validations|default:0 }}</li>
+                                    <li><i class="bx bx-list-ul text-info me-2"></i>Total Realizados: {{ ks_validation.reliability_report.tests_summary.total_conducted|default:0 }}</li>
+                                    {% if ks_validation.reliability_report.tests_summary.critical_issues > 0 %}
+                                    <li><i class="bx bx-error text-danger me-2"></i>Issues Críticos: {{ ks_validation.reliability_report.tests_summary.critical_issues }}</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pruebas KS Detalladas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-bar-chart me-2"></i>
+                Resultados de Pruebas Kolmogorov-Smirnov
+            </h5>
+        </div>
+        
+        <!-- Gráfico de Distribuciones -->
+        {% if ks_validation.ks_charts.demand_distribution %}
+        <div class="col-12 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-stats me-2"></i>
+                        Validación de Distribuciones vs Datos Observados
+                    </h6>
+                    <div class="chart-controls">
+                        <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.demand_distribution }}', 'validacion-distribuciones.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.demand_distribution }}', 'Validación de Distribuciones')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.demand_distribution }}" 
+                        class="chart-image" 
+                        alt="Validación de Distribuciones"
+                        loading="lazy">
+                </div>
+                <div class="chart-footer">
+                    <small class="text-muted">
+                        Las pruebas KS comparan los datos simulados contra distribuciones teóricas esperadas.
+                        P-values > 0.05 indican buen ajuste a la distribución.
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Intervalos de Confianza -->
+        {% if ks_validation.ks_charts.confidence_intervals %}
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-error-alt me-2"></i>
+                        Intervalos de Confianza para Proyecciones
+                    </h6>
+                    <div class="chart-controls">
+                        <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.confidence_intervals }}', 'intervalos-confianza.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.confidence_intervals }}', 'Intervalos de Confianza')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.confidence_intervals }}" 
+                        class="chart-image" 
+                        alt="Intervalos de Confianza"
+                        loading="lazy">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Estabilidad Temporal -->
+        {% if ks_validation.ks_charts.temporal_stability %}
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h6 class="chart-title mb-3">
+                        <i class="bx bx-time me-2"></i>
+                        Estabilidad Temporal de Distribuciones
+                    </h6>
+                    <div class="chart-controls">
+                        <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.temporal_stability }}', 'estabilidad-temporal.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </div>
+                        <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.temporal_stability }}', 'Estabilidad Temporal')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.temporal_stability }}" 
+                        class="chart-image" 
+                        alt="Estabilidad Temporal"
+                        loading="lazy">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tabla de Resultados KS por Variable -->
+    {% if ks_validation.ks_tests %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-table me-2"></i>
+                        Resultados Detallados por Variable
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Variable/Componente</th>
+                                    <th>Distribución Esperada</th>
+                                    <th>Estadístico KS</th>
+                                    <th>P-value</th>
+                                    <th>Tamaño Muestra</th>
+                                    <th>Estado</th>
+                                    <th>Interpretación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test_name, test_result in ks_validation.ks_tests.items %}
+                                {% if test_name == 'demand' %}
+                                <tr class="table-primary">
+                                    <td>
+                                        <strong>Demanda</strong>
+                                        <br><small class="text-muted">Componente principal</small>
+                                    </td>
+                                    <td>
+                                        {% if test_result.best_fit_distribution %}
+                                            <span class="badge bg-info">{{ test_result.best_fit_distribution|title }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Múltiples</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if test_result.distributions_tested %}
+                                            {% for dist_name, dist_info in test_result.distributions_tested.items %}
+                                                {% if dist_name == test_result.best_fit_distribution %}
+                                                    {{ dist_info.statistic|floatformat:4 }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="{% if test_result.best_p_value > 0.05 %}text-success{% elif test_result.best_p_value > 0.01 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                                            {{ test_result.best_p_value|floatformat:4 }}
+                                        </span>
+                                    </td>
+                                    <td>{{ test_result.sample_size|default:0 }}</td>
+                                    <td>
+                                        {% if test_result.overall_passes %}
+                                            <span class="badge bg-success">✓ Pasa</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">✗ Falla</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ test_result.interpretation|default:"Sin interpretación" }}</small>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ test_result.variable|default:test_name }}</strong>
+                                        <br><small class="text-muted">Variable endógena</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ test_result.expected_distribution|default:"Normal"|title }}</span>
+                                    </td>
+                                    <td>{{ test_result.statistic|default:0|floatformat:4 }}</td>
+                                    <td>
+                                        <span class="{% if test_result.p_value > 0.05 %}text-success{% elif test_result.p_value > 0.01 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                                            {{ test_result.p_value|default:0|floatformat:4 }}
+                                        </span>
+                                    </td>
+                                    <td>{{ test_result.sample_size|default:0 }}</td>
+                                    <td>
+                                        {% if test_result.passes_test %}
+                                            <span class="badge bg-success">✓ Pasa</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">✗ Falla</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ test_result.interpretation|default:"Test estadístico completado" }}</small>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Intervalos de Confianza Detallados -->
+    {% if ks_validation.confidence_intervals %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-error-alt me-2"></i>
+                        Intervalos de Confianza para Proyecciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Intervalos de Demanda -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Demanda Proyectada</h6>
+                            {% for interval_key, interval_data in ks_validation.confidence_intervals.items %}
+                                {% if 'demand' in interval_key %}
+                                <div class="confidence-interval-item mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong>{{ interval_data.confidence_level|floatformat:0 }}% de Confianza</strong>
+                                        <span class="badge bg-info">± {{ interval_data.margin_error|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="interval-visualization">
+                                        <div class="progress" style="height: 25px;">
+                                            <div class="progress-bar bg-primary" role="progressbar" 
+                                                style="width: 100%;" 
+                                                aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                                                {{ interval_data.mean|floatformat:1 }} L/día
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <small>{{ interval_data.lower_bound|floatformat:1 }}</small>
+                                            <small>{{ interval_data.upper_bound|floatformat:1 }}</small>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ interval_data.interpretation }}</small>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Intervalos de Variables Clave -->
+                        <div class="col-md-6">
+                            <h6 class="text-success">Variables Financieras (95% Confianza)</h6>
+                            {% for interval_key, interval_data in ks_validation.confidence_intervals.items %}
+                                {% if 'demand' not in interval_key %}
+                                <div class="variable-interval-item mb-2 p-2 bg-light rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>{{ interval_data.variable|default:interval_key }}</strong>
+                                        <span class="text-primary">{{ interval_data.mean|floatformat:2 }} ± {{ interval_data.margin_error|floatformat:2 }}</span>
+                                    </div>
+                                    <small class="text-muted">
+                                        Rango: [{{ interval_data.lower_bound|floatformat:2 }}, {{ interval_data.upper_bound|floatformat:2 }}]
+                                        (n={{ interval_data.sample_size }})
+                                    </small>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Análisis de Consistencia Temporal -->
+    {% if ks_validation.distribution_analysis %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-time-five me-2"></i>
+                        Análisis de Consistencia Temporal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Estabilidad Temporal -->
+                        {% if ks_validation.distribution_analysis.temporal_stability %}
+                        <div class="col-md-6">
+                            <h6 class="text-info">Estabilidad entre Períodos</h6>
+                            {% for comparison_key, comparison_data in ks_validation.distribution_analysis.temporal_stability.items %}
+                            <div class="comparison-item mb-2 p-2 border rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="fw-bold">{{ comparison_data.window1_period }} vs {{ comparison_data.window2_period }}</small>
+                                    <span class="badge {% if comparison_data.distributions_similar %}bg-success{% else %}bg-warning{% endif %}">
+                                        {% if comparison_data.distributions_similar %}Estables{% else %}Diferentes{% endif %}
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    KS: {{ comparison_data.ks_statistic|floatformat:4 }}, 
+                                    p-value: {{ comparison_data.p_value|floatformat:4 }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Drift de Distribución -->
+                        {% if ks_validation.distribution_analysis.distribution_drift %}
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Deriva de la Distribución</h6>
+                            {% with drift=ks_validation.distribution_analysis.distribution_drift %}
+                            <div class="drift-analysis p-3 bg-light rounded">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <div class="fw-bold text-primary">{{ drift.initial_mean|floatformat:1 }}</div>
+                                            <small>Media Inicial</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <div class="fw-bold text-success">{{ drift.final_mean|floatformat:1 }}</div>
+                                            <small>Media Final</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="text-center">
+                                    <div class="drift-indicator">
+                                        <span class="badge {% if drift.drift_direction == 'increasing' %}bg-success{% elif drift.drift_direction == 'decreasing' %}bg-danger{% else %}bg-secondary{% endif %} p-2">
+                                            {% if drift.drift_direction == 'increasing' %}
+                                                <i class="bx bx-trending-up me-1"></i>Tendencia Creciente
+                                            {% elif drift.drift_direction == 'decreasing' %}
+                                                <i class="bx bx-trending-down me-1"></i>Tendencia Decreciente
+                                            {% else %}
+                                                <i class="bx bx-minus me-1"></i>Estable
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <small class="d-block mt-2">
+                                        Cambio: {{ drift.relative_drift_pct|floatformat:2 }}% 
+                                        ({{ drift.absolute_drift|floatformat:2 }} unidades)
+                                    </small>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Métricas de Consistencia -->
+                    {% if ks_validation.distribution_analysis.consistency_metrics %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-secondary">Métricas de Consistencia General</h6>
+                            {% with metrics=ks_validation.distribution_analysis.consistency_metrics %}
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="metric-box text-center p-3 border rounded">
+                                        <div class="metric-value h4 {% if metrics.coefficient_of_variation < 0.1 %}text-success{% elif metrics.coefficient_of_variation < 0.3 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ metrics.coefficient_of_variation|floatformat:3 }}
+                                        </div>
+                                        <small>Coeficiente de Variación</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="metric-box text-center p-3 border rounded">
+                                        <div class="metric-value h4">
+                                            <span class="badge bg-{% if metrics.stability_assessment == 'high' %}success{% elif metrics.stability_assessment == 'medium' %}warning{% else %}danger{% endif %} p-2">
+                                                {{ metrics.stability_assessment|title }}
+                                            </span>
+                                        </div>
+                                        <small>Evaluación de Estabilidad</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="metric-box text-center p-3 border rounded">
+                                        <div class="metric-value h4">
+                                            <span class="badge bg-{% if metrics.data_quality == 'excellent' %}success{% elif metrics.data_quality == 'good' %}info{% elif metrics.data_quality == 'fair' %}warning{% else %}danger{% endif %} p-2">
+                                                {{ metrics.data_quality|title }}
+                                            </span>
+                                        </div>
+                                        <small>Calidad de Datos</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Alertas y Recomendaciones KS -->
+    {% if ks_validation.alerts %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-error-circle me-2"></i>
+                        Alertas y Recomendaciones Estadísticas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for alert in ks_validation.alerts %}
+                    <div class="alert alert-{% if alert.type == 'ERROR' %}danger{% elif alert.type == 'WARNING' %}warning{% else %}info{% endif %} mb-3">
+                        <div class="d-flex align-items-start">
+                            <i class="bx {% if alert.type == 'ERROR' %}bx-error-circle{% elif alert.type == 'WARNING' %}bx-error{% else %}bx-info-circle{% endif %} me-3 mt-1 fs-4"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">
+                                    {{ alert.type|title }} 
+                                    {% if alert.severity %}
+                                        <span class="badge bg-{% if alert.severity == 'high' %}danger{% elif alert.severity == 'medium' %}warning{% else %}secondary{% endif %} ms-2">
+                                            {{ alert.severity|title }}
+                                        </span>
+                                    {% endif %}
+                                </h6>
+                                <p class="mb-2">{{ alert.message }}</p>
+                                {% if alert.recommendation %}
+                                <div class="recommendation-text">
+                                    <strong>Recomendación:</strong> {{ alert.recommendation }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Análisis de Componentes -->
+    {% if ks_validation.reliability_report.component_analysis %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-component me-2"></i>
+                        Análisis de Confiabilidad por Componente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for component_key, component_data in ks_validation.reliability_report.component_analysis.items %}
+                        <div class="col-md-6 mb-3">
+                            <div class="component-analysis-card p-3 border rounded h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">{{ component_data.component|default:component_key|title }}</h6>
+                                    <span class="badge bg-{% if component_data.reliability == 'high' %}success{% elif component_data.reliability == 'medium' %}warning{% else %}danger{% endif %}">
+                                        {{ component_data.reliability|title }}
+                                    </span>
+                                </div>
+                                <div class="component-metrics">
+                                    {% if component_data.confidence %}
+                                    <div class="metric-row">
+                                        <small><strong>Confianza:</strong> {{ component_data.confidence }}</small>
+                                    </div>
+                                    {% endif %}
+                                    {% if component_data.pass_rate %}
+                                    <div class="metric-row">
+                                        <small><strong>Tasa de Aprobación:</strong> {{ component_data.pass_rate }}</small>
+                                    </div>
+                                    {% endif %}
+                                    {% if component_data.variables_tested %}
+                                    <div class="metric-row">
+                                        <small><strong>Variables Evaluadas:</strong> {{ component_data.variables_tested }}</small>
+                                    </div>
+                                    {% endif %}
+                                    <div class="metric-row">
+                                        <small><strong>Estado:</strong> 
+                                            <span class="text-{% if component_data.status == 'validated' %}success{% else %}warning{% endif %}">
+                                                {% if component_data.status == 'validated' %}Validado{% else %}Requiere Revisión{% endif %}
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Información del Certificado -->
+    {% if ks_validation.reliability_report.generated_at %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h6><i class="bx bx-time me-2"></i>Información del Certificado</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small><strong>Generado:</strong> {{ ks_validation.reliability_report.generated_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div class="col-md-4">
+                            <small><strong>Validez:</strong> {{ ks_validation.reliability_report.validity_period|default:"30 días" }}</small>
+                        </div>
+                        <div class="col-md-4">
+                            <small><strong>Nivel de Confianza:</strong> {{ ks_validation.summary.confidence_level|floatformat:0 }}%</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Mensaje si no hay validación KS -->
+    {% if not ks_validation.summary.total_tests %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bx bx-info-circle display-4 text-muted"></i>
+                <h5 class="mt-3">Validación Kolmogorov-Smirnov no Disponible</h5>
+                <p class="mb-3">
+                    La validación estadística KS requiere datos suficientes de la simulación para poder 
+                    ejecutar las pruebas de distribución. Esta funcionalidad estará disponible cuando 
+                    se complete la simulación con datos adecuados.
+                </p>
+                <div class="requirements-list">
+                    <h6>Requisitos para Validación KS:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bx bx-check-circle text-muted me-2"></i>Mínimo 30 datos de demanda simulada</li>
+                        <li><i class="bx bx-check-circle text-muted me-2"></i>Variables endógenas calculadas</li>
+                        <li><i class="bx bx-check-circle text-muted me-2"></i>Distribución de probabilidad definida</li>
+                        <li><i class="bx bx-check-circle text-muted me-2"></i>Simulación completada exitosamente</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+<script>
+// ==========================================
+// FUNCIONES ESPECÍFICAS PARA VALIDACIÓN KS
+// ==========================================
+
+function initializeKSValidationTab() {
+    """Inicializar funcionalidades específicas del tab KS"""
+    try {
+        // Inicializar tooltips para métricas KS
+        initializeKSTooltips();
+        
+        // Configurar interacciones de gráficos KS
+        setupKSChartInteractions();
+        
+        // Inicializar contadores animados para métricas KS
+        animateKSMetrics();
+        
+        // Configurar exportación específica KS
+        setupKSExportFunctions();
+        
+        console.log('KS Validation tab initialized successfully');
+    } catch (error) {
+        console.error('Error initializing KS validation tab:', error);
+    }
+}
+
+function initializeKSTooltips() {
+    """Agregar tooltips explicativos para métricas KS"""
+    const ksTooltips = {
+        '[data-metric="reliability-score"]': 'Score general de confiabilidad basado en todas las pruebas KS realizadas',
+        '[data-metric="ks-statistic"]': 'Estadístico de la prueba Kolmogorov-Smirnov. Valores menores indican mejor ajuste',
+        '[data-metric="p-value"]': 'P-value de la prueba KS. Valores > 0.05 indican que los datos siguen la distribución esperada',
+        '[data-metric="confidence-interval"]': 'Intervalo de confianza para las proyecciones. Rango donde se espera que estén los valores reales',
+        '[data-metric="temporal-stability"]': 'Medida de consistencia de la distribución a lo largo del tiempo',
+        '[data-metric="distribution-drift"]': 'Cambio en los parámetros de la distribución durante el período simulado'
+    };
+    
+    Object.entries(ksTooltips).forEach(([selector, tooltip]) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+            element.title = tooltip;
+            element.style.cursor = 'help';
+            
+            // Agregar tooltip Bootstrap si está disponible
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                new bootstrap.Tooltip(element, {
+                    placement: 'top',
+                    title: tooltip
+                });
+            }
+        });
+    });
+}
+
+function setupKSChartInteractions() {
+    """Configurar interacciones específicas para gráficos KS"""
+    
+    // Click en gráficos KS para expandir
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.ks-chart-container')) {
+            const chartImg = e.target.closest('.ks-chart-container').querySelector('img');
+            if (chartImg) {
+                const src = chartImg.src;
+                const alt = chartImg.alt;
+                const base64Data = src.split(',')[1];
+                if (base64Data) {
+                    openKSChartFullscreen(base64Data, alt);
+                }
+            }
+        }
+    });
+    
+    // Hover effects para métricas KS
+    const metricCards = document.querySelectorAll('.ks-metric-card, .reliability-metric, .confidence-interval-item');
+    metricCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.transition = 'transform 0.2s ease';
+            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            this.style.boxShadow = 'none';
+        });
+    });
+}
+
+function animateKSMetrics() {
+    """Animar métricas KS cuando se hace visible el tab"""
+    const ksTab = document.getElementById('ks-validation');
+    if (!ksTab) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateKSCounters();
+                animateKSProgressBars();
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    
+    observer.observe(ksTab);
+}
+
+function animateKSCounters() {
+    """Animar contadores de métricas KS"""
+    const counters = document.querySelectorAll('.ks-metric-value[data-target]');
+    
+    counters.forEach(counter => {
+        const target = parseFloat(counter.getAttribute('data-target'));
+        const isPercentage = counter.textContent.includes('%');
+        const isDecimal = target < 1 && target > 0;
+        
+        animateValue(counter, 0, target, 1500, (value) => {
+            if (isPercentage) {
+                return `${value.toFixed(1)}%`;
+            } else if (isDecimal) {
+                return value.toFixed(3);
+            } else {
+                return Math.round(value).toString();
+            }
+        });
+    });
+}
+
+function animateKSProgressBars() {
+    """Animar barras de progreso KS"""
+    const progressBars = document.querySelectorAll('.ks-progress-bar');
+    
+    progressBars.forEach(bar => {
+        const targetWidth = bar.getAttribute('data-width') || '0%';
+        const numericValue = parseFloat(targetWidth);
+        
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.transition = 'width 2s ease-out';
+            bar.style.width = targetWidth;
+            
+            // Agregar color basado en el valor
+            if (numericValue >= 80) {
+                bar.classList.add('bg-success');
+            } else if (numericValue >= 60) {
+                bar.classList.add('bg-warning');
+            } else {
+                bar.classList.add('bg-danger');
+            }
+        }, 100);
+    });
+}
+
+function animateValue(element, start, end, duration, formatter) {
+    """Función utilitaria para animar valores numéricos"""
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function (ease-out)
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = start + (end - start) * easeOut;
+        
+        element.textContent = formatter ? formatter(current) : current.toString();
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = formatter ? formatter(end) : end.toString();
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+function openKSChartFullscreen(chartData, title) {
+    """Abrir gráfico KS en pantalla completa"""
+    try {
+        const modal = document.getElementById('mainFullscreenModal');
+        const modalTitle = document.getElementById('mainFullscreenModalTitle');
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        
+        if (modal && modalTitle && modalImage) {
+            modalTitle.textContent = title || 'Gráfico de Validación KS';
+            modalImage.src = 'data:image/png;base64,' + chartData;
+            modalImage.setAttribute('data-chart-data', chartData);
+            modalImage.setAttribute('data-chart-type', 'ks-validation');
+            
+            // Agregar información adicional del gráfico KS
+            const additionalInfo = document.createElement('div');
+            additionalInfo.className = 'mt-3 text-muted';
+            additionalInfo.innerHTML = `
+                <small>
+                    <i class="bx bx-info-circle me-1"></i>
+                    Gráfico de validación estadística Kolmogorov-Smirnov para verificación de distribuciones
+                </small>
+            `;
+            
+            const modalBody = modal.querySelector('.modal-body');
+            const existingInfo = modalBody.querySelector('.chart-additional-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            additionalInfo.className += ' chart-additional-info';
+            modalBody.appendChild(additionalInfo);
+            
+            new bootstrap.Modal(modal).show();
+        }
+    } catch (error) {
+        console.error('Error opening KS chart fullscreen:', error);
+        showNotification('Error al abrir el gráfico', 'error');
+    }
+}
+
+function setupKSExportFunctions() {
+    """Configurar funciones de exportación específicas para KS"""
+    
+    // Exportar reporte de confiabilidad
+    window.exportKSReliabilityReport = function() {
+        try {
+            const reliabilityData = extractKSReliabilityData();
+            if (reliabilityData) {
+                generateKSReport(reliabilityData);
+                showNotification('Reporte de confiabilidad generado exitosamente', 'success');
+            } else {
+                showNotification('No hay datos de confiabilidad para exportar', 'warning');
+            }
+        } catch (error) {
+            console.error('Error exporting KS reliability report:', error);
+            showNotification('Error al exportar reporte de confiabilidad', 'error');
+        }
+    };
+    
+    // Exportar datos de intervalos de confianza
+    window.exportKSConfidenceIntervals = function() {
+        try {
+            const intervalData = extractKSConfidenceIntervalData();
+            if (intervalData) {
+                downloadKSConfidenceCSV(intervalData);
+                showNotification('Intervalos de confianza exportados exitosamente', 'success');
+            } else {
+                showNotification('No hay datos de intervalos para exportar', 'warning');
+            }
+        } catch (error) {
+            console.error('Error exporting confidence intervals:', error);
+            showNotification('Error al exportar intervalos de confianza', 'error');
+        }
+    };
+    
+    // Exportar resultados completos de validación KS
+    window.exportCompleteKSValidation = function() {
+        try {
+            const completeData = extractCompleteKSData();
+            if (completeData) {
+                generateCompleteKSReport(completeData);
+                showNotification('Validación KS completa exportada exitosamente', 'success');
+            } else {
+                showNotification('No hay datos de validación para exportar', 'warning');
+            }
+        } catch (error) {
+            console.error('Error exporting complete KS validation:', error);
+            showNotification('Error al exportar validación completa', 'error');
+        }
+    };
+}
+
+function extractKSReliabilityData() {
+    """Extraer datos de confiabilidad para exportación"""
+    try {
+        const reliabilityCard = document.querySelector('.reliability-summary');
+        if (!reliabilityCard) return null;
+        
+        const data = {
+            certification_status: document.querySelector('[data-certification-status]')?.textContent || 'NO_CERTIFIED',
+            reliability_score: document.querySelector('[data-reliability-score]')?.textContent || '0',
+            reliability_level: document.querySelector('[data-reliability-level]')?.textContent || 'Desconocido',
+            pass_rate: document.querySelector('[data-pass-rate]')?.textContent || '0%',
+            recommendation: document.querySelector('.recommendation-box p')?.textContent || '',
+            tests_summary: {
+                successful: document.querySelector('[data-successful-validations]')?.textContent || '0',
+                total: document.querySelector('[data-total-conducted]')?.textContent || '0',
+                critical_issues: document.querySelector('[data-critical-issues]')?.textContent || '0'
+            },
+            generated_at: new Date().toISOString()
+        };
+        
+        return data;
+    } catch (error) {
+        console.error('Error extracting reliability data:', error);
+        return null;
+    }
+}
+
+function extractKSConfidenceIntervalData() {
+    """Extraer datos de intervalos de confianza"""
+    try {
+        const intervals = [];
+        const intervalItems = document.querySelectorAll('.confidence-interval-item, .variable-interval-item');
+        
+        intervalItems.forEach(item => {
+            const confidence = item.querySelector('[data-confidence-level]')?.textContent || 
+                            item.textContent.match(/(\d+)% de Confianza/)?.[1] || '95';
+            const variable = item.querySelector('[data-variable]')?.textContent ||
+                           item.querySelector('strong')?.textContent || 'Variable';
+            const mean = item.querySelector('[data-mean]')?.textContent ||
+                        item.textContent.match(/([\d.]+) ± /)?.[1] || '0';
+            const margin = item.querySelector('[data-margin]')?.textContent ||
+                         item.textContent.match(/± ([\d.]+)/)?.[1] || '0';
+            const lower = item.querySelector('[data-lower]')?.textContent || '0';
+            const upper = item.querySelector('[data-upper]')?.textContent || '0';
+            
+            intervals.push({
+                variable: variable.trim(),
+                confidence_level: confidence + '%',
+                mean: parseFloat(mean),
+                margin_error: parseFloat(margin),
+                lower_bound: parseFloat(lower),
+                upper_bound: parseFloat(upper)
+            });
+        });
+        
+        return intervals;
+    } catch (error) {
+        console.error('Error extracting confidence interval data:', error);
+        return null;
+    }
+}
+
+function extractCompleteKSData() {
+    """Extraer todos los datos de validación KS"""
+    try {
+        const data = {
+            summary: {
+                total_tests: document.querySelector('[data-total-tests]')?.textContent || '0',
+                passed_tests: document.querySelector('[data-passed-tests]')?.textContent || '0',
+                critical_failures: document.querySelector('[data-critical-failures]')?.textContent || '0',
+                overall_validity: document.querySelector('[data-overall-validity]')?.textContent === 'true'
+            },
+            test_results: [],
+            reliability_report: extractKSReliabilityData(),
+            confidence_intervals: extractKSConfidenceIntervalData(),
+            temporal_analysis: extractTemporalAnalysisData(),
+            generated_at: new Date().toISOString()
+        };
+        
+        // Extraer resultados de tests individuales
+        const testRows = document.querySelectorAll('#ks-tests-table tbody tr');
+        testRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 6) {
+                data.test_results.push({
+                    variable: cells[0].textContent.trim(),
+                    expected_distribution: cells[1].textContent.trim(),
+                    ks_statistic: cells[2].textContent.trim(),
+                    p_value: cells[3].textContent.trim(),
+                    sample_size: cells[4].textContent.trim(),
+                    status: cells[5].textContent.trim()
+                });
+            }
+        });
+        
+        return data;
+    } catch (error) {
+        console.error('Error extracting complete KS data:', error);
+        return null;
+    }
+}
+
+function extractTemporalAnalysisData() {
+    """Extraer datos de análisis temporal"""
+    try {
+        const temporalData = {
+            stability_comparisons: [],
+            distribution_drift: null,
+            consistency_metrics: null
+        };
+        
+        // Extraer comparaciones de estabilidad
+        const stabilityItems = document.querySelectorAll('.comparison-item');
+        stabilityItems.forEach(item => {
+            const periods = item.querySelector('.fw-bold')?.textContent || '';
+            const status = item.querySelector('.badge')?.textContent || '';
+            const metrics = item.querySelector('.text-muted')?.textContent || '';
+            
+            temporalData.stability_comparisons.push({
+                periods: periods,
+                status: status,
+                metrics: metrics
+            });
+        });
+        
+        // Extraer drift de distribución
+        const driftAnalysis = document.querySelector('.drift-analysis');
+        if (driftAnalysis) {
+            temporalData.distribution_drift = {
+                initial_mean: driftAnalysis.querySelector('[data-initial-mean]')?.textContent || '0',
+                final_mean: driftAnalysis.querySelector('[data-final-mean]')?.textContent || '0',
+                drift_direction: driftAnalysis.querySelector('.drift-indicator .badge')?.textContent || 'stable',
+                relative_change: driftAnalysis.querySelector('[data-relative-change]')?.textContent || '0%'
+            };
+        }
+        
+        return temporalData;
+    } catch (error) {
+        console.error('Error extracting temporal analysis data:', error);
+        return {};
+    }
+}
+
+function generateKSReport(reliabilityData) {
+    """Generar reporte de confiabilidad KS"""
+    try {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Reporte de Confiabilidad - Validación Kolmogorov-Smirnov\n\n";
+        csvContent += "Métrica,Valor\n";
+        csvContent += `Estado de Certificación,"${reliabilityData.certification_status}"\n`;
+        csvContent += `Score de Confiabilidad,"${reliabilityData.reliability_score}"\n`;
+        csvContent += `Nivel de Confiabilidad,"${reliabilityData.reliability_level}"\n`;
+        csvContent += `Tasa de Aprobación,"${reliabilityData.pass_rate}"\n`;
+        csvContent += `Tests Exitosos,"${reliabilityData.tests_summary.successful}"\n`;
+        csvContent += `Total de Tests,"${reliabilityData.tests_summary.total}"\n`;
+        csvContent += `Issues Críticos,"${reliabilityData.tests_summary.critical_issues}"\n`;
+        csvContent += `Recomendación,"${reliabilityData.recommendation}"\n`;
+        csvContent += `Generado,"${reliabilityData.generated_at}"\n`;
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `reporte_confiabilidad_ks_${new Date().getTime()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error generating KS report:', error);
+        throw error;
+    }
+}
+
+function downloadKSConfidenceCSV(intervalData) {
+    """Descargar CSV de intervalos de confianza"""
+    try {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Variable,Nivel de Confianza,Media,Margen de Error,Límite Inferior,Límite Superior\n";
+        
+        intervalData.forEach(interval => {
+            csvContent += `"${interval.variable}","${interval.confidence_level}",${interval.mean},${interval.margin_error},${interval.lower_bound},${interval.upper_bound}\n`;
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `intervalos_confianza_ks_${new Date().getTime()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error downloading confidence intervals CSV:', error);
+        throw error;
+    }
+}
+
+function generateCompleteKSReport(completeData) {
+    """Generar reporte completo de validación KS"""
+    try {
+        // Generar PDF usando jsPDF
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        
+        // Título
+        pdf.setFontSize(20);
+        pdf.text('Reporte Completo de Validación Kolmogorov-Smirnov', 20, 30);
+        
+        // Información general
+        pdf.setFontSize(14);
+        pdf.text('Resumen General:', 20, 50);
+        pdf.setFontSize(12);
+        pdf.text(`Tests Realizados: ${completeData.summary.total_tests}`, 30, 65);
+        pdf.text(`Tests Aprobados: ${completeData.summary.passed_tests}`, 30, 75);
+        pdf.text(`Fallas Críticas: ${completeData.summary.critical_failures}`, 30, 85);
+        pdf.text(`Validez General: ${completeData.summary.overall_validity ? 'Válido' : 'Requiere Revisión'}`, 30, 95);
+        
+        // Resultados por variable
+        if (completeData.test_results.length > 0) {
+            pdf.setFontSize(14);
+            pdf.text('Resultados por Variable:', 20, 115);
+            
+            let yPos = 130;
+            completeData.test_results.forEach((result, index) => {
+                if (yPos > 250) {
+                    pdf.addPage();
+                    yPos = 30;
+                }
+                
+                pdf.setFontSize(10);
+                pdf.text(`${result.variable}: p-value=${result.p_value}, Status=${result.status}`, 30, yPos);
+                yPos += 10;
+            });
+        }
+        
+        // Recomendaciones
+        if (completeData.reliability_report?.recommendation) {
+            pdf.addPage();
+            pdf.setFontSize(14);
+            pdf.text('Recomendaciones:', 20, 30);
+            pdf.setFontSize(12);
+            
+            const recommendation = completeData.reliability_report.recommendation;
+            const lines = pdf.splitTextToSize(recommendation, 170);
+            pdf.text(lines, 20, 45);
+        }
+        
+        // Guardar PDF
+        pdf.save(`validacion_ks_completa_${new Date().getTime()}.pdf`);
+        
+    } catch (error) {
+        console.error('Error generating complete KS report:', error);
+        throw error;
+    }
+}
+
+// Evento para cuando se active el tab KS
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'ks-validation') {
+        setTimeout(initializeKSValidationTab, 100);
+    }
+});
+
+// Exportar funciones globales
+window.initializeKSValidationTab = initializeKSValidationTab;
+window.openKSChartFullscreen = openKSChartFullscreen;
+window.extractKSReliabilityData = extractKSReliabilityData;
+window.generateKSReport = generateKSReport;
+window.exportKSReliabilityReport = exportKSReliabilityReport;
+window.exportKSConfidenceIntervals = exportKSConfidenceIntervals;
+window.exportCompleteKSValidation = exportCompleteKSValidation;
+</script>
