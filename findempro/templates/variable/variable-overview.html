@@ -979,7 +979,7 @@
                     <p class="text-muted">Ecuaciones que dependen de esta variable</p>
                     {% if equations|length > 0 %}
                       <div class="progress mb-2">
-                        <div class="progress-bar bg-success" style="width: {{ equations|length|add:0|mul:10 }}%"></div>
+                        <div class="progress-bar bg-success" style="width: {{ equations|length|add:0 }}%"></div>
                       </div>
                       <small class="text-muted">Nivel de dependencia: 
                         {% if equations|length > 5 %}Alto
@@ -999,7 +999,7 @@
                     <h4>{{ variables_related.paginator.count }}</h4>
                     <p class="text-muted">Variables en el mismo contexto</p>
                     <div class="progress mb-2">
-                      <div class="progress-bar bg-info" style="width: {{ variables_related.paginator.count|add:0|mul:5 }}%"></div>
+                      <div class="progress-bar bg-info" style="width: {{ variables_related.paginator.count }}%"></div>
                     </div>
                     <small class="text-muted">Conectividad del sistema</small>
                   </div>

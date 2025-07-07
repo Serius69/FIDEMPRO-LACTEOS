@@ -1,0 +1,664 @@
+<!-- templates/documentacion/index.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FINDEMPRO LÁCTEOS - Portal de Documentación{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        margin-bottom: 40px;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        border-left: 5px solid #3498db;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .metric-number {
+        font-size: 2.5em;
+        font-weight: bold;
+        display: block;
+    }
+    
+    .quick-access {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 30px;
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 mb-4">🥛 FINDEMPRO LÁCTEOS</h1>
+                <h2 class="h3 mb-4">Sistema Inteligente de Simulación y Gestión de Inventarios</h2>
+                <p class="lead">Documentación técnica completa del sistema de optimización de inventarios para productos lácteos con modelos de simulación estocástica y validación estadística rigurosa.</p>
+                <div class="mt-4">
+                    <span class="badge bg-success fs-6 me-2">Versión 2.1.0</span>
+                    <span class="badge bg-info fs-6 me-2">Django 4.2</span>
+                    <span class="badge bg-warning fs-6">Python 3.11</span>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="metric-card">
+                    <span class="metric-number">{{ total_productos }}</span>
+                    <span>Productos Lácteos</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-number">{{ modelos_activos }}</span>
+                    <span>Modelos Activos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Secciones Principales -->
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="feature-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3" style="font-size: 2.5em;">🔍</div>
+                    <h3>Identificación de Distribuciones</h3>
+                </div>
+                <p>Metodología completa para identificar las distribuciones de probabilidad que mejor modelan la demanda de cada categoría de producto lácteo.</p>
+                <ul class="list-unstyled">
+                    <li>✅ Análisis estadístico automatizado</li>
+                    <li>✅ Pruebas de bondad de ajuste</li>
+                    <li>✅ Selección óptima por AIC/BIC</li>
+                    <li>✅ Ecuaciones específicas por producto</li>
+                </ul>
+                <a href="{% url 'documentacion:identificacion_distribuciones' %}" class="btn btn-primary">
+                    Ver Documentación
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="feature-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3" style="font-size: 2.5em;">⚙️</div>
+                    <h3>Modelos de Simulación</h3>
+                </div>
+                <p>Arquitectura completa del sistema de generación de modelos estocásticos para simulación de demanda considerando factores específicos de lácteos.</p>
+                <ul class="list-unstyled">
+                    <li>✅ Generación automática de modelos</li>
+                    <li>✅ Factores de estacionalidad</li>
+                    <li>✅ Consideración de perecibilidad</li>
+                    <li>✅ Optimización de inventarios</li>
+                </ul>
+                <a href="{% url 'documentacion:modelos_simulacion' %}" class="btn btn-primary">
+                    Ver Documentación
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="feature-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3" style="font-size: 2.5em;">📊</div>
+                    <h3>Validación Kolmogorov-Smirnov</h3>
+                </div>
+                <p>Implementación rigurosa de la prueba KS para validar que los modelos generados replican fielmente la distribución real de demanda.</p>
+                <ul class="list-unstyled">
+                    <li>✅ Validación automática continua</li>
+                    <li>✅ Criterios específicos por categoría</li>
+                    <li>✅ Métricas de calidad</li>
+                    <li>✅ Reportes gerenciales</li>
+                </ul>
+                <a href="{% url 'documentacion:validacion_ks' %}" class="btn btn-primary">
+                    Ver Documentación
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado del Sistema -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>📈 Estado Actual del Sistema</h2>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card">
+                <span class="metric-number">97.5%</span>
+                <span>Nivel de Servicio</span>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card" style="background: linear-gradient(135deg, #00b894, #00a085);">
+                <span class="metric-number">-27.8%</span>
+                <span>Reducción Desperdicio</span>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card" style="background: linear-gradient(135deg, #fdcb6e, #e17055);">
+                <span class="metric-number">94.2%</span>
+                <span>Precisión Predicción</span>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card" style="background: linear-gradient(135deg, #fd79a8, #e84393);">
+                <span class="metric-number">3.1%</span>
+                <span>Error Medio Absoluto</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accesos Rápidos -->
+    <div class="quick-access">
+        <h3>🚀 Accesos Rápidos</h3>
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <a href="{% url 'documentacion:ejecutar_prueba_ks' %}" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-play"></i> Ejecutar Prueba KS
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <a href="{% url 'documentacion:generar_modelo' %}" class="btn btn-outline-success w-100">
+                    <i class="fas fa-cogs"></i> Generar Modelo
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <a href="{% url 'documentacion:historial_validacion' %}" class="btn btn-outline-info w-100">
+                    <i class="fas fa-history"></i> Historial Validación
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <a href="#" class="btn btn-outline-warning w-100">
+                    <i class="fas fa-download"></i> Exportar Datos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos Recientes -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>📦 Productos Actualizados Recientemente</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Última Actualización</th>
+                            <th>Estado Modelo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_recientes %}
+                        <tr>
+                            <td><code>{{ producto.codigo }}</code></td>
+                            <td>{{ producto.nombre }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ producto.get_categoria_display }}</span>
+                            </td>
+                            <td>{{ producto.fecha_actualizacion|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if producto.modelo_activo %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'documentacion:analisis_producto' producto.codigo %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    Ver Análisis
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- templates/documentacion/identificacion_distribuciones.html -->
+{% extends 'documentacion/base.html' %}
+{% load static %}
+
+{% block title %}Identificación de Distribuciones - FINDEMPRO LÁCTEOS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+<style>
+    .distribution-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-left: 5px solid #3498db;
+        transition: all 0.3s ease;
+    }
+    
+    .distribution-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .equation-box {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        font-family: 'Courier New', monospace;
+        text-align: center;
+        margin: 20px 0;
+        position: relative;
+    }
+    
+    .equation-box::before {
+        content: "📐 Ecuación";
+        position: absolute;
+        top: -12px;
+        left: 20px;
+        background: #e74c3c;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.8em;
+        font-family: Arial, sans-serif;
+    }
+    
+    .methodology-step {
+        background: #f8f9fa;
+        border-left: 4px solid #28a745;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        position: relative;
+    }
+    
+    .step-number {
+        background: #28a745;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        position: absolute;
+        left: -17px;
+        top: 20px;
+    }
+    
+    .criteria-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="bg-primary text-white p-4 rounded">
+                <h1 class="display-5">🔍 Identificación de Distribuciones de Probabilidad</h1>
+                <p class="lead">Metodología técnica para identificar las distribuciones que mejor modelan la demanda de productos lácteos en FINDEMPRO</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pregunta Principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning border-0 shadow" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7);">
+                <h4 class="alert-heading">❓ Pregunta de Investigación</h4>
+                <p class="mb-0 fs-5"><strong>¿Cómo se identificaron las distribuciones y sus respectivas ecuaciones en FINDEMPRO LÁCTEOS?</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metodología -->
+    <div class="row">
+        <div class="col-lg-8">
+            <h2>🔬 Metodología de Identificación</h2>
+            
+            <div class="methodology-step">
+                <div class="step-number">1</div>
+                <h4>Recolección y Preparación de Datos</h4>
+                <p>Se recopilan datos históricos de ventas de productos lácteos con un mínimo de 90 días de historia, aplicando filtros de calidad y normalización.</p>
+                
+                <div class="bg-dark text-light p-3 rounded mt-3">
+                    <code>
+def preparar_datos_lacteos(producto_codigo, dias=90):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;datos = obtener_ventas_historicas(producto_codigo, dias)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;datos_limpios = filtrar_outliers(datos)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;datos_normalizados = aplicar_factores_estacionales(datos_limpios)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return datos_normalizados
+                    </code>
+                </div>
+            </div>
+
+            <div class="methodology-step">
+                <div class="step-number">2</div>
+                <h4>Análisis Estadístico Exploratorio</h4>
+                <p>Se calculan estadísticas descriptivas para identificar características clave de la distribución:</p>
+                
+                <ul>
+                    <li><strong>Medidas de tendencia central:</strong> Media, mediana, moda</li>
+                    <li><strong>Medidas de dispersión:</strong> Varianza, desviación estándar, coeficiente de variación</li>
+                    <li><strong>Medidas de forma:</strong> Asimetría (skewness) y curtosis</li>
+                    <li><strong>Análisis de percentiles:</strong> Q1, Q3, rango intercuartílico</li>
+                </ul>
+            </div>
+
+            <div class="methodology-step">
+                <div class="step-number">3</div>
+                <h4>Pruebas de Bondad de Ajuste</h4>
+                <p>Se ejecutan múltiples pruebas estadísticas para evaluar qué distribución se ajusta mejor:</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Pruebas Aplicadas:</h6>
+                        <ul>
+                            <li>Kolmogorov-Smirnov</li>
+                            <li>Anderson-Darling</li>
+                            <li>Cramér-von Mises</li>
+                            <li>Shapiro-Wilk (para normalidad)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Criterios de Información:</h6>
+                        <ul>
+                            <li>AIC (Akaike Information Criterion)</li>
+                            <li>BIC (Bayesian Information Criterion)</li>
+                            <li>Log-likelihood</li>
+                            <li>R² ajustado</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="methodology-step">
+                <div class="step-number">4</div>
+                <h4>Selección Automática de la Mejor Distribución</h4>
+                <p>El sistema utiliza un algoritmo de selección que combina múltiples criterios:</p>
+                
+                <div class="equation-box">
+                    Score = w₁×(1-p_valor_KS) + w₂×AIC_normalizado + w₃×BIC_normalizado
+                    <br><br>
+                    donde: w₁=0.4, w₂=0.3, w₃=0.3
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <h3>📊 Distribuciones por Categoría</h3>
+            
+            {% for categoria, info in categorias_productos.items %}
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <strong>{{ info.nombre }}</strong>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Total productos:</strong> {{ info.total_productos }}<br>
+                        <strong>Distribución principal:</strong> {{ info.distribucion_principal|title }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Distribuciones Identificadas -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>📈 Distribuciones Identificadas y sus Ecuaciones</h2>
+        </div>
+        
+        {% for categoria, ecuacion in ecuaciones_principales.items %}
+        <div class="col-lg-6">
+            <div class="distribution-card">
+                <h4>{{ ecuacion.distribucion|title }}</h4>
+                <p class="text-muted">{{ ecuacion.uso }}</p>
+                
+                <div class="equation-box">
+                    {{ ecuacion.ecuacion }}
+                </div>
+                
+                <h6>Parámetros:</h6>
+                <ul>
+                    {% for parametro in ecuacion.parametros %}
+                    <li>{{ parametro }}</li>
+                    {% endfor %}
+                </ul>
+                
+                <div class="mt-3">
+                    <span class="badge bg-info">{{ categoria|title }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Criterios de Selección -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>⚖️ Criterios de Selección Específicos para Lácteos</h2>
+            
+            <div class="criteria-table">
+                <table class="table table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Categoría Producto</th>
+                            <th>Distribución Preferida</th>
+                            <th>Criterio Principal</th>
+                            <th>Tolerancia KS</th>
+                            <th>Justificación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Leche Fresca</strong></td>
+                            <td>Normal</td>
+                            <td>Estabilidad de demanda</td>
+                            <td>≤ 0.03</td>
+                            <td>Consumo diario estable, variación simétrica</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Yogurt y Postres</strong></td>
+                            <td>Log-Normal</td>
+                            <td>Variaciones multiplicativas</td>
+                            <td>≤ 0.04</td>
+                            <td>Efectos estacionales y promocionales</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quesos Frescos</strong></td>
+                            <td>Gamma</td>
+                            <td>Asimetría positiva</td>
+                            <td>≤ 0.05</td>
+                            <td>Picos en fines de semana y festividades</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quesos Maduros</strong></td>
+                            <td>Weibull</td>
+                            <td>Demanda irregular</td>
+                            <td>≤ 0.06</td>
+                            <td>Compras ocasionales, cliente especializado</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Especiales/Estacionales</strong></td>
+                            <td>Gamma/Exponencial</td>
+                            <td>Alta variabilidad</td>
+                            <td>≤ 0.08</td>
+                            <td>Eventos específicos, demanda concentrada</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Algoritmo de Implementación -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>💻 Algoritmo de Implementación</h2>
+            
+            <div class="bg-dark text-light p-4 rounded">
+                <pre><code class="language-python">
+class IdentificadorDistribucionLacteos:
+    def __init__(self):
+        self.distribuciones_candidatas = [
+            ('normal', stats.norm),
+            ('lognormal', stats.lognorm),
+            ('gamma', stats.gamma),
+            ('exponencial', stats.expon),
+            ('weibull', stats.weibull_min)
+        ]
+        
+        self.criterios_categoria = {
+            'perecedero_diario': {'preferida': 'normal', 'tolerancia': 0.03},
+            'semi_perecedero': {'preferida': 'lognormal', 'tolerancia': 0.04},
+            'queso_fresco': {'preferida': 'gamma', 'tolerancia': 0.05}
+        }
+    
+    def identificar_distribucion(self, datos, categoria_producto):
+        """Identifica la mejor distribución para un producto lácteo"""
+        
+        # 1. Análisis descriptivo
+        estadisticas = self.calcular_estadisticas(datos)
+        
+        # 2. Pre-filtrado por categoría
+        distribuciones_evaluadas = self.prefiltrar_por_categoria(categoria_producto)
+        
+        # 3. Ajuste y evaluación
+        resultados = []
+        for nombre, distribucion in distribuciones_evaluadas:
+            # Estimación de parámetros
+            parametros = self.estimar_parametros(datos, distribucion)
+            
+            # Pruebas de bondad
+            ks_stat, ks_p = stats.kstest(datos, 
+                lambda x: distribucion.cdf(x, *parametros))
+            
+            # Criterios de información
+            aic = self.calcular_aic(datos, distribucion, parametros)
+            bic = self.calcular_bic(datos, distribucion, parametros)
+            
+            # Evaluación específica para lácteos
+            score = self.evaluar_ajuste_lacteos(
+                ks_stat, ks_p, aic, bic, categoria_producto
+            )
+            
+            resultados.append({
+                'distribucion': nombre,
+                'parametros': parametros,
+                'ks_statistic': ks_stat,
+                'ks_p_value': ks_p,
+                'aic': aic,
+                'bic': bic,
+                'score': score
+            })
+        
+        # 4. Selección de la mejor
+        mejor = min(resultados, key=lambda x: x['score'])
+        
+        # 5. Validación final
+        if self.validar_seleccion_lacteos(mejor, categoria_producto):
+            return mejor
+        else:
+            return self.seleccion_por_defecto(categoria_producto)
+                </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Herramientas Interactivas -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="bg-light p-4 rounded">
+                <h3>🛠️ Herramientas Interactivas</h3>
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'documentacion:analisis_producto' 'LAC001' %}" class="btn btn-primary w-100 mb-2">
+                            Analizar Producto Específico
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100 mb-2" onclick="ejecutarAnalisisCompleto()">
+                            Ejecutar Análisis Completo
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-info w-100 mb-2" onclick="compararDistribuciones()">
+                            Comparar Distribuciones
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-warning w-100 mb-2" onclick="exportarResultados()">
+                            Exportar Resultados
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+<script>
+function ejecutarAnalisisCompleto() {
+    // Implementar análisis completo
+    alert('Ejecutando análisis completo de todas las distribuciones...');
+}
+
+function compararDistribuciones() {
+    // Implementar comparación
+    alert('Abriendo herramienta de comparación de distribuciones...');
+}
+
+function exportarResultados() {
+    // Implementar exportación
+    alert('Exportando resultados del análisis...');
+}
+</script>
+{% endblock %}

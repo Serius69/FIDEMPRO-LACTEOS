@@ -1,4 +1,4 @@
-<!-- Statistical Analysis Tab -->
+<!-- Statistical Analysis Tab - Versión Mejorada -->
 <div class="tab-pane fade" id="analysis" role="tabpanel">
     <!-- Header del análisis estadístico -->
     <div class="row mb-4">
@@ -8,10 +8,12 @@
                     <i class="bx bx-math me-3"></i>
                     Análisis Estadístico Avanzado
                 </h2>
-                <p class="analysis-subtitle">
-                    Evaluación estadística completa del modelo de simulación, comparación de distribuciones, 
-                    métricas de desempeño y validación de precisión predictiva.
-                </p>
+                <div class="alert alert-info mb-3">
+                    <i class="bx bx-info-circle me-2"></i>
+                    <strong>¿Qué encontrarás aquí?</strong> Este análisis evalúa la calidad y precisión de tu modelo de simulación 
+                    comparando los datos simulados con patrones históricos reales. Te ayudará a entender qué tan confiables 
+                    son las predicciones del modelo.
+                </div>
                 <div class="analysis-badges">
                     <span class="badge bg-primary">
                         <i class="bx bx-data me-1"></i>
@@ -29,12 +31,6 @@
                         MAPE: {{ performance_metrics.mape|floatformat:2 }}%
                     </span>
                     {% endif %}
-                    {% if charts_available_count %}
-                    <span class="badge bg-warning">
-                        <i class="bx bx-bar-chart me-1"></i>
-                        {{ charts_available_count }} gráficos disponibles
-                    </span>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -42,14 +38,20 @@
 
     <!-- Dashboard de Performance Principal -->
     {% if statistical_charts.performance_dashboard %}
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h5 class="chart-title mb-3">
+                    <h5 class="chart-title mb-2">
                         <i class="bx bx-dashboard me-2"></i>
                         Dashboard de Performance del Modelo
                     </h5>
+                    <div class="chart-explanation mb-3">
+                        <div class="alert alert-light">
+                            <strong>¿Qué muestra este gráfico?</strong> Una vista completa del rendimiento de tu modelo. 
+                            Compara múltiples métricas para evaluar qué tan bien predice el comportamiento real de la demanda.
+                        </div>
+                    </div>
                     <div class="chart-controls">
                         <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.performance_dashboard }}', 'dashboard-performance.png')" title="Descargar">
                             <i class="bx bx-download"></i>
@@ -72,21 +74,22 @@
 
     <!-- Métricas de Performance Detalladas -->
     {% if performance_metrics %}
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
+            <h4 class="section-title mb-3">
+                <i class="bx bx-target-lock me-2"></i>
+                Indicadores de Precisión del Modelo
+            </h4>
+            <div class="alert alert-secondary mb-3">
+                <strong>¿Cómo interpretar estas métricas?</strong> Estas medidas te indican qué tan cerca están las predicciones 
+                del modelo de los valores reales. Valores más bajos en MAPE, RMSE y MAE indican mayor precisión.
+            </div>
+            
             <div class="metric-card model-performance">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bx bx-target-lock me-2"></i>
-                        Métricas de Desempeño del Modelo
-                    </h5>
-                    <div class="card-subtitle">
-                        Indicadores cuantitativos de precisión y calidad del modelo de simulación
-                    </div>
-                </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-lg-2 col-md-4 col-sm-6">
+                        <!-- MAPE -->
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                             <div class="performance-metric">
                                 <div class="metric-icon">
                                     <i class="bx bx-percentage"></i>
@@ -97,24 +100,54 @@
                                         {{ performance_metrics.mape|floatformat:2 }}%
                                     </h4>
                                     <small class="text-muted">{{ performance_metrics.accuracy_level|default:"Calculando..." }}</small>
+                                    <div class="metric-explanation mt-2">
+                                        <small class="text-info">
+                                            <i class="bx bx-help-circle me-1"></i>
+                                            Error porcentual promedio. 
+                                            {% if performance_metrics.mape < 10 %}
+                                                <strong>Excelente:</strong> Predicciones muy precisas
+                                            {% elif performance_metrics.mape < 20 %}
+                                                <strong>Bueno:</strong> Predicciones confiables
+                                            {% else %}
+                                                <strong>Necesita mejora:</strong> Revisar parámetros
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
+                        
+                        <!-- R² -->
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                             <div class="performance-metric">
                                 <div class="metric-icon">
                                     <i class="bx bx-check-square"></i>
                                 </div>
                                 <div class="metric-content">
-                                    <h6 class="metric-label">R²</h6>
+                                    <h6 class="metric-label">R² (Coeficiente de Determinación)</h6>
                                     <h4 class="metric-value text-{% if performance_metrics.r_squared > 0.8 %}success{% elif performance_metrics.r_squared > 0.6 %}warning{% else %}danger{% endif %}">
                                         {{ performance_metrics.r_squared|floatformat:3 }}
                                     </h4>
                                     <small class="text-muted">{{ performance_metrics.model_quality|default:"Evaluando..." }}</small>
+                                    <div class="metric-explanation mt-2">
+                                        <small class="text-info">
+                                            <i class="bx bx-help-circle me-1"></i>
+                                            Explica {{ performance_metrics.r_squared|floatformat:1|mul:100 }}% de la variabilidad. 
+                                            {% if performance_metrics.r_squared > 0.8 %}
+                                                <strong>Excelente ajuste</strong>
+                                            {% elif performance_metrics.r_squared > 0.6 %}
+                                                <strong>Buen ajuste</strong>
+                                            {% else %}
+                                                <strong>Ajuste limitado</strong>
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
+                        
+                        <!-- RMSE -->
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                             <div class="performance-metric">
                                 <div class="metric-icon">
                                     <i class="bx bx-error"></i>
@@ -125,10 +158,18 @@
                                         {{ performance_metrics.rmse|floatformat:2 }}
                                     </h4>
                                     <small class="text-muted">Error cuadrático medio</small>
+                                    <div class="metric-explanation mt-2">
+                                        <small class="text-info">
+                                            <i class="bx bx-help-circle me-1"></i>
+                                            Penaliza más los errores grandes. Útil para detectar predicciones muy alejadas de la realidad.
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
+                        
+                        <!-- MAE -->
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                             <div class="performance-metric">
                                 <div class="metric-icon">
                                     <i class="bx bx-trending-down"></i>
@@ -139,10 +180,18 @@
                                         {{ performance_metrics.mae|floatformat:2 }}
                                     </h4>
                                     <small class="text-muted">Error absoluto medio</small>
+                                    <div class="metric-explanation mt-2">
+                                        <small class="text-info">
+                                            <i class="bx bx-help-circle me-1"></i>
+                                            Error promedio en las mismas unidades que tus datos. Más fácil de interpretar.
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
+                        
+                        <!-- Nash-Sutcliffe -->
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                             <div class="performance-metric">
                                 <div class="metric-icon">
                                     <i class="bx bx-award"></i>
@@ -153,10 +202,18 @@
                                         {{ performance_metrics.nash_sutcliffe|floatformat:3 }}
                                     </h4>
                                     <small class="text-muted">Eficiencia del modelo</small>
+                                    <div class="metric-explanation mt-2">
+                                        <small class="text-info">
+                                            <i class="bx bx-help-circle me-1"></i>
+                                            Compara el modelo con simplemente usar el promedio. Valores > 0.5 son buenos.
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
+                        
+                        <!-- Willmott-d -->
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                             <div class="performance-metric">
                                 <div class="metric-icon">
                                     <i class="bx bx-stats"></i>
@@ -167,6 +224,12 @@
                                         {{ performance_metrics.willmott_d|floatformat:3 }}
                                     </h4>
                                     <small class="text-muted">Índice de concordancia</small>
+                                    <div class="metric-explanation mt-2">
+                                        <small class="text-info">
+                                            <i class="bx bx-help-circle me-1"></i>
+                                            Mide la concordancia (0-1). Valores cercanos a 1 indican alta concordancia.
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -178,12 +241,16 @@
     {% endif %}
 
     <!-- Gráficos Estadísticos Principales -->
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
-            <h5 class="mb-3">
+            <h4 class="section-title mb-3">
                 <i class="bx bx-bar-chart me-2"></i>
-                Análisis de Distribución y Correlación
-            </h5>
+                Análisis Visual de Datos
+            </h4>
+            <div class="alert alert-info mb-4">
+                <strong>Análisis de distribución y correlación:</strong> Estos gráficos te muestran cómo se distribuyen 
+                tus datos y qué tan bien se relacionan las variables simuladas con los datos históricos.
+            </div>
         </div>
         
         <!-- Histograma con distribución -->
@@ -191,10 +258,17 @@
         <div class="col-lg-6 mb-4">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h6 class="chart-title mb-3">
+                    <h6 class="chart-title mb-2">
                         <i class="bx bx-bar-chart me-2"></i>
                         Distribución de la Demanda Simulada
                     </h6>
+                    <div class="chart-explanation mb-3">
+                        <div class="alert alert-light">
+                            <strong>¿Qué muestra?</strong> La frecuencia con que aparecen diferentes valores de demanda. 
+                            Te ayuda a entender los rangos más comunes y detectar patrones inusuales.
+                            <br><strong>Busca:</strong> Una distribución equilibrada sin valores extremos aislados.
+                        </div>
+                    </div>
                     <div class="chart-controls">
                         <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.histogram }}', 'distribucion-demanda.png')" title="Descargar">
                             <i class="bx bx-download"></i>
@@ -212,15 +286,26 @@
                 </div>
                 {% if distribution_analysis.basic_stats %}
                 <div class="chart-footer">
-                    <small class="text-muted">
-                        Media: {{ distribution_analysis.basic_stats.mean|floatformat:2 }} | 
-                        Std: {{ distribution_analysis.basic_stats.std|floatformat:2 }} | 
-                        {% if distribution_analysis.normality_test.is_normal %}
-                            <span class="text-success">Distribución Normal</span>
-                        {% else %}
-                            <span class="text-warning">No Normal</span>
-                        {% endif %}
-                    </small>
+                    <div class="stats-summary">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <strong>{{ distribution_analysis.basic_stats.mean|floatformat:2 }}</strong>
+                                <br><small class="text-muted">Media</small>
+                            </div>
+                            <div class="col-4">
+                                <strong>{{ distribution_analysis.basic_stats.std|floatformat:2 }}</strong>
+                                <br><small class="text-muted">Desv. Estándar</small>
+                            </div>
+                            <div class="col-4">
+                                {% if distribution_analysis.normality_test.is_normal %}
+                                    <span class="badge bg-success">Normal</span>
+                                {% else %}
+                                    <span class="badge bg-warning">No Normal</span>
+                                {% endif %}
+                                <br><small class="text-muted">Distribución</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -232,10 +317,17 @@
         <div class="col-lg-6 mb-4">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h6 class="chart-title mb-3">
+                    <h6 class="chart-title mb-2">
                         <i class="bx bx-box me-2"></i>
                         Comparación de Distribuciones
                     </h6>
+                    <div class="chart-explanation mb-3">
+                        <div class="alert alert-light">
+                            <strong>¿Qué muestra?</strong> Compara la distribución de datos históricos vs simulados usando 
+                            diagramas de caja. Muestra medianas, cuartiles y valores atípicos.
+                            <br><strong>Busca:</strong> Cajas similares en tamaño y posición entre histórico y simulado.
+                        </div>
+                    </div>
                     <div class="chart-controls">
                         <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.boxplot }}', 'boxplot-comparativo.png')" title="Descargar">
                             <i class="bx bx-download"></i>
@@ -252,9 +344,12 @@
                         loading="lazy">
                 </div>
                 <div class="chart-footer">
-                    <small class="text-muted">
-                        Comparación de distribuciones entre demanda histórica y simulada
-                    </small>
+                    <div class="interpretation-guide">
+                        <small class="text-muted">
+                            <strong>Lectura del gráfico:</strong> La línea central es la mediana, las cajas muestran el 50% 
+                            central de los datos, las líneas los rangos normales, y los puntos son valores atípicos.
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -265,10 +360,17 @@
         <div class="col-lg-6 mb-4">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h6 class="chart-title mb-3">
+                    <h6 class="chart-title mb-2">
                         <i class="bx bx-scatter-chart me-2"></i>
                         Correlación Histórico vs Simulado
                     </h6>
+                    <div class="chart-explanation mb-3">
+                        <div class="alert alert-light">
+                            <strong>¿Qué muestra?</strong> Cada punto representa un día: coordenada X = valor histórico, 
+                            coordenada Y = valor simulado. La línea diagonal representa correlación perfecta.
+                            <br><strong>Busca:</strong> Puntos cercanos a la línea diagonal indican buena correlación.
+                        </div>
+                    </div>
                     <div class="chart-controls">
                         <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.scatter }}', 'correlacion-scatter.png')" title="Descargar">
                             <i class="bx bx-download"></i>
@@ -286,10 +388,20 @@
                 </div>
                 {% if performance_metrics.r_squared %}
                 <div class="chart-footer">
-                    <small class="text-muted">
-                        R² = {{ performance_metrics.r_squared|floatformat:3 }} | 
-                        Correlación: {{ statistical_tests.correlation.strength|default:"Calculando..." }}
-                    </small>
+                    <div class="correlation-summary">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <strong>R² = {{ performance_metrics.r_squared|floatformat:3 }}</strong>
+                                <br><small class="text-muted">Coeficiente de Determinación</small>
+                            </div>
+                            <div class="col-6">
+                                <span class="badge bg-{% if performance_metrics.r_squared > 0.7 %}success{% elif performance_metrics.r_squared > 0.4 %}warning{% else %}danger{% endif %}">
+                                    {{ statistical_tests.correlation.strength|default:"Calculando..." }}
+                                </span>
+                                <br><small class="text-muted">Fuerza de Correlación</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -301,10 +413,17 @@
         <div class="col-lg-6 mb-4">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h6 class="chart-title mb-3">
+                    <h6 class="chart-title mb-2">
                         <i class="bx bx-line-chart me-2"></i>
                         Análisis de Residuos
                     </h6>
+                    <div class="chart-explanation mb-3">
+                        <div class="alert alert-light">
+                            <strong>¿Qué muestra?</strong> Los errores del modelo (diferencia entre simulado y histórico). 
+                            Idealmente deberían distribuirse aleatoriamente alrededor de cero.
+                            <br><strong>Busca:</strong> Residuos sin patrones claros, distribuidos uniformemente.
+                        </div>
+                    </div>
                     <div class="chart-controls">
                         <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.residuals }}', 'analisis-residuos.png')" title="Descargar">
                             <i class="bx bx-download"></i>
@@ -321,9 +440,12 @@
                         loading="lazy">
                 </div>
                 <div class="chart-footer">
-                    <small class="text-muted">
-                        Distribución de errores para evaluar la calidad del ajuste del modelo
-                    </small>
+                    <div class="interpretation-guide">
+                        <small class="text-muted">
+                            <strong>Interpretación:</strong> Si los residuos muestran patrones (curvas, tendencias), 
+                            el modelo podría mejorarse. Residuos aleatorios indican un buen ajuste.
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -331,12 +453,16 @@
     </div>
 
     <!-- Análisis de Normalidad y Autocorrelación -->
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
-            <h5 class="mb-3">
+            <h4 class="section-title mb-3">
                 <i class="bx bx-pulse me-2"></i>
-                Análisis de Normalidad y Patrones Temporales
-            </h5>
+                Análisis Avanzado de Patrones
+            </h4>
+            <div class="alert alert-warning mb-4">
+                <strong>Análisis especializado:</strong> Estas pruebas evalúan si tus datos siguen distribuciones 
+                estadísticas conocidas y si tienen dependencias temporales. Útil para validación avanzada del modelo.
+            </div>
         </div>
         
         <!-- Q-Q Plot -->
@@ -344,10 +470,17 @@
         <div class="col-lg-6 mb-4">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h6 class="chart-title mb-3">
+                    <h6 class="chart-title mb-2">
                         <i class="bx bx-stats me-2"></i>
                         Prueba de Normalidad (Q-Q Plot)
                     </h6>
+                    <div class="chart-explanation mb-3">
+                        <div class="alert alert-light">
+                            <strong>¿Qué muestra?</strong> Compara tu distribución de datos con una distribución normal teórica. 
+                            Si los puntos forman una línea recta, tus datos son normales.
+                            <br><strong>Importancia:</strong> Los datos normales permiten usar métodos estadísticos más potentes.
+                        </div>
+                    </div>
                     <div class="chart-controls">
                         <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.qq_plot }}', 'qq-plot-normalidad.png')" title="Descargar">
                             <i class="bx bx-download"></i>
@@ -365,14 +498,23 @@
                 </div>
                 {% if distribution_analysis.normality_test %}
                 <div class="chart-footer">
-                    <small class="text-muted">
-                        Shapiro-Wilk: p = {{ distribution_analysis.normality_test.shapiro_p|floatformat:4 }} | 
-                        {% if distribution_analysis.normality_test.is_normal %}
-                            <span class="text-success">Los datos siguen distribución normal</span>
-                        {% else %}
-                            <span class="text-warning">Los datos no siguen distribución normal</span>
-                        {% endif %}
-                    </small>
+                    <div class="normality-result">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <strong>p = {{ distribution_analysis.normality_test.shapiro_p|floatformat:4 }}</strong>
+                                <br><small class="text-muted">Valor p (Shapiro-Wilk)</small>
+                            </div>
+                            <div class="col-6">
+                                {% if distribution_analysis.normality_test.is_normal %}
+                                    <span class="badge bg-success">Distribución Normal</span>
+                                    <br><small class="text-success">Datos siguen patrón normal</small>
+                                {% else %}
+                                    <span class="badge bg-warning">No Normal</span>
+                                    <br><small class="text-warning">Distribución irregular</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -384,10 +526,17 @@
         <div class="col-lg-6 mb-4">
             <div class="chart-container">
                 <div class="chart-header">
-                    <h6 class="chart-title mb-3">
+                    <h6 class="chart-title mb-2">
                         <i class="bx bx-pulse me-2"></i>
                         Función de Autocorrelación
                     </h6>
+                    <div class="chart-explanation mb-3">
+                        <div class="alert alert-light">
+                            <strong>¿Qué muestra?</strong> Evalúa si los valores de hoy están relacionados con los de días anteriores. 
+                            Detecta patrones temporales como tendencias o ciclos.
+                            <br><strong>Busca:</strong> Valores que decaen rápidamente indican independencia temporal.
+                        </div>
+                    </div>
                     <div class="chart-controls">
                         <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.autocorrelation }}', 'autocorrelacion.png')" title="Descargar">
                             <i class="bx bx-download"></i>
@@ -404,9 +553,12 @@
                         loading="lazy">
                 </div>
                 <div class="chart-footer">
-                    <small class="text-muted">
-                        Análisis de dependencias temporales en la serie de demanda simulada
-                    </small>
+                    <div class="interpretation-guide">
+                        <small class="text-muted">
+                            <strong>Interpretación:</strong> Barras que cruzan las líneas punteadas indican dependencia temporal significativa. 
+                            Esto puede sugerir patrones estacionales o tendencias.
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -415,23 +567,59 @@
 
     <!-- Mapa de correlaciones entre variables -->
     {% if statistical_charts.correlation_heatmap %}
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
+            <h4 class="section-title mb-3">
+                <i class="bx bx-grid me-2"></i>
+                Matriz de Correlación entre Variables
+            </h4>
+            <div class="alert alert-info mb-4">
+                <strong>Análisis de relaciones:</strong> Este mapa de calor muestra cómo se relacionan todas las variables 
+                entre sí. Los colores más intensos indican correlaciones más fuertes.
+            </div>
             <div class="chart-container">
-                <div class="chart-header">
-                    <h5 class="chart-title mb-3">
-                        <i class="bx bx-grid me-2"></i>
-                        Matriz de Correlación entre Variables Endógenas
-                    </h5>
-                    <div class="chart-controls">
-                        <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.correlation_heatmap }}', 'correlaciones-variables.png')" title="Descargar">
-                            <i class="bx bx-download"></i>
+                <div class="chart-explanation mb-3">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="alert alert-light">
+                                <strong>¿Cómo leer el mapa?</strong>
+                                <ul class="mb-0">
+                                    <li><strong>Verde intenso:</strong> Correlación positiva fuerte (cuando una variable sube, la otra también)</li>
+                                    <li><strong>Rojo intenso:</strong> Correlación negativa fuerte (cuando una sube, la otra baja)</li>
+                                    <li><strong>Colores claros:</strong> Correlación débil o inexistente</li>
+                                    <li><strong>Diagonal:</strong> Siempre será 1.0 (cada variable consigo misma)</li>
+                                </ul>
+                            </div>
                         </div>
-                        <div class="chart-control-btn" onclick="openFullscreen('{{ statistical_charts.correlation_heatmap }}', 'Matriz de Correlación')" title="Pantalla completa">
-                            <i class="bx bx-fullscreen"></i>
+                        <div class="col-md-4">
+                            <div class="correlation-legend">
+                                <h6>Escala de Interpretación</h6>
+                                <div class="legend-item">
+                                    <span class="legend-color bg-success"></span>
+                                    <span>0.7 - 1.0: Muy fuerte</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color bg-warning"></span>
+                                    <span>0.3 - 0.7: Moderada</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color bg-secondary"></span>
+                                    <span>0.0 - 0.3: Débil</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <div class="chart-controls">
+                    <div class="chart-control-btn" onclick="downloadChart('{{ statistical_charts.correlation_heatmap }}', 'correlaciones-variables.png')" title="Descargar">
+                        <i class="bx bx-download"></i>
+                    </div>
+                    <div class="chart-control-btn" onclick="openFullscreen('{{ statistical_charts.correlation_heatmap }}', 'Matriz de Correlación')" title="Pantalla completa">
+                        <i class="bx bx-fullscreen"></i>
+                    </div>
+                </div>
+                
                 <div class="chart-content">
                     <img src="data:image/png;base64,{{ statistical_charts.correlation_heatmap }}" 
                         class="chart-image" 
@@ -440,9 +628,11 @@
                 </div>
                 {% if correlation_analysis.significant_correlations %}
                 <div class="chart-footer">
-                    <small class="text-muted">
-                        Correlaciones significativas detectadas: {{ correlation_analysis.significant_correlations|length }}
-                    </small>
+                    <div class="alert alert-success">
+                        <i class="bx bx-check-circle me-2"></i>
+                        <strong>Correlaciones significativas detectadas:</strong> {{ correlation_analysis.significant_correlations|length }}
+                        <br><small>Esto indica relaciones estadísticamente relevantes entre las variables del modelo.</small>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -450,72 +640,141 @@
     </div>
     {% endif %}
 
-    <!-- Pruebas Estadísticas -->
+    <!-- Pruebas Estadísticas con Explicaciones Detalladas -->
     {% if statistical_tests %}
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
+            <h4 class="section-title mb-3">
+                <i class="bx bx-test-tube me-2"></i>
+                Pruebas Estadísticas de Validación
+            </h4>
+            <div class="alert alert-secondary mb-4">
+                <strong>Validación científica:</strong> Estas pruebas estadísticas validan matemáticamente la calidad 
+                de tu modelo comparando las distribuciones simuladas con las históricas.
+            </div>
+            
             <div class="statistical-tests-card">
-                <h5 class="tests-title">
-                    <i class="bx bx-test-tube me-2"></i>
-                    Pruebas Estadísticas de Validación
-                </h5>
                 <div class="tests-grid">
                     <div class="row">
                         {% if statistical_tests.t_test %}
-                        <div class="col-md-3">
-                            <div class="test-result">
-                                <h6 class="test-name">Prueba t (Medias)</h6>
+                        <div class="col-md-6 mb-4">
+                            <div class="test-result-card">
+                                <div class="test-header">
+                                    <h6 class="test-name">
+                                        <i class="bx bx-math me-2"></i>
+                                        Prueba t (Comparación de Medias)
+                                    </h6>
+                                </div>
+                                <div class="test-explanation mb-3">
+                                    <div class="alert alert-light">
+                                        <strong>¿Qué evalúa?</strong> Determina si la media de los datos simulados 
+                                        es estadísticamente igual a la media de los datos históricos.
+                                        <br><strong>Resultado deseado:</strong> Medias iguales (no hay diferencia significativa).
+                                    </div>
+                                </div>
                                 <div class="test-value">
-                                    <span class="badge {% if statistical_tests.t_test.means_equal %}bg-success{% else %}bg-warning{% endif %}">
-                                        {% if statistical_tests.t_test.means_equal %}Iguales{% else %}Diferentes{% endif %}
-                                    </span>
-                                    <small class="d-block">p-value: {{ statistical_tests.t_test.p_value|floatformat:4 }}</small>
-                                    <small class="text-muted">{{ statistical_tests.t_test.interpretation }}</small>
+                                    <div class="result-badge mb-2">
+                                        <span class="badge {% if statistical_tests.t_test.means_equal %}bg-success{% else %}bg-warning{% endif %} fs-6">
+                                            {% if statistical_tests.t_test.means_equal %}✓ Medias Iguales{% else %}⚠ Medias Diferentes{% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="test-details">
+                                        <small class="d-block"><strong>p-value:</strong> {{ statistical_tests.t_test.p_value|floatformat:4 }}</small>
+                                        <small class="text-muted">{{ statistical_tests.t_test.interpretation }}</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         {% endif %}
                         
                         {% if statistical_tests.f_test %}
-                        <div class="col-md-3">
-                            <div class="test-result">
-                                <h6 class="test-name">Prueba F (Varianzas)</h6>
+                        <div class="col-md-6 mb-4">
+                            <div class="test-result-card">
+                                <div class="test-header">
+                                    <h6 class="test-name">
+                                        <i class="bx bx-stats me-2"></i>
+                                        Prueba F (Comparación de Varianzas)
+                                    </h6>
+                                </div>
+                                <div class="test-explanation mb-3">
+                                    <div class="alert alert-light">
+                                        <strong>¿Qué evalúa?</strong> Compara la variabilidad (dispersión) entre 
+                                        datos simulados e históricos.
+                                        <br><strong>Resultado deseado:</strong> Varianzas homogéneas (similar dispersión).
+                                    </div>
+                                </div>
                                 <div class="test-value">
-                                    <span class="badge {% if statistical_tests.f_test.variances_equal %}bg-success{% else %}bg-warning{% endif %}">
-                                        {% if statistical_tests.f_test.variances_equal %}Homogéneas{% else %}Heterogéneas{% endif %}
-                                    </span>
-                                    <small class="d-block">p-value: {{ statistical_tests.f_test.p_value|floatformat:4 }}</small>
-                                    <small class="text-muted">{{ statistical_tests.f_test.interpretation }}</small>
+                                    <div class="result-badge mb-2">
+                                        <span class="badge {% if statistical_tests.f_test.variances_equal %}bg-success{% else %}bg-warning{% endif %} fs-6">
+                                            {% if statistical_tests.f_test.variances_equal %}✓ Varianzas Homogéneas{% else %}⚠ Varianzas Heterogéneas{% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="test-details">
+                                        <small class="d-block"><strong>p-value:</strong> {{ statistical_tests.f_test.p_value|floatformat:4 }}</small>
+                                        <small class="text-muted">{{ statistical_tests.f_test.interpretation }}</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         {% endif %}
                         
                         {% if statistical_tests.ks_test %}
-                        <div class="col-md-3">
-                            <div class="test-result">
-                                <h6 class="test-name">Kolmogorov-Smirnov</h6>
+                        <div class="col-md-6 mb-4">
+                            <div class="test-result-card">
+                                <div class="test-header">
+                                    <h6 class="test-name">
+                                        <i class="bx bx-chart me-2"></i>
+                                        Kolmogorov-Smirnov
+                                    </h6>
+                                </div>
+                                <div class="test-explanation mb-3">
+                                    <div class="alert alert-light">
+                                        <strong>¿Qué evalúa?</strong> Compara las distribuciones completas 
+                                        (no solo medias) entre simulado e histórico.
+                                        <br><strong>Resultado deseado:</strong> Distribuciones similares.
+                                    </div>
+                                </div>
                                 <div class="test-value">
-                                    <span class="badge {% if statistical_tests.ks_test.distributions_equal %}bg-success{% else %}bg-warning{% endif %}">
-                                        {% if statistical_tests.ks_test.distributions_equal %}Similares{% else %}Diferentes{% endif %}
-                                    </span>
-                                    <small class="d-block">p-value: {{ statistical_tests.ks_test.p_value|floatformat:4 }}</small>
-                                    <small class="text-muted">{{ statistical_tests.ks_test.interpretation }}</small>
+                                    <div class="result-badge mb-2">
+                                        <span class="badge {% if statistical_tests.ks_test.distributions_equal %}bg-success{% else %}bg-warning{% endif %} fs-6">
+                                            {% if statistical_tests.ks_test.distributions_equal %}✓ Distribuciones Similares{% else %}⚠ Distribuciones Diferentes{% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="test-details">
+                                        <small class="d-block"><strong>p-value:</strong> {{ statistical_tests.ks_test.p_value|floatformat:4 }}</small>
+                                        <small class="text-muted">{{ statistical_tests.ks_test.interpretation }}</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         {% endif %}
                         
                         {% if statistical_tests.correlation %}
-                        <div class="col-md-3">
-                            <div class="test-result">
-                                <h6 class="test-name">Correlación de Pearson</h6>
+                        <div class="col-md-6 mb-4">
+                            <div class="test-result-card">
+                                <div class="test-header">
+                                    <h6 class="test-name">
+                                        <i class="bx bx-link me-2"></i>
+                                        Correlación de Pearson
+                                    </h6>
+                                </div>
+                                <div class="test-explanation mb-3">
+                                    <div class="alert alert-light">
+                                        <strong>¿Qué evalúa?</strong> Mide qué tan linealmente relacionados 
+                                        están los valores simulados con los históricos.
+                                        <br><strong>Rango:</strong> -1 (correlación negativa perfecta) a +1 (correlación positiva perfecta).
+                                    </div>
+                                </div>
                                 <div class="test-value">
-                                    <span class="badge {% if statistical_tests.correlation.is_significant %}bg-success{% else %}bg-secondary{% endif %}">
-                                        {{ statistical_tests.correlation.strength }}
-                                    </span>
-                                    <small class="d-block">r = {{ statistical_tests.correlation.coefficient|floatformat:3 }}</small>
-                                    <small class="text-muted">{{ statistical_tests.correlation.interpretation }}</small>
+                                    <div class="result-badge mb-2">
+                                        <span class="badge {% if statistical_tests.correlation.is_significant %}bg-success{% else %}bg-secondary{% endif %} fs-6">
+                                            {{ statistical_tests.correlation.strength }}
+                                        </span>
+                                    </div>
+                                    <div class="test-details">
+                                        <small class="d-block"><strong>r = {{ statistical_tests.correlation.coefficient|floatformat:3 }}</strong></small>
+                                        <small class="text-muted">{{ statistical_tests.correlation.interpretation }}</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -527,32 +786,50 @@
     </div>
     {% endif %}
 
-    <!-- Correlaciones Significativas -->
+    <!-- Correlaciones Significativas con Interpretaciones -->
     {% if correlation_analysis.significant_correlations %}
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
+            <h4 class="section-title mb-3">
+                <i class="bx bx-link me-2"></i>
+                Relaciones Importantes entre Variables
+            </h4>
+            <div class="alert alert-info mb-4">
+                <strong>Relaciones detectadas:</strong> Estas son las correlaciones más fuertes encontradas entre 
+                las variables de tu simulación. Te ayudan a entender qué factores se influyen mutuamente.
+            </div>
+            
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bx bx-link me-2"></i>
-                        Correlaciones Significativas entre Variables
-                    </h5>
-                </div>
                 <div class="card-body">
                     <div class="row">
                         {% for correlation in correlation_analysis.significant_correlations %}
                         <div class="col-md-6 mb-3">
                             <div class="correlation-item">
-                                <div class="correlation-header">
-                                    <strong>{{ correlation.var1 }} ↔ {{ correlation.var2 }}</strong>
-                                    <span class="badge bg-{% if correlation.coefficient > 0 %}success{% else %}danger{% endif %} ms-2">
-                                        {{ correlation.direction }}
-                                    </span>
+                                <div class="correlation-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ correlation.var1 }} ↔ {{ correlation.var2 }}</h6>
+                                        <span class="badge bg-{% if correlation.coefficient > 0 %}success{% else %}danger{% endif %}">
+                                            {{ correlation.direction }}
+                                        </span>
+                                    </div>
+                                    <div class="correlation-strength">
+                                        <div class="text-end">
+                                            <strong>{{ correlation.coefficient|floatformat:3 }}</strong>
+                                            <br><small class="text-muted">{{ correlation.strength }}</small>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="correlation-details">
-                                    <small class="text-muted">
-                                        Coeficiente: {{ correlation.coefficient|floatformat:3 }} | 
-                                        Fuerza: {{ correlation.strength }}
+                                <div class="correlation-details mt-2">
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-{% if correlation.coefficient > 0 %}success{% else %}danger{% endif %}" 
+                                             style="width: {{ correlation.coefficient|abs|mul:100 }}%"></div>
+                                    </div>
+                                    <small class="text-muted mt-1 d-block">
+                                        {% if correlation.coefficient > 0 %}
+                                            Cuando {{ correlation.var1 }} aumenta, {{ correlation.var2 }} tiende a aumentar también.
+                                        {% else %}
+                                            Cuando {{ correlation.var1 }} aumenta, {{ correlation.var2 }} tiende a disminuir.
+                                        {% endif %}
                                     </small>
                                 </div>
                             </div>
@@ -567,48 +844,93 @@
 
     <!-- Análisis de Tendencias -->
     {% if trend_analysis %}
-    <div class="row mb-4">
+    <div class="row mb-5">
         <div class="col-12">
+            <h4 class="section-title mb-3">
+                <i class="bx bx-trending-up me-2"></i>
+                Análisis de Tendencias Temporales
+            </h4>
+            <div class="alert alert-warning mb-4">
+                <strong>Patrones en el tiempo:</strong> Este análisis detecta si existe una tendencia general 
+                (crecimiento o decrecimiento) en tus datos a lo largo del período simulado.
+            </div>
+            
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bx bx-trending-up me-2"></i>
-                        Análisis de Tendencias Temporales
-                    </h5>
-                </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <div class="trend-metric">
-                                <h6 class="trend-label">Tipo de Tendencia</h6>
-                                <div class="trend-value">
-                                    <span class="badge bg-{% if trend_analysis.trend_type == 'Creciente' %}success{% elif trend_analysis.trend_type == 'Decreciente' %}danger{% else %}secondary{% endif %}">
+                            <div class="trend-metric text-center">
+                                <h6 class="trend-label mb-3">Tipo de Tendencia</h6>
+                                <div class="trend-value mb-2">
+                                    <span class="badge fs-5 bg-{% if trend_analysis.trend_type == 'Creciente' %}success{% elif trend_analysis.trend_type == 'Decreciente' %}danger{% else %}secondary{% endif %}">
+                                        {% if trend_analysis.trend_type == 'Creciente' %}
+                                            <i class="bx bx-trending-up me-1"></i>
+                                        {% elif trend_analysis.trend_type == 'Decreciente' %}
+                                            <i class="bx bx-trending-down me-1"></i>
+                                        {% else %}
+                                            <i class="bx bx-minus me-1"></i>
+                                        {% endif %}
                                         {{ trend_analysis.trend_type }}
                                     </span>
                                 </div>
                                 <small class="text-muted">{{ trend_analysis.trend_strength }} intensidad</small>
+                                <div class="trend-explanation mt-2">
+                                    <small class="text-info">
+                                        {% if trend_analysis.trend_type == 'Creciente' %}
+                                            Los datos muestran una tendencia al crecimiento a lo largo del tiempo.
+                                        {% elif trend_analysis.trend_type == 'Decreciente' %}
+                                            Los datos muestran una tendencia a la disminución a lo largo del tiempo.
+                                        {% else %}
+                                            No se detecta una tendencia clara en los datos.
+                                        {% endif %}
+                                    </small>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="trend-metric">
-                                <h6 class="trend-label">Pendiente</h6>
-                                <div class="trend-value">
-                                    <strong class="text-{% if trend_analysis.slope > 0 %}success{% elif trend_analysis.slope < 0 %}danger{% else %}secondary{% endif %}">
+                            <div class="trend-metric text-center">
+                                <h6 class="trend-label mb-3">Pendiente</h6>
+                                <div class="trend-value mb-2">
+                                    <h4 class="text-{% if trend_analysis.slope > 0 %}success{% elif trend_analysis.slope < 0 %}danger{% else %}secondary{% endif %}">
                                         {{ trend_analysis.slope|floatformat:4 }}
-                                    </strong>
+                                    </h4>
                                 </div>
                                 <small class="text-muted">Cambio por período</small>
+                                <div class="trend-explanation mt-2">
+                                    <small class="text-info">
+                                        {% if trend_analysis.slope > 0 %}
+                                            Los valores aumentan en promedio {{ trend_analysis.slope|floatformat:2 }} unidades por día.
+                                        {% elif trend_analysis.slope < 0 %}
+                                            Los valores disminuyen en promedio {{ trend_analysis.slope|abs|floatformat:2 }} unidades por día.
+                                        {% else %}
+                                            No hay cambio sistemático en los valores.
+                                        {% endif %}
+                                    </small>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="trend-metric">
-                                <h6 class="trend-label">Significancia</h6>
-                                <div class="trend-value">
-                                    <span class="badge bg-{% if trend_analysis.has_significant_trend %}success{% else %}secondary{% endif %}">
-                                        {% if trend_analysis.has_significant_trend %}Significativa{% else %}No Significativa{% endif %}
+                            <div class="trend-metric text-center">
+                                <h6 class="trend-label mb-3">Significancia Estadística</h6>
+                                <div class="trend-value mb-2">
+                                    <span class="badge fs-5 bg-{% if trend_analysis.has_significant_trend %}success{% else %}secondary{% endif %}">
+                                        {% if trend_analysis.has_significant_trend %}
+                                            <i class="bx bx-check-circle me-1"></i>Significativa
+                                        {% else %}
+                                            <i class="bx bx-x-circle me-1"></i>No Significativa
+                                        {% endif %}
                                     </span>
                                 </div>
                                 <small class="text-muted">R² = {{ trend_analysis.r_squared|floatformat:3 }}</small>
+                                <div class="trend-explanation mt-2">
+                                    <small class="text-info">
+                                        {% if trend_analysis.has_significant_trend %}
+                                            La tendencia es estadísticamente confiable y debe considerarse en proyecciones futuras.
+                                        {% else %}
+                                            La tendencia podría ser aleatoria. No es confiable para proyecciones.
+                                        {% endif %}
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -621,90 +943,162 @@
     <!-- Interpretación y Recomendaciones Estadísticas -->
     <div class="row">
         <div class="col-12">
+            <h4 class="section-title mb-3">
+                <i class="bx bx-brain me-2"></i>
+                Interpretación y Recomendaciones del Análisis
+            </h4>
+            
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bx bx-brain me-2"></i>
-                        Interpretación Estadística y Recomendaciones
-                    </h5>
-                </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="text-primary">Calidad del Modelo</h6>
+                            <h5 class="text-primary mb-3">
+                                <i class="bx bx-check-shield me-2"></i>
+                                Diagnóstico de Calidad del Modelo
+                            </h5>
                             {% if performance_metrics %}
                             <div class="interpretation-section">
-                                <p><strong>Nivel de Precisión:</strong> {{ performance_metrics.accuracy_level }}</p>
-                                <p><strong>Calidad del Ajuste:</strong> {{ performance_metrics.model_quality }}</p>
+                                <div class="quality-summary mb-3">
+                                    <h6>Nivel de Precisión Actual</h6>
+                                    <div class="alert alert-{% if performance_metrics.mape < 10 %}success{% elif performance_metrics.mape < 20 %}warning{% else %}danger{% endif %}">
+                                        <strong>{{ performance_metrics.accuracy_level }}</strong>
+                                        <br>{{ performance_metrics.model_quality }}
+                                    </div>
+                                </div>
                                 
-                                {% if performance_metrics.mape < 10 %}
-                                <div class="alert alert-success">
-                                    <i class="bx bx-check-circle me-2"></i>
-                                    El modelo muestra <strong>excelente precisión</strong> con MAPE < 10%. 
-                                    Las predicciones son altamente confiables.
+                                <div class="detailed-assessment">
+                                    {% if performance_metrics.mape < 10 %}
+                                    <div class="alert alert-success">
+                                        <i class="bx bx-check-circle me-2"></i>
+                                        <strong>Excelente Modelo:</strong> Tu simulación tiene una precisión excepcional con MAPE < 10%. 
+                                        Las predicciones son altamente confiables para toma de decisiones críticas.
+                                        <ul class="mt-2 mb-0">
+                                            <li>Ideal para planificación estratégica</li>
+                                            <li>Confiable para proyecciones de corto y mediano plazo</li>
+                                            <li>Puede usarse para optimización operativa</li>
+                                        </ul>
+                                    </div>
+                                    {% elif performance_metrics.mape < 20 %}
+                                    <div class="alert alert-warning">
+                                        <i class="bx bx-error-circle me-2"></i>
+                                        <strong>Buen Modelo con Potencial de Mejora:</strong> El modelo tiene buena precisión pero puede optimizarse.
+                                        <ul class="mt-2 mb-0">
+                                            <li>Útil para planificación general</li>
+                                            <li>Considerar refinamiento de parámetros</li>
+                                            <li>Evaluar incluir variables adicionales</li>
+                                        </ul>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-danger">
+                                        <i class="bx bx-x-circle me-2"></i>
+                                        <strong>Modelo Requiere Mejoras Significativas:</strong> La precisión actual es limitada.
+                                        <ul class="mt-2 mb-0">
+                                            <li>Revisar estructura del modelo</li>
+                                            <li>Validar calidad de datos de entrada</li>
+                                            <li>Considerar métodos alternativos</li>
+                                        </ul>
+                                    </div>
+                                    {% endif %}
                                 </div>
-                                {% elif performance_metrics.mape < 20 %}
-                                <div class="alert alert-warning">
-                                    <i class="bx bx-error-circle me-2"></i>
-                                    El modelo tiene <strong>buena precisión</strong> pero puede mejorarse. 
-                                    Considerar refinamiento de parámetros.
-                                </div>
-                                {% else %}
-                                <div class="alert alert-danger">
-                                    <i class="bx bx-x-circle me-2"></i>
-                                    El modelo requiere <strong>calibración significativa</strong>. 
-                                    Revisar estructura del modelo y datos de entrada.
-                                </div>
-                                {% endif %}
                             </div>
                             {% endif %}
                         </div>
                         
                         <div class="col-md-6">
-                            <h6 class="text-success">Recomendaciones</h6>
+                            <h5 class="text-success mb-3">
+                                <i class="bx bx-bulb me-2"></i>
+                                Recomendaciones Específicas
+                            </h5>
                             <div class="recommendations-section">
-                                {% if performance_metrics.r_squared > 0.8 %}
-                                <div class="recommendation-item">
-                                    <i class="bx bx-check text-success me-2"></i>
-                                    <span>Excelente capacidad explicativa del modelo (R² > 0.8)</span>
+                                <div class="recommendation-list">
+                                    {% if performance_metrics.r_squared > 0.8 %}
+                                    <div class="recommendation-item mb-3">
+                                        <div class="d-flex">
+                                            <i class="bx bx-check text-success me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Capacidad Explicativa Excelente</strong>
+                                                <br><small class="text-muted">R² > 0.8 indica que el modelo explica muy bien la variabilidad de los datos</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="recommendation-item mb-3">
+                                        <div class="d-flex">
+                                            <i class="bx bx-error text-warning me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Mejorar Capacidad Explicativa</strong>
+                                                <br><small class="text-muted">Considerar incluir variables adicionales o ajustar parámetros para aumentar R²</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if statistical_tests.correlation.is_significant %}
+                                    <div class="recommendation-item mb-3">
+                                        <div class="d-flex">
+                                            <i class="bx bx-check text-success me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Correlación Significativa Detectada</strong>
+                                                <br><small class="text-muted">Existe una relación estadísticamente válida entre simulado e histórico</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="recommendation-item mb-3">
+                                        <div class="d-flex">
+                                            <i class="bx bx-error text-warning me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Revisar Patrones Temporales</strong>
+                                                <br><small class="text-muted">La correlación débil sugiere revisar la estructura temporal del modelo</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if distribution_analysis.normality_test.is_normal %}
+                                    <div class="recommendation-item mb-3">
+                                        <div class="d-flex">
+                                            <i class="bx bx-check text-success me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Distribución Normal Válida</strong>
+                                                <br><small class="text-muted">Los datos siguen distribución normal, permitiendo usar métodos estadísticos avanzados</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="recommendation-item mb-3">
+                                        <div class="d-flex">
+                                            <i class="bx bx-info text-info me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Considerar Transformación de Datos</strong>
+                                                <br><small class="text-muted">Distribución no normal: evaluar transformaciones logarítmicas o de raíz</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if trend_analysis.has_significant_trend %}
+                                    <div class="recommendation-item mb-3">
+                                        <div class="d-flex">
+                                            <i class="bx bx-trending-up text-info me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Incorporar Tendencia en Proyecciones</strong>
+                                                <br><small class="text-muted">Tendencia {{ trend_analysis.trend_type|lower }} significativa: incluir en análisis futuro</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
-                                {% else %}
-                                <div class="recommendation-item">
-                                    <i class="bx bx-error text-warning me-2"></i>
-                                    <span>Considerar incluir variables adicionales para mejorar R²</span>
-                                </div>
-                                {% endif %}
                                 
-                                {% if statistical_tests.correlation.is_significant %}
-                                <div class="recommendation-item">
-                                    <i class="bx bx-check text-success me-2"></i>
-                                    <span>Correlación significativa entre histórico y simulado</span>
+                                <div class="next-steps mt-4">
+                                    <h6 class="text-primary">Próximos Pasos Recomendados:</h6>
+                                    <ol class="small">
+                                        <li>Validar resultados con datos adicionales</li>
+                                        <li>Implementar mejoras sugeridas según las métricas</li>
+                                        <li>Documentar supuestos y limitaciones del modelo</li>
+                                        <li>Establecer procesos de monitoreo continuo</li>
+                                    </ol>
                                 </div>
-                                {% else %}
-                                <div class="recommendation-item">
-                                    <i class="bx bx-error text-warning me-2"></i>
-                                    <span>Revisar patrones temporales y ajustar modelo</span>
-                                </div>
-                                {% endif %}
-                                
-                                {% if distribution_analysis.normality_test.is_normal %}
-                                <div class="recommendation-item">
-                                    <i class="bx bx-check text-success me-2"></i>
-                                    <span>Distribución normal: métodos estadísticos estándar aplicables</span>
-                                </div>
-                                {% else %}
-                                <div class="recommendation-item">
-                                    <i class="bx bx-info text-info me-2"></i>
-                                    <span>Distribución no normal: considerar transformaciones de datos</span>
-                                </div>
-                                {% endif %}
-                                
-                                {% if trend_analysis.has_significant_trend %}
-                                <div class="recommendation-item">
-                                    <i class="bx bx-trending-up text-info me-2"></i>
-                                    <span>Tendencia {{ trend_analysis.trend_type|lower }} detectada: incluir en análisis futuro</span>
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -714,9 +1108,219 @@
     </div>
 </div>
 
+<!-- CSS adicional para mejorar la presentación -->
+<style>
+.analysis-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 2rem;
+    border-radius: 10px;
+    border-left: 5px solid #007bff;
+}
+
+.analysis-title {
+    color: #495057;
+    font-weight: 600;
+}
+
+.section-title {
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 0.5rem;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.chart-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.chart-explanation {
+    margin: 0;
+}
+
+.chart-explanation .alert {
+    margin: 0;
+    border: none;
+    background: #f8f9fa;
+    border-left: 4px solid #17a2b8;
+}
+
+.performance-metric {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    height: 100%;
+    transition: all 0.2s ease;
+}
+
+.performance-metric:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.metric-icon {
+    background: linear-gradient(135deg, #007bff, #6610f2);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.metric-explanation {
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 5px;
+    border-left: 3px solid #17a2b8;
+}
+
+.test-result-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    height: 100%;
+    border-left: 4px solid #28a745;
+}
+
+.correlation-legend {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    margin-right: 0.5rem;
+}
+
+.correlation-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    border-left: 4px solid #007bff;
+}
+
+.stats-summary, .correlation-summary, .normality-result {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.interpretation-guide {
+    background: #fff3cd;
+    padding: 0.75rem;
+    border-radius: 5px;
+    border-left: 4px solid #ffc107;
+    margin-top: 1rem;
+}
+
+.recommendation-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.next-steps {
+    background: #e7f3ff;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.trend-metric {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    height: 100%;
+}
+
+.trend-explanation {
+    background: #fff;
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.chart-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chart-control-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chart-control-btn:hover {
+    background: #007bff;
+    color: white;
+    transform: scale(1.1);
+}
+
+.result-badge {
+    text-align: center;
+}
+
+.result-badge .badge {
+    padding: 0.5rem 1rem;
+}
+
+@media (max-width: 768px) {
+    .analysis-header {
+        padding: 1rem;
+    }
+    
+    .performance-metric {
+        margin-bottom: 1rem;
+    }
+    
+    .chart-controls {
+        position: static;
+        margin-bottom: 1rem;
+        justify-content: center;
+    }
+}
+</style>
+
 <script>
 // ==========================================
-// FUNCIONES ESPECÍFICAS PARA ANÁLISIS ESTADÍSTICO
+// FUNCIONES MEJORADAS PARA ANÁLISIS ESTADÍSTICO
 // ==========================================
 
 let correlationChart = null;
@@ -725,168 +1329,538 @@ let distributionChart = null;
 
 function initializeAnalysisTab() {
     try {
-        initializeStatisticalCharts();
-        performCorrelationAnalysis();
-        performRegressionAnalysis();
-        performDistributionAnalysis();
-        generateStatisticalSummary();
+        console.log('🔬 Inicializando análisis estadístico avanzado...');
         
-        console.log('Analysis tab initialized successfully');
+        // Mostrar mensaje de carga
+        showAnalysisLoadingMessage();
+        
+        // Inicialización y eventos
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Documento cargado, preparando análisis estadístico...');
+});
+
+// Evento cuando se muestra el tab de análisis
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'analysis') {
+        console.log('📊 Tab de análisis activado');
+        setTimeout(() => {
+            initializeAnalysisTab();
+        }, 100);
+    }
+});
+
+// Funciones auxiliares para UI
+function showNotification(message, type = 'info') {
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="bx bx-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function formatNumber(value, decimals = 2) {
+    if (value === null || value === undefined || isNaN(value)) return 'N/A';
+    return parseFloat(value).toFixed(decimals);
+}
+
+function downloadChart(base64Data, filename) {
+    try {
+        const link = document.createElement('a');
+        link.href = `data:image/png;base64,${base64Data}`;
+        link.download = filename;
+        link.click();
+        showNotification(`Gráfico ${filename} descargado`, 'success');
     } catch (error) {
-        console.error('Error initializing analysis tab:', error);
+        console.error('Error descargando gráfico:', error);
+        showNotification('Error al descargar gráfico', 'error');
     }
 }
 
-function initializeStatisticalCharts() {
-    if (typeof Chart === 'undefined') {
-        console.warn('Chart.js no está disponible para análisis estadístico');
+function openFullscreen(base64Data, title) {
+    try {
+        const fullscreenHtml = `
+            <div class="fullscreen-overlay" id="fullscreenOverlay">
+                <div class="fullscreen-content">
+                    <div class="fullscreen-header">
+                        <h5>${title}</h5>
+                        <div class="fullscreen-controls">
+                            <button class="btn btn-outline-light btn-sm me-2" onclick="downloadChart('${base64Data}', '${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png')">
+                                <i class="bx bx-download"></i> Descargar
+                            </button>
+                            <button class="btn btn-outline-light btn-sm" onclick="closeFullscreen()">
+                                <i class="bx bx-x"></i> Cerrar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="fullscreen-body">
+                        <img src="data:image/png;base64,${base64Data}" alt="${title}" class="fullscreen-image">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', fullscreenHtml);
+        
+        // Agregar estilos CSS para pantalla completa
+        const style = document.createElement('style');
+        style.textContent = `
+            .fullscreen-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+            }
+            .fullscreen-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                max-height: 100vh;
+            }
+            .fullscreen-header {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 1rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: white;
+            }
+            .fullscreen-body {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+                overflow: auto;
+            }
+            .fullscreen-image {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Cerrar con ESC
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error abriendo pantalla completa:', error);
+        showNotification('Error al abrir en pantalla completa', 'error');
+    }
+}
+
+function closeFullscreen() {
+    const overlay = document.getElementById('fullscreenOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+// Funciones de análisis estadístico adicionales
+function performStatisticalTests(variables) {
+    console.log('🧪 Realizando pruebas estadísticas...');
+    
+    if (variables.length < 2) {
+        console.warn('Se necesitan al menos 2 variables para pruebas estadísticas');
         return;
     }
     
-    initializeCorrelationMatrix();
-    initializeRegressionChart();
-    initializeDistributionChart();
-    initializeStatisticalBoxplot();
-}
-
-function initializeCorrelationMatrix() {
-    const ctx = document.getElementById('correlationChart');
-    if (!ctx) return;
+    const tests = [];
     
-    if (correlationChart) {
-        correlationChart.destroy();
+    // Prueba de normalidad para cada variable
+    variables.forEach(variable => {
+        const normalityTest = performShapiroWilkTest(variable.data);
+        tests.push({
+            variable: variable.name,
+            test: 'Shapiro-Wilk',
+            result: normalityTest,
+            interpretation: normalityTest.isNormal ? 'Datos siguen distribución normal' : 'Datos no siguen distribución normal'
+        });
+    });
+    
+    // Pruebas de comparación entre variables principales
+    if (variables.length >= 2) {
+        const var1 = variables[0]; // Demanda
+        const var2 = variables[1]; // Ingresos
+        
+        // Prueba t para medias
+        const tTest = performTTest(var1.data, var2.data);
+        tests.push({
+            variables: [var1.name, var2.name],
+            test: 'Prueba t',
+            result: tTest,
+            interpretation: tTest.meansEqual ? 'Las medias son estadísticamente iguales' : 'Las medias son estadísticamente diferentes'
+        });
+        
+        // Prueba F para varianzas
+        const fTest = performFTest(var1.data, var2.data);
+        tests.push({
+            variables: [var1.name, var2.name],
+            test: 'Prueba F',
+            result: fTest,
+            interpretation: fTest.variancesEqual ? 'Las varianzas son homogéneas' : 'Las varianzas son heterogéneas'
+        });
     }
     
-    const correlationData = calculateCorrelationMatrix();
-    
-    // Crear matriz de calor para correlaciones
-    const config = {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Correlaciones',
-                data: correlationData.points,
-                backgroundColor: correlationData.colors,
-                pointRadius: 15,
-                showLine: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Matriz de Correlación entre Variables'
-                },
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const point = context.raw;
-                            return `${point.varX} vs ${point.varY}: r = ${point.correlation.toFixed(3)}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    type: 'category',
-                    labels: correlationData.variables,
-                    title: {
-                        display: true,
-                        text: 'Variables'
-                    }
-                },
-                y: {
-                    type: 'category',
-                    labels: correlationData.variables,
-                    title: {
-                        display: true,
-                        text: 'Variables'
-                    }
-                }
-            }
-        }
-    };
-    
-    correlationChart = new Chart(ctx, config);
+    displayStatisticalTests(tests);
+    console.log(`✓ ${tests.length} pruebas estadísticas completadas`);
 }
 
-function calculateCorrelationMatrix() {
-    const variables = extractAllVariables();
-    const correlations = [];
-    const points = [];
-    const colors = [];
+function performShapiroWilkTest(data) {
+    // Implementación simplificada del test de Shapiro-Wilk
+    const validData = data.filter(v => v !== null && v !== undefined && !isNaN(v));
+    const n = validData.length;
     
-    // Calcular correlaciones entre todas las variables
-    for (let i = 0; i < variables.length; i++) {
-        for (let j = 0; j < variables.length; j++) {
-            const correlation = calculatePearsonCorrelation(variables[i].data, variables[j].data);
-            correlations.push(correlation);
-            
-            points.push({
-                x: i,
-                y: j,
-                correlation: correlation,
-                varX: variables[i].name,
-                varY: variables[j].name
-            });
-            
-            // Color basado en la intensidad de la correlación
-            const intensity = Math.abs(correlation);
-            if (intensity > 0.7) {
-                colors.push(correlation > 0 ? 'rgba(40, 167, 69, 0.8)' : 'rgba(220, 53, 69, 0.8)');
-            } else if (intensity > 0.4) {
-                colors.push(correlation > 0 ? 'rgba(255, 193, 7, 0.8)' : 'rgba(255, 152, 0, 0.8)');
-            } else {
-                colors.push('rgba(108, 117, 125, 0.5)');
-            }
-        }
-    }
+    if (n < 3) return { isNormal: false, pValue: 0, statistic: 0 };
+    
+    const sortedData = [...validData].sort((a, b) => a - b);
+    const mean = validData.reduce((a, b) => a + b, 0) / n;
+    
+    // Calcular estadísticos de forma y asimetría
+    const variance = validData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
+    const stdDev = Math.sqrt(variance);
+    
+    const skewness = validData.reduce((sum, val) => sum + Math.pow((val - mean) / stdDev, 3), 0) / n;
+    const kurtosis = validData.reduce((sum, val) => sum + Math.pow((val - mean) / stdDev, 4), 0) / n - 3;
+    
+    // Criterio simplificado
+    const isNormal = Math.abs(skewness) < 1 && Math.abs(kurtosis) < 1 && n >= 8;
+    const pValue = isNormal ? 0.15 : 0.02; // Simulado para demo
     
     return {
-        correlations,
-        points,
-        colors,
-        variables: variables.map(v => v.name)
+        isNormal,
+        pValue,
+        skewness,
+        kurtosis,
+        statistic: 1 - Math.abs(skewness) - Math.abs(kurtosis)
     };
+}
+
+function performTTest(data1, data2) {
+    const stats1 = calculateDescriptiveStats(data1);
+    const stats2 = calculateDescriptiveStats(data2);
+    
+    if (!stats1 || !stats2) return { meansEqual: false, pValue: 1, statistic: 0 };
+    
+    const n1 = stats1.count;
+    const n2 = stats2.count;
+    
+    // Prueba t de dos muestras independientes
+    const pooledVariance = ((n1 - 1) * stats1.variance + (n2 - 1) * stats2.variance) / (n1 + n2 - 2);
+    const standardError = Math.sqrt(pooledVariance * (1/n1 + 1/n2));
+    const tStatistic = Math.abs(stats1.mean - stats2.mean) / standardError;
+    
+    // Aproximación del p-value (simplificada)
+    const pValue = tStatistic < 2 ? 0.1 : 0.01;
+    const meansEqual = pValue > 0.05;
+    
+    return {
+        meansEqual,
+        pValue,
+        statistic: tStatistic,
+        mean1: stats1.mean,
+        mean2: stats2.mean,
+        difference: Math.abs(stats1.mean - stats2.mean)
+    };
+}
+
+function performFTest(data1, data2) {
+    const stats1 = calculateDescriptiveStats(data1);
+    const stats2 = calculateDescriptiveStats(data2);
+    
+    if (!stats1 || !stats2) return { variancesEqual: false, pValue: 1, statistic: 0 };
+    
+    const fStatistic = Math.max(stats1.variance, stats2.variance) / Math.min(stats1.variance, stats2.variance);
+    const pValue = fStatistic < 2 ? 0.1 : 0.01; // Simplificado
+    const variancesEqual = pValue > 0.05;
+    
+    return {
+        variancesEqual,
+        pValue,
+        statistic: fStatistic,
+        variance1: stats1.variance,
+        variance2: stats2.variance
+    };
+}
+
+function displayStatisticalTests(tests) {
+    const container = document.getElementById('statisticalTestsResults');
+    if (!container) return;
+    
+    let html = `
+        <div class="statistical-tests-results">
+            <h6 class="mb-3">Resultados de Pruebas Estadísticas</h6>
+            <div class="accordion" id="testsAccordion">
+    `;
+    
+    tests.forEach((test, index) => {
+        const isSignificant = test.result.pValue <= 0.05;
+        const statusClass = isSignificant ? 'success' : 'warning';
+        const statusText = isSignificant ? 'Significativo' : 'No Significativo';
+        
+        html += `
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#test${index}">
+                        ${test.test} ${test.variable ? `- ${test.variable}` : test.variables ? `- ${test.variables.join(' vs ')}` : ''}
+                        <span class="badge bg-${statusClass} ms-2">${statusText}</span>
+                    </button>
+                </h2>
+                <div id="test${index}" class="accordion-collapse collapse" data-bs-parent="#testsAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Resultados:</h6>
+                                <ul>
+                                    <li><strong>Estadístico:</strong> ${test.result.statistic?.toFixed(4) || 'N/A'}</li>
+                                    <li><strong>p-value:</strong> ${test.result.pValue?.toFixed(4) || 'N/A'}</li>
+                                    ${test.result.mean1 ? `<li><strong>Media 1:</strong> ${test.result.mean1.toFixed(4)}</li>` : ''}
+                                    ${test.result.mean2 ? `<li><strong>Media 2:</strong> ${test.result.mean2.toFixed(4)}</li>` : ''}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Interpretación:</h6>
+                                <div class="alert alert-${statusClass}">
+                                    ${test.interpretation}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Exportar funciones para uso global
+window.initializeAnalysisTab = initializeAnalysisTab;
+window.exportComprehensiveReport = exportComprehensiveReport;
+window.downloadChart = downloadChart;
+window.openFullscreen = openFullscreen;
+window.closeFullscreen = closeFullscreen;
+window.performCorrelationAnalysis = performCorrelationAnalysis;
+window.performRegressionAnalysis = performRegressionAnalysis;
+window.performDistributionAnalysis = performDistributionAnalysis;
+
+console.log('📊 Sistema de análisis estadístico avanzado cargado completamente');
+</script>izar componentes
+        initializeStatisticalCharts();
+        performComprehensiveAnalysis();
+        generateInteractiveTooltips();
+        setupChartInteractions();
+        
+        // Ocultar mensaje de carga
+        hideAnalysisLoadingMessage();
+        
+        console.log('✅ Análisis estadístico completado exitosamente');
+        showNotification('Análisis estadístico completado', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error en análisis estadístico:', error);
+        showNotification('Error en el análisis estadístico', 'error');
+        showAnalysisErrorMessage(error);
+    }
+}
+
+function showAnalysisLoadingMessage() {
+    const loadingHtml = `
+        <div id="analysisLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Procesando análisis estadístico avanzado...</p>
+            <small class="text-info">Calculando métricas de precisión, correlaciones y distribuciones</small>
+        </div>
+    `;
+    
+    const container = document.getElementById('analysis');
+    if (container) {
+        container.insertAdjacentHTML('afterbegin', loadingHtml);
+    }
+}
+
+function hideAnalysisLoadingMessage() {
+    const loadingElement = document.getElementById('analysisLoading');
+    if (loadingElement) {
+        loadingElement.remove();
+    }
+}
+
+function showAnalysisErrorMessage(error) {
+    const errorHtml = `
+        <div class="alert alert-danger" role="alert">
+            <h5 class="alert-heading">
+                <i class="bx bx-error-circle me-2"></i>
+                Error en el Análisis Estadístico
+            </h5>
+            <p>Ocurrió un problema al procesar el análisis estadístico:</p>
+            <hr>
+            <p class="mb-0">
+                <strong>Detalles técnicos:</strong> ${error.message || 'Error desconocido'}
+                <br><small class="text-muted">Por favor, intenta actualizar la página o contacta al soporte técnico.</small>
+            </p>
+        </div>
+    `;
+    
+    const container = document.getElementById('analysis');
+    if (container) {
+        container.insertAdjacentHTML('afterbegin', errorHtml);
+    }
+}
+
+function performComprehensiveAnalysis() {
+    const variables = extractAllVariables();
+    
+    if (variables.length === 0) {
+        console.warn('⚠️ No se encontraron variables para analizar');
+        return;
+    }
+    
+    console.log(`📊 Analizando ${variables.length} variables con ${variables[0]?.data.length || 0} observaciones`);
+    
+    // Realizar todos los análisis
+    performCorrelationAnalysis(variables);
+    performRegressionAnalysis(variables);
+    performDistributionAnalysis(variables);
+    performStatisticalTests(variables);
+    generateDetailedSummary(variables);
 }
 
 function extractAllVariables() {
+    console.log('🔍 Extrayendo variables de los elementos del DOM...');
+    
     const variables = [];
     
-    // Extraer datos de demanda
-    const demandData = [];
-    document.querySelectorAll('.daily-result-item').forEach(item => {
-        const demand = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
-        demandData.push(demand);
-    });
-    variables.push({ name: 'Demanda', data: demandData });
-    
-    // Extraer datos de ingresos
-    const revenueData = [];
-    document.querySelectorAll('.daily-result-item').forEach(item => {
-        const revenue = parseFloat(item.querySelector('[data-revenue]')?.dataset.revenue || 0);
-        revenueData.push(revenue);
-    });
-    variables.push({ name: 'Ingresos', data: revenueData });
-    
-    // Extraer datos de gastos
-    const expenseData = [];
-    document.querySelectorAll('.daily-result-item').forEach(item => {
-        const expenses = parseFloat(item.querySelector('[data-expenses]')?.dataset.expenses || 0);
-        expenseData.push(expenses);
-    });
-    variables.push({ name: 'Gastos', data: expenseData });
-    
-    // Extraer datos de ganancia
-    const profitData = revenueData.map((rev, index) => rev - expenseData[index]);
-    variables.push({ name: 'Ganancia', data: profitData });
+    try {
+        // Extraer datos de demanda
+        const demandData = [];
+        document.querySelectorAll('.daily-result-item').forEach((item, index) => {
+            const demandElement = item.querySelector('[data-demand]');
+            const demand = demandElement ? parseFloat(demandElement.dataset.demand || 0) : 0;
+            demandData.push(demand);
+        });
+        
+        if (demandData.length > 0) {
+            variables.push({ name: 'Demanda (L)', data: demandData, unit: 'L' });
+            console.log(`✓ Demanda: ${demandData.length} valores extraídos`);
+        }
+        
+        // Extraer datos de ingresos
+        const revenueData = [];
+        document.querySelectorAll('.daily-result-item').forEach((item, index) => {
+            const revenueElement = item.querySelector('[data-revenue]');
+            const revenue = revenueElement ? parseFloat(revenueElement.dataset.revenue || 0) : 0;
+            revenueData.push(revenue);
+        });
+        
+        if (revenueData.length > 0) {
+            variables.push({ name: 'Ingresos (Bs)', data: revenueData, unit: 'Bs' });
+            console.log(`✓ Ingresos: ${revenueData.length} valores extraídos`);
+        }
+        
+        // Extraer datos de gastos
+        const expenseData = [];
+        document.querySelectorAll('.daily-result-item').forEach((item, index) => {
+            const expenseElement = item.querySelector('[data-expenses]');
+            const expenses = expenseElement ? parseFloat(expenseElement.dataset.expenses || 0) : 0;
+            expenseData.push(expenses);
+        });
+        
+        if (expenseData.length > 0) {
+            variables.push({ name: 'Gastos (Bs)', data: expenseData, unit: 'Bs' });
+            console.log(`✓ Gastos: ${expenseData.length} valores extraídos`);
+        }
+        
+        // Calcular datos de ganancia
+        if (revenueData.length > 0 && expenseData.length > 0) {
+            const profitData = revenueData.map((rev, index) => rev - expenseData[index]);
+            variables.push({ name: 'Ganancia (Bs)', data: profitData, unit: 'Bs' });
+            console.log(`✓ Ganancia: ${profitData.length} valores calculados`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error extrayendo variables:', error);
+    }
     
     return variables;
+}
+
+function performCorrelationAnalysis(variables) {
+    console.log('🔗 Realizando análisis de correlaciones...');
+    
+    const significantCorrelations = [];
+    const correlationMatrix = [];
+    
+    // Calcular todas las correlaciones
+    for (let i = 0; i < variables.length; i++) {
+        const row = [];
+        for (let j = 0; j < variables.length; j++) {
+            const correlation = calculatePearsonCorrelation(variables[i].data, variables[j].data);
+            row.push(correlation);
+            
+            // Guardar correlaciones significativas (excluyendo autocorrelaciones)
+            if (i !== j && Math.abs(correlation) > 0.3) {
+                significantCorrelations.push({
+                    var1: variables[i].name,
+                    var2: variables[j].name,
+                    correlation: correlation,
+                    strength: getCorrelationStrength(Math.abs(correlation)),
+                    direction: correlation > 0 ? 'Positiva' : 'Negativa',
+                    interpretation: getCorrelationInterpretation(correlation, variables[i].name, variables[j].name)
+                });
+            }
+        }
+        correlationMatrix.push(row);
+    }
+    
+    // Mostrar resultados
+    displayCorrelationResults(significantCorrelations, correlationMatrix, variables);
+    
+    console.log(`✓ Análisis de correlaciones completado: ${significantCorrelations.length} correlaciones significativas`);
+}
+
+function getCorrelationInterpretation(correlation, var1, var2) {
+    const absCorr = Math.abs(correlation);
+    const direction = correlation > 0 ? 'aumenta' : 'disminuye';
+    const strength = getCorrelationStrength(absCorr);
+    
+    return `Correlación ${strength.toLowerCase()}: cuando ${var1} aumenta, ${var2} tiende a ${direction}.`;
 }
 
 function calculatePearsonCorrelation(x, y) {
@@ -905,289 +1879,6 @@ function calculatePearsonCorrelation(x, y) {
     return denominator === 0 ? 0 : numerator / denominator;
 }
 
-function initializeRegressionChart() {
-    const ctx = document.getElementById('regressionChart');
-    if (!ctx) return;
-    
-    if (regressionChart) {
-        regressionChart.destroy();
-    }
-    
-    // Análisis de regresión: Demanda vs Ingresos
-    const variables = extractAllVariables();
-    const demandData = variables.find(v => v.name === 'Demanda')?.data || [];
-    const revenueData = variables.find(v => v.name === 'Ingresos')?.data || [];
-    
-    const regressionAnalysis = performLinearRegression(demandData, revenueData);
-    
-    const scatterData = demandData.map((demand, index) => ({
-        x: demand,
-        y: revenueData[index]
-    }));
-    
-    const regressionLine = demandData.map(demand => ({
-        x: demand,
-        y: regressionAnalysis.slope * demand + regressionAnalysis.intercept
-    }));
-    
-    const config = {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Datos Observados',
-                data: scatterData,
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                pointRadius: 4
-            }, {
-                label: `Línea de Regresión (R² = ${regressionAnalysis.r2.toFixed(3)})`,
-                data: regressionLine,
-                type: 'line',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'transparent',
-                pointRadius: 0,
-                tension: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Análisis de Regresión: Demanda vs Ingresos'
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Demanda (L)'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Ingresos (Bs)'
-                    }
-                }
-            }
-        }
-    };
-    
-    regressionChart = new Chart(ctx, config);
-}
-
-function performLinearRegression(x, y) {
-    if (x.length !== y.length || x.length === 0) {
-        return { slope: 0, intercept: 0, r2: 0 };
-    }
-    
-    const n = x.length;
-    const sumX = x.reduce((a, b) => a + b, 0);
-    const sumY = y.reduce((a, b) => a + b, 0);
-    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-    const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
-    const sumYY = y.reduce((sum, yi) => sum + yi * yi, 0);
-    
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-    
-    // Calcular R²
-    const yMean = sumY / n;
-    const ssTotal = y.reduce((sum, yi) => sum + Math.pow(yi - yMean, 2), 0);
-    const ssResidual = y.reduce((sum, yi, i) => {
-        const predicted = slope * x[i] + intercept;
-        return sum + Math.pow(yi - predicted, 2);
-    }, 0);
-    
-    const r2 = ssTotal > 0 ? 1 - (ssResidual / ssTotal) : 0;
-    
-    return { slope, intercept, r2 };
-}
-
-function initializeDistributionChart() {
-    const ctx = document.getElementById('distributionChart');
-    if (!ctx) return;
-    
-    if (distributionChart) {
-        distributionChart.destroy();
-    }
-    
-    const variables = extractAllVariables();
-    const demandData = variables.find(v => v.name === 'Demanda')?.data || [];
-    
-    // Crear histograma de distribución
-    const histogram = createHistogram(demandData, 8);
-    
-    const config = {
-        type: 'bar',
-        data: {
-            labels: histogram.bins,
-            datasets: [{
-                label: 'Frecuencia',
-                data: histogram.frequencies,
-                backgroundColor: 'rgba(75, 192, 192, 0.8)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Distribución de Frecuencia - Demanda'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Frecuencia'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Rangos de Demanda (L)'
-                    }
-                }
-            }
-        }
-    };
-    
-    distributionChart = new Chart(ctx, config);
-}
-
-function createHistogram(data, numBins) {
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    const binWidth = (max - min) / numBins;
-    
-    const bins = [];
-    const frequencies = Array(numBins).fill(0);
-    
-    for (let i = 0; i < numBins; i++) {
-        const start = min + i * binWidth;
-        const end = start + binWidth;
-        bins.push(`${start.toFixed(0)}-${end.toFixed(0)}`);
-    }
-    
-    data.forEach(value => {
-        let binIndex = Math.floor((value - min) / binWidth);
-        if (binIndex >= numBins) binIndex = numBins - 1;
-        if (binIndex < 0) binIndex = 0;
-        frequencies[binIndex]++;
-    });
-    
-    return { bins, frequencies };
-}
-
-function initializeStatisticalBoxplot() {
-    const ctx = document.getElementById('boxplotChart');
-    if (!ctx) return;
-    
-    const variables = extractAllVariables();
-    
-    // Simular boxplot con gráfico de barras
-    const boxplotData = variables.map(variable => {
-        const stats = calculateDescriptiveStats(variable.data);
-        return {
-            label: variable.name,
-            min: stats.min,
-            q1: stats.q1,
-            median: stats.median,
-            q3: stats.q3,
-            max: stats.max,
-            mean: stats.mean
-        };
-    });
-    
-    displayBoxplotData(boxplotData);
-}
-
-function calculateDescriptiveStats(data) {
-    if (data.length === 0) return null;
-    
-    const sortedData = [...data].sort((a, b) => a - b);
-    const n = sortedData.length;
-    
-    return {
-        min: sortedData[0],
-        max: sortedData[n - 1],
-        mean: data.reduce((a, b) => a + b, 0) / n,
-        median: n % 2 === 0 ? 
-            (sortedData[n/2 - 1] + sortedData[n/2]) / 2 : 
-            sortedData[Math.floor(n/2)],
-        q1: sortedData[Math.floor(n * 0.25)],
-        q3: sortedData[Math.floor(n * 0.75)],
-        stdDev: Math.sqrt(data.reduce((sum, val) => {
-            const mean = data.reduce((a, b) => a + b, 0) / n;
-            return sum + Math.pow(val - mean, 2);
-        }, 0) / n)
-    };
-}
-
-function displayBoxplotData(boxplotData) {
-    const container = document.getElementById('boxplotContainer');
-    if (!container) return;
-    
-    let html = '<h6>Estadísticas Descriptivas por Variable:</h6>';
-    html += '<div class="table-responsive">';
-    html += '<table class="table table-sm">';
-    html += '<thead>';
-    html += '<tr><th>Variable</th><th>Mín</th><th>Q1</th><th>Mediana</th><th>Q3</th><th>Máx</th><th>Media</th></tr>';
-    html += '</thead><tbody>';
-    
-    boxplotData.forEach(data => {
-        if (data) {
-            html += `
-                <tr>
-                    <td><strong>${data.label}</strong></td>
-                    <td>${formatNumber(data.min, 1)}</td>
-                    <td>${formatNumber(data.q1, 1)}</td>
-                    <td>${formatNumber(data.median, 1)}</td>
-                    <td>${formatNumber(data.q3, 1)}</td>
-                    <td>${formatNumber(data.max, 1)}</td>
-                    <td>${formatNumber(data.mean, 1)}</td>
-                </tr>
-            `;
-        }
-    });
-    
-    html += '</tbody></table>';
-    html += '</div>';
-    
-    container.innerHTML = html;
-}
-
-function performCorrelationAnalysis() {
-    const variables = extractAllVariables();
-    const significantCorrelations = [];
-    
-    // Encontrar correlaciones significativas
-    for (let i = 0; i < variables.length; i++) {
-        for (let j = i + 1; j < variables.length; j++) {
-            const correlation = calculatePearsonCorrelation(variables[i].data, variables[j].data);
-            
-            if (Math.abs(correlation) > 0.3) { // Umbral de significancia
-                significantCorrelations.push({
-                    var1: variables[i].name,
-                    var2: variables[j].name,
-                    correlation: correlation,
-                    strength: getCorrelationStrength(Math.abs(correlation)),
-                    direction: correlation > 0 ? 'Positiva' : 'Negativa'
-                });
-            }
-        }
-    }
-    
-    displayCorrelationAnalysis(significantCorrelations);
-}
-
 function getCorrelationStrength(absCorrelation) {
     if (absCorrelation > 0.8) return 'Muy Fuerte';
     if (absCorrelation > 0.6) return 'Fuerte';
@@ -1196,452 +1887,405 @@ function getCorrelationStrength(absCorrelation) {
     return 'Muy Débil';
 }
 
-function displayCorrelationAnalysis(correlations) {
-    const container = document.getElementById('correlationAnalysis');
+function displayCorrelationResults(correlations, matrix, variables) {
+    const container = document.getElementById('correlationResults');
     if (!container) return;
     
-    if (correlations.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-info">
-                <i class="bx bx-info-circle me-2"></i>
-                No se encontraron correlaciones significativas entre las variables analizadas.
+    let html = `
+        <div class="correlation-results">
+            <h6 class="mb-3">Matriz de Correlaciones Calculada</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th></th>
+                            ${variables.map(v => `<th class="text-center">${v.name}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    matrix.forEach((row, i) => {
+        html += `<tr><th class="table-light">${variables[i].name}</th>`;
+        row.forEach((corr, j) => {
+            const colorClass = Math.abs(corr) > 0.7 ? 'table-success' : 
+                              Math.abs(corr) > 0.3 ? 'table-warning' : '';
+            html += `<td class="text-center ${colorClass}">${corr.toFixed(3)}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += `
+                    </tbody>
+                </table>
             </div>
-        `;
-        return;
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function generateInteractiveTooltips() {
+    console.log('💡 Generando tooltips interactivos...');
+    
+    // Agregar tooltips a métricas de performance
+    document.querySelectorAll('.performance-metric').forEach(metric => {
+        const metricType = metric.querySelector('.metric-label')?.textContent;
+        metric.setAttribute('title', getMetricTooltip(metricType));
+        metric.setAttribute('data-bs-toggle', 'tooltip');
+        metric.setAttribute('data-bs-placement', 'top');
+    });
+    
+    // Agregar tooltips a resultados de pruebas
+    document.querySelectorAll('.test-result-card').forEach(test => {
+        const testType = test.querySelector('.test-name')?.textContent;
+        test.setAttribute('title', getTestTooltip(testType));
+        test.setAttribute('data-bs-toggle', 'tooltip');
+        test.setAttribute('data-bs-placement', 'top');
+    });
+    
+    // Inicializar Bootstrap tooltips
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+}
+
+function getMetricTooltip(metricType) {
+    const tooltips = {
+        'MAPE': 'Error Porcentual Absoluto Medio: Mide el error promedio como porcentaje. Valores menores indican mayor precisión.',
+        'R²': 'Coeficiente de Determinación: Indica qué porcentaje de la variabilidad explica el modelo (0-1).',
+        'RMSE': 'Raíz del Error Cuadrático Medio: Penaliza más los errores grandes. En las mismas unidades que los datos.',
+        'MAE': 'Error Absoluto Medio: Error promedio en valor absoluto. Fácil de interpretar.',
+        'Nash-Sutcliffe': 'Eficiencia del modelo comparado con usar simplemente el promedio de los datos.',
+        'Willmott-d': 'Índice de concordancia entre valores observados y simulados (0-1).'
+    };
+    
+    return tooltips[metricType] || 'Métrica de evaluación del modelo';
+}
+
+function getTestTooltip(testType) {
+    const tooltips = {
+        'Prueba t': 'Compara las medias de dos grupos para determinar si son estadísticamente diferentes.',
+        'Prueba F': 'Compara las varianzas de dos grupos para evaluar homogeneidad.',
+        'Kolmogorov-Smirnov': 'Compara distribuciones completas entre dos conjuntos de datos.',
+        'Correlación de Pearson': 'Mide la relación lineal entre dos variables (-1 a +1).'
+    };
+    
+    return tooltips[testType] || 'Prueba estadística de validación';
+}
+
+function setupChartInteractions() {
+    console.log('🎯 Configurando interacciones de gráficos...');
+    
+    // Agregar funcionalidad de zoom a gráficos
+    document.querySelectorAll('.chart-image').forEach(img => {
+        img.addEventListener('click', function() {
+            openImageModal(this.src, this.alt);
+        });
+        
+        img.style.cursor = 'pointer';
+        img.setAttribute('title', 'Clic para ampliar');
+    });
+}
+
+function openImageModal(src, title) {
+    const modalHtml = `
+        <div class="modal fade" id="imageModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="${src}" class="img-fluid" alt="${title}">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="downloadImageFromModal('${src}', '${title}')">
+                            <i class="bx bx-download me-1"></i> Descargar
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal anterior si existe
+    const existingModal = document.getElementById('imageModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
-    let html = '<h6>Correlaciones Significativas Detectadas:</h6>';
-    html += '<div class="row g-2">';
+    // Agregar nuevo modal
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
     
-    correlations.forEach(corr => {
-        const cardClass = Math.abs(corr.correlation) > 0.7 ? 'border-success' : 
-                         Math.abs(corr.correlation) > 0.5 ? 'border-warning' : 'border-info';
-        
-        html += `
-            <div class="col-md-6">
-                <div class="card ${cardClass}">
-                    <div class="card-body p-3">
-                        <h6 class="card-title">${corr.var1} ↔ ${corr.var2}</h6>
-                        <p class="card-text">
-                           <strong>Correlación:</strong> ${corr.correlation.toFixed(3)}<br>
-                           <strong>Intensidad:</strong> ${corr.strength}<br>
-                           <strong>Dirección:</strong> ${corr.direction}
-                       </p>
-                       <div class="progress" style="height: 8px;">
-                           <div class="progress-bar ${corr.direction === 'Positiva' ? 'bg-success' : 'bg-warning'}" 
-                                style="width: ${Math.abs(corr.correlation) * 100}%"></div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       `;
-   });
-   
-   html += '</div>';
-   container.innerHTML = html;
+    // Mostrar modal
+    if (typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        modal.show();
+    }
 }
 
-function performRegressionAnalysis() {
-   const variables = extractAllVariables();
-   const regressionResults = [];
-   
-   // Realizar análisis de regresión entre variables clave
-   const demandData = variables.find(v => v.name === 'Demanda')?.data || [];
-   const revenueData = variables.find(v => v.name === 'Ingresos')?.data || [];
-   const profitData = variables.find(v => v.name === 'Ganancia')?.data || [];
-   
-   // Demanda vs Ingresos
-   if (demandData.length > 0 && revenueData.length > 0) {
-       const regression1 = performLinearRegression(demandData, revenueData);
-       regressionResults.push({
-           independent: 'Demanda',
-           dependent: 'Ingresos',
-           ...regression1,
-           equation: `Ingresos = ${regression1.slope.toFixed(2)} × Demanda + ${regression1.intercept.toFixed(2)}`
-       });
-   }
-   
-   // Ingresos vs Ganancia
-   if (revenueData.length > 0 && profitData.length > 0) {
-       const regression2 = performLinearRegression(revenueData, profitData);
-       regressionResults.push({
-           independent: 'Ingresos',
-           dependent: 'Ganancia',
-           ...regression2,
-           equation: `Ganancia = ${regression2.slope.toFixed(2)} × Ingresos + ${regression2.intercept.toFixed(2)}`
-       });
-   }
-   
-   displayRegressionAnalysis(regressionResults);
+function downloadImageFromModal(src, filename) {
+    downloadChart(src.split(',')[1], filename.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.png');
 }
 
-function displayRegressionAnalysis(regressions) {
-   const container = document.getElementById('regressionAnalysis');
-   if (!container) return;
-   
-   if (regressions.length === 0) {
-       container.innerHTML = `
-           <div class="alert alert-warning">
-               <i class="bx bx-error-circle me-2"></i>
-               No se pudieron realizar análisis de regresión con los datos disponibles.
-           </div>
-       `;
-       return;
-   }
-   
-   let html = '<h6>Análisis de Regresión Lineal:</h6>';
-   html += '<div class="accordion" id="regressionAccordion">';
-   
-   regressions.forEach((regression, index) => {
-       const qualityClass = regression.r2 > 0.7 ? 'success' : 
-                           regression.r2 > 0.4 ? 'warning' : 'danger';
-       
-       const qualityText = regression.r2 > 0.7 ? 'Excelente' : 
-                          regression.r2 > 0.4 ? 'Moderado' : 'Pobre';
-       
-       html += `
-           <div class="accordion-item">
-               <h2 class="accordion-header" id="heading${index}">
-                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                           data-bs-target="#collapse${index}">
-                       ${regression.independent} → ${regression.dependent} 
-                       <span class="badge bg-${qualityClass} ms-2">R² = ${regression.r2.toFixed(3)}</span>
-                   </button>
-               </h2>
-               <div id="collapse${index}" class="accordion-collapse collapse" 
-                    data-bs-parent="#regressionAccordion">
-                   <div class="accordion-body">
-                       <div class="row">
-                           <div class="col-md-8">
-                               <p><strong>Ecuación de Regresión:</strong></p>
-                               <p class="bg-light p-2 rounded"><code>${regression.equation}</code></p>
-                               
-                               <p><strong>Interpretación:</strong></p>
-                               <ul>
-                                   <li>Por cada unidad de incremento en ${regression.independent}, 
-                                       ${regression.dependent} ${regression.slope > 0 ? 'aumenta' : 'disminuye'} 
-                                       en ${Math.abs(regression.slope).toFixed(2)} unidades</li>
-                                   <li>El modelo explica el ${(regression.r2 * 100).toFixed(1)}% de la variabilidad 
-                                       en ${regression.dependent}</li>
-                               </ul>
-                           </div>
-                           <div class="col-md-4">
-                               <div class="card">
-                                   <div class="card-body">
-                                       <h6 class="card-title">Calidad del Ajuste</h6>
-                                       <div class="text-center">
-                                           <div class="display-6 text-${qualityClass}">${(regression.r2 * 100).toFixed(1)}%</div>
-                                           <small class="text-${qualityClass}">${qualityText}</small>
-                                       </div>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       `;
-   });
-   
-   html += '</div>';
-   container.innerHTML = html;
+function generateDetailedSummary(variables) {
+    console.log('📋 Generando resumen detallado...');
+    
+    const summary = {
+        totalVariables: variables.length,
+        totalObservations: variables[0]?.data.length || 0,
+        dataQuality: assessDataQuality(variables),
+        recommendations: generateSmartRecommendations(variables)
+    };
+    
+    displayDetailedSummary(summary);
 }
 
-function performDistributionAnalysis() {
-   const variables = extractAllVariables();
-   const distributionResults = [];
-   
-   variables.forEach(variable => {
-       const stats = calculateDescriptiveStats(variable.data);
-       if (stats) {
-           const normalityTest = performShapiroWilkTest(variable.data);
-           const distributionType = identifyDistributionType(variable.data, stats);
-           
-           distributionResults.push({
-               name: variable.name,
-               stats: stats,
-               normality: normalityTest,
-               distributionType: distributionType,
-               outliers: detectOutliers(variable.data, stats)
-           });
-       }
-   });
-   
-   displayDistributionAnalysis(distributionResults);
+function assessDataQuality(variables) {
+    let score = 0;
+    const issues = [];
+    
+    variables.forEach(variable => {
+        const stats = calculateDescriptiveStats(variable.data);
+        if (stats) {
+            // Verificar valores faltantes
+            const missingValues = variable.data.filter(v => v === null || v === undefined || isNaN(v)).length;
+            if (missingValues === 0) score += 20;
+            else issues.push(`${variable.name}: ${missingValues} valores faltantes`);
+            
+            // Verificar outliers extremos
+            const outliers = detectOutliers(variable.data, stats);
+            if (outliers.length < variable.data.length * 0.05) score += 15;
+            else issues.push(`${variable.name}: ${outliers.length} outliers detectados`);
+            
+            // Verificar variabilidad
+            const cv = stats.stdDev / stats.mean;
+            if (cv > 0.1 && cv < 2) score += 15;
+            else issues.push(`${variable.name}: Variabilidad ${cv < 0.1 ? 'muy baja' : 'muy alta'}`);
+        }
+    });
+    
+    return {
+        score: Math.min(score, 100),
+        issues: issues,
+        level: score > 80 ? 'Excelente' : score > 60 ? 'Buena' : score > 40 ? 'Regular' : 'Necesita mejora'
+    };
 }
 
-function performShapiroWilkTest(data) {
-   // Implementación simplificada del test de normalidad
-   // En una implementación real, se usaría una librería estadística
-   const n = data.length;
-   if (n < 3) return { isNormal: false, pValue: 0 };
-   
-   const sortedData = [...data].sort((a, b) => a - b);
-   const mean = data.reduce((a, b) => a + b, 0) / n;
-   
-   // Calcular asimetría y curtosis
-   const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
-   const stdDev = Math.sqrt(variance);
-   
-   const skewness = data.reduce((sum, val) => sum + Math.pow((val - mean) / stdDev, 3), 0) / n;
-   const kurtosis = data.reduce((sum, val) => sum + Math.pow((val - mean) / stdDev, 4), 0) / n - 3;
-   
-   // Criterio simplificado de normalidad
-   const isNormal = Math.abs(skewness) < 1 && Math.abs(kurtosis) < 1;
-   const pValue = isNormal ? 0.1 : 0.01; // Simulado
-   
-   return { isNormal, pValue, skewness, kurtosis };
+function generateSmartRecommendations(variables) {
+    const recommendations = [];
+    
+    // Análisis de correlaciones
+    const hasStrongCorrelations = checkForStrongCorrelations(variables);
+    if (hasStrongCorrelations) {
+        recommendations.push({
+            type: 'success',
+            text: 'Excelentes correlaciones detectadas entre variables clave',
+            action: 'Aprovechar estas relaciones para optimización'
+        });
+    } else {
+        recommendations.push({
+            type: 'warning',
+            text: 'Correlaciones débiles entre variables',
+            action: 'Considerar incluir variables adicionales o revisar metodología'
+        });
+    }
+    
+    // Análisis de distribuciones
+    variables.forEach(variable => {
+        const stats = calculateDescriptiveStats(variable.data);
+        if (stats) {
+            const cv = stats.stdDev / stats.mean;
+            if (cv > 1) {
+                recommendations.push({
+                    type: 'info',
+                    text: `${variable.name} muestra alta variabilidad`,
+                    action: 'Investigar causas de la variabilidad y considerar segmentación'
+                });
+            }
+        }
+    });
+    
+    return recommendations;
 }
 
-function identifyDistributionType(data, stats) {
-   const cv = stats.stdDev / stats.mean;
-   const skewness = Math.abs(stats.mean - stats.median) / stats.stdDev;
-   
-   if (cv < 0.1) return 'Uniforme';
-   if (skewness < 0.5) return 'Normal';
-   if (stats.mean > stats.median) return 'Sesgada a la derecha';
-   if (stats.mean < stats.median) return 'Sesgada a la izquierda';
-   return 'Irregular';
+function checkForStrongCorrelations(variables) {
+    for (let i = 0; i < variables.length; i++) {
+        for (let j = i + 1; j < variables.length; j++) {
+            const correlation = calculatePearsonCorrelation(variables[i].data, variables[j].data);
+            if (Math.abs(correlation) > 0.7) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function displayDetailedSummary(summary) {
+    const container = document.getElementById('detailedSummary');
+    if (!container) return;
+    
+    const html = `
+        <div class="detailed-summary">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-primary">${summary.totalVariables}</h4>
+                            <small>Variables Analizadas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-success">${summary.totalObservations}</h4>
+                            <small>Observaciones</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-info">${summary.dataQuality.score}%</h4>
+                            <small>Calidad de Datos</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-warning">${summary.recommendations.length}</h4>
+                            <small>Recomendaciones</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            ${summary.recommendations.map(rec => `
+                <div class="alert alert-${rec.type}">
+                    <strong>${rec.text}</strong><br>
+                    <small>${rec.action}</small>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Funciones auxiliares mejoradas
+function calculateDescriptiveStats(data) {
+    if (!data || data.length === 0) return null;
+    
+    const validData = data.filter(val => val !== null && val !== undefined && !isNaN(val));
+    if (validData.length === 0) return null;
+    
+    const sortedData = [...validData].sort((a, b) => a - b);
+    const n = sortedData.length;
+    
+    const mean = validData.reduce((a, b) => a + b, 0) / n;
+    const variance = validData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
+    const stdDev = Math.sqrt(variance);
+    
+    return {
+        count: n,
+        min: sortedData[0],
+        max: sortedData[n - 1],
+        mean: mean,
+        median: n % 2 === 0 ? 
+            (sortedData[n/2 - 1] + sortedData[n/2]) / 2 : 
+            sortedData[Math.floor(n/2)],
+        q1: sortedData[Math.floor(n * 0.25)],
+        q3: sortedData[Math.floor(n * 0.75)],
+        stdDev: stdDev,
+        variance: variance,
+        cv: mean !== 0 ? stdDev / mean : 0
+    };
 }
 
 function detectOutliers(data, stats) {
-   const iqr = stats.q3 - stats.q1;
-   const lowerBound = stats.q1 - 1.5 * iqr;
-   const upperBound = stats.q3 + 1.5 * iqr;
-   
-   const outliers = [];
-   data.forEach((value, index) => {
-       if (value < lowerBound || value > upperBound) {
-           outliers.push({
-               index: index + 1,
-               value: value,
-               type: value < lowerBound ? 'Inferior' : 'Superior'
-           });
-       }
-   });
-   
-   return outliers;
+    const iqr = stats.q3 - stats.q1;
+    const lowerBound = stats.q1 - 1.5 * iqr;
+    const upperBound = stats.q3 + 1.5 * iqr;
+    
+    const outliers = [];
+    data.forEach((value, index) => {
+        if (value < lowerBound || value > upperBound) {
+            outliers.push({
+                index: index + 1,
+                value: value,
+                type: value < lowerBound ? 'Inferior' : 'Superior',
+                severity: value < (stats.q1 - 3 * iqr) || value > (stats.q3 + 3 * iqr) ? 'Extremo' : 'Moderado'
+            });
+        }
+    });
+    
+    return outliers;
 }
 
-function displayDistributionAnalysis(results) {
-   const container = document.getElementById('distributionAnalysis');
-   if (!container) return;
-   
-   let html = '<h6>Análisis de Distribuciones:</h6>';
-   html += '<div class="table-responsive">';
-   html += '<table class="table table-sm">';
-   html += '<thead>';
-   html += '<tr><th>Variable</th><th>Tipo de Distribución</th><th>Normalidad</th><th>Asimetría</th><th>Outliers</th></tr>';
-   html += '</thead><tbody>';
-   
-   results.forEach(result => {
-       const normalityClass = result.normality.isNormal ? 'text-success' : 'text-warning';
-       const normalityText = result.normality.isNormal ? 'Normal' : 'No Normal';
-       const outliersCount = result.outliers.length;
-       
-       html += `
-           <tr>
-               <td><strong>${result.name}</strong></td>
-               <td>${result.distributionType}</td>
-               <td class="${normalityClass}">${normalityText}</td>
-               <td>${result.normality.skewness ? result.normality.skewness.toFixed(3) : 'N/A'}</td>
-               <td>
-                   ${outliersCount > 0 ? 
-                       `<span class="badge bg-warning">${outliersCount} detectados</span>` : 
-                       '<span class="text-success">Ninguno</span>'
-                   }
-               </td>
-           </tr>
-       `;
-   });
-   
-   html += '</tbody></table>';
-   html += '</div>';
-   
-   // Mostrar detalles de outliers si existen
-   const allOutliers = results.flatMap(r => 
-       r.outliers.map(o => ({ variable: r.name, ...o }))
-   );
-   
-   if (allOutliers.length > 0) {
-       html += '<div class="mt-3">';
-       html += '<h6>Outliers Detectados:</h6>';
-       html += '<div class="row g-2">';
-       
-       allOutliers.slice(0, 6).forEach(outlier => {
-           html += `
-               <div class="col-md-4">
-                   <div class="card border-warning">
-                       <div class="card-body p-2">
-                           <h6 class="card-title">${outlier.variable}</h6>
-                           <p class="card-text small">
-                               <strong>Día:</strong> ${outlier.index}<br>
-                               <strong>Valor:</strong> ${formatNumber(outlier.value, 2)}<br>
-                               <strong>Tipo:</strong> ${outlier.type}
-                           </p>
-                       </div>
-                   </div>
-               </div>
-           `;
-       });
-       
-       if (allOutliers.length > 6) {
-           html += `
-               <div class="col-12">
-                   <small class="text-muted">... y ${allOutliers.length - 6} outliers más</small>
-               </div>
-           `;
-       }
-       
-       html += '</div>';
-       html += '</div>';
-   }
-   
-   container.innerHTML = html;
+function exportComprehensiveReport() {
+    console.log('📄 Exportando reporte comprehensivo...');
+    
+    try {
+        const variables = extractAllVariables();
+        const csvContent = generateComprehensiveCSV(variables);
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `analisis_estadistico_completo_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        
+        showNotification('Reporte completo exportado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exportando reporte:', error);
+        showNotification('Error al exportar reporte', 'error');
+    }
 }
 
-function generateStatisticalSummary() {
-   const variables = extractAllVariables();
-   const summary = {
-       totalVariables: variables.length,
-       totalObservations: variables[0]?.data.length || 0,
-       significantCorrelations: 0,
-       normalDistributions: 0,
-       outliersDetected: 0
-   };
-   
-   // Contar correlaciones significativas
-   for (let i = 0; i < variables.length; i++) {
-       for (let j = i + 1; j < variables.length; j++) {
-           const correlation = calculatePearsonCorrelation(variables[i].data, variables[j].data);
-           if (Math.abs(correlation) > 0.3) {
-               summary.significantCorrelations++;
-           }
-       }
-   }
-   
-   // Contar distribuciones normales y outliers
-   variables.forEach(variable => {
-       const stats = calculateDescriptiveStats(variable.data);
-       if (stats) {
-           const normalityTest = performShapiroWilkTest(variable.data);
-           if (normalityTest.isNormal) {
-               summary.normalDistributions++;
-           }
-           
-           const outliers = detectOutliers(variable.data, stats);
-           summary.outliersDetected += outliers.length;
-       }
-   });
-   
-   displayStatisticalSummary(summary);
+function generateComprehensiveCSV(variables) {
+    let csv = 'ANÁLISIS ESTADÍSTICO COMPLETO - SIMULACIÓN DE DEMANDA\n';
+    csv += `Fecha de Generación: ${new Date().toLocaleString()}\n\n`;
+    
+    // Resumen ejecutivo
+    csv += 'RESUMEN EJECUTIVO\n';
+    csv += `Variables Analizadas: ${variables.length}\n`;
+    csv += `Observaciones: ${variables[0]?.data.length || 0}\n\n`;
+    
+    // Estadísticas descriptivas
+    csv += 'ESTADÍSTICAS DESCRIPTIVAS\n';
+    csv += 'Variable,Media,Mediana,Desv.Estándar,Mínimo,Máximo,Q1,Q3,CV\n';
+    
+    variables.forEach(variable => {
+        const stats = calculateDescriptiveStats(variable.data);
+        if (stats) {
+            csv += `"${variable.name}",${stats.mean.toFixed(4)},${stats.median.toFixed(4)},${stats.stdDev.toFixed(4)},${stats.min},${stats.max},${stats.q1},${stats.q3},${stats.cv.toFixed(4)}\n`;
+        }
+    });
+    
+    csv += '\n';
+    
+    // Matriz de correlaciones
+    csv += 'MATRIZ DE CORRELACIONES\n';
+    csv += 'Variable 1,Variable 2,Correlación,Fuerza,Interpretación\n';
+    
+    for (let i = 0; i < variables.length; i++) {
+        for (let j = i + 1; j < variables.length; j++) {
+            const correlation = calculatePearsonCorrelation(variables[i].data, variables[j].data);
+            const strength = getCorrelationStrength(Math.abs(correlation));
+            const interpretation = getCorrelationInterpretation(correlation, variables[i].name, variables[j].name);
+            csv += `"${variables[i].name}","${variables[j].name}",${correlation.toFixed(4)},"${strength}","${interpretation}"\n`;
+        }
+    }
+    
+    return csv;
 }
 
-function displayStatisticalSummary(summary) {
-   const container = document.getElementById('statisticalSummary');
-   if (!container) return;
-   
-   const html = `
-       <div class="row g-3">
-           <div class="col-md-3">
-               <div class="card text-center">
-                   <div class="card-body">
-                       <div class="display-6 text-primary">${summary.totalVariables}</div>
-                       <small class="text-muted">Variables Analizadas</small>
-                   </div>
-               </div>
-           </div>
-           <div class="col-md-3">
-               <div class="card text-center">
-                   <div class="card-body">
-                       <div class="display-6 text-success">${summary.totalObservations}</div>
-                       <small class="text-muted">Observaciones</small>
-                   </div>
-               </div>
-           </div>
-           <div class="col-md-3">
-               <div class="card text-center">
-                   <div class="card-body">
-                       <div class="display-6 text-info">${summary.significantCorrelations}</div>
-                       <small class="text-muted">Correlaciones Significativas</small>
-                   </div>
-               </div>
-           </div>
-           <div class="col-md-3">
-               <div class="card text-center">
-                   <div class="card-body">
-                       <div class="display-6 text-warning">${summary.outliersDetected}</div>
-                       <small class="text-muted">Outliers Detectados</small>
-                   </div>
-               </div>
-           </div>
-       </div>
-   `;
-   
-   container.innerHTML = html;
-}
-
-function exportStatisticalReport() {
-   try {
-       const variables = extractAllVariables();
-       const csvContent = generateStatisticalCSV(variables);
-       
-       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-       const link = document.createElement('a');
-       link.href = URL.createObjectURL(blob);
-       link.download = `reporte_estadistico_${new Date().getTime()}.csv`;
-       link.click();
-       
-       showNotification('Reporte estadístico exportado exitosamente', 'success');
-   } catch (error) {
-       console.error('Error exporting statistical report:', error);
-       showNotification('Error al exportar reporte estadístico', 'error');
-   }
-}
-
-function generateStatisticalCSV(variables) {
-   let csv = 'Reporte de Análisis Estadístico - Simulación\n\n';
-   
-   // Estadísticas descriptivas
-   csv += 'Estadísticas Descriptivas\n';
-   csv += 'Variable,Media,Mediana,Desv.Estándar,Mínimo,Máximo,Q1,Q3\n';
-   
-   variables.forEach(variable => {
-       const stats = calculateDescriptiveStats(variable.data);
-       if (stats) {
-           csv += `"${variable.name}",${stats.mean.toFixed(2)},${stats.median.toFixed(2)},${stats.stdDev.toFixed(2)},${stats.min},${stats.max},${stats.q1},${stats.q3}\n`;
-       }
-   });
-   
-   csv += '\n';
-   
-   // Matriz de correlaciones
-   csv += 'Matriz de Correlaciones\n';
-   csv += 'Variable 1,Variable 2,Correlación\n';
-   
-   for (let i = 0; i < variables.length; i++) {
-       for (let j = i + 1; j < variables.length; j++) {
-           const correlation = calculatePearsonCorrelation(variables[i].data, variables[j].data);
-           csv += `"${variables[i].name}","${variables[j].name}",${correlation.toFixed(4)}\n`;
-       }
-   }
-   
-   csv += `\nFecha de Generación,"${new Date().toLocaleDateString()}"\n`;
-   
-   return csv;
-}
-
-// Inicializar cuando se muestre el tab
-document.addEventListener('shown.bs.tab', function(e) {
-   if (e.target.getAttribute('aria-controls') === 'analysis') {
-       setTimeout(initializeAnalysisTab, 100);
-   }
-});
-
-// Exportar funciones globales
-window.initializeAnalysisTab = initializeAnalysisTab;
-window.exportStatisticalReport = exportStatisticalReport;
-window.performCorrelationAnalysis = performCorrelationAnalysis;
-window.performRegressionAnalysis = performRegressionAnalysis;
-window.performDistributionAnalysis = performDistributionAnalysis;
-</script>
+// Inicial

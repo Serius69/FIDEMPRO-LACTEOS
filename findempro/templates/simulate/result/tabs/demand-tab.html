@@ -1,697 +1,1631 @@
-<!-- Demand Tab -->
+<!-- ========================================== -->
+<!-- COMPONENTE DE ANÁLISIS DE DEMANDA - HTML -->
+<!-- demand-tab.html                          -->
+<!-- ========================================== -->
+
+<!-- Demand Tab - Análisis Completo de Demanda -->
 <div class="tab-pane fade" id="demand" role="tabpanel">
-    <div class="row">
-        <div class="col-md-6">
-            <!-- Demand Table -->
-            <div class="data-table-container">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bx bx-table me-2"></i>
-                        Tabla de Demanda Diaria
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive" style="max-height: 400px;">
-                        <table class="table table-striped" id="demandTable">
-                            <thead>
-                                <tr>
-                                    <th>Día</th>
-                                    <th>Fecha</th>
-                                    <th>Demanda (L)</th>
-                                    <th>Desviación (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for simulate in results %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ simulate.date|date:"d/m/Y" }}</td>
-                                    <td class="fw-bold">{{ simulate.demand_mean|floatformat:"2" }}</td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            {{ simulate.demand_std_deviation|floatformat:"2" }}%
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="pagination-controls">
-                    <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="prevTablePage">
-                        <i class="bx bx-chevron-left me-1"></i>Anterior
-                    </button>
-                    <span class="flex-grow-1 text-center small text-muted" id="tablePageInfo">
-                        Página 1
-                    </span>
-                    <button type="button" class="btn btn-sm btn-outline-primary btn-pagination" id="nextTablePage">
-                        Siguiente<i class="bx bx-chevron-right ms-1"></i>
-                    </button>
-                </div>
+    
+    <!-- ==================== HEADER PRINCIPAL ==================== -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="bx bx-line-chart text-primary me-2"></i>
+                Análisis de Demanda
+            </h4>
+            <p class="text-muted mb-0">Análisis detallado de patrones y tendencias de consumo</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bx bx-filter me-1"></i>Filtros
+                </button>
+                <ul class="dropdown-menu">
+                    <li><h6 class="dropdown-header">Rango de Demanda</h6></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterDemandByRange('high')">
+                        <i class="bx bx-trending-up text-danger me-2"></i>Alta (>120% promedio)
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterDemandByRange('medium')">
+                        <i class="bx bx-minus text-warning me-2"></i>Normal (80-120% promedio)
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="filterDemandByRange('low')">
+                        <i class="bx bx-trending-down text-success me-2"></i>Baja (<80% promedio)
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="resetDemandFilters()">
+                        <i class="bx bx-refresh me-2"></i>Limpiar filtros
+                    </a></li>
+                </ul>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="exportDemandReport()">
+                <i class="bx bx-download me-1"></i>Exportar
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== EXPLICACIÓN GENERAL ==================== -->
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+        <div class="d-flex align-items-start">
+            <i class="bx bx-info-circle me-3 mt-1 fs-5"></i>
+            <div>
+                <h6 class="mb-2">¿Qué es el Análisis de Demanda?</h6>
+                <p class="mb-2">Este análisis examina los patrones de consumo de agua durante el período simulado, identificando tendencias, variaciones y comportamientos anómalos que pueden afectar la gestión del sistema de distribución.</p>
+                <p class="mb-0"><strong>Utiliza estos datos para:</strong> Planificar capacidades, optimizar inventarios, detectar problemas en la red y mejorar la eficiencia operativa.</p>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="chart-container">
-                <h6 class="mb-3">
-                    <i class="bx bx-line-chart-down me-2"></i>
-                    Análisis de Demanda con Tendencias
-                </h6>
-                {% if image_data_simulation %}
-                <img src="data:image/png;base64,{{ image_data_simulation }}" 
-                        class="chart-image" 
-                        alt="Análisis de demanda"
-                        loading="lazy">
-                {% endif %}
-            </div>
-        </div>
-        {% if comparison_chart %}
-        <div class="col-12 mb-4">
-            <div class="chart-container">
-                <h6 class="mb-3">
-                    <i class="bx bx-git-compare me-2"></i>
-                    Comparación: Demanda Histórica vs Simulada
-                </h6>
-                <div class="chart-controls">
-                    <div class="chart-control-btn" onclick="downloadChart('{{ comparison_chart }}', 'comparacion-demanda.png')" title="Descargar">
-                        <i class="bx bx-download"></i>
-                    </div>
-                    <div class="chart-control-btn" onclick="openFullscreen('{{ comparison_chart }}', 'Comparación de Demanda')" title="Pantalla completa">
-                        <i class="bx bx-fullscreen"></i>
-                    </div>
-                </div>
-                <img src="data:image/png;base64,{{ comparison_chart }}" 
-                    class="chart-image" 
-                    alt="Comparación de Demanda Histórica vs Simulada"
-                    loading="lazy">
-            </div>
-        </div>
-        {% endif %}
-        <!-- Three-Line Validation Chart Section -->
-        {% if has_three_line_chart %}
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-success text-white">
-                        <h4 class="mb-0">
-                            <i class="fas fa-check-circle"></i> Validación del Modelo: Comparación de Tres Líneas
-                        </h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-lg-9">
-                                {% if three_line_validation_chart %}
-                                    <img src="data:image/png;base64,{{ three_line_validation_chart }}" 
-                                        class="img-fluid rounded shadow" 
-                                        alt="Gráfico de Validación de Tres Líneas">
-                                {% endif %}
+    </div>
+
+    <!-- ==================== KPIS PRINCIPALES ==================== -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 kpi-card" data-bs-toggle="tooltip" 
+                 title="Suma total de agua demandada durante todo el período de simulación">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                            <i class="bx bx-water text-primary fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Demanda Total</div>
+                            <div class="fw-bold fs-5" id="totalDemandValue">0 L</div>
+                            <div class="kpi-explanation">
+                                <small class="text-muted">Consumo acumulado total</small>
                             </div>
-                            <div class="col-lg-3">
-                                <div class="validation-metrics">
-                                    <h5>Métricas de Validación</h5>
-                                    
-                                    {% if three_line_validation_metrics.historical_vs_simulated %}
-                                    <div class="metric-card mb-3 p-3 bg-light rounded">
-                                        <h6 class="text-muted">Histórico vs Simulado</h6>
-                                        <p class="mb-1">RMSE: <strong>{{ three_line_validation_metrics.historical_vs_simulated.rmse|floatformat:2 }}</strong></p>
-                                    </div>
-                                    {% endif %}
-                                    
-                                    {% if three_line_validation_metrics.simulated_vs_projected %}
-                                    <div class="metric-card mb-3 p-3 bg-light rounded">
-                                        <h6 class="text-muted">Simulado vs Proyectado</h6>
-                                        <p class="mb-1">MAPE: <strong>{{ three_line_validation_metrics.simulated_vs_projected.mape }}%</strong></p>
-                                        <p class="mb-0">Alineación: <strong>{{ three_line_validation_metrics.simulated_vs_projected.alignment }}</strong></p>
-                                    </div>
-                                    {% endif %}
-                                    
-                                    {% if three_line_validation_metrics.overall_validation %}
-                                    <div class="metric-card p-3 bg-primary text-white rounded">
-                                        <h6>Validación General</h6>
-                                        <h3 class="mb-1">{{ three_line_validation_metrics.overall_validation.score|floatformat:1 }}%</h3>
-                                        <p class="mb-0">{{ three_line_validation_metrics.overall_validation.status }}</p>
-                                    </div>
-                                    {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 kpi-card" data-bs-toggle="tooltip" 
+                 title="Promedio de litros consumidos por día - útil para dimensionar capacidades">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-success bg-opacity-10 me-3">
+                            <i class="bx bx-calculator text-success fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Promedio Diario</div>
+                            <div class="fw-bold fs-5" id="avgDemandValue">0 L</div>
+                            <div class="kpi-explanation">
+                                <small class="text-muted">Base para planificación</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 kpi-card" data-bs-toggle="tooltip" 
+                 title="Mide qué tan variable es la demanda. <15% es estable, >30% es muy variable">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-warning bg-opacity-10 me-3">
+                            <i class="bx bx-stats text-warning fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Variabilidad</div>
+                            <div class="fw-bold fs-5" id="demandVariabilityValue">0%</div>
+                            <div class="kpi-explanation">
+                                <small class="text-muted" id="variabilityExplanation">Estabilidad del consumo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 kpi-card" data-bs-toggle="tooltip" 
+                 title="Dirección de cambio en la demanda. ↗ creciente, ↘ decreciente, → estable">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-info bg-opacity-10 me-3">
+                            <i class="bx bx-trending-up text-info fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Tendencia</div>
+                            <div class="fw-bold fs-5" id="demandTrendValue">→ 0%</div>
+                            <div class="kpi-explanation">
+                                <small class="text-muted" id="trendExplanation">Dirección del cambio</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+    <div class="row g-4">
+        
+        <!-- ========== TABLA DE DATOS CON EXPLICACIONES ========== -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="bx bx-table me-2"></i>
+                                Datos Diarios Detallados
+                            </h6>
+                            <small class="text-muted">Consumo registrado día por día con indicadores de estado</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm" 
+                                   style="width: 150px;" placeholder="Buscar día..."
+                                   id="demandTableSearch">
+                            <button class="btn btn-outline-secondary btn-sm" 
+                                    onclick="toggleDemandTableView()" id="tableViewToggle"
+                                    title="Cambiar vista">
+                                <i class="bx bx-grid-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Explicación de la tabla -->
+                    <div class="p-3 bg-light border-bottom">
+                        <div class="row g-2 small">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success bg-opacity-20 text-success me-2">
+                                        <i class="bx bx-check-circle"></i>
+                                    </span>
+                                    <span>Estable: Variación < 15%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-warning bg-opacity-20 text-warning me-2">
+                                        <i class="bx bx-info-circle"></i>
+                                    </span>
+                                    <span>Moderada: Variación 15-25%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-danger bg-opacity-20 text-danger me-2">
+                                        <i class="bx bx-error-circle"></i>
+                                    </span>
+                                    <span>Alta variación: > 25%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="demand-bar me-2" style="width: 20px; height: 6px; background: linear-gradient(90deg, #198754 60%, #e9ecef 60%);"></div>
+                                    <span>Barra: Intensidad de demanda</span>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="mt-3 p-3 bg-light rounded">
-                            <h6>Interpretación del Gráfico:</h6>
-                            <ul class="mb-0">
-                                <li><span style="color: blue; font-weight: bold;">Línea Azul</span>: Demanda Real Histórica</li>
-                                <li><span style="color: red; font-weight: bold;">Línea Roja</span>: Demanda Proyectada (tendencia futura)</li>
-                                <li><span style="color: green; font-weight: bold;">Línea Verde (punteada)</span>: Demanda Simulada (validación del modelo)</li>
-                            </ul>
+                    </div>
+
+                    <!-- Vista de tabla -->
+                    <div id="demandTableView">
+                        <div class="table-responsive" style="max-height: 400px;">
+                            <table class="table table-hover mb-0" id="demandTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="border-0">Día</th>
+                                        <th class="border-0">Fecha</th>
+                                        <th class="border-0">Demanda (L)</th>
+                                        <th class="border-0">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for simulate in results %}
+                                    <tr class="demand-row" data-demand="{{ simulate.demand_mean }}" 
+                                        data-day="{{ forloop.counter }}">
+                                        <td class="fw-medium">{{ forloop.counter }}</td>
+                                        <td class="text-muted">{{ simulate.date|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="fw-bold me-2">{{ simulate.demand_mean|floatformat:"0" }}</span>
+                                                <div class="demand-bar" 
+                                                     style="width: 40px; height: 6px; background: linear-gradient(90deg, 
+                                                     {% if simulate.demand_mean > 350 %}#dc3545{% elif simulate.demand_mean > 250 %}#fd7e14{% else %}#198754{% endif %} 
+                                                     {{ simulate.demand_mean|floatformat:"0"|add:"0"|mul:"0.2" }}%, #e9ecef {{ simulate.demand_mean|floatformat:"0"|add:"0"|mul:"0.2" }}%);">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if simulate.demand_std_deviation > 25 %}
+                                                <span class="badge bg-danger bg-opacity-20 text-danger">
+                                                    <i class="bx bx-error-circle me-1"></i>Alta variación
+                                                </span>
+                                            {% elif simulate.demand_std_deviation > 15 %}
+                                                <span class="badge bg-warning bg-opacity-20 text-warning">
+                                                    <i class="bx bx-info-circle me-1"></i>Moderada
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success bg-opacity-20 text-success">
+                                                    <i class="bx bx-check-circle me-1"></i>Estable
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Vista de tarjetas (alternativa) -->
+                    <div id="demandCardView" style="display: none;">
+                        <div class="p-3" style="max-height: 400px; overflow-y: auto;">
+                            <div class="row g-2" id="demandCards">
+                                <!-- Las tarjetas se generarán dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="prevTablePage">
+                            <i class="bx bx-chevron-left me-1"></i>Anterior
+                        </button>
+                        <span class="small text-muted" id="tablePageInfo">Página 1</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="nextTablePage">
+                            Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== GRÁFICOS Y ANÁLISIS ========== -->
+        <div class="col-lg-7">
+            <!-- Gráfico principal con explicación -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="bx bx-line-chart me-2"></i>
+                                Evolución de la Demanda en el Tiempo
+                            </h6>
+                            <small class="text-muted">Visualización del comportamiento de consumo durante la simulación</small>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="chartPeriod" id="period7" checked>
+                            <label class="btn btn-outline-secondary" for="period7">7d</label>
+                            
+                            <input type="radio" class="btn-check" name="chartPeriod" id="period14">
+                            <label class="btn btn-outline-secondary" for="period14">14d</label>
+                            
+                            <input type="radio" class="btn-check" name="chartPeriod" id="periodAll">
+                            <label class="btn btn-outline-secondary" for="periodAll">Todo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Explicación del gráfico -->
+                    <div class="alert alert-light border mb-3">
+                        <div class="row g-2 small">
+                            <div class="col-md-12 mb-2">
+                                <strong>Cómo interpretar este gráfico:</strong>
+                            </div>
+                            <div class="col-md-4">
+                                • <strong>Línea principal:</strong> Demanda real simulada
+                            </div>
+                            <div class="col-md-4">
+                                • <strong>Picos hacia arriba:</strong> Días de alto consumo
+                            </div>
+                            <div class="col-md-4">
+                                • <strong>Valles hacia abajo:</strong> Días de bajo consumo
+                            </div>
+                            <div class="col-md-6">
+                                • <strong>Tendencia general:</strong> Dirección del cambio
+                            </div>
+                            <div class="col-md-6">
+                                • <strong>Variaciones bruscas:</strong> Posibles anomalías
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if image_data_simulation %}
+                    <div class="position-relative">
+                        <img src="data:image/png;base64,{{ image_data_simulation }}" 
+                             class="img-fluid rounded" 
+                             alt="Análisis de demanda"
+                             loading="lazy">
+                        <div class="chart-controls position-absolute top-0 end-0 m-2">
+                            <button class="btn btn-sm btn-light shadow-sm me-1" 
+                                    onclick="downloadChart('{{ image_data_simulation }}', 'demanda-simulacion.png')"
+                                    title="Descargar gráfico">
+                                <i class="bx bx-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light shadow-sm" 
+                                    onclick="openFullscreen('{{ image_data_simulation }}', 'Análisis de Demanda')"
+                                    title="Ver en pantalla completa">
+                                <i class="bx bx-fullscreen"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Gráfico de demanda no disponible</p>
+                        <small class="text-muted">Los datos se mostrarán cuando la simulación genere resultados</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Métricas detalladas con explicaciones -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom">
+                            <h6 class="mb-0">
+                                <i class="bx bx-bar-chart-alt-2 text-primary me-2"></i>
+                                Estadísticas Descriptivas
+                            </h6>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-2 text-sm">
+                                <div class="col-12 mb-2">
+                                    <small class="text-muted">Estos valores ayudan a entender la distribución de la demanda:</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Máximo:</div>
+                                    <div class="fw-bold" id="maxDemandValue">0 L</div>
+                                    <div class="small text-muted">Día de mayor consumo</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Mínimo:</div>
+                                    <div class="fw-bold" id="minDemandValue">0 L</div>
+                                    <div class="small text-muted">Día de menor consumo</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Mediana:</div>
+                                    <div class="fw-bold" id="medianDemandValue">0 L</div>
+                                    <div class="small text-muted">Valor central típico</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Rango:</div>
+                                    <div class="fw-bold" id="rangeDemandValue">0 L</div>
+                                    <div class="small text-muted">Diferencia máx-mín</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom">
+                            <h6 class="mb-0">
+                                <i class="bx bx-calendar text-success me-2"></i>
+                                Patrón Semanal de Consumo
+                            </h6>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="mb-2">
+                                <small class="text-muted">Promedio de consumo por día de la semana (útil para detectar patrones de comportamiento):</small>
+                            </div>
+                            <div id="weekdayPattern">
+                                <div class="text-center text-muted">
+                                    <i class="bx bx-loader-alt bx-spin"></i>
+                                    Calculando patrón semanal...
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-success">
+                                    <i class="bx bx-info-circle me-1"></i>
+                                    Las barras más altas indican días de mayor consumo promedio
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
+
+    <!-- ==================== COMPARACIÓN HISTÓRICA ==================== -->
+    {% if comparison_chart %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="bx bx-git-compare text-info me-2"></i>
+                                Comparación: Demanda Histórica vs Simulada
+                            </h6>
+                            <small class="text-muted">Validación del modelo comparando datos reales con resultados simulados</small>
+                        </div>
+                        <span class="badge bg-info bg-opacity-20 text-info">
+                            <i class="bx bx-check-circle me-1"></i>Validación
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Explicación detallada -->
+                    <div class="alert alert-info border-0 mb-3">
+                        <div class="row g-2">
+                            <div class="col-md-12 mb-2">
+                                <h6 class="mb-2">
+                                    <i class="bx bx-lightbulb me-2"></i>¿Qué muestra esta comparación?
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="mb-0 small">
+                                    <li><strong>Línea histórica (azul):</strong> Datos reales de consumo pasado</li>
+                                    <li><strong>Línea simulada (roja):</strong> Resultados de la simulación actual</li>
+                                    <li><strong>Correlación alta:</strong> Modelo bien calibrado</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="mb-0 small">
+                                    <li><strong>Patrones similares:</strong> Simulación realista</li>
+                                    <li><strong>Desviaciones menores:</strong> Variabilidad normal esperada</li>
+                                    <li><strong>Desviaciones grandes:</strong> Revisar parámetros del modelo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="position-relative">
+                        <img src="data:image/png;base64,{{ comparison_chart }}" 
+                             class="img-fluid rounded" 
+                             alt="Comparación de Demanda Histórica vs Simulada"
+                             loading="lazy">
+                        <div class="chart-controls position-absolute top-0 end-0 m-2">
+                            <button class="btn btn-sm btn-light shadow-sm me-1" 
+                                    onclick="downloadChart('{{ comparison_chart }}', 'comparacion-demanda.png')"
+                                    title="Descargar gráfico de comparación">
+                                <i class="bx bx-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light shadow-sm" 
+                                    onclick="openFullscreen('{{ comparison_chart }}', 'Comparación de Demanda')"
+                                    title="Ver comparación en pantalla completa">
+                                <i class="bx bx-fullscreen"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Indicadores de calidad de la comparación -->
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bx bx-target text-primary fs-4"></i>
+                                <div class="mt-2">
+                                    <div class="fw-bold">Precisión</div>
+                                    <div class="small text-muted">Qué tan cerca están los valores simulados de los reales</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bx bx-trending-up text-success fs-4"></i>
+                                <div class="mt-2">
+                                    <div class="fw-bold">Tendencias</div>
+                                    <div class="small text-muted">Si la simulación captura las tendencias reales</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bx bx-stats text-warning fs-4"></i>
+                                <div class="mt-2">
+                                    <div class="fw-bold">Variabilidad</div>
+                                    <div class="small text-muted">Si reproduce las fluctuaciones naturales</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ==================== VALIDACIÓN DE TRES LÍNEAS ==================== -->
+    {% if has_three_line_chart %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm border-success">
+                <div class="card-header bg-success bg-opacity-10 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1 text-success">
+                                <i class="bx bx-check-shield me-2"></i>
+                                Validación Avanzada del Modelo: Análisis de Tres Líneas
+                            </h5>
+                            <small class="text-muted">Comparación integral entre datos históricos, simulación y proyección futura</small>
+                        </div>
+                        <span class="badge bg-success">Validación Completa</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Explicación comprehensiva -->
+                    <div class="alert alert-success border-0 mb-4">
+                        <h6 class="mb-3">
+                            <i class="bx bx-info-circle me-2"></i>¿Qué es el Análisis de Tres Líneas?
+                        </h6>
+                        <p class="mb-3">Este es el método más robusto para validar la calidad de una simulación de demanda. Compara tres conjuntos de datos clave para determinar si el modelo es confiable para tomar decisiones operativas.</p>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="legend-color bg-primary me-3 mt-1" style="width: 20px; height: 4px;"></div>
+                                    <div>
+                                        <strong>Línea Azul - Histórica Real</strong>
+                                        <div class="small text-muted">Datos reales de consumo del pasado. Esta es la "verdad de referencia" que sabemos que ocurrió.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="legend-color bg-danger me-3 mt-1" style="width: 20px; height: 4px;"></div>
+                                    <div>
+                                        <strong>Línea Roja - Proyección Futura</strong>
+                                        <div class="small text-muted">Predicción matemática basada en tendencias históricas. Muestra hacia dónde "debería" ir la demanda.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="legend-color bg-success me-3 mt-1" style="width: 20px; height: 4px; border: 2px dashed #198754;"></div>
+                                    <div>
+                                        <strong>Línea Verde - Simulación</strong>
+                                        <div class="small text-muted">Resultado de nuestro modelo de simulación. Debe estar entre las otras dos líneas para ser válida.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 p-3 bg-white rounded">
+                            <h6 class="text-success mb-2">Criterios de Validación:</h6>
+                            <div class="row g-2 small">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-check text-success me-2"></i>
+                                        <span><strong>Buena validación:</strong> Las tres líneas siguen patrones similares</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-check text-success me-2"></i>
+                                        <span><strong>Simulación entre límites:</strong> Verde entre azul y roja</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-check text-success me-2"></i>
+                                        <span><strong>Tendencias coherentes:</strong> Misma dirección de cambio</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-check text-success me-2"></i>
+                                        <span><strong>Variabilidad realista:</strong> Fluctuaciones similares</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            {% if three_line_validation_chart %}
+                            <div class="position-relative">
+                                <img src="data:image/png;base64,{{ three_line_validation_chart }}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     alt="Gráfico de Validación de Tres Líneas">
+                                <div class="chart-controls position-absolute top-0 end-0 m-2">
+                                    <button class="btn btn-sm btn-light shadow-sm" 
+                                            onclick="downloadChart('{{ three_line_validation_chart }}', 'validacion-tres-lineas.png')"
+                                            title="Descargar gráfico de validación">
+                                        <i class="bx bx-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Guía de interpretación visual -->
+                            <div class="mt-3 p-3 bg-light rounded">
+                                <h6 class="mb-2">
+                                    <i class="bx bx-search-alt text-info me-2"></i>
+                                    Cómo Interpretar el Gráfico:
+                                </h6>
+                                <div class="row g-2 small">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="bx bx-trending-up text-success me-2"></i>
+                                            <span><strong>Líneas paralelas:</strong> Modelo bien calibrado</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="bx bx-target text-primary me-2"></i>
+                                            <span><strong>Cruces ocasionales:</strong> Variabilidad normal</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="bx bx-error text-warning me-2"></i>
+                                            <span><strong>Desviaciones grandes:</strong> Revisar parámetros</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="bx bx-x-circle text-danger me-2"></i>
+                                            <span><strong>Líneas divergentes:</strong> Modelo inválido</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="h-100">
+                                <h6 class="mb-3">
+                                    <i class="bx bx-calculator me-2"></i>Métricas de Validación
+                                </h6>
+                                
+                                {% if three_line_validation_metrics.overall_validation %}
+                                <div class="card border-success mb-3">
+                                    <div class="card-body text-center p-3">
+                                        <div class="display-6 fw-bold text-success mb-2">
+                                            {{ three_line_validation_metrics.overall_validation.score|floatformat:1 }}%
+                                        </div>
+                                        <div class="text-success fw-medium mb-2">
+                                            {{ three_line_validation_metrics.overall_validation.status }}
+                                        </div>
+                                        <div class="small text-muted">
+                                            Puntuación general de validación del modelo
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if three_line_validation_metrics.historical_vs_simulated %}
+                                <div class="card border-0 bg-light mb-3">
+                                    <div class="card-body p-3">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="bx bx-git-compare me-1"></i>Histórico vs Simulado
+                                        </h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span>RMSE (Error Cuadrático):</span>
+                                            <strong>{{ three_line_validation_metrics.historical_vs_simulated.rmse|floatformat:2 }}</strong>
+                                        </div>
+                                        <div class="small text-muted">
+                                            <i class="bx bx-info-circle me-1"></i>
+                                            Menor valor = mejor precisión. <50 es excelente, <100 es bueno, >200 requiere ajustes.
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if three_line_validation_metrics.simulated_vs_projected %}
+                                <div class="card border-0 bg-light mb-3">
+                                    <div class="card-body p-3">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="bx bx-trending-up me-1"></i>Simulado vs Proyectado
+                                        </h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span>MAPE (Error Porcentual):</span>
+                                            <strong>{{ three_line_validation_metrics.simulated_vs_projected.mape }}%</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span>Alineación:</span>
+                                            <strong>{{ three_line_validation_metrics.simulated_vs_projected.alignment }}</strong>
+                                        </div>
+                                        <div class="small text-muted">
+                                            <i class="bx bx-info-circle me-1"></i>
+                                            MAPE <10% es excelente, <20% es aceptable. Alineación "Alta" es ideal.
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Recomendaciones basadas en las métricas -->
+                                <div class="card border-info">
+                                    <div class="card-body p-3">
+                                        <h6 class="text-info mb-2">
+                                            <i class="bx bx-lightbulb me-1"></i>Recomendaciones
+                                        </h6>
+                                        <div id="validationRecommendations">
+                                            <div class="small text-muted">
+                                                Las recomendaciones se generarán basadas en las métricas de validación...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ==================== INSIGHTS Y ANOMALÍAS ==================== -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-1">
+                        <i class="bx bx-brain text-warning me-2"></i>
+                        Insights Automáticos del Sistema
+                    </h6>
+                    <small class="text-muted">Análisis inteligente de patrones y recomendaciones operativas</small>
+                </div>
+                <div class="card-body">
+                    <!-- Explicación de insights -->
+                    <div class="alert alert-warning border-0 bg-warning bg-opacity-10 mb-3">
+                        <div class="small">
+                            <strong>¿Qué son los insights?</strong> Son conclusiones automáticas que el sistema genera al analizar los datos de demanda. Te ayudan a identificar oportunidades de mejora y riesgos potenciales sin necesidad de análisis manual.
+                        </div>
+                    </div>
+                    <div id="demandInsights">
+                        <div class="text-center text-muted py-3">
+                            <i class="bx bx-loader-alt bx-spin mb-2"></i>
+                            <div>Analizando patrones de consumo...</div>
+                            <small class="text-muted">Generando recomendaciones inteligentes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-1">
+                        <i class="bx bx-error-circle text-danger me-2"></i>
+                        Detección de Anomalías
+                    </h6>
+                    <small class="text-muted">Identificación automática de comportamientos inusuales en el consumo</small>
+                </div>
+                <div class="card-body">
+                    <!-- Explicación de anomalías -->
+                    <div class="alert alert-danger border-0 bg-danger bg-opacity-10 mb-3">
+                        <div class="small">
+                            <strong>¿Qué son las anomalías?</strong> Son días donde el consumo se desvía significativamente del patrón normal (>2 desviaciones estándar). Pueden indicar fugas, eventos especiales o problemas en la red.
+                        </div>
+                    </div>
+                    <div id="demandAnomalies">
+                        <div class="text-center text-muted py-3">
+                            <i class="bx bx-search-alt mb-2"></i>
+                            <div>Buscando comportamientos anómalos...</div>
+                            <small class="text-muted">Aplicando análisis estadístico</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== RESUMEN EJECUTIVO ==================== -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-primary bg-opacity-5">
+                <div class="card-header bg-primary bg-opacity-10 border-bottom">
+                    <h6 class="mb-0 text-primary">
+                        <i class="bx bx-check-double me-2"></i>
+                        Resumen Ejecutivo y Próximos Pasos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="executiveSummary">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-2">
+                                    <i class="bx bx-chart-line me-2"></i>Estado del Sistema
+                                </h6>
+                                <div id="systemStatus">
+                                    <div class="placeholder-glow">
+                                        <span class="placeholder col-12"></span>
+                                        <span class="placeholder col-8"></span>
+                                        <span class="placeholder col-6"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-2">
+                                    <i class="bx bx-list-check me-2"></i>Acciones Recomendadas
+                                </h6>
+                                <div id="recommendedActions">
+                                    <div class="placeholder-glow">
+                                        <span class="placeholder col-10"></span>
+                                        <span class="placeholder col-12"></span>
+                                        <span class="placeholder col-7"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
+<style>
+/* ==========================================
+   ESTILOS CSS PARA ANÁLISIS DE DEMANDA
+   demand-tab.css
+   ========================================== */
+
+/* ========== ESTILOS GENERALES ========== */
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.demand-bar {
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.demand-row:hover .demand-bar {
+    transform: scaleY(1.5);
+}
+
+.legend-color {
+    border-radius: 2px;
+}
+
+.chart-controls {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.chart-controls:hover {
+    opacity: 1;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* ========== INSIGHTS Y ANOMALÍAS ========== */
+.insight-card, .anomaly-card {
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.insight-icon, .anomaly-icon {
+    min-width: 24px;
+}
+
+.insight-details, .anomaly-details {
+    padding-left: 1rem;
+    border-left: 2px solid rgba(0,0,0,0.1);
+    margin-top: 0.5rem;
+}
+
+/* ========== KPI CARDS ========== */
+.kpi-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.kpi-card:hover {
+    border-left-color: var(--bs-primary);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.kpi-explanation {
+    margin-top: 0.25rem;
+}
+
+/* ========== TABLA RESPONSIVA ========== */
+.table-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: #dee2e6 transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+    width: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: #dee2e6;
+    border-radius: 3px;
+}
+
+/* ========== ANIMACIONES ========== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 768px) {
+    .icon-circle {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .fs-5 {
+        font-size: 1rem !important;
+    }
+    
+    .chart-controls {
+        position: relative !important;
+        margin: 0.5rem 0 !important;
+    }
+    
+    .legend-color {
+        width: 12px !important;
+        height: 2px !important;
+    }
+    
+    .insight-details, .anomaly-details {
+        padding-left: 0.5rem;
+        border-left-width: 1px;
+    }
+}
+
+/* ========== PROGRESS BARS ========== */
+.vertical-progress {
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+}
+
+.vertical-progress .progress-bar {
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* ========== BADGES Y ESTADOS ========== */
+.badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.text-success { color: #198754 !important; }
+.text-warning { color: #fd7e14 !important; }
+.text-danger { color: #dc3545 !important; }
+.text-info { color: #0dcaf0 !important; }
+.text-primary { color: #0d6efd !important; }
+
+/* ========== LOADING STATES ========== */
+.placeholder {
+    background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ========== ALERTS Y NOTIFICACIONES ========== */
+.alert {
+    border-radius: 8px;
+}
+
+.alert.border-0 {
+    border: none !important;
+}
+
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    color: #055160;
+}
+
+.alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #0a3622;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #664d03;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #58151c;
+}
+
+/* ========== TOOLTIPS ========== */
+.tooltip {
+    font-size: 0.8rem;
+}
+
+.tooltip-inner {
+    max-width: 250px;
+    text-align: left;
+}
+
+/* ========== CARDS ESPECIALES ========== */
+.card.border-success {
+    border-color: #198754 !important;
+}
+
+.card.border-info {
+    border-color: #0dcaf0 !important;
+}
+
+.card.border-warning {
+    border-color: #ffc107 !important;
+}
+
+.card.border-danger {
+    border-color: #dc3545 !important;
+}
+
+/* ========== BACKGROUNDS ========== */
+.bg-primary.bg-opacity-5 {
+    background-color: rgba(13, 110, 253, 0.05) !important;
+}
+
+.bg-primary.bg-opacity-10 {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.bg-success.bg-opacity-10 {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-warning.bg-opacity-10 {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-danger.bg-opacity-10 {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.bg-info.bg-opacity-20 {
+    background-color: rgba(13, 202, 240, 0.2) !important;
+}
+
+.bg-success.bg-opacity-20 {
+    background-color: rgba(25, 135, 84, 0.2) !important;
+}
+
+.bg-warning.bg-opacity-20 {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+}
+
+.bg-danger.bg-opacity-20 {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+}
+
+/* ========== SOMBRAS ========== */
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ========== BORDES ========== */
+.border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.border-top-0 {
+    border-top: 0 !important;
+}
+
+.border-0 {
+    border: 0 !important;
+}
+
+/* ========== ESTADOS DE HOVER ========== */
+.btn:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* ========== ELEMENTOS INTERACTIVOS ========== */
+.dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: background-color 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* ========== UTILIDADES ADICIONALES ========== */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.flex-grow-1 {
+    flex-grow: 1 !important;
+}
+
+.min-width-0 {
+    min-width: 0 !important;
+}
+
+/* ========== MEJORAS VISUALES ========== */
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 1rem 1.25rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-footer {
+    padding: 0.75rem 1.25rem;
+    background-color: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* ========== PERSONALIZACIONES DE BOOTSTRAP ========== */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-primary {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* ========== DARK MODE SUPPORT (OPCIONAL) ========== */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .card-header, .card-footer {
+        background-color: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .table {
+        color: #e2e8f0;
+    }
+    
+    .table-light {
+        background-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .text-muted {
+        color: #a0aec0 !important;
+    }
+}
+
+/* ========== PRINT STYLES ========== */
+@media print {
+    .chart-controls,
+    .btn,
+    .dropdown {
+        display: none !important;
+    }
+    
+    .card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+}
+</style>
+
 <script>
-// ==========================================
-// FUNCIONES ESPECÍFICAS PARA ANÁLISIS DE DEMANDA
-// ==========================================
-
-let demandChart = null;
-let demandDistributionChart = null;
-let demandForecastChart = null;
-
-function initializeDemandTab() {
-    try {
-        initializeDemandCharts();
-        calculateDemandMetrics();
-        setupDemandFilters();
-        analyzeDemandPatterns();
-        generateDemandForecast();
+// Obtener desviación desde el atributo data
+        const deviation = parseFloat(row.dataset.demand) || demand;
         
-        console.log('Demand tab initialized successfully');
-    } catch (error) {
-        console.error('Error initializing demand tab:', error);
-    }
-}
-
-function initializeDemandCharts() {
-    if (typeof Chart === 'undefined') {
-        console.warn('Chart.js no está disponible para gráficos de demanda');
-        return;
-    }
-    
-    initializeDemandEvolutionChart();
-    initializeDemandDistributionChart();
-    initializeDemandVariabilityChart();
-    initializeDemandForecastChart();
-}
-
-function initializeDemandEvolutionChart() {
-    const ctx = document.getElementById('demandEvolutionChart');
-    if (!ctx) return;
-    
-    if (demandChart) {
-        demandChart.destroy();
-    }
-    
-    const demandData = extractDemandData();
-    
-    const config = {
-        type: 'line',
-        data: {
-            labels: demandData.labels,
-            datasets: [{
-                label: 'Demanda Real (L)',
-                data: demandData.actual,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Demanda Histórica Promedio (L)',
-                data: demandData.historical,
-                borderColor: 'rgba(255, 206, 86, 1)',
-                backgroundColor: 'transparent',
-                borderDash: [5, 5],
-                tension: 0.4
-            }, {
-                label: 'Tendencia',
-                data: demandData.trend,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'transparent',
-                borderWidth: 2,
-                pointRadius: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Evolución de la Demanda'
-                },
-                legend: {
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Litros'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Días de Simulación'
-                    }
-                }
-            }
-        }
-    };
-    
-    demandChart = new Chart(ctx, config);
-}
-
-function initializeDemandDistributionChart() {
-    const ctx = document.getElementById('demandDistributionChart');
-    if (!ctx) return;
-    
-    if (demandDistributionChart) {
-        demandDistributionChart.destroy();
-    }
-    
-    const demandData = extractDemandData();
-    const distribution = calculateDemandDistribution(demandData.actual);
-    
-    const config = {
-        type: 'bar',
-        data: {
-            labels: distribution.ranges,
-            datasets: [{
-                label: 'Frecuencia de Demanda',
-                data: distribution.frequencies,
-                backgroundColor: 'rgba(153, 102, 255, 0.8)',
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Distribución de Frecuencia de Demanda'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Número de Días'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Rangos de Demanda (L)'
-                    }
-                }
-            }
-        }
-    };
-    
-    demandDistributionChart = new Chart(ctx, config);
-}
-
-function initializeDemandVariabilityChart() {
-    const ctx = document.getElementById('demandVariabilityChart');
-    if (!ctx) return;
-    
-    const demandData = extractDemandData();
-    const variability = calculateDemandVariability(demandData.actual);
-    
-    const config = {
-        type: 'line',
-        data: {
-            labels: demandData.labels,
-            datasets: [{
-                label: 'Demanda (L)',
-                data: demandData.actual,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'transparent',
-                yAxisID: 'y'
-            }, {
-                label: 'Variabilidad (%)',
-                data: variability,
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'transparent',
-                yAxisID: 'y1'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Demanda y Variabilidad'
-                }
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Demanda (L)'
-                    }
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Variabilidad (%)'
-                    },
-                    grid: {
-                        drawOnChartArea: false,
-                    },
-                }
-            }
-        }
-    };
-    
-    new Chart(ctx, config);
-}
-
-function initializeDemandForecastChart() {
-    const ctx = document.getElementById('demandForecastChart');
-    if (!ctx) return;
-    
-    if (demandForecastChart) {
-        demandForecastChart.destroy();
-    }
-    
-    const demandData = extractDemandData();
-    const forecast = generateSimpleForecast(demandData.actual, 7); // Pronosticar 7 días
-    
-    const forecastLabels = [];
-    const currentLength = demandData.labels.length;
-    for (let i = 1; i <= 7; i++) {
-        forecastLabels.push(`Día ${currentLength + i} (Pronóstico)`);
-    }
-    
-    const config = {
-        type: 'line',
-        data: {
-            labels: [...demandData.labels, ...forecastLabels],
-            datasets: [{
-                label: 'Demanda Histórica (L)',
-                data: [...demandData.actual, ...Array(7).fill(null)],
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Pronóstico (L)',
-                data: [...Array(currentLength).fill(null), ...forecast],
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                borderDash: [5, 5],
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Pronóstico de Demanda'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Litros'
-                    }
-                }
-            }
-        }
-    };
-    
-    demandForecastChart = new Chart(ctx, config);
-}
-
-function extractDemandData() {
-    const dailyItems = document.querySelectorAll('.daily-result-item');
-    const labels = [];
-    const actual = [];
-    const historical = [];
-    const trend = [];
-    
-    const historicalAvg = parseFloat(document.querySelector('[data-variable="DPH"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 300);
-    
-    dailyItems.forEach((item, index) => {
-        const day = index + 1;
-        labels.push(`Día ${day}`);
-        
-        const demand = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
-        actual.push(demand);
-        historical.push(historicalAvg);
-        
-        // Calcular tendencia simple (promedio móvil)
-        if (index < 2) {
-            trend.push(demand);
-        } else {
-            const recentAvg = (actual[index-2] + actual[index-1] + demand) / 3;
-            trend.push(recentAvg);
-        }
+        data.days.push(day);
+        data.dates.push(dateText);
+        data.demands.push(demand);
+        data.deviations.push(Math.abs((demand - deviation) / deviation * 100) || 0);
     });
     
-    return { labels, actual, historical, trend };
+    return data;
 }
 
-function calculateDemandDistribution(demandData) {
-    // Crear rangos de demanda
-    const minDemand = Math.min(...demandData);
-    const maxDemand = Math.max(...demandData);
-    const range = maxDemand - minDemand;
-    const numBins = 6;
-    const binSize = range / numBins;
+function calculateLinearTrend(data) {
+    const n = data.length;
+    if (n < 2) return { slope: 0, direction: 'stable', percentage: 0 };
     
-    const ranges = [];
-    const frequencies = Array(numBins).fill(0);
+    const x = Array.from({length: n}, (_, i) => i + 1);
+    const y = data;
     
-    for (let i = 0; i < numBins; i++) {
-        const start = minDemand + (i * binSize);
-        const end = start + binSize;
-        ranges.push(`${start.toFixed(0)}-${end.toFixed(0)}`);
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = y.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+    const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const avgY = sumY / n;
+    const percentage = avgY > 0 ? (slope / avgY) * 100 * n : 0;
+    
+    let direction = 'stable';
+    if (Math.abs(percentage) > 5) {
+        direction = percentage > 0 ? 'increasing' : 'decreasing';
     }
     
-    // Contar frecuencias
-    demandData.forEach(demand => {
-        const binIndex = Math.min(Math.floor((demand - minDemand) / binSize), numBins - 1);
-        frequencies[binIndex]++;
-    });
-    
-    return { ranges, frequencies };
+    return { slope, direction, percentage };
 }
 
-function calculateDemandVariability(demandData) {
-    const variability = [];
-    const windowSize = 3;
+// ==========================================
+// CÁLCULO DE MÉTRICAS AVANZADAS
+// ==========================================
+function calculateEnhancedDemandMetrics() {
+    if (!demandData || demandData.demands.length === 0) return;
     
-    for (let i = 0; i < demandData.length; i++) {
-        if (i < windowSize - 1) {
-            variability.push(0);
-        } else {
-            const window = demandData.slice(i - windowSize + 1, i + 1);
-            const mean = window.reduce((a, b) => a + b, 0) / window.length;
-            const variance = window.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / window.length;
-            const stdDev = Math.sqrt(variance);
-            const cv = mean > 0 ? (stdDev / mean) * 100 : 0; // Coeficiente de variación
-            variability.push(cv);
-        }
-    }
-    
-    return variability;
-}
-
-function generateSimpleForecast(demandData, days) {
-    // Pronóstico simple usando promedio móvil y tendencia
-    const forecast = [];
-    const windowSize = Math.min(7, demandData.length);
-    
-    // Calcular promedio de los últimos días
-    const recentData = demandData.slice(-windowSize);
-    const avgDemand = recentData.reduce((a, b) => a + b, 0) / recentData.length;
-    
-    // Calcular tendencia
-    const firstHalf = recentData.slice(0, Math.floor(windowSize/2));
-    const secondHalf = recentData.slice(Math.floor(windowSize/2));
-    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-    const trend = (secondAvg - firstAvg) / (windowSize/2);
-    
-    // Generar pronóstico
-    for (let i = 1; i <= days; i++) {
-        const forecastValue = avgDemand + (trend * i);
-        // Agregar un poco de variabilidad realista
-        const noise = (Math.random() - 0.5) * avgDemand * 0.1;
-        forecast.push(Math.max(0, forecastValue + noise));
-    }
-    
-    return forecast;
-}
-
-function calculateDemandMetrics() {
-    const demandData = extractDemandData();
+    const demands = demandData.demands;
+    const n = demands.length;
     
     // Métricas básicas
-    const totalDemand = demandData.actual.reduce((a, b) => a + b, 0);
-    const avgDemand = totalDemand / demandData.actual.length;
-    const maxDemand = Math.max(...demandData.actual);
-    const minDemand = Math.min(...demandData.actual);
+    const total = demands.reduce((a, b) => a + b, 0);
+    const avg = total / n;
+    const max = Math.max(...demands);
+    const min = Math.min(...demands);
+    const range = max - min;
     
-    // Desviación estándar
-    const variance = demandData.actual.reduce((sum, val) => sum + Math.pow(val - avgDemand, 2), 0) / demandData.actual.length;
+    // Mediana
+    const sortedDemands = [...demands].sort((a, b) => a - b);
+    const median = n % 2 === 0 
+        ? (sortedDemands[n/2 - 1] + sortedDemands[n/2]) / 2 
+        : sortedDemands[Math.floor(n/2)];
+    
+    // Desviación estándar y coeficiente de variación
+    const variance = demands.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / n;
     const stdDev = Math.sqrt(variance);
-    const coefficientOfVariation = (stdDev / avgDemand) * 100;
+    const coefficientOfVariation = avg > 0 ? (stdDev / avg) * 100 : 0;
     
-    // Tendencia general
-    const firstWeek = demandData.actual.slice(0, 7);
-    const lastWeek = demandData.actual.slice(-7);
-    const firstWeekAvg = firstWeek.reduce((a, b) => a + b, 0) / firstWeek.length;
-    const lastWeekAvg = lastWeek.reduce((a, b) => a + b, 0) / lastWeek.length;
-    const trendPercentage = ((lastWeekAvg - firstWeekAvg) / firstWeekAvg) * 100;
+    // Tendencia (regresión lineal simple)
+    const trend = calculateLinearTrend(demands);
     
-    // Estacionalidad (días de la semana)
-    const weekdayPattern = analyzeWeekdayPattern(demandData.actual);
-    
-    // Picos de demanda
-    const demandPeaks = identifyDemandPeaks(demandData.actual, avgDemand + stdDev);
-    
-    updateDemandMetricsDisplay({
-        totalDemand,
-        avgDemand,
-        maxDemand,
-        minDemand,
+    // Actualizar la UI
+    updateEnhancedMetricsDisplay({
+        total,
+        avg,
+        max,
+        min,
+        median,
+        range,
         stdDev,
         coefficientOfVariation,
-        trendPercentage,
-        weekdayPattern,
-        demandPeaks
+        trend
     });
+    
+    // Generar patrón semanal
+    generateWeekdayPattern();
 }
 
-function analyzeWeekdayPattern(demandData) {
-    const weekdayDemands = Array(7).fill(0).map(() => []);
-    
-    demandData.forEach((demand, index) => {
-        const weekday = index % 7;
-        weekdayDemands[weekday].push(demand);
-    });
-    
-    const weekdayAverages = weekdayDemands.map(demands => {
-        return demands.length > 0 ? demands.reduce((a, b) => a + b, 0) / demands.length : 0;
-    });
-    
-    const weekdayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    const pattern = {};
-    
-    weekdayNames.forEach((name, index) => {
-        pattern[name] = weekdayAverages[index];
-    });
-    
-    return pattern;
-}
-
-function identifyDemandPeaks(demandData, threshold) {
-    const peaks = [];
-    
-    demandData.forEach((demand, index) => {
-        if (demand > threshold) {
-            peaks.push({
-                day: index + 1,
-                demand: demand,
-                excess: demand - threshold
-            });
-        }
-    });
-    
-    return peaks;
-}
-
-function updateDemandMetricsDisplay(metrics) {
+function updateEnhancedMetricsDisplay(metrics) {
+    // KPIs principales
     const elements = {
         totalDemand: document.getElementById('totalDemandValue'),
         avgDemand: document.getElementById('avgDemandValue'),
         maxDemand: document.getElementById('maxDemandValue'),
         minDemand: document.getElementById('minDemandValue'),
+        medianDemand: document.getElementById('medianDemandValue'),
+        rangeDemand: document.getElementById('rangeDemandValue'),
         demandVariability: document.getElementById('demandVariabilityValue'),
-        demandTrend: document.getElementById('demandTrendValue')
+        demandTrend: document.getElementById('demandTrendValue'),
+        variabilityExplanation: document.getElementById('variabilityExplanation'),
+        trendExplanation: document.getElementById('trendExplanation')
     };
     
     if (elements.totalDemand) {
-        elements.totalDemand.textContent = `${formatNumber(metrics.totalDemand, 0)} L`;
+        elements.totalDemand.textContent = formatNumber(metrics.total, 0) + ' L';
     }
     if (elements.avgDemand) {
-        elements.avgDemand.textContent = `${formatNumber(metrics.avgDemand, 1)} L`;
+        elements.avgDemand.textContent = formatNumber(metrics.avg, 1) + ' L';
     }
     if (elements.maxDemand) {
-        elements.maxDemand.textContent = `${formatNumber(metrics.maxDemand, 0)} L`;
+        elements.maxDemand.textContent = formatNumber(metrics.max, 0) + ' L';
     }
     if (elements.minDemand) {
-        elements.minDemand.textContent = `${formatNumber(metrics.minDemand, 0)} L`;
+        elements.minDemand.textContent = formatNumber(metrics.min, 0) + ' L';
+    }
+    if (elements.medianDemand) {
+        elements.medianDemand.textContent = formatNumber(metrics.median, 0) + ' L';
+    }
+    if (elements.rangeDemand) {
+        elements.rangeDemand.textContent = formatNumber(metrics.range, 0) + ' L';
     }
     if (elements.demandVariability) {
-        elements.demandVariability.textContent = `${metrics.coefficientOfVariation.toFixed(1)}%`;
-        elements.demandVariability.className = getVariabilityClass(metrics.coefficientOfVariation);
+        const cv = metrics.coefficientOfVariation;
+        elements.demandVariability.textContent = cv.toFixed(1) + '%';
+        elements.demandVariability.className = `fw-bold fs-5 ${getVariabilityClass(cv)}`;
+        
+        // Explicación dinámica de variabilidad
+        if (elements.variabilityExplanation) {
+            if (cv <= 10) {
+                elements.variabilityExplanation.textContent = 'Muy estable - Fácil planificación';
+            } else if (cv <= 20) {
+                elements.variabilityExplanation.textContent = 'Moderadamente variable';
+            } else if (cv <= 30) {
+                elements.variabilityExplanation.textContent = 'Alta variabilidad - Requiere flexibilidad';
+            } else {
+                elements.variabilityExplanation.textContent = 'Muy variable - Revisar causas';
+            }
+        }
     }
     if (elements.demandTrend) {
-        const trendSymbol = metrics.trendPercentage > 0 ? '↗' : metrics.trendPercentage < 0 ? '↘' : '→';
-        elements.demandTrend.textContent = `${trendSymbol} ${Math.abs(metrics.trendPercentage).toFixed(1)}%`;
-        elements.demandTrend.className = getTrendClass(metrics.trendPercentage);
+        const trend = metrics.trend;
+        const symbol = trend.direction === 'increasing' ? '↗' : 
+                      trend.direction === 'decreasing' ? '↘' : '→';
+        elements.demandTrend.textContent = `${symbol} ${Math.abs(trend.percentage).toFixed(1)}%`;
+        elements.demandTrend.className = `fw-bold fs-5 ${getTrendClass(trend.direction)}`;
+        
+        // Explicación dinámica de tendencia
+        if (elements.trendExplanation) {
+            if (trend.direction === 'increasing') {
+                elements.trendExplanation.textContent = 'Demanda creciente - Planificar expansión';
+            } else if (trend.direction === 'decreasing') {
+                elements.trendExplanation.textContent = 'Demanda decreciente - Optimizar recursos';
+            } else {
+                elements.trendExplanation.textContent = 'Demanda estable - Mantener operación';
+            }
+        }
     }
     
-    // Mostrar patrón semanal
-    displayWeekdayPattern(metrics.weekdayPattern);
-    
-    // Mostrar picos de demanda
-    displayDemandPeaks(metrics.demandPeaks);
+    // Generar resumen ejecutivo
+    generateExecutiveSummary(metrics);
 }
 
 function getVariabilityClass(cv) {
-    if (cv <= 15) return 'text-success fw-bold';
-    if (cv <= 30) return 'text-warning fw-bold';
-    return 'text-danger fw-bold';
+    if (cv <= 10) return 'text-success';
+    if (cv <= 20) return 'text-warning';
+    return 'text-danger';
 }
 
-function getTrendClass(trend) {
-    if (trend > 5) return 'text-success fw-bold';
-    if (trend < -5) return 'text-danger fw-bold';
-    return 'text-muted fw-bold';
+function getTrendClass(direction) {
+    switch(direction) {
+        case 'increasing': return 'text-success';
+        case 'decreasing': return 'text-danger';
+        default: return 'text-muted';
+    }
 }
 
-function displayWeekdayPattern(pattern) {
+// ==========================================
+// PATRÓN SEMANAL
+// ==========================================
+function generateWeekdayPattern() {
+    if (!demandData || demandData.demands.length === 0) return;
+    
+    const weekdayDemands = Array(7).fill(0).map(() => []);
+    const weekdayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    
+    demandData.demands.forEach((demand, index) => {
+        const weekday = index % 7;
+        weekdayDemands[weekday].push(demand);
+    });
+    
+    const weekdayAverages = weekdayDemands.map(demands => 
+        demands.length > 0 ? demands.reduce((a, b) => a + b, 0) / demands.length : 0
+    );
+    
+    const maxAvg = Math.max(...weekdayAverages);
     const container = document.getElementById('weekdayPattern');
+    
     if (!container) return;
     
-    const weekdays = Object.keys(pattern);
-    const maxDemand = Math.max(...Object.values(pattern));
-    
-    let html = '<h6>Patrón Semanal de Demanda:</h6>';
-    html += '<div class="row g-2">';
-    
-    weekdays.forEach(day => {
-        const demand = pattern[day];
-        const percentage = maxDemand > 0 ? (demand / maxDemand) * 100 : 0;
-        const barClass = percentage > 80 ? 'bg-success' : percentage > 60 ? 'bg-warning' : 'bg-secondary';
+    let html = '<div class="row g-1">';
+    weekdayNames.forEach((day, index) => {
+        const avg = weekdayAverages[index];
+        const percentage = maxAvg > 0 ? (avg / maxAvg) * 100 : 0;
+        const barClass = percentage > 80 ? 'bg-success' : 
+                        percentage > 60 ? 'bg-warning' : 'bg-secondary';
         
         html += `
             <div class="col">
                 <div class="text-center">
-                    <small class="d-block mb-1">${day}</small>
-                    <div class="progress" style="height: 60px;">
-                        <div class="progress-bar ${barClass}" role="progressbar" 
-                             style="width: ${percentage}%; writing-mode: vertical-lr; text-orientation: mixed;"
-                             title="${demand.toFixed(0)} L">
-                            ${demand.toFixed(0)}
+                    <div class="small text-muted mb-1">${day}</div>
+                    <div class="progress vertical-progress" style="height: 40px; width: 100%;">
+                        <div class="progress-bar ${barClass}" 
+                             style="height: ${percentage}%;" 
+                             title="${avg.toFixed(0)} L">
+                        </div>
+                    </div>
+                    <div class="small fw-bold mt-1">${avg.toFixed(0)}</div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// ==========================================
+// CONFIGURACIÓN DE CONTROLES
+// ==========================================
+function setupEnhancedDemandControls() {
+    // Búsqueda en tabla
+    const searchInput = document.getElementById('demandTableSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterTableBySearch(this.value);
+        });
+    }
+    
+    // Filtros de período
+    const periodInputs = document.querySelectorAll('input[name="chartPeriod"]');
+    periodInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                applyPeriodFilter(this.id);
+            }
+        });
+    });
+    
+    // Toggle de vista
+    const toggleBtn = document.getElementById('tableViewToggle');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleDemandTableView);
+    }
+    
+    setupTablePagination();
+}
+
+function filterTableBySearch(searchTerm) {
+    const rows = document.querySelectorAll('#demandTable tbody tr');
+    const term = searchTerm.toLowerCase().trim();
+    
+    rows.forEach(row => {
+        const day = row.children[0]?.textContent.toLowerCase() || '';
+        const date = row.children[1]?.textContent.toLowerCase() || '';
+        const demand = row.children[2]?.textContent.toLowerCase() || '';
+        
+        const matches = day.includes(term) || date.includes(term) || demand.includes(term);
+        row.style.display = matches ? '' : 'none';
+    });
+    
+    // Actualizar contador
+    const visibleRows = document.querySelectorAll('#demandTable tbody tr:not([style*="display: none"])').length;
+    const totalRows = rows.length;
+    
+    if (term && visibleRows !== totalRows) {
+        showNotification(`Mostrando ${visibleRows} de ${totalRows} registros`, 'info');
+    }
+}
+
+function applyPeriodFilter(periodId) {
+    const rows = document.querySelectorAll('#demandTable tbody tr');
+    const totalRows = rows.length;
+    
+    let startIndex = 0;
+    let endIndex = totalRows;
+    
+    switch(periodId) {
+        case 'period7':
+            endIndex = Math.min(7, totalRows);
+            break;
+        case 'period14':
+            endIndex = Math.min(14, totalRows);
+            break;
+        case 'periodAll':
+        default:
+            // Mostrar todo
+            break;
+    }
+    
+    rows.forEach((row, index) => {
+        row.style.display = (index >= startIndex && index < endIndex) ? '' : 'none';
+    });
+    
+    const label = periodId === 'period7' ? 'últimos 7 días' : 
+                 periodId === 'period14' ? 'últimos 14 días' : 'todos los días';
+    showNotification(`Mostrando ${label}`, 'info');
+}
+
+function toggleDemandTableView() {
+    const tableView = document.getElementById('demandTableView');
+    const cardView = document.getElementById('demandCardView');
+    const toggleBtn = document.getElementById('tableViewToggle');
+    
+    if (currentTableView === 'table') {
+        // Cambiar a vista de tarjetas
+        tableView.style.display = 'none';
+        cardView.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="bx bx-table"></i>';
+        currentTableView = 'cards';
+        generateCardView();
+    } else {
+        // Cambiar a vista de tabla
+        tableView.style.display = 'block';
+        cardView.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="bx bx-grid-alt"></i>';
+        currentTableView = 'table';
+    }
+}
+
+function generateCardView() {
+    const container = document.getElementById('demandCards');
+    if (!container || !demandData) return;
+    
+    let html = '';
+    demandData.demands.forEach((demand, index) => {
+        const day = demandData.days[index];
+        const date = demandData.dates[index];
+        const deviation = demandData.deviations[index];
+        
+        const statusClass = deviation > 25 ? 'danger' : deviation > 15 ? 'warning' : 'success';
+        const statusText = deviation > 25 ? 'Alta variación' : deviation > 15 ? 'Moderada' : 'Estable';
+        const statusIcon = deviation > 25 ? 'error-circle' : deviation > 15 ? 'info-circle' : 'check-circle';
+        
+        html += `
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">Día ${day}</h6>
+                            <span class="badge bg-${statusClass} bg-opacity-20 text-${statusClass}">
+                                <i class="bx bx-${statusIcon} me-1"></i>${statusText}
+                            </span>
+                        </div>
+                        <div class="text-muted small mb-2">${date}</div>
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 me-2">${demand.toFixed(0)} L</h5>
+                            <div class="flex-grow-1">
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-${statusClass}" 
+                                         style="width: ${Math.min((demand / 500) * 100, 100)}%">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -699,519 +1633,1014 @@ function displayWeekdayPattern(pattern) {
         `;
     });
     
-    html += '</div>';
     container.innerHTML = html;
 }
 
-function displayDemandPeaks(peaks) {
-    const container = document.getElementById('demandPeaks');
+function setupTablePagination() {
+    const prevBtn = document.getElementById('prevTablePage');
+    const nextBtn = document.getElementById('nextTablePage');
+    const pageInfo = document.getElementById('tablePageInfo');
+    
+    let currentPage = 1;
+    const rowsPerPage = 10;
+    const totalRows = document.querySelectorAll('#demandTable tbody tr').length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    
+    function updatePagination() {
+        const rows = document.querySelectorAll('#demandTable tbody tr');
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        
+        rows.forEach((row, index) => {
+            row.style.display = (index >= startIndex && index < endIndex) ? '' : 'none';
+        });
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+        }
+        
+        if (prevBtn) {
+            prevBtn.disabled = currentPage === 1;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = currentPage === totalPages;
+        }
+    }
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
+            }
+        });
+    }
+    
+    updatePagination();
+}
+
+// ==========================================
+// GENERACIÓN DE INSIGHTS
+// ==========================================
+function generateDemandInsights() {
+    if (!demandData || demandData.demands.length === 0) return;
+    
+    const insights = [];
+    const demands = demandData.demands;
+    const avg = demands.reduce((a, b) => a + b, 0) / demands.length;
+    
+    // Insight sobre variabilidad con explicación
+    const cv = calculateCoefficientOfVariation(demands);
+    if (cv > 30) {
+        insights.push({
+            type: 'warning',
+            icon: 'error-circle',
+            title: 'Alta Variabilidad Detectada',
+            description: `La demanda muestra alta variabilidad (${cv.toFixed(1)}%). Esto significa que hay días con consumos muy diferentes entre sí.`,
+            recommendation: 'Implementa estrategias de gestión de inventario más flexibles y considera sistemas de almacenamiento buffer para absorber picos.',
+            impact: 'Alto riesgo de desabastecimiento o sobrestock'
+        });
+    } else if (cv < 10) {
+        insights.push({
+            type: 'success',
+            icon: 'check-circle',
+            title: 'Demanda Muy Estable',
+            description: `La demanda es muy estable (${cv.toFixed(1)}% de variabilidad). Los consumos diarios son muy predecibles.`,
+            recommendation: 'Aprovecha esta estabilidad para optimizar inventarios con técnicas como Just-in-Time y reducir costos de almacenamiento.',
+            impact: 'Excelente predictibilidad operativa'
+        });
+    }
+    
+    // Insight sobre tendencia con implicaciones
+    const trend = calculateLinearTrend(demands);
+    if (Math.abs(trend.percentage) > 10) {
+        const direction = trend.percentage > 0 ? 'creciente' : 'decreciente';
+        const color = trend.percentage > 0 ? 'info' : 'warning';
+        const futureImplication = trend.percentage > 0 ? 
+            'En 30 días podrías necesitar un ' + (trend.percentage * 30 / 100).toFixed(0) + '% más de capacidad.' :
+            'En 30 días podrías tener un exceso de capacidad del ' + Math.abs(trend.percentage * 30 / 100).toFixed(0) + '%.';
+        
+        insights.push({
+            type: color,
+            icon: trend.percentage > 0 ? 'trending-up' : 'trending-down',
+            title: `Tendencia ${direction.charAt(0).toUpperCase() + direction.slice(1)} Significativa`,
+            description: `Se detecta una tendencia ${direction} del ${Math.abs(trend.percentage).toFixed(1)}% en la demanda.`,
+            recommendation: trend.percentage > 0 ? 
+                'Planifica aumentos de capacidad y revisa proveedores para asegurar suministro futuro.' :
+                'Evalúa reducir capacidad ociosa y reasignar recursos a otras áreas.',
+            impact: futureImplication
+        });
+    }
+    
+    // Insight sobre picos con análisis de frecuencia
+    const peaks = demands.filter(d => d > avg * 1.5).length;
+    const peakFrequency = (peaks / demands.length) * 100;
+    if (peaks > demands.length * 0.1) {
+        insights.push({
+            type: 'warning',
+            icon: 'bar-chart-alt-2',
+            title: 'Picos de Demanda Frecuentes',
+            description: `Se detectaron ${peaks} picos de demanda (>${(avg * 1.5).toFixed(0)}L) - ${peakFrequency.toFixed(1)}% de los días.`,
+            recommendation: 'Aumenta la capacidad de reserva en un 20-30% y considera implementar sistemas de alerta temprana para picos.',
+            impact: 'Riesgo de desabastecimiento durante picos'
+        });
+    }
+    
+    // Insight sobre eficiencia con comparación benchmarks
+    const efficiency = calculateDemandEfficiency(demands);
+    if (efficiency > 0.8) {
+        insights.push({
+            type: 'success',
+            icon: 'check-shield',
+            title: 'Sistema Altamente Eficiente',
+            description: `La distribución de demanda muestra alta eficiencia (${(efficiency * 100).toFixed(1)}%). Tu sistema está en el top 20% de rendimiento.`,
+            recommendation: 'Mantén las prácticas actuales y considera compartir mejores prácticas con otros sistemas similares.',
+            impact: 'Operación optimizada y costos controlados'
+        });
+    } else if (efficiency < 0.6) {
+        insights.push({
+            type: 'danger',
+            icon: 'x-circle',
+            title: 'Oportunidades de Mejora en Eficiencia',
+            description: `La eficiencia del sistema es del ${(efficiency * 100).toFixed(1)}%, por debajo del benchmark de 70%.`,
+            recommendation: 'Revisa procesos operativos, implementa monitoreo en tiempo real y considera capacitación del personal.',
+            impact: 'Potencial ahorro del 15-25% en costos operativos'
+        });
+    }
+    
+    // Insight sobre estacionalidad semanal
+    const weeklyPattern = analyzeWeeklyPattern();
+    if (weeklyPattern.hasPattern) {
+        insights.push({
+            type: 'info',
+            icon: 'calendar',
+            title: 'Patrón Semanal Identificado',
+            description: `Hay diferencias significativas en el consumo según el día de la semana (variación del ${weeklyPattern.variation.toFixed(1)}%).`,
+            recommendation: `Ajusta las operaciones según el día: reduce personal en días de menor demanda (${weeklyPattern.lowDay}) y refuerza en días pico (${weeklyPattern.highDay}).`,
+            impact: 'Optimización de personal y recursos del 10-15%'
+        });
+    }
+    
+    displayEnhancedInsights(insights);
+}
+
+function analyzeWeeklyPattern() {
+    if (!demandData || demandData.demands.length < 7) {
+        return { hasPattern: false };
+    }
+    
+    const weekdayDemands = Array(7).fill(0).map(() => []);
+    const weekdayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    
+    demandData.demands.forEach((demand, index) => {
+        const weekday = index % 7;
+        weekdayDemands[weekday].push(demand);
+    });
+    
+    const weekdayAverages = weekdayDemands.map(demands => 
+        demands.length > 0 ? demands.reduce((a, b) => a + b, 0) / demands.length : 0
+    );
+    
+    const maxAvg = Math.max(...weekdayAverages);
+    const minAvg = Math.min(...weekdayAverages);
+    const variation = ((maxAvg - minAvg) / minAvg) * 100;
+    
+    const maxIndex = weekdayAverages.indexOf(maxAvg);
+    const minIndex = weekdayAverages.indexOf(minAvg);
+    
+    return {
+        hasPattern: variation > 15, // Consideramos patrón si hay >15% de diferencia
+        variation: variation,
+        highDay: weekdayNames[maxIndex],
+        lowDay: weekdayNames[minIndex],
+        averages: weekdayAverages
+    };
+}
+
+function calculateCoefficientOfVariation(data) {
+    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+    const variance = data.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / data.length;
+    const stdDev = Math.sqrt(variance);
+    return avg > 0 ? (stdDev / avg) * 100 : 0;
+}
+
+function calculateDemandEfficiency(data) {
+    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+    const deviations = data.map(d => Math.abs(d - avg));
+    const avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length;
+    return avg > 0 ? 1 - (avgDeviation / avg) : 0;
+}
+
+function displayEnhancedInsights(insights) {
+    const container = document.getElementById('demandInsights');
     if (!container) return;
     
-    if (peaks.length === 0) {
+    if (insights.length === 0) {
         container.innerHTML = `
-            <div class="alert alert-info">
-                <i class="bx bx-info-circle me-2"></i>
-                No se detectaron picos de demanda significativos.
+            <div class="alert alert-success border-0">
+                <div class="d-flex align-items-center">
+                    <i class="bx bx-check-circle me-2"></i>
+                    <div>
+                        <strong>Sistema Operando Normalmente</strong>
+                        <div class="small text-muted">No se detectaron patrones que requieran atención especial</div>
+                    </div>
+                </div>
             </div>
         `;
         return;
     }
     
-    let html = '<h6>Picos de Demanda Detectados:</h6>';
-    html += '<div class="row g-2">';
-    
-    peaks.slice(0, 6).forEach(peak => { // Mostrar solo los primeros 6
+    let html = '';
+    insights.forEach((insight, index) => {
         html += `
-            <div class="col-md-4">
-                <div class="card border-warning">
-                    <div class="card-body p-2">
-                        <h6 class="card-title">Día ${peak.day}</h6>
-                        <p class="card-text small">
-                            <strong>Demanda:</strong> ${peak.demand.toFixed(0)} L<br>
-                            <strong>Exceso:</strong> +${peak.excess.toFixed(0)} L
-                        </p>
+            <div class="insight-card alert alert-${insight.type} border-0 shadow-sm mb-3" style="animation-delay: ${index * 0.1}s">
+                <div class="d-flex align-items-start">
+                    <div class="insight-icon me-3">
+                        <i class="bx bx-${insight.icon} fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-2">${insight.title}</h6>
+                        <p class="mb-2 small">${insight.description}</p>
+                        <div class="insight-details">
+                            <div class="mb-2">
+                                <strong class="small">Recomendación:</strong>
+                                <div class="small text-muted">${insight.recommendation}</div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <strong class="small me-2">Impacto:</strong>
+                                <span class="badge bg-${insight.type} bg-opacity-20 text-${insight.type} small">
+                                    ${insight.impact}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     });
     
-    if (peaks.length > 6) {
+    container.innerHTML = html;
+}
+
+// ==========================================
+// DETECCIÓN DE ANOMALÍAS
+// ==========================================
+function detectAndDisplayAnomalies() {
+    if (!demandData || demandData.demands.length === 0) return;
+    
+    const anomalies = detectStatisticalAnomalies(demandData.demands);
+    const container = document.getElementById('demandAnomalies');
+    
+    if (!container) return;
+    
+    if (anomalies.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-success border-0">
+                <div class="d-flex align-items-center">
+                    <i class="bx bx-check-circle me-2"></i>
+                    <div>
+                        <strong>No se Detectaron Anomalías</strong>
+                        <div class="small text-muted">Todos los valores están dentro del rango normal esperado (±2σ)</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    anomalies.slice(0, 3).forEach((anomaly, index) => {
+        const severity = anomaly.severity > 3 ? 'danger' : anomaly.severity > 2 ? 'warning' : 'info';
+        const icon = anomaly.type === 'high' ? 'trending-up' : 'trending-down';
+        const severityText = anomaly.severity > 3 ? 'Crítica' : anomaly.severity > 2 ? 'Moderada' : 'Leve';
+        
+        // Calcular posibles causas basadas en el tipo y magnitud
+        const possibleCauses = getPossibleCauses(anomaly);
+        const recommendations = getAnomalyRecommendations(anomaly);
+        
         html += `
-            <div class="col-12">
-                <small class="text-muted">... y ${peaks.length - 6} picos más</small>
+            <div class="anomaly-card alert alert-${severity} border-0 shadow-sm mb-3" style="animation-delay: ${index * 0.1}s">
+                <div class="d-flex align-items-start">
+                    <div class="anomaly-icon me-3">
+                        <i class="bx bx-${icon} fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">Día ${anomaly.day} - ${anomaly.type === 'high' ? 'Pico Anómalo' : 'Caída Anómala'}</h6>
+                            <span class="badge bg-${severity} bg-opacity-20 text-${severity} small">
+                                Severidad ${severityText}
+                            </span>
+                        </div>
+                        <div class="row g-2 small mb-2">
+                            <div class="col-md-6">
+                                <strong>Demanda:</strong> ${anomaly.value.toFixed(0)}L
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Desviación:</strong> ${anomaly.deviation.toFixed(1)}σ del promedio
+                            </div>
+                        </div>
+                        <div class="anomaly-details">
+                            <div class="mb-2">
+                                <strong class="small">Posibles causas:</strong>
+                                <div class="small text-muted">${possibleCauses}</div>
+                            </div>
+                            <div>
+                                <strong class="small">Acción recomendada:</strong>
+                                <div class="small text-muted">${recommendations}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (anomalies.length > 3) {
+        html += `
+            <div class="text-center">
+                <button class="btn btn-outline-secondary btn-sm" onclick="showAllAnomalies()">
+                    Ver todas las anomalías (${anomalies.length - 3} más)
+                </button>
             </div>
         `;
     }
     
-    html += '</div>';
     container.innerHTML = html;
 }
 
-function setupDemandFilters() {
-    // Filtro por rango de demanda
-    const rangeFilter = document.getElementById('demandRangeFilter');
-    if (rangeFilter) {
-        rangeFilter.addEventListener('change', function() {
-            const range = this.value;
-            filterDemandByRange(range);
-        });
-    }
-    
-    // Filtro por período
-    const periodFilter = document.getElementById('demandPeriodFilter');
-    if (periodFilter) {
-        periodFilter.addEventListener('change', function() {
-            const period = this.value;
-            filterDemandByPeriod(period);
-        });
-    }
-}
-
-function filterDemandByRange(range) {
-    const demandData = extractDemandData();
-    let filteredDays = [];
-    
-    const avgDemand = demandData.actual.reduce((a, b) => a + b, 0) / demandData.actual.length;
-    
-    demandData.actual.forEach((demand, index) => {
-        const day = index + 1;
-        
-        switch(range) {
-            case 'high':
-                if (demand > avgDemand * 1.2) filteredDays.push(day);
-                break;
-            case 'medium':
-                if (demand >= avgDemand * 0.8 && demand <= avgDemand * 1.2) filteredDays.push(day);
-                break;
-            case 'low':
-                if (demand < avgDemand * 0.8) filteredDays.push(day);
-                break;
-        }
-    });
-    
-    if (filteredDays.length > 0) {
-        showNotification(`Encontrados ${filteredDays.length} días con demanda ${range}`, 'info');
-        highlightDaysInChart(filteredDays);
-    } else {
-        showNotification(`No se encontraron días con demanda ${range}`, 'warning');
-    }
-}
-
-function filterDemandByPeriod(period) {
-    let startDay = 1, endDay = extractDemandData().actual.length;
-    
-    switch(period) {
-        case 'week1': startDay = 1; endDay = 7; break;
-        case 'week2': startDay = 8; endDay = 14; break;
-        case 'week3': startDay = 15; endDay = 21; break;
-        case 'week4': startDay = 22; endDay = 28; break;
-    }
-    
-    const filteredData = extractDemandDataForPeriod(startDay, endDay);
-    updateDemandChartsWithFilteredData(filteredData);
-    
-    showNotification(`Mostrando datos del día ${startDay} al ${endDay}`, 'info');
-}
-
-function extractDemandDataForPeriod(startDay, endDay) {
-    const allData = extractDemandData();
-    const startIndex = startDay - 1;
-    const endIndex = endDay;
-    
-    return {
-        labels: allData.labels.slice(startIndex, endIndex),
-        actual: allData.actual.slice(startIndex, endIndex),
-        historical: allData.historical.slice(startIndex, endIndex),
-        trend: allData.trend.slice(startIndex, endIndex)
-    };
-}
-
-function updateDemandChartsWithFilteredData(data) {
-    if (demandChart) {
-        demandChart.data.labels = data.labels;
-        demandChart.data.datasets[0].data = data.actual;
-        demandChart.data.datasets[1].data = data.historical;
-        demandChart.data.datasets[2].data = data.trend;
-        demandChart.update();
-    }
-}
-
-function highlightDaysInChart(days) {
-    if (!demandChart) return;
-    
-    const colors = demandChart.data.datasets[0].backgroundColor;
-    const newColors = demandChart.data.labels.map((label, index) => {
-        const day = index + 1;
-        return days.includes(day) ? 'rgba(255, 99, 132, 0.8)' : 'rgba(54, 162, 235, 0.1)';
-    });
-    
-    demandChart.data.datasets[0].backgroundColor = newColors;
-    demandChart.update();
-}
-
-function analyzeDemandPatterns() {
-    const demandData = extractDemandData();
-    
-    // Análisis de estacionalidad
-    const seasonalAnalysis = analyzeSeasonality(demandData.actual);
-    
-    // Análisis de autocorrelación
-    const autocorrelation = calculateAutocorrelation(demandData.actual);
-    
-    // Detección de anomalías
-    const anomalies = detectDemandAnomalies(demandData.actual);
-    
-    displayPatternAnalysis({
-        seasonal: seasonalAnalysis,
-        autocorrelation: autocorrelation,
-        anomalies: anomalies
-    });
-}
-
-function analyzeSeasonality(demandData) {
-    // Análisis simple de estacionalidad por semana
-    const weeklyPattern = [];
-    for (let week = 0; week < Math.floor(demandData.length / 7); week++) {
-        const weekData = demandData.slice(week * 7, (week + 1) * 7);
-        const weekAvg = weekData.reduce((a, b) => a + b, 0) / weekData.length;
-        weeklyPattern.push(weekAvg);
-    }
-    
-    return {
-        hasSeasonality: weeklyPattern.length > 1,
-        weeklyAverages: weeklyPattern,
-        seasonalStrength: calculateSeasonalStrength(weeklyPattern)
-    };
-}
-
-function calculateSeasonalStrength(weeklyPattern) {
-    if (weeklyPattern.length < 2) return 0;
-    
-    const overallMean = weeklyPattern.reduce((a, b) => a + b, 0) / weeklyPattern.length;
-    const variance = weeklyPattern.reduce((sum, val) => sum + Math.pow(val - overallMean, 2), 0) / weeklyPattern.length;
+function detectStatisticalAnomalies(data) {
+    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+    const variance = data.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / data.length;
     const stdDev = Math.sqrt(variance);
     
-    return overallMean > 0 ? (stdDev / overallMean) * 100 : 0;
-}
-
-function calculateAutocorrelation(demandData) {
-    // Calcular autocorrelación para lag 1
-    if (demandData.length < 2) return 0;
-    
-    const mean = demandData.reduce((a, b) => a + b, 0) / demandData.length;
-    
-    let numerator = 0;
-    let denominator = 0;
-    
-    for (let i = 0; i < demandData.length - 1; i++) {
-        numerator += (demandData[i] - mean) * (demandData[i + 1] - mean);
-    }
-    
-    for (let i = 0; i < demandData.length; i++) {
-        denominator += Math.pow(demandData[i] - mean, 2);
-    }
-    
-    return denominator > 0 ? numerator / denominator : 0;
-}
-
-function detectDemandAnomalies(demandData) {
-    const mean = demandData.reduce((a, b) => a + b, 0) / demandData.length;
-    const variance = demandData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / demandData.length;
-    const stdDev = Math.sqrt(variance);
-    
-    const threshold = 2 * stdDev; // Umbral de 2 desviaciones estándar
     const anomalies = [];
     
-    demandData.forEach((demand, index) => {
-        const deviation = Math.abs(demand - mean);
-        if (deviation > threshold) {
+    data.forEach((value, index) => {
+        const deviation = Math.abs(value - avg) / stdDev;
+        
+        if (deviation > 2) { // Más de 2 desviaciones estándar
             anomalies.push({
                 day: index + 1,
-                demand: demand,
+                value: value,
                 deviation: deviation,
-                type: demand > mean ? 'high' : 'low'
+                type: value > avg ? 'high' : 'low',
+                severity: deviation
             });
         }
     });
     
-    return anomalies;
+    return anomalies.sort((a, b) => b.severity - a.severity);
 }
 
-function displayPatternAnalysis(analysis) {
-    const container = document.getElementById('patternAnalysis');
-    if (!container) return;
+function getPossibleCauses(anomaly) {
+    if (anomaly.type === 'high') {
+        if (anomaly.severity > 3) {
+            return 'Fuga mayor, evento masivo, falla en medidores, consumo industrial no reportado';
+        } else {
+            return 'Evento comunitario, clima inusual, incremento temporal de población';
+        }
+    } else {
+        if (anomaly.severity > 3) {
+            return 'Corte de suministro, falla en sistema, mantenimiento no programado';
+        } else {
+            return 'Feriado local, reducción temporal de actividad, clima adverso';
+        }
+    }
+}
+
+function getAnomalyRecommendations(anomaly) {
+    if (anomaly.type === 'high') {
+        if (anomaly.severity > 3) {
+            return 'Inspección inmediata de la red, verificar medidores, investigar fugas, contactar grandes consumidores';
+        } else {
+            return 'Monitorear días siguientes, verificar eventos programados, revisar histórico de fechas similares';
+        }
+    } else {
+        if (anomaly.severity > 3) {
+            return 'Verificar continuidad del servicio, revisar presión en red, comprobar funcionamiento de bombas';
+        } else {
+            return 'Confirmar si fue planificado, documentar para futuras referencias, verificar recuperación normal';
+        }
+    }
+}
+
+function showAllAnomalies() {
+    // Función para mostrar todas las anomalías en un modal
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-error-circle me-2"></i>
+                        Todas las Anomalías Detectadas
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="allAnomaliesContent">
+                    <div class="text-center">
+                        <i class="bx bx-loader-alt bx-spin"></i>
+                        Cargando todas las anomalías...
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
     
-    let html = '<h6>Análisis de Patrones de Demanda:</h6>';
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
     
-    // Estacionalidad
-    html += '<div class="mb-3">';
-    html += '<strong>Estacionalidad:</strong>';
-   if (analysis.seasonal.hasSeasonality) {
-       html += `
-           <div class="alert alert-info">
-               <i class="bx bx-calendar me-2"></i>
-               Se detectó patrón estacional con intensidad del ${analysis.seasonal.seasonalStrength.toFixed(1)}%
-           </div>
-       `;
-   } else {
-       html += `
-           <div class="alert alert-secondary">
-               <i class="bx bx-calendar me-2"></i>
-               No se detectó patrón estacional significativo
-           </div>
-       `;
-   }
-   html += '</div>';
-   
-   // Autocorrelación
-   html += '<div class="mb-3">';
-   html += '<strong>Autocorrelación:</strong>';
-   const autocorrClass = Math.abs(analysis.autocorrelation) > 0.3 ? 'info' : 'secondary';
-   html += `
-       <div class="alert alert-${autocorrClass}">
-           <i class="bx bx-link me-2"></i>
-           Correlación entre días consecutivos: ${analysis.autocorrelation.toFixed(3)}
-           ${Math.abs(analysis.autocorrelation) > 0.3 ? ' (Dependencia temporal detectada)' : ' (Demanda independiente)'}
-       </div>
-   `;
-   html += '</div>';
-   
-   // Anomalías
-   html += '<div class="mb-3">';
-   html += '<strong>Anomalías Detectadas:</strong>';
-   if (analysis.anomalies.length === 0) {
-       html += `
-           <div class="alert alert-success">
-               <i class="bx bx-check-circle me-2"></i>
-               No se detectaron anomalías significativas en la demanda
-           </div>
-       `;
-   } else {
-       html += `
-           <div class="alert alert-warning">
-               <i class="bx bx-error-circle me-2"></i>
-               Se detectaron ${analysis.anomalies.length} anomalías:
-               <ul class="mb-0 mt-2">
-       `;
-       analysis.anomalies.slice(0, 5).forEach(anomaly => {
-           html += `
-               <li>Día ${anomaly.day}: ${anomaly.demand.toFixed(0)} L 
-                   (${anomaly.type === 'high' ? 'Pico alto' : 'Caída baja'})</li>
-           `;
-       });
-       if (analysis.anomalies.length > 5) {
-           html += `<li>... y ${analysis.anomalies.length - 5} más</li>`;
-       }
-       html += '</ul></div>';
-   }
-   html += '</div>';
-   
-   container.innerHTML = html;
+    // Limpiar modal cuando se cierre
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+    
+    // Cargar todas las anomalías
+    setTimeout(() => {
+        const allAnomalies = detectStatisticalAnomalies(demandData.demands);
+        const content = document.getElementById('allAnomaliesContent');
+        
+        if (allAnomalies.length === 0) {
+            content.innerHTML = '<p class="text-center text-muted">No hay anomalías que mostrar</p>';
+            return;
+        }
+        
+        let html = '<div class="row g-2">';
+        allAnomalies.forEach((anomaly, index) => {
+            const severity = anomaly.severity > 3 ? 'danger' : anomaly.severity > 2 ? 'warning' : 'info';
+            html += `
+                <div class="col-md-6">
+                    <div class="card border-${severity} h-100">
+                        <div class="card-body p-3">
+                            <h6 class="card-title">Día ${anomaly.day}</h6>
+                            <p class="card-text small">
+                                <strong>Demanda:</strong> ${anomaly.value.toFixed(0)}L<br>
+                                <strong>Tipo:</strong> ${anomaly.type === 'high' ? 'Pico Alto' : 'Caída Baja'}<br>
+                                <strong>Severidad:</strong> ${anomaly.deviation.toFixed(1)}σ
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        content.innerHTML = html;
+    }, 500);
 }
 
-function generateDemandForecast() {
-   const demandData = extractDemandData();
-   const forecastDays = 7;
-   
-   // Generar múltiples tipos de pronóstico
-   const forecasts = {
-       simple: generateSimpleForecast(demandData.actual, forecastDays),
-       exponential: generateExponentialSmoothing(demandData.actual, forecastDays),
-       linear: generateLinearTrend(demandData.actual, forecastDays)
-   };
-   
-   // Calcular pronóstico ensemble (promedio de métodos)
-   const ensembleForecast = [];
-   for (let i = 0; i < forecastDays; i++) {
-       const avg = (forecasts.simple[i] + forecasts.exponential[i] + forecasts.linear[i]) / 3;
-       ensembleForecast.push(avg);
-   }
-   
-   displayForecastResults({
-       historical: demandData.actual,
-       forecasts: forecasts,
-       ensemble: ensembleForecast,
-       days: forecastDays
-   });
+// ==========================================
+// RESUMEN EJECUTIVO
+// ==========================================
+function generateExecutiveSummary(metrics) {
+    const systemStatusContainer = document.getElementById('systemStatus');
+    const recommendedActionsContainer = document.getElementById('recommendedActions');
+    
+    if (!systemStatusContainer || !recommendedActionsContainer) return;
+    
+    // Evaluar estado general del sistema
+    const cv = metrics.coefficientOfVariation;
+    const trendAbs = Math.abs(metrics.trend.percentage);
+    
+    let systemHealth = 'Excelente';
+    let healthColor = 'success';
+    let healthIcon = 'check-circle';
+    
+    if (cv > 30 || trendAbs > 20) {
+        systemHealth = 'Requiere Atención';
+        healthColor = 'warning';
+        healthIcon = 'error-circle';
+    } else if (cv > 20 || trendAbs > 15) {
+        systemHealth = 'Aceptable';
+        healthColor = 'info';
+        healthIcon = 'info-circle';
+    }
+    
+    // Estado del sistema
+    const systemStatusHtml = `
+        <div class="d-flex align-items-center mb-3">
+            <div class="icon-circle bg-${healthColor} bg-opacity-10 me-3">
+                <i class="bx bx-${healthIcon} text-${healthColor} fs-4"></i>
+            </div>
+            <div>
+                <h5 class="mb-1 text-${healthColor}">${systemHealth}</h5>
+                <small class="text-muted">Estado general del sistema</small>
+            </div>
+        </div>
+        <div class="row g-2 small">
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <span>Estabilidad:</span>
+                    <strong class="text-${getVariabilityClass(cv).split(' ')[0].replace('text-', '')}">${cv <= 15 ? 'Alta' : cv <= 25 ? 'Media' : 'Baja'}</strong>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <span>Predictibilidad:</span>
+                    <strong class="text-${trendAbs <= 10 ? 'success' : trendAbs <= 20 ? 'warning' : 'danger'}">${trendAbs <= 10 ? 'Alta' : trendAbs <= 20 ? 'Media' : 'Baja'}</strong>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="d-flex justify-content-between">
+                    <span>Consumo Promedio:</span>
+                    <strong>${formatNumber(metrics.avg, 0)} L/día</strong>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Acciones recomendadas
+    const actions = [];
+    
+    if (cv > 25) {
+        actions.push({
+            icon: 'stats',
+            color: 'warning',
+            text: 'Implementar buffer de seguridad para absorber variabilidad',
+            priority: 'Alta'
+        });
+    }
+    
+    if (metrics.trend.direction === 'increasing' && metrics.trend.percentage > 10) {
+        actions.push({
+            icon: 'trending-up',
+            color: 'info',
+            text: 'Planificar expansión de capacidad para demanda creciente',
+            priority: 'Media'
+        });
+    }
+    
+    if (metrics.trend.direction === 'decreasing' && Math.abs(metrics.trend.percentage) > 15) {
+        actions.push({
+            icon: 'trending-down',
+            color: 'warning',
+            text: 'Evaluar optimización de recursos por demanda decreciente',
+            priority: 'Media'
+        });
+    }
+    
+    // Agregar acciones por defecto si no hay específicas
+    if (actions.length === 0) {
+        actions.push({
+            icon: 'check-circle',
+            color: 'success',
+            text: 'Mantener operación actual - Sistema funcionando óptimamente',
+            priority: 'Baja'
+        });
+        actions.push({
+            icon: 'eye',
+            color: 'info',
+            text: 'Continuar monitoreo regular de patrones de demanda',
+            priority: 'Rutina'
+        });
+    }
+    
+    // Agregar acción de seguimiento
+    actions.push({
+        icon: 'calendar-event',
+        color: 'primary',
+        text: 'Programar revisión de análisis en 7-14 días',
+        priority: 'Rutina'
+    });
+    
+    const actionsHtml = actions.map(action => `
+        <div class="d-flex align-items-start mb-2">
+            <i class="bx bx-${action.icon} text-${action.color} me-2 mt-1"></i>
+            <div class="flex-grow-1">
+                <div class="small">${action.text}</div>
+                <span class="badge bg-${action.color} bg-opacity-20 text-${action.color} small">
+                    ${action.priority}
+                </span>
+            </div>
+        </div>
+    `).join('');
+    
+    systemStatusContainer.innerHTML = systemStatusHtml;
+    recommendedActionsContainer.innerHTML = actionsHtml;
 }
 
-function generateExponentialSmoothing(data, days, alpha = 0.3) {
-   const forecast = [];
-   let smoothed = data[0];
-   
-   // Calcular valores suavizados
-   for (let i = 1; i < data.length; i++) {
-       smoothed = alpha * data[i] + (1 - alpha) * smoothed;
-   }
-   
-   // Generar pronóstico
-   for (let i = 0; i < days; i++) {
-       forecast.push(smoothed);
-   }
-   
-   return forecast;
+// ==========================================
+// FUNCIONES DE FILTRADO
+// ==========================================
+function filterDemandByRange(range) {
+    if (!demandData) return;
+    
+    const avg = demandData.demands.reduce((a, b) => a + b, 0) / demandData.demands.length;
+    const rows = document.querySelectorAll('#demandTable tbody tr');
+    let filteredCount = 0;
+    
+    rows.forEach((row, index) => {
+        const demand = demandData.demands[index];
+        let matches = false;
+        
+        switch(range) {
+            case 'high':
+                matches = demand > avg * 1.2;
+                break;
+            case 'medium':
+                matches = demand >= avg * 0.8 && demand <= avg * 1.2;
+                break;
+            case 'low':
+                matches = demand < avg * 0.8;
+                break;
+        }
+        
+        row.style.display = matches ? '' : 'none';
+        if (matches) filteredCount++;
+    });
+    
+    const rangeLabels = {
+        'high': 'alta (>120% promedio)',
+        'medium': 'normal (80-120% promedio)', 
+        'low': 'baja (<80% promedio)'
+    };
+    
+    showNotification(`Mostrando ${filteredCount} días con demanda ${rangeLabels[range]}`, 'info');
 }
 
-function generateLinearTrend(data, days) {
-   const n = data.length;
-   const x = Array.from({length: n}, (_, i) => i + 1);
-   const y = data;
-   
-   // Calcular regresión lineal
-   const sumX = x.reduce((a, b) => a + b, 0);
-   const sumY = y.reduce((a, b) => a + b, 0);
-   const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-   const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
-   
-   const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-   const intercept = (sumY - slope * sumX) / n;
-   
-   // Generar pronóstico
-   const forecast = [];
-   for (let i = 1; i <= days; i++) {
-       const futureX = n + i;
-       forecast.push(slope * futureX + intercept);
-   }
-   
-   return forecast;
+function resetDemandFilters() {
+    const rows = document.querySelectorAll('#demandTable tbody tr');
+    rows.forEach(row => {
+        row.style.display = '';
+    });
+    
+    const searchInput = document.getElementById('demandTableSearch');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    
+    const periodInputs = document.querySelectorAll('input[name="chartPeriod"]');
+    periodInputs.forEach(input => {
+        input.checked = input.id === 'periodAll';
+    });
+    
+    showNotification('Filtros restablecidos', 'success');
 }
 
-function displayForecastResults(results) {
-   const container = document.getElementById('forecastResults');
-   if (!container) return;
-   
-   const lastDemand = results.historical[results.historical.length - 1];
-   const avgForecast = results.ensemble.reduce((a, b) => a + b, 0) / results.ensemble.length;
-   const forecastChange = ((avgForecast - lastDemand) / lastDemand) * 100;
-   
-   let html = '<h6>Resultados del Pronóstico:</h6>';
-   
-   // Resumen del pronóstico
-   html += '<div class="row g-3 mb-3">';
-   html += `
-       <div class="col-md-4">
-           <div class="card">
-               <div class="card-body text-center">
-                   <h6 class="card-title">Pronóstico Promedio</h6>
-                   <h4 class="text-primary">${avgForecast.toFixed(0)} L</h4>
-               </div>
-           </div>
-       </div>
-       <div class="col-md-4">
-           <div class="card">
-               <div class="card-body text-center">
-                   <h6 class="card-title">Cambio Esperado</h6>
-                   <h4 class="${forecastChange >= 0 ? 'text-success' : 'text-danger'}">
-                       ${forecastChange >= 0 ? '+' : ''}${forecastChange.toFixed(1)}%
-                   </h4>
-               </div>
-           </div>
-       </div>
-       <div class="col-md-4">
-           <div class="card">
-               <div class="card-body text-center">
-                   <h6 class="card-title">Rango Esperado</h6>
-                   <h4 class="text-info">
-                       ${Math.min(...results.ensemble).toFixed(0)} - ${Math.max(...results.ensemble).toFixed(0)} L
-                   </h4>
-               </div>
-           </div>
-       </div>
-   `;
-   html += '</div>';
-   
-   // Tabla de pronósticos detallada
-   html += '<div class="table-responsive">';
-   html += '<table class="table table-sm">';
-   html += '<thead><tr><th>Día</th><th>Simple</th><th>Exponencial</th><th>Lineal</th><th>Ensemble</th></tr></thead>';
-   html += '<tbody>';
-   
-   for (let i = 0; i < results.days; i++) {
-       const currentLength = results.historical.length;
-       html += `
-           <tr>
-               <td>Día ${currentLength + i + 1}</td>
-               <td>${results.forecasts.simple[i].toFixed(0)} L</td>
-               <td>${results.forecasts.exponential[i].toFixed(0)} L</td>
-               <td>${results.forecasts.linear[i].toFixed(0)} L</td>
-               <td><strong>${results.ensemble[i].toFixed(0)} L</strong></td>
-           </tr>
-       `;
-   }
-   
-   html += '</tbody></table>';
-   html += '</div>';
-   
-   container.innerHTML = html;
-}
-
+// ==========================================
+// FUNCIÓN DE EXPORTACIÓN
+// ==========================================
 function exportDemandReport() {
-   try {
-       const demandData = extractDemandData();
-       const metrics = extractDemandMetrics();
-       const csvContent = generateDemandCSV(demandData, metrics);
-       
-       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-       const link = document.createElement('a');
-       link.href = URL.createObjectURL(blob);
-       link.download = `reporte_demanda_${new Date().getTime()}.csv`;
-       link.click();
-       
-       showNotification('Reporte de demanda exportado exitosamente', 'success');
-   } catch (error) {
-       console.error('Error exporting demand report:', error);
-       showNotification('Error al exportar reporte de demanda', 'error');
-   }
+    try {
+        if (!demandData) {
+            showNotification('No hay datos para exportar', 'warning');
+            return;
+        }
+        
+        const csvContent = generateEnhancedCSV();
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `analisis_demanda_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Reporte exportado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exportando reporte:', error);
+        showNotification('Error al exportar reporte', 'error');
+    }
 }
 
-function extractDemandMetrics() {
-   return {
-       totalDemand: parseFloat(document.getElementById('totalDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-       avgDemand: parseFloat(document.getElementById('avgDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-       maxDemand: parseFloat(document.getElementById('maxDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-       minDemand: parseFloat(document.getElementById('minDemandValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-       variability: parseFloat(document.getElementById('demandVariabilityValue')?.textContent.replace(/[^\d.-]/g, '') || 0)
-   };
+function generateEnhancedCSV() {
+    const avg = demandData.demands.reduce((a, b) => a + b, 0) / demandData.demands.length;
+    const total = demandData.demands.reduce((a, b) => a + b, 0);
+    const max = Math.max(...demandData.demands);
+    const min = Math.min(...demandData.demands);
+    
+    let csv = 'Reporte de Análisis de Demanda\n';
+    csv += `Fecha de generación,${new Date().toLocaleDateString()}\n`;
+    csv += `Período analizado,${demandData.demands.length} días\n\n`;
+    
+    csv += 'RESUMEN EJECUTIVO\n';
+    csv += 'Métrica,Valor\n';
+    csv += `Demanda total,"${total.toFixed(0)} L"\n`;
+    csv += `Demanda promedio,"${avg.toFixed(1)} L"\n`;
+    csv += `Demanda máxima,"${max.toFixed(0)} L"\n`;
+    csv += `Demanda mínima,"${min.toFixed(0)} L"\n\n`;
+    
+    csv += 'DATOS DETALLADOS\n';
+    csv += 'Día,Fecha,Demanda (L),Desviación del Promedio (%),Estado\n';
+    
+    demandData.demands.forEach((demand, index) => {
+        const day = demandData.days[index];
+        const date = demandData.dates[index];
+        const deviation = ((demand - avg) / avg * 100).toFixed(1);
+        const status = Math.abs(parseFloat(deviation)) > 20 ? 'Anómalo' : 'Normal';
+        
+        csv += `${day},"${date}",${demand.toFixed(1)},${deviation},${status}\n`;
+    });
+    
+    return csv;
 }
 
-function generateDemandCSV(demandData, metrics) {
-   let csv = 'Reporte de Análisis de Demanda - Simulación\n\n';
-   csv += 'Resumen de Métricas\n';
-   csv += 'Métrica,Valor\n';
-   csv += `Demanda Total,"${metrics.totalDemand} L"\n`;
-   csv += `Demanda Promedio,"${metrics.avgDemand} L"\n`;
-   csv += `Demanda Máxima,"${metrics.maxDemand} L"\n`;
-   csv += `Demanda Mínima,"${metrics.minDemand} L"\n`;
-   csv += `Variabilidad,"${metrics.variability}%"\n\n`;
-   
-   csv += 'Datos Diarios de Demanda\n';
-   csv += 'Día,Demanda Real (L),Demanda Histórica (L),Tendencia (L)\n';
-   
-   demandData.actual.forEach((demand, index) => {
-       const day = index + 1;
-       const historical = demandData.historical[index];
-       const trend = demandData.trend[index];
-       
-       csv += `${day},${demand.toFixed(1)},${historical.toFixed(1)},${trend.toFixed(1)}\n`;
-   });
-   
-   csv += `\nFecha de Generación,"${new Date().toLocaleDateString()}"\n`;
-   
-   return csv;
+// ==========================================
+// FUNCIONES DE GRÁFICOS
+// ==========================================
+function downloadChart(base64Data, filename) {
+    try {
+        const link = document.createElement('a');
+        link.href = `data:image/png;base64,${base64Data}`;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showNotification('Gráfico descargado', 'success');
+    } catch (error) {
+        showNotification('Error al descargar gráfico', 'error');
+    }
 }
 
-// Inicializar cuando se muestre el tab
-document.addEventListener('shown.bs.tab', function(e) {
-   if (e.target.getAttribute('aria-controls') === 'demand') {
-       setTimeout(initializeDemandTab, 100);
-   }
+function openFullscreen(base64Data, title) {
+    const newWindow = window.open('', '_blank');
+    newWindow.document.write(`
+        <html>
+            <head><title>${title}</title></head>
+            <body style="margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:#f8f9fa;">
+                <img src="data:image/png;base64,${base64Data}" style="max-width:100%; max-height:100%;" alt="${title}">
+            </body>
+        </html>
+    `);
+}
+
+// ==========================================
+// UTILIDADES
+// ==========================================
+function formatNumber(num, decimals = 0) {
+    return new Intl.NumberFormat('es-ES', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    }).format(num);
+}
+
+function showNotification(message, type = 'info') {
+    // Crear notificación temporal
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remover después de 3 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// ==========================================
+// INICIALIZACIÓN AUTOMÁTICA
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Si el tab ya está activo, inicializar inmediatamente
+    const demandTab = document.getElementById('demand');
+    if (demandTab && demandTab.classList.contains('active')) {
+        setTimeout(initializeDemandTab, 100);
+    }
 });
 
-// Exportar funciones globales
+// Escuchar cambios de tab
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'demand') {
+        setTimeout(initializeDemandTab, 100);
+    }
+});
+
+// ==========================================
+// EXPORTAR FUNCIONES GLOBALES
+// ==========================================
 window.initializeDemandTab = initializeDemandTab;
 window.exportDemandReport = exportDemandReport;
 window.filterDemandByRange = filterDemandByRange;
-window.filterDemandByPeriod = filterDemandByPeriod;
-window.generateDemandForecast = generateDemandForecast;
+window.resetDemandFilters = resetDemandFilters;
+window.toggleDemandTableView = toggleDemandTableView;
+window.downloadChart = downloadChart;
+window.openFullscreen = openFullscreen;
+window.showAllAnomalies = showAllAnomalies;/* ==========================================
+   JAVASCRIPT PARA ANÁLISIS DE DEMANDA
+   demand-tab.js
+   ========================================== */
+
+// ==========================================
+// VARIABLES GLOBALES
+// ==========================================
+let demandChart = null;
+let demandDistributionChart = null;
+let demandForecastChart = null;
+let currentTableView = 'table'; // 'table' o 'cards'
+let demandData = null;
+
+// ==========================================
+// FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
+// ==========================================
+function initializeDemandTab() {
+    try {
+        console.log('Inicializando análisis de demanda...');
+        
+        // Extraer datos de demanda
+        demandData = extractDemandData();
+        
+        // Calcular métricas
+        calculateEnhancedDemandMetrics();
+        
+        // Configurar controles
+        setupEnhancedDemandControls();
+        
+        // Generar insights automáticos
+        generateDemandInsights();
+        
+        // Detectar anomalías
+        detectAndDisplayAnomalies();
+        
+        console.log('Análisis de demanda inicializado correctamente');
+    } catch (error) {
+        console.error('Error inicializando análisis de demanda:', error);
+        showNotification('Error al inicializar análisis de demanda', 'error');
+    }
+}
+
+// ==========================================
+// EXTRACCIÓN Y PROCESAMIENTO DE DATOS
+// ==========================================
+function extractDemandData() {
+    const rows = document.querySelectorAll('#demandTable tbody tr');
+    const data = {
+        days: [],
+        dates: [],
+        demands: [],
+        deviations: []
+    };
+    
+    rows.forEach((row, index) => {
+        const day = index + 1;
+        const dateText = row.children[1]?.textContent.trim() || '';
+        const demandText = row.children[2]?.querySelector('.fw-bold')?.textContent || '0';
+        const demand = parseFloat(demandText.replace(/[^\d.-]/g, '')) || 0;
+        
+        // Agregar datos básicos
+        data.days.push(day);
+        data.dates.push(dateText);
+        data.demands.push(demand);
+    });
+    
+    // Calcular desviaciones después de tener todos los datos
+    const meanDemand = data.demands.reduce((sum, val) => sum + val, 0) / data.demands.length;
+    
+    data.demands.forEach(demand => {
+        const deviation = demand - meanDemand;
+        data.deviations.push(deviation);
+    });
+    
+    return data;
+}
+
+// ==========================================
+// FUNCIONES DE ANÁLISIS ESTADÍSTICO
+// ==========================================
+function calculateStatistics(data) {
+    const demands = data.demands;
+    const n = demands.length;
+    
+    if (n === 0) return {};
+    
+    // Estadísticas básicas
+    const mean = demands.reduce((sum, val) => sum + val, 0) / n;
+    const sortedDemands = [...demands].sort((a, b) => a - b);
+    const median = n % 2 === 0 
+        ? (sortedDemands[n/2 - 1] + sortedDemands[n/2]) / 2
+        : sortedDemands[Math.floor(n/2)];
+    
+    const min = Math.min(...demands);
+    const max = Math.max(...demands);
+    const range = max - min;
+    
+    // Varianza y desviación estándar
+    const variance = demands.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
+    const stdDev = Math.sqrt(variance);
+    
+    // Coeficiente de variación
+    const cv = (stdDev / mean) * 100;
+    
+    return {
+        count: n,
+        mean: mean,
+        median: median,
+        min: min,
+        max: max,
+        range: range,
+        variance: variance,
+        stdDev: stdDev,
+        cv: cv
+    };
+}
+
+// ==========================================
+// FUNCIONES DE VALIDACIÓN
+// ==========================================
+function validateData(data) {
+    const errors = [];
+    
+    if (!data.demands || data.demands.length === 0) {
+        errors.push('No hay datos de demanda disponibles');
+    }
+    
+    if (data.demands.some(d => isNaN(d) || d <script 0)) {
+        errors.push('Algunos valores de demanda son inválidos');
+    }
+    
+    if (data.dates.some(date => !date || date.trim() === '')) {
+        errors.push('Algunas fechas están vacías');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+// ==========================================
+// FUNCIÓN PRINCIPAL DE PROCESAMIENTO
+// ==========================================
+function processDemandData() {
+    try {
+        // Extraer datos
+        const data = extractDemandData();
+        
+        // Validar datos
+        const validation = validateData(data);
+        if (!validation.isValid) {
+            console.error('Errores de validación:', validation.errors);
+            return null;
+        }
+        
+        // Calcular estadísticas
+        const statistics = calculateStatistics(data);
+        
+        // Combinar toda la información
+        const result = {
+            ...data,
+            statistics: statistics,
+            processedAt: new Date().toISOString()
+        };
+        
+        console.log('Datos procesados exitosamente:', result);
+        return result;
+        
+    } catch (error) {
+        console.error('Error al procesar datos de demanda:', error);
+        return null;
+    }
+}
+
+// ==========================================
+// FUNCIONES DE EXPORTACIÓN
+// ==========================================
+function exportToCSV(data) {
+    if (!data || !data.demands) return '';
+    
+    const headers = ['Día', 'Fecha', 'Demanda', 'Desviación'];
+    const rows = data.days.map((day, index) => [
+        day,
+        data.dates[index],
+        data.demands[index],
+        data.deviations[index].toFixed(2)
+    ]);
+    
+    const csvContent = [headers, ...rows]
+        .map(row => row.join(','))
+        .join('\n');
+    
+    return csvContent;
+}
+
+function downloadCSV(data, filename = 'datos_demanda.csv') {
+    const csvContent = exportToCSV(data);
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    
+    window.URL.revokeObjectURL(url);
+}
+
 </script>

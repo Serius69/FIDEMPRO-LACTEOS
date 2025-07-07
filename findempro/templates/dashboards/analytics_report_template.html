@@ -425,14 +425,14 @@
     <div class="section">
         <h2 class="section-title">Recomendaciones Estratégicas</h2>
         <ul class="recommendations">
-            {% if metrics.Total_Costs > metrics.Total_Revenue|floatformat:0|mul:0.7 %}
+            {% if metrics.Total_Costs > metrics.Total_Revenue|floatformat:0}
             <li>
                 <strong>Optimización de Costos:</strong> Los costos representan más del 70% de los ingresos. 
                 Se recomienda revisar la estructura de costos y buscar eficiencias operativas.
             </li>
             {% endif %}
             
-            {% if metrics.Total_Inventory_Levels > metrics.Total_Demand|floatformat:0|mul:2 %}
+            {% if metrics.Total_Inventory_Levels > metrics.Total_Demand|floatformat:0}
             <li>
                 <strong>Gestión de Inventario:</strong> El inventario actual es alto comparado con la demanda. 
                 Considere implementar estrategias de reducción de inventario o promociones.

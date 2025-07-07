@@ -1,32 +1,32 @@
-/* ===== VARIABLES CSS CON COLORES SIMPLES Y CLAROS ===== */
+/* ===== VARIABLES CSS - SOLO TONOS OSCUROS PARA TEXTO Y CLAROS PARA BOXES ===== */
 :root {
     /* Colores principales simples y claros */
     --primary-color: #007bff;
     --primary-dark: #0056b3;
     --primary-light: #4dabf7;
-    --primary-bg: #f0f8ff;
+    --primary-bg: #f8f9fa;
     
     --success-color: #28a745;
     --success-dark: #1e7e34;
     --success-light: #5cb85c;
-    --success-bg: #f0fff4;
+    --success-bg: #f8f9fa;
     
     --warning-color: #ffc107;
     --warning-dark: #e0a800;
     --warning-light: #fff3cd;
-    --warning-bg: #fffdf0;
+    --warning-bg: #f8f9fa;
     
     --danger-color: #dc3545;
     --danger-dark: #c82333;
     --danger-light: #f5c6cb;
-    --danger-bg: #fff5f5;
+    --danger-bg: #f8f9fa;
     
     --info-color: #17a2b8;
     --info-dark: #138496;
     --info-light: #bee5eb;
-    --info-bg: #f0fdff;
+    --info-bg: #f8f9fa;
     
-    /* Grises suaves */
+    /* Grises suaves para boxes */
     --white: #ffffff;
     --gray-50: #fafafa;
     --gray-100: #f8f9fa;
@@ -39,11 +39,17 @@
     --gray-800: #343a40;
     --gray-900: #212529;
     
-    /* Textos contrastados pero suaves */
-    --text-primary: #212529;
-    --text-secondary: #6c757d;
-    --text-white: #ffffff;
-    --text-muted: #6c757d;
+    /* TODOS LOS TEXTOS EN TONOS OSCUROS */
+    --text-primary: #212529;    /* Negro oscuro */
+    --text-secondary: #495057;  /* Gris muy oscuro */
+    --text-muted: #6c757d;      /* Gris oscuro */
+    --text-dark: #343a40;       /* Gris muy oscuro */
+    
+    /* Textos específicos en tonos oscuros */
+    --text-precise: #1e7e34;    /* Verde oscuro */
+    --text-acceptable: #e0a800;  /* Amarillo oscuro */
+    --text-marginal: #138496;    /* Azul oscuro */
+    --text-inaccurate: #c82333;  /* Rojo oscuro */
     
     /* Bordes suaves pero visibles */
     --border-color: #dee2e6;
@@ -63,29 +69,29 @@
     --transition: all 0.2s ease;
 }
 
-/* ===== RESET Y BASE ===== */
+/* ===== RESET Y BASE CON TEXTOS OSCUROS ===== */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--gray-50);
-    color: var(--text-primary);
+    background-color: var(--gray-50);     /* Fondo claro */
+    color: var(--text-primary);          /* Texto oscuro */
     line-height: 1.5;
     font-size: 14px;
 }
 
-/* ===== HEADERS Y RESULTADOS SIMPLES ===== */
+/* ===== HEADERS Y RESULTADOS - FONDO CLARO, TEXTO OSCURO ===== */
 .results-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
+    background: var(--white);            /* Fondo blanco */
+    color: var(--text-primary);          /* Texto oscuro */
     border-radius: var(--border-radius-lg);
     padding: 2rem;
     margin-bottom: 2rem;
-    border: 1px solid var(--primary-color);
+    border: 2px solid var(--primary-color);
     box-shadow: var(--shadow-lg);
 }
 
-/* ===== METRIC CARDS CLARAS ===== */
+/* ===== METRIC CARDS - FONDOS CLAROS, TEXTOS OSCUROS ===== */
 .metric-card {
-    background: var(--white);
+    background: var(--white);            /* Fondo blanco */
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow);
@@ -99,9 +105,9 @@ body {
     border-color: var(--primary-color);
 }
 
-/* ===== CHART CONTAINERS CLAROS ===== */
+/* ===== CHART CONTAINERS - FONDOS CLAROS ===== */
 .chart-container {
-    background: var(--white);
+    background: var(--white);            /* Fondo blanco */
     border-radius: var(--border-radius-lg);
     padding: 1.5rem;
     box-shadow: var(--shadow);
@@ -120,32 +126,9 @@ body {
     background: linear-gradient(90deg, var(--success-color), var(--primary-color), var(--warning-color));
 }
 
-.chart-container:hover {
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-lg);
-}
-
-.chart-image {
-    width: 100%;
-    height: auto;
-    border-radius: var(--border-radius-sm);
-    transition: var(--transition);
-}
-
-.chart-image:hover {
-    transform: scale(1.02);
-}
-
-/* ===== STATS GRID CLARA ===== */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
+/* ===== STATS GRID - FONDOS CLAROS, TEXTOS OSCUROS ===== */
 .stat-item {
-    background: var(--white);
+    background: var(--white);            /* Fondo blanco */
     padding: 1.5rem;
     border-radius: var(--border-radius);
     text-align: center;
@@ -154,44 +137,33 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.stat-item:hover {
-    transform: translateY(-2px);
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-lg);
-}
-
 .stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--text-primary);          /* Texto oscuro */
     margin-bottom: 0.5rem;
 }
 
 .stat-label {
-    color: var(--text-secondary);
+    color: var(--text-secondary);        /* Texto gris oscuro */
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;
 }
 
-/* ===== TABLAS CLARAS Y LEGIBLES ===== */
+/* ===== TABLAS - FONDOS CLAROS, TEXTOS OSCUROS ===== */
 .data-table-container {
-    background: var(--white);
+    background: var(--white);            /* Fondo blanco */
     border-radius: var(--border-radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
 }
 
-.table-responsive {
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
 .table th {
-    background: var(--primary-color);
-    color: white;
+    background: var(--gray-100);         /* Fondo gris claro */
+    color: var(--text-primary);          /* Texto oscuro */
     border: none;
     font-weight: 600;
     text-transform: uppercase;
@@ -204,23 +176,23 @@ body {
     vertical-align: middle;
     border-color: var(--border-light);
     padding: 0.875rem;
-    color: var(--text-primary);
-    background: var(--white);
+    color: var(--text-primary);          /* Texto oscuro */
+    background: var(--white);            /* Fondo blanco */
 }
 
 .table tbody tr:hover {
-    background-color: var(--gray-50);
+    background-color: var(--gray-50);    /* Hover claro */
     border-left: 3px solid var(--primary-color);
 }
 
-/* ===== VALIDATION STYLES CLAROS ===== */
+/* ===== VALIDATION STYLES - FONDOS CLAROS, TEXTOS OSCUROS ===== */
 .validation-kpi {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     padding: 1.5rem;
-    background: var(--white);
+    background: var(--white);            /* Fondo blanco */
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
 }
@@ -228,18 +200,19 @@ body {
 .validation-kpi-value {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--text-primary);          /* Texto oscuro */
     margin-bottom: 0.5rem;
 }
 
 .validation-kpi-label {
-    color: var(--text-secondary);
+    color: var(--text-secondary);        /* Texto gris oscuro */
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;
 }
 
+/* ===== VALIDATION VERDICT - FONDOS CLAROS, TEXTOS OSCUROS ===== */
 .validation-verdict {
     font-weight: 600;
     padding: 6px 12px;
@@ -250,24 +223,24 @@ body {
 }
 
 .validation-verdict.precise {
-    background-color: var(--success-bg);
-    color: var(--success-dark);
+    background-color: var(--gray-100);    /* Fondo claro */
+    color: var(--text-precise);           /* Texto verde oscuro */
     border: 1px solid var(--success-color);
 }
 
 .validation-verdict.acceptable {
-    background-color: var(--warning-bg);
-    color: var(--warning-dark);
+    background-color: var(--gray-100);    /* Fondo claro */
+    color: var(--text-acceptable);        /* Texto amarillo oscuro */
     border: 1px solid var(--warning-color);
 }
 
 .validation-verdict.inaccurate {
-    background-color: var(--danger-bg);
-    color: var(--danger-dark);
+    background-color: var(--gray-100);    /* Fondo claro */
+    color: var(--text-inaccurate);        /* Texto rojo oscuro */
     border: 1px solid var(--danger-color);
 }
 
-/* ===== BADGES SIMPLES Y CLAROS ===== */
+/* ===== BADGES - FONDOS CLAROS, TEXTOS OSCUROS ===== */
 .badge {
     padding: 6px 12px;
     font-size: 0.75rem;
@@ -278,31 +251,36 @@ body {
 }
 
 .badge.bg-success {
-    background-color: var(--success-color);
-    color: white;
+    background-color: var(--gray-100) !important;  /* Fondo claro */
+    color: var(--text-precise) !important;         /* Texto verde oscuro */
+    border: 1px solid var(--success-color);
 }
 
 .badge.bg-warning {
-    background-color: var(--warning-color);
-    color: var(--gray-800);
+    background-color: var(--gray-100) !important;  /* Fondo claro */
+    color: var(--text-acceptable) !important;      /* Texto amarillo oscuro */
+    border: 1px solid var(--warning-color);
 }
 
 .badge.bg-danger {
-    background-color: var(--danger-color);
-    color: white;
+    background-color: var(--gray-100) !important;  /* Fondo claro */
+    color: var(--text-inaccurate) !important;      /* Texto rojo oscuro */
+    border: 1px solid var(--danger-color);
 }
 
 .badge.bg-info {
-    background-color: var(--info-color);
-    color: white;
+    background-color: var(--gray-100) !important;  /* Fondo claro */
+    color: var(--text-marginal) !important;        /* Texto azul oscuro */
+    border: 1px solid var(--info-color);
 }
 
 .badge.bg-secondary {
-    background-color: var(--gray-500);
-    color: white;
+    background-color: var(--gray-100) !important;  /* Fondo claro */
+    color: var(--text-secondary) !important;       /* Texto gris oscuro */
+    border: 1px solid var(--gray-500);
 }
 
-/* ===== ALERTAS CLARAS ===== */
+/* ===== ALERTAS - FONDOS CLAROS, TEXTOS OSCUROS ===== */
 .alert {
     border: 1px solid;
     border-radius: var(--border-radius);
@@ -312,30 +290,30 @@ body {
 }
 
 .alert-success {
-    background-color: var(--success-bg);
+    background-color: var(--gray-100);    /* Fondo claro */
     border-color: var(--success-color);
-    color: var(--success-dark);
+    color: var(--text-precise);           /* Texto verde oscuro */
 }
 
 .alert-warning {
-    background-color: var(--warning-bg);
+    background-color: var(--gray-100);    /* Fondo claro */
     border-color: var(--warning-color);
-    color: var(--warning-dark);
+    color: var(--text-acceptable);        /* Texto amarillo oscuro */
 }
 
 .alert-danger {
-    background-color: var(--danger-bg);
+    background-color: var(--gray-100);    /* Fondo claro */
     border-color: var(--danger-color);
-    color: var(--danger-dark);
+    color: var(--text-inaccurate);        /* Texto rojo oscuro */
 }
 
 .alert-info {
-    background-color: var(--info-bg);
+    background-color: var(--gray-100);    /* Fondo claro */
     border-color: var(--info-color);
-    color: var(--info-dark);
+    color: var(--text-marginal);          /* Texto azul oscuro */
 }
 
-/* ===== BOTONES CLAROS ===== */
+/* ===== BOTONES - FONDOS CLAROS (cuando no están activos) ===== */
 .btn {
     padding: 8px 16px;
     font-size: 0.875rem;
@@ -349,22 +327,23 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background-color: var(--white);       /* Fondo claro */
     border-color: var(--primary-color);
-    color: white;
+    color: var(--primary-color);          /* Texto azul oscuro */
 }
 
 .btn-primary:hover {
-    background-color: var(--primary-dark);
-    border-color: var(--primary-dark);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;                         /* Solo en hover cambia a blanco */
     transform: translateY(-1px);
     box-shadow: var(--shadow);
 }
 
 .btn-outline-primary {
-    background-color: transparent;
+    background-color: var(--white);       /* Fondo claro */
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    color: var(--primary-color);          /* Texto azul oscuro */
 }
 
 .btn-outline-primary:hover {
@@ -372,10 +351,99 @@ body {
     color: white;
 }
 
-.btn-success {
-    background-color: var(--success-color);
-    border-color: var(--success-color);
-    color: white;
+/* ===== CARDS GENERALES - FONDOS CLAROS, TEXTOS OSCUROS ===== */
+.card {
+    background: var(--white);             /* Fondo blanco */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.card-header {
+    background: var(--gray-100);          /* Fondo gris claro */
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);           /* Texto oscuro */
+}
+
+.card-body {
+    padding: 1rem;
+    background: var(--white);             /* Fondo blanco */
+    color: var(--text-primary);           /* Texto oscuro */
+}
+
+/* ===== KPI CARDS - FONDOS CLAROS, TEXTOS OSCUROS ===== */
+.kpi-card {
+    background: var(--white);             /* Fondo blanco */
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.kpi-title {
+    font-size: 0.875rem;
+    color: var(--text-secondary);         /* Texto gris oscuro */
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);           /* Texto oscuro */
+    margin-bottom: 0.5rem;
+}
+
+/* ===== ESTADOS DE VALIDACIÓN - FONDOS CLAROS, TEXTOS OSCUROS ===== */
+.text-precise { 
+    color: var(--text-precise) !important;     /* Verde oscuro */
+    font-weight: 600;
+}
+
+.text-acceptable { 
+    color: var(--text-acceptable) !important;  /* Amarillo oscuro */
+    font-weight: 600;
+}
+
+.text-inaccurate { 
+    color: var(--text-inaccurate) !important;  /* Rojo oscuro */
+    font-weight: 600;
+}
+
+.text-marginal { 
+    color: var(--text-marginal) !important;    /* Azul oscuro */
+    font-weight: 600;
+}
+
+.bg-precise { 
+    background-color: var(--white) !important;     /* Fondo claro */
+    color: var(--text-precise) !important;         /* Texto verde oscuro */
+    border: 1px solid var(--success-color);
+}
+
+.bg-acceptable { 
+    background-color: var(--white) !important;     /* Fondo claro */
+    color: var(--text-acceptable) !important;      /* Texto amarillo oscuro */
+    border: 1px solid var(--warning-color);
+}
+
+.bg-inaccurate { 
+    background-color: var(--white) !important;     /* Fondo claro */
+    color: var(--text-inaccurate) !important;      /* Texto rojo oscuro */
+    border: 1px solid var(--danger-color);
+}
+
+.bg-marginal { 
+    background-color: var(--white) !important;     /* Fondo claro */
+    color: var(--text-marginal) !important;        /* Texto azul oscuro */
+    border: 1px solid var(--info-color);
 }
 
 .btn-success:hover {
@@ -1657,5 +1725,679 @@ body {
 
     .timeline-dot {
         left: 2rem;
+    }
+}
+
+/* ===== ELEMENTOS ADICIONALES QUE FALTABAN ===== */
+
+/* Validation Metric específico */
+.validation-metric {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.validation-metric:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Table específico para validación */
+#validationTable tbody tr:hover {
+    background-color: var(--gray-50);
+    cursor: pointer;
+    border-left: 3px solid var(--primary-color);
+}
+
+/* Elementos de Variable */
+.variable-row:hover {
+    background-color: var(--gray-50);
+    transition: background-color 0.2s;
+    border-left: 3px solid var(--success-color);
+}
+
+/* Controles de paginación específicos */
+.pagination-controls #dayCounter {
+    color: var(--text-primary);
+    font-weight: 600;
+    background: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+/* Estados específicos de badges */
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+    color: white !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: var(--gray-800) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--danger-color) !important;
+    color: white !important;
+}
+
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+    color: white !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--gray-500) !important;
+    color: white !important;
+}
+
+/* Elementos de tabla específicos */
+.table tbody tr strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.table tbody tr small {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
+/* Elementos de gráficos específicos */
+.charts-grid {
+    position: relative;
+}
+
+.chart-item {
+    transition: all 0.3s ease;
+    opacity: 1;
+}
+
+.chart-item[style*="display: none"] {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+/* Cards de gráficos específicos */
+.chart-card .card-header {
+    background: var(--gray-100);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-primary);
+}
+
+.chart-card .card-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Navegación de gráficos específica */
+.chart-navigation {
+    background: var(--white);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.chart-view-toggle .btn {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--white);
+    color: var(--text-secondary);
+}
+
+.chart-view-toggle .btn.active {
+    background: var(--gray-600);
+    border-color: var(--gray-600);
+    color: white;
+}
+
+/* Carrusel de gráficos */
+.charts-carousel {
+    background: var(--gray-50);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+    background: rgba(0,0,0,0.5);
+    border-radius: var(--border-radius-sm);
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    background: rgba(0,0,0,0.7);
+}
+
+/* Modales */
+.modal-xl {
+    max-width: 90%;
+}
+
+.modal-content {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--shadow-lg);
+    background: var(--white);
+}
+
+.modal-header {
+    background: var(--primary-color);
+    color: white;
+    border-bottom: none;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    padding: 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: white;
+}
+
+.modal-body {
+    padding: 2rem;
+    background: var(--white);
+    color: var(--text-primary);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem;
+    background: var(--white);
+}
+
+/* Trend Cards */
+.trend-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    height: 100%;
+}
+
+.trend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.trend-header h6 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.trend-stats {
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+}
+
+/* Input Groups */
+.input-group-text {
+    background: var(--gray-100);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Paginación específica */
+.pagination .page-link {
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.75rem 1rem;
+    margin: 0 0.125rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: var(--gray-100);
+    border-color: var(--gray-300);
+    color: var(--gray-500);
+}
+
+/* Estados adicionales de texto */
+.text-marginal { 
+    color: var(--info-dark) !important; 
+    font-weight: 600;
+}
+
+.bg-marginal { 
+    background-color: var(--info-bg) !important; 
+    color: var(--info-dark) !important;
+    border: 1px solid var(--info-color);
+}
+
+/* Elementos de loading específicos */
+.chart-loading::before {
+    content: '📊';
+    font-size: 3rem;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Scrollbar personalizado */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: var(--gray-100);
+    border-radius: var(--border-radius-sm);
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition);
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
+}
+
+/* Estados de formularios */
+.form-validation-success {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.form-validation-error {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Elementos de highlight */
+.metric-highlight {
+    background: var(--white);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-color);
+}
+
+/* Border utilities */
+.border-thick { border-width: 2px !important; }
+.rounded-lg { border-radius: var(--border-radius-lg) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+/* Elementos interactivos */
+.interactive-element {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.interactive-element:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: var(--shadow-lg);
+}
+
+.interactive-element:active {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+}
+
+/* Elementos de GPU acceleration */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+.optimize-animations {
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Screen reader only */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* High contrast text */
+.high-contrast-text {
+    color: var(--text-primary) !important;
+    background-color: var(--white) !important;
+    border: 1px solid var(--text-primary) !important;
+    font-weight: 700 !important;
+    padding: 0.25rem 0.5rem !important;
+}
+
+/* Skeleton loading */
+.skeleton-loading {
+    background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: var(--border-radius-sm);
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Estados de validación específicos mejorados */
+.validation-status-excellent {
+    background: var(--success-bg);
+    color: var(--success-dark);
+    border: 1px solid var(--success-color);
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.2);
+}
+
+.validation-status-good {
+    background: var(--info-bg);
+    color: var(--info-dark);
+    border: 1px solid var(--info-color);
+    box-shadow: 0 0 10px rgba(23, 162, 184, 0.2);
+}
+
+.validation-status-fair {
+    background: var(--warning-bg);
+    color: var(--warning-dark);
+    border: 1px solid var(--warning-color);
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);
+}
+
+.validation-status-poor {
+    background: var(--danger-bg);
+    color: var(--danger-dark);
+    border: 1px solid var(--danger-color);
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+}
+
+/* Efectos de glow para elementos críticos */
+.critical-alert {
+    animation: glow-critical 2s ease-in-out infinite alternate;
+}
+
+.warning-alert {
+    animation: glow-warning 2s ease-in-out infinite alternate;
+}
+
+.success-alert {
+    animation: glow-success 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow-critical {
+    from { 
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+        border-color: var(--danger-color);
+    }
+    to { 
+        box-shadow: 0 0 20px rgba(220, 53, 69, 0.4);
+        border-color: var(--danger-light);
+    }
+}
+
+@keyframes glow-warning {
+    from { 
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);
+        border-color: var(--warning-color);
+    }
+    to { 
+        box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
+        border-color: var(--warning-light);
+    }
+}
+
+@keyframes glow-success {
+    from { 
+        box-shadow: 0 0 10px rgba(40, 167, 69, 0.2);
+        border-color: var(--success-color);
+    }
+    to { 
+        box-shadow: 0 0 20px rgba(40, 167, 69, 0.4);
+        border-color: var(--success-light);
+    }
+}
+
+/* Tooltips personalizados mejorados */
+.tooltip-custom {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip-custom::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--gray-800);
+    color: white;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    box-shadow: var(--shadow-lg);
+}
+
+.tooltip-custom:hover::after {
+    opacity: 1;
+}
+
+/* Estados adicionales para elementos específicos */
+.rotate-on-hover {
+    transition: transform 0.3s ease;
+}
+
+.rotate-on-hover:hover {
+    transform: rotate(5deg);
+}
+
+.scale-on-hover {
+    transition: transform 0.3s ease;
+}
+
+.scale-on-hover:hover {
+    transform: scale(1.05);
+}
+
+/* Modo print optimizado */
+@media print {
+    * {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    .card, .table-responsive, .chart-container {
+        border: 1px solid black !important;
+        page-break-inside: avoid;
+    }
+    
+    .btn, .no-print {
+        display: none !important;
+    }
+    
+    .validation-kpi-value, .stat-value, .kpi-value {
+        font-size: 1.5rem !important;
+    }
+    
+    .table th {
+        background: #f0f0f0 !important;
+        color: black !important;
+    }
+}
+
+/* Media queries adicionales para dispositivos específicos */
+@media (max-width: 480px) {
+    .validation-kpi-value {
+        font-size: 1.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .kpi-value {
+        font-size: 1.25rem;
+    }
+    
+    .btn {
+        padding: 10px 16px;
+        font-size: 0.8rem;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+        padding: 4px 8px;
+    }
+    
+    .chart-container {
+        padding: 0.75rem;
+    }
+    
+    .alert {
+        padding: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.75rem;
+    }
+    
+    .score-circle {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .score-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Landscape orientation específico para tablets */
+@media (orientation: landscape) and (max-width: 1024px) {
+    .validation-kpi {
+        padding: 1rem 0.75rem;
+    }
+    
+    .validation-kpi-value {
+        font-size: 2rem;
+    }
+    
+    .table-responsive {
+        max-height: 300px;
+    }
+}
+
+/* Estados de error específicos para accesibilidad */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --border-dark: #000000;
+        --text-primary: #000000;
+        --text-secondary: #333333;
+        --shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+    
+    .card, .table-responsive, .btn, .badge {
+        border-width: 2px !important;
+        border-color: #000000 !important;
+    }
+    
+    .table th {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+    }
+    
+    .btn:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    }
+}
+
+/* Reducir movimiento para usuarios sensibles */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .hover-lift:hover,
+    .validation-row:hover,
+    .clickable:hover {
+        transform: none !important;
+    }
+}
+
+/* Dispositivos con hover limitado */
+@media (hover: none) and (pointer: coarse) {
+    .hover-lift:hover {
+        transform: none;
+    }
+    
+    .validation-row:hover {
+        background: var(--gray-50);
+        transform: none;
+    }
+    
+    .clickable:hover {
+        transform: none;
+    }
+    
+    .btn:hover {
+        transform: none;
     }
 }

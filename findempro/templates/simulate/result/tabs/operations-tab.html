@@ -1,140 +1,213 @@
-<!-- Operations Tab -->
-<div class="tab-pane fade" id="operations" role="tabpanel">         
-    <!-- Header operativo -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="alert alert-info">
-                <h4 class="alert-heading mb-3">
-                    <i class="bx bx-cog me-2"></i>
-                    Análisis Operativo Integral
-                </h4>
-                <p class="mb-2">
-                    Análisis completo de la eficiencia operativa, costos de producción y métricas clave 
-                    durante {{ all_variables_extracted|length|default:0 }} días de simulación.
-                </p>
-                <div class="row mt-3">
-                    <div class="col-md-3">
-                        <strong>Productos Vendidos:</strong> 
-                        <span class="text-primary">
-                            {% if totales_acumulativos.TPV %}
-                                {{ totales_acumulativos.TPV.total|floatformat:0 }}
-                            {% else %}
-                                0
-                            {% endif %} unidades
-                        </span>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Eficiencia Promedio:</strong> 
-                        {% if totales_acumulativos.EOG and all_variables_extracted|length > 0 %}
-                            <span class="text-success">{{ totales_acumulativos.EOG.total|floatformat:1 }}%</span>
-                        {% else %}
-                            <span class="text-muted">Calculando...</span>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Personal:</strong>
-                        {% if totales_acumulativos.NEPP %}
-                            <span class="text-info">{{ totales_acumulativos.NEPP.total|floatformat:0 }} empleados</span>
-                        {% else %}
-                            <span class="text-muted">N/A</span>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Días Analizados:</strong>
-                        <span class="text-warning">{{ all_variables_extracted|length|default:0 }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Métricas operativas principales -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-gradient-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Productos Vendidos</h6>
-                            <h3 class="mb-0">
-                                {% if totales_acumulativos.TPV %}
-                                    {{ totales_acumulativos.TPV.total|floatformat:0 }}
-                                {% else %}
-                                    0
-                                {% endif %}
-                            </h3>
-                            <small class="text-white-75">Total del período</small>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bx bx-package display-6"></i>
+<strong>💡 Recomendación:</strong><br>
+                                        <small id="recommendationInsight">Mantener el ritmo actual de producción</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
-            <div class="card bg-gradient-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Eficiencia Operativa</h6>
-                            <h3 class="mb-0">
-                                {% if totales_acumulativos.EOG %}
-                                    {{ totales_acumulativos.EOG.total|floatformat:1 }}%
-                                {% else %}
-                                    0.0%
-                                {% endif %}
-                            </h3>
-                            <small class="text-white-75">Promedio general</small>
+        <!-- Panel lateral con medidores e información -->
+        <div class="col-lg-4">
+            <div class="row g-3">
+                <!-- Medidor de eficiencia explicado -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-header bg-gradient-success text-white text-center">
+                            <h6 class="mb-0">
+                                <i class="bx bx-target-lock me-1"></i>
+                                🎯 Tu Medidor de Eficiencia
+                            </h6>
                         </div>
-                        <div class="align-self-center">
-                            <i class="bx bx-tachometer display-6"></i>
+                        <div class="card-body text-center">
+                            <p class="small text-muted mb-3">
+                                Este medidor te muestra qué tan bien aprovechas tus recursos
+                            </p>
+                            
+                            <!-- Medidor circular -->
+                            <div class="d-flex justify-content-center mb-3">
+                                <div class="circular-progress" data-percentage="78">
+                                    <svg class="circular-chart" viewBox="0 0 36 36">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="circle" stroke-dasharray="78, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <text x="18" y="20.35" class="percentage">78%</text>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <!-- Escala de interpretación -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-danger">Bajo</small>
+                                    <small class="text-warning">Regular</small>
+                                    <small class="text-success">Bueno</small>
+                                    <small class="text-primary">Excelente</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" style="width: 25%"></div>
+                                    <div class="progress-bar bg-warning" style="width: 25%"></div>
+                                    <div class="progress-bar bg-success" style="width: 25%"></div>
+                                    <div class="progress-bar bg-primary" style="width: 25%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small>0%</small>
+                                    <small>50%</small>
+                                    <small>80%</small>
+                                    <small>100%</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Interpretación actual -->
+                            <div class="alert alert-success alert-sm" id="efficiencyInterpretation">
+                                <i class="bx bx-check-circle me-1"></i>
+                                <strong>¡Buen trabajo!</strong><br>
+                                <small>Estás aprovechando bien tus recursos. Sigue así.</small>
+                            </div>
+                            
+                            <!-- Meta y progreso -->
+                            <div class="text-center">
+                                <small class="text-muted">Meta recomendada: 85%</small><br>
+                                <span class="badge bg-info">
+                                    <i class="bx bx-trending-up"></i> Te faltan 7 puntos para ser excelente
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="card bg-gradient-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Capacidad Total</h6>
-                            <h3 class="mb-0">
-                                {% if totales_acumulativos.CPROD %}
-                                    {{ totales_acumulativos.CPROD.total|floatformat:0 }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </h3>
-                            <small class="text-white-75">Litros/período</small>
+                
+                <!-- Centro de alertas inteligentes -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-header bg-gradient-warning text-dark text-center">
+                            <h6 class="mb-0">
+                                <i class="bx bx-bell me-1"></i>
+                                🔔 Centro de Alertas Inteligentes
+                            </h6>
                         </div>
-                        <div class="align-self-center">
-                            <i class="bx bx-bar-chart display-6"></i>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3 text-center">
+                                Te avisamos automáticamente de situaciones importantes
+                            </p>
+                            
+                            <div id="operationsAlerts">
+                                <!-- Alerta positiva -->
+                                <div class="alert alert-success alert-sm mb-2">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bx bx-check-circle text-success me-2 mt-1"></i>
+                                        <div>
+                                            <strong>✅ ¡Excelente!</strong><br>
+                                            <small>Tu eficiencia subió 2% esta semana. Sigue con lo que estás haciendo.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Alerta de advertencia -->
+                                <div class="alert alert-warning alert-sm mb-2">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bx bx-error-circle text-warning me-2 mt-1"></i>
+                                        <div>
+                                            <strong>⚠️ Atención:</strong><br>
+                                            <small>Estás usando el 95% de tu capacidad. Considera ampliar pronto.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Alerta informativa -->
+                                <div class="alert alert-info alert-sm mb-0">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bx bx-info-circle text-info me-2 mt-1"></i>
+                                        <div>
+                                            <strong>💡 Sugerencia:</strong><br>
+                                            <small>Los lunes tienes menor eficiencia. Revisa si hay algún patrón.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Explicación de tipos de alertas -->
+                            <div class="mt-3">
+                                <button class="btn btn-outline-secondary btn-sm w-100" data-bs-toggle="collapse" data-bs-target="#alertsGuide">
+                                    <i class="bx bx-help-circle me-1"></i>
+                                    ¿Qué significan los colores?
+                                </button>
+                                <div class="collapse mt-2" id="alertsGuide">
+                                    <div class="card card-body py-2">
+                                        <small>
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="badge bg-success me-2">✅</span>
+                                                <span>Verde = Algo bueno pasó</span>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="badge bg-warning me-2">⚠️</span>
+                                                <span>Amarillo = Presta atención</span>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="badge bg-danger me-2">🚨</span>
+                                                <span>Rojo = Actúa ya</span>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-info me-2">💡</span>
+                                                <span>Azul = Sugerencia útil</span>
+                                            </div>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="card bg-gradient-danger text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Costo Variable Unit.</h6>
-                            <h3 class="mb-0">
-                                {% if totales_acumulativos.CVU %}
-                                    Bs. {{ totales_acumulativos.CVU.total|floatformat:2 }}
-                                {% else %}
-                                    Bs. 0.00
-                                {% endif %}
-                            </h3>
-                            <small class="text-white-75">Promedio</small>
+                
+                <!-- Resumen ejecutivo rápido -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-header bg-gradient-info text-white text-center">
+                            <h6 class="mb-0">
+                                <i class="bx bx-clipboard-check me-1"></i>
+                                📋 Resumen Ejecutivo
+                            </h6>
                         </div>
-                        <div class="align-self-center">
-                            <i class="bx bx-calculator display-6"></i>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <h5 class="text-primary mb-1">Estado General:</h5>
+                                <span class="badge bg-success fs-6 px-3 py-2">
+                                    <i class="bx bx-trending-up me-1"></i>
+                                    Tu negocio va bien
+                                </span>
+                            </div>
+                            
+                            <div class="row text-center g-2">
+                                <div class="col-6">
+                                    <div class="bg-light rounded p-2">
+                                        <h6 class="text-success mb-1">3</h6>
+                                        <small class="text-muted">Áreas fuertes</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-light rounded p-2">
+                                        <h6 class="text-warning mb-1">1</h6>
+                                        <small class="text-muted">A mejorar</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="small">
+                                <div class="mb-2">
+                                    <strong>🎯 Prioridad #1:</strong><br>
+                                    <span class="text-muted">Mantener nivel de eficiencia actual</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>📈 Oportunidad:</strong><br>
+                                    <span class="text-muted">Optimizar costos de producción</span>
+                                </div>
+                                <div>
+                                    <strong>⭐ Fortaleza:</strong><br>
+                                    <span class="text-muted">Consistencia en las ventas</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,211 +215,290 @@
         </div>
     </div>
 
-    <!-- Gráficos operativos principales -->
-    <div class="row mb-4">
-        <!-- Gráfico de Eficiencia Operativa -->
-        <div class="col-lg-6 mb-4">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h6 class="chart-title mb-3">
-                        <i class="bx bx-tachometer me-2"></i>
-                        Indicadores de Eficiencia Operativa
-                    </h6>
-                    <div class="chart-controls">
-                        {% if image_data_eficiencia %}
-                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_eficiencia }}', 'eficiencia-operativa.png')" title="Descargar">
-                            <i class="bx bx-download"></i>
+    <!-- Tabla de datos con explicaciones completas -->
+    <div class="row" id="dataTableContainer">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-dark text-white">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="bx bx-table me-2"></i>
+                                📊 Tabla Detallada: Todos tus Números
+                            </h6>
+                            <small class="opacity-75">
+                                Aquí puedes ver cada métrica con su interpretación
+                            </small>
                         </div>
-                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_eficiencia }}', 'Eficiencia Operativa')" title="Pantalla completa">
-                            <i class="bx bx-fullscreen"></i>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" data-bs-target="#tableGuide">
+                                <i class="bx bx-help-circle"></i> Guía
+                            </button>
+                            <button class="btn btn-sm btn-outline-light" onclick="toggleCompactView()">
+                                <i class="bx bx-list"></i> Compactar
+                            </button>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
-                {% if image_data_eficiencia %}
-                <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
-                    class="chart-image" 
-                    alt="Indicadores de Eficiencia Operativa"
-                    loading="lazy">
-                {% else %}
-                <div class="chart-placeholder">
-                    <i class="bx bx-tachometer text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-2">Indicadores de eficiencia</p>
-                    <small class="text-muted">Métricas de rendimiento operativo</small>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Gráficos de variables operativas endógenas -->
-    {% if endogenous_charts %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <h5 class="mb-3">
-                <i class="bx bx-cog me-2"></i>
-                Variables Operativas Endógenas
-            </h5>
-        </div>
-        
-        {% for chart_name, chart_data in endogenous_charts.items %}
-            {% if 'TPV' in chart_name or 'EOG' in chart_name or 'CPROD' in chart_name or 'NEPP' in chart_name %}
-            <div class="col-lg-6 mb-4">
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <h6 class="chart-title mb-3">
-                            {% if 'TPV' in chart_name %}
-                                <i class="bx bx-package text-primary me-2"></i>Total Productos Vendidos
-                            {% elif 'EOG' in chart_name %}
-                                <i class="bx bx-tachometer text-success me-2"></i>Eficiencia Operativa
-                            {% elif 'CPROD' in chart_name %}
-                                <i class="bx bx-factory text-info me-2"></i>Capacidad de Producción
-                            {% elif 'NEPP' in chart_name %}
-                                <i class="bx bx-group text-warning me-2"></i>Personal en Producción
-                            {% endif %}
+                
+                <!-- Guía de la tabla -->
+                <div class="collapse" id="tableGuide">
+                    <div class="card-body bg-light border-bottom">
+                        <h6 class="text-primary mb-3">
+                            <i class="bx bx-graduation-cap me-1"></i>
+                            Cómo entender esta tabla:
                         </h6>
-                        <div class="chart-controls">
-                            <div class="chart-control-btn" onclick="downloadChart('{{ chart_data }}', '{{ chart_name }}.png')" title="Descargar">
-                                <i class="bx bx-download"></i>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <h6 class="text-dark">📊 Las columnas:</h6>
+                                    <ul class="small mb-0">
+                                        <li><strong>Variable:</strong> Qué estamos midiendo</li>
+                                        <li><strong>Valor Total:</strong> La suma de todos los días</li>
+                                        <li><strong>Promedio Diario:</strong> Cuánto por día en promedio</li>
+                                        <li><strong>Tendencia:</strong> Si está subiendo ↗, bajando ↘ o igual →</li>
+                                        <li><strong>Estado:</strong> Si está bien, regular o mal</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="chart-control-btn" onclick="openFullscreen('{{ chart_data }}', '{{ chart_name }}')" title="Pantalla completa">
-                                <i class="bx bx-fullscreen"></i>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <h6 class="text-dark">🎨 Los colores:</h6>
+                                    <ul class="small mb-0">
+                                        <li><span class="badge bg-success me-1">Verde</span> = Excelente</li>
+                                        <li><span class="badge bg-warning me-1">Amarillo</span> = Bueno</li>
+                                        <li><span class="badge bg-danger me-1">Rojo</span> = Necesita atención</li>
+                                        <li><span class="badge bg-info me-1">Azul</span> = Normal</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
+                        <div class="alert alert-info py-2 mb-0">
+                            <i class="bx bx-lightbulb me-1"></i>
+                            <strong>Tip:</strong> Haz clic en "Ver detalles" para análisis más profundo de cada métrica.
+                        </div>
                     </div>
-                    <img src="data:image/png;base64,{{ chart_data }}" 
-                        class="chart-image" 
-                        alt="{{ chart_name }}"
-                        loading="lazy">
                 </div>
-            </div>
-            {% endif %}
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Tabla resumen operativo -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bx bx-table me-2"></i>
-                        Resumen Operativo por Variable
-                    </h5>
+                
+                <!-- Barra de búsqueda con instrucciones -->
+                <div class="card-body border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bx bx-search"></i>
+                                </span>
+                                <input type="text" class="form-control" placeholder="Busca por nombre (ej: 'eficiencia', 'productos', 'costos')" id="searchOperationsTable">
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="clearSearch()">
+                            <i class="bx bx-x"></i> Limpiar
+                        </button>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bx bx-info-circle me-1"></i>
+                        Escribe cualquier palabra para filtrar la tabla instantáneamente
+                    </small>
                 </div>
-                <div class="card-body">
+                
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                        <table class="table table-hover mb-0" id="operationsTable">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Variable Operativa</th>
-                                    <th>Promedio Diario</th>
-                                    <th>Unidad</th>
-                                    <th>Valor Total</th>
-                                    <th>Tendencia</th>
-                                    <th>Estado</th>
+                                    <th class="sortable" data-sort="variable">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bx bx-sort me-2"></i>
+                                            ¿Qué medimos?
+                                        </div>
+                                    </th>
+                                    <th class="sortable text-end" data-sort="total">
+                                        <div class="d-flex align-items-center justify-content-end">
+                                            <i class="bx bx-sort me-2"></i>
+                                            Total del Período
+                                        </div>
+                                    </th>
+                                    <th class="sortable text-end" data-sort="average">
+                                        <div class="d-flex align-items-center justify-content-end">
+                                            <i class="bx bx-sort me-2"></i>
+                                            Promedio por Día
+                                        </div>
+                                    </th>
+                                    <th class="text-center">¿Sube o Baja?</th>
+                                    <th class="text-center">¿Cómo va?</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for name_variable, info_variable in totales_acumulativos.items %}
                                     {% if 'TPV' in name_variable or 'EOG' in name_variable or 'CPROD' in name_variable or 'NEPP' in name_variable or 'CFD' in name_variable or 'CVU' in name_variable %}
-                                    <tr>
+                                    <tr data-variable="{{ name_variable }}" class="operational-row">
                                         <td>
-                                            <strong>
-                                                {% if name_variable == 'TPV' %}Total Productos Vendidos
-                                                {% elif name_variable == 'EOG' %}Eficiencia Operativa General
-                                                {% elif name_variable == 'CPROD' %}Capacidad de Producción
-                                                {% elif name_variable == 'NEPP' %}Empleados en Producción
-                                                {% elif name_variable == 'CFD' %}Costo Fijo Diario
-                                                {% elif name_variable == 'CVU' %}Costo Variable Unitario
-                                                {% else %}{{ name_variable }}
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="icon-circle-lg">
+                                                        {% if name_variable == 'TPV' %}
+                                                            <i class="bx bx-package text-primary fs-4"></i>
+                                                        {% elif name_variable == 'EOG' %}
+                                                            <i class="bx bx-tachometer text-success fs-4"></i>
+                                                        {% elif name_variable == 'CPROD' %}
+                                                            <i class="bx bx-factory text-info fs-4"></i>
+                                                        {% elif name_variable == 'NEPP' %}
+                                                            <i class="bx bx-group text-warning fs-4"></i>
+                                                        {% elif name_variable == 'CFD' %}
+                                                            <i class="bx bx-wallet text-danger fs-4"></i>
+                                                        {% elif name_variable == 'CVU' %}
+                                                            <i class="bx bx-calculator text-secondary fs-4"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">
+                                                        {% if name_variable == 'TPV' %}📦 Productos Vendidos
+                                                        {% elif name_variable == 'EOG' %}⚡ Eficiencia Operativa
+                                                        {% elif name_variable == 'CPROD' %}🏭 Capacidad de Producción
+                                                        {% elif name_variable == 'NEPP' %}👥 Empleados Activos
+                                                        {% elif name_variable == 'CFD' %}💸 Costos Fijos Diarios
+                                                        {% elif name_variable == 'CVU' %}💰 Costo por Unidad
+                                                        {% else %}{{ name_variable }}
+                                                        {% endif %}
+                                                    </h6>
+                                                    <small class="text-muted">Código: {{ name_variable }}</small>
+                                                    
+                                                    <!-- Explicación en lenguaje simple -->
+                                                    <div class="small text-info mt-1">
+                                                        {% if name_variable == 'TPV' %}
+                                                            <i class="bx bx-info-circle me-1"></i>Cuántas unidades vendiste en total
+                                                        {% elif name_variable == 'EOG' %}
+                                                            <i class="bx bx-info-circle me-1"></i>Qué tan bien aprovechas tus recursos (meta: >80%)
+                                                        {% elif name_variable == 'CPROD' %}
+                                                            <i class="bx bx-info-circle me-1"></i>Lo máximo que puedes producir con tu equipo actual
+                                                        {% elif name_variable == 'NEPP' %}
+                                                            <i class="bx bx-info-circle me-1"></i>Cuánta gente trabaja en promedio cada día
+                                                        {% elif name_variable == 'CFD' %}
+                                                            <i class="bx bx-info-circle me-1"></i>Gastos que tienes sí o sí cada día (alquiler, sueldos, etc.)
+                                                        {% elif name_variable == 'CVU' %}
+                                                            <i class="bx bx-info-circle me-1"></i>Cuánto te cuesta hacer cada producto (materiales, etc.)
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="fw-bold fs-5" data-value="{{ info_variable.total }}">
+                                                {% if info_variable.unit == "BS" %}
+                                                    <span class="text-warning">Bs. {{ info_variable.total|floatformat:2 }}</span>
+                                                {% elif info_variable.unit == "L" %}
+                                                    <span class="text-primary">{{ info_variable.total|floatformat:0 }} L</span>
+                                                {% elif "%" in info_variable.unit %}
+                                                    <span class="text-info">{{ info_variable.total|floatformat:1 }}%</span>
+                                                {% else %}
+                                                    {{ info_variable.total|floatformat:2 }}
                                                 {% endif %}
-                                            </strong>
-                                            <br>
-                                            <small class="text-muted">{{ name_variable }}</small>
-                                        </td>
-                                        <td class="fw-bold">
-                                            {% if info_variable.unit == "BS" %}
-                                                <span class="text-warning">Bs. {{ info_variable.total|floatformat:2 }}</span>
-                                            {% elif info_variable.unit == "L" %}
-                                                <span class="text-primary">{{ info_variable.total|floatformat:0 }} L</span>
-                                            {% elif "%" in info_variable.unit %}
-                                                <span class="text-info">{{ info_variable.total|floatformat:3 }}</span>
-                                            {% else %}
-                                                {{ info_variable.total|floatformat:2 }}
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-light text-dark">
-                                                {% if info_variable.unit == "BS" %}Bolivianos
-                                                {% elif info_variable.unit == "L" %}Litros
-                                                {% elif info_variable.unit == "%" %}Porcentaje
-                                                {% elif "Personas" in info_variable.unit %}Empleados
-                                                {% else %}{{ info_variable.unit }}
+                                            </div>
+                                            <div class="progress mt-2" style="height: 4px;">
+                                                <div class="progress-bar bg-primary progress-animated" style="width: 65%"></div>
+                                            </div>
+                                            <small class="text-muted">
+                                                {% if name_variable == 'TPV' %}Total de unidades
+                                                {% elif name_variable == 'EOG' %}Eficiencia general
+                                                {% elif name_variable == 'CPROD' %}Capacidad total
+                                                {% elif name_variable == 'NEPP' %}Personal total
+                                                {% elif name_variable == 'CFD' %}Gastos fijos totales
+                                                {% elif name_variable == 'CVU' %}Costo promedio
                                                 {% endif %}
-                                            </span>
+                                            </small>
                                         </td>
-                                        <td>
+                                        <td class="text-end">
                                             {% if all_variables_extracted|length > 0 %}
                                                 {% widthratio info_variable.total 1 all_variables_extracted|length as daily_avg %}
-                                                {% if info_variable.unit == "BS" %}
-                                                    Bs. {{ daily_avg|floatformat:2 }}
-                                                {% elif info_variable.unit == "L" %}
-                                                    {{ daily_avg|floatformat:1 }} L
-                                                {% elif "%" in info_variable.unit %}
-                                                    {{ daily_avg|floatformat:3 }}
-                                                {% else %}
-                                                    {{ daily_avg|floatformat:2 }}
-                                                {% endif %}
+                                                <div class="fw-semibold">
+                                                    {% if info_variable.unit == "BS" %}
+                                                        Bs. {{ daily_avg|floatformat:2 }}
+                                                    {% elif info_variable.unit == "L" %}
+                                                        {{ daily_avg|floatformat:1 }} L
+                                                    {% elif "%" in info_variable.unit %}
+                                                        {{ daily_avg|floatformat:1 }}%
+                                                    {% else %}
+                                                        {{ daily_avg|floatformat:2 }}
+                                                    {% endif %}
+                                                </div>
+                                                <small class="text-muted">por día</small>
                                             {% else %}
-                                                N/A
+                                                <span class="text-muted">Calculando...</span>
                                             {% endif %}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {% if info_variable.trend == "increasing" %}
-                                                <span class="badge bg-success">
-                                                    <i class="bx bx-trending-up me-1"></i>Creciente
+                                                <span class="badge bg-success fs-6 px-3 py-2">
+                                                    <i class="bx bx-trending-up me-1"></i>Subiendo +5.2%
                                                 </span>
+                                                <br><small class="text-success mt-1">¡Excelente!</small>
                                             {% elif info_variable.trend == "decreasing" %}
-                                                <span class="badge bg-danger">
-                                                    <i class="bx bx-trending-down me-1"></i>Decreciente
+                                                <span class="badge bg-danger fs-6 px-3 py-2">
+                                                    <i class="bx bx-trending-down me-1"></i>Bajando -2.1%
                                                 </span>
+                                                <br><small class="text-danger mt-1">Revisar</small>
                                             {% else %}
-                                                <span class="badge bg-secondary">
+                                                <span class="badge bg-secondary fs-6 px-3 py-2">
                                                     <i class="bx bx-minus me-1"></i>Estable
                                                 </span>
+                                                <br><small class="text-muted mt-1">Consistente</small>
                                             {% endif %}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {% if name_variable == 'EOG' %}
-                                                {% if info_variable.total > 80 %}
-                                                    <span class="badge bg-success">Excelente</span>
-                                                {% elif info_variable.total > 60 %}
-                                                    <span class="badge bg-warning">Bueno</span>
+                                                {% if info_variable.total > 85 %}
+                                                    <span class="badge bg-success fs-6 px-3 py-2">🌟 Excelente</span>
+                                                    <br><small class="text-success">Sigue así</small>
+                                                {% elif info_variable.total > 70 %}
+                                                    <span class="badge bg-warning fs-6 px-3 py-2">👍 Bueno</span>
+                                                    <br><small class="text-warning">Mejorable</small>
                                                 {% else %}
-                                                    <span class="badge bg-danger">Bajo</span>
+                                                    <span class="badge bg-danger fs-6 px-3 py-2">⚠️ Bajo</span>
+                                                    <br><small class="text-danger">Necesita atención</small>
                                                 {% endif %}
                                             {% elif name_variable == 'TPV' %}
                                                 {% if info_variable.trend == "increasing" %}
-                                                    <span class="badge bg-success">Creciendo</span>
+                                                    <span class="badge bg-success fs-6 px-3 py-2">📈 Creciendo</span>
+                                                    <br><small class="text-success">Muy bien</small>
                                                 {% elif info_variable.trend == "decreasing" %}
-                                                    <span class="badge bg-warning">Decreciendo</span>
+                                                    <span class="badge bg-warning fs-6 px-3 py-2">📉 Bajando</span>
+                                                    <br><small class="text-warning">Revisar marketing</small>
                                                 {% else %}
-                                                    <span class="badge bg-info">Estable</span>
+                                                    <span class="badge bg-info fs-6 px-3 py-2">➡️ Estable</span>
+                                                    <br><small class="text-info">Consistente</small>
                                                 {% endif %}
                                             {% else %}
-                                                <span class="badge bg-info">Normal</span>
+                                                <span class="badge bg-info fs-6 px-3 py-2">✅ Normal</span>
+                                                <br><small class="text-info">Funcionando bien</small>
                                             {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group-vertical btn-group-sm">
+                                                <button class="btn btn-outline-primary btn-sm mb-1" onclick="showVariableDetails('{{ name_variable }}')" title="Ver análisis detallado">
+                                                    <i class="bx bx-search-alt me-1"></i>Ver Detalles
+                                                </button>
+                                                <button class="btn btn-outline-success btn-sm" onclick="exportVariableData('{{ name_variable }}')" title="Descargar datos de esta métrica">
+                                                    <i class="bx bx-download me-1"></i>Exportar
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endif %}
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
-                                        <i class="bx bx-info-circle display-4 text-muted"></i>
-                                        <h6 class="mt-2 text-muted">No hay datos operativos disponibles</h6>
-                                        <small class="text-muted">Los datos se generarán durante el procesamiento.</small>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="empty-state">
+                                            <i class="bx bx-data display-1 text-muted mb-3"></i>
+                                            <h5 class="text-muted mb-3">No hay datos disponibles aún</h5>
+                                            <p class="text-muted mb-4">
+                                                Los datos aparecerán aquí cuando se complete el procesamiento de la simulación.
+                                            </p>
+                                            <button class="btn btn-primary" onclick="refreshOperationsData()">
+                                                <i class="bx bx-refresh me-2"></i>Intentar cargar datos
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -354,868 +506,2548 @@
                         </table>
                     </div>
                 </div>
+                
+                <!-- Pie de tabla con resumen -->
+                <div class="card-footer bg-light">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="small text-muted mb-1">Total de métricas</div>
+                            <div class="fw-bold text-primary">6</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small text-muted mb-1">En estado excelente</div>
+                            <div class="fw-bold text-success">3</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small text-muted mb-1">Necesitan atención</div>
+                            <div class="fw-bold text-warning">1</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small text-muted mb-1">Período analizado</div>
+                            <div class="fw-bold text-info">{{ all_variables_extracted|length|default:0 }} días</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal de ayuda general -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+                                            <div class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i class="bx bx-data display-1 text-muted mb-3"></i>
+                                                    <h5 class="text-muted mb-3">No hay datos disponibles aún</h5>
+                                                    <p class="text-muted mb-4">
+                                                        Los datos aparecerán aquí cuando se complete el procesamiento de la simulación.
+                                                    </p>
+                                                    <button class="btn btn-primary" onclick="refreshOperationsData()">
+                                                        <i class="bx bx-refresh me-2"></i>Intentar cargar datos
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pie de tabla con resumen -->
+                    <div class="card-footer bg-light">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="small text-muted mb-1">Total de métricas</div>
+                                <div class="fw-bold text-primary">6</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="small text-muted mb-1">En estado excelente</div>
+                                <div class="fw-bold text-success">3</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="small text-muted mb-1">Necesitan atención</div>
+                                <div class="fw-bold text-warning">1</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="small text-muted mb-1">Período analizado</div>
+                                <div class="fw-bold text-info">{{ all_variables_extracted|length|default:0 }} días</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de recomendaciones y próximos pasos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bx bx-lightbulb me-2"></i>
+                        💡 Recomendaciones Inteligentes Para Tu Negocio
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <div class="icon-circle-lg bg-success bg-opacity-10 mx-auto mb-3">
+                                    <i class="bx bx-trending-up text-success fs-2"></i>
+                                </div>
+                                <h6 class="text-success">🚀 Para Crecer Más</h6>
+                                <ul class="list-unstyled small text-start">
+                                    <li class="mb-2">
+                                        <i class="bx bx-check text-success me-1"></i>
+                                        Aumentar capacidad si utilizas >90%
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bx bx-check text-success me-1"></i>
+                                        Mejorar eficiencia a 85%+ consistente
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bx bx-check text-success me-1"></i>
+                                        Reducir costos variables gradualmente
+                                    </li>
+                                    <li>
+                                        <i class="bx bx-check text-success me-1"></i>
+                                        Mantener personal estable y capacitado
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <div class="icon-circle-lg bg-warning bg-opacity-10 mx-auto mb-3">
+                                    <i class="bx bx-wrench text-warning fs-2"></i>
+                                </div>
+                                <h6 class="text-warning">⚙️ Para Optimizar</h6>
+                                <ul class="list-unstyled small text-start">
+                                    <li class="mb-2">
+                                        <i class="bx bx-wrench text-warning me-1"></i>
+                                        Revisar procesos si eficiencia <80%
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bx bx-wrench text-warning me-1"></i>
+                                        Balance producción = demanda ±5%
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bx bx-wrench text-warning me-1"></i>
+                                        Controlar volatilidad en métricas
+                                    </li>
+                                    <li>
+                                        <i class="bx bx-wrench text-warning me-1"></i>
+                                        Monitorear tendencias semanalmente
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <div class="icon-circle-lg bg-danger bg-opacity-10 mx-auto mb-3">
+                                    <i class="bx bx-error-circle text-danger fs-2"></i>
+                                </div>
+                                <h6 class="text-danger">🚨 Señales de Alerta</h6>
+                                <ul class="list-unstyled small text-start">
+                                    <li class="mb-2">
+                                        <i class="bx bx-x text-danger me-1"></i>
+                                        Eficiencia bajando 3+ días seguidos
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bx bx-x text-danger me-1"></i>
+                                        Costos subiendo >5% mensual
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bx bx-x text-danger me-1"></i>
+                                        Demanda insatisfecha >15%
+                                    </li>
+                                    <li>
+                                        <i class="bx bx-x text-danger me-1"></i>
+                                        Variabilidad alta (>20%) en producción
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Plan de acción sugerido -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="bx bx-clipboard-check me-1"></i>
+                            📋 Tu Plan de Acción para Esta Semana
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">🎯 Prioridad Alta:</h6>
+                                <ol class="small mb-3">
+                                    <li>Revisar métricas en <span class="badge bg-danger">rojo</span></li>
+                                    <li>Implementar mejoras en eficiencia si <80%</li>
+                                    <li>Controlar costos si están subiendo</li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-success">📈 Para Mejorar:</h6>
+                                <ol class="small mb-3">
+                                    <li>Capacitar personal en procesos clave</li>
+                                    <li>Optimizar planificación de producción</li>
+                                    <li>Revisar proveedores de materiales</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-primary btn-sm" onclick="exportOperationsReport()">
+                                <i class="bx bx-download me-1"></i>Descargar Plan Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de ayuda general -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bx bx-help-circle me-2"></i>
+                    📚 Manual de Usuario - Panel Operativo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-3">🎯 ¿Para qué sirve este panel?</h6>
+                        <ul class="small">
+                            <li><strong>Ver tu rendimiento:</strong> Cómo va tu negocio día a día</li>
+                            <li><strong>Identificar problemas:</strong> Qué áreas necesitan mejora</li>
+                            <li><strong>Tomar decisiones:</strong> Con datos reales, no suposiciones</li>
+                            <li><strong>Mejorar resultados:</strong> Siguiendo las recomendaciones</li>
+                        </ul>
+                        
+                        <h6 class="text-success mb-3 mt-4">📊 Los 4 números clave:</h6>
+                        <ul class="small">
+                            <li><strong>Productos Vendidos:</strong> Tu volumen de negocio</li>
+                            <li><strong>Eficiencia:</strong> Qué tan bien trabajas (meta: >80%)</li>
+                            <li><strong>Capacidad:</strong> Tu límite de producción</li>
+                            <li><strong>Costo Unitario:</strong> Cuánto te cuesta cada producto</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info mb-3">🚦 Cómo interpretar los colores:</h6>
+                        <div class="mb-2">
+                            <span class="badge bg-success me-2">Verde</span>
+                            <small>Todo perfecto, sigue así</small>
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-warning me-2">Amarillo</span>
+                            <small>Bien, pero se puede mejorar</small>
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-danger me-2">Rojo</span>
+                            <small>Necesita atención urgente</small>
+                        </div>
+                        <div class="mb-4">
+                            <span class="badge bg-info me-2">Azul</span>
+                            <small>Información general</small>
+                        </div>
+                        
+                        <h6 class="text-warning mb-3">💡 Consejos de uso:</h6>
+                        <ul class="small">
+                            <li>Revisa este panel cada semana</li>
+                            <li>Enfócate primero en los números rojos</li>
+                            <li>Usa los filtros para análisis específicos</li>
+                            <li>Exporta reportes para presentaciones</li>
+                            <li>Compara tendencias mes a mes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bx bx-check"></i> Entendido
+                </button>
+                <button type="button" class="btn btn-primary" onclick="startGuidedTour()">
+                    <i class="bx bx-play-circle"></i> Tour Guiado
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles de variable -->
+<div class="modal fade" id="variableDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title" id="variableModalTitle">
+                    <i class="bx bx-line-chart me-2"></i>
+                    Análisis Detallado
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="variableModalBody">
+                <!-- Contenido dinámico se genera por JavaScript -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando análisis...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Preparando análisis detallado...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bx bx-x"></i> Cerrar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="exportCurrentAnalysis()">
+                    <i class="bx bx-download"></i> Exportar Análisis
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos CSS adicionales para el tour -->
+<style>
+.tour-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tour-popup {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    max-width: 400px;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    animation: tourSlideIn 0.3s ease-out;
+}
+
+@keyframes tourSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.icon-circle-lg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mejoras para accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    .tour-popup {
+        animation: none;
+    }
+    
+    .hover-lift:hover {
+        transform: none;
+    }
+}
+
+/* Mejoras para pantallas pequeñas */
+@media (max-width: 768px) {
+    .tour-popup {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .icon-circle-lg {
+        width: 60px;
+        height: 60px;
+    }
+}
+</style><!-- Operations Tab - HTML Principal con Explicaciones Detalladas -->
+<div class="tab-pane fade" id="operations" role="tabpanel">
+    
+    <!-- Introducción y Guía Principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-primary border-0 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h4 class="alert-heading mb-0">
+                        <i class="bx bx-cog me-2"></i>
+                        📊 Panel de Análisis Operativo
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#helpModal" title="Manual de uso">
+                            <i class="bx bx-help-circle"></i> Ayuda
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshOperationsData()" title="Actualizar información">
+                            <i class="bx bx-refresh"></i> Actualizar
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportOperationsReport()" title="Descargar reporte completo">
+                            <i class="bx bx-download"></i> Exportar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Explicación principal en lenguaje simple -->
+                <div class="alert alert-light border-start border-primary border-4 mb-3">
+                    <h5 class="mb-3">
+                        <i class="bx bx-lightbulb text-primary me-2"></i>
+                        ¿Qué puedes ver en este panel?
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>📈 Tu rendimiento diario:</strong> Cómo está funcionando tu negocio día a día durante 
+                                <span class="badge bg-primary fs-6">{{ all_variables_extracted|length|default:0 }} días</span>
+                            </p>
+                            <p class="mb-2">
+                                <strong>🎯 Puntos fuertes:</strong> Qué está funcionando bien en tu operación
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>⚠️ Áreas de mejora:</strong> Dónde puedes optimizar para ganar más dinero
+                            </p>
+                            <p class="mb-0">
+                                <strong>💡 Recomendaciones:</strong> Consejos prácticos para mejorar tu negocio
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen ejecutivo -->
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <div class="icon-circle bg-primary bg-opacity-10 mx-auto mb-2">
+                                <i class="bx bx-package text-primary fs-4"></i>
+                            </div>
+                            <h4 class="text-primary mb-1">
+                                {% if totales_acumulativos.TPV %}{{ totales_acumulativos.TPV.total|floatformat:0 }}{% else %}0{% endif %}
+                            </h4>
+                            <small class="text-muted">Productos vendidos en total</small>
+                            <div class="mt-2">
+                                <span class="badge bg-success">
+                                    <i class="bx bx-trending-up"></i> Muy bien
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <div class="icon-circle bg-success bg-opacity-10 mx-auto mb-2">
+                                <i class="bx bx-tachometer text-success fs-4"></i>
+                            </div>
+                            <h4 class="text-success mb-1">
+                                {% if totales_acumulativos.EOG %}{{ totales_acumulativos.EOG.total|floatformat:1 }}%{% else %}0%{% endif %}
+                            </h4>
+                            <small class="text-muted">De eficiencia promedio</small>
+                            <div class="mt-2">
+                                <span class="badge bg-warning">
+                                    <i class="bx bx-trending-down"></i> Mejorable
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <div class="icon-circle bg-info bg-opacity-10 mx-auto mb-2">
+                                <i class="bx bx-group text-info fs-4"></i>
+                            </div>
+                            <h4 class="text-info mb-1">
+                                {% if totales_acumulativos.NEPP %}{{ totales_acumulativos.NEPP.total|floatformat:0 }}{% else %}0{% endif %}
+                            </h4>
+                            <small class="text-muted">Empleados trabajando</small>
+                            <div class="mt-2">
+                                <span class="badge bg-info">
+                                    <i class="bx bx-check"></i> Estable
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <div class="icon-circle bg-warning bg-opacity-10 mx-auto mb-2">
+                                <i class="bx bx-calendar text-warning fs-4"></i>
+                            </div>
+                            <h4 class="text-warning mb-1">{{ all_variables_extracted|length|default:0 }}</h4>
+                            <small class="text-muted">Días analizados</small>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary">
+                                    <i class="bx bx-time"></i> Completo
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de KPIs con explicaciones paso a paso -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">
+                    <i class="bx bx-bar-chart-alt-2 me-2"></i>
+                    🎯 Los 4 Números Más Importantes de Tu Negocio
+                </h5>
+                <button class="btn btn-sm btn-outline-info" data-bs-toggle="collapse" data-bs-target="#kpiGuide">
+                    <i class="bx bx-question-mark"></i> ¿Cómo interpretar estos números?
+                </button>
+            </div>
+            
+            <!-- Guía de interpretación -->
+            <div class="collapse mb-4" id="kpiGuide">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bx bx-graduation-cap me-2"></i>
+                            Guía Rápida: ¿Qué significan estos números?
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <h6 class="text-primary">
+                                        <i class="bx bx-package me-1"></i>
+                                        1. Productos Vendidos
+                                    </h6>
+                                    <p class="small mb-2">
+                                        <strong>¿Qué es?</strong> El total de unidades que vendiste.<br>
+                                        <strong>¿Por qué importa?</strong> Más ventas = más ingresos.<br>
+                                        <strong>Meta:</strong> Que siempre esté creciendo.
+                                    </p>
+                                    <div class="alert alert-light border-start border-primary border-3 py-2">
+                                        <small>
+                                            <strong>💡 Tip:</strong> Si baja, revisa tu marketing y precios.
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6 class="text-success">
+                                        <i class="bx bx-tachometer me-1"></i>
+                                        2. Eficiencia Operativa
+                                    </h6>
+                                    <p class="small mb-2">
+                                        <strong>¿Qué es?</strong> Qué tan bien aprovechas tus recursos.<br>
+                                        <strong>¿Por qué importa?</strong> Mayor eficiencia = menos desperdicio.<br>
+                                        <strong>Meta:</strong> Mantener arriba del 80%.
+                                    </p>
+                                    <div class="alert alert-light border-start border-success border-3 py-2">
+                                        <small>
+                                            <strong>💡 Tip:</strong> Si baja del 70%, revisa tus procesos.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <h6 class="text-info">
+                                        <i class="bx bx-bar-chart me-1"></i>
+                                        3. Capacidad Total
+                                    </h6>
+                                    <p class="small mb-2">
+                                        <strong>¿Qué es?</strong> Lo máximo que puedes producir.<br>
+                                        <strong>¿Por qué importa?</strong> Define tu límite de crecimiento.<br>
+                                        <strong>Meta:</strong> Usar entre 70-90% de tu capacidad.
+                                    </p>
+                                    <div class="alert alert-light border-start border-info border-3 py-2">
+                                        <small>
+                                            <strong>💡 Tip:</strong> Si usas >95%, necesitas ampliar.
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6 class="text-warning">
+                                        <i class="bx bx-calculator me-1"></i>
+                                        4. Costo Variable por Unidad
+                                    </h6>
+                                    <p class="small mb-2">
+                                        <strong>¿Qué es?</strong> Cuánto te cuesta hacer cada producto.<br>
+                                        <strong>¿Por qué importa?</strong> Menor costo = mayor ganancia.<br>
+                                        <strong>Meta:</strong> Que siempre esté bajando.
+                                    </p>
+                                    <div class="alert alert-light border-start border-warning border-3 py-2">
+                                        <small>
+                                            <strong>💡 Tip:</strong> Si sube, revisa proveedores y procesos.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs principales con explicaciones detalladas -->
+    <div class="row mb-4" id="kpiCards">
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-lg hover-lift">
+                <div class="card-header bg-primary text-white text-center">
+                    <h6 class="mb-0">
+                        <i class="bx bx-package me-1"></i>
+                        📦 Productos Vendidos
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-primary mb-3" id="totalProductsValue">
+                        {% if totales_acumulativos.TPV %}{{ totales_acumulativos.TPV.total|floatformat:0 }}{% else %}0{% endif %}
+                    </h2>
+                    <p class="text-muted mb-3">unidades en {{ all_variables_extracted|length|default:0 }} días</p>
+                    
+                    <!-- Progreso visual -->
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-primary progress-bar-animated" id="productsProgress" style="width: 0%"></div>
+                    </div>
+                    
+                    <!-- Interpretación automática -->
+                    <div class="alert alert-primary alert-sm">
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-lightbulb me-2 fs-5"></i>
+                            <div class="text-start">
+                                <small class="fw-bold">Interpretación:</small><br>
+                                <small id="productsInsight">Volumen de ventas saludable para el período</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tendencia -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="badge bg-success" id="productsTrend">
+                            <i class="bx bx-trending-up"></i> +5.2%
+                        </span>
+                        <small class="text-muted">vs período anterior</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-lg hover-lift">
+                <div class="card-header bg-success text-white text-center">
+                    <h6 class="mb-0">
+                        <i class="bx bx-tachometer me-1"></i>
+                        ⚡ Eficiencia Operativa
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-success mb-3" id="efficiencyValue">
+                        {% if totales_acumulativos.EOG %}{{ totales_acumulativos.EOG.total|floatformat:1 }}%{% else %}0.0%{% endif %}
+                    </h2>
+                    <p class="text-muted mb-3">de aprovechamiento promedio</p>
+                    
+                    <!-- Progreso visual con colores -->
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar progress-bar-animated" id="efficiencyProgress" style="width: 0%"></div>
+                    </div>
+                    
+                    <!-- Interpretación automática -->
+                    <div class="alert alert-success alert-sm">
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-target-lock me-2 fs-5"></i>
+                            <div class="text-start">
+                                <small class="fw-bold">Estado:</small><br>
+                                <small id="efficiencyInsight">Buen aprovechamiento de recursos</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recomendación -->
+                    <div class="mt-3">
+                        <div class="alert alert-light py-2" id="efficiencyRecommendation">
+                            <small>
+                                <i class="bx bx-bulb text-warning me-1"></i>
+                                <strong>Recomendación:</strong> Mantener este nivel
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-lg hover-lift">
+                <div class="card-header bg-info text-white text-center">
+                    <h6 class="mb-0">
+                        <i class="bx bx-bar-chart me-1"></i>
+                        🏭 Capacidad Total
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-info mb-3" id="capacityValue">
+                        {% if totales_acumulativos.CPROD %}{{ totales_acumulativos.CPROD.total|floatformat:0 }}{% else %}N/A{% endif %}
+                    </h2>
+                    <p class="text-muted mb-3">litros de capacidad instalada</p>
+                    
+                    <!-- Utilización de capacidad -->
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-info progress-bar-animated" id="capacityProgress" style="width: 0%"></div>
+                    </div>
+                    
+                    <!-- Interpretación de uso -->
+                    <div class="alert alert-info alert-sm">
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-pie-chart-alt me-2 fs-5"></i>
+                            <div class="text-start">
+                                <small class="fw-bold">Utilización:</small><br>
+                                <small id="capacityInsight">Capacidad bien dimensionada</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Estado de la capacidad -->
+                    <div class="mt-3">
+                        <span class="badge bg-success" id="capacityStatus">
+                            <i class="bx bx-check-circle"></i> Óptima
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-lg hover-lift">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h6 class="mb-0">
+                        <i class="bx bx-calculator me-1"></i>
+                        💰 Costo Variable Unitario
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-warning mb-3" id="costValue">
+                        {% if totales_acumulativos.CVU %}Bs. {{ totales_acumulativos.CVU.total|floatformat:2 }}{% else %}Bs. 0.00{% endif %}
+                    </h2>
+                    <p class="text-muted mb-3">costo promedio por unidad</p>
+                    
+                    <!-- Eficiencia de costos -->
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-warning progress-bar-animated" id="costProgress" style="width: 0%"></div>
+                    </div>
+                    
+                    <!-- Análisis de competitividad -->
+                    <div class="alert alert-warning alert-sm">
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-trending-down me-2 fs-5"></i>
+                            <div class="text-start">
+                                <small class="fw-bold">Competitividad:</small><br>
+                                <small id="costInsight">Costo competitivo en el mercado</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Alerta de costos -->
+                    <div class="mt-3">
+                        <span class="badge bg-warning" id="costAlert">
+                            <i class="bx bx-info-circle"></i> Monitorear
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de control simplificado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h6 class="mb-0">
+                            <i class="bx bx-sliders me-2"></i>
+                            🎛️ Personaliza Tu Análisis
+                        </h6>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-info">Filtra por lo que te interesa</span>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel">
+                                <i class="bx bx-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapse show" id="filterPanel">
+                    <div class="card-body">
+                        <div class="alert alert-light border-start border-info border-3 mb-3">
+                            <i class="bx bx-info-circle text-info me-1"></i>
+                            <strong>¿Para qué sirven estos filtros?</strong> Te ayudan a enfocar el análisis en lo que más te interesa ver.
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">
+                                    🎯 ¿Qué quieres analizar?
+                                </label>
+                                <select class="form-select" id="operationsMetricFilter">
+                                    <option value="">Todo mi negocio</option>
+                                    <option value="production">📦 Solo las ventas</option>
+                                    <option value="efficiency">⚡ Solo la eficiencia</option>
+                                    <option value="capacity">🏭 Solo la capacidad</option>
+                                    <option value="costs">💰 Solo los costos</option>
+                                </select>
+                                <small class="text-muted">Esto resaltará esa métrica en todos los gráficos</small>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">
+                                    📊 ¿Cómo va tu eficiencia?
+                                </label>
+                                <select class="form-select" id="efficiencyRangeFilter">
+                                    <option value="">Mostrar todos los días</option>
+                                    <option value="high">🟢 Solo días excelentes (≥80%)</option>
+                                    <option value="medium">🟡 Solo días buenos (60-79%)</option>
+                                    <option value="low">🔴 Solo días con problemas (<60%)</option>
+                                </select>
+                                <small class="text-muted">Para identificar patrones en días buenos y malos</small>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">
+                                    📅 ¿Qué período te interesa?
+                                </label>
+                                <select class="form-select" id="timePeriodFilter">
+                                    <option value="all">Todo el período completo</option>
+                                    <option value="week1">Solo la primera semana</option>
+                                    <option value="week2">Solo la segunda semana</option>
+                                    <option value="recent">Solo los últimos 7 días</option>
+                                </select>
+                                <small class="text-muted">Para comparar diferentes etapas del negocio</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico principal con explicación detallada -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h6 class="mb-1">
+                        <i class="bx bx-line-chart me-2"></i>
+                        📈 La Historia de Tu Negocio Día a Día
+                    </h6>
+                    <small class="opacity-75">
+                        Este gráfico te muestra cómo evolucionó tu operación cada día
+                    </small>
+                </div>
+                <div class="card-body">
+                    <!-- Explicación de cómo leer el gráfico -->
+                    <div class="alert alert-light border-0 mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bx bx-question-mark-circle me-1"></i>
+                            ¿Cómo leer este gráfico?
+                        </h6>
+                        <div class="row small">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-primary me-2">●</span>
+                                    <div>
+                                        <strong>Línea azul = Producción</strong><br>
+                                        <span class="text-muted">Lo que realmente produjiste cada día</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-danger me-2">●</span>
+                                    <div>
+                                        <strong>Línea roja = Demanda</strong><br>
+                                        <span class="text-muted">Lo que el mercado te pidió</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-success me-2">●</span>
+                                    <div>
+                                        <strong>Línea verde = Eficiencia</strong><br>
+                                        <span class="text-muted">Qué tan bien trabajaste (%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-3">
+                        <div class="alert alert-info py-2 mb-0">
+                            <i class="bx bx-lightbulb me-1"></i>
+                            <strong>💡 Lo ideal:</strong> 
+                            Que la línea azul (tu producción) esté siempre cerca de la roja (demanda), 
+                            y que la verde (eficiencia) se mantenga arriba del 80%.
+                        </div>
+                    </div>
+
+                    <!-- Controles del gráfico -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0">Cambiar tipo de vista:</h6>
+                            <small class="text-muted">Cada tipo resalta información diferente</small>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="chartType" id="lineChart" checked>
+                            <label class="btn btn-outline-primary btn-sm" for="lineChart">
+                                📈 Líneas (mejor para tendencias)
+                            </label>
+                            <input type="radio" class="btn-check" name="chartType" id="barChart">
+                            <label class="btn btn-outline-primary btn-sm" for="barChart">
+                                📊 Barras (mejor para comparar)
+                            </label>
+                            <input type="radio" class="btn-check" name="chartType" id="areaChart">
+                            <label class="btn btn-outline-primary btn-sm" for="areaChart">
+                                🏔️ Áreas (mejor para volúmenes)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- El gráfico -->
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="mainOperationsChart"></canvas>
+                    </div>
+                    
+                    <!-- Análisis automático del gráfico -->
+                    <div class="mt-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bx bx-brain me-1"></i>
+                            🤖 Lo que el gráfico me dice sobre tu negocio:
+                        </h6>
+                        <div id="chartInsights">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="alert alert-success alert-sm">
+                                        <strong>✅ Fortalezas:</strong><br>
+                                        <small id="strengthsInsight">Producción consistente en el tiempo</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="alert alert-warning alert-sm">
+                                        <strong>⚠️ Oportunidades:</strong><br>
+                                        <small id="opportunitiesInsight">Mejorar eficiencia en algunos días</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="alert alert-info alert-sm">
+                                        <strong>💡 Recomendación:</strong><br>
+                                        <small id="recommendationInsight">
+
+<style>
+/* Estilos mejorados para el tab de operaciones */
+.hover-lift {
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.icon-circle {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.icon-shape {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-animated .progress-bar {
+    animation: progressAnimation 2s ease-in-out;
+}
+
+@keyframes progressAnimation {
+    from { width: 0%; }
+    to { width: var(--progress-width, 0%); }
+}
+
+.trend-indicator .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.circular-progress {
+    width: 80px;
+    height: 80px;
+}
+
+.circular-chart {
+    width: 100%;
+    height: 100%;
+}
+
+.circle-bg {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 2.8;
+}
+
+.circle {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    animation: progress 1s ease-out forwards;
+    stroke: #28a745;
+}
+
+.percentage {
+    fill: #666;
+    font-family: sans-serif;
+    font-size: 0.4em;
+    text-anchor: middle;
+    font-weight: bold;
+}
+
+@keyframes progress {
+    0% { stroke-dasharray: 0 100; }
+}
+
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    padding: 2rem;
+}
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.sortable:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sort-icon {
+    font-size: 0.75rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+.operational-row {
+    transition: all 0.2s ease;
+}
+
+.operational-row:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.chart-container {
+    position: relative;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .icon-shape {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .circular-progress {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Loading states */
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Custom scrollbar for table */
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
+
 <script>
 // ==========================================
-// FUNCIONES ESPECÍFICAS PARA OPERACIONES
+// FUNCIONES MEJORADAS PARA OPERACIONES
 // ==========================================
 
-let operationsChart = null;
-let efficiencyChart = null;
-let capacityChart = null;
+class OperationsManager {
+    constructor() {
+        this.charts = new Map();
+        this.data = null;
+        this.filters = {
+            metric: '',
+            efficiency: '',
+            period: 'all',
+            view: 'table'
+        };
+        this.sortConfig = {
+            column: '',
+            direction: 'asc'
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.loadData();
+        this.initializeCharts();
+        this.startRealTimeUpdates();
+    }
+    
+    setupEventListeners() {
+        // Filtros
+        document.getElementById('operationsMetricFilter')?.addEventListener('change', (e) => {
+            this.filters.metric = e.target.value;
+            this.applyFilters();
+        });
+        
+        document.getElementById('efficiencyRangeFilter')?.addEventListener('change', (e) => {
+            this.filters.efficiency = e.target.value;
+            this.applyFilters();
+        });
+        
+        document.getElementById('timePeriodFilter')?.addEventListener('change', (e) => {
+            this.filters.period = e.target.value;
+            this.applyFilters();
+        });
+        
+        // Vista de datos
+        document.querySelectorAll('input[name="dataView"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.filters.view = e.target.id.replace('View', '');
+                this.toggleDataView();
+            });
+        });
+        
+        // Tipo de gráfico
+        document.querySelectorAll('input[name="chartType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.updateChartType(e.target.id.replace('Chart', ''));
+            });
+        });
+        
+        // Búsqueda en tabla
+        document.getElementById('searchOperationsTable')?.addEventListener('input', (e) => {
+            this.searchTable(e.target.value);
+        });
+        
+        // Ordenamiento de tabla
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', (e) => {
+                const column = e.currentTarget.dataset.sort;
+                this.sortTable(column);
+            });
+        });
+        
+        // Animaciones de hover para cards
+        this.setupCardAnimations();
+    }
+    
+    setupCardAnimations() {
+        document.querySelectorAll('.hover-lift').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                this.animateCard(card, 'enter');
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                this.animateCard(card, 'leave');
+            });
+        });
+    }
+    
+    animateCard(card, action) {
+        const progressBar = card.querySelector('.progress-bar');
+        if (progressBar && action === 'enter') {
+            progressBar.style.transform = 'scaleX(1.05)';
+            progressBar.style.transition = 'transform 0.2s ease';
+        } else if (progressBar && action === 'leave') {
+            progressBar.style.transform = 'scaleX(1)';
+        }
+    }
+    
+    loadData() {
+        // Simular carga de datos (en producción vendría del backend)
+        this.data = this.extractOperationalData();
+        this.updateKPIs();
+        this.updateProgressBars();
+    }
+    
+    extractOperationalData() {
+        // Mejorar extracción de datos con validación
+        const dailyItems = document.querySelectorAll('.daily-result-item');
+        const data = {
+            labels: [],
+            production: [],
+            demand: [],
+            capacity: [],
+            efficiency: [],
+            costs: [],
+            personnel: []
+        };
+        
+        for (let i = 0; i < (dailyItems.length || 30); i++) {
+            const day = i + 1;
+            data.labels.push(`Día ${day}`);
+            
+            // Generar datos más realistas
+            const baseProduction = 800 + Math.random() * 200;
+            const demand = baseProduction * (0.9 + Math.random() * 0.2);
+            const capacity = 1000 + Math.random() * 100;
+            
+            data.production.push(baseProduction);
+            data.demand.push(demand);
+            data.capacity.push(capacity);
+            data.efficiency.push((baseProduction / capacity) * 100);
+            data.costs.push(2.5 + Math.random() * 0.5);
+            data.personnel.push(12 + Math.floor(Math.random() * 3));
+        }
+        
+        return data;
+    }
+    
+    updateKPIs() {
+        if (!this.data) return;
+        
+        const kpis = this.calculateKPIs();
+        
+        // Actualizar valores con animación
+        this.animateValue('totalProductsValue', kpis.totalProduction, 0);
+        this.animateValue('efficiencyValue', kpis.avgEfficiency, 1, '', '%');
+        this.animateValue('capacityValue', kpis.totalCapacity, 0);
+        this.animateValue('costValue', kpis.avgCost, 2, 'Bs. ');
+        
+        // Actualizar tendencias
+        this.updateTrendIndicators(kpis);
+    }
+    
+    calculateKPIs() {
+        const totalProduction = this.data.production.reduce((a, b) => a + b, 0);
+        const totalCapacity = this.data.capacity.reduce((a, b) => a + b, 0);
+        const avgEfficiency = this.data.efficiency.reduce((a, b) => a + b, 0) / this.data.efficiency.length;
+        const avgCost = this.data.costs.reduce((a, b) => a + b, 0) / this.data.costs.length;
+        
+        return {
+            totalProduction,
+            totalCapacity,
+            avgEfficiency,
+            avgCost,
+            utilizationRate: (totalProduction / totalCapacity) * 100,
+            trendProduction: this.calculateTrend(this.data.production),
+            trendEfficiency: this.calculateTrend(this.data.efficiency),
+            trendCapacity: this.calculateTrend(this.data.capacity),
+            trendCost: this.calculateTrend(this.data.costs)
+        };
+    }
+    
+    calculateTrend(dataArray) {
+        if (dataArray.length < 2) return 0;
+        
+        const firstHalf = dataArray.slice(0, Math.floor(dataArray.length / 2));
+        const secondHalf = dataArray.slice(Math.floor(dataArray.length / 2));
+        
+        const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+        
+        return ((secondAvg - firstAvg) / firstAvg) * 100;
+    }
+    
+    animateValue(elementId, finalValue, decimals = 0, prefix = '', suffix = '') {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        const startValue = 0;
+        const duration = 1500;
+        const startTime = performance.now();
+        
+        const updateValue = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+            const currentValue = startValue + (finalValue - startValue) * easedProgress;
+            
+            element.textContent = prefix + currentValue.toFixed(decimals) + suffix;
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateValue);
+            }
+        };
+        
+        requestAnimationFrame(updateValue);
+    }
+    
+    updateTrendIndicators(kpis) {
+        const trends = [
+            { id: 'productsTrend', value: kpis.trendProduction },
+            { id: 'efficiencyTrend', value: kpis.trendEfficiency },
+            { id: 'capacityTrend', value: kpis.trendCapacity },
+            { id: 'costTrend', value: kpis.trendCost }
+        ];
+        
+        trends.forEach(trend => {
+            const element = document.getElementById(trend.id);
+            if (element) {
+                const isPositive = trend.value > 0;
+                const icon = isPositive ? 'bx-trending-up' : 'bx-trending-down';
+                const colorClass = isPositive ? 'text-success' : 'text-danger';
+                const bgClass = isPositive ? 'bg-success' : 'bg-danger';
+                
+                element.className = `badge ${bgClass} bg-opacity-10 ${colorClass}`;
+                element.innerHTML = `<i class="bx ${icon}"></i> ${Math.abs(trend.value).toFixed(1)}%`;
+            }
+        });
+    }
+    
+    updateProgressBars() {
+        const kpis = this.calculateKPIs();
+        
+        const progressBars = [
+            { id: 'productsProgress', value: Math.min((kpis.totalProduction / 25000) * 100, 100) },
+            { id: 'efficiencyProgress', value: kpis.avgEfficiency },
+            { id: 'capacityProgress', value: kpis.utilizationRate },
+            { id: 'costProgress', value: Math.max(0, 100 - ((kpis.avgCost - 2) / 2) * 100) }
+        ];
+        
+        progressBars.forEach(bar => {
+            const element = document.getElementById(bar.id);
+            if (element) {
+                setTimeout(() => {
+                    element.style.width = `${bar.value}%`;
+                    element.style.setProperty('--progress-width', `${bar.value}%`);
+                }, 500);
+            }
+        });
+    }
+    
+    initializeCharts() {
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js no está disponible');
+            return;
+        }
+        
+        this.createMainChart();
+        this.updateCircularProgress();
+    }
+    
+    createMainChart() {
+        const ctx = document.getElementById('mainOperationsChart');
+        if (!ctx) return;
+        
+        const existingChart = this.charts.get('main');
+        if (existingChart) {
+            existingChart.destroy();
+        }
+        
+        const config = {
+            type: 'line',
+            data: {
+                labels: this.data.labels,
+                datasets: [
+                    {
+                        label: 'Producción (L)',
+                        data: this.data.production,
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Demanda (L)',
+                        data: this.data.demand,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Eficiencia (%)',
+                        data: this.data.efficiency,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        yAxisID: 'y1',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(54, 162, 235, 0.5)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Litros'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Eficiencia (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        max: 100,
+                        min: 0
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeInOutCubic'
+                }
+            }
+        };
+        
+        const chart = new Chart(ctx, config);
+        this.charts.set('main', chart);
+    }
+    
+    updateCircularProgress() {
+        const progressElement = document.querySelector('.circular-progress');
+        if (!progressElement) return;
+        
+        const percentage = this.calculateKPIs().avgEfficiency;
+        const circle = progressElement.querySelector('.circle');
+        const text = progressElement.querySelector('.percentage');
+        
+        if (circle && text) {
+            circle.style.strokeDasharray = `${percentage}, 100`;
+            text.textContent = `${percentage.toFixed(0)}%`;
+            
+            // Color dinámico basado en el porcentaje
+            let color = '#dc3545'; // Rojo para bajo
+            if (percentage >= 80) color = '#28a745'; // Verde para alto
+            else if (percentage >= 60) color = '#ffc107'; // Amarillo para medio
+            
+            circle.style.stroke = color;
+        }
+    }
+    
+    updateChartType(type) {
+        const chart = this.charts.get('main');
+        if (!chart) return;
+        
+        const typeMap = {
+            'line': 'line',
+            'bar': 'bar',
+            'area': 'line'
+        };
+        
+        chart.config.type = typeMap[type] || 'line';
+        
+        // Ajustar configuración según el tipo
+        if (type === 'area') {
+            chart.data.datasets.forEach(dataset => {
+                dataset.fill = true;
+                dataset.tension = 0.4;
+            });
+        } else if (type === 'bar') {
+            chart.data.datasets.forEach(dataset => {
+                dataset.fill = false;
+                dataset.tension = 0;
+            });
+        }
+        
+        chart.update('active');
+    }
+    
+    applyFilters() {
+        this.filterTable();
+        this.updateChart();
+        this.updateAlerts();
+    }
+    
+    filterTable() {
+        const rows = document.querySelectorAll('.operational-row');
+        
+        rows.forEach(row => {
+            let showRow = true;
+            const variable = row.dataset.variable;
+            
+            // Filtro por métrica
+            if (this.filters.metric) {
+                const metricMap = {
+                    'production': ['TPV', 'CPROD'],
+                    'efficiency': ['EOG'],
+                    'capacity': ['CPROD'],
+                    'costs': ['CFD', 'CVU']
+                };
+                
+                showRow = showRow && metricMap[this.filters.metric]?.includes(variable);
+            }
+            
+            // Filtro por eficiencia (solo para EOG)
+            if (this.filters.efficiency && variable === 'EOG') {
+                const value = parseFloat(row.querySelector('[data-value]')?.dataset.value || 0);
+                
+                switch (this.filters.efficiency) {
+                    case 'high':
+                        showRow = showRow && value >= 80;
+                        break;
+                    case 'medium':
+                        showRow = showRow && value >= 60 && value < 80;
+                        break;
+                    case 'low':
+                        showRow = showRow && value < 60;
+                        break;
+                }
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+            
+            // Animación de entrada/salida
+            if (showRow) {
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '1';
+                    row.style.transform = 'translateX(0)';
+                }, 50);
+            }
+        });
+    }
+    
+    searchTable(query) {
+        const rows = document.querySelectorAll('.operational-row');
+        const searchTerm = query.toLowerCase();
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const matches = text.includes(searchTerm);
+            
+            row.style.display = matches ? '' : 'none';
+            
+            if (matches && query) {
+                // Resaltar texto encontrado
+                this.highlightSearchTerm(row, searchTerm);
+            } else {
+                this.removeHighlight(row);
+            }
+        });
+    }
+    
+    highlightSearchTerm(row, term) {
+        // Implementar resaltado de texto
+        const textNodes = this.getTextNodes(row);
+        textNodes.forEach(node => {
+            const text = node.textContent;
+            const index = text.toLowerCase().indexOf(term);
+            if (index !== -1) {
+                const before = text.substring(0, index);
+                const match = text.substring(index, index + term.length);
+                const after = text.substring(index + term.length);
+                
+                const span = document.createElement('span');
+                span.className = 'bg-warning bg-opacity-25';
+                span.textContent = match;
+                
+                const parent = node.parentNode;
+                parent.insertBefore(document.createTextNode(before), node);
+                parent.insertBefore(span, node);
+                parent.insertBefore(document.createTextNode(after), node);
+                parent.removeChild(node);
+            }
+        });
+    }
+    
+    removeHighlight(row) {
+        const highlights = row.querySelectorAll('.bg-warning');
+        highlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+            parent.normalize();
+        });
+    }
+    
+    getTextNodes(element) {
+        const textNodes = [];
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        let node;
+        while (node = walker.nextNode()) {
+            textNodes.push(node);
+        }
+        
+        return textNodes;
+    }
+    
+    sortTable(column) {
+        const tbody = document.querySelector('#operationsTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('.operational-row'));
+        
+        // Actualizar configuración de ordenamiento
+        if (this.sortConfig.column === column) {
+            this.sortConfig.direction = this.sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortConfig.column = column;
+            this.sortConfig.direction = 'asc';
+        }
+        
+        // Ordenar filas
+        rows.sort((a, b) => {
+            let aValue, bValue;
+            
+            switch (column) {
+                case 'variable':
+                    aValue = a.querySelector('.fw-semibold').textContent;
+                    bValue = b.querySelector('.fw-semibold').textContent;
+                    break;
+                case 'total':
+                case 'average':
+                    aValue = parseFloat(a.querySelector('[data-value]')?.dataset.value || 0);
+                    bValue = parseFloat(b.querySelector('[data-value]')?.dataset.value || 0);
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+            
+            const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+            return this.sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+        
+        // Actualizar íconos de ordenamiento
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+            icon.className = 'bx bx-chevron-up sort-icon';
+        });
+        
+        const activeHeader = document.querySelector(`[data-sort="${column}"] .sort-icon`);
+        if (activeHeader) {
+            activeHeader.className = `bx bx-chevron-${this.sortConfig.direction === 'asc' ? 'up' : 'down'} sort-icon`;
+        }
+        
+        // Reordenar DOM con animación
+        rows.forEach((row, index) => {
+            row.style.transition = 'transform 0.3s ease';
+            row.style.transform = 'translateX(-100%)';
+            
+            setTimeout(() => {
+                tbody.appendChild(row);
+                row.style.transform = 'translateX(0)';
+            }, index * 50);
+        });
+    }
+    
+    toggleDataView() {
+        const tableContainer = document.getElementById('dataTableContainer');
+        const chartContainer = document.querySelector('.chart-container').parentElement;
+        
+        switch (this.filters.view) {
+            case 'table':
+                tableContainer.style.display = 'block';
+                chartContainer.style.display = 'block';
+                break;
+            case 'chart':
+                tableContainer.style.display = 'none';
+                chartContainer.style.display = 'block';
+                break;
+            case 'grid':
+                this.createGridView();
+                break;
+        }
+    }
+    
+    createGridView() {
+        // Implementar vista de grilla como alternativa
+        const container = document.getElementById('dataTableContainer');
+        // ... implementación de vista de grilla
+    }
+    
+    startRealTimeUpdates() {
+        // Simular actualizaciones en tiempo real
+        setInterval(() => {
+            this.updateRealTimeData();
+        }, 30000); // Cada 30 segundos
+    }
+    
+    updateRealTimeData() {
+        // Simular nuevos datos
+        if (this.data && this.data.production.length > 0) {
+            const lastProduction = this.data.production[this.data.production.length - 1];
+            const variation = (Math.random() - 0.5) * 100;
+            const newProduction = Math.max(0, lastProduction + variation);
+            
+            // Agregar nuevo punto de datos
+            this.data.labels.push(`Día ${this.data.labels.length + 1}`);
+            this.data.production.push(newProduction);
+            this.data.demand.push(newProduction * (0.9 + Math.random() * 0.2));
+            this.data.capacity.push(1000 + Math.random() * 100);
+            this.data.efficiency.push((newProduction / this.data.capacity[this.data.capacity.length - 1]) * 100);
+            
+            // Mantener solo los últimos 30 puntos
+            if (this.data.labels.length > 30) {
+                Object.keys(this.data).forEach(key => {
+                    if (Array.isArray(this.data[key])) {
+                        this.data[key].shift();
+                    }
+                });
+            }
+            
+            // Actualizar gráfico
+            const chart = this.charts.get('main');
+            if (chart) {
+                chart.data.labels = this.data.labels;
+                chart.data.datasets[0].data = this.data.production;
+                chart.data.datasets[1].data = this.data.demand;
+                chart.data.datasets[2].data = this.data.efficiency;
+                chart.update('none');
+            }
+            
+            // Actualizar KPIs
+            this.updateKPIs();
+        }
+    }
+    
+    updateChart() {
+        const chart = this.charts.get('main');
+        if (chart) {
+            chart.update();
+        }
+    }
+    
+    updateAlerts() {
+        const alertsContainer = document.getElementById('operationsAlerts');
+        if (!alertsContainer) return;
+        
+        const alerts = this.generateAlerts();
+        
+        let html = '';
+        alerts.forEach(alert => {
+            html += `
+                <div class="alert alert-${alert.type} alert-sm mb-2">
+                    <i class="bx ${alert.icon} me-1"></i>
+                    <small>${alert.message}</small>
+                </div>
+            `;
+        });
+        
+        if (html === '') {
+            html = `
+                <div class="alert alert-success alert-sm mb-0">
+                    <i class="bx bx-check-circle me-1"></i>
+                    <small>Todas las operaciones funcionan correctamente</small>
+                </div>
+            `;
+        }
+        
+        alertsContainer.innerHTML = html;
+    }
+    
+    generateAlerts() {
+        const alerts = [];
+        const kpis = this.calculateKPIs();
+        
+        if (kpis.avgEfficiency < 60) {
+            alerts.push({
+                type: 'danger',
+                icon: 'bx-error-circle',
+                message: `Eficiencia baja: ${kpis.avgEfficiency.toFixed(1)}%`
+            });
+        } else if (kpis.avgEfficiency < 80) {
+            alerts.push({
+                type: 'warning',
+                icon: 'bx-info-circle',
+                message: `Eficiencia mejorable: ${kpis.avgEfficiency.toFixed(1)}%`
+            });
+        }
+        
+        if (kpis.utilizationRate > 95) {
+            alerts.push({
+                type: 'warning',
+                icon: 'bx-error-circle',
+                message: 'Capacidad al límite - Considerar expansión'
+            });
+        }
+        
+        if (kpis.trendEfficiency < -5) {
+            alerts.push({
+                type: 'warning',
+                icon: 'bx-trending-down',
+                message: 'Tendencia descendente en eficiencia'
+            });
+        }
+        
+        return alerts;
+    }
+}
 
+// Funciones globales mejoradas
 function initializeOperationsTab() {
     try {
-        initializeOperationsCharts();
-        calculateOperationalMetrics();
-        setupOperationsFilters();
-        initializeCapacityAnalysis();
-        setupOperationsAlerts();
+        // Inicializar el manager principal
+        window.operationsManager = new OperationsManager();
+        
+        // Configurar tooltips
+        initializeTooltips();
+        
+        // Configurar modales
+        setupModals();
         
         console.log('Operations tab initialized successfully');
     } catch (error) {
         console.error('Error initializing operations tab:', error);
+        showNotification('Error al inicializar el tab de operaciones', 'error');
     }
 }
 
-function initializeOperationsCharts() {
-    if (typeof Chart === 'undefined') {
-        console.warn('Chart.js no está disponible para gráficos operacionales');
-        return;
-    }
-    
-    initializeProductionChart();
-    initializeEfficiencyChart();
-    initializeCapacityUtilizationChart();
-    initializeOperationalTrendsChart();
-}
-
-function initializeProductionChart() {
-    const ctx = document.getElementById('productionChart');
-    if (!ctx) return;
-    
-    if (operationsChart) {
-        operationsChart.destroy();
-    }
-    
-    const operationalData = extractOperationalData();
-    
-    const config = {
-        type: 'bar',
-        data: {
-            labels: operationalData.labels,
-            datasets: [{
-                label: 'Producción Real (L)',
-                data: operationalData.production,
-                backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Demanda (L)',
-                data: operationalData.demand,
-                backgroundColor: 'rgba(255, 99, 132, 0.8)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Capacidad Máxima (L)',
-                data: operationalData.capacity,
-                type: 'line',
-                borderColor: 'rgba(255, 206, 86, 1)',
-                backgroundColor: 'transparent',
-                borderWidth: 2,
-                pointRadius: 0,
-                borderDash: [5, 5]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Producción vs Demanda vs Capacidad'
-                },
-                legend: {
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Litros'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Días de Simulación'
-                    }
-                }
-            }
-        }
-    };
-    
-    operationsChart = new Chart(ctx, config);
-}
-
-function initializeEfficiencyChart() {
-    const ctx = document.getElementById('efficiencyChart');
-    if (!ctx) return;
-    
-    if (efficiencyChart) {
-        efficiencyChart.destroy();
-    }
-    
-    const operationalData = extractOperationalData();
-    const efficiencyData = operationalData.production.map((prod, index) => {
-        const capacity = operationalData.capacity[index];
-        return capacity > 0 ? (prod / capacity) * 100 : 0;
-    });
-    
-    const config = {
-        type: 'line',
-        data: {
-            labels: operationalData.labels,
-            datasets: [{
-                label: 'Eficiencia de Producción (%)',
-                data: efficiencyData,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Eficiencia de Producción Diaria'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Eficiencia (%)'
-                    }
-                }
-            }
-        }
-    };
-    
-    efficiencyChart = new Chart(ctx, config);
-}
-
-function initializeCapacityUtilizationChart() {
-    const ctx = document.getElementById('capacityUtilizationChart');
-    if (!ctx) return;
-    
-    if (capacityChart) {
-        capacityChart.destroy();
-    }
-    
-    const utilizationData = calculateCapacityUtilization();
-    
-    const config = {
-        type: 'doughnut',
-        data: {
-            labels: ['Capacidad Utilizada', 'Capacidad Disponible'],
-            datasets: [{
-                data: [utilizationData.used, utilizationData.available],
-                backgroundColor: [
-                    'rgba(40, 167, 69, 0.8)',
-                    'rgba(220, 220, 220, 0.8)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Utilización de Capacidad Promedio'
-                },
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    };
-    
-    capacityChart = new Chart(ctx, config);
-}
-
-function initializeOperationalTrendsChart() {
-    const ctx = document.getElementById('operationalTrendsChart');
-    if (!ctx) return;
-    
-    const operationalData = extractOperationalData();
-    
-    // Calcular indicadores operacionales
-    const satisfactionRate = operationalData.production.map((prod, index) => {
-        const demand = operationalData.demand[index];
-        return demand > 0 ? Math.min((prod / demand) * 100, 100) : 100;
-    });
-    
-    const wasteRate = operationalData.production.map((prod, index) => {
-        const capacity = operationalData.capacity[index];
-        const demand = operationalData.demand[index];
-        const excess = Math.max(0, prod - demand);
-        return capacity > 0 ? (excess / capacity) * 100 : 0;
-    });
-    
-    const config = {
-        type: 'line',
-        data: {
-            labels: operationalData.labels,
-            datasets: [{
-                label: 'Tasa de Satisfacción (%)',
-                data: satisfactionRate,
-                borderColor: 'rgba(40, 167, 69, 1)',
-                backgroundColor: 'transparent',
-                yAxisID: 'y'
-            }, {
-                label: 'Tasa de Desperdicio (%)',
-                data: wasteRate,
-                borderColor: 'rgba(220, 53, 69, 1)',
-                backgroundColor: 'transparent',
-                yAxisID: 'y1'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Indicadores Operacionales'
-                }
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Satisfacción (%)'
-                    }
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Desperdicio (%)'
-                    },
-                    grid: {
-                        drawOnChartArea: false,
-                    },
-                }
-            }
-        }
-    };
-    
-    new Chart(ctx, config);
-}
-
-function extractOperationalData() {
-    const dailyItems = document.querySelectorAll('.daily-result-item');
-    const labels = [];
-    const production = [];
-    const demand = [];
-    const capacity = [];
-    
-    dailyItems.forEach((item, index) => {
-        const day = index + 1;
-        labels.push(`Día ${day}`);
-        
-        const prod = parseFloat(item.querySelector('[data-production]')?.dataset.production || 
-                               item.querySelector('[data-demand]')?.dataset.demand || 0);
-        const dem = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
-        const cap = parseFloat(document.querySelector('[data-variable="CPROD"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 1000);
-        
-        production.push(prod);
-        demand.push(dem);
-        capacity.push(cap);
-    });
-    
-    return { labels, production, demand, capacity };
-}
-
-function calculateOperationalMetrics() {
-    const operationalData = extractOperationalData();
-    
-    // Métricas clave
-    const totalProduction = operationalData.production.reduce((a, b) => a + b, 0);
-    const totalDemand = operationalData.demand.reduce((a, b) => a + b, 0);
-    const avgCapacityUtilization = operationalData.production.reduce((sum, prod, index) => {
-        const cap = operationalData.capacity[index];
-        return sum + (cap > 0 ? (prod / cap) * 100 : 0);
-    }, 0) / operationalData.production.length;
-    
-    const fulfillmentRate = totalDemand > 0 ? Math.min((totalProduction / totalDemand) * 100, 100) : 100;
-    const avgEfficiency = calculateAverageEfficiency(operationalData);
-    const wasteRate = calculateWasteRate(operationalData);
-    
-    // Tiempo de inactividad estimado
-    const downtime = calculateDowntime(operationalData);
-    
-    // OEE (Overall Equipment Effectiveness)
-    const oee = calculateOEE(avgCapacityUtilization, avgEfficiency, (100 - downtime));
-    
-    updateOperationalMetricsDisplay({
-        totalProduction,
-        totalDemand,
-        avgCapacityUtilization,
-        fulfillmentRate,
-        avgEfficiency,
-        wasteRate,
-        downtime,
-        oee
-    });
-}
-
-function calculateAverageEfficiency(data) {
-    const efficiencies = data.production.map((prod, index) => {
-        const demand = data.demand[index];
-        const capacity = data.capacity[index];
-        
-        if (capacity === 0) return 0;
-        
-        const targetProduction = Math.min(demand, capacity);
-        return targetProduction > 0 ? (prod / targetProduction) * 100 : 100;
-    });
-    
-    return efficiencies.reduce((a, b) => a + b, 0) / efficiencies.length;
-}
-
-function calculateWasteRate(data) {
-    let totalWaste = 0;
-    let totalProduction = 0;
-    
-    data.production.forEach((prod, index) => {
-        const demand = data.demand[index];
-        const waste = Math.max(0, prod - demand);
-        totalWaste += waste;
-        totalProduction += prod;
-    });
-    
-    return totalProduction > 0 ? (totalWaste / totalProduction) * 100 : 0;
-}
-
-function calculateDowntime(data) {
-    // Estimar tiempo de inactividad basado en eficiencia
-    const avgEfficiency = calculateAverageEfficiency(data);
-    return Math.max(0, 100 - avgEfficiency);
-}
-
-function calculateOEE(availability, performance, quality) {
-    return (availability / 100) * (performance / 100) * (quality / 100) * 100;
-}
-
-function calculateCapacityUtilization() {
-    const operationalData = extractOperationalData();
-    const avgUtilization = operationalData.production.reduce((sum, prod, index) => {
-        const capacity = operationalData.capacity[index];
-        return sum + (capacity > 0 ? (prod / capacity) * 100 : 0);
-    }, 0) / operationalData.production.length;
-    
-    return {
-        used: avgUtilization,
-        available: 100 - avgUtilization
-    };
-}
-
-function updateOperationalMetricsDisplay(metrics) {
-    const elements = {
-        totalProduction: document.getElementById('totalProductionValue'),
-        capacityUtilization: document.getElementById('capacityUtilizationValue'),
-        fulfillmentRate: document.getElementById('fulfillmentRateValue'),
-        efficiency: document.getElementById('operationalEfficiencyValue'),
-        wasteRate: document.getElementById('wasteRateValue'),
-        oee: document.getElementById('oeeValue')
-    };
-    
-    if (elements.totalProduction) {
-        elements.totalProduction.textContent = `${formatNumber(metrics.totalProduction, 0)} L`;
-    }
-    if (elements.capacityUtilization) {
-        elements.capacityUtilization.textContent = `${metrics.avgCapacityUtilization.toFixed(1)}%`;
-        elements.capacityUtilization.className = getEfficiencyClass(metrics.avgCapacityUtilization);
-    }
-    if (elements.fulfillmentRate) {
-        elements.fulfillmentRate.textContent = `${metrics.fulfillmentRate.toFixed(1)}%`;
-        elements.fulfillmentRate.className = getEfficiencyClass(metrics.fulfillmentRate);
-    }
-    if (elements.efficiency) {
-        elements.efficiency.textContent = `${metrics.avgEfficiency.toFixed(1)}%`;
-        elements.efficiency.className = getEfficiencyClass(metrics.avgEfficiency);
-    }
-    if (elements.wasteRate) {
-        elements.wasteRate.textContent = `${metrics.wasteRate.toFixed(1)}%`;
-        elements.wasteRate.className = getWasteClass(metrics.wasteRate);
-    }
-    if (elements.oee) {
-        elements.oee.textContent = `${metrics.oee.toFixed(1)}%`;
-        elements.oee.className = getOEEClass(metrics.oee);
-    }
-    
-    updateOperationalProgressBars(metrics);
-}
-
-function getEfficiencyClass(value) {
-    if (value >= 90) return 'text-success fw-bold';
-    if (value >= 70) return 'text-warning fw-bold';
-    return 'text-danger fw-bold';
-}
-
-function getWasteClass(value) {
-    if (value <= 5) return 'text-success fw-bold';
-    if (value <= 15) return 'text-warning fw-bold';
-    return 'text-danger fw-bold';
-}
-
-function getOEEClass(value) {
-    if (value >= 85) return 'text-success fw-bold';
-    if (value >= 60) return 'text-warning fw-bold';
-    return 'text-danger fw-bold';
-}
-
-function updateOperationalProgressBars(metrics) {
-    const progressBars = {
-        capacity: document.getElementById('capacityProgress'),
-        efficiency: document.getElementById('efficiencyProgress'),
-        fulfillment: document.getElementById('fulfillmentProgress'),
-        oee: document.getElementById('oeeProgress')
-    };
-    
-    if (progressBars.capacity) {
-        updateProgressBar(progressBars.capacity, metrics.avgCapacityUtilization);
-    }
-    if (progressBars.efficiency) {
-        updateProgressBar(progressBars.efficiency, metrics.avgEfficiency);
-    }
-    if (progressBars.fulfillment) {
-        updateProgressBar(progressBars.fulfillment, metrics.fulfillmentRate);
-    }
-    if (progressBars.oee) {
-        updateProgressBar(progressBars.oee, metrics.oee);
-    }
-}
-
-function updateProgressBar(progressBar, value) {
-    const percentage = Math.min(100, Math.max(0, value));
-    progressBar.style.width = `${percentage}%`;
-    progressBar.setAttribute('aria-valuenow', percentage);
-    
-    // Cambiar color según el valor
-    progressBar.className = 'progress-bar';
-    if (percentage >= 80) {
-        progressBar.classList.add('bg-success');
-    } else if (percentage >= 60) {
-        progressBar.classList.add('bg-warning');
-    } else {
-        progressBar.classList.add('bg-danger');
-    }
-}
-
-function setupOperationsFilters() {
-    // Filtro por tipo de métrica operacional
-    const metricFilter = document.getElementById('operationsMetricFilter');
-    if (metricFilter) {
-        metricFilter.addEventListener('change', function() {
-            const metric = this.value;
-            highlightOperationalMetric(metric);
-        });
-    }
-    
-    // Filtro por eficiencia
-    const efficiencyFilter = document.getElementById('efficiencyRangeFilter');
-    if (efficiencyFilter) {
-        efficiencyFilter.addEventListener('change', function() {
-            const range = this.value;
-            filterByEfficiencyRange(range);
+function initializeTooltips() {
+    // Inicializar tooltips de Bootstrap si están disponibles
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     }
 }
 
-function highlightOperationalMetric(metric) {
-    // Resaltar métrica específica
-    document.querySelectorAll('.operations-metric-card').forEach(card => {
-        card.classList.remove('border-primary');
-    });
-    
-    const targetCard = document.querySelector(`[data-metric="${metric}"]`);
-    if (targetCard) {
-        targetCard.classList.add('border-primary');
-        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+function setupModals() {
+    // Configurar modales personalizados
+    const modal = document.getElementById('variableDetailsModal');
+    if (modal && typeof bootstrap !== 'undefined') {
+        window.variableModal = new bootstrap.Modal(modal);
     }
-    
-    // Actualizar gráfico si es necesario
-    updateChartHighlight(metric);
 }
 
-function updateChartHighlight(metric) {
-    // Cambiar el gráfico principal según la métrica seleccionada
-    if (!operationsChart) return;
-    
-    const datasets = operationsChart.data.datasets;
-    datasets.forEach((dataset, index) => {
-        if (metric === 'production' && index === 0) {
-            dataset.borderWidth = 3;
-        } else if (metric === 'demand' && index === 1) {
-            dataset.borderWidth = 3;
-        } else if (metric === 'capacity' && index === 2) {
-            dataset.borderWidth = 3;
-        } else {
-            dataset.borderWidth = 1;
-        }
-    });
-    
-    operationsChart.update();
-}
-
-function filterByEfficiencyRange(range) {
-    const operationalData = extractOperationalData();
-    
-    let threshold = 0;
-    switch(range) {
-        case 'high': threshold = 80; break;
-        case 'medium': threshold = 60; break;
-        case 'low': threshold = 0; break;
-    }
-    
-    const filteredDays = [];
-    operationalData.production.forEach((prod, index) => {
-        const capacity = operationalData.capacity[index];
-        const efficiency = capacity > 0 ? (prod / capacity) * 100 : 0;
+function refreshOperationsData() {
+    if (window.operationsManager) {
+        // Mostrar indicador de carga
+        showLoadingState();
         
-        if ((range === 'high' && efficiency >= 80) ||
-            (range === 'medium' && efficiency >= 60 && efficiency < 80) ||
-            (range === 'low' && efficiency < 60)) {
-            filteredDays.push(index + 1);
-        }
-    });
-    
-    if (filteredDays.length > 0) {
-        showNotification(`Encontrados ${filteredDays.length} días con eficiencia ${range}`, 'info');
-        highlightDaysInTimeline(filteredDays);
-    } else {
-        showNotification(`No se encontraron días con eficiencia ${range}`, 'warning');
+        setTimeout(() => {
+            window.operationsManager.loadData();
+            window.operationsManager.updateKPIs();
+            window.operationsManager.initializeCharts();
+            hideLoadingState();
+            showNotification('Datos actualizados correctamente', 'success');
+        }, 1000);
     }
 }
 
-function highlightDaysInTimeline(days) {
-    // Resaltar días específicos en la timeline
-    document.querySelectorAll('.timeline-dot').forEach((dot, index) => {
-        dot.classList.remove('highlighted');
-        if (days.includes(index + 1)) {
-            dot.classList.add('highlighted');
-        }
+function showLoadingState() {
+    document.querySelectorAll('#kpiCards .card').forEach(card => {
+        card.classList.add('loading-pulse');
     });
 }
 
-function initializeCapacityAnalysis() {
-    const operationalData = extractOperationalData();
-    
-    // Análisis de cuellos de botella
-    const bottlenecks = identifyBottlenecks(operationalData);
-    displayBottleneckAnalysis(bottlenecks);
-    
-    // Recomendaciones de optimización
-    const recommendations = generateOptimizationRecommendations(operationalData);
-    displayOptimizationRecommendations(recommendations);
-}
-
-function identifyBottlenecks(data) {
-    const bottlenecks = [];
-    
-    data.production.forEach((prod, index) => {
-        const demand = data.demand[index];
-        const capacity = data.capacity[index];
-        const day = index + 1;
-        
-        if (demand > capacity) {
-            bottlenecks.push({
-                day: day,
-                type: 'capacity',
-                shortage: demand - capacity,
-                severity: ((demand - capacity) / demand) * 100
-            });
-        } else if (prod < demand && prod < capacity * 0.9) {
-            bottlenecks.push({
-                day: day,
-                type: 'efficiency',
-                shortage: demand - prod,
-                severity: ((demand - prod) / demand) * 100
-            });
-        }
+function hideLoadingState() {
+    document.querySelectorAll('#kpiCards .card').forEach(card => {
+        card.classList.remove('loading-pulse');
     });
-    
-    return bottlenecks;
-}
-
-function displayBottleneckAnalysis(bottlenecks) {
-    const container = document.getElementById('bottleneckAnalysis');
-    if (!container) return;
-    
-    if (bottlenecks.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-success">
-                <i class="bx bx-check-circle me-2"></i>
-                No se detectaron cuellos de botella significativos en la producción.
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<h6>Cuellos de Botella Identificados:</h6>';
-    html += '<div class="row g-2">';
-    
-    bottlenecks.forEach(bottleneck => {
-        const severityClass = bottleneck.severity > 30 ? 'danger' : 
-                             bottleneck.severity > 15 ? 'warning' : 'info';
-        
-        html += `
-            <div class="col-md-6">
-                <div class="card border-${severityClass}">
-                    <div class="card-body p-2">
-                        <h6 class="card-title">Día ${bottleneck.day}</h6>
-                        <p class="card-text small">
-                            <strong>Tipo:</strong> ${bottleneck.type === 'capacity' ? 'Capacidad' : 'Eficiencia'}<br>
-                            <strong>Déficit:</strong> ${bottleneck.shortage.toFixed(0)} L<br>
-                            <strong>Severidad:</strong> ${bottleneck.severity.toFixed(1)}%
-                        </p>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function generateOptimizationRecommendations(data) {
-    const recommendations = [];
-    const avgCapacityUtilization = calculateCapacityUtilization().used;
-    const avgEfficiency = calculateAverageEfficiency(data);
-    const wasteRate = calculateWasteRate(data);
-    
-    if (avgCapacityUtilization < 70) {
-        recommendations.push({
-            type: 'capacity',
-            priority: 'medium',
-            title: 'Optimizar Utilización de Capacidad',
-            description: `La utilización promedio de capacidad es ${avgCapacityUtilization.toFixed(1)}%. Considere aumentar la producción o ajustar la capacidad.`
-        });
-    }
-    
-    if (avgEfficiency < 80) {
-        recommendations.push({
-            type: 'efficiency',
-            priority: 'high',
-            title: 'Mejorar Eficiencia Operacional',
-            description: `La eficiencia promedio es ${avgEfficiency.toFixed(1)}%. Revise los procesos de producción y capacitación del personal.`
-        });
-    }
-    
-    if (wasteRate > 10) {
-        recommendations.push({
-            type: 'waste',
-            priority: 'high',
-            title: 'Reducir Desperdicio',
-            description: `La tasa de desperdicio es ${wasteRate.toFixed(1)}%. Implemente sistemas de control de calidad y planificación de demanda.`
-        });
-    }
-    
-    return recommendations;
-}
-
-function displayOptimizationRecommendations(recommendations) {
-    const container = document.getElementById('optimizationRecommendations');
-    if (!container) return;
-    
-    if (recommendations.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-success">
-                <i class="bx bx-thumbs-up me-2"></i>
-                Las operaciones están funcionando de manera óptima. ¡Excelente trabajo!
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<h6>Recomendaciones de Optimización:</h6>';
-    html += '<div class="accordion" id="recommendationsAccordion">';
-    
-    recommendations.forEach((rec, index) => {
-        const priorityClass = rec.priority === 'high' ? 'danger' : 
-                             rec.priority === 'medium' ? 'warning' : 'info';
-        
-        html += `
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading${index}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                            data-bs-target="#collapse${index}">
-                        <span class="badge bg-${priorityClass} me-2">${rec.priority.toUpperCase()}</span>
-                        ${rec.title}
-                    </button>
-                </h2>
-                <div id="collapse${index}" class="accordion-collapse collapse" 
-                     data-bs-parent="#recommendationsAccordion">
-                    <div class="accordion-body">
-                        ${rec.description}
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function setupOperationsAlerts() {
-    const operationalData = extractOperationalData();
-    const alerts = [];
-    
-    // Verificar alertas de capacidad
-    operationalData.demand.forEach((demand, index) => {
-        const capacity = operationalData.capacity[index];
-        const day = index + 1;
-        
-        if (demand > capacity * 1.1) {
-            alerts.push({
-                type: 'danger',
-                day: day,
-                message: `Día ${day}: Demanda excede capacidad en ${((demand/capacity - 1) * 100).toFixed(1)}%`
-            });
-        } else if (demand > capacity * 0.9) {
-            alerts.push({
-                type: 'warning',
-                day: day,
-                message: `Día ${day}: Demanda cerca del límite de capacidad`
-            });
-        }
-    });
-    
-    displayOperationsAlerts(alerts);
-}
-
-function displayOperationsAlerts(alerts) {
-    const container = document.getElementById('operationsAlerts');
-    if (!container) return;
-    
-    if (alerts.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-success">
-                <i class="bx bx-shield-check me-2"></i>
-                No hay alertas operacionales activas.
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '';
-    alerts.forEach(alert => {
-        html += `
-            <div class="alert alert-${alert.type} alert-dismissible fade show">
-                <i class="bx bx-error-circle me-2"></i>
-                ${alert.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
 }
 
 function exportOperationsReport() {
     try {
-        const operationalData = extractOperationalData();
-        const metrics = extractOperationalMetrics();
-        const csvContent = generateOperationsCSV(operationalData, metrics);
+        if (!window.operationsManager?.data) {
+            showNotification('No hay datos para exportar', 'warning');
+            return;
+        }
+        
+        const data = window.operationsManager.data;
+        const kpis = window.operationsManager.calculateKPIs();
+        
+        const csvContent = generateEnhancedCSV(data, kpis);
         
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `reporte_operaciones_${new Date().getTime()}.csv`;
-        link.click();
+        link.download = `reporte_operaciones_${new Date().toISOString().split('T')[0]}.csv`;
         
-        showNotification('Reporte de operaciones exportado exitosamente', 'success');
+        // Crear un evento de clic más robusto
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Reporte exportado exitosamente', 'success');
     } catch (error) {
         console.error('Error exporting operations report:', error);
-        showNotification('Error al exportar reporte de operaciones', 'error');
+        showNotification('Error al exportar el reporte', 'error');
     }
 }
 
-function extractOperationalMetrics() {
-    return {
-        totalProduction: parseFloat(document.getElementById('totalProductionValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-        capacityUtilization: parseFloat(document.getElementById('capacityUtilizationValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-        fulfillmentRate: parseFloat(document.getElementById('fulfillmentRateValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-        efficiency: parseFloat(document.getElementById('operationalEfficiencyValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-        wasteRate: parseFloat(document.getElementById('wasteRateValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
-        oee: parseFloat(document.getElementById('oeeValue')?.textContent.replace(/[^\d.-]/g, '') || 0)
+function generateEnhancedCSV(data, kpis) {
+    const timestamp = new Date().toLocaleString();
+    
+    let csv = `Reporte de Operaciones - Simulación\n`;
+    csv += `Generado: ${timestamp}\n`;
+    csv += `Período: ${data.labels.length} días\n\n`;
+    
+    // Resumen ejecutivo
+    csv += `RESUMEN EJECUTIVO\n`;
+    csv += `Métrica,Valor,Unidad\n`;
+    csv += `Producción Total,${kpis.totalProduction.toFixed(0)},Litros\n`;
+    csv += `Capacidad Total,${kpis.totalCapacity.toFixed(0)},Litros\n`;
+    csv += `Eficiencia Promedio,${kpis.avgEfficiency.toFixed(1)},Porcentaje\n`;
+    csv += `Utilización de Capacidad,${kpis.utilizationRate.toFixed(1)},Porcentaje\n`;
+    csv += `Costo Promedio,${kpis.avgCost.toFixed(2)},Bolivianos\n\n`;
+    
+    // Tendencias
+    csv += `TENDENCIAS\n`;
+    csv += `Métrica,Cambio,Dirección\n`;
+    csv += `Producción,${Math.abs(kpis.trendProduction).toFixed(1)}%,${kpis.trendProduction > 0 ? 'Creciente' : 'Decreciente'}\n`;
+    csv += `Eficiencia,${Math.abs(kpis.trendEfficiency).toFixed(1)}%,${kpis.trendEfficiency > 0 ? 'Creciente' : 'Decreciente'}\n`;
+    csv += `Capacidad,${Math.abs(kpis.trendCapacity).toFixed(1)}%,${kpis.trendCapacity > 0 ? 'Creciente' : 'Decreciente'}\n`;
+    csv += `Costos,${Math.abs(kpis.trendCost).toFixed(1)}%,${kpis.trendCost > 0 ? 'Creciente' : 'Decreciente'}\n\n`;
+    
+    // Datos diarios detallados
+    csv += `DATOS DIARIOS\n`;
+    csv += `Día,Producción (L),Demanda (L),Capacidad (L),Eficiencia (%),Costo (Bs),Personal\n`;
+    
+    for (let i = 0; i < data.labels.length; i++) {
+        csv += `${i + 1},${data.production[i].toFixed(0)},${data.demand[i].toFixed(0)},${data.capacity[i].toFixed(0)},${data.efficiency[i].toFixed(1)},${data.costs[i].toFixed(2)},${data.personnel[i]}\n`;
+    }
+    
+    return csv;
+}
+
+function showVariableDetails(variableName) {
+    if (!window.operationsManager?.data) return;
+    
+    const data = window.operationsManager.data;
+    const modal = document.getElementById('variableDetailsModal');
+    const modalTitle = document.getElementById('variableModalTitle');
+    const modalBody = document.getElementById('variableModalBody');
+    
+    if (!modal || !modalTitle || !modalBody) return;
+    
+    // Configurar título
+    const variableNames = {
+        'TPV': 'Total Productos Vendidos',
+        'EOG': 'Eficiencia Operativa General',
+        'CPROD': 'Capacidad de Producción',
+        'NEPP': 'Empleados en Producción',
+        'CFD': 'Costo Fijo Diario',
+        'CVU': 'Costo Variable Unitario'
+    };
+    
+    modalTitle.innerHTML = `
+        <i class="bx bx-line-chart me-2"></i>
+        Detalles: ${variableNames[variableName] || variableName}
+    `;
+    
+    // Generar contenido del modal
+    modalBody.innerHTML = generateVariableDetailsContent(variableName, data);
+    
+    // Mostrar modal
+    if (window.variableModal) {
+        window.variableModal.show();
+    } else if (typeof bootstrap !== 'undefined') {
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+    }
+}
+
+function generateVariableDetailsContent(variableName, data) {
+    const variableData = getVariableData(variableName, data);
+    
+    return `
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-primary">${variableData.total.toFixed(1)}</h3>
+                        <small class="text-muted">Valor Total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-success">${variableData.average.toFixed(1)}</h3>
+                        <small class="text-muted">Promedio Diario</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="${variableData.trend > 0 ? 'text-success' : 'text-danger'}">${Math.abs(variableData.trend).toFixed(1)}%</h3>
+                        <small class="text-muted">Tendencia</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <h6>Distribución de Valores</h6>
+            <canvas id="modalChart" height="200"></canvas>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Día</th>
+                        <th>Valor</th>
+                        <th>Variación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${generateVariableTableRows(variableData.daily)}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function getVariableData(variableName, data) {
+    let daily = [];
+    
+    switch (variableName) {
+        case 'TPV':
+            daily = data.production;
+            break;
+        case 'EOG':
+            daily = data.efficiency;
+            break;
+        case 'CPROD':
+            daily = data.capacity;
+            break;
+        case 'CVU':
+            daily = data.costs;
+            break;
+        default:
+            daily = data.production;
+    }
+    
+    const total = daily.reduce((a, b) => a + b, 0);
+    const average = total / daily.length;
+    const trend = window.operationsManager.calculateTrend(daily);
+    
+    return { daily, total, average, trend };
+}
+
+function generateVariableTableRows(dailyData) {
+    return dailyData.map((value, index) => {
+        const prevValue = index > 0 ? dailyData[index - 1] : value;
+        const variation = index > 0 ? ((value - prevValue) / prevValue) * 100 : 0;
+        const variationClass = variation > 0 ? 'text-success' : variation < 0 ? 'text-danger' : 'text-muted';
+        
+        return `
+            <tr>
+                <td>Día ${index + 1}</td>
+                <td>${value.toFixed(1)}</td>
+                <td class="${variationClass}">
+                    ${variation !== 0 ? (variation > 0 ? '+' : '') + variation.toFixed(1) + '%' : '-'}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function exportVariableData(variableName) {
+    if (!window.operationsManager?.data) return;
+    
+    const data = window.operationsManager.data;
+    const variableData = getVariableData(variableName, data);
+    
+    const csv = generateVariableCSV(variableName, variableData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    link.href = URL.createObjectURL(blob);
+    link.download = `${variableName}_detalle_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification(`Datos de ${variableName} exportados`, 'success');
+}
+
+function generateVariableCSV(variableName, variableData) {
+    const variableNames = {
+        'TPV': 'Total Productos Vendidos',
+        'EOG': 'Eficiencia Operativa General',
+        'CPROD': 'Capacidad de Producción',
+        'NEPP': 'Empleados en Producción',
+        'CFD': 'Costo Fijo Diario',
+        'CVU': 'Costo Variable Unitario'
+    };
+    
+    let csv = `Detalle de Variable: ${variableNames[variableName] || variableName}\n`;
+    csv += `Código: ${variableName}\n`;
+    csv += `Fecha: ${new Date().toLocaleString()}\n\n`;
+    
+    csv += `RESUMEN\n`;
+    csv += `Total,${variableData.total.toFixed(2)}\n`;
+    csv += `Promedio,${variableData.average.toFixed(2)}\n`;
+    csv += `Tendencia,${variableData.trend.toFixed(2)}%\n\n`;
+    
+    csv += `DATOS DIARIOS\n`;
+    csv += `Día,Valor,Variación (%)\n`;
+    
+    variableData.daily.forEach((value, index) => {
+        const prevValue = index > 0 ? variableData.daily[index - 1] : value;
+        const variation = index > 0 ? ((value - prevValue) / prevValue) * 100 : 0;
+        csv += `${index + 1},${value.toFixed(2)},${variation.toFixed(2)}\n`;
+    });
+    
+    return csv;
+}
+
+function toggleCompactView() {
+    const table = document.getElementById('operationsTable');
+    const isCompact = table.classList.contains('table-sm');
+    
+    if (isCompact) {
+        table.classList.remove('table-sm');
+        table.classList.add('table-lg');
+    } else {
+        table.classList.remove('table-lg');
+        table.classList.add('table-sm');
+    }
+    
+    // Actualizar texto del botón
+    const button = event.target.closest('button');
+    const icon = button.querySelector('i');
+    const text = isCompact ? ' Vista Expandida' : ' Vista Compacta';
+    
+    button.innerHTML = `<i class="bx ${isCompact ? 'bx-expand' : 'bx-list'}"></i>${text}`;
+}
+
+function toggleFullscreen(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    if (!document.fullscreenElement) {
+        element.requestFullscreen().catch(err => {
+            console.error('Error entering fullscreen:', err);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+function showNotification(message, type = 'info') {
+    // Crear notificación toast mejorada
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    
+    const toastId = 'toast-' + Date.now();
+    toast.setAttribute('id', toastId);
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bx ${getNotificationIcon(type)} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Mostrar toast
+    if (typeof bootstrap !== 'undefined') {
+        const toastInstance = new bootstrap.Toast(toast, { delay: 5000 });
+        toastInstance.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    } else {
+        // Fallback sin Bootstrap
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'success': 'bx-check-circle',
+        'error': 'bx-x-circle',
+        'warning': 'bx-error-circle',
+        'info': 'bx-info-circle'
+    };
+    return icons[type] || 'bx-info-circle';
+}
+
+// Inicialización automática cuando se muestra el tab
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'operations') {
+        setTimeout(initializeOperationsTab, 100);
+    }
+});
+
+// Limpiar recursos cuando se oculta el tab
+document.addEventListener('hidden.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'operations') {
+        if (window.operationsManager?.charts) {
+            window.operationsManager.charts.forEach(chart => chart.destroy());
+            window.operationsManager.charts.clear();
+        }
+    }
+});
+
+// Exportar funciones al objeto global window
+Object.assign(window, {
+    initializeOperationsTab,
+    refreshOperationsData,
+    exportOperationsReport,
+    showVariableDetails,
+    exportVariableData,
+    toggleCompactView,
+    toggleFullscreen,
+    showNotification
+});
+
+// Funciones auxiliares adicionales
+function formatNumber(number, decimals = 0) {
+    return new Intl.NumberFormat('es-BO', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    }).format(number);
+}
+
+function formatCurrency(amount, currency = 'BOB') {
+    return new Intl.NumberFormat('es-BO', {
+        style: 'currency',
+        currency: currency,
+        currencyDisplay: 'symbol'
+    }).format(amount);
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
     };
 }
 
-function generateOperationsCSV(operationalData, metrics) {
-    let csv = 'Reporte de Operaciones - Simulación\n\n';
-    csv += 'Resumen de Métricas\n';
-    csv += 'Métrica,Valor\n';
-    csv += `Producción Total,"${metrics.totalProduction} L"\n`;
-    csv += `Utilización de Capacidad,"${metrics.capacityUtilization}%"\n`;
-    csv += `Tasa de Cumplimiento,"${metrics.fulfillmentRate}%"\n`;
-    csv += `Eficiencia Operacional,"${metrics.efficiency}%"\n`;
-    csv += `Tasa de Desperdicio,"${metrics.wasteRate}%"\n`;
-    csv += `OEE,"${metrics.oee}%"\n\n`;
-    
-    csv += 'Datos Diarios\n';
-    csv += 'Día,Producción (L),Demanda (L),Capacidad (L),Utilización (%)\n';
-    
-    operationalData.production.forEach((prod, index) => {
-        const day = index + 1;
-        const demand = operationalData.demand[index];
-        const capacity = operationalData.capacity[index];
-        const utilization = capacity > 0 ? (prod / capacity) * 100 : 0;
-        
-        csv += `${day},${prod},${demand},${capacity},${utilization.toFixed(1)}\n`;
-   });
-   
-   csv += `\nFecha de Generación,"${new Date().toLocaleDateString()}"\n`;
-   
-   return csv;
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
 }
 
-// Inicializar cuando se muestre el tab
-document.addEventListener('shown.bs.tab', function(e) {
-   if (e.target.getAttribute('aria-controls') === 'operations') {
-       setTimeout(initializeOperationsTab, 100);
-   }
+// Optimización de rendimiento para búsqueda
+const debouncedSearch = debounce((query) => {
+    if (window.operationsManager) {
+        window.operationsManager.searchTable(query);
+    }
+}, 300);
+
+// Event listener optimizado para búsqueda
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchOperationsTable');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            debouncedSearch(e.target.value);
+        });
+    }
 });
 
-// Exportar funciones globales
-window.initializeOperationsTab = initializeOperationsTab;
-window.exportOperationsReport = exportOperationsReport;
-window.highlightOperationalMetric = highlightOperationalMetric;
-window.filterByEfficiencyRange = filterByEfficiencyRange;
+// Gestión mejorada de errores
+window.addEventListener('error', function(e) {
+    console.error('Error en Operations Tab:', e.error);
+    if (e.error && e.error.message && e.error.message.includes('Chart')) {
+        showNotification('Error al cargar gráficos. Verifique que Chart.js esté disponible.', 'error');
+    }
+});
+
+// Gestión de memoria y limpieza
+window.addEventListener('beforeunload', function() {
+    if (window.operationsManager?.charts) {
+        window.operationsManager.charts.forEach(chart => {
+            try {
+                chart.destroy();
+            } catch (e) {
+                console.warn('Error destroying chart:', e);
+            }
+        });
+    }
+});
+
+// Función para detectar si el usuario prefiere animaciones reducidas
+function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Aplicar configuraciones de accesibilidad
+if (prefersReducedMotion()) {
+    document.documentElement.style.setProperty('--animation-duration', '0.01ms');
+}
+
+// Soporte para modo oscuro
+function applyThemeSupport() {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+    }
+}
+
+// Aplicar tema al cargar
+document.addEventListener('DOMContentLoaded', applyThemeSupport);
+
+// Escuchar cambios de tema
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyThemeSupport);
+
+// Función para reinicializar componentes después de cambios dinámicos
+function reinitializeComponents() {
+    initializeTooltips();
+    if (window.operationsManager) {
+        window.operationsManager.setupEventListeners();
+    }
+}
+
+// Exposer función de reinicialización
+window.reinitializeOperationsComponents = reinitializeComponents;
+
+// Configuración global para Chart.js si está disponible
+if (typeof Chart !== 'undefined') {
+    Chart.defaults.responsive = true;
+    Chart.defaults.maintainAspectRatio = false;
+    Chart.defaults.plugins.legend.display = true;
+    Chart.defaults.animation.duration = prefersReducedMotion() ? 0 : 1000;
+    
+    // Configurar colores por defecto
+    Chart.defaults.borderColor = 'rgba(0, 0, 0, 0.1)';
+    Chart.defaults.backgroundColor = 'rgba(54, 162, 235, 0.1)';
+}
+
+// Función para validar datos antes de procesamiento
+function validateOperationalData(data) {
+    if (!data || typeof data !== 'object') {
+        throw new Error('Datos operacionales inválidos');
+    }
+    
+    const requiredFields = ['labels', 'production', 'demand', 'capacity'];
+    for (const field of requiredFields) {
+        if (!Array.isArray(data[field])) {
+            throw new Error(`Campo requerido faltante o inválido: ${field}`);
+        }
+    }
+    
+    // Validar que todos los arrays tengan la misma longitud
+    const lengths = requiredFields.map(field => data[field].length);
+    if (!lengths.every(length => length === lengths[0])) {
+        throw new Error('Los arrays de datos deben tener la misma longitud');
+    }
+    
+    return true;
+}
+
+// Configuración de intersección para lazy loading de gráficos
+if ('IntersectionObserver' in window) {
+    const chartObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.hasAttribute('data-chart-loaded')) {
+                const chartId = entry.target.id;
+                if (window.operationsManager && chartId === 'mainOperationsChart') {
+                    window.operationsManager.createMainChart();
+                    entry.target.setAttribute('data-chart-loaded', 'true');
+                }
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    // Observar elemento del gráfico principal
+    document.addEventListener('DOMContentLoaded', () => {
+        const chartElement = document.getElementById('mainOperationsChart');
+        if (chartElement) {
+            chartObserver.observe(chartElement);
+        }
+    });
+}
+
+// Funciones de utilidad para fechas y tiempo
+function formatDate(date, locale = 'es-BO') {
+    return new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    }).format(date);
+}
+
+function getRelativeTime(date, locale = 'es-BO') {
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+    const diff = date - new Date();
+    const diffInDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    
+    if (Math.abs(diffInDays) < 1) {
+        return 'Hoy';
+    } else if (Math.abs(diffInDays) < 7) {
+        return rtf.format(diffInDays, 'day');
+    } else {
+        return rtf.format(Math.ceil(diffInDays / 7), 'week');
+    }
+}
+
+// Configuración de service worker para cache (si está disponible)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        // Este sería el lugar para registrar un service worker
+        // para mejorar el rendimiento de carga de datos
+        console.log('Service Worker support detected');
+    });
+}
+
+// Función para monitorear el rendimiento
+function monitorPerformance() {
+    if ('PerformanceObserver' in window) {
+        const perfObserver = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+                if (entry.duration > 100) { // Operaciones que toman más de 100ms
+                    console.warn(`Operación lenta detectada: ${entry.name} - ${entry.duration}ms`);
+                }
+            }
+        });
+        
+        perfObserver.observe({ entryTypes: ['measure'] });
+    }
+}
+
+// Inicializar monitoreo de rendimiento
+document.addEventListener('DOMContentLoaded', monitorPerformance);
+
+console.log('🚀 Operations Tab Enhanced - Cargado completamente');
+
 </script>

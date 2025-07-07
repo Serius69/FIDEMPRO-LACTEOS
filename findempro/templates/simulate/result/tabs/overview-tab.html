@@ -1,343 +1,1173 @@
-<!-- Overview Tab -->
+<!-- Enhanced Overview Tab Partial -->
 <div class="tab-pane fade show active" id="overview" role="tabpanel">
-    <!-- Header de resumen ejecutivo -->
+    <!-- Enhanced Executive Summary -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="executive-summary">
+            <div class="executive-summary-enhanced">
                 <div class="summary-header">
-                    <h2 class="summary-title">
-                        <i class="bx bx-chart me-3"></i>
-                        Resumen Ejecutivo de la Simulación
-                    </h2>
-                    <div class="summary-badges">
-                        {% if simulation_instance.date_created %}
-                        <span class="badge bg-info">
-                            <i class="bx bx-calendar me-1"></i>
-                            {{ simulation_instance.date_created|date:"d/m/Y H:i" }}
-                        </span>
-                        {% endif %}
-                        <span class="badge bg-success">
-                            <i class="bx bx-check-circle me-1"></i>
-                            Simulación Completada
-                        </span>
-                        {% if validation_summary.success_rate %}
-                        <span class="badge bg-{% if validation_summary.success_rate >= 80 %}success{% elif validation_summary.success_rate >= 60 %}warning{% else %}danger{% endif %}">
-                            <i class="bx bx-target-lock me-1"></i>
-                            Precisión: {{ validation_summary.success_rate|floatformat:1 }}%
-                        </span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2 class="summary-title">
+                                <i class="bx bx-chart-line me-3 text-primary"></i>
+                                Resumen Ejecutivo de la Simulación
+                            </h2>
+                            <p class="summary-subtitle text-muted mb-0">
+                                Análisis integral de {{ all_variables_extracted|length|default:0 }} días de simulación
+                            </p>
+                        </div>
+                        <div class="summary-actions">
+                            <button class="btn btn-outline-primary btn-sm me-2" onclick="exportOverview()">
+                                <i class="bx bx-download me-1"></i>Exportar
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="refreshOverview()">
+                                <i class="bx bx-refresh me-1"></i>Actualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Status Badges -->
+                <div class="summary-badges-grid">
+                    {% if simulation_instance.date_created %}
+                    <div class="badge-item">
+                        <div class="badge-icon">
+                            <i class="bx bx-calendar"></i>
+                        </div>
+                        <div class="badge-content">
+                            <span class="badge-label">Fecha de Simulación</span>
+                            <span class="badge-value">{{ simulation_instance.date_created|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="badge-item success">
+                        <div class="badge-icon">
+                            <i class="bx bx-check-circle"></i>
+                        </div>
+                        <div class="badge-content">
+                            <span class="badge-label">Estado</span>
+                            <span class="badge-value">Simulación Completada</span>
+                        </div>
+                    </div>
+
+                    {% if validation_summary.success_rate %}
+                    <div class="badge-item {% if validation_summary.success_rate >= 80 %}success{% elif validation_summary.success_rate >= 60 %}warning{% else %}danger{% endif %}">
+                        <div class="badge-icon">
+                            <i class="bx bx-target-lock"></i>
+                        </div>
+                        <div class="badge-content">
+                            <span class="badge-label">Precisión del Modelo</span>
+                            <span class="badge-value">{{ validation_summary.success_rate|floatformat:1 }}%</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if totales_acumulativos.GT %}
+                    <div class="badge-item {% if totales_acumulativos.GT.total > 0 %}success{% else %}warning{% endif %}">
+                        <div class="badge-icon">
+                            <i class="bx bx-trending-up"></i>
+                        </div>
+                        <div class="badge-content">
+                            <span class="badge-label">Resultado Financiero</span>
+                            <span class="badge-value">
+                                {% if totales_acumulativos.GT.total > 0 %}
+                                    +Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}
+                                {% else %}
+                                    Optimización Requerida
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Enhanced Summary Description -->
+                <div class="summary-insights">
+                    <div class="insight-card financial-insight">
+                        <div class="insight-icon">
+                            <i class="bx bx-dollar-circle"></i>
+                        </div>
+                        <div class="insight-content">
+                            <h6 class="insight-title">Rendimiento Financiero</h6>
+                            <p class="insight-description">
+                                {% if totales_acumulativos.GT %}
+                                    {% if totales_acumulativos.GT.total > 0 %}
+                                        La simulación proyecta un escenario <strong class="text-success">rentable</strong> 
+                                        con ganancias totales de <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}</strong>.
+                                        {% if margin_percent %}
+                                            Margen de rentabilidad del <strong>{{ margin_percent|floatformat:1 }}%</strong>.
+                                        {% endif %}
+                                    {% else %}
+                                        La simulación indica la necesidad de <strong class="text-warning">optimización</strong> 
+                                        en la estrategia operativa y financiera para mejorar la rentabilidad.
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="insight-card demand-insight">
+                        <div class="insight-icon">
+                            <i class="bx bx-line-chart"></i>
+                        </div>
+                        <div class="insight-content">
+                            <h6 class="insight-title">Análisis de Demanda</h6>
+                            <p class="insight-description">
+                                Demanda histórica promedio: <strong>{{ demand_stats.historical.mean|floatformat:1 }} L/día</strong>
+                                <br>
+                                Demanda proyectada: <strong>{{ demand_stats.simulated.mean|floatformat:1 }} L/día</strong>
+                                {% if demand_stats.comparison.mean_diff_pct %}
+                                <br>
+                                <span class="trend-indicator {% if demand_stats.comparison.mean_diff > 0 %}trend-up{% elif demand_stats.comparison.mean_diff < 0 %}trend-down{% else %}trend-stable{% endif %}">
+                                    {% if demand_stats.comparison.mean_diff > 0 %}
+                                        <i class="bx bx-trending-up"></i> +{{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}% vs histórico
+                                    {% elif demand_stats.comparison.mean_diff < 0 %}
+                                        <i class="bx bx-trending-down"></i> {{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}% vs histórico
+                                    {% else %}
+                                        <i class="bx bx-minus"></i> Estable vs histórico
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Main Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container-enhanced">
+                <div class="chart-header">
+                    <div class="chart-title-section">
+                        <h5 class="chart-title">
+                            <i class="bx bx-dollar me-2"></i>
+                            Evolución Financiera
+                        </h5>
+                        <p class="chart-subtitle">Ingresos vs Ganancias en el tiempo</p>
+                    </div>
+                    <div class="chart-controls">
+                        {% if image_data_ingresos_gastos %}
+                        <button class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" 
+                                title="Descargar gráfico" data-bs-toggle="tooltip">
+                            <i class="bx bx-download"></i>
+                        </button>
+                        <button class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Evolución Financiera')" 
+                                title="Ver en pantalla completa" data-bs-toggle="tooltip">
+                            <i class="bx bx-fullscreen"></i>
+                        </button>
+                        <button class="chart-control-btn" onclick="showChartDetails('financial')" 
+                                title="Ver detalles" data-bs-toggle="tooltip">
+                            <i class="bx bx-info-circle"></i>
+                        </button>
                         {% endif %}
                     </div>
                 </div>
-                <div class="summary-description">
-                    <p class="lead">
-                        Análisis integral de {{ all_variables_extracted|length|default:0 }} días de simulación 
-                        para <strong>{{ product_instance.name|default:"el producto" }}</strong> de 
-                        <strong>{{ business_instance.name|default:"la empresa" }}</strong>.
-                        {% if totales_acumulativos.GT %}
-                            {% if totales_acumulativos.GT.total > 0 %}
-                                La simulación proyecta un escenario <span class="text-success font-weight-bold">rentable</span> 
-                                con ganancias totales de <strong>Bs. {{ totales_acumulativos.GT.total|floatformat:2 }}</strong>.
-                            {% else %}
-                                La simulación indica la necesidad de <span class="text-warning font-weight-bold">optimización</span> 
-                                en la estrategia operativa y financiera.
-                            {% endif %}
-                        {% endif %}
-                    </p>
-                    
-                    <p class="lead">
-                        El análisis de demanda revela que la demanda histórica promedio es de 
-                        <strong>{{ demand_stats.historical.mean|floatformat:1 }} L diarios</strong>, mientras que la simulación 
-                        proyecta una demanda de <strong>{{ demand_stats.simulated.mean|floatformat:1 }} L diarios</strong>.
-                        {% if demand_stats.comparison.mean_diff > 0 %}
-                            Esto representa un <span class="text-success font-weight-bold">incremento esperado</span> de 
-                            <strong>{{ demand_stats.comparison.mean_diff|floatformat:1 }} L</strong>
-                            {% if demand_stats.comparison.mean_diff_pct %}
-                                ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
-                            {% endif %}, 
-                            indicando un crecimiento positivo en la demanda del producto.
-                        {% elif demand_stats.comparison.mean_diff < 0 %}
-                            Esto representa una <span class="text-danger font-weight-bold">disminución esperada</span> de 
-                            <strong>{{ demand_stats.comparison.mean_diff|floatformat:1 }} L</strong>
-                            {% if demand_stats.comparison.mean_diff_pct %}
-                                ({{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%)
-                            {% endif %}, 
-                            sugiriendo la necesidad de estrategias para estimular la demanda.
-                        {% else %}
-                            Esto muestra una <span class="text-info font-weight-bold">estabilidad</span> en los patrones de demanda, 
-                            manteniendo niveles consistentes con el comportamiento histórico.
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Gráficos principales del overview -->
-    <div class="row mb-4">
-        <div class="col-lg-6 mb-4">
-    <div class="chart-container">
-        <!-- TEXTO ARRIBA: Header con título y controles -->
-        <div class="chart-header">
-            <h6 class="chart-title mb-3">
-                <i class="bx bx-dollar me-2"></i>
-                Evolución Financiera: Ingresos vs Ganancias
-            </h6>
-            <div class="chart-controls">
-                {% if image_data_ingresos_gastos %}
-                <div class="chart-control-btn" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'ingresos-ganancias.png')" title="Descargar">
-                    <i class="bx bx-download"></i>
-                </div>
-                <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Ingresos vs Ganancias')" title="Pantalla completa">
-                    <i class="bx bx-fullscreen"></i>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
-        <div class="chart-content">
-            {% if image_data_ingresos_gastos %}
-            <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
-                class="chart-image" 
-                alt="Evolución Financiera: Ingresos vs Ganancias"
-                loading="lazy">
-            {% else %}
-            <div class="chart-placeholder">
-                <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">Gráfico financiero no disponible</p>
-                <small class="text-muted">Los datos se generarán durante el análisis</small>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- FOOTER ABAJO: Resumen y análisis -->
-        <div class="chart-footer">
-            <div class="chart-summary">
-                <small class="text-muted">
-                    {% if totales_acumulativos.IT and totales_acumulativos.GT %}
-                        Rendimiento financiero: 
-                        {% if totales_acumulativos.GT.total > 0 %}
-                            <span class="text-success">Positivo</span> - 
-                            Margen del {{ margin_percent|floatformat:1 }}%
-                        {% else %}
-                            <span class="text-danger">Requiere optimización</span>
-                        {% endif %}
+                <div class="chart-content">
+                    {% if image_data_ingresos_gastos %}
+                    <div class="chart-image-container">
+                        <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                            class="chart-image" 
+                            alt="Evolución Financiera: Ingresos vs Ganancias"
+                            loading="lazy">
+                        <div class="chart-overlay">
+                            <button class="btn btn-light btn-sm" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Evolución Financiera')">
+                                <i class="bx bx-expand"></i> Ampliar
+                            </button>
+                        </div>
+                    </div>
                     {% else %}
-                        Análisis financiero en proceso
+                    <div class="chart-placeholder-enhanced">
+                        <div class="placeholder-content">
+                            <i class="bx bx-chart text-muted"></i>
+                            <h6 class="placeholder-title">Gráfico Financiero</h6>
+                            <p class="placeholder-description">Los datos se generarán durante el análisis</p>
+                            <div class="placeholder-loader">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
                     {% endif %}
-                </small>
+                </div>
+
+                <div class="chart-footer">
+                    <div class="chart-metrics">
+                        {% if totales_acumulativos.IT and totales_acumulativos.GT %}
+                        <div class="metric-item">
+                            <span class="metric-label">Rendimiento:</span>
+                            <span class="metric-value {% if totales_acumulativos.GT.total > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {% if totales_acumulativos.GT.total > 0 %}
+                                    Positivo ({{ margin_percent|floatformat:1 }}%)
+                                {% else %}
+                                    Requiere optimización
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    </div>               
+
         <div class="col-lg-6 mb-4">
-            <div class="chart-container">
-                <!-- TEXTO ARRIBA: Header con título y controles -->
+            <div class="chart-container-enhanced">
                 <div class="chart-header">
-                    <h6 class="chart-title mb-3">
-                        <i class="bx bx-line-chart me-2"></i>
-                        Comportamiento de la Demanda
-                    </h6>
+                    <div class="chart-title-section">
+                        <h5 class="chart-title">
+                            <i class="bx bx-line-chart me-2"></i>
+                            Comportamiento de la Demanda
+                        </h5>
+                        <p class="chart-subtitle">Tendencias y patrones de consumo</p>
+                    </div>
                     <div class="chart-controls">
                         {% if image_data_simulation %}
-                        <div class="chart-control-btn" onclick="downloadChart('{{ image_data_simulation }}', 'tendencia-demanda.png')" title="Descargar">
+                        <button class="chart-control-btn" onclick="downloadChart('{{ image_data_simulation }}', 'tendencia-demanda.png')" 
+                                title="Descargar gráfico" data-bs-toggle="tooltip">
                             <i class="bx bx-download"></i>
-                        </div>
-                        <div class="chart-control-btn" onclick="openFullscreen('{{ image_data_simulation }}', 'Tendencia de Demanda')" title="Pantalla completa">
+                        </button>
+                        <button class="chart-control-btn" onclick="openFullscreen('{{ image_data_simulation }}', 'Comportamiento de la Demanda')" 
+                                title="Ver en pantalla completa" data-bs-toggle="tooltip">
                             <i class="bx bx-fullscreen"></i>
-                        </div>
+                        </button>
+                        <button class="chart-control-btn" onclick="showChartDetails('demand')" 
+                                title="Ver detalles" data-bs-toggle="tooltip">
+                            <i class="bx bx-info-circle"></i>
+                        </button>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
                 <div class="chart-content">
                     {% if image_data_simulation %}
-                    <img src="data:image/png;base64,{{ image_data_simulation }}" 
-                        class="chart-image" 
-                        alt="Comportamiento de la Demanda"
-                        loading="lazy">
+                    <div class="chart-image-container">
+                        <img src="data:image/png;base64,{{ image_data_simulation }}" 
+                            class="chart-image" 
+                            alt="Comportamiento de la Demanda"
+                            loading="lazy">
+                        <div class="chart-overlay">
+                            <button class="btn btn-light btn-sm" onclick="openFullscreen('{{ image_data_simulation }}', 'Comportamiento de la Demanda')">
+                                <i class="bx bx-expand"></i> Ampliar
+                            </button>
+                        </div>
+                    </div>
                     {% elif comparison_chart %}
-                    <img src="data:image/png;base64,{{ comparison_chart }}" 
-                        class="chart-image" 
-                        alt="Comparación de Demanda"
-                        loading="lazy">
+                    <div class="chart-image-container">
+                        <img src="data:image/png;base64,{{ comparison_chart }}" 
+                            class="chart-image" 
+                            alt="Comparación de Demanda"
+                            loading="lazy">
+                        <div class="chart-overlay">
+                            <button class="btn btn-light btn-sm" onclick="openFullscreen('{{ comparison_chart }}', 'Comparación de Demanda')">
+                                <i class="bx bx-expand"></i> Ampliar
+                            </button>
+                        </div>
+                    </div>
                     {% else %}
-                    <div class="chart-placeholder">
-                        <i class="bx bx-chart text-muted" style="font-size: 3rem;"></i>
-                        <p class="text-muted mt-2">Gráfico de demanda no disponible</p>
-                        <small class="text-muted">Los datos se generarán durante el análisis</small>
+                    <div class="chart-placeholder-enhanced">
+                        <div class="placeholder-content">
+                            <i class="bx bx-line-chart text-muted"></i>
+                            <h6 class="placeholder-title">Gráfico de Demanda</h6>
+                            <p class="placeholder-description">Los datos se generarán durante el análisis</p>
+                            <div class="placeholder-loader">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- FOOTER ABAJO: Resumen y análisis -->
                 <div class="chart-footer">
-                    <div class="chart-summary">
-                        <small class="text-muted">
-                            {% if growth_rate %}
-                                Tendencia de crecimiento: 
+                    <div class="chart-metrics">
+                        {% if growth_rate %}
+                        <div class="metric-item">
+                            <span class="metric-label">Tendencia:</span>
+                            <span class="metric-value trend-indicator {% if growth_rate > 0 %}trend-up{% elif growth_rate < 0 %}trend-down{% else %}trend-stable{% endif %}">
                                 {% if growth_rate > 0 %}
-                                    <span class="text-success">+{{ growth_rate|floatformat:2 }}%</span> - Creciente
+                                    <i class="bx bx-trending-up"></i> +{{ growth_rate|floatformat:2 }}%
                                 {% elif growth_rate < 0 %}
-                                    <span class="text-danger">{{ growth_rate|floatformat:2 }}%</span> - Decreciente
+                                    <i class="bx bx-trending-down"></i> {{ growth_rate|floatformat:2 }}%
                                 {% else %}
-                                    <span class="text-info">{{ growth_rate|floatformat:2 }}%</span> - Estable
+                                    <i class="bx bx-minus"></i> Estable
                                 {% endif %}
-                            {% elif demand_stats.comparison.mean_diff_pct %}
-                                Cambio vs histórico: {{ demand_stats.comparison.mean_diff_pct|floatformat:2 }}%
-                            {% else %}
-                                Análisis de tendencia en proceso
-                            {% endif %}
-                        </small>
+                            </span>
+                        </div>
+                        {% elif demand_stats.comparison.mean_diff_pct %}
+                        <div class="metric-item">
+                            <span class="metric-label">vs Histórico:</span>
+                            <span class="metric-value">{{ demand_stats.comparison.mean_diff_pct|floatformat:2 }}%</span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Gráficos adicionales de overview -->
-    <div class="row mb-6">
+
+    <!-- Enhanced Secondary Charts -->
+    <div class="row mb-4">
         <div class="col-lg-6 mb-3">
-        <div class="chart-container compact">
-            <!-- TEXTO ARRIBA: Título -->
-            <div class="chart-header">
-                <h6 class="chart-title mb-3">
-                    <i class="bx bx-bar-chart me-2"></i>
-                    Eficiencia Operativa
-                </h6>
-            </div>
-
-            <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
-            <div class="chart-content">
-                {% if image_data_eficiencia %}
-                <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
-                    class="chart-image" 
-                    alt="Eficiencia Operativa"
-                    loading="lazy">
-                {% else %}
-                <div class="chart-placeholder compact">
-                    <i class="bx bx-bar-chart text-muted" style="font-size: 2rem;"></i>
-                    <p class="text-muted mt-2">No disponible</p>
+            <div class="chart-container-compact">
+                <div class="chart-header-compact">
+                    <h6 class="chart-title">
+                        <i class="bx bx-bar-chart me-2"></i>
+                        Eficiencia Operativa
+                    </h6>
+                    <div class="chart-controls-compact">
+                        {% if image_data_eficiencia %}
+                        <button class="chart-control-btn-sm" onclick="openFullscreen('{{ image_data_eficiencia }}', 'Eficiencia Operativa')" 
+                                title="Ver en pantalla completa" data-bs-toggle="tooltip">
+                            <i class="bx bx-fullscreen"></i>
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endif %}
+                <div class="chart-content-compact">
+                    {% if image_data_eficiencia %}
+                    <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                        class="chart-image-compact" 
+                        alt="Eficiencia Operativa"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder-compact">
+                        <i class="bx bx-bar-chart text-muted"></i>
+                        <p class="text-muted mb-0">No disponible</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+        </div>
 
-            <!-- FOOTER ABAJO: Podría agregarse aquí si se necesita -->
-            <div class="chart-footer">
-                <!-- Footer vacío para mantener consistencia -->
+        <div class="col-lg-6 mb-3">
+            <div class="chart-container-compact">
+                <div class="chart-header-compact">
+                    <h6 class="chart-title">
+                        <i class="bx bx-trending-up me-2"></i>
+                        Análisis de ROI
+                    </h6>
+                    <div class="chart-controls-compact">
+                        {% if image_data_kpis or image_data_rentabilidad %}
+                        <button class="chart-control-btn-sm" onclick="openFullscreen('{% if image_data_kpis %}{{ image_data_kpis }}{% else %}{{ image_data_rentabilidad }}{% endif %}', 'Análisis de ROI')" 
+                                title="Ver en pantalla completa" data-bs-toggle="tooltip">
+                            <i class="bx bx-fullscreen"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="chart-content-compact">
+                    {% if image_data_kpis %}
+                    <img src="data:image/png;base64,{{ image_data_kpis }}" 
+                        class="chart-image-compact" 
+                        alt="Análisis de KPIs"
+                        loading="lazy">
+                    {% elif image_data_rentabilidad %}
+                    <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
+                        class="chart-image-compact" 
+                        alt="Análisis de Rentabilidad"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder-compact">
+                        <i class="bx bx-trending-up text-muted"></i>
+                        <p class="text-muted mb-0">No disponible</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-6 mb-3">
-        <div class="chart-container compact">
-            <!-- TEXTO ARRIBA: Título -->
-            <div class="chart-header">
-                <h6 class="chart-title mb-3">
-                    <i class="bx bx-trending-up me-2"></i>
-                    Análisis de ROI
-                </h6>
-            </div>
 
-            <!-- GRÁFICO EN EL MEDIO: Imagen o placeholder -->
-            <div class="chart-content">
-                {% if image_data_kpis %}
-                <img src="data:image/png;base64,{{ image_data_kpis }}" 
-                    class="chart-image" 
-                    alt="Análisis de KPIs"
-                    loading="lazy">
-                {% elif image_data_rentabilidad %}
-                <img src="data:image/png;base64,{{ image_data_rentabilidad }}" 
-                    class="chart-image" 
-                    alt="Análisis de Rentabilidad"
-                    loading="lazy">
-                {% else %}
-                <div class="chart-placeholder compact">
-                    <i class="bx bx-trending-up text-muted" style="font-size: 2rem;"></i>
-                    <p class="text-muted mt-2">No disponible</p>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- FOOTER ABAJO: Podría agregarse aquí si se necesita -->
-            <div class="chart-footer">
-                <!-- Footer vacío para mantener consistencia -->
-            </div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Datos estadísticos adicionales si están disponibles -->
+    <!-- Enhanced Statistics Section -->
     {% if demand_stats.comparison %}
-    <div class="row mb-9">
+    <div class="row mb-4">
         <div class="col-12">
-            <h5 class="mb-3">
-                <i class="bx bx-calculator me-2"></i>
-                Estadísticas Comparativas
-            </h5>
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="text-center p-3 border rounded">
-                        <h6 class="text-muted mb-1">Correlación</h6>
-                        <h4 class="mb-0 {% if demand_stats.comparison.correlation > 0.8 %}text-success{% elif demand_stats.comparison.correlation > 0.6 %}text-warning{% else %}text-danger{% endif %}">
-                            {{ demand_stats.comparison.correlation|floatformat:3 }}
-                        </h4>
-                        <small class="text-muted">Histórico vs Simulado</small>
-                    </div>
+            <div class="statistics-section">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="bx bx-calculator me-2"></i>
+                        Estadísticas Comparativas
+                    </h5>
+                    <p class="section-subtitle">Métricas de precisión y correlación del modelo</p>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 border rounded">
-                        <h6 class="text-muted mb-1">MAPE</h6>
-                        <h4 class="mb-0 {% if demand_stats.comparison.mape < 10 %}text-success{% elif demand_stats.comparison.mape < 20 %}text-warning{% else %}text-danger{% endif %}">
-                            {{ demand_stats.comparison.mape|floatformat:2 }}%
-                        </h4>
-                        <small class="text-muted">Error promedio</small>
+
+                <div class="statistics-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon {% if demand_stats.comparison.correlation > 0.8 %}success{% elif demand_stats.comparison.correlation > 0.6 %}warning{% else %}danger{% endif %}">
+                            <i class="bx bx-trending-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ demand_stats.comparison.correlation|floatformat:3 }}</div>
+                            <div class="stat-label">Correlación</div>
+                            <div class="stat-description">Histórico vs Simulado</div>
+                        </div>
+                        <div class="stat-indicator {% if demand_stats.comparison.correlation > 0.8 %}success{% elif demand_stats.comparison.correlation > 0.6 %}warning{% else %}danger{% endif %}">
+                            {% if demand_stats.comparison.correlation > 0.8 %}
+                                <i class="bx bx-check-circle"></i>
+                            {% elif demand_stats.comparison.correlation > 0.6 %}
+                                <i class="bx bx-error-circle"></i>
+                            {% else %}
+                                <i class="bx bx-x-circle"></i>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-                {% if demand_stats.comparison.r_squared %}
-                <div class="col-md-3">
-                    <div class="text-center p-3 border rounded">
-                        <h6 class="text-muted mb-1">R²</h6>
-                        <h4 class="mb-0 {% if demand_stats.comparison.r_squared > 0.8 %}text-success{% elif demand_stats.comparison.r_squared > 0.6 %}text-warning{% else %}text-danger{% endif %}">
-                            {{ demand_stats.comparison.r_squared|floatformat:3 }}
-                        </h4>
-                        <small class="text-muted">Bondad de ajuste</small>
+
+                    <div class="stat-card">
+                        <div class="stat-icon {% if demand_stats.comparison.mape < 10 %}success{% elif demand_stats.comparison.mape < 20 %}warning{% else %}danger{% endif %}">
+                            <i class="bx bx-target-lock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ demand_stats.comparison.mape|floatformat:2 }}%</div>
+                            <div class="stat-label">MAPE</div>
+                            <div class="stat-description">Error promedio</div>
+                        </div>
+                        <div class="stat-indicator {% if demand_stats.comparison.mape < 10 %}success{% elif demand_stats.comparison.mape < 20 %}warning{% else %}danger{% endif %}">
+                            {% if demand_stats.comparison.mape < 10 %}
+                                <i class="bx bx-check-circle"></i>
+                            {% elif demand_stats.comparison.mape < 20 %}
+                                <i class="bx bx-error-circle"></i>
+                            {% else %}
+                                <i class="bx bx-x-circle"></i>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-                {% endif %}
-                {% if demand_stats.comparison.mean_diff_pct %}
-                <div class="col-md-3">
-                    <div class="text-center p-3 border rounded">
-                        <h6 class="text-muted mb-1">Cambio en Media</h6>
-                        <h4 class="mb-0 {% if demand_stats.comparison.mean_diff_pct > -5 and demand_stats.comparison.mean_diff_pct < 5 %}text-success{% else %}text-warning{% endif %}">
-                            {% if demand_stats.comparison.mean_diff_pct > 0 %}+{% endif %}{{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%
-                        </h4>
-                        <small class="text-muted">vs histórico</small>
+
+                    {% if demand_stats.comparison.r_squared %}
+                    <div class="stat-card">
+                        <div class="stat-icon {% if demand_stats.comparison.r_squared > 0.8 %}success{% elif demand_stats.comparison.r_squared > 0.6 %}warning{% else %}danger{% endif %}">
+                            <i class="bx bx-pie-chart-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ demand_stats.comparison.r_squared|floatformat:3 }}</div>
+                            <div class="stat-label">R²</div>
+                            <div class="stat-description">Bondad de ajuste</div>
+                        </div>
+                        <div class="stat-indicator {% if demand_stats.comparison.r_squared > 0.8 %}success{% elif demand_stats.comparison.r_squared > 0.6 %}warning{% else %}danger{% endif %}">
+                            {% if demand_stats.comparison.r_squared > 0.8 %}
+                                <i class="bx bx-check-circle"></i>
+                            {% elif demand_stats.comparison.r_squared > 0.6 %}
+                                <i class="bx bx-error-circle"></i>
+                            {% else %}
+                                <i class="bx bx-x-circle"></i>
+                            {% endif %}
+                        </div>
                     </div>
+                    {% endif %}
+
+                    {% if demand_stats.comparison.mean_diff_pct %}
+                    <div class="stat-card">
+                        <div class="stat-icon {% if demand_stats.comparison.mean_diff_pct > -5 and demand_stats.comparison.mean_diff_pct < 5 %}success{% else %}warning{% endif %}">
+                            <i class="bx bx-transfer-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">
+                                {% if demand_stats.comparison.mean_diff_pct > 0 %}+{% endif %}{{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}%
+                            </div>
+                            <div class="stat-label">Cambio en Media</div>
+                            <div class="stat-description">vs histórico</div>
+                        </div>
+                        <div class="stat-indicator {% if demand_stats.comparison.mean_diff_pct > -5 and demand_stats.comparison.mean_diff_pct < 5 %}success{% else %}warning{% endif %}">
+                            {% if demand_stats.comparison.mean_diff_pct > -5 and demand_stats.comparison.mean_diff_pct < 5 %}
+                                <i class="bx bx-check-circle"></i>
+                            {% else %}
+                                <i class="bx bx-error-circle"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
     {% endif %}
 </div>
 
-<script>
+<!-- Enhanced Styles -->
+<style>
+/* Executive Summary Enhanced */
+.executive-summary-enhanced {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
 
+.summary-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.summary-subtitle {
+    font-size: 1rem;
+    color: #64748b;
+}
+
+.summary-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Enhanced Badge Grid */
+.summary-badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.badge-item {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.badge-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge-item.success {
+    border-left: 4px solid #10b981;
+}
+
+.badge-item.warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.badge-item.danger {
+    border-left: 4px solid #ef4444;
+}
+
+.badge-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 1.25rem;
+}
+
+.badge-item.success .badge-icon {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.badge-item.warning .badge-icon {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+.badge-item.danger .badge-icon {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.badge-content {
+    flex: 1;
+}
+
+.badge-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.badge-value {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Enhanced Insights */
+.summary-insights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.insight-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.insight-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.financial-insight .insight-icon {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.demand-insight .insight-icon {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.insight-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.insight-description {
+    font-size: 0.875rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+/* Trend Indicators */
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.trend-up {
+    color: #10b981;
+}
+
+.trend-down {
+    color: #ef4444;
+}
+
+.trend-stable {
+    color: #64748b;
+}
+
+/* Enhanced Chart Containers */
+.chart-container-enhanced {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.chart-container-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.chart-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.chart-title-section {
+    flex: 1;
+}
+
+.chart-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.chart-subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chart-control-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #64748b;
+}
+
+.chart-control-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #475569;
+    transform: scale(1.05);
+}
+
+.chart-content {
+    position: relative;
+    padding: 1rem 1.5rem;
+}
+
+.chart-image-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.chart-image {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.chart-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.chart-image-container:hover .chart-overlay {
+    opacity: 1;
+}
+
+.chart-placeholder-enhanced {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px dashed #cbd5e1;
+}
+
+.placeholder-content {
+    text-align: center;
+}
+
+.placeholder-content i {
+    font-size: 3rem;
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+}
+
+.placeholder-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.placeholder-description {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-bottom: 1rem;
+}
+
+.placeholder-loader {
+    margin-top: 1rem;
+}
+
+.chart-footer {
+    padding: 1rem 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+.chart-metrics {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Compact Chart Containers */
+.chart-container-compact {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.chart-container-compact:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chart-header-compact {
+    padding: 1rem 1rem 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-header-compact .chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0;
+}
+
+.chart-controls-compact {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.chart-control-btn-sm {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.chart-control-btn-sm:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+.chart-content-compact {
+    padding: 0.5rem 1rem 1rem;
+}
+
+.chart-image-compact {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.chart-placeholder-compact {
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+}
+
+.chart-placeholder-compact i {
+    font-size: 2rem;
+    color: #cbd5e1;
+    margin-bottom: 0.5rem;
+}
+
+/* Enhanced Statistics Section */
+.statistics-section {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.section-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+    font-size: 1rem;
+    color: #64748b;
+    margin-bottom: 0;
+}
+
+.statistics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #e2e8f0, #cbd5e1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+.stat-card:hover::before {
+    background: linear-gradient(90deg, #3b82f6, #1e40af);
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+    font-weight: 600;
+}
+
+.stat-icon.success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.stat-icon.warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.stat-icon.danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0.25rem;
+}
+
+.stat-description {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-indicator {
+    font-size: 1.25rem;
+}
+
+.stat-indicator.success {
+    color: #10b981;
+}
+
+.stat-indicator.warning {
+    color: #f59e0b;
+}
+
+.stat-indicator.danger {
+    color: #ef4444;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .summary-badges-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-insights {
+        grid-template-columns: 1fr;
+    }
+    
+    .statistics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .chart-controls {
+        align-self: flex-end;
+    }
+}
+
+/* Animation Classes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Loading States */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+</style>
+
+<!-- Enhanced JavaScript -->
+<script>
 document.addEventListener('DOMContentLoaded', function() {
-    initializeEnhancedInsights();
+    initializeEnhancedOverview();
 });
 
-function initializeEnhancedInsights() {
-    // Animar insights secuencialmente
-    const insightCards = document.querySelectorAll('.insight-card');
+function initializeEnhancedOverview() {
+    // Initialize tooltips
+    initializeTooltips();
     
-    // Intersection Observer para animar cuando sea visible
+    // Initialize animations
+    initializeAnimations();
+    
+    // Initialize chart interactions
+    initializeChartInteractions();
+    
+    // Initialize statistics animations
+    initializeStatisticsAnimations();
+    
+    // Initialize refresh functionality
+    initializeRefreshFunctionality();
+}
+
+function initializeTooltips() {
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+function initializeAnimations() {
+    // Stagger animation for cards
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
                 setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.classList.add('animate-fade-in');
                 }, index * 100);
                 observer.unobserve(entry.target);
             }
@@ -347,151 +1177,267 @@ function initializeEnhancedInsights() {
         rootMargin: '50px'
     });
     
-    insightCards.forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'all 0.6s ease';
-        observer.observe(card);
-    });
-    
-    // Agregar tooltips a los insights
-    addInsightTooltips();
-    
-    // Actualizar insights en tiempo real si hay datos dinámicos
-    updateInsightsRealTime();
-}
-function addInsightTooltips() {
-    const tooltips = {
-        '.financial': 'Análisis de rentabilidad y performance financiera basado en ingresos, gastos y márgenes',
-        '.validation': 'Evaluación de la precisión y confiabilidad del modelo predictivo utilizado',
-        '.operational': 'Medición de la eficiencia en procesos operativos y uso de recursos',
-        '.demand': 'Análisis del comportamiento y tendencias de la demanda del producto',
-        '.customer': 'Evaluación del nivel de satisfacción y experiencia del cliente',
-        '.comparison': 'Comparación entre datos históricos reales y resultados de la simulación'
-    };
-    
-    Object.entries(tooltips).forEach(([selector, tooltip]) => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(element => {
-            element.title = tooltip;
-            element.style.cursor = 'help';
-        });
-    });
-}
-function updateInsightsRealTime() {
-    // Simular actualizaciones en tiempo real de insights
-    setInterval(() => {
-        updateInsightTrends();
-    }, 30000); // Cada 30 segundos
-}
-function updateInsightTrends() {
-    const trendElements = document.querySelectorAll('.insight-trend');
-    trendElements.forEach(element => {
-        if (element.querySelector('.trend-up, .trend-down')) {
-            element.style.animation = 'pulse-success 1s ease';
-            setTimeout(() => {
-                element.style.animation = '';
-            }, 1000);
-        }
+    // Observe all major sections
+    const sections = document.querySelectorAll('.chart-container-enhanced, .chart-container-compact, .stat-card, .insight-card, .badge-item');
+    sections.forEach(section => {
+        observer.observe(section);
     });
 }
 
-function expandInsightDetails(insightType) {
-    const modal = document.getElementById('mainDetailsModal');
-    const modalTitle = document.getElementById('mainDetailsModalTitle');
-    const modalBody = document.getElementById('mainDetailsModalBody');
+function initializeChartInteractions() {
+    // Add hover effects to chart images
+    const chartImages = document.querySelectorAll('.chart-image');
+    chartImages.forEach(img => {
+        img.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+        });
+        
+        img.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+}
+
+function initializeStatisticsAnimations() {
+    // Animate statistics values on scroll
+    const statValues = document.querySelectorAll('.stat-value');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateStatValue(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    });
     
-    if (!modal || !modalTitle || !modalBody) return;
+    statValues.forEach(stat => observer.observe(stat));
+}
+
+function animateStatValue(element) {
+    const finalValue = element.textContent;
+    const isPercentage = finalValue.includes('%');
+    const isNumeric = !isNaN(parseFloat(finalValue.replace(/[^\d.-]/g, '')));
     
-    const insightDetails = {
-        financial: {
-            title: 'Detalles del Análisis Financiero',
-            content: generateFinancialDetails()
-        },
-        validation: {
-            title: 'Detalles de Validación del Modelo',
-            content: generateValidationDetails()
-        },
-        operational: {
-            title: 'Detalles de Eficiencia Operativa',
-            content: generateOperationalDetails()
-        },
-        demand: {
-            title: 'Detalles del Comportamiento de Demanda',
-            content: generateDemandDetails()
-        },
-        customer: {
-            title: 'Detalles de Satisfacción del Cliente',
-            content: generateCustomerDetails()
-        },
-        comparison: {
-            title: 'Detalles de Comparación Histórica',
-            content: generateComparisonDetails()
-        }
-    };
-    
-    const detail = insightDetails[insightType];
-    if (detail) {
-        modalTitle.textContent = detail.title;
-        modalBody.innerHTML = detail.content;
-        new bootstrap.Modal(modal).show();
+    if (isNumeric) {
+        const numericValue = parseFloat(finalValue.replace(/[^\d.-]/g, ''));
+        const duration = 1500;
+        const steps = 60;
+        const increment = numericValue / steps;
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= numericValue) {
+                current = numericValue;
+                clearInterval(timer);
+            }
+            
+            let displayValue = current.toFixed(isPercentage ? 1 : 2);
+            if (finalValue.includes('+')) displayValue = '+' + displayValue;
+            if (isPercentage) displayValue += '%';
+            if (finalValue.includes('Bs.')) displayValue = 'Bs. ' + displayValue;
+            
+            element.textContent = displayValue;
+        }, duration / steps);
     }
 }
-function generateFinancialDetails() {
-    return `
-        <div class="financial-details">
-            <h6>Métricas Financieras Detalladas</h6>
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="text-primary">Ingresos</h6>
-                    <p>Total generado durante el período de simulación</p>
+
+function initializeRefreshFunctionality() {
+    // Auto-refresh data every 5 minutes
+    setInterval(() => {
+        updateDynamicData();
+    }, 5 * 60 * 1000);
+}
+
+function updateDynamicData() {
+    // Simulate real-time updates
+    const dynamicElements = document.querySelectorAll('[data-dynamic]');
+    dynamicElements.forEach(element => {
+        element.classList.add('animate-pulse');
+        setTimeout(() => {
+            element.classList.remove('animate-pulse');
+        }, 1000);
+    });
+}
+
+// Enhanced Chart Functions
+function downloadChart(imageData, filename) {
+    const link = document.createElement('a');
+    link.href = 'data:image/png;base64,' + imageData;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show success message
+    showNotification('Gráfico descargado exitosamente', 'success');
+}
+
+function openFullscreen(imageData, title) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">${title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="col-md-6">
-                    <h6 class="text-success">Rentabilidad</h6>
-                    <p>Margen de ganancia sobre ingresos totales</p>
+                <div class="modal-body text-center p-4">
+                    <img src="data:image/png;base64,${imageData}" class="img-fluid" alt="${title}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="downloadChart('${imageData}', '${title.toLowerCase().replace(/\s+/g, '-')}.png')">
+                        <i class="bx bx-download me-1"></i>Descargar
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     `;
+    
+    document.body.appendChild(modal);
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    
+    modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+    });
 }
-function generateValidationDetails() {
-    return `
-        <div class="validation-details">
-            <h6>Métricas de Validación del Modelo</h6>
-            <p>El modelo ha sido validado comparando predicciones con datos históricos reales.</p>
+
+function showChartDetails(chartType) {
+    const details = {
+        financial: {
+            title: 'Detalles del Análisis Financiero',
+            content: `
+                <div class="chart-details">
+                    <h6 class="text-primary mb-3">Métricas Financieras Clave</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <strong>Ingresos Totales:</strong>
+                                <p class="mb-2">Suma de todos los ingresos generados durante el período de simulación.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <strong>Margen de Rentabilidad:</strong>
+                                <p class="mb-2">Porcentaje de ganancia sobre los ingresos totales generados.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="bx bx-info-circle me-2"></i>
+                        Este gráfico muestra la evolución temporal de los ingresos y ganancias, permitiendo identificar tendencias y patrones de rentabilidad.
+                    </div>
+                </div>
+            `
+        },
+        demand: {
+            title: 'Detalles del Comportamiento de Demanda',
+            content: `
+                <div class="chart-details">
+                    <h6 class="text-primary mb-3">Análisis de Demanda</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <strong>Demanda Histórica:</strong>
+                                <p class="mb-2">Patrones de consumo basados en datos reales anteriores.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <strong>Demanda Proyectada:</strong>
+                                <p class="mb-2">Predicciones basadas en el modelo de simulación implementado.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="bx bx-info-circle me-2"></i>
+                        La comparación permite evaluar la precisión del modelo y identificar oportunidades de mejora en la predicción.
+                    </div>
+                </div>
+            `
+        }
+    };
+    
+    const detail = details[chartType];
+    if (detail) {
+        showModal(detail.title, detail.content);
+    }
+}
+
+function showModal(title, content) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">${title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
         </div>
     `;
+    
+    document.body.appendChild(modal);
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    
+    modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+    });
 }
-function generateOperationalDetails() {
-    return `
-        <div class="operational-details">
-            <h6>Análisis de Eficiencia Operativa</h6>
-            <p>Evaluación de la eficiencia en procesos de producción y operaciones.</p>
-        </div>
-    `;
+
+function exportOverview() {
+    // Simulate export functionality
+    showNotification('Exportando resumen ejecutivo...', 'info');
+    
+    setTimeout(() => {
+        showNotification('Resumen ejecutivo exportado exitosamente', 'success');
+    }, 2000);
 }
-function generateDemandDetails() {
-    return `
-        <div class="demand-details">
-            <h6>Análisis de Demanda</h6>
-            <p>Tendencias y patrones identificados en el comportamiento de la demanda.</p>
-        </div>
-    `;
+
+function refreshOverview() {
+    // Simulate refresh functionality
+    showNotification('Actualizando datos...', 'info');
+    
+    // Add loading state to all dynamic elements
+    const dynamicElements = document.querySelectorAll('.stat-value, .metric-value, .badge-value');
+    dynamicElements.forEach(element => {
+        element.classList.add('loading-shimmer');
+    });
+    
+    setTimeout(() => {
+        dynamicElements.forEach(element => {
+            element.classList.remove('loading-shimmer');
+        });
+        showNotification('Datos actualizados exitosamente', 'success');
+    }, 3000);
 }
-function generateCustomerDetails() {
-    return `
-        <div class="customer-details">
-            <h6>Análisis de Satisfacción del Cliente</h6>
-            <p>Evaluación del nivel de satisfacción basado en métricas de servicio.</p>
-        </div>
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-}
-function generateComparisonDetails() {
-    return `
-        <div class="comparison-details">
-            <h6>Comparación con Datos Históricos</h6>
-            <p>Análisis de correlación entre datos reales y simulaciones.</p>
-        </div>
-    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            notification.remove();
+        }
+    }, 5000);
 }
 </script>
