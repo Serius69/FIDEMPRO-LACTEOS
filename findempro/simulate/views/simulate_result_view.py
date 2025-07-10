@@ -316,7 +316,42 @@ class SimulateResultView(LoginRequiredMixin, View):
                 'distribution_analysis': ks_validation_results.get('distribution_analysis', {}),
             })
 
-              
+            
+            # PASO XX: Generar los 3 gráficos adicionales solicitados
+            try:
+                logger.info("Generando gráficos adicionales personalizados...")
+                
+                # 1. Gráfico de distribución de gastos (torta)
+                grafico_gastos = chart_generator.generate_gastos_distribution_chart(all_variables_extracted)
+                
+                # 2. Gráfico de rentabilidad diaria (líneas)
+                grafico_rentabilidad = chart_generator.generate_rentabilidad_diaria_chart(all_variables_extracted)
+                
+                # 3. Gráfico de tendencia con promedio móvil (doble línea)
+                grafico_tendencia = chart_generator.generate_tendencia_promedio_movil_chart(all_variables_extracted)
+                
+                # Agregar al contexto
+                context.update({
+                    'grafico_gastos': grafico_gastos,
+                    'grafico_rentabilidad': grafico_rentabilidad, 
+                    'grafico_tendencia': grafico_tendencia,
+                    'has_custom_charts': True  # Flag para el template
+                })
+                
+                # Log de resultado
+                charts_generated = sum([1 for chart in [grafico_gastos, grafico_rentabilidad, grafico_tendencia] if chart])
+                logger.info(f"Gráficos adicionales generados exitosamente: {charts_generated}/3")
+                
+            except Exception as e:
+                logger.error(f"Error generando gráficos adicionales: {str(e)}")
+                # Valores por defecto en caso de error
+                context.update({
+                    'grafico_gastos': None,
+                    'grafico_rentabilidad': None,
+                    'grafico_tendencia': None,
+                    'has_custom_charts': False
+                })
+            
             
             # Final logging
             self._log_context_summary(context)

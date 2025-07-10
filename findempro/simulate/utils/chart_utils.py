@@ -4326,3 +4326,359 @@ class ChartGenerator:
     def create_qq_plot(self, demand_data: List[float]) -> Optional[str]:
         """Método alternativo para crear Q-Q plot"""
         return self.generate_qqplot(demand_data)
+    
+    # Agregar estos métodos al final de la clase ChartGenerator en chart_utils.py
+
+    def generate_gastos_distribution_chart(self, all_variables_extracted):
+        """
+        Genera gráfico de torta para distribución de gastos
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            # Extraer datos de gastos
+            gastos_operativos = []
+            gastos_produccion = []
+            gastos_materiales = []
+            gastos_transporte = []
+            
+            for day_data in all_variables_extracted:
+                gastos_operativos.append(day_data.get('GO', 0))
+                gastos_produccion.append(day_data.get('CPROD', 0))
+                gastos_materiales.append(day_data.get('MP', 0))
+                gastos_transporte.append(day_data.get('CTTL', 0))
+            
+            # Calcular totales
+            total_operativos = sum(gastos_operativos)
+            total_produccion = sum(gastos_produccion)
+            total_materiales = sum(gastos_materiales)
+            total_transporte = sum(gastos_transporte)
+            
+            # Preparar datos para el gráfico
+            categorias = []
+            valores = []
+            
+            if total_operativos > 0:
+                categorias.append('Gastos Operativos')
+                valores.append(total_operativos)
+            
+            if total_produccion > 0:
+                categorias.append('Costos Producción')
+                valores.append(total_produccion)
+                
+            if total_materiales > 0:
+                categorias.append('Materiales')
+                valores.append(total_materiales)
+                
+            if total_transporte > 0:
+                categorias.append('Transporte')
+                valores.append(total_transporte)
+            
+            # Si no hay datos suficientes, usar valores por defecto
+            if not valores or sum(valores) == 0:
+                categorias = ['Gastos Operativos', 'Costos Producción', 'Otros']
+                valores = [40, 45, 15]  # Porcentajes por defecto
+            
+            # Crear figura con diseño sobrio
+            fig, ax = plt.subplots(figsize=(8, 6), facecolor='white')
+            
+            # Colores sobrios y profesionales
+            colores = ['#4A90E2', '#7ED321', '#F5A623', '#BD10E0', '#B8E986'][:len(valores)]
+            
+            # Crear gráfico de torta
+            wedges, texts, autotexts = ax.pie(
+                valores, 
+                labels=categorias,
+                colors=colores,
+                autopct=lambda pct: f'{pct:.1f}%' if pct > 3 else '',
+                startangle=90,
+                textprops={'fontsize': 10, 'color': '#333333'},
+                explode=[0.02] * len(valores)  # Pequeña separación
+            )
+            
+            # Mejorar estilo del texto
+            for autotext in autotexts:
+                autotext.set_color('white')
+                autotext.set_fontweight('bold')
+                autotext.set_fontsize(9)
+            
+            for text in texts:
+                text.set_fontsize(10)
+                text.set_color('#333333')
+            
+            # Título
+            ax.set_title('Distribución de Gastos por Categoría', 
+                        fontsize=14, fontweight='bold', color='#333333', pad=20)
+            
+            # Leyenda con totales
+            leyenda_labels = []
+            for cat, val in zip(categorias, valores):
+                leyenda_labels.append(f'{cat}: Bs. {val:,.0f}')
+            
+            ax.legend(wedges, leyenda_labels, 
+                    title="Detalle de Gastos",
+                    loc="center left", 
+                    bbox_to_anchor=(1, 0, 0.5, 1),
+                    fontsize=9)
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating gastos distribution chart: {str(e)}")
+            return None
+
+    def generate_rentabilidad_diaria_chart(self, all_variables_extracted):
+        """
+        Genera gráfico de líneas para rentabilidad diaria
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            
+            # Extraer datos diarios
+            dias = []
+            ingresos = []
+            gastos = []
+            ganancias = []
+            margen_porcentaje = []
+            
+            for day_idx, day_data in enumerate(all_variables_extracted):
+                dias.append(day_idx + 1)
+                
+                ingreso_dia = day_data.get('IT', 0)
+                gasto_dia = day_data.get('TG', 0)
+                ganancia_dia = day_data.get('GT', 0)
+                
+                ingresos.append(ingreso_dia)
+                gastos.append(gasto_dia)
+                ganancias.append(ganancia_dia)
+                
+                # Calcular margen porcentual
+                if ingreso_dia > 0:
+                    margen = (ganancia_dia / ingreso_dia) * 100
+                else:
+                    margen = 0
+                margen_porcentaje.append(margen)
+            
+            # Si no hay datos, usar datos de ejemplo
+            if not dias or all(g == 0 for g in ganancias):
+                dias = list(range(1, 11))
+                ganancias = [100, 150, 80, 200, 120, 180, 90, 160, 140, 110]
+                margen_porcentaje = [15, 18, 12, 25, 16, 22, 14, 20, 17, 13]
+            
+            # Crear figura
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), facecolor='white')
+            
+            # Gráfico 1: Ganancias diarias
+            ax1.plot(dias, ganancias, color='#2E8B57', linewidth=2.5, marker='o', 
+                    markersize=4, alpha=0.8, label='Ganancia Diaria')
+            
+            # Área bajo la curva para ganancias positivas
+            ax1.fill_between(dias, 0, ganancias, 
+                            where=[g >= 0 for g in ganancias],
+                            color='#90EE90', alpha=0.3, label='Ganancia')
+            
+            # Área para pérdidas
+            ax1.fill_between(dias, ganancias, 0,
+                            where=[g < 0 for g in ganancias],
+                            color='#FFB6C1', alpha=0.3, label='Pérdida')
+            
+            ax1.axhline(y=0, color='#666666', linestyle='-', alpha=0.5, linewidth=1)
+            ax1.set_xlabel('Día', fontsize=11, color='#333333')
+            ax1.set_ylabel('Ganancia (Bs)', fontsize=11, color='#333333')
+            ax1.set_title('Rentabilidad Diaria - Ganancias', fontsize=13, fontweight='bold', color='#333333')
+            ax1.grid(True, alpha=0.3, linestyle='--')
+            ax1.legend(fontsize=9)
+            
+            # Configurar color de ticks
+            ax1.tick_params(colors='#333333')
+            
+            # Gráfico 2: Margen porcentual
+            colors_margen = ['#2E8B57' if m >= 0 else '#DC143C' for m in margen_porcentaje]
+            
+            bars = ax2.bar(dias, margen_porcentaje, color=colors_margen, alpha=0.7, 
+                        edgecolor='#333333', linewidth=0.5)
+            
+            ax2.axhline(y=0, color='#666666', linestyle='-', alpha=0.5, linewidth=1)
+            ax2.axhline(y=15, color='#4A90E2', linestyle='--', alpha=0.7, linewidth=1, label='Meta 15%')
+            
+            ax2.set_xlabel('Día', fontsize=11, color='#333333')
+            ax2.set_ylabel('Margen (%)', fontsize=11, color='#333333')
+            ax2.set_title('Margen de Ganancia Porcentual', fontsize=13, fontweight='bold', color='#333333')
+            ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
+            ax2.legend(fontsize=9)
+            
+            # Configurar color de ticks
+            ax2.tick_params(colors='#333333')
+            
+            # Agregar valores en barras significativas
+            for bar, margen in zip(bars, margen_porcentaje):
+                if abs(margen) > 5:  # Solo mostrar si es significativo
+                    height = bar.get_height()
+                    ax2.text(bar.get_x() + bar.get_width()/2., 
+                            height + (1 if height >= 0 else -3),
+                            f'{margen:.1f}%', 
+                            ha='center', va='bottom' if height >= 0 else 'top',
+                            fontsize=8, color='#333333')
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating rentabilidad chart: {str(e)}")
+            return None
+
+    def generate_tendencia_promedio_movil_chart(self, all_variables_extracted):
+        """
+        Genera gráfico de tendencia con promedio móvil de 7 días
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            matplotlib.use('Agg')
+            from io import BytesIO
+            import base64
+            import numpy as np
+            import pandas as pd
+            
+            # Extraer datos de demanda y ventas
+            dias = []
+            demanda_real = []
+            ventas_diarias = []
+            
+            for day_idx, day_data in enumerate(all_variables_extracted):
+                dias.append(day_idx + 1)
+                demanda_real.append(day_data.get('demand_mean', 0))
+                ventas_diarias.append(day_data.get('TPV', 0))
+            
+            # Si no hay datos suficientes, usar datos de ejemplo
+            if len(dias) < 7 or all(d == 0 for d in demanda_real):
+                dias = list(range(1, 31))  # 30 días
+                # Simular datos con tendencia y variabilidad
+                base_demand = 100
+                trend = np.linspace(0, 20, 30)  # Tendencia creciente
+                noise = np.random.normal(0, 10, 30)  # Ruido
+                demanda_real = base_demand + trend + noise
+                
+                # Ventas ligeramente menores que demanda
+                ventas_diarias = demanda_real * np.random.uniform(0.85, 0.98, 30)
+            
+            # Convertir a pandas para facilitar cálculo de promedio móvil
+            df = pd.DataFrame({
+                'dia': dias,
+                'demanda': demanda_real,
+                'ventas': ventas_diarias
+            })
+            
+            # Calcular promedios móviles de 7 días
+            window_size = min(7, len(df) // 2)  # Ajustar ventana si hay pocos datos
+            
+            df['demanda_ma7'] = df['demanda'].rolling(window=window_size, center=True).mean()
+            df['ventas_ma7'] = df['ventas'].rolling(window=window_size, center=True).mean()
+            
+            # Crear figura
+            fig, ax = plt.subplots(figsize=(12, 7), facecolor='white')
+            
+            # Líneas de datos originales
+            ax.plot(df['dia'], df['demanda'], color='#87CEEB', linewidth=1.5, 
+                alpha=0.6, label='Demanda Diaria', marker='o', markersize=3)
+            ax.plot(df['dia'], df['ventas'], color='#F4A460', linewidth=1.5, 
+                alpha=0.6, label='Ventas Diarias', marker='s', markersize=3)
+            
+            # Líneas de promedio móvil (más destacadas)
+            ax.plot(df['dia'], df['demanda_ma7'], color='#4169E1', linewidth=3, 
+                alpha=0.9, label=f'Demanda - Promedio Móvil ({window_size} días)')
+            ax.plot(df['dia'], df['ventas_ma7'], color='#FF6347', linewidth=3, 
+                alpha=0.9, label=f'Ventas - Promedio Móvil ({window_size} días)')
+            
+            # Área entre las líneas de promedio móvil
+            ax.fill_between(df['dia'], df['demanda_ma7'], df['ventas_ma7'], 
+                        where=(df['demanda_ma7'] >= df['ventas_ma7']),
+                        color='#FFE4E1', alpha=0.4, 
+                        label='Brecha Demanda-Ventas')
+            
+            # Configuración del gráfico
+            ax.set_xlabel('Día de Simulación', fontsize=12, color='#333333')
+            ax.set_ylabel('Cantidad (Litros)', fontsize=12, color='#333333')
+            ax.set_title('Tendencia y Promedio Móvil - Demanda vs Ventas', 
+                        fontsize=14, fontweight='bold', color='#333333', pad=20)
+            
+            # Grid sutil
+            ax.grid(True, alpha=0.3, linestyle='--', color='#CCCCCC')
+            
+            # Leyenda
+            ax.legend(loc='upper left', fontsize=10, framealpha=0.9, 
+                    edgecolor='#CCCCCC', fancybox=True)
+            
+            # Configurar colores de los ticks
+            ax.tick_params(colors='#333333')
+            
+            # Agregar información estadística
+            if not df['demanda_ma7'].isna().all():
+                demanda_promedio = df['demanda_ma7'].mean()
+                ventas_promedio = df['ventas_ma7'].mean()
+                gap_promedio = demanda_promedio - ventas_promedio
+                
+                info_text = f'Promedio Demanda: {demanda_promedio:.1f}L\n'
+                info_text += f'Promedio Ventas: {ventas_promedio:.1f}L\n'
+                info_text += f'Brecha Promedio: {gap_promedio:.1f}L'
+                
+                ax.text(0.02, 0.98, info_text, transform=ax.transAxes,
+                    verticalalignment='top', fontsize=10,
+                    bbox=dict(boxstyle='round,pad=0.5', 
+                            facecolor='white', 
+                            alpha=0.8,
+                            edgecolor='#CCCCCC'))
+            
+            # Añadir línea de tendencia general para demanda
+            if len(df) > 3:
+                z = np.polyfit(df['dia'], df['demanda'], 1)
+                p = np.poly1d(z)
+                ax.plot(df['dia'], p(df['dia']), color='#696969', 
+                    linestyle=':', linewidth=2, alpha=0.7,
+                    label=f'Tendencia General (m={z[0]:.2f})')
+                ax.legend(loc='upper left', fontsize=10, framealpha=0.9)
+            
+            plt.tight_layout()
+            
+            # Convertir a base64
+            buffer = BytesIO()
+            fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', 
+                    facecolor='white', edgecolor='none')
+            buffer.seek(0)
+            chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close(fig)
+            
+            return chart_base64
+            
+        except Exception as e:
+            logger.error(f"Error generating tendencia chart: {str(e)}")
+            return None

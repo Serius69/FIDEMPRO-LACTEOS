@@ -1,3 +1,760 @@
+<style>
+
+    /* ==========================================
+  ESTILOS PARA VALIDACIÓN KOLMOGOROV-SMIRNOV
+  ========================================== */
+
+/* Variables CSS */
+:root {
+   --primary-color: #2c3e50;
+   --secondary-color: #34495e;
+   --success-color: #27ae60;
+   --warning-color: #e67e22;
+   --danger-color: #c0392b;
+   --info-color: #2980b9;
+   --light-bg: #f8f9fa;
+   --white-bg: #ffffff;
+   --text-dark: #2c3e50;
+   --text-muted: #7f8c8d;
+   --border-light: #ecf0f1;
+   --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+   --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
+   --shadow-heavy: 0 8px 16px rgba(0, 0, 0, 0.2);
+   --border-radius: 8px;
+   --transition-base: all 0.3s ease;
+}
+
+/* Estilos base del tab */
+.tab-pane {
+   padding: 20px;
+   background-color: var(--light-bg);
+   min-height: 100vh;
+}
+
+/* Alert personalizada con colores suaves */
+.alert {
+   border: none;
+   border-radius: var(--border-radius);
+   box-shadow: var(--shadow-light);
+   color: var(--text-dark);
+}
+
+.alert-success {
+   background-color: #d5f4e6;
+   border-left: 4px solid var(--success-color);
+}
+
+.alert-warning {
+   background-color: #fef5e7;
+   border-left: 4px solid var(--warning-color);
+}
+
+.alert-danger {
+   background-color: #fadbd8;
+   border-left: 4px solid var(--danger-color);
+}
+
+.alert-info {
+   background-color: #e8f4f8;
+   border-left: 4px solid var(--info-color);
+}
+
+/* Header del análisis KS */
+.alert-heading {
+   color: var(--text-dark);
+   font-weight: 600;
+   font-size: 1.25rem;
+}
+
+/* Explanation box */
+.explanation-box {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   padding: 16px;
+   color: var(--text-dark);
+}
+
+.explanation-box h6 {
+   color: var(--primary-color);
+   font-weight: 600;
+   margin-bottom: 8px;
+}
+
+.explanation-box p, .explanation-box li {
+   color: var(--text-dark);
+   font-size: 0.9rem;
+   line-height: 1.5;
+}
+
+/* Metric cards */
+.metric-card {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   transition: var(--transition-base);
+   box-shadow: var(--shadow-light);
+}
+
+.metric-card:hover {
+   box-shadow: var(--shadow-medium);
+   transform: translateY(-2px);
+}
+
+.metric-value {
+   color: var(--primary-color);
+   font-weight: 700;
+   font-size: 1.5rem;
+}
+
+/* Chart containers */
+.chart-container {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   overflow: hidden;
+   box-shadow: var(--shadow-light);
+   margin-bottom: 24px;
+}
+
+.enhanced-chart {
+   transition: var(--transition-base);
+}
+
+.enhanced-chart:hover {
+   box-shadow: var(--shadow-medium);
+}
+
+.chart-header {
+   background-color: var(--light-bg);
+   padding: 16px;
+   border-bottom: 1px solid var(--border-light);
+}
+
+.chart-title {
+   color: var(--primary-color);
+   font-weight: 600;
+   font-size: 1.1rem;
+}
+
+.chart-content {
+   padding: 16px;
+   text-align: center;
+}
+
+.chart-image {
+   max-width: 100%;
+   height: auto;
+   border-radius: 4px;
+}
+
+.chart-footer {
+   padding: 12px 16px;
+   background-color: var(--light-bg);
+   border-top: 1px solid var(--border-light);
+   font-size: 0.85rem;
+   color: var(--text-muted);
+}
+
+.chart-controls {
+   display: flex;
+   gap: 8px;
+}
+
+.chart-control-btn {
+   width: 32px;
+   height: 32px;
+   border-radius: 50%;
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   cursor: pointer;
+   transition: var(--transition-base);
+   color: var(--text-dark);
+}
+
+.chart-control-btn:hover {
+   background-color: var(--light-bg);
+   color: var(--primary-color);
+}
+
+/* Cards mejoradas */
+.enhanced-card {
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   box-shadow: var(--shadow-light);
+   background-color: var(--white-bg);
+}
+
+.card-header {
+   background-color: var(--light-bg);
+   border-bottom: 1px solid var(--border-light);
+   padding: 16px;
+}
+
+.card-title {
+   color: var(--primary-color);
+   font-weight: 600;
+   margin: 0;
+}
+
+/* Certification section */
+.certification-section {
+   padding: 16px;
+}
+
+.certification-badge .badge {
+   font-size: 1rem;
+   padding: 12px 16px;
+   border-radius: var(--border-radius);
+}
+
+.certification-explanation h6 {
+   color: var(--text-dark);
+   font-weight: 600;
+   margin-bottom: 4px;
+}
+
+.certification-explanation small {
+   color: var(--text-muted);
+}
+
+/* Reliability metrics */
+.reliability-metrics-enhanced {
+   margin-top: 16px;
+}
+
+.metric-row {
+   padding: 12px 0;
+   border-bottom: 1px solid var(--border-light);
+}
+
+.metric-row:last-child {
+   border-bottom: none;
+}
+
+.metric-label {
+   color: var(--text-dark);
+   font-weight: 500;
+}
+
+.metric-visual {
+   display: flex;
+   align-items: center;
+}
+
+/* Score circle */
+.score-circle {
+   width: 60px;
+   height: 60px;
+   border-radius: 50%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   font-weight: 700;
+   color: white;
+   position: relative;
+}
+
+.score-excellent {
+   background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
+}
+
+.score-good {
+   background: linear-gradient(135deg, var(--warning-color) 0%, #f39c12 100%);
+}
+
+.score-poor {
+   background: linear-gradient(135deg, var(--danger-color) 0%, #e74c3c 100%);
+}
+
+.score-value {
+   font-size: 1.2rem;
+   line-height: 1;
+}
+
+/* Progress bars */
+.progress {
+   height: 8px;
+   background-color: var(--border-light);
+   border-radius: 4px;
+   overflow: hidden;
+}
+
+.progress-bar {
+   transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
+   position: relative;
+}
+
+/* Recommendation section */
+.recommendation-section {
+   padding: 16px;
+}
+
+.recommendation-box {
+   background-color: var(--light-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   padding: 16px;
+   color: var(--text-dark);
+}
+
+/* Tests summary */
+.summary-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+   gap: 16px;
+   margin-top: 16px;
+}
+
+.summary-item {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding: 12px;
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+}
+
+.summary-icon {
+   font-size: 1.5rem;
+}
+
+.summary-value {
+   font-size: 1.25rem;
+   font-weight: 700;
+   color: var(--primary-color);
+}
+
+.summary-label {
+   font-size: 0.8rem;
+   color: var(--text-muted);
+}
+
+/* Table enhancements */
+.enhanced-table {
+   background-color: var(--white-bg);
+   border: none;
+}
+
+.enhanced-table thead th {
+   background-color: var(--primary-color);
+   color: white;
+   border: none;
+   font-weight: 600;
+   padding: 16px 12px;
+}
+
+.enhanced-row {
+   transition: var(--transition-base);
+   cursor: pointer;
+   border-left: 4px solid transparent;
+}
+
+.enhanced-row:hover {
+   background-color: rgba(44, 62, 80, 0.05);
+   border-left-color: var(--primary-color);
+}
+
+.enhanced-row[data-importance="high"] {
+   border-left-color: var(--info-color);
+   background-color: rgba(41, 128, 185, 0.03);
+}
+
+.enhanced-row[data-importance="medium"] {
+   border-left-color: var(--text-muted);
+}
+
+/* Variable info */
+.variable-info strong {
+   color: var(--primary-color);
+   font-weight: 600;
+}
+
+.variable-info small {
+   color: var(--text-muted);
+}
+
+.variable-importance .badge {
+   font-size: 0.7rem;
+   padding: 4px 8px;
+}
+
+/* P-value display */
+.p-value-display .fw-bold {
+   font-size: 1.1rem;
+}
+
+.statistic-value .fw-bold {
+   color: var(--primary-color);
+}
+
+/* Interpretation text */
+.interpretation-text {
+   font-size: 0.85rem;
+   line-height: 1.4;
+}
+
+/* Confidence intervals */
+.confidence-interval-enhanced {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   transition: var(--transition-base);
+   cursor: pointer;
+}
+
+.confidence-interval-enhanced:hover {
+   box-shadow: var(--shadow-medium);
+   transform: translateY(-2px);
+}
+
+.interval-header {
+   padding-bottom: 12px;
+   border-bottom: 1px solid var(--border-light);
+}
+
+.confidence-info h6 {
+   color: var(--primary-color);
+   font-weight: 600;
+}
+
+.margin-error .badge {
+   font-size: 0.9rem;
+   padding: 6px 12px;
+}
+
+/* Range visualization */
+.range-bar {
+   background: linear-gradient(90deg, #e8f4f8 0%, var(--info-color) 50%, #e8f4f8 100%);
+   border-radius: 20px;
+   position: relative;
+   overflow: hidden;
+}
+
+.range-labels {
+   color: var(--text-dark);
+   font-weight: 600;
+}
+
+.range-labels .text-white {
+   color: white !important;
+}
+
+/* Scenario boxes */
+.scenario-box {
+   text-align: center;
+   transition: var(--transition-base);
+}
+
+.scenario-box:hover {
+   transform: scale(1.05);
+}
+
+.scenario-value {
+   font-size: 1.1rem;
+   font-weight: 700;
+}
+
+/* Variable intervals */
+.variable-interval-enhanced {
+   background-color: var(--light-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+}
+
+.variable-header {
+   margin-bottom: 8px;
+}
+
+.variable-name strong {
+   color: var(--primary-color);
+   font-weight: 600;
+}
+
+.variable-value {
+   color: var(--primary-color);
+}
+
+.mini-range-bar .progress {
+   height: 6px;
+}
+
+.variable-stats {
+   margin-top: 8px;
+}
+
+/* Empty state */
+.enhanced-empty-state {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   text-align: center;
+   padding: 40px;
+}
+
+.empty-state-icon {
+   color: var(--text-muted);
+   margin-bottom: 20px;
+}
+
+.requirements-checklist {
+   margin-top: 24px;
+}
+
+.requirement-item {
+   display: flex;
+   align-items: center;
+   text-align: left;
+   justify-content: flex-start;
+}
+
+.guide-item {
+   display: flex;
+   align-items: center;
+   margin-bottom: 8px;
+}
+
+.next-steps {
+   margin-top: 24px;
+   text-align: left;
+}
+
+.next-steps ol {
+   max-width: 600px;
+   margin: 0 auto;
+}
+
+/* Interpretation guide */
+.interpretation-guide {
+   background-color: var(--light-bg);
+   border-radius: var(--border-radius);
+   padding: 12px;
+}
+
+/* Badges customizados */
+.badge {
+   font-weight: 500;
+   padding: 6px 12px;
+   border-radius: 4px;
+}
+
+.bg-primary {
+   background-color: var(--primary-color) !important;
+}
+
+.bg-success {
+   background-color: var(--success-color) !important;
+}
+
+.bg-warning {
+   background-color: var(--warning-color) !important;
+}
+
+.bg-danger {
+   background-color: var(--danger-color) !important;
+}
+
+.bg-info {
+   background-color: var(--info-color) !important;
+}
+
+.bg-secondary {
+   background-color: var(--secondary-color) !important;
+}
+
+/* Text colors */
+.text-primary {
+   color: var(--primary-color) !important;
+}
+
+.text-success {
+   color: var(--success-color) !important;
+}
+
+.text-warning {
+   color: var(--warning-color) !important;
+}
+
+.text-danger {
+   color: var(--danger-color) !important;
+}
+
+.text-info {
+   color: var(--info-color) !important;
+}
+
+.text-muted {
+   color: var(--text-muted) !important;
+}
+
+/* Tooltips personalizados */
+.enhanced-tooltip {
+   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.tooltip-header h6 {
+   color: white;
+   font-weight: 600;
+   margin: 0;
+}
+
+.tooltip-content p {
+   color: rgba(255, 255, 255, 0.9);
+   margin: 0;
+}
+
+/* Floating help button */
+.floating-help-btn {
+   box-shadow: var(--shadow-heavy);
+   transition: var(--transition-base);
+}
+
+/* Buttons */
+.btn {
+   border-radius: var(--border-radius);
+   font-weight: 500;
+   transition: var(--transition-base);
+   border: none;
+}
+
+.btn-outline-info {
+   color: var(--info-color);
+   border: 1px solid var(--info-color);
+   background-color: transparent;
+}
+
+.btn-outline-info:hover {
+   background-color: var(--info-color);
+   color: white;
+}
+
+.btn-outline-primary {
+   color: var(--primary-color);
+   border: 1px solid var(--primary-color);
+   background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+   background-color: var(--primary-color);
+   color: white;
+}
+
+.btn-primary {
+   background-color: var(--primary-color);
+   color: white;
+}
+
+.btn-primary:hover {
+   background-color: var(--secondary-color);
+}
+
+.btn-secondary {
+   background-color: var(--secondary-color);
+   color: white;
+}
+
+.btn-success {
+   background-color: var(--success-color);
+   color: white;
+}
+
+/* Small text improvements */
+.small, small {
+   color: var(--text-muted);
+   font-size: 0.85rem;
+}
+
+/* Collapse improvements */
+.collapse {
+   transition: height 0.35s ease;
+}
+
+/* Focus states for accessibility */
+.enhanced-row:focus,
+.confidence-interval-enhanced:focus,
+.metric-card:focus {
+   outline: 2px solid var(--info-color);
+   outline-offset: 2px;
+}
+
+/* Notification styles */
+.notification-enhanced {
+   border-radius: var(--border-radius);
+   box-shadow: var(--shadow-heavy);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+   .tab-pane {
+       padding: 16px;
+   }
+   
+   .chart-container {
+       margin-bottom: 16px;
+   }
+   
+   .chart-header {
+       padding: 12px;
+   }
+   
+   .chart-content {
+       padding: 12px;
+   }
+   
+   .metric-card {
+       margin-bottom: 12px;
+   }
+   
+   .summary-grid {
+       grid-template-columns: 1fr;
+       gap: 12px;
+   }
+   
+   .score-circle {
+       width: 50px;
+       height: 50px;
+   }
+   
+   .score-value {
+       font-size: 1rem;
+   }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+   :root {
+       --primary-color: #000000;
+       --text-dark: #000000;
+       --text-muted: #333333;
+       --border-light: #666666;
+   }
+   
+   .alert {
+       border: 2px solid var(--text-dark);
+   }
+   
+   .enhanced-row:hover {
+       background-color: #f0f0f0;
+       border-left-color: #000000;
+   }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+   * {
+       animation-duration: 0.01ms !important;
+       animation-iteration-count: 1 !important;
+       transition-duration: 0.01ms !important;
+   }
+}
+
+</style>
+
+
 <!-- Kolmogorov-Smirnov Validation Tab - Improved Version -->
 <div class="tab-pane fade" id="ks-validation" role="tabpanel">
     <!-- Header del análisis KS con explicación expandida -->

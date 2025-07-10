@@ -1,3 +1,540 @@
+
+
+<style>
+
+    /* ==========================================
+  ANÁLISIS FINANCIERO - ESTILOS CSS
+  ========================================== */
+
+/* Variables CSS para consistencia */
+:root {
+   --primary-color: #2563eb;
+   --success-color: #059669;
+   --warning-color: #d97706;
+   --danger-color: #dc2626;
+   --info-color: #0891b2;
+   --light-bg: #f8fafc;
+   --white: #ffffff;
+   --gray-50: #f9fafb;
+   --gray-100: #f3f4f6;
+   --gray-200: #e5e7eb;
+   --gray-300: #d1d5db;
+   --gray-400: #9ca3af;
+   --gray-500: #6b7280;
+   --gray-600: #4b5563;
+   --gray-700: #374151;
+   --gray-800: #1f2937;
+   --gray-900: #111827;
+   --text-primary: #111827;
+   --text-secondary: #4b5563;
+   --text-muted: #6b7280;
+   --border-color: #e5e7eb;
+   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+   --radius-sm: 0.375rem;
+   --radius-md: 0.5rem;
+   --radius-lg: 0.75rem;
+}
+
+/* Estilo base del tab financiero */
+.tab-pane#financial {
+   background-color: var(--gray-50);
+   min-height: 100vh;
+   padding: 1.5rem 0;
+}
+
+/* Header principal mejorado */
+.bg-gradient-primary {
+   background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+   border-radius: var(--radius-lg);
+   color: var(--white) !important;
+}
+
+.bg-gradient-primary .card-body {
+   padding: 2rem;
+}
+
+.bg-gradient-primary h4 {
+   color: var(--white);
+   font-weight: 700;
+   margin-bottom: 0.5rem;
+}
+
+.bg-gradient-primary p {
+   color: rgba(255, 255, 255, 0.9);
+   font-size: 0.95rem;
+}
+
+.btn-outline-light {
+   border-color: rgba(255, 255, 255, 0.3);
+   color: var(--white);
+   background-color: transparent;
+   transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+   background-color: rgba(255, 255, 255, 0.1);
+   border-color: rgba(255, 255, 255, 0.5);
+   color: var(--white);
+}
+
+/* Indicadores rápidos en header */
+.text-white-50 {
+   color: rgba(255, 255, 255, 0.7) !important;
+   font-size: 0.85rem;
+   font-weight: 500;
+}
+
+/* Tarjetas de métricas financieras */
+.financial-metric-card {
+   transition: all 0.3s ease;
+   border: 1px solid var(--border-color);
+   background-color: var(--white);
+   cursor: pointer;
+}
+
+.financial-metric-card:hover {
+   transform: translateY(-2px);
+   box-shadow: var(--shadow-lg);
+   border-color: var(--primary-color);
+}
+
+.financial-metric-card.border-primary {
+   border-color: var(--primary-color) !important;
+   box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+}
+
+/* Íconos en círculo */
+.icon-circle {
+   width: 2.5rem;
+   height: 2.5rem;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-shrink: 0;
+}
+
+.icon-circle i {
+   font-size: 1.25rem;
+}
+
+/* Valores numéricos principales */
+.financial-metric-card h3 {
+   font-size: 1.75rem;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin-bottom: 0.25rem;
+}
+
+/* Barras de progreso mejoradas */
+.progress {
+   height: 0.5rem;
+   background-color: var(--gray-200);
+   border-radius: var(--radius-sm);
+   overflow: hidden;
+}
+
+.progress-sm {
+   height: 0.375rem;
+}
+
+.progress-bar {
+   transition: width 0.6s ease;
+   border-radius: var(--radius-sm);
+}
+
+/* Filtros y controles */
+.form-select-sm,
+.form-control-sm {
+   font-size: 0.875rem;
+   padding: 0.375rem 0.75rem;
+   border-color: var(--border-color);
+   background-color: var(--white);
+   color: var(--text-primary);
+}
+
+.form-select-sm:focus,
+.form-control-sm:focus {
+   border-color: var(--primary-color);
+   box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+}
+
+.form-label {
+   color: var(--text-secondary);
+   font-weight: 500;
+   margin-bottom: 0.25rem;
+}
+
+/* Botones de vista */
+.btn-group .btn-outline-primary {
+   border-color: var(--border-color);
+   color: var(--text-secondary);
+   background-color: var(--white);
+}
+
+.btn-group .btn-outline-primary:hover,
+.btn-group .btn-outline-primary.active {
+   background-color: var(--primary-color);
+   border-color: var(--primary-color);
+   color: var(--white);
+}
+
+/* Tarjetas de gráficos */
+.card {
+   border: 1px solid var(--border-color);
+   border-radius: var(--radius-lg);
+   background-color: var(--white);
+   box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+   background-color: var(--white);
+   border-bottom: 1px solid var(--border-color);
+   padding: 1.5rem 1.5rem 1rem;
+}
+
+.card-header h5 {
+   color: var(--text-primary);
+   font-weight: 700;
+   margin-bottom: 0.25rem;
+}
+
+.card-header p {
+   color: var(--text-muted);
+   font-size: 0.875rem;
+   margin: 0;
+}
+
+.card-body {
+   padding: 1.5rem;
+}
+
+/* Controles de gráfico */
+.chart-controls .btn {
+   padding: 0.375rem 0.75rem;
+   font-size: 0.875rem;
+   border-color: var(--border-color);
+   color: var(--text-secondary);
+}
+
+.chart-controls .btn:hover {
+   background-color: var(--gray-100);
+   border-color: var(--gray-300);
+}
+
+/* Contenedores de gráficos */
+.chart-container {
+   position: relative;
+   background-color: var(--white);
+   border-radius: var(--radius-md);
+   padding: 1rem;
+}
+
+.chart-image {
+   border-radius: var(--radius-md);
+   background-color: var(--gray-50);
+}
+
+.chart-mini-container {
+   background-color: var(--gray-50);
+   border-radius: var(--radius-md);
+   padding: 0.5rem;
+   margin-bottom: 0.75rem;
+}
+
+.chart-mini-container img {
+   border-radius: var(--radius-sm);
+}
+
+/* Variables endógenas */
+.card.border {
+   border-color: var(--border-color) !important;
+   background-color: var(--white);
+}
+
+.card.border h6 {
+   color: var(--text-primary);
+   font-weight: 600;
+   font-size: 0.875rem;
+}
+
+/* Alertas y recomendaciones */
+.alert {
+   border-radius: var(--radius-md);
+   border: none;
+   padding: 1rem 1.25rem;
+   margin-bottom: 1rem;
+}
+
+.alert-danger {
+   background-color: #fef2f2;
+   color: #991b1b;
+}
+
+.alert-warning {
+   background-color: #fffbeb;
+   color: #92400e;
+}
+
+.alert-info {
+   background-color: #eff6ff;
+   color: #1e40af;
+}
+
+.alert-success {
+   background-color: #f0fdf4;
+   color: #166534;
+}
+
+.alert h6 {
+   color: inherit;
+   font-weight: 600;
+   margin-bottom: 0.5rem;
+}
+
+.alert p {
+   color: inherit;
+   margin-bottom: 0.75rem;
+   line-height: 1.5;
+}
+
+/* Badges */
+.badge {
+   font-weight: 500;
+   font-size: 0.75rem;
+   padding: 0.375rem 0.75rem;
+   border-radius: var(--radius-sm);
+}
+
+.bg-success {
+   background-color: var(--success-color) !important;
+}
+
+.bg-danger {
+   background-color: var(--danger-color) !important;
+}
+
+.bg-warning {
+   background-color: var(--warning-color) !important;
+}
+
+.bg-info {
+   background-color: var(--info-color) !important;
+}
+
+.bg-primary {
+   background-color: var(--primary-color) !important;
+}
+
+/* Estadísticas adicionales */
+.bg-light {
+   background-color: var(--gray-100) !important;
+}
+
+.text-center p-3 {
+   padding: 1rem;
+}
+
+.text-center h6 {
+   color: var(--text-muted);
+   font-size: 0.75rem;
+   font-weight: 500;
+   text-transform: uppercase;
+   letter-spacing: 0.025em;
+}
+
+.text-center h4 {
+   color: var(--text-primary);
+   font-weight: 700;
+   font-size: 1.5rem;
+   margin-bottom: 0.25rem;
+}
+
+/* Comparación de datos */
+.text-success {
+   color: var(--success-color) !important;
+}
+
+.text-danger {
+   color: var(--danger-color) !important;
+}
+
+.text-info {
+   color: var(--info-color) !important;
+}
+
+.text-primary {
+   color: var(--primary-color) !important;
+}
+
+.text-muted {
+   color: var(--text-muted) !important;
+}
+
+.text-secondary {
+   color: var(--text-secondary) !important;
+}
+
+/* Resumen ejecutivo */
+.bg-light .card-body {
+   background-color: var(--gray-50);
+}
+
+.summary-content ul {
+   padding-left: 0;
+}
+
+.summary-content li {
+   display: flex;
+   align-items: center;
+   padding: 0.25rem 0;
+   color: var(--text-primary);
+}
+
+.summary-content li i {
+   margin-right: 0.5rem;
+   font-size: 1rem;
+}
+
+.summary-metrics {
+   background-color: var(--white);
+   border: 1px solid var(--border-color);
+   border-radius: var(--radius-md);
+   padding: 1.25rem;
+}
+
+.summary-metrics h6 {
+   color: var(--text-primary);
+   font-weight: 600;
+   margin-bottom: 1rem;
+}
+
+.summary-metrics .d-flex {
+   margin-bottom: 0.75rem;
+}
+
+.summary-metrics span {
+   font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+   .tab-pane#financial {
+       padding: 1rem 0;
+   }
+   
+   .bg-gradient-primary .card-body {
+       padding: 1.5rem;
+   }
+   
+   .financial-metric-card h3 {
+       font-size: 1.5rem;
+   }
+   
+   .card-header,
+   .card-body {
+       padding: 1rem;
+   }
+   
+   .chart-container {
+       padding: 0.75rem;
+   }
+}
+
+/* Animaciones suaves */
+.financial-metric-card,
+.card,
+.btn,
+.alert {
+   transition: all 0.3s ease;
+}
+
+/* Estados hover mejorados */
+.btn:hover {
+   transform: translateY(-1px);
+}
+
+.card:hover {
+   box-shadow: var(--shadow-md);
+}
+
+/* Fuentes y tipografía */
+body, .card, .alert, .btn, .form-control, .form-select {
+   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+   color: var(--text-primary);
+   font-weight: 600;
+}
+
+/* Asegurar contraste en todos los textos */
+p, span, div, li, td, th, label {
+   color: var(--text-primary);
+}
+
+small, .small {
+   color: var(--text-secondary);
+}
+
+.text-muted {
+   color: var(--text-muted) !important;
+}
+
+/* Modal para pantalla completa */
+.modal-xl .modal-dialog {
+   max-width: 95vw;
+}
+
+.modal-content {
+   border: none;
+   border-radius: var(--radius-lg);
+   box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+   background-color: var(--gray-50);
+   border-bottom: 1px solid var(--border-color);
+   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-title {
+   color: var(--text-primary);
+   font-weight: 600;
+}
+
+.modal-body {
+   background-color: var(--white);
+   padding: 2rem;
+}
+
+/* Notificaciones */
+.alert.position-fixed {
+   z-index: 9999;
+   min-width: 300px;
+   max-width: 400px;
+   box-shadow: var(--shadow-lg);
+}
+
+/* Estados de loading y interactividad */
+.loading {
+   opacity: 0.6;
+   pointer-events: none;
+}
+
+.clickable {
+   cursor: pointer;
+}
+
+.clickable:hover {
+   opacity: 0.8;
+}
+
+</style>
+
+
 <div class="tab-pane fade" id="financial" role="tabpanel">
     <!-- Header con resumen financiero mejorado -->
     <div class="row mb-4">
@@ -214,63 +751,6 @@
         </div>
     </div>
 
-    <!-- Filtros y controles -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-3">
-                    <div class="row g-3 align-items-center">
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted mb-1">Período de Análisis</label>
-                            <select class="form-select form-select-sm" id="financialPeriodFilter">
-                                <option value="all">Todo el período</option>
-                                <option value="week1">Primera semana</option>
-                                <option value="week2">Segunda semana</option>
-                                <option value="week3">Tercera semana</option>
-                                <option value="week4">Cuarta semana</option>
-                                <option value="month">Último mes</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted mb-1">Métrica Destacada</label>
-                            <select class="form-select form-select-sm" id="financialMetricFilter">
-                                <option value="all">Todas las métricas</option>
-                                <option value="revenue">Ingresos</option>
-                                <option value="expenses">Gastos</option>
-                                <option value="profit">Ganancia</option>
-                                <option value="margin">Margen</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted mb-1">Vista</label>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="viewMode" id="daily" checked>
-                                <label class="btn btn-outline-primary btn-sm" for="daily">Diario</label>
-                                <input type="radio" class="btn-check" name="viewMode" id="weekly">
-                                <label class="btn btn-outline-primary btn-sm" for="weekly">Semanal</label>
-                                <input type="radio" class="btn-check" name="viewMode" id="monthly">
-                                <label class="btn btn-outline-primary btn-sm" for="monthly">Mensual</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body py-3 d-flex align-items-center">
-                    <div class="me-3">
-                        <i class="bx bx-info-circle text-info fs-4"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-1">Punto de Equilibrio</h6>
-                        <span class="fw-bold" id="breakEvenValue">1,250 unidades</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Gráficos principales mejorados -->
     <div class="row mb-4">
         <!-- Evolución financiera -->
@@ -312,7 +792,7 @@
                 </div>
             </div>
         </div>
-
+        {% if has_custom_charts %}
         <!-- Distribución de gastos -->
         <div class="col-lg-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
@@ -326,8 +806,8 @@
                 <div class="card-body">
                     <div class="chart-container position-relative" style="height: 250px;">
                         <canvas id="costsBreakdownChart"></canvas>
-                        {% if image_data_gastos %}
-                        <img src="data:image/png;base64,{{ image_data_gastos }}" 
+                        {% if grafico_gastos %}
+                        <img src="data:image/png;base64,{{ grafico_gastos }}" 
                             class="chart-image position-absolute top-0 start-0 w-100 h-100" 
                             alt="Distribución de Gastos"
                             style="object-fit: contain; z-index: -1;"
@@ -337,8 +817,9 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
-
+    {% if has_custom_charts %}
     <!-- Gráficos secundarios -->
     <div class="row mb-4">
         <!-- Rentabilidad diaria -->
@@ -352,8 +833,15 @@
                     <p class="text-muted small mb-0">Ganancia por día de operación</p>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" style="height: 250px;">
-                        <canvas id="profitabilityChart"></canvas>
+                    <div class="chart-container position-relative" style="height: 250px;">
+                        <canvas id="costsBreakdownChart"></canvas>
+                        {% if grafico_gastos %}
+                        <img src="data:image/png;base64,{{ grafico_rentabilidad  }}" 
+                            class="chart-image position-absolute top-0 start-0 w-100 h-100" 
+                            alt="Rentabilidad Diaria"
+                            style="object-fit: contain; z-index: -1;"
+                            loading="lazy">
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -370,13 +858,21 @@
                     <p class="text-muted small mb-0">Suavizado de fluctuaciones</p>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" style="height: 250px;">
-                        <canvas id="financialTrendsChart"></canvas>
+                    <div class="chart-container position-relative" style="height: 250px;">
+                        <canvas id="costsBreakdownChart"></canvas>
+                        {% if grafico_gastos %}
+                        <img src="data:image/png;base64,{{ grafico_tendencia }}" 
+                            class="chart-image position-absolute top-0 start-0 w-100 h-100" 
+                            alt="Tendencia y Promedio Móvil"
+                            style="object-fit: contain; z-index: -1;"
+                            loading="lazy">
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Variables financieras endógenas mejoradas -->
     {% if endogenous_charts %}
@@ -1834,3 +2330,4 @@ window.filterFinancialDataByPeriod = filterFinancialDataByPeriod;
 window.highlightFinancialMetric = highlightFinancialMetric;
 window.downloadChart = downloadChart;
 window.openFullscreen = openFullscreen;
+</script>
