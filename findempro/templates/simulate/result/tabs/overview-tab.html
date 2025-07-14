@@ -1460,8 +1460,8 @@
                                 <ul class="insights-list">
                                     <li><strong>Demanda promedio histórica:</strong> {{ demand_stats.historical.mean|floatformat:1 }} L/día</li>
                                     <li><strong>Proyección simulada:</strong> {{ demand_stats.simulated.mean|floatformat:1 }} L/día</li>
-                                    {% if demand_stats.comparison.correlation %}
-                                    <li><strong>Correlación modelo:</strong> {{ demand_stats.comparison.correlation|floatformat:3 }} (Alta precisión)</li>
+                                    {% if realistic_comparison.correlatio %}
+                                    <li><strong>Correlación modelo:</strong> {{ realistic_comparison.correlatio|floatformat:3 }} (Alta precisión)</li>
                                     {% endif %}
                                     {% if demand_stats.comparison.mean_diff_pct %}
                                     <li><strong>Variación esperada:</strong> {{ demand_stats.comparison.mean_diff_pct|floatformat:1 }}% vs histórico</li>
@@ -1603,18 +1603,18 @@
 
                 <div class="statistics-grid">
                     <div class="stat-card">
-                        <div class="stat-icon {% if demand_stats.comparison.correlation > 0.8 %}success{% elif demand_stats.comparison.correlation > 0.6 %}warning{% else %}danger{% endif %}">
+                        <div class="stat-icon {% if realistic_comparison.correlatio > 0.8 %}success{% elif realistic_comparison.correlatio > 0.6 %}warning{% else %}danger{% endif %}">
                             <i class="bx bx-trending-up"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-value">{{ demand_stats.comparison.correlation|floatformat:3 }}</div>
+                            <div class="stat-value">{{ realistic_comparison.correlatio|floatformat:3 }}</div>
                             <div class="stat-label">Correlación</div>
                             <div class="stat-description">Histórico vs Simulado</div>
                         </div>
-                        <div class="stat-indicator {% if demand_stats.comparison.correlation > 0.8 %}success{% elif demand_stats.comparison.correlation > 0.6 %}warning{% else %}danger{% endif %}">
-                            {% if demand_stats.comparison.correlation > 0.8 %}
+                        <div class="stat-indicator {% if realistic_comparison.correlatio > 0.8 %}success{% elif realistic_comparison.correlatio > 0.6 %}warning{% else %}danger{% endif %}">
+                            {% if realistic_comparison.correlatio > 0.8 %}
                                 <i class="bx bx-check-circle"></i>
-                            {% elif demand_stats.comparison.correlation > 0.6 %}
+                            {% elif realistic_comparison.correlatio > 0.6 %}
                                 <i class="bx bx-error-circle"></i>
                             {% else %}
                                 <i class="bx bx-x-circle"></i>
@@ -1622,9 +1622,9 @@
                         </div>
                         <div class="stat-explanation">
                             <small class="text-muted">
-                                {% if demand_stats.comparison.correlation > 0.8 %}
+                                {% if realistic_comparison.correlatio > 0.8 %}
                                     Excelente correlación. El modelo predice con alta precisión los patrones de demanda.
-                                {% elif demand_stats.comparison.correlation > 0.6 %}
+                                {% elif realistic_comparison.correlatio > 0.6 %}
                                     Correlación moderada. El modelo captura las tendencias principales con algunas variaciones.
                                 {% else %}
                                     Correlación baja. Se recomienda revisar y ajustar los parámetros del modelo.
@@ -1634,18 +1634,18 @@
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-icon {% if demand_stats.comparison.mape < 10 %}success{% elif demand_stats.comparison.mape < 20 %}warning{% else %}danger{% endif %}">
+                        <div class="stat-icon {% if performance_metrics.mape < 10 %}success{% elif performance_metrics.mape < 20 %}warning{% else %}danger{% endif %}">
                             <i class="bx bx-target-lock"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-value">{{ demand_stats.comparison.mape|floatformat:2 }}%</div>
+                            <div class="stat-value">{{ performance_metrics.mape|floatformat:2 }}%</div>
                             <div class="stat-label">MAPE</div>
                             <div class="stat-description">Error Absoluto Promedio</div>
                         </div>
-                        <div class="stat-indicator {% if demand_stats.comparison.mape < 10 %}success{% elif demand_stats.comparison.mape < 20 %}warning{% else %}danger{% endif %}">
-                            {% if demand_stats.comparison.mape < 10 %}
+                        <div class="stat-indicator {% if performance_metrics.mape < 10 %}success{% elif performance_metrics.mape < 20 %}warning{% else %}danger{% endif %}">
+                            {% if performance_metrics.mape < 10 %}
                                 <i class="bx bx-check-circle"></i>
-                            {% elif demand_stats.comparison.mape < 20 %}
+                            {% elif performance_metrics.mape < 20 %}
                                 <i class="bx bx-error-circle"></i>
                             {% else %}
                                 <i class="bx bx-x-circle"></i>
@@ -1653,9 +1653,9 @@
                         </div>
                         <div class="stat-explanation">
                             <small class="text-muted">
-                                {% if demand_stats.comparison.mape < 10 %}
+                                {% if performance_metrics.mape < 10 %}
                                     Error muy bajo. Predicciones extremadamente precisas para planificación operativa.
-                                {% elif demand_stats.comparison.mape < 20 %}
+                                {% elif performance_metrics.mape < 20 %}
                                     Error aceptable. Las predicciones son útiles con margen de seguridad en la planificación.
                                 {% else %}
                                     Error elevado. Se requiere calibración del modelo para mejorar la precisión predictiva.
@@ -1664,20 +1664,20 @@
                         </div>
                     </div>
 
-                    {% if demand_stats.comparison.r_squared %}
+                    {% if realistic_comparison.r_squared %}
                     <div class="stat-card">
-                        <div class="stat-icon {% if demand_stats.comparison.r_squared > 0.8 %}success{% elif demand_stats.comparison.r_squared > 0.6 %}warning{% else %}danger{% endif %}">
+                        <div class="stat-icon {% if realistic_comparison.r_squared > 0.8 %}success{% elif realistic_comparison.r_squared > 0.6 %}warning{% else %}danger{% endif %}">
                             <i class="bx bx-pie-chart-alt"></i>
                         </div>
                         <div class="stat-content">
-                            <div class="stat-value">{{ demand_stats.comparison.r_squared|floatformat:3 }}</div>
+                            <div class="stat-value">{{ realistic_comparison.r_squared|floatformat:3 }}</div>
                             <div class="stat-label">R²</div>
                             <div class="stat-description">Bondad de Ajuste</div>
                         </div>
-                        <div class="stat-indicator {% if demand_stats.comparison.r_squared > 0.8 %}success{% elif demand_stats.comparison.r_squared > 0.6 %}warning{% else %}danger{% endif %}">
-                            {% if demand_stats.comparison.r_squared > 0.8 %}
+                        <div class="stat-indicator {% if realistic_comparison.r_squared > 0.8 %}success{% elif realistic_comparison.r_squared > 0.6 %}warning{% else %}danger{% endif %}">
+                            {% if realistic_comparison.r_squared > 0.8 %}
                                 <i class="bx bx-check-circle"></i>
-                            {% elif demand_stats.comparison.r_squared > 0.6 %}
+                            {% elif realistic_comparison.r_squared > 0.6 %}
                                 <i class="bx bx-error-circle"></i>
                             {% else %}
                                 <i class="bx bx-x-circle"></i>
@@ -1685,9 +1685,9 @@
                         </div>
                         <div class="stat-explanation">
                             <small class="text-muted">
-                                {% if demand_stats.comparison.r_squared > 0.8 %}
+                                {% if realistic_comparison.r_squared > 0.8 %}
                                     Excelente ajuste. El modelo explica >80% de la variabilidad en los datos.
-                                {% elif demand_stats.comparison.r_squared > 0.6 %}
+                                {% elif realistic_comparison.r_squared > 0.6 %}
                                     Ajuste moderado. El modelo captura las tendencias principales de la demanda.
                                 {% else %}
                                     Ajuste limitado. Considerar variables adicionales para mejorar el modelo.
@@ -1740,9 +1740,9 @@
                         <p class="mb-2">
                             El modelo predictivo ha sido validado comparando las proyecciones con datos históricos reales. 
                             Los indicadores estadísticos muestran 
-                            {% if demand_stats.comparison.correlation > 0.8 and demand_stats.comparison.mape < 10 %}
+                            {% if realistic_comparison.correlatio > 0.8 and performance_metrics.mape < 10 %}
                                 un <strong>rendimiento excelente</strong> con alta precisión y confiabilidad para la toma de decisiones estratégicas.
-                            {% elif demand_stats.comparison.correlation > 0.6 and demand_stats.comparison.mape < 20 %}
+                            {% elif realistic_comparison.correlatio > 0.6 and performance_metrics.mape < 20 %}
                                 un <strong>rendimiento satisfactorio</strong> con precisión adecuada para planificación operativa con márgenes de seguridad.
                             {% else %}
                                 <strong>oportunidades de mejora</strong> en la calibración del modelo para incrementar la precisión predictiva.
@@ -1750,9 +1750,9 @@
                         </p>
                         <small class="text-muted">
                             <strong>Recomendación:</strong> 
-                            {% if demand_stats.comparison.correlation > 0.8 and demand_stats.comparison.mape < 10 %}
+                            {% if realistic_comparison.correlatio > 0.8 and performance_metrics.mape < 10 %}
                                 Utilizar las proyecciones con confianza para planificación estratégica y operativa.
-                            {% elif demand_stats.comparison.correlation > 0.6 and demand_stats.comparison.mape < 20 %}
+                            {% elif realistic_comparison.correlatio > 0.6 and performance_metrics.mape < 20 %}
                                 Aplicar márgenes de seguridad del 10-15% en la planificación basada en estas proyecciones.
                             {% else %}
                                 Revisar parámetros del modelo y considerar variables adicionales antes de tomar decisiones críticas.

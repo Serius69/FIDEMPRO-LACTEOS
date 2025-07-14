@@ -108,7 +108,6 @@ class SimulateResultView(LoginRequiredMixin, View):
             messages.error(request, "Error al mostrar los resultados.")
             return redirect('simulate:simulate.show')
     
-    
     def _prepare_complete_results_context(self, simulation_id, simulation_instance, results_simulation, historical_demand):
         """Prepare comprehensive context data for results view - OPTIMIZADO Y CORREGIDO"""
         
