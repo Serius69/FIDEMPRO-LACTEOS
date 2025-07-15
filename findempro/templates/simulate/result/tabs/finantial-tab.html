@@ -751,139 +751,362 @@ small, .small {
         </div>
     </div>
 
-    <!-- Gráficos principales mejorados -->
-    <div class="row mb-4">
-        <!-- Evolución financiera -->
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="fw-bold mb-1">
-                                <i class="bx bx-line-chart me-2 text-primary"></i>
+<!-- Gráficos principales financieros -->
+<div class="row mb-4">
+    <!-- Evolución financiera -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            <i class="bx bx-line-chart me-2 text-primary"></i>
+                            {% if chart_images.image_data_ingresos_gastos %}
+                                Evolución de Ingresos y Gastos
+                            {% else %}
                                 Evolución Financiera
-                            </h5>
-                            <p class="text-muted small mb-0">Tendencia de ingresos, gastos y ganancias</p>
-                        </div>
-                        <div class="chart-controls">
-                            {% if image_data_ingresos_gastos %}
-                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'evolucion-financiera.png')" title="Descargar">
-                                <i class="bx bx-download"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Evolución Financiera')" title="Pantalla completa">
-                                <i class="bx bx-fullscreen"></i>
-                            </button>
+                            {% endif %}
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            {% if totales_acumulativos.IT.trend == 'increasing' and totales_acumulativos.TG.trend == 'decreasing' %}
+                                Tendencia favorable: ingresos crecientes y gastos controlados
+                            {% elif totales_acumulativos.IT.trend == 'increasing' and totales_acumulativos.TG.trend == 'increasing' %}
+                                Crecimiento con aumento de costos - revisar eficiencia
+                            {% elif totales_acumulativos.IT.trend == 'decreasing' %}
+                                Tendencia de ingresos descendente - requiere atención
+                            {% else %}
+                                Análisis de tendencias financieras del período simulado
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="chart-controls">
+                        {% if image_data_ingresos_gastos %}
+                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="downloadChart('{{ image_data_ingresos_gastos }}', 'evolucion-financiera.png')" title="Descargar">
+                            <i class="bx bx-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="openFullscreen('{{ image_data_ingresos_gastos }}', 'Evolución Financiera')" title="Pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Interpretación del gráfico -->
+                {% if totales_acumulativos.IT and totales_acumulativos.TG %}
+                <div class="alert alert-light border-start border-primary border-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bx bx-info-circle text-primary me-2"></i>
+                        <div>
+                            <strong>Interpretación Financiera:</strong>
+                            {% if totales_acumulativos.IT.total and totales_acumulativos.TG.total %}
+                                {% if totales_acumulativos.GT.total > 0 %}
+                                    <span class="text-success">Operación rentable</span> - Los ingresos totales ({{ totales_acumulativos.IT.total|floatformat:0 }} {{ totales_acumulativos.IT.unit }}) superan los gastos ({{ totales_acumulativos.TG.total|floatformat:0 }} {{ totales_acumulativos.TG.unit }}).
+                                {% elif totales_acumulativos.GT.total == 0 %}
+                                    <span class="text-warning">Punto de equilibrio</span> - Ingresos y gastos balanceados.
+                                {% else %}
+                                    <span class="text-danger">Pérdidas operativas</span> - Los gastos ({{ totales_acumulativos.TG.total|floatformat:0 }}) exceden los ingresos ({{ totales_acumulativos.IT.total|floatformat:0 }}).
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <!-- Canvas para gráfico dinámico -->
-                    <div class="chart-container position-relative" style="height: 300px;">
-                        <canvas id="revenueChart"></canvas>
-                        {% if image_data_ingresos_gastos %}
-                        <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
-                            class="chart-image position-absolute top-0 start-0 w-100 h-100" 
-                            alt="Evolución Financiera"
-                            style="object-fit: contain; z-index: -1;"
-                            loading="lazy">
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% if has_custom_charts %}
-        <!-- Distribución de gastos -->
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                    <h5 class="fw-bold mb-1">
-                        <i class="bx bx-pie-chart me-2 text-warning"></i>
-                        Distribución de Gastos
-                    </h5>
-                    <p class="text-muted small mb-0">Composición de costos</p>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container position-relative" style="height: 250px;">
-                        <canvas id="costsBreakdownChart"></canvas>
-                        {% if grafico_gastos %}
-                        <img src="data:image/png;base64,{{ grafico_gastos }}" 
-                            class="chart-image position-absolute top-0 start-0 w-100 h-100" 
-                            alt="Distribución de Gastos"
-                            style="object-fit: contain; z-index: -1;"
-                            loading="lazy">
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    {% if has_custom_charts %}
-    <!-- Gráficos secundarios -->
-    <div class="row mb-4">
-        <!-- Rentabilidad diaria -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                    <h5 class="fw-bold mb-1">
-                        <i class="bx bx-bar-chart me-2 text-success"></i>
-                        Rentabilidad Diaria
-                    </h5>
-                    <p class="text-muted small mb-0">Ganancia por día de operación</p>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container position-relative" style="height: 250px;">
-                        <canvas id="costsBreakdownChart"></canvas>
-                        {% if grafico_gastos %}
-                        <img src="data:image/png;base64,{{ grafico_rentabilidad  }}" 
-                            class="chart-image position-absolute top-0 start-0 w-100 h-100" 
-                            alt="Rentabilidad Diaria"
-                            style="object-fit: contain; z-index: -1;"
-                            loading="lazy">
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
+                {% endif %}
 
-        <!-- Tendencias financieras -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                    <h5 class="fw-bold mb-1">
-                        <i class="bx bx-trending-up me-2 text-info"></i>
-                        Tendencias (Promedio Móvil)
-                    </h5>
-                    <p class="text-muted small mb-0">Suavizado de fluctuaciones</p>
+                <!-- Canvas para gráfico dinámico -->
+                <div class="chart-container position-relative" style="height: 300px;">
+                    <canvas id="revenueChart"></canvas>
+                    {% if image_data_ingresos_gastos %}
+                    <img src="data:image/png;base64,{{ image_data_ingresos_gastos }}" 
+                        class="chart-image position-absolute top-0 start-0 w-100 h-100" 
+                        alt="Evolución Financiera"
+                        style="object-fit: contain; z-index: -1;"
+                        loading="lazy">
+                    {% endif %}
                 </div>
-                <div class="card-body">
-                    <div class="chart-container position-relative" style="height: 250px;">
-                        <canvas id="costsBreakdownChart"></canvas>
-                        {% if grafico_gastos %}
-                        <img src="data:image/png;base64,{{ grafico_tendencia }}" 
-                            class="chart-image position-absolute top-0 start-0 w-100 h-100" 
-                            alt="Tendencia y Promedio Móvil"
-                            style="object-fit: contain; z-index: -1;"
-                            loading="lazy">
-                        {% endif %}
+
+                <!-- Métricas clave financieras -->
+                {% if totales_acumulativos.GT %}
+                <div class="row mt-3">
+                    <div class="col-4 text-center">
+                        <div class="border-end">
+                            <h6 class="fw-bold mb-1 {% if totales_acumulativos.GT.total > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ totales_acumulativos.GT.total|floatformat:0 }} {{ totales_acumulativos.GT.unit|default:"Bs." }}
+                            </h6>
+                            <small class="text-muted">Ganancia Total</small>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="border-end">
+                            <h6 class="fw-bold mb-1">
+                                {% if totales_acumulativos.GT.trend == 'increasing' %}
+                                    <i class="bx bx-trending-up text-success"></i> Creciente
+                                {% elif totales_acumulativos.GT.trend == 'decreasing' %}
+                                    <i class="bx bx-trending-down text-danger"></i> Decreciente
+                                {% else %}
+                                    <i class="bx bx-minus text-warning"></i> Estable
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted">Tendencia</small>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <h6 class="fw-bold mb-1">
+                            {{ totales_acumulativos.GT.volatility|floatformat:1|default:"0.0" }}%
+                        </h6>
+                        <small class="text-muted">Volatilidad</small>
                     </div>
                 </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if has_custom_charts %}
+    <!-- Distribución de gastos -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="fw-bold mb-1">
+                    <i class="bx bx-pie-chart me-2 text-warning"></i>
+                    Distribución de Costos Operativos
+                </h5>
+                <p class="text-muted small mb-0">
+                    {% if totales_acumulativos.TG.cv > 0.3 %}
+                        Alta variabilidad en estructura de costos
+                    {% elif totales_acumulativos.TG.cv > 0.15 %}
+                        Variabilidad moderada en gastos
+                    {% else %}
+                        Estructura de costos estable y predecible
+                    {% endif %}
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Interpretación específica de costos -->
+                {% if totales_acumulativos.CVU and totales_acumulativos.CFD %}
+                <div class="alert alert-light border-start border-warning border-4 mb-3">
+                    <small>
+                        <strong>Análisis de Costos:</strong>
+                        {% if totales_acumulativos.CVU.total > totales_acumulativos.CFD.total %}
+                            Predominan costos variables ({{ totales_acumulativos.CVU.total|floatformat:0 }} vs {{ totales_acumulativos.CFD.total|floatformat:0 }}). Estructura flexible.
+                        {% elif totales_acumulativos.CFD.total > totales_acumulativos.CVU.total %}
+                            Altos costos fijos ({{ totales_acumulativos.CFD.total|floatformat:0 }} vs {{ totales_acumulativos.CVU.total|floatformat:0 }}). Requiere volumen para rentabilidad.
+                        {% else %}
+                            Estructura balanceada entre costos fijos y variables.
+                        {% endif %}
+                    </small>
+                </div>
+                {% endif %}
+
+                <div class="chart-container position-relative" style="height: 250px;">
+                    <canvas id="costsBreakdownChart"></canvas>
+                    {% if grafico_gastos %}
+                    <img src="data:image/png;base64,{{ grafico_gastos }}" 
+                        class="chart-image position-absolute top-0 start-0 w-100 h-100" 
+                        alt="Distribución de Gastos"
+                        style="object-fit: contain; z-index: -1;"
+                        loading="lazy">
+                    {% endif %}
+                </div>
+
+                <!-- Indicadores de eficiencia de costos -->
+                {% if totales_acumulativos.CVU and totales_acumulativos.TG %}
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="small text-muted">Eficiencia de Costos:</span>
+                        <span class="small fw-bold {% if totales_acumulativos.TG.trend == 'decreasing' %}text-success{% elif totales_acumulativos.TG.trend == 'increasing' %}text-danger{% else %}text-warning{% endif %}">
+                            {% if totales_acumulativos.TG.trend == 'decreasing' %}
+                                Mejorando
+                            {% elif totales_acumulativos.TG.trend == 'increasing' %}
+                                Deteriorando
+                            {% else %}
+                                Estable
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
     {% endif %}
+</div>
 
-    <!-- Variables financieras endógenas mejoradas -->
-    {% if endogenous_charts %}
+{% if has_custom_charts %}
+<!-- Gráficos financieros secundarios -->
+<div class="row mb-4">
+    <!-- Rentabilidad diaria -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="fw-bold mb-1">
+                    <i class="bx bx-bar-chart me-2 text-success"></i>
+                    Rentabilidad Operativa Diaria
+                </h5>
+                <p class="text-muted small mb-0">
+                    {% if totales_acumulativos.NR %}
+                        {% if totales_acumulativos.NR.mean > 0.15 %}
+                            Rentabilidad alta - Margen promedio {{ totales_acumulativos.NR.mean|floatformat:1 }}%
+                        {% elif totales_acumulativos.NR.mean > 0.05 %}
+                            Rentabilidad moderada - Margen promedio {{ totales_acumulativos.NR.mean|floatformat:1 }}%
+                        {% else %}
+                            Rentabilidad baja - Revisar estructura de costos
+                        {% endif %}
+                    {% else %}
+                        Análisis de márgenes de ganancia por período
+                    {% endif %}
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Interpretación de rentabilidad -->
+                {% if totales_acumulativos.NR %}
+                <div class="alert alert-light border-start border-success border-4 mb-3">
+                    <small>
+                        <strong>Análisis de Margen:</strong>
+                        {% if totales_acumulativos.NR.volatility > 30 %}
+                            Alta volatilidad ({{ totales_acumulativos.NR.volatility|floatformat:1 }}%) indica inestabilidad en rentabilidad.
+                        {% elif totales_acumulativos.NR.volatility > 15 %}
+                            Volatilidad moderada - rentabilidad con fluctuaciones normales.
+                        {% else %}
+                            Baja volatilidad - rentabilidad estable y predecible.
+                        {% endif %}
+                        
+                        {% if totales_acumulativos.NR.trend == 'increasing' %}
+                            Tendencia positiva en mejora de márgenes.
+                        {% elif totales_acumulativos.NR.trend == 'decreasing' %}
+                            Alerta: tendencia decreciente en rentabilidad.
+                        {% endif %}
+                    </small>
+                </div>
+                {% endif %}
+
+                <div class="chart-container position-relative" style="height: 250px;">
+                    <canvas id="profitabilityChart"></canvas>
+                    {% if grafico_rentabilidad %}
+                    <img src="data:image/png;base64,{{ grafico_rentabilidad }}" 
+                        class="chart-image position-absolute top-0 start-0 w-100 h-100" 
+                        alt="Rentabilidad Diaria"
+                        style="object-fit: contain; z-index: -1;"
+                        loading="lazy">
+                    {% endif %}
+                </div>
+
+                <!-- Métricas de rentabilidad -->
+                {% if totales_acumulativos.NR %}
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-1 {% if totales_acumulativos.NR.max_value > 0.2 %}text-success{% elif totales_acumulativos.NR.max_value > 0.1 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ totales_acumulativos.NR.max_value|floatformat:1 }}%
+                            </h6>
+                            <small class="text-muted">Máximo Margen</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-1 {% if totales_acumulativos.NR.min_value > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ totales_acumulativos.NR.min_value|floatformat:1 }}%
+                            </h6>
+                            <small class="text-muted">Mínimo Margen</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tendencias financieras -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="fw-bold mb-1">
+                    <i class="bx bx-trending-up me-2 text-info"></i>
+                    Análisis de Tendencias Financieras
+                </h5>
+                <p class="text-muted small mb-0">
+                    {% if totales_acumulativos.GT.trend %}
+                        Tendencia de ganancia {{ totales_acumulativos.GT.trend|lower }} identificada
+                    {% else %}
+                        Promedio móvil para identificar patrones financieros subyacentes
+                    {% endif %}
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Interpretación de tendencias financieras -->
+                {% if totales_acumulativos.GT.trend %}
+                <div class="alert alert-light border-start border-info border-4 mb-3">
+                    <small>
+                        <strong>Análisis de Tendencia:</strong>
+                        {% if totales_acumulativos.GT.trend == 'increasing' %}
+                            <span class="text-success">Tendencia ascendente en ganancias</span> - El negocio muestra crecimiento sostenido.
+                        {% elif totales_acumulativos.GT.trend == 'decreasing' %}
+                            <span class="text-danger">Tendencia descendente en ganancias</span> - Requiere acciones correctivas inmediatas.
+                        {% else %}
+                            <span class="text-info">Comportamiento estable</span> - Ganancias consistentes sin variaciones significativas.
+                        {% endif %}
+                    </small>
+                </div>
+                {% endif %}
+
+                <div class="chart-container position-relative" style="height: 250px;">
+                    <canvas id="trendChart"></canvas>
+                    {% if grafico_tendencia %}
+                    <img src="data:image/png;base64,{{ grafico_tendencia }}" 
+                        class="chart-image position-absolute top-0 start-0 w-100 h-100" 
+                        alt="Tendencia Financiera"
+                        style="object-fit: contain; z-index: -1;"
+                        loading="lazy">
+                    {% endif %}
+                </div>
+
+                <!-- Indicadores de tendencia financiera -->
+                {% if totales_acumulativos.GT %}
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-1">
+                                {% if totales_acumulativos.GT.trend == 'increasing' %}
+                                    <i class="bx bx-trending-up text-success"></i> Creciente
+                                {% elif totales_acumulativos.GT.trend == 'decreasing' %}
+                                    <i class="bx bx-trending-down text-danger"></i> Decreciente
+                                {% else %}
+                                    <i class="bx bx-minus text-warning"></i> Estable
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted">Dirección</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-1 {% if totales_acumulativos.GT.trend_strength > 70 %}text-success{% elif totales_acumulativos.GT.trend_strength > 40 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ totales_acumulativos.GT.trend_strength|floatformat:0|default:"0" }}%
+                            </h6>
+                            <small class="text-muted">Fuerza</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Variables financieras endógenas -->
+{% if endogenous_charts %}
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-transparent border-0 pt-4 pb-2">
-                    <h5 class="fw-bold mb-0">
+                    <h5 class="fw-bold mb-1">
                         <i class="bx bx-line-chart me-2 text-primary"></i>
-                        Variables Financieras Endógenas
+                        Variables Financieras del Modelo
                     </h5>
+                    <p class="text-muted small mb-0">
+                        Evolución temporal de las principales variables económicas calculadas por el sistema
+                    </p>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -894,15 +1117,72 @@ small, .small {
                                     <div class="card-body p-3">
                                         <h6 class="fw-bold mb-2">
                                             {% if 'IT' in chart_name %}
-                                                <i class="bx bx-dollar text-success me-2"></i>Ingresos Totales
+                                                <i class="bx bx-dollar text-success me-2"></i>Ingresos Totales (IT)
                                             {% elif 'GT' in chart_name %}
-                                                <i class="bx bx-trending-up text-primary me-2"></i>Ganancia Total
+                                                <i class="bx bx-trending-up text-primary me-2"></i>Ganancia Total (GT)
                                             {% elif 'TG' in chart_name %}
-                                                <i class="bx bx-trending-down text-danger me-2"></i>Total Gastos
+                                                <i class="bx bx-trending-down text-danger me-2"></i>Total Gastos (TG)
                                             {% elif 'NR' in chart_name %}
-                                                <i class="bx bx-percentage text-info me-2"></i>Nivel Rentabilidad
+                                                <i class="bx bx-percentage text-info me-2"></i>Nivel Rentabilidad (NR)
                                             {% endif %}
                                         </h6>
+                                        
+                                        <!-- Descripción específica por variable financiera -->
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                {% if 'IT' in chart_name %}
+                                                    {% if totales_acumulativos.IT %}
+                                                        Total acumulado: {{ totales_acumulativos.IT.total|floatformat:0 }} {{ totales_acumulativos.IT.unit }}
+                                                        | Tendencia: 
+                                                        {% if totales_acumulativos.IT.trend == 'increasing' %}
+                                                            <span class="text-success">↗ Creciente</span>
+                                                        {% elif totales_acumulativos.IT.trend == 'decreasing' %}
+                                                            <span class="text-danger">↘ Decreciente</span>
+                                                        {% else %}
+                                                            <span class="text-warning">→ Estable</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Ingresos totales generados por ventas del producto
+                                                    {% endif %}
+                                                {% elif 'GT' in chart_name %}
+                                                    {% if totales_acumulativos.GT %}
+                                                        Ganancia neta: {{ totales_acumulativos.GT.total|floatformat:0 }} {{ totales_acumulativos.GT.unit }}
+                                                        | Variabilidad: {{ totales_acumulativos.GT.volatility|floatformat:1|default:"0.0" }}%
+                                                    {% else %}
+                                                        Diferencia entre ingresos totales y gastos operativos
+                                                    {% endif %}
+                                                {% elif 'TG' in chart_name %}
+                                                    {% if totales_acumulativos.TG %}
+                                                        Total gastado: {{ totales_acumulativos.TG.total|floatformat:0 }} {{ totales_acumulativos.TG.unit }}
+                                                        | Control: 
+                                                        {% if totales_acumulativos.TG.trend == 'decreasing' %}
+                                                            <span class="text-success">Mejorando</span>
+                                                        {% elif totales_acumulativos.TG.trend == 'increasing' %}
+                                                            <span class="text-warning">Incrementando</span>
+                                                        {% else %}
+                                                            <span class="text-info">Controlado</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Suma de todos los costos operativos del período
+                                                    {% endif %}
+                                                {% elif 'NR' in chart_name %}
+                                                    {% if totales_acumulativos.NR %}
+                                                        Margen promedio: {{ totales_acumulativos.NR.mean|floatformat:1|default:"0.0" }}%
+                                                        | Estabilidad: 
+                                                        {% if totales_acumulativos.NR.volatility < 15 %}
+                                                            <span class="text-success">Alta</span>
+                                                        {% elif totales_acumulativos.NR.volatility < 30 %}
+                                                            <span class="text-warning">Media</span>
+                                                        {% else %}
+                                                            <span class="text-danger">Baja</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Porcentaje de rentabilidad sobre ventas totales
+                                                    {% endif %}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+
                                         <div class="chart-mini-container">
                                             <img src="data:image/png;base64,{{ chart_data }}" 
                                                 class="img-fluid rounded" 
@@ -910,11 +1190,58 @@ small, .small {
                                                 style="height: 120px; width: 100%; object-fit: cover;"
                                                 loading="lazy">
                                         </div>
+
+                                        <!-- Interpretación financiera específica -->
+                                        <div class="mt-2">
+                                            <div class="alert alert-light py-1 px-2 mb-2">
+                                                <small>
+                                                    <strong>Interpretación:</strong>
+                                                    {% if 'IT' in chart_name and totales_acumulativos.IT %}
+                                                        {% if totales_acumulativos.IT.trend == 'increasing' %}
+                                                            Crecimiento sostenido en ventas indica aceptación del mercado.
+                                                        {% elif totales_acumulativos.IT.trend == 'decreasing' %}
+                                                            Declive en ingresos requiere estrategias de mercadeo urgentes.
+                                                        {% else %}
+                                                            Ingresos estables - mercado en equilibrio operativo.
+                                                        {% endif %}
+                                                    {% elif 'GT' in chart_name and totales_acumulativos.GT %}
+                                                        {% if totales_acumulativos.GT.total > 0 %}
+                                                            {% if totales_acumulativos.GT.trend == 'increasing' %}
+                                                                Rentabilidad creciente - modelo de negocio exitoso.
+                                                            {% else %}
+                                                                Operación rentable pero con oportunidades de crecimiento.
+                                                            {% endif %}
+                                                        {% else %}
+                                                            Pérdidas acumuladas - revisar estrategia financiera urgente.
+                                                        {% endif %}
+                                                    {% elif 'TG' in chart_name and totales_acumulativos.TG %}
+                                                        {% if totales_acumulativos.TG.trend == 'decreasing' %}
+                                                            Optimización exitosa de costos operativos.
+                                                        {% elif totales_acumulativos.TG.trend == 'increasing' %}
+                                                            Incremento en costos - revisar eficiencia operativa.
+                                                        {% else %}
+                                                            Estructura de costos bien controlada.
+                                                        {% endif %}
+                                                    {% elif 'NR' in chart_name and totales_acumulativos.NR %}
+                                                        {% if totales_acumulativos.NR.mean > 0.15 %}
+                                                            Excelente margen de rentabilidad - negocio muy saludable.
+                                                        {% elif totales_acumulativos.NR.mean > 0.05 %}
+                                                            Margen aceptable con oportunidades de optimización.
+                                                        {% else %}
+                                                            Margen bajo - optimización de costos urgente.
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Variable clave para análisis financiero integral.
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+
                                         <div class="d-flex justify-content-between mt-2">
-                                            <button class="btn btn-sm btn-outline-primary" onclick="downloadChart('{{ chart_data }}', '{{ chart_name }}.png')">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="downloadChart('{{ chart_data }}', '{{ chart_name }}.png')" title="Descargar gráfico">
                                                 <i class="bx bx-download"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="openFullscreen('{{ chart_data }}', '{{ chart_name }}')">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="openFullscreen('{{ chart_data }}', '{{ chart_name }}')" title="Ver en pantalla completa">
                                                 <i class="bx bx-fullscreen"></i>
                                             </button>
                                         </div>
@@ -924,11 +1251,401 @@ small, .small {
                             {% endif %}
                         {% endfor %}
                     </div>
+
+                    <!-- Resumen ejecutivo financiero -->
+                    {% if totales_acumulativos.IT and totales_acumulativos.GT and totales_acumulativos.TG %}
+                    <div class="alert alert-info border-0 mt-3">
+                        <div class="d-flex align-items-start">
+                            <i class="bx bx-calculator me-2 mt-1"></i>
+                            <div>
+                                <strong>Resumen Ejecutivo Financiero:</strong>
+                                <p class="mb-0 mt-1">
+                                    El modelo simuló {{ results_simulation.count|default:"múltiples" }} períodos operativos con un resultado financiero
+                                    {% if totales_acumulativos.GT.total > 0 %}
+                                        <span class="fw-bold text-success">positivo</span> de {{ totales_acumulativos.GT.total|floatformat:0 }} {{ totales_acumulativos.GT.unit }}.
+                                        La operación muestra rentabilidad favorable.
+                                    {% else %}
+                                        <span class="fw-bold text-danger">negativo</span> con pérdidas de {{ totales_acumulativos.GT.total|floatformat:0 }} {{ totales_acumulativos.GT.unit }}.
+                                        Se requiere 
+                                        {% if totales_acumulativos.TG.trend == 'increasing' %}
+                                            <span class="text-warning">control de costos</span>
+                                        {% else %}
+                                            <span class="text-info">incremento en ventas</span>
+                                        {% endif %}
+                                        para alcanzar rentabilidad.
+                                    {% endif %}
+                                    
+                                    {% if totales_acumulativos.NR %}
+                                        El margen de rentabilidad promedio fue 
+                                        <span class="fw-bold {% if totales_acumulativos.NR.mean > 0.15 %}text-success{% elif totales_acumulativos.NR.mean > 0.05 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ totales_acumulativos.NR.mean|floatformat:1|default:"0.0" }}%
+                                        </span>
+                                        {% if totales_acumulativos.NR.volatility > 30 %}
+                                            con alta variabilidad ({{ totales_acumulativos.NR.volatility|floatformat:1|default:"0.0" }}% CV), sugiriendo inestabilidad operativa que requiere atención.
+                                        {% elif totales_acumulativos.NR.volatility > 15 %}
+                                            con variabilidad normal para este tipo de operación comercial.
+                                        {% else %}
+                                            con baja variabilidad, indicando operación estable y predecible financieramente.
+                                        {% endif %}
+                                    {% endif %}
+
+                                    {% if totales_acumulativos.IT.trend and totales_acumulativos.TG.trend %}
+                                        <br><strong>Perspectiva:</strong>
+                                        {% if totales_acumulativos.IT.trend == 'increasing' and totales_acumulativos.TG.trend == 'stable' %}
+                                            <span class="text-success">Escenario ideal</span> - ingresos crecientes con costos controlados.
+                                        {% elif totales_acumulativos.IT.trend == 'increasing' and totales_acumulativos.TG.trend == 'increasing' %}
+                                            <span class="text-warning">Crecimiento costoso</span> - monitorear eficiencia operativa.
+                                        {% elif totales_acumulativos.IT.trend == 'stable' and totales_acumulativos.TG.trend == 'decreasing' %}
+                                            <span class="text-success">Optimización exitosa</span> - mejorando márgenes operativos.
+                                        {% elif totales_acumulativos.IT.trend == 'decreasing' %}
+                                            <span class="text-danger">Alerta comercial</span> - implementar estrategias de recuperación.
+                                        {% else %}
+                                            <span class="text-info">Operación estable</span> - considerar estrategias de crecimiento.
+                                        {% endif %}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
+{% endif %}
+
+<!-- Gráfico de comparación histórica vs simulada (solo financiero) -->
+{% if comparison_chart %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 pb-2">
+                <h5 class="fw-bold mb-1">
+                    <i class="bx bx-line-chart-down me-2 text-primary"></i>
+                    Comparación: Demanda Histórica vs Simulada
+                </h5>
+                <p class="text-muted small mb-0">
+                    Validación del comportamiento de demanda del modelo contra datos históricos reales
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Interpretación de la comparación -->
+                {% if realistic_comparison %}
+                <div class="alert alert-light border-start border-primary border-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bx bx-trending-up text-primary me-2"></i>
+                        <div>
+                            <strong>Análisis Comparativo:</strong>
+                            {% if realistic_comparison.accuracy_level == 'Excelente' %}
+                                <span class="text-success">Excelente coincidencia</span> - El modelo replica fielmente el comportamiento histórico.
+                            {% elif realistic_comparison.accuracy_level == 'Buena' %}
+                                <span class="text-success">Buena aproximación</span> - El modelo captura las tendencias principales del mercado.
+                            {% elif realistic_comparison.accuracy_level == 'Aceptable' %}
+                                <span class="text-warning">Aproximación aceptable</span> - El modelo necesita ajustes menores.
+                            {% else %}
+                                <span class="text-danger">Baja precisión</span> - El modelo requiere calibración significativa.
+                            {% endif %}
+                            
+                            {% if realistic_comparison.mean_diff_pct %}
+                                Diferencia promedio: {{ realistic_comparison.mean_diff_pct|floatformat:1 }}%
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="chart-container position-relative" style="height: 350px;">
+                    <canvas id="comparisonChart"></canvas>
+                    <img src="data:image/png;base64,{{ comparison_chart }}" 
+                        class="chart-image position-absolute top-0 start-0 w-100 h-100" 
+                        alt="Comparación Histórica vs Simulada"
+                        style="object-fit: contain; z-index: -1;"
+                        loading="lazy">
+                </div>
+
+                <!-- Métricas de comparación -->
+                {% if realistic_comparison %}
+                <div class="row mt-3">
+                    <div class="col-md-3 text-center">
+                        <h6 class="fw-bold mb-1 {% if realistic_comparison.correlation > 0.7 %}text-success{% elif realistic_comparison.correlation > 0.4 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ realistic_comparison.correlation|floatformat:2|default:"0.00" }}
+                        </h6>
+                        <small class="text-muted">Correlación</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6 class="fw-bold mb-1 {% if realistic_comparison.mape < 15 %}text-success{% elif realistic_comparison.mape < 25 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ realistic_comparison.mape|floatformat:1|default:"0.0" }}%
+                        </h6>
+                        <small class="text-muted">Error MAPE</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6 class="fw-bold mb-1">
+                            {{ realistic_comparison.mean_diff|floatformat:0|default:"0" }}
+                        </h6>
+                        <small class="text-muted">Diferencia Media</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h6 class="fw-bold mb-1 {% if realistic_comparison.cv_diff < 0.1 %}text-success{% elif realistic_comparison.cv_diff < 0.3 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ realistic_comparison.cv_diff|floatformat:2|default:"0.00" }}
+                        </h6>
+                        <small class="text-muted">Diferencia CV</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-end mt-3">
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="downloadChart('{{ comparison_chart }}', 'comparacion-historica.png')" title="Descargar">
+                        <i class="bx bx-download"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openFullscreen('{{ comparison_chart }}', 'Comparación Histórica vs Simulada')" title="Pantalla completa">
+                        <i class="bx bx-fullscreen"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Métricas financieras consolidadas -->
+{% if totales_acumulativos %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 pb-2">
+                <h5 class="fw-bold mb-1">
+                    <i class="bx bx-calculator me-2 text-success"></i>
+                    Métricas Financieras Consolidadas
+                </h5>
+                <p class="text-muted small mb-0">
+                    Resumen integral de indicadores económicos del período simulado
+                </p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Ingresos Totales -->
+                    {% if totales_acumulativos.IT %}
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-start border-success border-4 h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold text-success mb-1">Ingresos Totales</h6>
+                                        <h4 class="fw-bold mb-1">{{ totales_acumulativos.IT.total|floatformat:0 }}</h4>
+                                        <small class="text-muted">{{ totales_acumulativos.IT.unit|default:"Bs." }}</small>
+                                    </div>
+                                    <i class="bx bx-dollar text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-{% if totales_acumulativos.IT.trend == 'increasing' %}success{% elif totales_acumulativos.IT.trend == 'decreasing' %}danger{% else %}warning{% endif %} me-1">
+                                        {% if totales_acumulativos.IT.trend == 'increasing' %}
+                                            ↗ Creciente
+                                        {% elif totales_acumulativos.IT.trend == 'decreasing' %}
+                                            ↘ Decreciente  
+                                        {% else %}
+                                            → Estable
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted">
+                                        Promedio: {{ totales_acumulativos.IT.mean|floatformat:0|default:"0" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Gastos Totales -->
+                    {% if totales_acumulativos.TG %}
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-start border-danger border-4 h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold text-danger mb-1">Gastos Totales</h6>
+                                        <h4 class="fw-bold mb-1">{{ totales_acumulativos.TG.total|floatformat:0 }}</h4>
+                                        <small class="text-muted">{{ totales_acumulativos.TG.unit|default:"Bs." }}</small>
+                                    </div>
+                                    <i class="bx bx-trending-down text-danger" style="font-size: 2rem;"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-{% if totales_acumulativos.TG.trend == 'decreasing' %}success{% elif totales_acumulativos.TG.trend == 'increasing' %}danger{% else %}warning{% endif %} me-1">
+                                        {% if totales_acumulativos.TG.trend == 'decreasing' %}
+                                            ↘ Mejorando
+                                        {% elif totales_acumulativos.TG.trend == 'increasing' %}
+                                            ↗ Incrementando
+                                        {% else %}
+                                            → Controlado
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted">
+                                        Promedio: {{ totales_acumulativos.TG.mean|floatformat:0|default:"0" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Ganancia Total -->
+                    {% if totales_acumulativos.GT %}
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-start border-{% if totales_acumulativos.GT.total > 0 %}primary{% else %}warning{% endif %} border-4 h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold text-{% if totales_acumulativos.GT.total > 0 %}primary{% else %}warning{% endif %} mb-1">Ganancia Total</h6>
+                                        <h4 class="fw-bold mb-1 {% if totales_acumulativos.GT.total > 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ totales_acumulativos.GT.total|floatformat:0 }}
+                                        </h4>
+                                        <small class="text-muted">{{ totales_acumulativos.GT.unit|default:"Bs." }}</small>
+                                    </div>
+                                    <i class="bx bx-trending-up text-{% if totales_acumulativos.GT.total > 0 %}primary{% else %}warning{% endif %}" style="font-size: 2rem;"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-{% if totales_acumulativos.GT.trend == 'increasing' %}success{% elif totales_acumulativos.GT.trend == 'decreasing' %}danger{% else %}warning{% endif %} me-1">
+                                        {% if totales_acumulativos.GT.trend == 'increasing' %}
+                                            ↗ Creciente
+                                        {% elif totales_acumulativos.GT.trend == 'decreasing' %}
+                                            ↘ Decreciente
+                                        {% else %}
+                                            → Estable
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted">
+                                        CV: {{ totales_acumulativos.GT.volatility|floatformat:1|default:"0.0" }}%
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Nivel de Rentabilidad -->
+                    {% if totales_acumulativos.NR %}
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-start border-info border-4 h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold text-info mb-1">Rentabilidad</h6>
+                                        <h4 class="fw-bold mb-1 {% if totales_acumulativos.NR.mean > 0.15 %}text-success{% elif totales_acumulativos.NR.mean > 0.05 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ totales_acumulativos.NR.mean|floatformat:1|default:"0.0" }}%
+                                        </h4>
+                                        <small class="text-muted">Margen promedio</small>
+                                    </div>
+                                    <i class="bx bx-percentage text-info" style="font-size: 2rem;"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-{% if totales_acumulativos.NR.volatility < 15 %}success{% elif totales_acumulativos.NR.volatility < 30 %}warning{% else %}danger{% endif %} me-1">
+                                        {% if totales_acumulativos.NR.volatility < 15 %}
+                                            Estable
+                                        {% elif totales_acumulativos.NR.volatility < 30 %}
+                                            Moderado
+                                        {% else %}
+                                            Volátil
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted">
+                                        Rango: {{ totales_acumulativos.NR.min_value|floatformat:1|default:"0" }}% - {{ totales_acumulativos.NR.max_value|floatformat:1|default:"0" }}%
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Indicadores adicionales de performance financiera -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-light border-0">
+                            <div class="row text-center">
+                                <!-- ROI aproximado -->
+                                {% if totales_acumulativos.GT and totales_acumulativos.TG %}
+                                <div class="col-md-3">
+                                    <h6 class="fw-bold mb-1">Retorno sobre Gastos</h6>
+                                    <p class="mb-0">
+                                        {% if totales_acumulativos.TG.total > 0 %}
+                                            <span class="fw-bold {% if totales_acumulativos.GT.total > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                {% if totales_acumulativos.GT.total > 0 %}+{% endif %}
+                                                {{ totales_acumulativos.GT.total|floatformat:0 }} {{ totales_acumulativos.GT.unit|default:"Bs." }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </p>
+                                    <small class="text-muted">por cada período</small>
+                                </div>
+                                {% endif %}
+
+                                <!-- Eficiencia operativa -->
+                                {% if totales_acumulativos.IT and totales_acumulativos.TG %}
+                                <div class="col-md-3">
+                                    <h6 class="fw-bold mb-1">Eficiencia Operativa</h6>
+                                    <p class="mb-0">
+                                        {% if totales_acumulativos.IT.total > 0 %}
+                                            <span class="fw-bold {% if totales_acumulativos.TG.total < totales_acumulativos.IT.total %}text-success{% else %}text-warning{% endif %}">
+                                                {% if totales_acumulativos.TG.total < totales_acumulativos.IT.total %}
+                                                    Eficiente
+                                                {% else %}
+                                                    Revisar costos
+                                                {% endif %}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </p>
+                                    <small class="text-muted">relación costo-ingreso</small>
+                                </div>
+                                {% endif %}
+
+                                <!-- Estabilidad financiera -->
+                                {% if totales_acumulativos.GT %}
+                                <div class="col-md-3">
+                                    <h6 class="fw-bold mb-1">Estabilidad</h6>
+                                    <p class="mb-0">
+                                        <span class="fw-bold {% if totales_acumulativos.GT.volatility < 20 %}text-success{% elif totales_acumulativos.GT.volatility < 40 %}text-warning{% else %}text-danger{% endif %}">
+                                            {% if totales_acumulativos.GT.volatility < 20 %}
+                                                Alta
+                                            {% elif totales_acumulativos.GT.volatility < 40 %}
+                                                Media
+                                            {% else %}
+                                                Baja
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                    <small class="text-muted">CV: {{ totales_acumulativos.GT.volatility|floatformat:1|default:"0.0" }}%</small>
+                                </div>
+                                {% endif %}
+
+                                <!-- Perspectiva de crecimiento -->
+                                {% if totales_acumulativos.IT %}
+                                <div class="col-md-3">
+                                    <h6 class="fw-bold mb-1">Perspectiva</h6>
+                                    <p class="mb-0">
+                                        <span class="fw-bold {% if totales_acumulativos.IT.trend == 'increasing' %}text-success{% elif totales_acumulativos.IT.trend == 'decreasing' %}text-danger{% else %}text-warning{% endif %}">
+                                            {% if totales_acumulativos.IT.trend == 'increasing' %}
+                                                Crecimiento
+                                            {% elif totales_acumulativos.IT.trend == 'decreasing' %}
+                                                Declive
+                                            {% else %}
+                                                Estable
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                    <small class="text-muted">tendencia de ingresos</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
     <!-- Recomendaciones y alertas -->
     {% if financial_recommendations %}
