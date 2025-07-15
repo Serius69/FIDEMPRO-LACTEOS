@@ -596,354 +596,274 @@
         </div>
     </div>
 
-    <!-- Historical Data Comparison Table -->
-    <div class="data-table-container mb-4">
-        <div class="card-header bg-gradient-info">
-            <h5 class="card-title mb-0">
-                <i class="bx bx-bar-chart-alt-2 me-2"></i>
-                Datos Históricos vs Simulación
-            </h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 40%">Métrica</th>
-                            <th style="width: 30%">Histórico</th>
-                            <th style="width: 30%">Simulado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Variables Financieras Principales -->
-                        <tr>
-                            <td><strong>PVP - Precio de Venta al Público</strong><br><small class="text-muted">Bs.</small></td>
-                            <td><span class="badge bg-secondary">4.35 Bs</span></td>
-                            <td><span class="badge bg-info">{{ avg_PVP|floatformat:2 }} Bs</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TPV - Total Productos Vendidos</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">425 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_TPV|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>IT - Ingresos Totales</strong><br><small class="text-muted">Bs.</small></td>
-                            <td><span class="badge bg-secondary">1,850 Bs</span></td>
-                            <td><span class="badge bg-success">{{ avg_IT|floatformat:0 }} Bs</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TG - Total Gastos</strong><br><small class="text-muted">Bs.</small></td>
-                            <td><span class="badge bg-secondary">1,470 Bs</span></td>
-                            <td><span class="badge bg-warning">{{ avg_TG|floatformat:0 }} Bs</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>GT - Ganancia Total</strong><br><small class="text-muted">Bs.</small></td>
-                            <td><span class="badge bg-secondary">380 Bs</span></td>
-                            <td><span class="badge bg-success">{{ avg_GT|floatformat:0 }} Bs</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>NR - Nivel de Rentabilidad</strong><br><small class="text-muted">%</small></td>
-                            <td><span class="badge bg-secondary">20.5%</span></td>
-                            <td><span class="badge bg-info">{{ avg_NR|floatformat:2 }}%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>NSC - Nivel de Satisfacción del Cliente</strong><br><small class="text-muted">%</small></td>
-                            <td><span class="badge bg-secondary">85.0%</span></td>
-                            <td><span class="badge bg-success">{{ avg_NSC|floatformat:2 }}%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>EOG - Eficiencia Operativa General</strong><br><small class="text-muted">%</small></td>
-                            <td><span class="badge bg-secondary">78.5%</span></td>
-                            <td><span class="badge bg-info">{{ avg_EOG|floatformat:2 }}%</span></td>
-                        </tr>
+<!-- Historical Data Comparison Table -->
+<div class="data-table-container mb-4">
+   <div class="card border-0 shadow-sm">
+       <div class="card-header bg-gradient-info">
+           <h5 class="card-title mb-0">
+               <i class="bx bx-bar-chart-alt-2 me-2"></i>
+               Datos Históricos vs Simulación
+           </h5>
+           <small class="text-muted">Comparación de variables principales del modelo</small>
+       </div>
+       <div class="card-body p-0">
+           <!-- Controles de búsqueda y filtro -->
+           <div class="p-3 bg-light border-bottom">
+               <div class="row align-items-center">
+                   <div class="col-md-6">
+                       <input type="text" class="form-control form-control-sm" 
+                              placeholder="Buscar variable..." id="variableSearch">
+                   </div>
+                   <div class="col-md-6 text-end">
+                       <small class="text-muted">
+                           <i class="bx bx-info-circle me-1"></i>
+                           Mostrando variables disponibles
+                       </small>
+                   </div>
+               </div>
+           </div>
+           
+           <!-- Tabla con scroll -->
+           <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+               <table class="table table-hover mb-0" id="comparisonTable">
+                   <thead class="table-light sticky-top">
+                       <tr>
+                           <th style="width: 40%">Métrica</th>
+                           <th style="width: 30%">Promedio Simulado</th>
+                           <th style="width: 30%">Tendencia</th>
+                       </tr>
+                   </thead>
+                   <tbody id="comparisonTableBody">
+                       {% if totales_acumulativos %}
+                           {% for variable_name, variable_data in totales_acumulativos.items %}
+                           <tr class="variable-row" data-category="simulacion">
+                               <td>
+                                   <strong>{{ variable_name }}</strong>
+                                   <br><small class="text-muted">{{ variable_data.unit }}</small>
+                               </td>
+                               <td>
+                                   <span class="badge 
+                                       {% if variable_data.mean > 0 %}bg-primary{% else %}bg-secondary{% endif %}">
+                                       {{ variable_data.mean|floatformat:2 }} {{ variable_data.unit }}
+                                   </span>
+                               </td>
+                               <td>
+                                   {% if variable_data.trend == 'increasing' %}
+                                       <span class="badge bg-success bg-opacity-20 text-success">
+                                           <i class="bx bx-trending-up me-1"></i>Creciente
+                                       </span>
+                                   {% elif variable_data.trend == 'decreasing' %}
+                                       <span class="badge bg-danger bg-opacity-20 text-danger">
+                                           <i class="bx bx-trending-down me-1"></i>Decreciente
+                                       </span>
+                                   {% else %}
+                                       <span class="badge bg-info bg-opacity-20 text-info">
+                                           <i class="bx bx-minus me-1"></i>Estable
+                                       </span>
+                                   {% endif %}
+                               </td>
+                           </tr>
+                           {% endfor %}
+                       {% else %}
+                           <tr>
+                               <td colspan="3" class="text-center text-muted py-4">
+                                   <i class="bx bx-info-circle mb-2"></i>
+                                   <div>No hay datos de variables calculadas disponibles</div>
+                                   <small>Ejecute una simulación completa para ver las comparaciones</small>
+                               </td>
+                           </tr>
+                       {% endif %}
+                   </tbody>
+               </table>
+           </div>
+           
+           <!-- Información adicional -->
+           <div class="p-3 bg-light border-top">
+               <div class="row">
+                   <div class="col-md-6">
+                       <small class="text-muted">
+                           <i class="bx bx-info-circle me-1"></i>
+                           Variables calculadas: {{ totales_acumulativos|length }}
+                       </small>
+                   </div>
+                   <div class="col-md-6 text-end">
+                       {% if results %}
+                       <small class="text-muted">
+                           Basado en {{ results|length }} días de simulación
+                       </small>
+                       {% endif %}
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
+</div>
 
-                        <!-- Variables de Demanda -->
-                        <tr>
-                            <td><strong>DPH - Demanda Promedio Histórica</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">450 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_DPH|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>DH - Demanda Histórica</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">430 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_DH|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>DE - Demanda Esperada</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">465 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_DE|floatformat:0 }} L</span></td>
-                        </tr>
+<!-- Financial Recommendations Enhanced -->
+{% if financial_recommendations %}
+<div class="recommendation-card mb-4">
+   <div class="card border-0 shadow-sm">
+       <div class="card-header bg-gradient-warning">
+           <h5 class="card-title mb-0">
+               <i class="bx bx-lightbulb me-2"></i>
+               Recomendaciones Inteligentes
+           </h5>
+       </div>
+       <div class="card-body">
+           {% for recommendation in financial_recommendations %}
+           <div class="recommendation-item mb-3 p-3 bg-light rounded border-start border-warning border-4">
+               <div class="d-flex justify-content-between align-items-start mb-2">
+                   <h6 class="fw-bold text-warning mb-0">
+                       {% if recommendation.name %}
+                           {{ recommendation.name }}
+                       {% else %}
+                           Recomendación {{ forloop.counter }}
+                       {% endif %}
+                   </h6>
+                   {% if recommendation.priority %}
+                   <span class="badge bg-warning bg-opacity-25 text-warning">
+                       {% if recommendation.priority == 'high' %}Alta
+                       {% elif recommendation.priority == 'medium' %}Media
+                       {% else %}Baja
+                       {% endif %}
+                   </span>
+                   {% endif %}
+               </div>
+               {% if recommendation.recommendation %}
+               <p class="mb-2 small">{{ recommendation.recommendation }}</p>
+               {% endif %}
+               <div class="d-flex justify-content-between align-items-center">
+                   {% if recommendation.variable_name %}
+                   <small class="text-muted">
+                       <i class="bx bx-target me-1"></i>
+                       Variable: <strong>{{ recommendation.variable_name }}</strong>
+                   </small>
+                   {% else %}
+                   <small class="text-muted">
+                       <i class="bx bx-lightbulb me-1"></i>
+                       Recomendación general
+                   </small>
+                   {% endif %}
+                   {% if recommendation.id %}
+                   <button class="btn btn-outline-warning btn-sm" onclick="applyRecommendation('{{ recommendation.id }}')">
+                       <i class="bx bx-check me-1"></i>Aplicar
+                   </button>
+                   {% endif %}
+               </div>
+           </div>
+           {% endfor %}
+       </div>
+   </div>
+</div>
+{% elif financial_recommendations_to_show %}
+<div class="recommendation-card mb-4">
+   <div class="card border-0 shadow-sm">
+       <div class="card-header bg-gradient-warning">
+           <h5 class="card-title mb-0">
+               <i class="bx bx-lightbulb me-2"></i>
+               Recomendaciones Inteligentes
+           </h5>
+       </div>
+       <div class="card-body">
+           {% for recommendation in financial_recommendations_to_show %}
+           <div class="recommendation-item mb-3 p-3 bg-light rounded border-start border-warning border-4">
+               <div class="d-flex justify-content-between align-items-start mb-2">
+                   <h6 class="fw-bold text-warning mb-0">
+                       {% if recommendation.name %}
+                           {{ recommendation.name }}
+                       {% else %}
+                           Recomendación {{ forloop.counter }}
+                       {% endif %}
+                   </h6>
+                   {% if recommendation.priority %}
+                   <span class="badge bg-warning bg-opacity-25 text-warning">
+                       {% if recommendation.priority == 'high' %}Alta
+                       {% elif recommendation.priority == 'medium' %}Media
+                       {% else %}Baja
+                       {% endif %}
+                   </span>
+                   {% endif %}
+               </div>
+               {% if recommendation.recommendation %}
+               <p class="mb-2 small">{{ recommendation.recommendation }}</p>
+               {% endif %}
+               <div class="d-flex justify-content-between align-items-center">
+                   {% if recommendation.variable_name %}
+                   <small class="text-muted">
+                       <i class="bx bx-target me-1"></i>
+                       Variable: <strong>{{ recommendation.variable_name }}</strong>
+                   </small>
+                   {% else %}
+                   <small class="text-muted">
+                       <i class="bx bx-lightbulb me-1"></i>
+                       Recomendación general
+                   </small>
+                   {% endif %}
+                   {% if recommendation.id %}
+                   <button class="btn btn-outline-warning btn-sm" onclick="applyRecommendation('{{ recommendation.id }}')">
+                       <i class="bx bx-check me-1"></i>Aplicar
+                   </button>
+                   {% endif %}
+               </div>
+           </div>
+           {% endfor %}
+       </div>
+   </div>
+</div>
+{% else %}
+<!-- Solo mostrar si hay datos de simulación pero no recomendaciones -->
+{% if results %}
+<div class="alert alert-info border-0">
+   <div class="d-flex align-items-center">
+       <i class="bx bx-info-circle me-2"></i>
+       <div>
+           <strong>Recomendaciones en proceso</strong>
+           <div class="small">Las recomendaciones se generarán automáticamente al completar el análisis financiero.</div>
+       </div>
+   </div>
+</div>
+{% endif %}
+{% endif %}
 
-                        <!-- Variables de Costos -->
-                        <tr>
-                            <td><strong>CFD - Costo Fijo Diario</strong><br><small class="text-muted">Bs.</small></td>
-                            <td><span class="badge bg-secondary">650 Bs</span></td>
-                            <td><span class="badge bg-danger">{{ avg_CFD|floatformat:0 }} Bs</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CVU - Costo Variable Unitario</strong><br><small class="text-muted">Bs/L</small></td>
-                            <td><span class="badge bg-secondary">1.95 Bs/L</span></td>
-                            <td><span class="badge bg-warning">{{ avg_CVU|floatformat:2 }} Bs/L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CUIP - Costo Unitario Insumo</strong><br><small class="text-muted">Bs/L</small></td>
-                            <td><span class="badge bg-secondary">0.85 Bs/L</span></td>
-                            <td><span class="badge bg-warning">{{ avg_CUIP|floatformat:2 }} Bs/L</span></td>
-                        </tr>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+   const searchInput = document.getElementById('variableSearch');
+   
+   // Búsqueda de variables
+   if (searchInput) {
+       searchInput.addEventListener('input', function() {
+           const searchTerm = this.value.toLowerCase();
+           const allRows = document.querySelectorAll('.variable-row');
+           let visibleCount = 0;
+           
+           allRows.forEach(row => {
+               const text = row.textContent.toLowerCase();
+               if (text.includes(searchTerm) || searchTerm === '') {
+                   row.style.display = '';
+                   visibleCount++;
+               } else {
+                   row.style.display = 'none';
+               }
+           });
+           
+           // Actualizar contador
+           const info = document.querySelector('.col-md-6.text-end small');
+           if (info) {
+               info.innerHTML = '<i class="bx bx-info-circle me-1"></i>Mostrando ' + visibleCount + ' variables';
+           }
+       });
+   }
+});
 
-                        <!-- Variables de Producción -->
-                        <tr>
-                            <td><strong>CPROD - Capacidad de Producción</strong><br><small class="text-muted">L/día</small></td>
-                            <td><span class="badge bg-secondary">800 L/día</span></td>
-                            <td><span class="badge bg-success">{{ avg_CPROD|floatformat:0 }} L/día</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>NEPP - Número de Empleados en Producción</strong><br><small class="text-muted">Personas</small></td>
-                            <td><span class="badge bg-secondary">3 Personas</span></td>
-                            <td><span class="badge bg-info">{{ avg_NEPP|floatformat:0 }} Personas</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CPPL - Cantidad Promedio Producción por Lote</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">200 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_CPPL|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TPE - Tiempo de producción por empleado</strong><br><small class="text-muted">minutos</small></td>
-                            <td><span class="badge bg-secondary">120 min</span></td>
-                            <td><span class="badge bg-info">{{ avg_TPE|floatformat:0 }} min</span></td>
-                        </tr>
-
-                        <!-- Variables de Inventario -->
-                        <tr>
-                            <td><strong>IPF_INICIAL - Inventario Productos Finales Inicial</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">150 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_IPF_INICIAL|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>II_INICIAL - Inventario Insumos Inicial</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">300 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_II_INICIAL|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CIP - Capacidad Inventario Productos</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">500 L</span></td>
-                            <td><span class="badge bg-info">{{ avg_CIP|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CMIPF - Capacidad Máxima Inventario Producto Final</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">600 L</span></td>
-                            <td><span class="badge bg-info">{{ avg_CMIPF|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>SI - Stock Inventario Seguridad</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">100 L</span></td>
-                            <td><span class="badge bg-warning">{{ avg_SI|floatformat:0 }} L</span></td>
-                        </tr>
-
-                        <!-- Variables de Tiempo -->
-                        <tr>
-                            <td><strong>TPC - Tiempo Promedio entre Compras</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">7 DÍAS</span></td>
-                            <td><span class="badge bg-info">{{ avg_TPC|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TR - Tiempo Reabastecimiento</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">3 DÍAS</span></td>
-                            <td><span class="badge bg-warning">{{ avg_TR|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TMP - Tiempo Medio Procesamiento Pedido</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">1 DÍAS</span></td>
-                            <td><span class="badge bg-info">{{ avg_TMP|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>DPL - Días Promedio de Reposición de Leche</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">2 DÍAS</span></td>
-                            <td><span class="badge bg-warning">{{ avg_DPL|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-
-                        <!-- Variables de Clientes -->
-                        <tr>
-                            <td><strong>CPD - Clientes Por Día</strong><br><small class="text-muted">Personas</small></td>
-                            <td><span class="badge bg-secondary">85 Personas</span></td>
-                            <td><span class="badge bg-success">{{ avg_CPD|floatformat:0 }} Personas</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>VPC_BASE - Ventas por Cliente Base</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">5.2 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_VPC_BASE|floatformat:1 }} L</span></td>
-                        </tr>
-
-                        <!-- Variables de Operaciones -->
-                        <tr>
-                            <td><strong>MLP - Minutos Laborables Por Día</strong><br><small class="text-muted">minutos</small></td>
-                            <td><span class="badge bg-secondary">480 min</span></td>
-                            <td><span class="badge bg-info">{{ avg_MLP|floatformat:0 }} min</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>HTO - Horas Totales de Operación</strong><br><small class="text-muted">HORAS</small></td>
-                            <td><span class="badge bg-secondary">8 HORAS</span></td>
-                            <td><span class="badge bg-info">{{ avg_HTO|floatformat:0 }} HORAS</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>QMAX - Cantidad Máxima Producible</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">750 L</span></td>
-                            <td><span class="badge bg-success">{{ avg_QMAX|floatformat:0 }} L</span></td>
-                        </tr>
-
-                        <!-- Variables de Calidad y Control -->
-                        <tr>
-                            <td><strong>TCFO - Temperatura Cadena Frío Objetivo</strong><br><small class="text-muted">°C</small></td>
-                            <td><span class="badge bg-secondary">4 °C</span></td>
-                            <td><span class="badge bg-info">{{ avg_TCFO|floatformat:1 }} °C</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TEO - Tiempo Entrega Objetivo</strong><br><small class="text-muted">HORAS</small></td>
-                            <td><span class="badge bg-secondary">2 HORAS</span></td>
-                            <td><span class="badge bg-warning">{{ avg_TEO|floatformat:0 }} HORAS</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CINSP - Conversión Insumos</strong><br><small class="text-muted">L/L</small></td>
-                            <td><span class="badge bg-secondary">0.95 L/L</span></td>
-                            <td><span class="badge bg-info">{{ avg_CINSP|floatformat:2 }} L/L</span></td>
-                        </tr>
-
-                        <!-- Variables de Empleados -->
-                        <tr>
-                            <td><strong>SE - Sueldos Empleados</strong><br><small class="text-muted">Bs/mes</small></td>
-                            <td><span class="badge bg-secondary">2,500 Bs/mes</span></td>
-                            <td><span class="badge bg-danger">{{ avg_SE|floatformat:0 }} Bs/mes</span></td>
-                        </tr>
-
-                        <!-- Variables de Competencia -->
-                        <tr>
-                            <td><strong>PC - Precio de Venta de la Competencia</strong><br><small class="text-muted">Bs.</small></td>
-                            <td><span class="badge bg-secondary">4.50 Bs</span></td>
-                            <td><span class="badge bg-warning">{{ avg_PC|floatformat:2 }} Bs</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>PMC - Participación Mercado Competidor</strong><br><small class="text-muted">%</small></td>
-                            <td><span class="badge bg-secondary">35%</span></td>
-                            <td><span class="badge bg-warning">{{ avg_PMC|floatformat:1 }}%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>NPC - Número Productos Competencia</strong><br><small class="text-muted">Personas</small></td>
-                            <td><span class="badge bg-secondary">5 Personas</span></td>
-                            <td><span class="badge bg-info">{{ avg_NPC|floatformat:0 }} Personas</span></td>
-                        </tr>
-
-                        <!-- Variables de Transporte y Logística -->
-                        <tr>
-                            <td><strong>DPE - Distancia Promedio de Entrega</strong><br><small class="text-muted">KM</small></td>
-                            <td><span class="badge bg-secondary">8.5 KM</span></td>
-                            <td><span class="badge bg-info">{{ avg_DPE|floatformat:1 }} KM</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CUTRANS - Costo Transporte Unitario</strong><br><small class="text-muted">Bs/L</small></td>
-                            <td><span class="badge bg-secondary">0.25 Bs/L</span></td>
-                            <td><span class="badge bg-warning">{{ avg_CUTRANS|floatformat:2 }} Bs/L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CTPLV - Cantidad transportada por viaje</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">200 L</span></td>
-                            <td><span class="badge bg-info">{{ avg_CTPLV|floatformat:0 }} L</span></td>
-                        </tr>
-
-                        <!-- Variables de Marketing -->
-                        <tr>
-                            <td><strong>GMM - Gastos Marketing Mensual</strong><br><small class="text-muted">Bs/mes</small></td>
-                            <td><span class="badge bg-secondary">800 Bs/mes</span></td>
-                            <td><span class="badge bg-warning">{{ avg_GMM|floatformat:0 }} Bs/mes</span></td>
-                        </tr>
-
-                        <!-- Variables de Proveedores -->
-                        <tr>
-                            <td><strong>NPD - Número de Proveedores de Leche</strong><br><small class="text-muted">Personas</small></td>
-                            <td><span class="badge bg-secondary">3 Personas</span></td>
-                            <td><span class="badge bg-info">{{ avg_NPD|floatformat:0 }} Personas</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TE1 - Tiempo Entrega Proveedor 1</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">1 DÍAS</span></td>
-                            <td><span class="badge bg-success">{{ avg_TE1|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TE2 - Tiempo Entrega Proveedor 2</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">2 DÍAS</span></td>
-                            <td><span class="badge bg-warning">{{ avg_TE2|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>TE3 - Tiempo Entrega Proveedor 3</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">1 DÍAS</span></td>
-                            <td><span class="badge bg-success">{{ avg_TE3|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-
-                        <!-- Variables Adicionales -->
-                        <tr>
-                            <td><strong>ED - Estacionalidad de la Demanda</strong><br><small class="text-muted">%</small></td>
-                            <td><span class="badge bg-secondary">15%</span></td>
-                            <td><span class="badge bg-info">{{ avg_ED|floatformat:1 }}%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>NCM - Nivel de Competencia en el Mercado</strong><br><small class="text-muted">%</small></td>
-                            <td><span class="badge bg-secondary">65%</span></td>
-                            <td><span class="badge bg-warning">{{ avg_NCM|floatformat:1 }}%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>CTL - Consumo diario promedio</strong><br><small class="text-muted">Litros</small></td>
-                            <td><span class="badge bg-secondary">425 L</span></td>
-                            <td><span class="badge bg-primary">{{ avg_CTL|floatformat:0 }} L</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>NMD - Número Máximo de Días</strong><br><small class="text-muted">DÍAS</small></td>
-                            <td><span class="badge bg-secondary">30 DÍAS</span></td>
-                            <td><span class="badge bg-info">{{ avg_NMD|floatformat:0 }} DÍAS</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="p-3 bg-light border-top">
-                <small class="text-muted">
-                    <i class="bx bx-info-circle me-1"></i>
-                    Comparación basada en promedio de {{ historical_days_count|default:"30" }} días históricos
-                </small>
-            </div>
-        </div>
-    </div>
-
-    <!-- Financial Recommendations Enhanced -->
-    {% if financial_recommendations_to_show %}
-    <div class="recommendation-card mb-4">
-        <div class="card-header bg-gradient-warning">
-            <h5 class="card-title mb-0">
-                <i class="bx bx-lightbulb me-2"></i>
-                Recomendaciones Inteligentes
-            </h5>
-        </div>
-        <div class="card-body">
-            {% for recommendation in financial_recommendations_to_show %}
-            <div class="recommendation-item mb-3 p-3 bg-light rounded border-start border-warning border-4">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="fw-bold text-warning mb-0">{{ recommendation.name }}</h6>
-                    <span class="badge bg-warning bg-opacity-25 text-warning">
-                        {% if recommendation.priority == 'high' %}Alta{% elif recommendation.priority == 'medium' %}Media{% else %}Baja{% endif %}
-                    </span>
-                </div>
-                <p class="mb-2 small">{{ recommendation.recommendation }}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted">
-                        <i class="bx bx-target me-1"></i>
-                        Variable: <strong>{{ recommendation.variable_name }}</strong>
-                    </small>
-                    <button class="btn btn-outline-warning btn-sm" onclick="applyRecommendation('{{ recommendation.id }}')">
-                        <i class="bx bx-check me-1"></i>Aplicar
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+// Función para aplicar recomendaciones
+function applyRecommendation(id) {
+   if (id) {
+       console.log('Aplicando recomendación:', id);
+       // Aquí puedes agregar la lógica para aplicar la recomendación
+       // Por ejemplo, hacer una llamada AJAX al backend
+   }
+}
+</script>
 
     <!-- Quick Stats Dashboard -->
     <div class="metric-card mb-4">
