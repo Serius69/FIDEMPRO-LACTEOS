@@ -5,15 +5,16 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.http import Http404, JsonResponse
-from django.db.models import Max, F, Prefetch, Count, Q, Sum
+from django.db.models import Max, F, Prefetch, Count, Q, Sum, Avg, Min, Subquery, OuterRef
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 from django.db import transaction
 import logging
+import json
 
 # Imports locales
 from variable.models import Variable
@@ -24,7 +25,6 @@ from business.models import Business
 from dashboards.models import Chart
 from simulate.models import ResultSimulation, Simulation, Demand, DemandBehavior
 from pages.forms import RegisterElementsForm
-
 # Configurar logger
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class DashboardService:
     
     @staticmethod
     def get_business_metrics(business_id: int) -> Dict[str, Any]:
-        """Obtiene las métricas del negocio de forma optimizada"""
+        """Obtiene las métricas del negocio de forma optimizada para MySQL"""
         # Usar agregación para obtener todas las métricas en una sola consulta
         products = Product.objects.filter(
             fk_business=business_id
@@ -52,26 +52,26 @@ class DashboardService:
         # Obtener IDs de productos para consultas posteriores
         product_ids = list(products.values_list('id', flat=True))
         
-        # Obtener últimos gráficos de forma optimizada
-        latest_charts = Chart.objects.filter(
-            fk_product_id__in=product_ids,
+        # MYSQL OPTIMIZED: Obtener últimos gráficos usando subquery
+        latest_chart_subquery = Chart.objects.filter(
+            fk_product_id=OuterRef('fk_product_id'),
             is_active=True
-        ).values('fk_product_id').annotate(
-            latest_id=Max('id')
-        ).values_list('latest_id', flat=True)
+        ).order_by('-id').values('id')[:1]
         
         charts = Chart.objects.filter(
-            id__in=latest_charts
+            fk_product_id__in=product_ids,
+            is_active=True,
+            id__in=Subquery(latest_chart_subquery)
         ).select_related('fk_product')
         
-        # Obtener simulaciones con prefetch
+        # MYSQL OPTIMIZED: Obtener simulaciones únicas usando GROUP BY
         simulations = Simulation.objects.filter(
             fk_questionary_result__fk_questionary__fk_product_id__in=product_ids
         ).select_related(
             'fk_questionary_result__fk_questionary__fk_product',
             'fk_fdp'
         ).prefetch_related(
-            'results'  # Prefetch results para evitar N+1 queries
+            'results'
         ).order_by('-date_created')
                 
         return {
@@ -87,11 +87,14 @@ class DashboardService:
         variables_to_search = ['TPV', 'IT', 'GT', 'TG', 'DT']
         
         # Obtener mapeo de variables una sola vez
-        variable_mapping = dict(
-            Variable.objects.filter(
-                initials__in=variables_to_search
-            ).values_list('initials', 'name')
-        )
+        try:
+            variable_mapping = dict(
+                Variable.objects.filter(
+                    initials__in=variables_to_search
+                ).values_list('initials', 'name')
+            )
+        except Exception:
+            variable_mapping = {}
         
         # Mapeo de iniciales a nombres descriptivos para el dashboard
         metric_mapping = {
@@ -111,46 +114,60 @@ class DashboardService:
             'Total Profit Margin': 0
         }
         
+        # MYSQL OPTIMIZED: Usar set para evitar duplicados más eficientemente
+        processed_simulations = set()
+        
         try:
             for simulation in simulations:
-                # Verificar si simulation tiene results
-                if hasattr(simulation, 'results'):
-                    results = simulation.results.all()
-                else:
-                    # Fallback si no hay prefetch
-                    results = ResultSimulation.objects.filter(fk_simulation=simulation)
+                # Skip if already processed
+                if simulation.id in processed_simulations:
+                    continue
+                processed_simulations.add(simulation.id)
                 
-                for result in results:
-                    try:
-                        # Verificar si result tiene el método get_variables
-                        if hasattr(result, 'get_variables'):
-                            variables = result.get_variables()
-                        else:
-                            # Fallback: intentar obtener variables directamente
-                            variables = {}
-                            if hasattr(result, 'variables') and result.variables:
-                                import json
-                                variables = json.loads(result.variables) if isinstance(result.variables, str) else result.variables
-                        
-                        for initial, value in variables.items():
-                            if initial in metric_mapping:
-                                metric_name = metric_mapping[initial]
-                                if metric_name in totals:
-                                    # Convertir value a float si es string
+                # Verificar si simulation tiene results
+                try:
+                    if hasattr(simulation, 'results'):
+                        results = simulation.results.all()
+                    else:
+                        # Fallback si no hay prefetch
+                        results = ResultSimulation.objects.filter(fk_simulation=simulation)
+                    
+                    for result in results:
+                        try:
+                            # Verificar si result tiene el método get_variables
+                            if hasattr(result, 'get_variables'):
+                                variables = result.get_variables()
+                            else:
+                                # Fallback: intentar obtener variables directamente
+                                variables = {}
+                                if hasattr(result, 'variables') and result.variables:
                                     try:
-                                        numeric_value = float(value) if value is not None else 0
-                                        totals[metric_name] += numeric_value
-                                    except (ValueError, TypeError):
-                                        logger.warning(f"Cannot convert value {value} to float for metric {initial}")
-                                        continue
-                                        
-                    except Exception as e:
-                        logger.error(f"Error processing result {result.id} from simulation {simulation.id}: {e}")
-                        continue
+                                        variables = json.loads(result.variables) if isinstance(result.variables, str) else result.variables
+                                    except (json.JSONDecodeError, TypeError):
+                                        variables = {}
+                            
+                            if variables and isinstance(variables, dict):
+                                for initial, value in variables.items():
+                                    if initial in metric_mapping:
+                                        metric_name = metric_mapping[initial]
+                                        if metric_name in totals:
+                                            # Convertir value a float si es string
+                                            try:
+                                                numeric_value = float(value) if value is not None else 0
+                                                totals[metric_name] += numeric_value
+                                            except (ValueError, TypeError):
+                                                logger.warning(f"Cannot convert value {value} to float for metric {initial}")
+                                                continue
+                                                
+                        except Exception as e:
+                            logger.error(f"Error processing result {result.id} from simulation {simulation.id}: {e}")
+                            continue
+                except Exception as e:
+                    logger.error(f"Error accessing results for simulation {simulation.id}: {e}")
+                    continue
                         
         except Exception as e:
             logger.error(f"Error calculating totals: {e}")
-            # Retornar totales con valores por defecto en caso de error
             
         return totals
     
@@ -158,22 +175,30 @@ class DashboardService:
     def calculate_business_stats(business_id: int) -> Dict[str, int]:
         """Calcula estadísticas adicionales del negocio"""
         try:
-            # Obtener conteos de forma eficiente
-            products_count = Product.objects.filter(fk_business=business_id).count()
+            # MYSQL OPTIMIZED: Usar una sola consulta con COUNT
+            stats = Business.objects.filter(
+                id=business_id
+            ).aggregate(
+                products_count=Count('fk_business_product', distinct=True),
+                simulations_count=Count(
+                    'fk_business_product__fk_product_questionary__results__fk_simulation',
+                    distinct=True
+                ),
+                charts_count=Count(
+                    'fk_business_product__fk_product_chart',
+                    filter=Q(fk_business_product__fk_product_chart__is_active=True),
+                    distinct=True
+                )
+            )
+            
+            # Calcular areas por separado para evitar joins complejos
             areas_count = Area.objects.filter(fk_product__fk_business=business_id).count()
-            simulations_count = Simulation.objects.filter(
-                fk_questionary_result__fk_questionary__fk_product__fk_business=business_id
-            ).count()
-            charts_count = Chart.objects.filter(
-                fk_product__fk_business=business_id,
-                is_active=True
-            ).count()
             
             return {
-                'products_count': products_count,
+                'products_count': stats.get('products_count', 0),
                 'areas_count': areas_count,
-                'simulations_count': simulations_count,
-                'charts_count': charts_count,
+                'simulations_count': stats.get('simulations_count', 0),
+                'charts_count': stats.get('charts_count', 0),
             }
         except Exception as e:
             logger.error(f"Error calculating business stats: {e}")
@@ -192,7 +217,7 @@ class DashboardService:
             today = timezone.now()
             last_month = today - relativedelta(months=1)
             
-            # Obtener simulaciones del mes anterior
+            # MYSQL OPTIMIZED: Obtener simulaciones del mes anterior con índices
             last_month_simulations = Simulation.objects.filter(
                 fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
                 date_created__year=last_month.year,
@@ -215,10 +240,10 @@ class DashboardService:
                 
                 if previous > 0:
                     change = ((current - previous) / previous) * 100
-                    changes[metric.replace('Total ', '').lower() + '_change'] = round(change, 1)
+                    changes[metric.replace('Total ', '').lower().replace(' ', '_') + '_change'] = round(change, 1)
                 else:
                     # Si no hay datos del mes anterior, asumir crecimiento del 0%
-                    changes[metric.replace('Total ', '').lower() + '_change'] = 0.0
+                    changes[metric.replace('Total ', '').lower().replace(' ', '_') + '_change'] = 0.0
             
             return changes
             
@@ -235,41 +260,182 @@ class DashboardService:
             }
 
     @staticmethod
+    def get_business_kpis(business_id: int) -> Dict[str, Any]:
+        """Calcula KPIs clave del negocio"""
+        try:
+            metrics = DashboardService.get_business_metrics(business_id)
+            totals = DashboardService.calculate_totals(metrics['simulations'])
+            
+            # Calcular KPIs
+            revenue = totals.get('Total Revenue', 0)
+            costs = totals.get('Total Costs', 0)
+            profit_margin = ((revenue - costs) / revenue * 100) if revenue > 0 else 0
+            roi = ((revenue - costs) / costs * 100) if costs > 0 else 0
+            
+            return {
+                'profit_margin_percentage': round(profit_margin, 1),
+                'roi_percentage': round(roi, 1),
+                'total_products': metrics['products'].count(),
+                'active_simulations': metrics['simulations'].count(),
+                'efficiency_score': min(100, max(0, round((profit_margin + roi) / 2, 1))) if profit_margin > 0 or roi > 0 else 0,
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculating KPIs: {e}")
+            return {
+                'profit_margin_percentage': 0,
+                'roi_percentage': 0,
+                'total_products': 0,
+                'active_simulations': 0,
+                'efficiency_score': 0,
+            }
+    
+    @staticmethod
+    def _calculate_growth_rate(monthly_data: list) -> float:
+        """Calcula la tasa de crecimiento promedio"""
+        if len(monthly_data) < 2:
+            return 0
+        
+        try:
+            first_revenue = monthly_data[0]['revenue']
+            last_revenue = monthly_data[-1]['revenue']
+            
+            if first_revenue > 0:
+                growth_rate = ((last_revenue - first_revenue) / first_revenue) * 100
+                return round(growth_rate, 1)
+        except (KeyError, TypeError, ZeroDivisionError):
+            pass
+        
+        return 0
+    
+    @staticmethod
+    def get_performance_trends(business_id: int) -> Dict[str, Any]:
+        """MYSQL OPTIMIZED: Obtiene tendencias de rendimiento usando agregaciones eficientes"""
+        try:
+            # Obtener datos de los últimos 6 meses
+            today = timezone.now()
+            six_months_ago = today - relativedelta(months=6)
+            
+            # MYSQL OPTIMIZED: Usar una sola consulta con GROUP BY para obtener datos mensuales
+            monthly_simulations = Simulation.objects.filter(
+                fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
+                date_created__gte=six_months_ago
+            ).extra(
+                select={
+                    'month': "DATE_FORMAT(date_created, '%%Y-%%m')",
+                    'month_name': "DATE_FORMAT(date_created, '%%b %%Y')"
+                }
+            ).values('month', 'month_name').annotate(
+                simulations_count=Count('id')
+            ).order_by('month')
+            
+            # Procesar datos mensuales
+            monthly_data = []
+            month_simulation_map = {item['month']: item for item in monthly_simulations}
+            
+            for i in range(6):
+                month_start = six_months_ago + relativedelta(months=i)
+                month_key = month_start.strftime('%Y-%m')
+                month_name = month_start.strftime('%b %Y')
+                
+                # Obtener simulaciones del mes específico
+                month_sims = Simulation.objects.filter(
+                    fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
+                    date_created__year=month_start.year,
+                    date_created__month=month_start.month
+                )
+                
+                month_totals = DashboardService.calculate_totals(month_sims)
+                sim_count = month_simulation_map.get(month_key, {}).get('simulations_count', 0)
+                
+                monthly_data.append({
+                    'month': month_name,
+                    'revenue': month_totals.get('Total Revenue', 0),
+                    'costs': month_totals.get('Total Costs', 0),
+                    'profit': month_totals.get('Total Profit Margin', 0),
+                    'simulations_count': sim_count
+                })
+            
+            return {
+                'monthly_trends': monthly_data,
+                'growth_rate': DashboardService._calculate_growth_rate(monthly_data),
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting performance trends: {e}")
+            return {'monthly_trends': [], 'growth_rate': 0}
+    
+    @staticmethod
+    def get_top_products(business_id: int) -> list:
+        """MYSQL OPTIMIZED: Obtiene los productos con mejor rendimiento usando subqueries"""
+        try:
+            # MYSQL OPTIMIZED: Usar subquery para contar simulaciones
+            products = Product.objects.filter(
+                fk_business=business_id
+            ).annotate(
+                simulations_count=Count(
+                    'fk_product_questionary__results__fk_simulation',
+                    distinct=True
+                ),
+                latest_simulation_date=Max(
+                    'fk_product_questionary__results__fk_simulation__date_created'
+                )
+            ).order_by('-simulations_count', '-latest_simulation_date')[:5]
+            
+            return list(products)
+            
+        except Exception as e:
+            logger.error(f"Error getting top products: {e}")
+            return []
+    
+    @staticmethod
     def get_business_recommendations_with_simulations(business_id: int):
         """
-        Obtiene las recomendaciones del negocio junto con sus simulaciones más recientes
+        MYSQL OPTIMIZED: Obtiene recomendaciones únicas usando GROUP BY
         """
         try:
-            # Obtener recomendaciones del negocio
-            business_recommendations = FinanceRecommendation.objects.filter(
-                fk_business_id=business_id,
-                is_active=True
-            ).prefetch_related('recommendation_simulations')
-            
-            # Obtener simulaciones recientes
+            # MYSQL OPTIMIZED: Usar GROUP BY en lugar de DISTINCT ON
             recent_simulations = FinanceRecommendationSimulation.objects.filter(
                 fk_simulation__fk_questionary_result__fk_questionary__fk_product__fk_business=business_id
             ).select_related(
                 'fk_simulation__fk_questionary_result__fk_questionary__fk_product'
-            ).order_by('-fk_simulation__date_created')[:10]
+            ).values(
+                'fk_simulation_id',
+                'fk_simulation__date_created',
+                'fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'
+            ).annotate(
+                latest_id=Max('id'),
+                data_value=Max('data')  # Asumiendo que quieres el último valor
+            ).order_by('-fk_simulation__date_created')[:20]
             
-            # Combinar datos para el template
             recommendations_data = []
             
-            for sim in recent_simulations:
-                # Intentar asociar con una recomendación existente del negocio
-                recommendation = business_recommendations.first() if business_recommendations.exists() else None
-                
-                recommendations_data.append({
-                    'id': sim.id,
-                    'simulation_date': sim.fk_simulation.date_created,
-                    'product_name': sim.fk_simulation.fk_questionary_result.fk_questionary.fk_product.name,
-                    'data': sim.data,
-                    'data_percentage': sim.data * 100,
-                    'variable_name': recommendation.variable_name if recommendation else 'Análisis General',
-                    'threshold_value': recommendation.threshold_value if recommendation else None,
-                    'recommendation_text': recommendation.recommendation if recommendation else f'Simulación realizada el {sim.fk_simulation.date_created.strftime("%d/%m/%Y")}',
-                })
+            for sim_data in recent_simulations:
+                try:
+                    # Obtener el objeto completo para el último registro
+                    sim = FinanceRecommendationSimulation.objects.get(id=sim_data['latest_id'])
+                    
+                    # Obtener datos seguros
+                    data_value = sim_data.get('data_value') or getattr(sim, 'data', 0.5)
+                    if data_value is None:
+                        data_value = 0.5
+                    data_percentage = float(data_value) * 100
+                    
+                    recommendations_data.append({
+                        'id': sim.id,
+                        'simulation_date': sim_data['fk_simulation__date_created'],
+                        'product_name': sim_data['fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'],
+                        'data': data_value,
+                        'data_percentage': data_percentage,
+                        'variable_name': 'Análisis General',
+                        'threshold_value': None,
+                        'recommendation_text': f'Simulación realizada el {sim_data["fk_simulation__date_created"].strftime("%d/%m/%Y")}',
+                        'simulation_id': sim_data['fk_simulation_id'],
+                    })
+                    
+                except Exception as e:
+                    logger.error(f"Error processing simulation data: {e}")
+                    continue
             
             return recommendations_data
             
@@ -284,7 +450,6 @@ def index(request):
         if request.method == 'POST':
             form = RegisterElementsForm(request.POST)
             if form.is_valid():
-                # Procesar formulario
                 messages.success(request, "Elementos registrados correctamente")
                 return redirect('dashboard:index')
         else:
@@ -292,7 +457,6 @@ def index(request):
 
         business = DashboardService.get_user_business(request.user)
         
-        # Si no hay negocio, mostrar valores por defecto
         if not business:
             context = {
                 'form': form,
@@ -304,17 +468,12 @@ def index(request):
             }
             return render(request, 'dashboards/index.html', context)
 
-        # Si hay negocio, continuar con la lógica normal
         request.session['business_id'] = business.id
-
-        # Obtener métricas del negocio para los contadores
         metrics = DashboardService.get_business_metrics(business.id)
         business_count = Business.objects.filter(fk_user=request.user, is_active=True).count()
         products_count = metrics['products'].count()
-        simulations_count = metrics['simulations'].count() if hasattr(metrics['simulations'], 'count') else len(metrics['simulations'])
-        # charts_count = metrics['charts'].count() if hasattr(metrics['charts'], 'count') else len(metrics['charts'])
+        simulations_count = metrics['simulations'].count()
 
-        # Get recent activities for the user
         recent_activities = ActivityLog.objects.filter(
             user=request.user
         ).select_related('user').order_by('-timestamp')[:30]
@@ -325,7 +484,6 @@ def index(request):
             'business_count': business_count,
             'products_count': products_count,
             'simulations_count': simulations_count,
-            # 'charts_count': charts_count,
             'recent_activities': recent_activities
         }
         return render(request, 'dashboards/index.html', context)
@@ -334,7 +492,7 @@ def index(request):
         logger.error(f"Error en index view: {e}")
         messages.error(request, 'Ocurrió un error inesperado. Por favor intenta nuevamente.')
         return render(request, 'error_page.html', {'error_message': str(e)})
-
+    
 @login_required
 @cache_page(60 * 5)  # Cache por 5 minutos
 def dashboard_admin(request):
@@ -374,7 +532,7 @@ def dashboard_admin(request):
 
 @login_required
 def dashboard_user(request):
-    """Dashboard principal del usuario con todas las métricas del negocio"""
+    """Dashboard principal del usuario con todas las métricas del negocio - MYSQL OPTIMIZED"""
     try:
         # Obtener business_id de sesión o parámetro
         business_id = request.GET.get('business_id') or request.session.get('business_id')
@@ -399,56 +557,27 @@ def dashboard_user(request):
         # Actualizar sesión
         request.session['business_id'] = business_id
         
-        # Obtener métricas del negocio directamente
-        products = Product.objects.filter(
-            fk_business=business_id
-        ).prefetch_related(
-            Prefetch('fk_product_area', queryset=Area.objects.select_related('fk_product'))
-        )
+        # MYSQL OPTIMIZED: Obtener métricas del negocio
+        metrics = DashboardService.get_business_metrics(business_id)
         
-        # Obtener IDs de productos para consultas posteriores
-        product_ids = list(products.values_list('id', flat=True))
+        # MYSQL OPTIMIZED: Obtener recomendaciones sin duplicados
+        recommendations_data = DashboardService.get_business_recommendations_with_simulations(business_id)
         
-        # Obtener últimos gráficos de forma optimizada
-        latest_charts = Chart.objects.filter(
-            fk_product_id__in=product_ids,
-            is_active=True
-        ).values('fk_product_id').annotate(
-            latest_id=Max('id')
-        ).values_list('latest_id', flat=True)
-        
-        charts = Chart.objects.filter(
-            id__in=latest_charts
-        ).select_related('fk_product')
-        
-        # Obtener simulaciones con prefetch
-        simulations = Simulation.objects.filter(
-            fk_questionary_result__fk_questionary__fk_product_id__in=product_ids
-        ).select_related(
-            'fk_questionary_result__fk_questionary__fk_product',
-            'fk_fdp'
-        ).prefetch_related(
-            'results'  # Prefetch results para evitar N+1 queries
-        ).order_by('-date_created')
-        
-        # Obtener recomendaciones con datos disponibles - FIXED
-        recommendations_query = FinanceRecommendationSimulation.objects.filter(
-            fk_simulation__fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
-        ).select_related(
-            'fk_simulation__fk_questionary_result__fk_questionary__fk_product'
-        ).annotate(
-            product_name=F('fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'),
-            simulation_date=F('fk_simulation__date_created'),
-            # Fixed: Use metric_value instead of data
-            data_percentage=F('metric_value') * 100
-        ).order_by('-simulation_date')
-        
-        # Paginación
-        paginator = Paginator(recommendations_query, 10)
+        # Paginación para recomendaciones
+        paginator = Paginator(recommendations_data, 10)
         page_obj = paginator.get_page(request.GET.get('page'))
         
         # Calcular totales directamente
-        totals = DashboardService.calculate_totals(simulations)
+        totals = DashboardService.calculate_totals(metrics['simulations'])
+        
+        # Obtener tendencias de rendimiento
+        performance_trends = DashboardService.get_performance_trends(business_id)
+        
+        # Obtener productos top
+        top_products = DashboardService.get_top_products(business_id)
+        
+        # Calcular KPIs del negocio
+        business_kpis = DashboardService.get_business_kpis(business_id)
         
         # Obtener actividad reciente con más detalles
         recent_activity = ActivityLog.objects.filter(
@@ -461,34 +590,10 @@ def dashboard_user(request):
             is_active=True
         ).order_by('-id')
         
-        # Obtener áreas del negocio actual
-        areas = Area.objects.filter(
-            fk_product__in=products
-        ).select_related('fk_product')
+        # Calcular estadísticas adicionales del negocio
+        business_stats = DashboardService.calculate_business_stats(business_id)
         
-        # Calcular estadísticas adicionales del negocio directamente
-        try:
-            products_count = products.count()
-            areas_count = areas.count()
-            simulations_count = simulations.count()
-            charts_count = charts.count()
-            
-            business_stats = {
-                'products_count': products_count,
-                'areas_count': areas_count,
-                'simulations_count': simulations_count,
-                'charts_count': charts_count,
-            }
-        except Exception as e:
-            logger.error(f"Error calculating business stats: {e}")
-            business_stats = {
-                'products_count': 0,
-                'areas_count': 0,
-                'simulations_count': 0,
-                'charts_count': 0,
-            }
-        
-        # Calcular cambios porcentuales comparando con el mes anterior
+        # Calcular cambios porcentuales
         percentage_changes = DashboardService.get_percentage_changes(business_id, totals)
         
         # Saludo personalizado
@@ -504,9 +609,8 @@ def dashboard_user(request):
             'greeting': greeting,
             'business': business,
             'businesses': businesses,
-            'products': products,
-            'areas': areas,
-            'charts': charts,
+            'products': metrics['products'],
+            'charts': metrics['charts'],
             'page_obj': page_obj,
             'recent_activity': recent_activity,
             
@@ -518,19 +622,30 @@ def dashboard_user(request):
             'total_production_output': totals.get('Total Production Output', 0),
             'total_profit_margin': totals.get('Total Profit Margin', 0),
             
+            # KPIs del negocio
+            'profit_margin_percentage': business_kpis['profit_margin_percentage'],
+            'roi_percentage': business_kpis['roi_percentage'],
+            'efficiency_score': business_kpis['efficiency_score'],
+            
             # Contadores para las cards de estadísticas
             'business_count': businesses.count(),
             'products_count': business_stats['products_count'],
             'simulations_count': business_stats['simulations_count'],
             'charts_count': business_stats['charts_count'],
             
-            # Cambios porcentuales (usando datos reales)
+            # Cambios porcentuales
             'revenue_change': percentage_changes.get('revenue_change', 0.0),
             'costs_change': percentage_changes.get('costs_change', 0.0),
             'profit_change': percentage_changes.get('profit_margin_change', 0.0),
             'inventory_change': percentage_changes.get('inventory_levels_change', 0.0),
             'demand_change': percentage_changes.get('demand_change', 0.0),
             'production_change': percentage_changes.get('production_output_change', 0.0),
+            
+            # Nuevos datos para dashboard ejecutivo
+            'performance_trends': performance_trends,
+            'top_products': top_products,
+            'monthly_trends_json': json.dumps(performance_trends['monthly_trends']),
+            'growth_rate': performance_trends['growth_rate'],
             
             # Datos adicionales del negocio
             'business_type_display': business.get_type_display() if hasattr(business, 'get_type_display') else 'Otros',
@@ -543,7 +658,7 @@ def dashboard_user(request):
         }
         
         # Debug para verificar datos
-        logger.info(f"Dashboard context for user {request.user.id}: business={business.name}, products={products.count()}, recommendations={page_obj.paginator.count}")
+        logger.info(f"Dashboard context for user {request.user.id}: business={business.name}, products={metrics['products'].count()}, unique_recommendations={len(recommendations_data)}")
         
         return render(request, 'dashboards/dashboard-user.html', context)
         
@@ -604,7 +719,6 @@ def update_business_metrics(request):
             'error': str(e)
         }, status=500)
         
-# Agregar las nuevas vistas al views.py
 def export_recommendations(request):
     """Exporta las recomendaciones a Excel/CSV"""
     from django.http import HttpResponse

@@ -1,6 +1,6 @@
 {% extends "partials/base.html" %}
 {% load static %}
-{% block title %}Dashboard - {{ business.name }}{% endblock title %}
+{% block title %}Dashboard Ejecutivo - {{ business.name }}{% endblock title %}
 {% block extra_css %}
     <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
@@ -11,21 +11,43 @@
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
-            <!-- Header Section -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="page-title-box d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-1">{{ greeting }}, {{ user.first_name|default:user.username }}</h4>
-                            <p class="text-muted mb-0">
-                                Dashboard de análisis para <strong>{{ business.name }}</strong>
-                            </p>
+            <!-- Executive Header -->
+            <div class="executive-header p-4 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h2 class="mb-1">{{ greeting }}, {{ user.first_name|default:user.username }}</h2>
+                        <p class="mb-3 opacity-75">Dashboard Ejecutivo - {{ business.name }}</p>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-calendar-line me-2"></i>
+                                    <small>{{ "now"|date:"d M Y" }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-building-line me-2"></i>
+                                    <small>{{ business_type_display }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-map-pin-line me-2"></i>
+                                    <small>{{ business_location }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-line-chart-line me-2"></i>
+                                    <small>Crecimiento: {{ growth_rate }}%</small>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <!-- Business Selector -->
-                        <div class="d-flex align-items-center gap-3">
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <div class="d-flex align-items-center justify-content-end gap-3">
                             <form method="GET" action="{% url 'dashboard:dashboard.user' %}" id="businessForm">
-                                <select name="business_id" class="form-select business-selector" 
+                                <select name="business_id" class="form-select text-dark" 
                                         onchange="document.getElementById('businessForm').submit()">
                                     {% for biz in businesses %}
                                         <option value="{{ biz.id }}" {% if biz.id == business.id %}selected{% endif %}>
@@ -36,8 +58,7 @@
                                     {% endfor %}
                                 </select>
                             </form>
-                            
-                            <button type="button" class="btn btn-primary" onclick="refreshDashboard()">
+                            <button type="button" class="btn btn-light btn-sm" onclick="refreshDashboard()">
                                 <i class="ri-refresh-line"></i> Actualizar
                             </button>
                         </div>
@@ -45,274 +66,440 @@
                 </div>
             </div>
 
-            <!-- Metrics Cards -->
-            <div class="dashboard-grid mb-4">
-                <!-- Revenue Card -->
-                <div class="card metric-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-muted text-uppercase mb-0">Ingresos Totales</h6>
-                            <div class="avatar-sm">
-                                <span class="avatar-title bg-success-subtle rounded">
-                                    <i class="bx bx-dollar-circle text-success fs-4"></i>
-                                </span>
+            <!-- KPI Cards Row -->
+            <div class="row g-4 mb-4">
+                <!-- Revenue KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-success-subtle text-success me-3">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1">Ingresos Totales</h6>
+                                    <h3 class="mb-0">Bs. <span class="counter-value" data-target="{{ total_revenue|floatformat:2 }}">0</span></h3>
+                                    <div class="d-flex align-items-center mt-2">
+                                        {% if revenue_change > 0 %}
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-arrow-up-line"></i> {{ revenue_change|floatformat:1 }}%
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="ri-arrow-down-line"></i> {{ revenue_change|floatformat:1 }}%
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <h3 class="mb-2">
-                            Bs. <span class="counter-value" data-target="{{ total_revenue|floatformat:2 }}">0</span>
-                        </h3>
-                        <div class="d-flex align-items-center">
-                            {% if revenue_change > 0 %}
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-arrow-up-line"></i> {{ revenue_change|floatformat:1 }}%
-                                </span>
-                            {% else %}
-                                <span class="badge bg-danger-subtle text-danger">
-                                    <i class="ri-arrow-down-line"></i> {{ revenue_change|floatformat:1 }}%
-                                </span>
-                            {% endif %}
-                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Costs Card -->
-                <div class="card metric-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-muted text-uppercase mb-0">Costos Totales</h6>
-                            <div class="avatar-sm">
-                                <span class="avatar-title bg-danger-subtle rounded">
-                                    <i class="bx bxs-badge-dollar text-danger fs-4"></i>
-                                </span>
+                <!-- Profit Margin KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-primary-subtle text-primary me-3">
+                                    <i class="ri-line-chart-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1">Margen de Beneficio</h6>
+                                    <h3 class="mb-0">{{ profit_margin_percentage }}%</h3>
+                                    <div class="d-flex align-items-center mt-2">
+                                        {% if profit_change > 0 %}
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <i class="ri-arrow-up-line"></i> {{ profit_change|floatformat:1 }}%
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="ri-arrow-down-line"></i> {{ profit_change|floatformat:1 }}%
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <h3 class="mb-2">
-                            Bs. <span class="counter-value" data-target="{{ total_costs|floatformat:2 }}">0</span>
-                        </h3>
-                        <div class="d-flex align-items-center">
-                            {% if costs_change > 0 %}
-                                <span class="badge bg-danger-subtle text-danger">
-                                    <i class="ri-arrow-up-line"></i> {{ costs_change|floatformat:1 }}%
-                                </span>
-                            {% else %}
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-arrow-down-line"></i> {{ costs_change|floatformat:1 }}%
-                                </span>
-                            {% endif %}
-                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Profit Margin Card -->
-                <div class="card metric-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-muted text-uppercase mb-0">Margen de Beneficio</h6>
-                            <div class="avatar-sm">
-                                <span class="avatar-title bg-primary-subtle rounded">
-                                    <i class="las la-chart-line text-primary fs-4"></i>
-                                </span>
+                <!-- ROI KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-warning-subtle text-warning me-3">
+                                    <i class="ri-percent-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1">ROI</h6>
+                                    <h3 class="mb-0">{{ roi_percentage }}%</h3>
+                                    <div class="d-flex align-items-center mt-2">
+                                        {% if roi_percentage > 15 %}
+                                            <span class="badge bg-success-subtle text-success">Excelente</span>
+                                        {% elif roi_percentage > 8 %}
+                                            <span class="badge bg-warning-subtle text-warning">Bueno</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger">Mejorar</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <h3 class="mb-2">
-                            Bs. <span class="counter-value" data-target="{{ total_profit_margin|floatformat:2 }}">0</span>
-                        </h3>
-                        <div class="d-flex align-items-center">
-                            {% if profit_change > 0 %}
-                                <span class="badge bg-primary-subtle text-primary">
-                                    <i class="ri-arrow-up-line"></i> {{ profit_change|floatformat:1 }}%
-                                </span>
-                            {% else %}
-                                <span class="badge bg-danger-subtle text-danger">
-                                    <i class="ri-arrow-down-line"></i> {{ profit_change|floatformat:1 }}%
-                                </span>
-                            {% endif %}
-                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Inventory Card -->
-                <div class="card metric-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-muted text-uppercase mb-0">Inventario</h6>
-                            <div class="avatar-sm">
-                                <span class="avatar-title bg-info-subtle rounded">
-                                    <i class="las la-layer-group text-info fs-4"></i>
-                                </span>
+                <!-- Efficiency Score KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-info-subtle text-info me-3">
+                                    <i class="ri-speed-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1">Score de Eficiencia</h6>
+                                    <h3 class="mb-0">{{ efficiency_score }}/100</h3>
+                                    <div class="progress mt-2" style="height: 6px;">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: {{ efficiency_score }}%"></div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <h3 class="mb-2">
-                            <span class="counter-value" data-target="{{ total_inventory_levels|floatformat:0 }}">0</span> unidades
-                        </h3>
-                        <div class="d-flex align-items-center">
-                            {% if inventory_change > 0 %}
-                                <span class="badge bg-info-subtle text-info">
-                                    <i class="ri-arrow-up-line"></i> {{ inventory_change|floatformat:1 }}%
-                                </span>
-                            {% else %}
-                                <span class="badge bg-warning-subtle text-warning">
-                                    <i class="ri-arrow-down-line"></i> {{ inventory_change|floatformat:1 }}%
-                                </span>
-                            {% endif %}
-                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Demand Card -->
-                <div class="card metric-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-muted text-uppercase mb-0">Demanda Total</h6>
-                            <div class="avatar-sm">
-                                <span class="avatar-title bg-warning-subtle rounded">
-                                    <i class="las la-chart-bar text-warning fs-4"></i>
-                                </span>
-                            </div>
-                        </div>
-                        <h3 class="mb-2">
-                            <span class="counter-value" data-target="{{ total_demand|floatformat:0 }}">0</span>
-                        </h3>
-                        <div class="d-flex align-items-center">
-                            {% if demand_change > 0 %}
-                                <span class="badge bg-warning-subtle text-warning">
-                                    <i class="ri-arrow-up-line"></i> {{ demand_change|floatformat:1 }}%
-                                </span>
-                            {% else %}
-                                <span class="badge bg-danger-subtle text-danger">
-                                    <i class="ri-arrow-down-line"></i> {{ demand_change|floatformat:1 }}%
-                                </span>
-                            {% endif %}
-                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Production Card -->
-                <div class="card metric-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-muted text-uppercase mb-0">Producción</h6>
-                            <div class="avatar-sm">
-                                <span class="avatar-title bg-secondary-subtle rounded">
-                                    <i class="las la-industry text-secondary fs-4"></i>
-                                </span>
-                            </div>
-                        </div>
-                        <h3 class="mb-2">
-                            <span class="counter-value" data-target="{{ total_production_output|floatformat:0 }}">0</span>
-                        </h3>
-                        <div class="d-flex align-items-center">
-                            {% if production_change > 0 %}
-                                <span class="badge bg-secondary-subtle text-secondary">
-                                    <i class="ri-arrow-up-line"></i> {{ production_change|floatformat:1 }}%
-                                </span>
-                            {% else %}
-                                <span class="badge bg-danger-subtle text-danger">
-                                    <i class="ri-arrow-down-line"></i> {{ production_change|floatformat:1 }}%
-                                </span>
-                            {% endif %}
-                            <span class="text-muted ms-2 fs-12">vs. mes anterior</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Main Content Row -->
-            <div class="row">
-                <!-- Business Info Card -->
-                <div class="col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            {% if business.get_photo_url %}
-                                <img src="{{ business.get_photo_url }}" alt="{{ business.name }}" 
-                                     class="img-fluid rounded mb-3" style="max-height: 150px;">
-                            {% else %}
-                                <div class="avatar-xl mx-auto mb-3">
-                                    <div class="avatar-title bg-primary-subtle text-primary rounded">
-                                        <i class="las la-building fs-2"></i>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            <h5 class="mb-1">{{ business.name }}</h5>
-                            <p class="text-muted small">{{ business.fk_user.get_full_name|default:business.fk_user.username }}</p>
-                            
-                            <hr>
-                            
-                            <div class="text-start">
-                                <h6 class="text-muted text-uppercase fw-semibold mb-3">Información</h6>
-                                <p class="text-muted mb-3">{{ business_description|truncatewords:20 }}</p>
-                                
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-borderless">
-                                        <tbody>
-                                            <tr>
-                                                <td class="fw-medium">Industria:</td>
-                                                <td class="text-end">{{ business_type_display }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Ubicación:</td>
-                                                <td class="text-end">{{ business_location }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Email:</td>
-                                                <td class="text-end text-truncate" style="max-width: 150px;">
-                                                    {{ business.fk_user.email }}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Desde:</td>
-                                                <td class="text-end">{{ business.date_created|date:"d/m/Y" }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Productos:</td>
-                                                <td class="text-end">{{ products_count }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-medium">Simulaciones:</td>
-                                                <td class="text-end">{{ simulations_count }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                
-                                <div class="d-grid mt-3">
-                                    <a href="{% url 'business:business.overview' business.id %}" 
-                                       class="btn btn-sm btn-primary">
-                                        Ver detalles completos
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recommendations Table -->
-                <div class="col-lg-9 mb-4">
+            <!-- Main Dashboard Content -->
+            <div class="row g-4">
+                <!-- Performance Trends Chart -->
+                <div class="col-lg-8">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Recomendaciones Financieras</h5>
+                            <h5 class="card-title mb-0">Tendencias de Rendimiento (6 meses)</h5>
                             <div class="dropdown">
                                 <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" 
                                         data-bs-toggle="dropdown">
                                     <i class="ri-more-2-fill"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    {% if can_export %}
-                                    <li><a class="dropdown-item" href="#" onclick="exportRecommendations()">
-                                        <i class="ri-download-2-line me-2"></i>Exportar
+                                    <li><a class="dropdown-item" href="#" onclick="exportChart('trends')">
+                                        <i class="ri-download-2-line me-2"></i>Exportar Gráfico
                                     </a></li>
-                                    {% endif %}
-                                    {% if can_print %}
-                                    <li><a class="dropdown-item" href="#" onclick="window.print()">
-                                        <i class="ri-printer-line me-2"></i>Imprimir
+                                    <li><a class="dropdown-item" href="#" onclick="toggleChartType()">
+                                        <i class="ri-bar-chart-line me-2"></i>Cambiar Tipo
                                     </a></li>
-                                    {% endif %}
                                 </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="trendsChart" class="trend-chart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Performance Gauge -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Rendimiento General</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="performance-gauge">
+                                <div class="gauge-circle" style="--progress: {{ efficiency_score }}%;">
+                                    <div class="gauge-inner">
+                                        {{ efficiency_score }}%
+                                    </div>
+                                </div>
+                                <h6 class="mb-2">Score General</h6>
+                                <p class="text-muted small mb-3">
+                                    Basado en margen de beneficio, ROI y eficiencia operativa
+                                </p>
+                                
+                                <!-- Performance Breakdown -->
+                                <div class="row g-2 text-start">
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Rentabilidad:</small>
+                                            <small class="fw-medium">{{ profit_margin_percentage }}%</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">ROI:</small>
+                                            <small class="fw-medium">{{ roi_percentage }}%</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Productos:</small>
+                                            <small class="fw-medium">{{ products_count }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Simulaciones:</small>
+                                            <small class="fw-medium">{{ simulations_count }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Metrics Row -->
+            <div class="row g-4 my-4">
+                <!-- Inventory & Demand -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-info-subtle text-info rounded-circle">
+                                    <i class="ri-stack-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">{{ total_inventory_levels|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">Unidades en Inventario</p>
+                            <div class="mt-2">
+                                {% if inventory_change > 0 %}
+                                    <span class="text-success"><i class="ri-arrow-up-line"></i> {{ inventory_change }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-down-line"></i> {{ inventory_change }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-warning-subtle text-warning rounded-circle">
+                                    <i class="ri-shopping-cart-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">{{ total_demand|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">Demanda Total</p>
+                            <div class="mt-2">
+                                {% if demand_change > 0 %}
+                                    <span class="text-success"><i class="ri-arrow-up-line"></i> {{ demand_change }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-down-line"></i> {{ demand_change }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-danger-subtle text-danger rounded-circle">
+                                    <i class="ri-wallet-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">Bs. {{ total_costs|floatformat:2 }}</h4>
+                            <p class="text-muted mb-0">Costos Totales</p>
+                            <div class="mt-2">
+                                {% if costs_change < 0 %}
+                                    <span class="text-success"><i class="ri-arrow-down-line"></i> {{ costs_change|floatformat:1 }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-up-line"></i> {{ costs_change|floatformat:1 }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-secondary-subtle text-secondary rounded-circle">
+                                    <i class="ri-factory-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">{{ total_production_output|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">Producción Total</p>
+                            <div class="mt-2">
+                                {% if production_change > 0 %}
+                                    <span class="text-success"><i class="ri-arrow-up-line"></i> {{ production_change }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-down-line"></i> {{ production_change }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics & Insights Row -->
+            <div class="row g-4">
+                <!-- Top Products Ranking -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Top Productos</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if top_products %}
+                                {% for product in top_products %}
+                                <div class="product-rank">
+                                    <div class="rank-number">{{ forloop.counter }}</div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ product.name|truncatechars:25 }}</h6>
+                                        <small class="text-muted">
+                                            {{ product.simulations_count }} simulaciones
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <i class="ri-arrow-right-s-line text-muted"></i>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="ri-product-hunt-line fs-1 text-muted"></i>
+                                    <p class="text-muted mt-2">No hay productos registrados</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Alerts -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Alertas de Negocio</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert-container">
+                                <!-- Critical Alert -->
+                                {% if profit_margin_percentage < 10 %}
+                                <div class="alert alert-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-error-warning-line text-danger me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Margen de Beneficio Bajo</h6>
+                                            <small class="text-muted">
+                                                Tu margen está por debajo del 10%. Revisa costos.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Success Alert -->
+                                {% if efficiency_score > 80 %}
+                                <div class="alert success-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-checkbox-circle-line text-success me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Excelente Rendimiento</h6>
+                                            <small class="text-muted">
+                                                Tu negocio tiene un score superior al 80%.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Warning Alert -->
+                                {% if inventory_change < -20 %}
+                                <div class="alert warning-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-alert-line text-warning me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Inventario Bajo</h6>
+                                            <small class="text-muted">
+                                                El inventario ha bajado {{ inventory_change }}% este mes.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Growth Alert -->
+                                {% if growth_rate > 10 %}
+                                <div class="alert success-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-line-chart-line text-success me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Crecimiento Acelerado</h6>
+                                            <small class="text-muted">
+                                                Crecimiento del {{ growth_rate }}% en 6 meses.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if profit_margin_percentage >= 10 and efficiency_score <= 80 and inventory_change >= -20 and growth_rate <= 10 %}
+                                <div class="text-center py-4">
+                                    <i class="ri-shield-check-line fs-1 text-success"></i>
+                                    <p class="text-muted mt-2">Todo está funcionando correctamente</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Acciones Rápidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="quick-action" onclick="location.href='{% url 'simulate:simulate.show' %}'">
+                                        <i class="ri-play-circle-line fs-2 text-primary mb-2"></i>
+                                        <h6 class="mb-1">Nueva Simulación</h6>
+                                        <small class="text-muted">Ejecutar análisis predictivo</small>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="quick-action" onclick="generateReport()">
+                                        <i class="ri-file-chart-line fs-2 text-success mb-2"></i>
+                                        <h6 class="mb-1">Generar Reporte</h6>
+                                        <small class="text-muted">Reporte ejecutivo completo</small>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="quick-action" onclick="location.href='{% url 'product:product.create' %}'">
+                                        <i class="ri-add-circle-line fs-2 text-info mb-2"></i>
+                                        <h6 class="mb-1">Nuevo Producto</h6>
+                                        <small class="text-muted">Agregar producto al portafolio</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations Table -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Recomendaciones y Análisis Recientes</h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-soft-primary btn-sm" onclick="exportRecommendations()">
+                                    <i class="ri-download-2-line me-1"></i>Exportar
+                                </button>
+                                <button class="btn btn-soft-secondary btn-sm" onclick="refreshRecommendations()">
+                                    <i class="ri-refresh-line me-1"></i>Actualizar
+                                </button>
                             </div>
                         </div>
                         <div class="card-body">
@@ -323,44 +510,81 @@
                                             <tr>
                                                 <th>Fecha</th>
                                                 <th>Producto</th>
-                                                <th>Variable</th>
-                                                <th>Valor</th>
-                                                <th>Umbral</th>
-                                                <th>Recomendación</th>
+                                                <th>Análisis</th>
+                                                <th>Resultado</th>
+                                                <th>Estado</th>
                                                 <th>Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for rec in page_obj %}
                                             <tr>
-                                                <td>{{ rec.simulation_date|date:"d/m/Y" }}</td>
                                                 <td>
-                                                    <span class="badge bg-info-subtle text-info">
-                                                        {{ rec.product_name|truncatechars:20 }}
-                                                    </span>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-medium">{{ rec.simulation_date|date:"d/m/Y" }}</span>
+                                                        <small class="text-muted">{{ rec.simulation_date|time:"H:i" }}</small>
+                                                    </div>
                                                 </td>
-                                                <td>Análisis General</td>
                                                 <td>
-                                                    <div class="progress" style="height: 20px;">
-                                                        <div class="progress-bar" role="progressbar" 
-                                                             style="width: {{ rec.data_percentage|floatformat:0 }}%"
-                                                             aria-valuenow="{{ rec.data_percentage|floatformat:0 }}" 
-                                                             aria-valuemin="0" aria-valuemax="100">
-                                                            {{ rec.data_percentage|floatformat:1 }}%
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-sm me-2">
+                                                            <div class="avatar-title bg-info-subtle text-info rounded">
+                                                                <i class="ri-product-hunt-line"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0">{{ rec.product_name|truncatechars:20 }}</h6>
+                                                            <small class="text-muted">ID: #{{ rec.simulation_id }}</small>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>N/A</td>
                                                 <td>
-                                                    <span class="text-wrap" style="max-width: 200px; display: inline-block;">
-                                                        Simulación realizada el {{ rec.simulation_date|date:"d/m/Y" }}
+                                                    <span class="badge bg-primary-subtle text-primary">
+                                                        {{ rec.variable_name }}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <button class="btn btn-sm btn-light" 
-                                                            onclick="viewRecommendationDetails({{ rec.id }})">
-                                                        <i class="ri-eye-line"></i>
-                                                    </button>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                            <div class="progress-bar 
+                                                                {% if rec.data_percentage > 75 %}bg-success
+                                                                {% elif rec.data_percentage > 50 %}bg-warning
+                                                                {% else %}bg-danger{% endif %}" 
+                                                                 role="progressbar" 
+                                                                 style="width: {{ rec.data_percentage|floatformat:0 }}%">
+                                                            </div>
+                                                        </div>
+                                                        <small class="fw-medium">{{ rec.data_percentage|floatformat:1 }}%</small>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {% if rec.data_percentage > 75 %}
+                                                        <span class="badge bg-success">Óptimo</span>
+                                                    {% elif rec.data_percentage > 50 %}
+                                                        <span class="badge bg-warning">Regular</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Crítico</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle" 
+                                                                type="button" data-bs-toggle="dropdown">
+                                                            <i class="ri-more-2-line"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="#" onclick="viewDetails({{ rec.simulation_id }})">
+                                                                <i class="ri-eye-line me-2"></i>Ver Detalles
+                                                            </a></li>
+                                                            <li><a class="dropdown-item" href="#" onclick="generateRecommendation({{ rec.id }})">
+                                                                <i class="ri-lightbulb-line me-2"></i>Generar Recomendación
+                                                            </a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteSimulation({{ rec.simulation_id }})">
+                                                                <i class="ri-delete-bin-line me-2"></i>Eliminar
+                                                            </a></li>
+                                                        </ul>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -368,42 +592,50 @@
                                     </table>
                                 </div>
                                 
-                                <!-- Pagination -->
+                                <!-- Enhanced Pagination -->
                                 {% if page_obj.has_other_pages %}
-                                <nav class="mt-3">
-                                    <ul class="pagination justify-content-center mb-0">
-                                        {% if page_obj.has_previous %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page=1&business_id={{ business.id }}">
-                                                    <i class="ri-arrow-left-s-line"></i>
-                                                </a>
+                                <nav class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="text-muted mb-0">
+                                                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} 
+                                                de {{ page_obj.paginator.count }} registros
+                                            </p>
+                                        </div>
+                                        <ul class="pagination justify-content-center mb-0">
+                                            {% if page_obj.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=1&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-left-double-line"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-left-s-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            
+                                            <li class="page-item active">
+                                                <span class="page-link">
+                                                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                                                </span>
                                             </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&business_id={{ business.id }}">
-                                                    Anterior
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                        
-                                        <li class="page-item active">
-                                            <span class="page-link">
-                                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                                            </span>
-                                        </li>
-                                        
-                                        {% if page_obj.has_next %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}&business_id={{ business.id }}">
-                                                    Siguiente
-                                                </a>
-                                            </li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&business_id={{ business.id }}">
-                                                    <i class="ri-arrow-right-s-line"></i>
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                    </ul>
+                                            
+                                            {% if page_obj.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-right-s-line"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-right-double-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
                                 </nav>
                                 {% endif %}
                             {% else %}
@@ -411,15 +643,15 @@
                                     <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
                                                trigger="loop" 
                                                colors="primary:#405189,secondary:#0ab39c" 
-                                               style="width:75px;height:75px">
+                                               style="width:100px;height:100px">
                                     </lord-icon>
-                                    <h5 class="mt-3">No hay recomendaciones disponibles</h5>
-                                    <p class="text-muted">
-                                        No se encontraron recomendaciones para {{ business.name }}. 
-                                        Ejecuta una simulación para generar recomendaciones.
+                                    <h5 class="mt-4">No hay análisis disponibles</h5>
+                                    <p class="text-muted mb-4">
+                                        Comienza ejecutando una simulación para generar insights y recomendaciones 
+                                        para {{ business.name }}.
                                     </p>
-                                    <a href="{% url 'simulate:simulate.show' %}" class="btn btn-primary mt-2">
-                                        <i class="ri-add-line me-1"></i> Nueva Simulación
+                                    <a href="{% url 'simulate:simulate.show' %}" class="btn btn-primary">
+                                        <i class="ri-play-circle-line me-2"></i>Ejecutar Primera Simulación
                                     </a>
                                 </div>
                             {% endif %}
@@ -428,42 +660,7 @@
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            {% if charts %}
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3">Análisis Visual</h5>
-                </div>
-                {% for chart in charts %}
-                <div class="col-lg-4 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h6 class="card-title mb-0">{{ chart.title }}</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container" id="chart-{{ chart.id }}">
-                                {% if chart.chart_image %}
-                                    <img src="{{ chart.get_photo_url }}" alt="{{ chart.title }}" 
-                                         class="img-fluid">
-                                {% else %}
-                                    <div class="chart-loading">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Cargando...</span>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            <i class="ri-time-line"></i> Actualizado: {{ chart.last_updated|date:"d/m/Y H:i" }}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <!-- Recent Activity Sidebar -->
+            <!-- Activity Sidebar -->
             <div class="position-fixed end-0 top-50 translate-middle-y" style="z-index: 1000;">
                 <button class="btn btn-primary btn-sm rounded-start-0" type="button" 
                         data-bs-toggle="offcanvas" data-bs-target="#activityOffcanvas">
@@ -472,7 +669,7 @@
             </div>
 
             <!-- Activity Offcanvas -->
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="activityOffcanvas">
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="activityOffcanvas" style="width: 400px;">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title">Actividad Reciente</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -482,23 +679,25 @@
                         <div class="timeline">
                             {% for activity in recent_activity %}
                             <div class="timeline-item">
-                                <div class="timeline-marker"></div>
+                                <div class="timeline-marker bg-primary"></div>
                                 <div class="timeline-content">
-                                    <h6 class="mb-1">{{ activity.action }}</h6>
-                                    <p class="text-muted small mb-0">
-                                        {{ activity.timestamp|timesince }} atrás
-                                    </p>
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <h6 class="mb-0">{{ activity.action }}</h6>
+                                        <small class="text-muted">{{ activity.timestamp|timesince }}</small>
+                                    </div>
                                     {% if activity.details %}
-                                        <p class="text-muted small mt-1">{{ activity.details }}</p>
+                                        <p class="text-muted small mb-0">{{ activity.details }}</p>
                                     {% endif %}
+                                    <small class="text-primary">{{ activity.timestamp|date:"d/m H:i" }}</small>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center py-4">
+                        <div class="text-center py-5">
                             <i class="ri-history-line fs-1 text-muted"></i>
-                            <p class="text-muted mt-2">No hay actividad reciente</p>
+                            <p class="text-muted mt-3">No hay actividad reciente</p>
+                            <small class="text-muted">Las acciones aparecerán aquí</small>
                         </div>
                     {% endif %}
                 </div>
@@ -515,8 +714,18 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-// Counter Animation
+// Dashboard data
+const trendsData = {{ monthly_trends_json|safe }};
+
+// Initialize dashboard on load
 document.addEventListener('DOMContentLoaded', function() {
+    initializeCounters();
+    initializeTrendsChart();
+    setupAutoRefresh();
+});
+
+// Counter Animation
+function initializeCounters() {
     const counters = document.querySelectorAll('.counter-value');
     const speed = 200;
     
@@ -537,14 +746,120 @@ document.addEventListener('DOMContentLoaded', function() {
         
         updateCounter();
     });
-    
-    // Load charts dynamically
-    loadChartsAsync();
-});
+}
 
-// Refresh Dashboard
+// Trends Chart with ApexCharts
+function initializeTrendsChart() {
+    if (!trendsData || trendsData.length === 0) {
+        document.getElementById('trendsChart').innerHTML = '<div class="text-center py-5"><p class="text-muted">No hay datos suficientes para mostrar tendencias</p></div>';
+        return;
+    }
+
+    const options = {
+        series: [{
+            name: 'Ingresos',
+            data: trendsData.map(item => item.revenue),
+            color: '#10b981'
+        }, {
+            name: 'Costos',
+            data: trendsData.map(item => item.costs),
+            color: '#ef4444'
+        }, {
+            name: 'Beneficio',
+            data: trendsData.map(item => item.profit),
+            color: '#4f46e5'
+        }],
+        chart: {
+            type: 'line',
+            height: 300,
+            toolbar: {
+                show: true,
+                tools: {
+                    download: true,
+                    selection: false,
+                    zoom: false,
+                    zoomin: false,
+                    zoomout: false,
+                    pan: false,
+                    reset: false
+                }
+            },
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 3
+        },
+        xaxis: {
+            categories: trendsData.map(item => item.month),
+            labels: {
+                style: {
+                    fontSize: '12px'
+                }
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Bolivianos (Bs.)'
+            },
+            labels: {
+                formatter: function (val) {
+                    return 'Bs. ' + val.toLocaleString();
+                }
+            }
+        },
+        legend: {
+            position: 'top'
+        },
+        grid: {
+            borderColor: '#f1f5f9',
+            strokeDashArray: 3
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return 'Bs. ' + val.toLocaleString();
+                }
+            }
+        },
+        markers: {
+            size: 6,
+            strokeWidth: 2,
+            hover: {
+                size: 8
+            }
+        }
+    };
+
+    const chart = new ApexCharts(document.querySelector("#trendsChart"), options);
+    chart.render();
+    
+    // Store chart globally for export
+    window.trendsChart = chart;
+}
+
+// Auto-refresh setup
+function setupAutoRefresh() {
+    // Refresh every 5 minutes
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            refreshDashboardData();
+        }
+    }, 300000);
+}
+
+// Refresh dashboard data
 function refreshDashboard() {
-    const btn = event.target;
+    const btn = event.target.closest('button');
+    const originalContent = btn.innerHTML;
+    
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
     
@@ -559,82 +874,235 @@ function refreshDashboard() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Show success message
+            showNotification('Dashboard actualizado correctamente', 'success');
+            // Reload page after short delay
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Error al actualizar: ' + data.error);
+            showNotification('Error al actualizar: ' + data.error, 'error');
         }
+    })
+    .catch(error => {
+        showNotification('Error de conexión', 'error');
+        console.error('Error:', error);
     })
     .finally(() => {
         btn.disabled = false;
-        btn.innerHTML = '<i class="ri-refresh-line"></i> Actualizar';
+        btn.innerHTML = originalContent;
     });
 }
 
-// Load Charts Asynchronously
-function loadChartsAsync() {
-    const chartContainers = document.querySelectorAll('[id^="chart-"]');
+// Refresh recommendations
+function refreshRecommendations() {
+    const container = document.querySelector('.table-responsive');
+    const overlay = document.createElement('div');
+    overlay.className = 'position-relative';
+    overlay.innerHTML = `
+        <div class="position-absolute top-50 start-50 translate-middle" style="z-index: 10;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
     
-    chartContainers.forEach(container => {
-        const chartId = container.id.split('-')[1];
-        
-        if (!container.querySelector('img')) {
-            fetch(`{% url 'dashboard:get_chart_data' 0 %}`.replace('0', chartId))
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        renderChart(container, data);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading chart:', error);
-                    container.innerHTML = '<p class="text-danger">Error al cargar el gráfico</p>';
-                });
-        }
-    });
+    container.style.opacity = '0.5';
+    container.appendChild(overlay);
+    
+    // Simulate refresh - replace with actual AJAX call
+    setTimeout(() => {
+        container.style.opacity = '1';
+        overlay.remove();
+        showNotification('Recomendaciones actualizadas', 'success');
+    }, 2000);
 }
 
-// View Recommendation Details
-function viewRecommendationDetails(recId) {
-    // Implementar modal o navegación a detalles
-    console.log('Ver recomendación:', recId);
-}
-
-// Export Recommendations
+// Export functions
 function exportRecommendations() {
     window.location.href = '{% url "dashboard:export_recommendations" %}?business_id={{ business.id }}';
 }
 
-// Render Chart with ApexCharts
-function renderChart(container, data) {
-    const options = {
-        series: data.data.datasets,
-        chart: {
-            type: data.type,
-            height: 300,
-            toolbar: {
-                show: false
+function exportChart(type) {
+    if (type === 'trends' && window.trendsChart) {
+        window.trendsChart.dataURI().then(({ imgURI, blob }) => {
+            const link = document.createElement('a');
+            link.href = imgURI;
+            link.download = 'tendencias-{{ business.name }}-{{ "now"|date:"Y-m-d" }}.png';
+            link.click();
+        });
+    }
+}
+
+function generateReport() {
+    const btn = event.target.closest('.quick-action');
+    const originalContent = btn.innerHTML;
+    
+    btn.style.opacity = '0.7';
+    btn.innerHTML = `
+        <div class="spinner-border spinner-border-sm text-success mb-2"></div>
+        <h6 class="mb-1">Generando...</h6>
+        <small class="text-muted">Por favor espera</small>
+    `;
+    
+    // Simulate report generation
+    setTimeout(() => {
+        btn.style.opacity = '1';
+        btn.innerHTML = originalContent;
+        window.open('{% url "dashboard:analytics_report" %}?business_id={{ business.id }}', '_blank');
+    }, 2000);
+}
+
+// Action functions
+function viewDetails(simulationId) {
+    // Implement view details modal or redirect
+    window.location.href = `/simulate/detail/${simulationId}/`;
+}
+
+function generateRecommendation(recId) {
+    showNotification('Generando recomendación personalizada...', 'info');
+    // Implement recommendation generation
+}
+
+function deleteSimulation(simulationId) {
+    if (confirm('¿Estás seguro de que deseas eliminar esta simulación?')) {
+        fetch(`/simulate/delete/${simulationId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
             }
-        },
-        labels: data.data.labels,
-        title: {
-            text: data.title,
-            align: 'center'
-        },
-        responsive: [{
-            breakpoint: 480,
-            options: {
-                chart: {
-                    width: 200
-                },
-                legend: {
-                    position: 'bottom'
-                }
+        })
+        .then(response => {
+            if (response.ok) {
+                showNotification('Simulación eliminada correctamente', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification('Error al eliminar la simulación', 'error');
             }
-        }]
+        });
+    }
+}
+
+function toggleChartType() {
+    // Toggle between line and bar chart
+    if (window.trendsChart) {
+        const currentType = window.trendsChart.w.config.chart.type;
+        const newType = currentType === 'line' ? 'bar' : 'line';
+        
+        window.trendsChart.updateOptions({
+            chart: {
+                type: newType
+            }
+        });
+        
+        showNotification(`Gráfico cambiado a ${newType === 'line' ? 'líneas' : 'barras'}`, 'info');
+    }
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="ri-${type === 'success' ? 'check-circle' : type === 'error' ? 'error-warning' : 'information'}-line me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Real-time data refresh
+function refreshDashboardData() {
+    fetch(`{% url 'dashboard:dashboard_api' %}?business_id={{ business.id }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateMetricsCards(data.metrics);
+            }
+        })
+        .catch(error => console.error('Error refreshing data:', error));
+}
+
+function updateMetricsCards(metrics) {
+    // Update counter values
+    const counters = {
+        revenue: metrics.revenue,
+        costs: metrics.costs,
+        profit: metrics.profit_margin,
+        inventory: metrics.inventory,
+        demand: metrics.demand,
+        production: metrics.production
     };
     
-    const chart = new ApexCharts(container, options);
-    chart.render();
+    Object.keys(counters).forEach(key => {
+        const counter = document.querySelector(`[data-target*="${key}"]`);
+        if (counter) {
+            counter.textContent = counters[key].toFixed(2);
+        }
+    });
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+R or F5 - Refresh dashboard
+    if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') {
+        e.preventDefault();
+        refreshDashboard();
+    }
+    
+    // Ctrl+E - Export recommendations
+    if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        exportRecommendations();
+    }
+    
+    // Ctrl+N - New simulation
+    if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = '{% url "simulate:simulate.show" %}';
+    }
+});
+
+// Responsive chart handling
+window.addEventListener('resize', function() {
+    if (window.trendsChart) {
+        window.trendsChart.resize();
+    }
+});
+
+// Initialize tooltips and popovers
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+    
+    // Initialize Bootstrap popovers
+    const popovers = document.querySelectorAll('[data-bs-toggle="popover"]');
+    popovers.forEach(popover => {
+        new bootstrap.Popover(popover);
+    });
+});
+
+// Progressive Web App support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+                console.log('SW registered: ', registration);
+            })
+            .catch(function(registrationError) {
+                console.log('SW registration failed: ', registrationError);
+            });
+    });
 }
 </script>
 {% endblock extra_js %}
