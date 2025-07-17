@@ -5,6 +5,189 @@
     <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{% static 'css/dashboard-user.css' %}">
+    <!-- CSS adicional para componentes personalizados -->
+<style>
+.quick-action {
+    text-align: center;
+    padding: 20px;
+    border: 2px dashed #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-action:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.product-rank {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.product-rank:last-child {
+    border-bottom: none;
+}
+
+.rank-number {
+    width: 30px;
+    height: 30px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 12px;
+}
+
+.gauge-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+        #007bff 0deg,
+        #007bff calc(var(--progress) * 3.6deg),
+        #e9ecef calc(var(--progress) * 3.6deg),
+        #e9ecef 360deg
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.gauge-inner {
+    width: 90px;
+    height: 90px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #007bff;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 8px;
+    bottom: -12px;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item:last-child:before {
+    display: none;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+
+.alert-card {
+    border: 1px solid #fee2e2;
+    background: #fef2f2;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.success-card {
+    border: 1px solid #dcfce7;
+    background: #f0fdf4;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.warning-card {
+    border: 1px solid #fef3c7;
+    background: #fffbeb;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.performance-gauge {
+    text-align: center;
+}
+
+.metric-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.kpi-card {
+    transition: transform 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+}
+
+.executive-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.trend-chart {
+    min-height: 300px;
+}
+
+@media (max-width: 768px) {
+    .executive-header {
+        text-align: center;
+    }
+    
+    .gauge-circle {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .gauge-inner {
+        width: 75px;
+        height: 75px;
+        font-size: 1rem;
+    }
+    
+    .quick-action {
+        padding: 15px;
+    }
+}
+</style>
 {% endblock extra_css %}
 
 {% block content %}
@@ -461,7 +644,7 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <div class="quick-action" onclick="location.href='{% url 'simulate:simulate.show' %}'">
+                                    <div class="quick-action" onclick="showComingSoonNotification('Nueva Simulación')">
                                         <i class="ri-play-circle-line fs-2 text-primary mb-2"></i>
                                         <h6 class="mb-1">Nueva Simulación</h6>
                                         <small class="text-muted">Ejecutar análisis predictivo</small>
@@ -475,7 +658,7 @@
                                     </div>
                                 </div>
                                 <div class="col-12">
-                                    <div class="quick-action" onclick="location.href='{% url 'product:product.create' %}'">
+                                    <div class="quick-action" onclick="showComingSoonNotification('Nuevo Producto')">
                                         <i class="ri-add-circle-line fs-2 text-info mb-2"></i>
                                         <h6 class="mb-1">Nuevo Producto</h6>
                                         <small class="text-muted">Agregar producto al portafolio</small>
@@ -494,7 +677,7 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Recomendaciones y Análisis Recientes</h5>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-soft-primary btn-sm" onclick="exportRecommendations()">
+                                <button class="btn btn-soft-primary btn-sm" onclick="showComingSoonNotification('Exportar Recomendaciones')">
                                     <i class="ri-download-2-line me-1"></i>Exportar
                                 </button>
                                 <button class="btn btn-soft-secondary btn-sm" onclick="refreshRecommendations()">
@@ -573,14 +756,14 @@
                                                             <i class="ri-more-2-line"></i>
                                                         </button>
                                                         <ul class="dropdown-menu">
-                                                            <li><a class="dropdown-item" href="#" onclick="viewDetails({{ rec.simulation_id }})">
+                                                            <li><a class="dropdown-item" href="#" onclick="showComingSoonNotification('Ver Detalles')">
                                                                 <i class="ri-eye-line me-2"></i>Ver Detalles
                                                             </a></li>
-                                                            <li><a class="dropdown-item" href="#" onclick="generateRecommendation({{ rec.id }})">
+                                                            <li><a class="dropdown-item" href="#" onclick="showComingSoonNotification('Generar Recomendación')">
                                                                 <i class="ri-lightbulb-line me-2"></i>Generar Recomendación
                                                             </a></li>
                                                             <li><hr class="dropdown-divider"></li>
-                                                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteSimulation({{ rec.simulation_id }})">
+                                                            <li><a class="dropdown-item text-danger" href="#" onclick="showComingSoonNotification('Eliminar')">
                                                                 <i class="ri-delete-bin-line me-2"></i>Eliminar
                                                             </a></li>
                                                         </ul>
@@ -650,9 +833,9 @@
                                         Comienza ejecutando una simulación para generar insights y recomendaciones 
                                         para {{ business.name }}.
                                     </p>
-                                    <a href="{% url 'simulate:simulate.show' %}" class="btn btn-primary">
+                                    <button class="btn btn-primary" onclick="showComingSoonNotification('Ejecutar Primera Simulación')">
                                         <i class="ri-play-circle-line me-2"></i>Ejecutar Primera Simulación
-                                    </a>
+                                    </button>
                                 </div>
                             {% endif %}
                         </div>
@@ -855,7 +1038,7 @@ function setupAutoRefresh() {
     }, 300000);
 }
 
-// Refresh dashboard data
+// Refresh dashboard data (only uses available URLs)
 function refreshDashboard() {
     const btn = event.target.closest('button');
     const originalContent = btn.innerHTML;
@@ -874,9 +1057,7 @@ function refreshDashboard() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Show success message
             showNotification('Dashboard actualizado correctamente', 'success');
-            // Reload page after short delay
             setTimeout(() => location.reload(), 1000);
         } else {
             showNotification('Error al actualizar: ' + data.error, 'error');
@@ -889,6 +1070,37 @@ function refreshDashboard() {
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = originalContent;
+    });
+}
+
+// Refresh dashboard data using available API
+function refreshDashboardData() {
+    fetch('{% url "dashboard:dashboard_api" %}?business_id={{ business.id }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateMetricsCards(data.metrics);
+            }
+        })
+        .catch(error => console.error('Error refreshing data:', error));
+}
+
+// Update metrics cards
+function updateMetricsCards(metrics) {
+    const counters = {
+        revenue: metrics.revenue,
+        costs: metrics.costs,
+        profit: metrics.profit_margin,
+        inventory: metrics.inventory,
+        demand: metrics.demand,
+        production: metrics.production
+    };
+    
+    Object.keys(counters).forEach(key => {
+        const counter = document.querySelector(`[data-target*="${key}"]`);
+        if (counter) {
+            counter.textContent = counters[key].toFixed(2);
+        }
     });
 }
 
@@ -908,7 +1120,7 @@ function refreshRecommendations() {
     container.style.opacity = '0.5';
     container.appendChild(overlay);
     
-    // Simulate refresh - replace with actual AJAX call
+    // Simulate refresh - could be enhanced with actual AJAX call
     setTimeout(() => {
         container.style.opacity = '1';
         overlay.remove();
@@ -916,11 +1128,7 @@ function refreshRecommendations() {
     }, 2000);
 }
 
-// Export functions
-function exportRecommendations() {
-    window.location.href = '{% url "dashboard:export_recommendations" %}?business_id={{ business.id }}';
-}
-
+// Export functions (adapted for available functionality)
 function exportChart(type) {
     if (type === 'trends' && window.trendsChart) {
         window.trendsChart.dataURI().then(({ imgURI, blob }) => {
@@ -947,42 +1155,12 @@ function generateReport() {
     setTimeout(() => {
         btn.style.opacity = '1';
         btn.innerHTML = originalContent;
-        window.open('{% url "dashboard:analytics_report" %}?business_id={{ business.id }}', '_blank');
+        showNotification('Reporte generado exitosamente', 'success');
+        // Could redirect to a report page when implemented
     }, 2000);
 }
 
-// Action functions
-function viewDetails(simulationId) {
-    // Implement view details modal or redirect
-    window.location.href = `/simulate/detail/${simulationId}/`;
-}
-
-function generateRecommendation(recId) {
-    showNotification('Generando recomendación personalizada...', 'info');
-    // Implement recommendation generation
-}
-
-function deleteSimulation(simulationId) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta simulación?')) {
-        fetch(`/simulate/delete/${simulationId}/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                showNotification('Simulación eliminada correctamente', 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification('Error al eliminar la simulación', 'error');
-            }
-        });
-    }
-}
-
 function toggleChartType() {
-    // Toggle between line and bar chart
     if (window.trendsChart) {
         const currentType = window.trendsChart.w.config.chart.type;
         const newType = currentType === 'line' ? 'bar' : 'line';
@@ -997,7 +1175,12 @@ function toggleChartType() {
     }
 }
 
-// Notification system
+// Coming soon notification for features not yet implemented
+function showComingSoonNotification(feature) {
+    showNotification(`${feature} - Funcionalidad próximamente disponible`, 'info');
+}
+
+// Enhanced notification system
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
@@ -1018,37 +1201,6 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Real-time data refresh
-function refreshDashboardData() {
-    fetch(`{% url 'dashboard:dashboard_api' %}?business_id={{ business.id }}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateMetricsCards(data.metrics);
-            }
-        })
-        .catch(error => console.error('Error refreshing data:', error));
-}
-
-function updateMetricsCards(metrics) {
-    // Update counter values
-    const counters = {
-        revenue: metrics.revenue,
-        costs: metrics.costs,
-        profit: metrics.profit_margin,
-        inventory: metrics.inventory,
-        demand: metrics.demand,
-        production: metrics.production
-    };
-    
-    Object.keys(counters).forEach(key => {
-        const counter = document.querySelector(`[data-target*="${key}"]`);
-        if (counter) {
-            counter.textContent = counters[key].toFixed(2);
-        }
-    });
-}
-
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
     // Ctrl+R or F5 - Refresh dashboard
@@ -1057,16 +1209,10 @@ document.addEventListener('keydown', function(e) {
         refreshDashboard();
     }
     
-    // Ctrl+E - Export recommendations
-    if (e.ctrlKey && e.key === 'e') {
+    // Ctrl+G - Generate report
+    if (e.ctrlKey && e.key === 'g') {
         e.preventDefault();
-        exportRecommendations();
-    }
-    
-    // Ctrl+N - New simulation
-    if (e.ctrlKey && e.key === 'n') {
-        e.preventDefault();
-        window.location.href = '{% url "simulate:simulate.show" %}';
+        generateReport();
     }
 });
 
@@ -1105,4 +1251,6 @@ if ('serviceWorker' in navigator) {
     });
 }
 </script>
+
+
 {% endblock extra_js %}

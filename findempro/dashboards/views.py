@@ -1,17 +1,19 @@
-from typing import Dict, Any, Optional, Tuple
+"""
+Enhanced Dashboard Views - Vistas mejoradas manteniendo las URLs existentes
+Compatible con: index, dashboard_admin, dashboard_user, update_business_metrics, dashboard_api
+"""
+
+from typing import Dict, Any, Optional
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
-from dateutil.relativedelta import relativedelta
 from datetime import datetime, timedelta
 from django.core.paginator import Paginator
 from django.contrib import messages
-from django.http import Http404, JsonResponse
-from django.db.models import Max, F, Prefetch, Count, Q, Sum, Avg, Min, Subquery, OuterRef
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
+from django.views.decorators.http import require_http_methods
 from django.db import transaction
 import logging
 import json
@@ -25,427 +27,19 @@ from business.models import Business
 from dashboards.models import Chart
 from simulate.models import ResultSimulation, Simulation, Demand, DemandBehavior
 from pages.forms import RegisterElementsForm
+
+# Import del servicio mejorado
+from .services.dashboard_service import DashboardService
+
 # Configurar logger
 logger = logging.getLogger(__name__)
 
-class DashboardService:
-    """Servicio para manejar la lógica del dashboard"""
-    
-    @staticmethod
-    def get_user_business(user) -> Optional[Business]:
-        """Obtiene el negocio activo del usuario con manejo de caché"""
-        return Business.objects.filter(
-            fk_user=user, 
-            is_active=True
-        ).select_related('fk_user').first()
-    
-    @staticmethod
-    def get_business_metrics(business_id: int) -> Dict[str, Any]:
-        """Obtiene las métricas del negocio de forma optimizada para MySQL"""
-        # Usar agregación para obtener todas las métricas en una sola consulta
-        products = Product.objects.filter(
-            fk_business=business_id
-        ).prefetch_related(
-            Prefetch('fk_product_area', queryset=Area.objects.select_related('fk_product'))
-        )
-        
-        # Obtener IDs de productos para consultas posteriores
-        product_ids = list(products.values_list('id', flat=True))
-        
-        # MYSQL OPTIMIZED: Obtener últimos gráficos usando subquery
-        latest_chart_subquery = Chart.objects.filter(
-            fk_product_id=OuterRef('fk_product_id'),
-            is_active=True
-        ).order_by('-id').values('id')[:1]
-        
-        charts = Chart.objects.filter(
-            fk_product_id__in=product_ids,
-            is_active=True,
-            id__in=Subquery(latest_chart_subquery)
-        ).select_related('fk_product')
-        
-        # MYSQL OPTIMIZED: Obtener simulaciones únicas usando GROUP BY
-        simulations = Simulation.objects.filter(
-            fk_questionary_result__fk_questionary__fk_product_id__in=product_ids
-        ).select_related(
-            'fk_questionary_result__fk_questionary__fk_product',
-            'fk_fdp'
-        ).prefetch_related(
-            'results'
-        ).order_by('-date_created')
-                
-        return {
-            'products': products,
-            'charts': charts,
-            'simulations': simulations,
-            'product_ids': product_ids
-        }
-    
-    @staticmethod
-    def calculate_totals(simulations) -> Dict[str, float]:
-        """Calcula los totales de las variables de forma eficiente"""
-        variables_to_search = ['TPV', 'IT', 'GT', 'TG', 'DT']
-        
-        # Obtener mapeo de variables una sola vez
-        try:
-            variable_mapping = dict(
-                Variable.objects.filter(
-                    initials__in=variables_to_search
-                ).values_list('initials', 'name')
-            )
-        except Exception:
-            variable_mapping = {}
-        
-        # Mapeo de iniciales a nombres descriptivos para el dashboard
-        metric_mapping = {
-            'TPV': 'Total Revenue',
-            'IT': 'Total Costs', 
-            'GT': 'Total Profit Margin',
-            'TG': 'Total Inventory Levels',
-            'DT': 'Total Demand'
-        }
-        
-        totals = {
-            'Total Revenue': 0,
-            'Total Costs': 0,
-            'Total Inventory Levels': 0,
-            'Total Demand': 0,
-            'Total Production Output': 0,
-            'Total Profit Margin': 0
-        }
-        
-        # MYSQL OPTIMIZED: Usar set para evitar duplicados más eficientemente
-        processed_simulations = set()
-        
-        try:
-            for simulation in simulations:
-                # Skip if already processed
-                if simulation.id in processed_simulations:
-                    continue
-                processed_simulations.add(simulation.id)
-                
-                # Verificar si simulation tiene results
-                try:
-                    if hasattr(simulation, 'results'):
-                        results = simulation.results.all()
-                    else:
-                        # Fallback si no hay prefetch
-                        results = ResultSimulation.objects.filter(fk_simulation=simulation)
-                    
-                    for result in results:
-                        try:
-                            # Verificar si result tiene el método get_variables
-                            if hasattr(result, 'get_variables'):
-                                variables = result.get_variables()
-                            else:
-                                # Fallback: intentar obtener variables directamente
-                                variables = {}
-                                if hasattr(result, 'variables') and result.variables:
-                                    try:
-                                        variables = json.loads(result.variables) if isinstance(result.variables, str) else result.variables
-                                    except (json.JSONDecodeError, TypeError):
-                                        variables = {}
-                            
-                            if variables and isinstance(variables, dict):
-                                for initial, value in variables.items():
-                                    if initial in metric_mapping:
-                                        metric_name = metric_mapping[initial]
-                                        if metric_name in totals:
-                                            # Convertir value a float si es string
-                                            try:
-                                                numeric_value = float(value) if value is not None else 0
-                                                totals[metric_name] += numeric_value
-                                            except (ValueError, TypeError):
-                                                logger.warning(f"Cannot convert value {value} to float for metric {initial}")
-                                                continue
-                                                
-                        except Exception as e:
-                            logger.error(f"Error processing result {result.id} from simulation {simulation.id}: {e}")
-                            continue
-                except Exception as e:
-                    logger.error(f"Error accessing results for simulation {simulation.id}: {e}")
-                    continue
-                        
-        except Exception as e:
-            logger.error(f"Error calculating totals: {e}")
-            
-        return totals
-    
-    @staticmethod
-    def calculate_business_stats(business_id: int) -> Dict[str, int]:
-        """Calcula estadísticas adicionales del negocio"""
-        try:
-            # MYSQL OPTIMIZED: Usar una sola consulta con COUNT
-            stats = Business.objects.filter(
-                id=business_id
-            ).aggregate(
-                products_count=Count('fk_business_product', distinct=True),
-                simulations_count=Count(
-                    'fk_business_product__fk_product_questionary__results__fk_simulation',
-                    distinct=True
-                ),
-                charts_count=Count(
-                    'fk_business_product__fk_product_chart',
-                    filter=Q(fk_business_product__fk_product_chart__is_active=True),
-                    distinct=True
-                )
-            )
-            
-            # Calcular areas por separado para evitar joins complejos
-            areas_count = Area.objects.filter(fk_product__fk_business=business_id).count()
-            
-            return {
-                'products_count': stats.get('products_count', 0),
-                'areas_count': areas_count,
-                'simulations_count': stats.get('simulations_count', 0),
-                'charts_count': stats.get('charts_count', 0),
-            }
-        except Exception as e:
-            logger.error(f"Error calculating business stats: {e}")
-            return {
-                'products_count': 0,
-                'areas_count': 0,
-                'simulations_count': 0,
-                'charts_count': 0,
-            }
-    
-    @staticmethod
-    def get_percentage_changes(business_id: int, current_totals: Dict[str, float]) -> Dict[str, float]:
-        """Calcula los cambios porcentuales comparando con el mes anterior"""
-        try:
-            # Obtener fecha actual y mes anterior
-            today = timezone.now()
-            last_month = today - relativedelta(months=1)
-            
-            # MYSQL OPTIMIZED: Obtener simulaciones del mes anterior con índices
-            last_month_simulations = Simulation.objects.filter(
-                fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
-                date_created__year=last_month.year,
-                date_created__month=last_month.month
-            ).select_related(
-                'fk_questionary_result__fk_questionary__fk_product'
-            ).prefetch_related('results')
-            
-            # Calcular totales del mes anterior
-            last_month_totals = DashboardService.calculate_totals(last_month_simulations)
-            
-            # Calcular cambios porcentuales
-            changes = {}
-            metrics = ['Total Revenue', 'Total Costs', 'Total Profit Margin', 
-                      'Total Inventory Levels', 'Total Demand', 'Total Production Output']
-            
-            for metric in metrics:
-                current = current_totals.get(metric, 0)
-                previous = last_month_totals.get(metric, 0)
-                
-                if previous > 0:
-                    change = ((current - previous) / previous) * 100
-                    changes[metric.replace('Total ', '').lower().replace(' ', '_') + '_change'] = round(change, 1)
-                else:
-                    # Si no hay datos del mes anterior, asumir crecimiento del 0%
-                    changes[metric.replace('Total ', '').lower().replace(' ', '_') + '_change'] = 0.0
-            
-            return changes
-            
-        except Exception as e:
-            logger.error(f"Error calculating percentage changes: {e}")
-            # Retornar cambios por defecto en caso de error
-            return {
-                'revenue_change': 0.0,
-                'costs_change': 0.0,
-                'profit_margin_change': 0.0,
-                'inventory_levels_change': 0.0,
-                'demand_change': 0.0,
-                'production_output_change': 0.0,
-            }
-
-    @staticmethod
-    def get_business_kpis(business_id: int) -> Dict[str, Any]:
-        """Calcula KPIs clave del negocio"""
-        try:
-            metrics = DashboardService.get_business_metrics(business_id)
-            totals = DashboardService.calculate_totals(metrics['simulations'])
-            
-            # Calcular KPIs
-            revenue = totals.get('Total Revenue', 0)
-            costs = totals.get('Total Costs', 0)
-            profit_margin = ((revenue - costs) / revenue * 100) if revenue > 0 else 0
-            roi = ((revenue - costs) / costs * 100) if costs > 0 else 0
-            
-            return {
-                'profit_margin_percentage': round(profit_margin, 1),
-                'roi_percentage': round(roi, 1),
-                'total_products': metrics['products'].count(),
-                'active_simulations': metrics['simulations'].count(),
-                'efficiency_score': min(100, max(0, round((profit_margin + roi) / 2, 1))) if profit_margin > 0 or roi > 0 else 0,
-            }
-            
-        except Exception as e:
-            logger.error(f"Error calculating KPIs: {e}")
-            return {
-                'profit_margin_percentage': 0,
-                'roi_percentage': 0,
-                'total_products': 0,
-                'active_simulations': 0,
-                'efficiency_score': 0,
-            }
-    
-    @staticmethod
-    def _calculate_growth_rate(monthly_data: list) -> float:
-        """Calcula la tasa de crecimiento promedio"""
-        if len(monthly_data) < 2:
-            return 0
-        
-        try:
-            first_revenue = monthly_data[0]['revenue']
-            last_revenue = monthly_data[-1]['revenue']
-            
-            if first_revenue > 0:
-                growth_rate = ((last_revenue - first_revenue) / first_revenue) * 100
-                return round(growth_rate, 1)
-        except (KeyError, TypeError, ZeroDivisionError):
-            pass
-        
-        return 0
-    
-    @staticmethod
-    def get_performance_trends(business_id: int) -> Dict[str, Any]:
-        """MYSQL OPTIMIZED: Obtiene tendencias de rendimiento usando agregaciones eficientes"""
-        try:
-            # Obtener datos de los últimos 6 meses
-            today = timezone.now()
-            six_months_ago = today - relativedelta(months=6)
-            
-            # MYSQL OPTIMIZED: Usar una sola consulta con GROUP BY para obtener datos mensuales
-            monthly_simulations = Simulation.objects.filter(
-                fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
-                date_created__gte=six_months_ago
-            ).extra(
-                select={
-                    'month': "DATE_FORMAT(date_created, '%%Y-%%m')",
-                    'month_name': "DATE_FORMAT(date_created, '%%b %%Y')"
-                }
-            ).values('month', 'month_name').annotate(
-                simulations_count=Count('id')
-            ).order_by('month')
-            
-            # Procesar datos mensuales
-            monthly_data = []
-            month_simulation_map = {item['month']: item for item in monthly_simulations}
-            
-            for i in range(6):
-                month_start = six_months_ago + relativedelta(months=i)
-                month_key = month_start.strftime('%Y-%m')
-                month_name = month_start.strftime('%b %Y')
-                
-                # Obtener simulaciones del mes específico
-                month_sims = Simulation.objects.filter(
-                    fk_questionary_result__fk_questionary__fk_product__fk_business=business_id,
-                    date_created__year=month_start.year,
-                    date_created__month=month_start.month
-                )
-                
-                month_totals = DashboardService.calculate_totals(month_sims)
-                sim_count = month_simulation_map.get(month_key, {}).get('simulations_count', 0)
-                
-                monthly_data.append({
-                    'month': month_name,
-                    'revenue': month_totals.get('Total Revenue', 0),
-                    'costs': month_totals.get('Total Costs', 0),
-                    'profit': month_totals.get('Total Profit Margin', 0),
-                    'simulations_count': sim_count
-                })
-            
-            return {
-                'monthly_trends': monthly_data,
-                'growth_rate': DashboardService._calculate_growth_rate(monthly_data),
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting performance trends: {e}")
-            return {'monthly_trends': [], 'growth_rate': 0}
-    
-    @staticmethod
-    def get_top_products(business_id: int) -> list:
-        """MYSQL OPTIMIZED: Obtiene los productos con mejor rendimiento usando subqueries"""
-        try:
-            # MYSQL OPTIMIZED: Usar subquery para contar simulaciones
-            products = Product.objects.filter(
-                fk_business=business_id
-            ).annotate(
-                simulations_count=Count(
-                    'fk_product_questionary__results__fk_simulation',
-                    distinct=True
-                ),
-                latest_simulation_date=Max(
-                    'fk_product_questionary__results__fk_simulation__date_created'
-                )
-            ).order_by('-simulations_count', '-latest_simulation_date')[:5]
-            
-            return list(products)
-            
-        except Exception as e:
-            logger.error(f"Error getting top products: {e}")
-            return []
-    
-    @staticmethod
-    def get_business_recommendations_with_simulations(business_id: int):
-        """
-        MYSQL OPTIMIZED: Obtiene recomendaciones únicas usando GROUP BY
-        """
-        try:
-            # MYSQL OPTIMIZED: Usar GROUP BY en lugar de DISTINCT ON
-            recent_simulations = FinanceRecommendationSimulation.objects.filter(
-                fk_simulation__fk_questionary_result__fk_questionary__fk_product__fk_business=business_id
-            ).select_related(
-                'fk_simulation__fk_questionary_result__fk_questionary__fk_product'
-            ).values(
-                'fk_simulation_id',
-                'fk_simulation__date_created',
-                'fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'
-            ).annotate(
-                latest_id=Max('id'),
-                data_value=Max('data')  # Asumiendo que quieres el último valor
-            ).order_by('-fk_simulation__date_created')[:20]
-            
-            recommendations_data = []
-            
-            for sim_data in recent_simulations:
-                try:
-                    # Obtener el objeto completo para el último registro
-                    sim = FinanceRecommendationSimulation.objects.get(id=sim_data['latest_id'])
-                    
-                    # Obtener datos seguros
-                    data_value = sim_data.get('data_value') or getattr(sim, 'data', 0.5)
-                    if data_value is None:
-                        data_value = 0.5
-                    data_percentage = float(data_value) * 100
-                    
-                    recommendations_data.append({
-                        'id': sim.id,
-                        'simulation_date': sim_data['fk_simulation__date_created'],
-                        'product_name': sim_data['fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'],
-                        'data': data_value,
-                        'data_percentage': data_percentage,
-                        'variable_name': 'Análisis General',
-                        'threshold_value': None,
-                        'recommendation_text': f'Simulación realizada el {sim_data["fk_simulation__date_created"].strftime("%d/%m/%Y")}',
-                        'simulation_id': sim_data['fk_simulation_id'],
-                    })
-                    
-                except Exception as e:
-                    logger.error(f"Error processing simulation data: {e}")
-                    continue
-            
-            return recommendations_data
-            
-        except Exception as e:
-            logger.error(f"Error getting business recommendations: {e}")
-            return []
-    
 @login_required
 def index(request):
-    """Vista principal del dashboard"""
+    """
+    Vista principal del dashboard - MEJORADA
+    URL: '' (dashboard:index)
+    """
     try:
         if request.method == 'POST':
             form = RegisterElementsForm(request.POST)
@@ -455,6 +49,7 @@ def index(request):
         else:
             form = RegisterElementsForm()
 
+        # Obtener negocio activo del usuario usando el servicio mejorado
         business = DashboardService.get_user_business(request.user)
         
         if not business:
@@ -465,74 +60,161 @@ def index(request):
                 'products_count': 0,
                 'simulations_count': 0,
                 'charts_count': 0,
+                'greeting': DashboardService.get_business_greeting(request.user),
+                'system_status': 'no_business'
             }
             return render(request, 'dashboards/index.html', context)
 
+        # Guardar business_id en sesión
         request.session['business_id'] = business.id
-        metrics = DashboardService.get_business_metrics(business.id)
-        business_count = Business.objects.filter(fk_user=request.user, is_active=True).count()
-        products_count = metrics['products'].count()
-        simulations_count = metrics['simulations'].count()
 
+        # Obtener datos completos usando el servicio mejorado
+        dashboard_data = DashboardService.get_complete_dashboard_data(business.id, request.user)
+        
+        # Obtener actividad reciente
         recent_activities = ActivityLog.objects.filter(
             user=request.user
         ).select_related('user').order_by('-timestamp')[:30]
 
+        # Contexto mejorado
         context = {
             'form': form,
             'business': business,
-            'business_count': business_count,
-            'products_count': products_count,
-            'simulations_count': simulations_count,
-            'recent_activities': recent_activities
+            'greeting': DashboardService.get_business_greeting(request.user),
+            
+            # Estadísticas básicas
+            'business_count': Business.objects.filter(fk_user=request.user, is_active=True).count(),
+            'products_count': dashboard_data['business_stats']['products_count'],
+            'simulations_count': dashboard_data['business_stats']['simulations_count'],
+            'charts_count': dashboard_data['business_stats']['charts_count'],
+            
+            # Métricas destacadas para la vista index
+            'total_revenue': dashboard_data['financial_metrics']['revenue'],
+            'profit_margin': dashboard_data['financial_metrics']['profit_margin'],
+            'efficiency_score': dashboard_data['business_kpis']['efficiency_score'],
+            'financial_health': dashboard_data['business_kpis']['financial_health'],
+            
+            # Datos adicionales
+            'recent_activities': recent_activities,
+            'has_alerts': len(dashboard_data['business_alerts']) > 0,
+            'critical_alerts_count': len([a for a in dashboard_data['business_alerts'] if a.get('priority') == 'high']),
+            'system_status': dashboard_data['summary']['status'],
+            'last_updated': dashboard_data['last_updated']
         }
+        
         return render(request, 'dashboards/index.html', context)
 
     except Exception as e:
         logger.error(f"Error en index view: {e}")
         messages.error(request, 'Ocurrió un error inesperado. Por favor intenta nuevamente.')
-        return render(request, 'error_page.html', {'error_message': str(e)})
-    
+        
+        # Contexto de error
+        error_context = {
+            'form': RegisterElementsForm(),
+            'business': None,
+            'business_count': 0,
+            'products_count': 0,
+            'simulations_count': 0,
+            'charts_count': 0,
+            'greeting': DashboardService.get_business_greeting(request.user),
+            'system_status': 'error',
+            'error_message': str(e)
+        }
+        
+        return render(request, 'dashboards/index.html', error_context)
+
 @login_required
 @cache_page(60 * 5)  # Cache por 5 minutos
 def dashboard_admin(request):
-    """Dashboard para administradores con métricas de usuarios"""
-    today = timezone.now()
-    last_month = today - relativedelta(months=1)
-    
-    # Usar agregación para obtener conteos
-    user_stats = User.objects.aggregate(
-        total_users=Count('id'),
-        last_month_users=Count(
-            'id',
-            filter=Q(
-                date_joined__month=last_month.month,
-                date_joined__year=last_month.year
+    """
+    Dashboard para administradores - MEJORADO
+    URL: 'admin/' (dashboard:dashboard.admin)
+    """
+    try:
+        # Obtener estadísticas usando el servicio mejorado
+        admin_stats = DashboardService.get_admin_statistics()
+        
+        # Obtener datos adicionales para admin
+        recent_businesses = Business.objects.filter(
+            is_active=True
+        ).select_related('fk_user').order_by('-date_created')[:10]
+        
+        recent_simulations = Simulation.objects.select_related(
+            'fk_questionary_result__fk_questionary__fk_product__fk_business'
+        ).order_by('-date_created')[:15]
+        
+        # Calcular métricas del sistema
+        system_metrics = {
+            'avg_simulations_per_business': (
+                admin_stats['total_simulations'] / max(admin_stats['active_businesses'], 1)
+            ),
+            'user_engagement_rate': (
+                admin_stats['active_users'] / max(admin_stats['users_count'], 1) * 100
+            ),
+            'business_activation_rate': (
+                admin_stats['active_businesses'] / max(admin_stats['total_businesses'], 1) * 100
             )
-        )
-    )
-    
-    users_count = user_stats['total_users']
-    users_last_month_count = user_stats['last_month_users']
-    
-    users_change = users_count - users_last_month_count
-    users_change_percentage = (
-        (users_change / users_last_month_count * 100) 
-        if users_last_month_count > 0 else 0
-    )
-    
-    context = {
-        'users_count': users_count,
-        'users_last_month_count': users_last_month_count,
-        'users_change': users_change,
-        'users_change_percentage': round(users_change_percentage, 2),
-    }
-    
-    return render(request, 'dashboards/dashboard-admin.html', context)
+        }
+        
+        context = {
+            # Estadísticas básicas mejoradas
+            'users_count': admin_stats['users_count'],
+            'active_users': admin_stats['active_users'],
+            'new_users_last_month': admin_stats['new_users_last_month'],
+            'users_change': admin_stats['users_change'],
+            'users_change_percentage': admin_stats['users_change_percentage'],
+            
+            # Estadísticas de negocios
+            'total_businesses': admin_stats['total_businesses'],
+            'active_businesses': admin_stats['active_businesses'],
+            'new_businesses_last_month': admin_stats['new_businesses_last_month'],
+            
+            # Estadísticas de simulaciones
+            'total_simulations': admin_stats['total_simulations'],
+            'last_month_simulations': admin_stats['last_month_simulations'],
+            
+            # Métricas del sistema
+            'system_health': admin_stats['system_health'],
+            'system_metrics': system_metrics,
+            
+            # Datos recientes
+            'recent_businesses': recent_businesses,
+            'recent_simulations': recent_simulations,
+            
+            # Información del sistema
+            'report_date': timezone.now(),
+            'cache_status': 'active',
+            'performance_status': 'optimal'
+        }
+        
+        return render(request, 'dashboards/dashboard-admin.html', context)
+        
+    except Exception as e:
+        logger.error(f"Error in dashboard_admin: {e}")
+        messages.error(request, 'Error al cargar el dashboard administrativo.')
+        
+        # Contexto de fallback
+        fallback_context = {
+            'users_count': 0,
+            'active_users': 0,
+            'new_users_last_month': 0,
+            'users_change': 0,
+            'users_change_percentage': 0,
+            'total_businesses': 0,
+            'active_businesses': 0,
+            'total_simulations': 0,
+            'system_health': 'error',
+            'error_message': str(e)
+        }
+        
+        return render(request, 'dashboards/dashboard-admin.html', fallback_context)
 
 @login_required
 def dashboard_user(request):
-    """Dashboard principal del usuario con todas las métricas del negocio - MYSQL OPTIMIZED"""
+    """
+    Dashboard principal del usuario - MEJORADO SIGNIFICATIVAMENTE
+    URL: 'user/' (dashboard:dashboard.user)
+    """
     try:
         # Obtener business_id de sesión o parámetro
         business_id = request.GET.get('business_id') or request.session.get('business_id')
@@ -541,400 +223,497 @@ def dashboard_user(request):
             messages.error(request, 'Por favor selecciona un negocio.')
             return redirect("business:business.list")
         
-        # Validar y obtener el negocio
+        # Validar business_id
         try:
             business_id = int(business_id)
-            business = get_object_or_404(
-                Business.objects.select_related('fk_user'),
-                pk=business_id,
-                is_active=True,
-                fk_user=request.user
-            )
-        except (ValueError, Business.DoesNotExist):
-            messages.error(request, 'Negocio no válido o no tienes permisos.')
+        except (ValueError, TypeError):
+            messages.error(request, 'ID de negocio no válido.')
             return redirect("business:business.list")
         
         # Actualizar sesión
         request.session['business_id'] = business_id
         
-        # MYSQL OPTIMIZED: Obtener métricas del negocio
-        metrics = DashboardService.get_business_metrics(business_id)
+        # Obtener todos los datos del dashboard usando el servicio mejorado
+        dashboard_data = DashboardService.get_complete_dashboard_data(business_id, request.user)
         
-        # MYSQL OPTIMIZED: Obtener recomendaciones sin duplicados
-        recommendations_data = DashboardService.get_business_recommendations_with_simulations(business_id)
+        # Verificar si se encontró el negocio
+        if not dashboard_data['business']:
+            messages.error(request, 'Negocio no encontrado o no tienes permisos.')
+            return redirect("business:business.list")
         
-        # Paginación para recomendaciones
-        paginator = Paginator(recommendations_data, 10)
-        page_obj = paginator.get_page(request.GET.get('page'))
-        
-        # Calcular totales directamente
-        totals = DashboardService.calculate_totals(metrics['simulations'])
-        
-        # Obtener tendencias de rendimiento
-        performance_trends = DashboardService.get_performance_trends(business_id)
-        
-        # Obtener productos top
-        top_products = DashboardService.get_top_products(business_id)
-        
-        # Calcular KPIs del negocio
-        business_kpis = DashboardService.get_business_kpis(business_id)
-        
-        # Obtener actividad reciente con más detalles
-        recent_activity = ActivityLog.objects.filter(
-            user=request.user
-        ).select_related('user').order_by('-timestamp')[:10]
-        
-        # Obtener todos los negocios del usuario
+        # Obtener todos los negocios del usuario para el selector
         businesses = Business.objects.filter(
             fk_user=request.user,
             is_active=True
         ).order_by('-id')
         
-        # Calcular estadísticas adicionales del negocio
-        business_stats = DashboardService.calculate_business_stats(business_id)
+        # Paginación para recomendaciones
+        paginator = Paginator(dashboard_data['recommendations'], 10)
+        page_obj = paginator.get_page(request.GET.get('page'))
         
-        # Calcular cambios porcentuales
-        percentage_changes = DashboardService.get_percentage_changes(business_id, totals)
+        # Preparar datos para gráficos
+        monthly_trends_json = json.dumps(dashboard_data['performance_trends']['monthly_trends'])
         
-        # Saludo personalizado
-        current_hour = datetime.now().hour
-        if 5 <= current_hour < 12:
-            greeting = "Buenos Días"
-        elif 12 <= current_hour < 18:
-            greeting = "Buenas Tardes"
-        else:
-            greeting = "Buenas Noches"
-        
+        # Contexto completo mejorado
         context = {
-            'greeting': greeting,
-            'business': business,
+            # Información básica
+            'greeting': DashboardService.get_business_greeting(request.user),
+            'business': dashboard_data['business'],
             'businesses': businesses,
-            'products': metrics['products'],
-            'charts': metrics['charts'],
+            'products': dashboard_data['products'],
+            'charts': dashboard_data['charts'],
             'page_obj': page_obj,
-            'recent_activity': recent_activity,
+            'recent_activity': dashboard_data['recent_activity'],
             
-            # Métricas financieras
-            'total_revenue': totals.get('Total Revenue', 0),
-            'total_costs': totals.get('Total Costs', 0),
-            'total_inventory_levels': totals.get('Total Inventory Levels', 0),
-            'total_demand': totals.get('Total Demand', 0),
-            'total_production_output': totals.get('Total Production Output', 0),
-            'total_profit_margin': totals.get('Total Profit Margin', 0),
+            # Métricas financieras principales
+            'total_revenue': dashboard_data['financial_metrics']['revenue'],
+            'total_costs': dashboard_data['financial_metrics']['costs'],
+            'total_inventory_levels': dashboard_data['financial_metrics']['inventory'],
+            'total_demand': dashboard_data['financial_metrics']['demand'],
+            'total_production_output': dashboard_data['financial_metrics']['production'],
+            'total_profit_margin': dashboard_data['financial_metrics']['profit'],
             
-            # KPIs del negocio
-            'profit_margin_percentage': business_kpis['profit_margin_percentage'],
-            'roi_percentage': business_kpis['roi_percentage'],
-            'efficiency_score': business_kpis['efficiency_score'],
+            # KPIs mejorados
+            'profit_margin_percentage': dashboard_data['financial_metrics']['profit_margin'],
+            'roi_percentage': dashboard_data['financial_metrics']['roi'],
+            'efficiency_score': dashboard_data['business_kpis']['efficiency_score'],
+            'financial_health': dashboard_data['business_kpis']['financial_health'],
+            'net_profit': dashboard_data['business_kpis']['net_profit'],
+            'cost_ratio': dashboard_data['business_kpis']['cost_ratio'],
+            
+            # KPIs adicionales
+            'revenue_per_product': dashboard_data['business_kpis']['revenue_per_product'],
+            'demand_fulfillment': dashboard_data['business_kpis']['demand_fulfillment'],
+            'operational_efficiency': dashboard_data['business_kpis']['operational_efficiency'],
             
             # Contadores para las cards de estadísticas
             'business_count': businesses.count(),
-            'products_count': business_stats['products_count'],
-            'simulations_count': business_stats['simulations_count'],
-            'charts_count': business_stats['charts_count'],
+            'products_count': dashboard_data['business_stats']['products_count'],
+            'active_products_count': dashboard_data['business_stats']['active_products_count'],
+            'simulations_count': dashboard_data['business_stats']['simulations_count'],
+            'recent_simulations_count': dashboard_data['business_stats']['recent_simulations_count'],
+            'charts_count': dashboard_data['business_stats']['charts_count'],
+            'areas_count': dashboard_data['business_stats']['areas_count'],
             
             # Cambios porcentuales
-            'revenue_change': percentage_changes.get('revenue_change', 0.0),
-            'costs_change': percentage_changes.get('costs_change', 0.0),
-            'profit_change': percentage_changes.get('profit_margin_change', 0.0),
-            'inventory_change': percentage_changes.get('inventory_levels_change', 0.0),
-            'demand_change': percentage_changes.get('demand_change', 0.0),
-            'production_change': percentage_changes.get('production_output_change', 0.0),
+            'revenue_change': dashboard_data['percentage_changes']['revenue_change'],
+            'costs_change': dashboard_data['percentage_changes']['costs_change'],
+            'profit_change': dashboard_data['percentage_changes']['profit_change'],
+            'profit_margin_change': dashboard_data['percentage_changes']['profit_margin_change'],
+            'inventory_change': dashboard_data['percentage_changes']['inventory_change'],
+            'demand_change': dashboard_data['percentage_changes']['demand_change'],
+            'production_change': dashboard_data['percentage_changes']['production_change'],
             
-            # Nuevos datos para dashboard ejecutivo
-            'performance_trends': performance_trends,
-            'top_products': top_products,
-            'monthly_trends_json': json.dumps(performance_trends['monthly_trends']),
-            'growth_rate': performance_trends['growth_rate'],
+            # Datos para dashboard ejecutivo
+            'performance_trends': dashboard_data['performance_trends'],
+            'top_products': dashboard_data['top_products'],
+            'monthly_trends_json': monthly_trends_json,
+            'growth_rate': dashboard_data['performance_trends']['growth_rate'],
+            'has_trend_data': dashboard_data['performance_trends']['has_data'],
+            
+            # Alertas y resumen mejorados
+            'business_alerts': dashboard_data['business_alerts'],
+            'critical_alerts': [a for a in dashboard_data['business_alerts'] if a.get('priority') == 'high'],
+            'dashboard_summary': dashboard_data['summary'],
+            'health_score': dashboard_data['summary']['health_score'],
             
             # Datos adicionales del negocio
-            'business_type_display': business.get_type_display() if hasattr(business, 'get_type_display') else 'Otros',
-            'business_location': getattr(business, 'location', 'No especificada'),
-            'business_description': getattr(business, 'description', 'Sin descripción'),
+            'business_type_display': dashboard_data['business'].get_type_display() if hasattr(dashboard_data['business'], 'get_type_display') else 'Otros',
+            'business_location': getattr(dashboard_data['business'], 'location', 'No especificada'),
+            'business_description': getattr(dashboard_data['business'], 'description', 'Sin descripción'),
             
-            # URLs y configuraciones
+            # Estado del sistema y configuraciones
+            'system_status': dashboard_data['summary']['status'],
+            'last_updated': dashboard_data['last_updated'],
             'can_export': True,
             'can_print': True,
+            'auto_refresh': request.session.get('auto_refresh', False),
+            
+            # Datos para JavaScript y gráficos
+            'chart_data_available': len(dashboard_data['charts']) > 0,
+            'recommendations_count': len(dashboard_data['recommendations']),
+            'alerts_count': len(dashboard_data['business_alerts']),
         }
         
-        # Debug para verificar datos
-        logger.info(f"Dashboard context for user {request.user.id}: business={business.name}, products={metrics['products'].count()}, unique_recommendations={len(recommendations_data)}")
+        # Log de información para debugging
+        logger.info(f"Enhanced dashboard loaded for user {request.user.id}: "
+                   f"business={dashboard_data['business'].name}, "
+                   f"health_score={dashboard_data['summary']['health_score']}, "
+                   f"products={dashboard_data['business_stats']['products_count']}, "
+                   f"simulations={dashboard_data['business_stats']['simulations_count']}")
         
         return render(request, 'dashboards/dashboard-user.html', context)
         
     except Exception as e:
-        logger.error(f"Error in dashboard_user: {e}", exc_info=True)
+        logger.error(f"Error in enhanced dashboard_user: {e}", exc_info=True)
         messages.error(request, 'Error al cargar el dashboard. Por favor intenta nuevamente.')
         return redirect("business:business.list")
 
 @login_required
+@transaction.atomic
+@require_http_methods(["POST"])
+def update_business_metrics(request):
+    """
+    Actualiza las métricas del negocio - MEJORADO SIGNIFICATIVAMENTE
+    URL: 'api/update-metrics/' (dashboard:update_metrics)
+    """
+    try:
+        business_id = request.POST.get('business_id')
+        
+        if not business_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Business ID requerido'
+            }, status=400)
+        
+        try:
+            business_id = int(business_id)
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': 'Business ID inválido'
+            }, status=400)
+        
+        # Actualizar métricas usando el servicio mejorado
+        result = DashboardService.update_business_metrics_enhanced(business_id, request.user)
+        
+        if result['success']:
+            # Obtener estado de salud del dashboard
+            health_status = DashboardService.get_dashboard_health_status(business_id, request.user)
+            
+            # Enriquecer respuesta con datos adicionales
+            result.update({
+                'health_status': health_status,
+                'cache_cleared': True,
+                'data_freshness': 'updated',
+                'performance': {
+                    'update_time': timezone.now().isoformat(),
+                    'data_completeness': health_status.get('data_completeness', 0),
+                    'metrics_count': len(result.get('metrics', {}))
+                }
+            })
+        
+        # Log de la actualización
+        logger.info(f"Metrics update for business {business_id} by user {request.user.id}: "
+                   f"success={result['success']}")
+        
+        return JsonResponse(result)
+        
+    except Exception as e:
+        logger.error(f"Error updating enhanced business metrics: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Error interno del servidor',
+            'error_code': 'METRICS_UPDATE_FAILED',
+            'timestamp': timezone.now().isoformat()
+        }, status=500)
+
+@login_required
+def dashboard_api(request):
+    """
+    API endpoint para obtener datos del dashboard - MEJORADO SIGNIFICATIVAMENTE
+    URL: 'api/dashboard-data/' (dashboard:dashboard_api)
+    """
+    try:
+        business_id = request.GET.get('business_id')
+        
+        if not business_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Business ID requerido',
+                'error_code': 'MISSING_BUSINESS_ID'
+            }, status=400)
+        
+        try:
+            business_id = int(business_id)
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': 'Business ID inválido',
+                'error_code': 'INVALID_BUSINESS_ID'
+            }, status=400)
+        
+        # Parámetros opcionales
+        include_trends = request.GET.get('include_trends', 'true').lower() == 'true'
+        include_recommendations = request.GET.get('include_recommendations', 'true').lower() == 'true'
+        include_alerts = request.GET.get('include_alerts', 'true').lower() == 'true'
+        format_type = request.GET.get('format', 'full')  # full, summary, minimal
+        
+        # Obtener datos usando el servicio mejorado
+        api_data = DashboardService.get_dashboard_api_data_enhanced(business_id, request.user)
+        
+        if not api_data['success']:
+            return JsonResponse(api_data, status=403)
+        
+        # Personalizar respuesta según parámetros
+        if format_type == 'summary':
+            # Respuesta resumida
+            summary_data = {
+                'success': True,
+                'business': api_data['business'],
+                'key_metrics': {
+                    'revenue': api_data['metrics']['revenue'],
+                    'profit_margin': api_data['metrics']['profit_margin'],
+                    'roi': api_data['metrics']['roi'],
+                    'efficiency_score': api_data['kpis']['efficiency_score']
+                },
+                'health_indicators': api_data['performance_indicators'],
+                'alerts_summary': {
+                    'total': api_data['alerts']['total_count'],
+                    'critical': api_data['alerts']['critical_count']
+                },
+                'last_updated': api_data['last_updated']
+            }
+            return JsonResponse(summary_data)
+        
+        elif format_type == 'minimal':
+            # Respuesta mínima
+            minimal_data = {
+                'success': True,
+                'business_name': api_data['business']['name'],
+                'health_score': api_data['performance_indicators']['health_score'],
+                'revenue': api_data['metrics']['revenue'],
+                'profit_margin': api_data['metrics']['profit_margin'],
+                'status': api_data['summary']['status'],
+                'timestamp': api_data['timestamp']
+            }
+            return JsonResponse(minimal_data)
+        
+        # Respuesta completa (personalizada según parámetros)
+        if not include_trends:
+            api_data.pop('trends', None)
+        
+        if not include_recommendations:
+            api_data['alerts'].pop('recent_alerts', None)
+        
+        if not include_alerts:
+            api_data.pop('alerts', None)
+        
+        # Agregar metadatos de la API
+        api_data.update({
+            'api_version': '2.0',
+            'request_params': {
+                'include_trends': include_trends,
+                'include_recommendations': include_recommendations,
+                'include_alerts': include_alerts,
+                'format': format_type
+            },
+            'cache_info': {
+                'cached': hasattr(request, '_cached_response'),
+                'cache_age': 'fresh'  # Se podría calcular realmente
+            }
+        })
+        
+        # Log de acceso a la API
+        logger.info(f"Dashboard API accessed: user={request.user.id}, "
+                   f"business={business_id}, format={format_type}")
+        
+        return JsonResponse(api_data)
+        
+    except Exception as e:
+        logger.error(f"Error in enhanced dashboard API: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Error interno del servidor',
+            'error_code': 'API_ERROR',
+            'timestamp': timezone.now().isoformat()
+        }, status=500)
+
+# === FUNCIONES AUXILIARES PARA LAS VISTAS ===
+
+@login_required
 def get_chart_data(request, chart_id):
-    """API endpoint para obtener datos de gráficos de forma asíncrona"""
+    """
+    Obtiene datos de un gráfico específico - FUNCIÓN AUXILIAR MEJORADA
+    Esta función puede ser llamada desde JavaScript en las vistas principales
+    """
     try:
         chart = get_object_or_404(Chart, pk=chart_id, is_active=True)
+        
+        # Verificar permisos (el gráfico debe pertenecer al usuario)
+        if chart.fk_product.fk_business.fk_user != request.user:
+            return JsonResponse({
+                'success': False,
+                'error': 'Sin permisos para acceder a este gráfico'
+            }, status=403)
+        
         return JsonResponse({
             'success': True,
             'data': chart.chart_data,
             'title': chart.title,
-            'type': chart.chart_type
+            'type': chart.chart_type,
+            'product_name': chart.fk_product.name,
+            'last_updated': chart.date_created.isoformat() if hasattr(chart, 'date_created') else None,
+            'timestamp': timezone.now().isoformat()
         })
+        
     except Exception as e:
+        logger.error(f"Error getting chart data: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
-        }, status=400)
+        }, status=500)
 
 @login_required
-@transaction.atomic
-def update_business_metrics(request):
-    """Actualiza las métricas del negocio de forma transaccional"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+def dashboard_health_check(request):
+    """
+    Endpoint de verificación de salud del dashboard - FUNCIÓN AUXILIAR
+    """
     try:
-        business_id = request.POST.get('business_id')
+        business_id = request.GET.get('business_id') or request.session.get('business_id')
+        
         if not business_id:
-            return JsonResponse({'error': 'Business ID required'}, status=400)
+            return JsonResponse({
+                'status': 'error',
+                'error': 'No business selected',
+                'timestamp': timezone.now().isoformat()
+            })
         
-        # Verificar permisos
-        business = get_object_or_404(
-            Business,
-            pk=business_id,
-            fk_user=request.user,
-            is_active=True
-        )
+        # Obtener estado de salud usando el servicio
+        health_status = DashboardService.get_dashboard_health_status(int(business_id), request.user)
         
-        # Aquí iría la lógica para actualizar métricas
-        # Por ejemplo, recalcular totales, actualizar gráficos, etc.
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Métricas actualizadas correctamente'
-        })
+        return JsonResponse(health_status)
         
     except Exception as e:
-        logger.error(f"Error updating metrics: {e}")
+        logger.error(f"Error in dashboard health check: {e}")
         return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-        
-def export_recommendations(request):
-    """Exporta las recomendaciones a Excel/CSV"""
-    from django.http import HttpResponse
-    import csv
-    
-    business_id = request.GET.get('business_id')
-    if not business_id:
-        messages.error(request, 'Business ID requerido')
-        return redirect('dashboard:dashboard.user')
-    
-    # Verificar permisos
-    business = get_object_or_404(
-        Business,
-        pk=business_id,
-        fk_user=request.user,
-        is_active=True
-    )
-    
-    # Obtener recomendaciones
-    recommendations = FinanceRecommendationSimulation.objects.filter(
-        finance_recommendation_simulations__fk_business=business_id,
-        is_active=True
-    ).select_related(
-        'fk_simulation__fk_questionary_result__fk_questionary__fk_product',
-        'finance_recommendation_simulations'
-    )
-    
-    # Crear respuesta CSV
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="recomendaciones_{business.name}_{timezone.now().strftime("%Y%m%d")}.csv"'
-    
-    writer = csv.writer(response)
-    writer.writerow([
-        'Fecha', 'Producto', 'Variable', 'Valor (%)', 
-        'Umbral', 'Recomendación'
-    ])
-    
-    # for rec in recommendations:
-    #     writer.writerow([
-    #         rec.fk_simulation.date_created.strftime('%Y-%m-%d'),
-    #         rec.fk_simulation.fk_questionary_result.fk_questionary.fk_product.name,
-    #         rec.finance_recommendation_simulations.variable_name,
-    #         f"{rec.data * 100:.2f}",
-    #         rec.finance_recommendation_simulations.threshold_value,
-    #         rec.finance_recommendation_simulations.recommendation
-    #     ])
-    
-    return response
-
-def dashboard_api(request):
-    """API endpoint para obtener datos del dashboard en JSON"""
-    from django.http import JsonResponse
-    
-    business_id = request.GET.get('business_id')
-    if not business_id:
-        return JsonResponse({'error': 'Business ID required'}, status=400)
-    
-    try:
-        business = get_object_or_404(
-            Business,
-            pk=business_id,
-            fk_user=request.user,
-            is_active=True
-        )
-        
-        # Obtener métricas
-        metrics = DashboardService.get_business_metrics(business_id)
-        totals = DashboardService.calculate_totals(metrics['simulations'])
-        
-        # Preparar respuesta
-        data = {
-            'success': True,
-            'business': {
-                'id': business.id,
-                'name': business.name,
-                'type': business.get_type_display(),
-            },
-            'metrics': {
-                'revenue': totals['Total Revenue'],
-                'costs': totals['Total Costs'],
-                'profit_margin': totals['Total Profit Margin'],
-                'inventory': totals['Total Inventory Levels'],
-                'demand': totals['Total Demand'],
-                'production': totals['Total Production Output'],
-            },
-            'charts': [
-                {
-                    'id': chart.id,
-                    'title': chart.title,
-                    'type': chart.chart_type,
-                    'last_updated': chart.last_updated.isoformat()
-                }
-                for chart in metrics['charts']
-            ],
-            'products_count': metrics['products'].count(),
+            'status': 'error',
+            'error': str(e),
             'timestamp': timezone.now().isoformat()
-        }
-        
-        return JsonResponse(data)
-        
-    except Exception as e:
-        logger.error(f"Error in dashboard API: {e}")
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
         }, status=500)
 
-def chart_builder(request):
-    """Vista para construir gráficos personalizados"""
-    if request.method == 'POST':
-        try:
-            import json
-            
-            data = json.loads(request.body)
-            product_id = data.get('product_id')
-            chart_type = data.get('chart_type')
-            chart_data = data.get('chart_data')
-            title = data.get('title')
-            
-            # Validar datos
-            if not all([product_id, chart_type, chart_data, title]):
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Faltan datos requeridos'
-                }, status=400)
-            
-            # Crear gráfico
-            product = get_object_or_404(Product, pk=product_id)
-            chart = Chart.objects.create(
-                title=title,
-                chart_type=chart_type,
-                chart_data=chart_data,
-                fk_product=product
-            )
-            
-            # Generar imagen
-            chart.generate_chart_image()
-            
+@login_required
+def clear_dashboard_cache_view(request):
+    """
+    Limpia la caché del dashboard - FUNCIÓN AUXILIAR
+    """
+    try:
+        business_id = request.GET.get('business_id') or request.session.get('business_id')
+        
+        if business_id:
+            DashboardService.clear_dashboard_cache(int(business_id), request.user.id)
+            message = f'Caché limpiada para el negocio {business_id}'
+        else:
+            DashboardService.clear_dashboard_cache()
+            message = 'Caché general limpiada'
+        
+        if request.headers.get('Accept') == 'application/json':
             return JsonResponse({
                 'success': True,
-                'chart_id': chart.id,
-                'chart_url': chart.get_photo_url()
+                'message': message,
+                'timestamp': timezone.now().isoformat()
             })
-            
-        except Exception as e:
-            logger.error(f"Error in chart builder: {e}")
+        
+        messages.success(request, 'Caché del dashboard limpiada correctamente.')
+        return redirect('dashboard:dashboard.user')
+        
+    except Exception as e:
+        logger.error(f"Error clearing dashboard cache: {e}")
+        
+        if request.headers.get('Accept') == 'application/json':
             return JsonResponse({
                 'success': False,
                 'error': str(e)
             }, status=500)
-    
-    # GET request - mostrar el builder
-    products = Product.objects.filter(
-        fk_business__fk_user=request.user,
-        fk_business__is_active=True
-    )
-    
-    context = {
-        'products': products,
-        'chart_types': Chart.CHART_TYPES,
-    }
-    
-    return render(request, 'dashboards/chart_builder.html', context)
-
-def analytics_report(request):
-    """Genera un reporte analítico completo"""
-    from django.template.loader import render_to_string
-    from weasyprint import HTML
-    from django.http import HttpResponse
-    import tempfile
-    
-    business_id = request.GET.get('business_id')
-    if not business_id:
-        messages.error(request, 'Business ID requerido')
+        
+        messages.error(request, 'Error al limpiar la caché.')
         return redirect('dashboard:dashboard.user')
-    
+
+# === FUNCIONES DE UTILIDAD ===
+
+def get_user_dashboard_context(user, business_id: int = None) -> Dict[str, Any]:
+    """
+    Función auxiliar para obtener contexto básico del dashboard
+    Útil para otras vistas que necesiten datos del dashboard
+    """
     try:
-        # Obtener datos
-        business = get_object_or_404(
-            Business,
-            pk=business_id,
-            fk_user=request.user,
-            is_active=True
-        )
+        if not business_id:
+            business = DashboardService.get_user_business(user)
+            if not business:
+                return {}
+            business_id = business.id
         
-        metrics = DashboardService.get_business_metrics(business_id)
-        totals = DashboardService.calculate_totals(metrics['simulations'])
+        # Obtener datos básicos del dashboard
+        dashboard_data = DashboardService.get_complete_dashboard_data(business_id, user)
         
-        # Preparar contexto para el reporte
-        context = {
-            'business': business,
-            'metrics': totals,
-            'products': metrics['products'],
-            'charts': metrics['charts'],
-            'report_date': timezone.now(),
-            'user': request.user,
+        return {
+            'business': dashboard_data['business'],
+            'financial_metrics': dashboard_data['financial_metrics'],
+            'business_kpis': dashboard_data['business_kpis'],
+            'summary': dashboard_data['summary'],
+            'greeting': DashboardService.get_business_greeting(user),
         }
         
-        # Renderizar HTML
-        html_string = render_to_string(
-            'dashboards/analytics_report_template.html',
-            context
+    except Exception as e:
+        logger.error(f"Error getting user dashboard context: {e}")
+        return {}
+
+def validate_business_access(user, business_id: int) -> bool:
+    """
+    Valida si el usuario tiene acceso al negocio
+    """
+    try:
+        business = DashboardService._get_validated_business(business_id, user)
+        return business is not None
+    except Exception:
+        return False
+
+# === DECORADORES PERSONALIZADOS ===
+
+from functools import wraps
+
+def require_business_access(view_func):
+    """Decorador para verificar acceso al negocio"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        business_id = (
+            request.GET.get('business_id') or 
+            request.POST.get('business_id') or 
+            request.session.get('business_id') or
+            kwargs.get('business_id')
         )
         
-        # Generar PDF
-        html = HTML(string=html_string)
-        pdf = html.write_pdf()
+        if not business_id:
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({'error': 'Business ID required'}, status=400)
+            messages.error(request, 'ID de negocio requerido')
+            return redirect('dashboard:dashboard.user')
         
-        # Crear respuesta
-        response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="reporte_analitico_{business.name}_{timezone.now().strftime("%Y%m%d")}.pdf"'
+        try:
+            if not validate_business_access(request.user, int(business_id)):
+                if request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({'error': 'Access denied'}, status=403)
+                messages.error(request, 'Acceso denegado')
+                return redirect('dashboard:dashboard.user')
+                
+        except (ValueError, TypeError):
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({'error': 'Invalid business ID'}, status=400)
+            messages.error(request, 'ID de negocio inválido')
+            return redirect('dashboard:dashboard.user')
         
-        return response
-        
-    except Exception as e:
-        logger.error(f"Error generating analytics report: {e}")
-        messages.error(request, 'Error al generar el reporte')
-        return redirect('dashboard:dashboard.user')\
+        return view_func(request, *args, **kwargs)
+    
+    return wrapper
 
+def log_dashboard_access(view_func):
+    """Decorador para registrar accesos al dashboard"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        try:
+            business_id = request.GET.get('business_id') or request.session.get('business_id')
+            
+            # Registrar acceso
+            if request.user.is_authenticated and business_id:
+                ActivityLog.objects.create(
+                    user=request.user,
+                    action=f"Dashboard access: {view_func.__name__}",
+                    details=f"Accessed {view_func.__name__} for business {business_id}",
+                    timestamp=timezone.now()
+                )
+        except Exception:
+            pass  # No fallar si no se puede registrar
+        
+        return view_func(request, *args, **kwargs)
+    
+    return wrapper
