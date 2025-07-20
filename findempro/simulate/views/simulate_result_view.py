@@ -329,12 +329,21 @@ class SimulateResultView(LoginRequiredMixin, View):
                 # 3. Gráfico de tendencia con promedio móvil (doble línea)
                 grafico_tendencia = chart_generator.generate_tendencia_promedio_movil_chart(all_variables_extracted)
                 
+                
+                interactive_chart = chart_generator.generate_enhanced_temporal_evolution(
+                    all_variables_extracted=all_variables_extracted,
+                    historical_demand=historical_demand,
+                    validation_results=validation_results
+                )
+            
+                
                 # Agregar al contexto
                 context.update({
                     'grafico_gastos': grafico_gastos,
                     'grafico_rentabilidad': grafico_rentabilidad, 
                     'grafico_tendencia': grafico_tendencia,
-                    'has_custom_charts': True  # Flag para el template
+                    'has_custom_charts': True,
+                    'interactive_chart': interactive_chart,
                 })
                 
                 # Log de resultado
@@ -350,6 +359,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                     'grafico_tendencia': None,
                     'has_custom_charts': False
                 })
+            
             
             
             # Final logging

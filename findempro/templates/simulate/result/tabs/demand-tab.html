@@ -1324,16 +1324,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             </h6>
                             <small class="text-muted">Visualización del comportamiento de consumo durante la simulación</small>
                         </div>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <input type="radio" class="btn-check" name="chartPeriod" id="period7" checked>
-                            <label class="btn btn-outline-secondary" for="period7">7d</label>
-                            
-                            <input type="radio" class="btn-check" name="chartPeriod" id="period14">
-                            <label class="btn btn-outline-secondary" for="period14">14d</label>
-                            
-                            <input type="radio" class="btn-check" name="chartPeriod" id="periodAll">
-                            <label class="btn btn-outline-secondary" for="periodAll">Todo</label>
-                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -1361,20 +1351,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
 
-                    {% if image_data_simulation %}
+                    {% if interactive_chart %}
                     <div class="position-relative">
-                        <img src="data:image/png;base64,{{ image_data_simulation }}" 
+                        <img src="data:image/png;base64,{{ interactive_chart }}" 
                              class="img-fluid rounded" 
                              alt="Análisis de demanda"
                              loading="lazy">
                         <div class="chart-controls position-absolute top-0 end-0 m-2">
                             <button class="btn btn-sm btn-light shadow-sm me-1" 
-                                    onclick="downloadChart('{{ image_data_simulation }}', 'demanda-simulacion.png')"
+                                    onclick="downloadChart('{{ interactive_chart }}', 'demanda-simulacion.png')"
                                     title="Descargar gráfico">
                                 <i class="bx bx-download"></i>
                             </button>
                             <button class="btn btn-sm btn-light shadow-sm" 
-                                    onclick="openFullscreen('{{ image_data_simulation }}', 'Análisis de Demanda')"
+                                    onclick="openFullscreen('{{ interactive_chart }}', 'Análisis de Demanda')"
                                     title="Ver en pantalla completa">
                                 <i class="bx bx-fullscreen"></i>
                             </button>
