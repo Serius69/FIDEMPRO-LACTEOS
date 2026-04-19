@@ -1,0 +1,33 @@
+# ══════════════════════════════════════════════════════════════════
+# FINDEMPRO AI — Requirements para CI/CD (GitHub Actions)
+#
+# Incluye base + testing + calidad de código.
+# NO incluye herramientas de desarrollo interactivo (ipython, etc).
+# Más ligero que development.txt para acelerar el pipeline.
+# ══════════════════════════════════════════════════════════════════
+
+-r base.txt
+
+# ── Base de datos ─────────────────────────────────────────────
+psycopg2-binary==2.9.9
+
+# ── Testing ───────────────────────────────────────────────────
+pytest==8.2.1
+pytest-django==4.8.0
+pytest-cov==5.0.0
+pytest-xdist==3.5.0          # tests en paralelo (opcional, -n auto)
+pytest-timeout==2.3.1         # timeout por test
+factory-boy==3.3.0
+faker==25.2.0
+
+# ── Calidad de código ─────────────────────────────────────────
+black==24.4.2
+isort==5.13.2
+flake8==7.0.0
+flake8-django==1.4
+flake8-bugbear==24.2.6
+flake8-pyproject==1.2.3      # permite leer config de pyproject.toml
+
+# ── Seguridad ────────────────────────────────────────────────
+bandit==1.7.8
+safety==3.2.0

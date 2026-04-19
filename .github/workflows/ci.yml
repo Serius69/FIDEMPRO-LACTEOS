@@ -1,111 +1,386 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# FINDEMPRO AI — CI/CD Pipeline
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Flujo de jobs:
+#   lint ──┬──> test ──> coverage-report
+#          │         └──> [si main]    deploy-production
+#          │         └──> [si staging] deploy-staging
+#          └──> security-scan (paralelo a test)
+#
+# Branches activos:
+#   push/PR  → main, develop, staging, sprint*
+# ══════════════════════════════════════════════════════════════════════════════
+
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, staging ]
+    branches:
+      - main
+      - develop
+      - staging
+      - "sprint*"
+      - "feat/*"
+      - "fix/*"
   pull_request:
-    branches: [ main, develop ]
+    branches:
+      - main
+      - develop
 
+# Cancelar runs anteriores del mismo PR para ahorrar minutos
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────────
+# Variables globales del pipeline
+# ─────────────────────────────────────────────────────────────────
 env:
-  DJANGO_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'development' }}
+  PYTHON_DEFAULT: "3.11"
+  DJANGO_SETTINGS_MODULE: findempro.settings.test
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
 
+# ══════════════════════════════════════════════════════════════════
+# JOB 1: lint — calidad de código (flake8 + black + isort)
+# Falla rápido para no desperdiciar minutos de CI en tests
+# ══════════════════════════════════════════════════════════════════
 jobs:
+  lint:
+    name: "Lint & Format Check"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_DEFAULT }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_DEFAULT }}
+          cache: pip
+          cache-dependency-path: findempro/requirements/development.txt
+
+      - name: Install lint dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            flake8==7.0.0 \
+            flake8-django==1.4 \
+            flake8-bugbear==24.2.6 \
+            black==24.4.2 \
+            isort==5.13.2
+
+      - name: "black — verificar formato"
+        run: black --check --diff findempro/
+        continue-on-error: false
+
+      - name: "isort — verificar orden de imports"
+        run: isort --check-only --diff findempro/
+        continue-on-error: false
+
+      - name: "flake8 — detectar errores de código"
+        run: flake8 findempro/ --config=pyproject.toml
+        continue-on-error: false
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 2: security-scan — análisis de vulnerabilidades
+  # ══════════════════════════════════════════════════════════════════
+  security-scan:
+    name: "Security Scan"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # No bloquea el pipeline pero informa si hay problemas
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_DEFAULT }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_DEFAULT }}
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit==1.7.8 safety==3.2.0
+
+      - name: "bandit — análisis de seguridad del código"
+        run: |
+          bandit -r findempro/ \
+            --exclude findempro/venv,findempro/node_modules \
+            -ll \
+            -f json \
+            -o bandit-report.json || true
+          bandit -r findempro/ \
+            --exclude findempro/venv,findempro/node_modules \
+            -ll
+
+      - name: "safety — verificar vulnerabilidades en dependencias"
+        run: |
+          pip install -r findempro/requirements/production.txt --quiet
+          safety check --json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: bandit-report.json
+          retention-days: 30
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 3: test — suite completa con PostgreSQL + Redis reales
+  # ══════════════════════════════════════════════════════════════════
   test:
+    name: "Tests (Python ${{ matrix.python-version }})"
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 20
+    needs: lint
+
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.9, 3.11]
-    
+        python-version: ["3.11", "3.12"]
+
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16-alpine
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: test_db
+          POSTGRES_DB: findempro_test
+          POSTGRES_USER: findempro_ci
+          POSTGRES_PASSWORD: ci_password_2024
         options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
         ports:
-          - 3306:3306
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Cache dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/*.txt') }}
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r findempro/requirements/development.txt
-    
-    - name: Run tests
-      env:
-        DJANGO_ENV: test
-        DB_NAME: test_db
-        DB_USER: root
-        DB_PASSWORD: root
-        DB_HOST: 127.0.0.1
-        SECRET_KEY: test-secret-key
-      run: |
-        pytest --cov=. --cov-report=xml
-    
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
+          - 5432:5432
 
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: findempro/requirements/development.txt
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libpq-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r findempro/requirements/ci.txt
+
+      - name: "Verificar configuración Django"
+        env:
+          SECRET_KEY: "ci-test-secret-key-not-for-production-use"
+          DB_NAME: findempro_test
+          DB_USER: findempro_ci
+          DB_PASSWORD: ci_password_2024
+          DB_HOST: 127.0.0.1
+          DB_PORT: "5432"
+          REDIS_URL: "redis://127.0.0.1:6379/1"
+          DJANGO_ENV: test
+        run: |
+          cd findempro
+          python manage.py check --settings=findempro.settings.test
+
+      - name: "Aplicar migraciones de test"
+        env:
+          SECRET_KEY: "ci-test-secret-key-not-for-production-use"
+          DB_NAME: findempro_test
+          DB_USER: findempro_ci
+          DB_PASSWORD: ci_password_2024
+          DB_HOST: 127.0.0.1
+          DB_PORT: "5432"
+          REDIS_URL: "redis://127.0.0.1:6379/1"
+          DJANGO_ENV: test
+        run: |
+          cd findempro
+          python manage.py migrate --settings=findempro.settings.test --no-input
+
+      - name: "Ejecutar suite de tests con cobertura"
+        env:
+          SECRET_KEY: "ci-test-secret-key-not-for-production-use"
+          DB_NAME: findempro_test
+          DB_USER: findempro_ci
+          DB_PASSWORD: ci_password_2024
+          DB_HOST: 127.0.0.1
+          DB_PORT: "5432"
+          REDIS_URL: "redis://127.0.0.1:6379/1"
+          DJANGO_ENV: test
+          DJANGO_SETTINGS_MODULE: findempro.settings.test
+        run: |
+          cd findempro
+          pytest \
+            --cov=. \
+            --cov-report=xml:../coverage.xml \
+            --cov-report=term-missing \
+            --cov-fail-under=40 \
+            --tb=short \
+            --no-header \
+            -q \
+            -x
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.11'
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: findempro-coverage
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-py${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 7
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 4: build-check — verifica que Docker build funciona
+  # Solo en PRs hacia main y en pushes a staging/main
+  # ══════════════════════════════════════════════════════════════════
+  build-check:
+    name: "Docker Build Check"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
+    if: |
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/staging' ||
+      github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: "Build Docker image (sin push)"
+        uses: docker/build-push-action@v5
+        with:
+          context: ./findempro
+          file: ./findempro/Dockerfile
+          push: false
+          tags: findempro:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 5: deploy-staging — deploy automático a staging
+  # Solo cuando se hace push a la rama staging
+  # ══════════════════════════════════════════════════════════════════
   deploy-staging:
-    needs: test
+    name: "Deploy → Staging"
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/staging'
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Deploy to Staging
-      env:
-        STAGING_HOST: ${{ secrets.STAGING_HOST }}
-        STAGING_USER: ${{ secrets.STAGING_USER }}
-        STAGING_KEY: ${{ secrets.STAGING_SSH_KEY }}
-      run: |
-        echo "$STAGING_KEY" > staging_key
-        chmod 600 staging_key
-        ssh -i staging_key -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_HOST '
-          cd /var/www/findempro-staging
-          git pull origin staging
-          docker-compose -f docker-compose.staging.yml down
-          docker-compose -f docker-compose.staging.yml up -d --build
-          docker-compose -f docker-compose.staging.yml exec -T app python manage.py migrate
-          docker-compose -f docker-compose.staging.yml exec -T app python manage.py collectstatic --noinput
-        '
+    timeout-minutes: 15
+    needs: [test, build-check]
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
 
-  deploy-production:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Deploy to Production
-      env:
-        PROD_HOST: ${{ secrets.PROD_HOST }}
-        PROD_USER: ${{ secrets.PROD_USER }}
-        PROD_KEY: ${{ secrets.PROD_SSH_KEY }}
-      run: |
-        echo "$PROD_KEY" > prod_key
-        chmod 600 prod_key
-        ssh -i prod_key -o StrictHostKeyChecking=no $PROD_USER@$PROD_HOST '
-          cd /var/www/findempro
-          ./scripts/deploy.sh
-        '
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Staging via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          timeout: 120s
+          script: |
+            set -e
+            cd /var/www/findempro-staging
+            git fetch origin staging
+            git reset --hard origin/staging
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+            docker compose -f docker-compose.prod.yml exec -T app python manage.py migrate --no-input
+            docker compose -f docker-compose.prod.yml exec -T app python manage.py collectstatic --no-input
+            docker system prune -f --volumes=false
+            echo "✓ Staging deploy completado: $(date)"
+
+      - name: Notify success
+        run: echo "✅ Deploy a staging exitoso — commit ${{ github.sha }}"
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 6: deploy-production — deploy con aprobación manual
+  # Solo cuando se hace push a main, requiere revisión humana
+  # ══════════════════════════════════════════════════════════════════
+  deploy-production:
+    name: "Deploy → Production"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [test, build-check]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    # "environment: production" con reviewers configurados en GitHub
+    # actúa como gate de aprobación manual antes de ejecutar el deploy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          timeout: 180s
+          script: |
+            set -e
+            cd /var/www/findempro
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Backup DB antes del deploy
+            docker compose -f docker-compose.prod.yml exec -T db \
+              pg_dump -U $DB_USER $DB_NAME > /backups/pre-deploy-$(date +%Y%m%d-%H%M%S).sql || true
+
+            # Deploy
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+            docker compose -f docker-compose.prod.yml exec -T app python manage.py migrate --no-input
+            docker compose -f docker-compose.prod.yml exec -T app python manage.py collectstatic --no-input
+
+            # Health check
+            sleep 10
+            curl -f http://localhost:8000/health/ || exit 1
+
+            docker system prune -f --volumes=false
+            echo "✓ Production deploy completado: $(date)"
+
+      - name: Notify success
+        run: echo "🚀 Deploy a producción exitoso — commit ${{ github.sha }}"

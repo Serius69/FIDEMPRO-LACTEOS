@@ -1,47 +1,103 @@
-version: '3.8'
+# ══════════════════════════════════════════════════════════════════════════════
+# FINDEMPRO AI — Docker Compose para DESARROLLO LOCAL
+#
+# Uso:
+#   docker compose -f docker-compose.dev.yml up
+#   docker compose -f docker-compose.dev.yml up --build  (rebuild)
+#   docker compose -f docker-compose.dev.yml down -v     (limpiar volúmenes)
+#
+# Variables: copia findempro/.env.example → findempro/.env.development
+# ══════════════════════════════════════════════════════════════════════════════
 
 services:
+  # ──────────────────────────────────────────────────────────────
+  # PostgreSQL — mismo motor que producción (evita diferencias)
+  # ──────────────────────────────────────────────────────────────
   db:
-    image: mysql:8.0
-    container_name: findempro_mysql_dev
+    image: postgres:16-alpine
+    container_name: findempro_db_dev
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: findempro_dev
-      MYSQL_USER: dev_user
-      MYSQL_PASSWORD: dev_password
+      POSTGRES_DB: findempro_dev
+      POSTGRES_USER: findempro
+      POSTGRES_PASSWORD: findempro_dev_pass
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data_dev:/var/lib/mysql
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U findempro -d findempro_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
+  # ──────────────────────────────────────────────────────────────
+  # Redis — cache y broker Celery
+  # ──────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: findempro_redis_dev
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
+  # ──────────────────────────────────────────────────────────────
+  # Mailhog — servidor de email local (captura emails sin enviarlos)
+  # UI en: http://localhost:8025
+  # ──────────────────────────────────────────────────────────────
   mailhog:
-    image: mailhog/mailhog
+    image: mailhog/mailhog:latest
     container_name: findempro_mailhog
+    restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
 
+  # ──────────────────────────────────────────────────────────────
+  # App Django — modo desarrollo con hot-reload
+  # ──────────────────────────────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile.dev
     container_name: findempro_app_dev
+    restart: unless-stopped
     volumes:
-      - .:/app
+      - .:/app                          # hot-reload del código fuente
+      - /app/staticfiles                # evitar montar staticfiles del host
     ports:
       - "8000:8000"
     env_file:
       - .env.development
+    environment:
+      DJANGO_SETTINGS_MODULE: findempro.settings.development
+      DJANGO_ENV: development
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: findempro_dev
+      DB_USER: findempro
+      DB_PASSWORD: findempro_dev_pass
+      REDIS_URL: redis://redis:6379/1
+      EMAIL_HOST: mailhog
+      EMAIL_PORT: "1025"
     depends_on:
-      - db
-      - redis
-    command: python manage.py runserver 0.0.0.0:8000
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        python manage.py migrate --settings=findempro.settings.development &&
+        python manage.py runserver 0.0.0.0:8000 --settings=findempro.settings.development
+      "
 
 volumes:
-  mysql_data_dev:
+  postgres_data_dev:
+    driver: local

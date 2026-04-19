@@ -1,0 +1,215 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# FINDEMPRO AI — Configuración de herramientas de calidad de código
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────
+# BLACK — formateador de código
+# ─────────────────────────────────────────────────────────────────
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | node_modules
+  | migrations
+  | staticfiles
+  | media
+  | __pycache__
+)/
+'''
+
+# ─────────────────────────────────────────────────────────────────
+# ISORT — orden de imports
+# Compatible con black (profile = "black")
+# ─────────────────────────────────────────────────────────────────
+[tool.isort]
+profile = "black"
+line_length = 100
+known_django = ["django"]
+known_first_party = [
+    "business",
+    "dashboards",
+    "finance",
+    "pages",
+    "product",
+    "questionary",
+    "report",
+    "simulate",
+    "user",
+    "variable",
+    "findempro",
+]
+known_third_party = [
+    "rest_framework",
+    "allauth",
+    "crispy_forms",
+    "corsheaders",
+    "django_filters",
+    "numpy",
+    "scipy",
+    "pandas",
+    "pytest",
+]
+sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip_glob = [
+    "*/migrations/*",
+    "*/venv/*",
+    "*/node_modules/*",
+    "*/__pycache__/*",
+]
+force_sort_within_sections = true
+combine_as_imports = true
+
+# ─────────────────────────────────────────────────────────────────
+# FLAKE8 — no tiene sección TOML nativa, se configura en [tool.flake8]
+# Requiere flake8-pyproject para leer esta sección
+# ─────────────────────────────────────────────────────────────────
+[tool.flake8]
+max-line-length = 100
+max-complexity = 15
+extend-ignore = [
+    "E203",   # whitespace before ':' (conflicto con black)
+    "E501",   # line too long (black lo maneja)
+    "W503",   # line break before binary operator
+    "W504",   # line break after binary operator
+    "E231",   # missing whitespace after ',' (black lo maneja)
+    "F401",   # imported but unused en __init__.py
+]
+per-file-ignores = [
+    # Migrations generadas automáticamente
+    "*/migrations/*.py:E501,F401,F811",
+    # Settings con importos con wildcard
+    "*/settings/*.py:F401,F403,F405",
+    # Tests pueden usar fixtures sin import explícito
+    "*/tests/*.py:F811",
+    "*/tests.py:F811",
+    # conftest.py y archivos de configuración pytest
+    "conftest.py:F401,F811",
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    ".venv",
+    "node_modules",
+    "staticfiles",
+    "media",
+    "*.egg-info",
+    "dist",
+    "build",
+    ".tox",
+    ".cache",
+    "docs",
+]
+# flake8-bugbear opciones
+extend-select = ["B", "B9"]
+
+# ─────────────────────────────────────────────────────────────────
+# PYTEST — configuración completa
+# ─────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+# Directorio raíz de pytest (relativo a pyproject.toml)
+testpaths = ["findempro"]
+
+# Django settings para tests
+DJANGO_SETTINGS_MODULE = "findempro.settings.test"
+
+# Opciones por defecto
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "--no-header",
+    "-ra",
+    "--import-mode=importlib",
+]
+
+# Markers personalizados del proyecto
+markers = [
+    "unit: tests unitarios rápidos sin DB",
+    "integration: tests de integración con DB",
+    "simulation: tests de lógica Monte Carlo (lentos)",
+    "api: tests de endpoints REST",
+    "slow: tests que tardan más de 1 segundo",
+]
+
+# Ignorar directorios que no contienen tests
+norecursedirs = [
+    "venv",
+    ".venv",
+    "node_modules",
+    "staticfiles",
+    "media",
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+    "migrations",
+]
+
+# Filtros de warnings en tests
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning",
+]
+
+# Timeout para tests individuales (requiere pytest-timeout)
+timeout = 30
+
+# ─────────────────────────────────────────────────────────────────
+# COVERAGE — configuración de pytest-cov
+# ─────────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["findempro"]
+branch = true
+omit = [
+    "*/migrations/*",
+    "*/venv/*",
+    "*/node_modules/*",
+    "*/staticfiles/*",
+    "*/tests/*",
+    "*/tests.py",
+    "*/conftest.py",
+    "*/settings/*",
+    "manage.py",
+    "*/wsgi.py",
+    "*/asgi.py",
+    "*/celery.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+skip_empty = true
+fail_under = 40
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "pass",
+    "\\.\\.\\.",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+# ─────────────────────────────────────────────────────────────────
+# MYPY — type checking (opcional, para futuro)
+# ─────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_configs = true
+exclude = [
+    "migrations/",
+    "venv/",
+]
