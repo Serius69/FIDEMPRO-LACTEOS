@@ -1,27 +1,214 @@
-# Entornos virtuales
-venv/
-.env/
+# ══════════════════════════════════════════════════════════════════════════════
+# FINDEMPRO AI — .gitignore
+# Django 4.2 + Python + Node.js + Docker + VSCode/PyCharm
+# ══════════════════════════════════════════════════════════════════════════════
 
-# Archivos de caché de Python
+# ─────────────────────────────────────────────────────────────────
+# PYTHON / DJANGO
+# ─────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.eggs/
 
-# Archivos de log
-*.log
+# ─────────────────────────────────────────────────────────────────
+# ENTORNOS VIRTUALES
+# ─────────────────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
 
-# Archivos de bases de datos temporales
+# ─────────────────────────────────────────────────────────────────
+# DJANGO ESPECÍFICO
+# ─────────────────────────────────────────────────────────────────
 *.sqlite3
+*.sqlite3-journal
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+/findempro/staticfiles/
+media/
+/findempro/media/
 
-# Configuraciones de editores de texto comunes
+# ─────────────────────────────────────────────────────────────────
+# VARIABLES DE ENTORNO Y SECRETOS
+# ─────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+.env.test
+# Mantener solo los archivos de ejemplo (sin credenciales reales)
+!.env.example
+!.env.*.example
+!findempro/.env.example
+!findempro/.env.vercel.example
+
+# ─────────────────────────────────────────────────────────────────
+# NODE.JS / FRONTEND
+# ─────────────────────────────────────────────────────────────────
+node_modules/
+/findempro/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+
+# ─────────────────────────────────────────────────────────────────
+# LOGS
+# ─────────────────────────────────────────────────────────────────
+*.log
+logs/
+/findempro/logs/
+*.log.*
+log/
+
+# ─────────────────────────────────────────────────────────────────
+# DOCKER
+# ─────────────────────────────────────────────────────────────────
+.docker/
+
+# ─────────────────────────────────────────────────────────────────
+# TESTING Y COBERTURA
+# ─────────────────────────────────────────────────────────────────
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+nosetests.xml
+test-results/
+
+# ─────────────────────────────────────────────────────────────────
+# JUPYTER / DATA SCIENCE
+# ─────────────────────────────────────────────────────────────────
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# ─────────────────────────────────────────────────────────────────
+# IDES Y EDITORES
+# ─────────────────────────────────────────────────────────────────
+# VSCode — se mantienen settings y extensions recomendadas
 .vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# PyCharm / JetBrains
 .idea/
+*.iml
+*.iws
+*.ipr
 
-# Archivos generados por Jupyter Notebooks
-.ipynb_checkpoints/
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
 
-# MacOS
+# Vim
+*.swp
+*.swo
+*~
+
+# ─────────────────────────────────────────────────────────────────
+# SISTEMA OPERATIVO
+# ─────────────────────────────────────────────────────────────────
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
 
 # Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ─────────────────────────────────────────────────────────────────
+# ARCHIVOS TEMPORALES Y COMPILADOS
+# ─────────────────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.pid
+*.seed
+*.pid.lock
+
+# ─────────────────────────────────────────────────────────────────
+# ARCHIVOS GRANDES / BINARIOS NO ESENCIALES
+# ─────────────────────────────────────────────────────────────────
+*.pkl
+*.pickle
+*.h5
+*.model
+*.weights
+
+# ─────────────────────────────────────────────────────────────────
+# VERCEL / DEPLOYMENT
+# ─────────────────────────────────────────────────────────────────
+.vercel/
+.next/
+out/
+
+# ─────────────────────────────────────────────────────────────────
+# QODO / HERRAMIENTAS EXTERNAS
+# ─────────────────────────────────────────────────────────────────
+.qodo/
+
+# ─────────────────────────────────────────────────────────────────
+# HERRAMIENTAS DE CALIDAD DE CÓDIGO
+# ─────────────────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.black_cache/
+
+# ─────────────────────────────────────────────────────────────────
+# ARCHIVOS GENERADOS POR BUILD
+# ─────────────────────────────────────────────────────────────────
+*.css.map
+*.js.map
+/findempro/src/dist/
+/findempro/src/build/
+
+# ─────────────────────────────────────────────────────────────────
+# CLAUDE CODE
+# ─────────────────────────────────────────────────────────────────
+.claude/settings.local.json
