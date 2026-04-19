@@ -1,16 +1,19 @@
 """
 WSGI config for findempro project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/3.2/howto/deployment/wsgi/
+Selecciona el settings correcto según DJANGO_ENV.
 """
-
 import os
-
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'findempro.settings')
+_env = os.getenv('DJANGO_ENV', 'development')
+_settings_map = {
+    'production': 'findempro.settings.production',
+    'staging': 'findempro.settings.staging',
+    'development': 'findempro.settings.development',
+}
+os.environ.setdefault(
+    'DJANGO_SETTINGS_MODULE',
+    _settings_map.get(_env, 'findempro.settings.production')
+)
 
 application = get_wsgi_application()

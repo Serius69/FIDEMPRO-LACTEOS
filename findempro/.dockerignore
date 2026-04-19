@@ -1,7 +1,67 @@
-__pycache__
-*.pyc
+# ── Python ────────────────────────────────────
+__pycache__/
+*.py[cod]
 *.pyo
-.git
-.vscode
-.idea
-*.sqlite3
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ── Virtual environments ───────────────────────
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# ── Environment files (NEVER in image) ────────
+.env
+.env.*
+!.env.example
+
+# ── Node ──────────────────────────────────────
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# ── Git ───────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── IDE / editors ─────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Tests / CI ────────────────────────────────
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+
+# ── Logs / temp ───────────────────────────────
+logs/
+*.log
+*.tmp
+
+# ── Compiled static (regenerated in container) ─
+staticfiles/
+media/
+
+# ── Docker itself ─────────────────────────────
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# ── OS ────────────────────────────────────────
+.DS_Store
+Thumbs.db

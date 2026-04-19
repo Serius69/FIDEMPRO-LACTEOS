@@ -8,13 +8,20 @@ from .views.api_views import (
     SimulationRetryView,
     SimulationDuplicateView,
     SimulationStartView,
-    SimulationDeleteView
+    SimulationDeleteView,
+)
+from .views.api_v1_views import (
+    SimulateAPIView,
+    ForecastAPIView,
+    RiskAnalysisAPIView,
+    ScenariosAPIView,
+    CompanyProfileAPIView,
 )
 
 app_name = 'simulate'
 
 urlpatterns = [
-    # Main simulation views
+    # ── Vistas principales de simulación ────────────────────────────────────────
     path("", view=AppsView.as_view(), name="simulate.index"),
     path("init/", view=simulate_show_view, name="simulate.show"),
     path("add/", view=simulate_add_view, name="simulate.add"),
@@ -24,10 +31,22 @@ urlpatterns = [
     path("result/<int:simulation_id>/view/", view=simulate_result_simulation_view, name="simulate.view"),
     path("list/", view=SimulateListView.as_view(), name="simulate.list"),
 
-    # API endpoints
+    # ── API legacy (endpoints existentes) ───────────────────────────────────────
     path("api/progress/<int:simulation_id>/", view=SimulationProgressView.as_view(), name="api.progress"),
     path("api/retry/<int:simulation_id>/", view=SimulationRetryView.as_view(), name="api.retry"),
     path("api/duplicate/<int:simulation_id>/", view=SimulationDuplicateView.as_view(), name="api.duplicate"),
     path("api/start/<int:simulation_id>/", view=SimulationStartView.as_view(), name="api.start"),
     path("api/delete/<int:simulation_id>/", view=SimulationDeleteView.as_view(), name="api.delete"),
+
+    # ── API v1 — Motor genérico multi-industria ─────────────────────────────────
+    # Simulación Monte Carlo completa
+    path("api/v1/simulate/", view=SimulateAPIView.as_view(), name="api.v1.simulate"),
+    # Proyección de demanda a partir de histórico
+    path("api/v1/forecast/", view=ForecastAPIView.as_view(), name="api.v1.forecast"),
+    # Análisis de riesgo financiero
+    path("api/v1/risk-analysis/", view=RiskAnalysisAPIView.as_view(), name="api.v1.risk_analysis"),
+    # Escenarios financieros (pesimista/base/optimista)
+    path("api/v1/scenarios/", view=ScenariosAPIView.as_view(), name="api.v1.scenarios"),
+    # Perfil de configuración por empresa
+    path("api/v1/company-profile/<int:business_id>/", view=CompanyProfileAPIView.as_view(), name="api.v1.company_profile"),
 ]

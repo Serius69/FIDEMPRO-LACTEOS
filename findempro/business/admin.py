@@ -1,32 +1,19 @@
 from django.contrib import admin
-# from . models import CrmContact,CrmCompany,CrmLead,JobApplication,EcommerceOrder,EcommerceCustomer,TicketList
+from .models import Business, CompanyProfile
 
-# # Register your models here.
+@admin.register(Business)
+class BusinessAdmin(admin.ModelAdmin):
+    list_display = ['name', 'get_type_display', 'industry_sector', 'location', 'owner_name', 'is_active', 'date_created']
+    list_filter = ['type', 'industry_sector', 'is_active']
+    search_fields = ['name', 'location', 'fk_user__username']
+    readonly_fields = ['date_created', 'last_updated', 'industry_sector']
+    ordering = ['-date_created']
 
-# @admin.register(CrmContact)
-# class CrmContactAdmin(admin.ModelAdmin):
-#     list_display = ['name','company_name','designation','email_id','phone','lead_score','tags','profile_pic']
-    
-# @admin.register(CrmCompany)
-# class CrmCompanyAdmin(admin.ModelAdmin):
-#     list_display = ['name','owner_name','industry_type','rating','location','employee','website','contact_email','logo']
-    
-# @admin.register(CrmLead)
-# class CrmLeadAdmin(admin.ModelAdmin):
-#     list_display = ['name','company_name','lead_score','phone','location','tags','profile_pic']
-    
-# @admin.register(JobApplication)
-# class JobApplicationAdmin(admin.ModelAdmin):
-#     list_display = ['company_name','designation','apply_date','contact','type','status','profile_pic']
-    
-# @admin.register(EcommerceOrder)
-# class EcommerceOrderAdmin(admin.ModelAdmin):
-#     list_display = ['name','product','order_date','amount','payment_method','status']
-    
-# @admin.register(EcommerceCustomer)
-# class EcommerceCustomerAdmin(admin.ModelAdmin):
-#     list_display = ['name','email_id','phone','joining_date','status']
-    
-# @admin.register(TicketList)
-# class TicketListAdmin(admin.ModelAdmin):
-#     list_display = ['title','client_name','assign_to','create_date','due_date','status','priority']
+
+@admin.register(CompanyProfile)
+class CompanyProfileAdmin(admin.ModelAdmin):
+    list_display = ['fk_business', 'demand_pattern', 'distribution_preference',
+                    'monte_carlo_iterations', 'confidence_level', 'min_profit_margin_pct']
+    list_filter = ['demand_pattern', 'distribution_preference']
+    search_fields = ['fk_business__name']
+    readonly_fields = ['date_created', 'last_updated']

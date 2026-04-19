@@ -68,14 +68,22 @@ class Product(models.Model):
         verbose_name="Negocio"
     )
     
+    # Categorías genéricas multi-industria — compatible con cualquier PyME
     TYPE_CHOICES = [
-        (1, 'Lácteos'),
-        (2, 'Servicio'),
-    ]    
+        (1, 'Producto Físico'),       # Bienes tangibles: alimentos, manufactura, etc.
+        (2, 'Servicio'),              # Servicios intangibles
+        (3, 'Materia Prima'),         # Insumos para producción
+        (4, 'Producto Semi-elaborado'), # Producto en proceso
+        (5, 'Producto Terminado'),    # Output final de producción
+        (6, 'Activo / Recurso'),      # Equipos, maquinaria, capital
+        (7, 'Digital / Software'),    # Productos digitales
+        (8, 'Agropecuario'),          # Productos del campo
+        (9, 'Otro'),
+    ]
     type = models.IntegerField(
-        default=1, 
+        default=1,
         choices=TYPE_CHOICES,
-        verbose_name="Tipo de Producto"
+        verbose_name="Categoría de Producto/Servicio"
     )
     
     profit_margin = models.DecimalField(

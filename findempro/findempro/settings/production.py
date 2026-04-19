@@ -1,66 +1,69 @@
 """
-Configuración para PRODUCCIÓN
+Django settings — PRODUCCIÓN
+Hereda de base.py y sobreescribe todo lo necesario para producción real.
 """
 from .base import *
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
+import logging
 
-# SEGURIDAD
+logger = logging.getLogger(__name__)
+
+# ─────────────────────────────────────────────
+# Seguridad obligatoria
+# ─────────────────────────────────────────────
 DEBUG = False
-SECRET_KEY = os.getenv('SECRET_KEY')
-if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable must be set in production")
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+_secret = os.getenv('SECRET_KEY')
+if not _secret:
+    raise ValueError("[PRODUCCION] SECRET_KEY no está configurada. Defínela en el .env")
+SECRET_KEY = _secret
+
+_hosts_raw = os.getenv('DJANGO_ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [h.strip() for h in _hosts_raw.split(',') if h.strip()]
 if not ALLOWED_HOSTS:
-    raise ValueError("ALLOWED_HOSTS must be set in production")
+    raise ValueError("[PRODUCCION] DJANGO_ALLOWED_HOSTS no está configurada.")
 
-# APPS DE PRODUCCIÓN
+# ─────────────────────────────────────────────
+# Apps adicionales de producción
+# ─────────────────────────────────────────────
 INSTALLED_APPS += [
     'django_prometheus',
 ]
 
-# MIDDLEWARE DE PRODUCCIÓN
-MIDDLEWARE.insert(0, 'whitenoise.middleware.WhiteNoiseMiddleware')
+# ─────────────────────────────────────────────
+# Middleware de producción (orden importa)
+# ─────────────────────────────────────────────
+# WhiteNoise debe ir después de SecurityMiddleware
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 MIDDLEWARE.append('django_prometheus.middleware.PrometheusAfterMiddleware')
 
-# DATABASE - Con pool de conexiones
-DATABASES['default'].update({
-    'OPTIONS': {
-        'charset': 'utf8mb4',
-        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        'connect_timeout': 10,
-    },
-    'CONN_MAX_AGE': 600,
-})
+# ─────────────────────────────────────────────
+# Base de datos PostgreSQL con pool
+# ─────────────────────────────────────────────
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'findempro'),
+        'USER': os.getenv('DB_USER', 'findempro'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+        'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '600')),
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c default_transaction_isolation=read\ committed',
+        },
+    }
+}
 
-# SEGURIDAD HTTPS
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-SECURE_REFERRER_POLICY = 'same-origin'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# ─────────────────────────────────────────────
+# Cache Redis (producción)
+# ─────────────────────────────────────────────
+REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/1')
 
-# EMAIL - SMTP Real
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv("EMAIL_HOST")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
-
-# CACHE - Redis
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.getenv('REDIS_URL', 'redis://redis:6379/1'),
+        'LOCATION': REDIS_URL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'PARSER_CLASS': 'redis.connection.HiredisParser',
@@ -70,102 +73,163 @@ CACHES = {
             },
             'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
             'IGNORE_EXCEPTIONS': True,
-        }
+        },
+        'TIMEOUT': 300,
     }
 }
 
-# SESSION - En Redis
+# ─────────────────────────────────────────────
+# Session en Redis
+# ─────────────────────────────────────────────
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
+SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-# STATIC FILES - WhiteNoise
+# ─────────────────────────────────────────────
+# Seguridad HTTPS
+# SSL solo se fuerza si está habilitado explícitamente
+# (útil cuando hay load balancer / proxy que termina SSL)
+# ─────────────────────────────────────────────
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+_ssl_enabled = os.getenv('HTTPS_ENABLED', 'false').lower() in ('true', '1', 'yes')
+SECURE_SSL_REDIRECT = _ssl_enabled
+CSRF_COOKIE_SECURE = _ssl_enabled
+SECURE_HSTS_SECONDS = 31536000 if _ssl_enabled else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _ssl_enabled
+SECURE_HSTS_PRELOAD = _ssl_enabled
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# ─────────────────────────────────────────────
+# CSRF confiable (necesario para frontend separado)
+# ─────────────────────────────────────────────
+_csrf_raw = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_raw.split(',') if o.strip()]
+
+# ─────────────────────────────────────────────
+# CORS
+# ─────────────────────────────────────────────
+_cors_raw = os.getenv('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_raw.split(',') if o.strip()]
+CORS_ALLOW_CREDENTIALS = True
+
+# ─────────────────────────────────────────────
+# Static files — WhiteNoise con compresión
+# ─────────────────────────────────────────────
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# PASSWORD VALIDATION - Estricto
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 12}
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-# ALLAUTH - Configuración de producción
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_LOGOUT_ON_GET = False
-ACCOUNT_SESSION_REMEMBER = None
-ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
-ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300
-
-# REST FRAMEWORK - Solo JSON
+# ─────────────────────────────────────────────
+# REST Framework — producción (solo JSON, auth requerida)
+# ─────────────────────────────────────────────
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+        'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
-        'user': '1000/hour'
-    }
+        'user': '1000/hour',
+    },
 }
 
-# CORS - Restringido
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-CORS_ALLOW_CREDENTIALS = True
+# ─────────────────────────────────────────────
+# Password validation estricta
+# ─────────────────────────────────────────────
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+     'OPTIONS': {'min_length': 12}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
 
-# CELERY
+# ─────────────────────────────────────────────
+# AllAuth — producción
+# ─────────────────────────────────────────────
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_LOGOUT_ON_GET = False
+ACCOUNT_SESSION_REMEMBER = None
+
+# ─────────────────────────────────────────────
+# Email SMTP real
+# ─────────────────────────────────────────────
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# ─────────────────────────────────────────────
+# Celery
+# ─────────────────────────────────────────────
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+CELERY_ALWAYS_EAGER = False
 
-# SENTRY
-SENTRY_DSN = os.getenv('SENTRY_DSN')
+# ─────────────────────────────────────────────
+# Sentry (opcional)
+# ─────────────────────────────────────────────
+SENTRY_DSN = os.getenv('SENTRY_DSN', '')
 if SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration()],
-        traces_sample_rate=0.1,
-        send_default_pii=False,
-        environment='production'
-    )
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.django import DjangoIntegration
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[DjangoIntegration(), CeleryIntegration()],
+            traces_sample_rate=float(os.getenv('SENTRY_TRACES_RATE', '0.1')),
+            send_default_pii=False,
+            environment='production',
+        )
+    except ImportError:
+        pass
 
-# LOGGING - Producción
+# ─────────────────────────────────────────────
+# Logging producción — rotación, sin emojis
+# ─────────────────────────────────────────────
+LOG_DIR = os.getenv('LOG_DIR', os.path.join(BASE_DIR, 'logs'))
+os.makedirs(LOG_DIR, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'json': {
-            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-            'format': '%(asctime)s %(name)s %(levelname)s %(message)s'
-        }
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'json'
+            'formatter': 'verbose',
         },
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/findempro/app.log',
-            'maxBytes': 1024 * 1024 * 15,  # 15MB
+            'filename': os.path.join(LOG_DIR, 'app.log'),
+            'maxBytes': 1024 * 1024 * 15,  # 15 MB
             'backupCount': 10,
-            'formatter': 'json',
+            'formatter': 'verbose',
+        },
+        'security': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'security.log'),
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 5,
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -173,16 +237,41 @@ LOGGING = {
         'level': 'INFO',
     },
     'loggers': {
-        'django.security': {
-            'handlers': ['file'],
+        'django': {
+            'handlers': ['console', 'file'],
             'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['security'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'findempro': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'simulate': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
             'propagate': False,
         },
     },
 }
 
-# DASHBOARD
+# ─────────────────────────────────────────────
+# Dashboard caching activo
+# ─────────────────────────────────────────────
 DASHBOARD_CONFIG['ENABLE_CHART_CACHING'] = True
 DASHBOARD_CONFIG['CHART_CACHE_TIMEOUT'] = 3600
-
-print("🔒 RUNNING IN PRODUCTION MODE 🔒")

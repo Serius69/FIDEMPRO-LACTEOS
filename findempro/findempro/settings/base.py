@@ -1,30 +1,38 @@
 """
-Django settings for findempro project - DESARROLLO
+Django settings — FINDEMPRO
+Base compartida entre development, staging y production.
+Los valores sensibles SIEMPRE vienen de variables de entorno.
 """
 import os
+import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 from dotenv import load_dotenv
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ─────────────────────────────────────────────
+# Rutas base
+# ─────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-ENV_PATH = os.path.join(BASE_DIR, '.env.development')
-load_dotenv(ENV_PATH)
-print("ENV_PATH:", ENV_PATH)
-if not os.path.exists(ENV_PATH):
-    raise FileNotFoundError(f"El archivo .env.development no se encuentra en la ruta esperada: {ENV_PATH}")
-else:
-    print("Archivo .env.development encontrado y cargado correctamente.")
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j%^*y0krq5^-#3lggoecxw!d7ad_gqkab3t5w17&0w06+qf8+8'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Cargar .env según el entorno activo — NUNCA forzar .env.development en producción
+_ENV = os.getenv('DJANGO_ENV', 'development')
+_env_file = os.path.join(BASE_DIR, f'.env.{_ENV}')
+if os.path.exists(_env_file):
+    load_dotenv(_env_file, override=False)
+elif os.path.exists(os.path.join(BASE_DIR, '.env')):
+    load_dotenv(os.path.join(BASE_DIR, '.env'), override=False)
 
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
+# ─────────────────────────────────────────────
+# Seguridad — NUNCA hardcodear en código
+# ─────────────────────────────────────────────
+SECRET_KEY = os.getenv('SECRET_KEY', 'change-me-in-production-via-env')
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
-# Application definition
-DEFAULT_APPS = [    
+# ─────────────────────────────────────────────
+# Aplicaciones
+# ─────────────────────────────────────────────
+DEFAULT_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,7 +53,7 @@ LOCAL_APPS = [
     "simulate",
     "user",
     "report",
-    "questionary"
+    "questionary",
 ]
 
 THIRDPARTY_APPS = [
@@ -63,6 +71,9 @@ THIRDPARTY_APPS = [
 
 INSTALLED_APPS = DEFAULT_APPS + LOCAL_APPS + THIRDPARTY_APPS
 
+# ─────────────────────────────────────────────
+# Middleware
+# ─────────────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -77,21 +88,11 @@ MIDDLEWARE = [
     'user.middleware.ActivityLogMiddleware',
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',  # Para desarrollo
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Para desarrollo
-    ],
-}
-
+# ─────────────────────────────────────────────
+# URLs / Templates / WSGI
+# ─────────────────────────────────────────────
 ROOT_URLCONF = 'findempro.urls'
+WSGI_APPLICATION = 'findempro.wsgi.application'
 
 TEMPLATES = [
     {
@@ -110,83 +111,46 @@ TEMPLATES = [
     },
 ]
 
+# ─────────────────────────────────────────────
+# Autenticación
+# ─────────────────────────────────────────────
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
     'social_core.backends.google.GoogleOAuth2',
 ]
 
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
-WSGI_APPLICATION = 'findempro.wsgi.application'
-
-# Database - Desarrollo
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv("MYSQL_DATABASE"),
-        'USER': os.getenv("MYSQL_USER"),
-        'PASSWORD': os.getenv("MYSQL_PASSWORD"),
-        'HOST': os.getenv("DB_HOST"),
-        'PORT': os.getenv("DB_PORT"),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
-    }
-}
-print("MYSQL_DATABASE:", os.getenv("MYSQL_DATABASE"))
-
-
-# Internationalization
-LANGUAGE_CODE = 'es'
-TIME_ZONE = 'America/La_Paz'
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-
-# IMPORTANTE: Esta línea debe apuntar a tu carpeta static
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+     'OPTIONS': {'min_length': 8}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-# Para producción (no lo necesitas ahora pero es bueno tenerlo)
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Messages customize
-MESSAGE_TAGS = {
-    messages.DEBUG: "alert-info",
-    messages.INFO: "alert-info",
-    messages.SUCCESS: "alert-success",
-    messages.WARNING: "alert-warning",
-    messages.ERROR: "alert-danger",
-}
-
-# Para usar Gmail en desarrollo (opcional)
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-
-# Authentication settings
 LOGIN_REDIRECT_URL = "/"
 LOGIN_URL = "account_login"
-ACCOUNT_LOGOUT_ON_GET = True  # Más conveniente para desarrollo
+ACCOUNT_LOGOUT_ON_GET = os.getenv('ACCOUNT_LOGOUT_ON_GET', 'True').lower() in ('true', '1')
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
-SOCIAL_AUTH_URL_NAMESPACE = 'social'
+ACCOUNT_EMAIL_VERIFICATION = os.getenv('ACCOUNT_EMAIL_VERIFICATION', 'optional')
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300
 
-# All Auth Forms Customization 
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIALACCOUNT_QUERY_EMAIL = True
+
+# Google OAuth2 — siempre desde env
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', '')
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+    }
+}
+
 ACCOUNT_FORMS = {
     "login": "findempro.forms.UserLoginForm",
     "signup": "findempro.forms.UserRegistrationForm",
@@ -196,49 +160,196 @@ ACCOUNT_FORMS = {
     "reset_password_from_key": "findempro.forms.PasswordResetKeyForm",
 }
 
-SOCIALACCOUNT_QUERY_EMAIL = True
+SITE_ID = int(os.getenv('SITE_ID', '2'))
 
-#Social auth google key and secret key
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY="328835751262-3trsdta49tep5gkm4h35vs9mb25npojr.apps.googleusercontent.com"
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET="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"
-
-SITE_ID = 2
-
-# Provider Configurations
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        }
+# ─────────────────────────────────────────────
+# Base de datos (override en cada settings/*.py)
+# ─────────────────────────────────────────────
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'findempro'),
+        'USER': os.getenv('DB_USER', 'findempro'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+        'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
+        'OPTIONS': {
+            'connect_timeout': 10,
+        },
     }
 }
 
-# OpenAI
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# ─────────────────────────────────────────────
+# Cache — Redis
+# ─────────────────────────────────────────────
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/1')
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'IGNORE_EXCEPTIONS': True,
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 20,
+                'retry_on_timeout': True,
+            },
+        },
+        'TIMEOUT': 300,
+    }
+}
 
-# Session configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Base de datos en desarrollo
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 2 weeks
-SESSION_SAVE_EVERY_REQUEST = False  # No necesario en desarrollo
+# ─────────────────────────────────────────────
+# Celery
+# ─────────────────────────────────────────────
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'America/La_Paz'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 min
+CELERY_ALWAYS_EAGER = os.getenv('CELERY_ALWAYS_EAGER', 'False').lower() in ('true', '1')
 
-# Celery Configuration - Opcional para desarrollo
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
-CELERY_ALWAYS_EAGER = True  # Ejecutar tareas síncronamente en desarrollo
-CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+# ─────────────────────────────────────────────
+# Internacionalización
+# ─────────────────────────────────────────────
+LANGUAGE_CODE = 'es'
+TIME_ZONE = 'America/La_Paz'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
 
-# Logging simplificado para desarrollo
+# ─────────────────────────────────────────────
+# Archivos estáticos y media
+# ─────────────────────────────────────────────
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ─────────────────────────────────────────────
+# Email
+# ─────────────────────────────────────────────
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+# ─────────────────────────────────────────────
+# Session
+# ─────────────────────────────────────────────
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 2 semanas
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# ─────────────────────────────────────────────
+# REST Framework
+# ─────────────────────────────────────────────
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
+}
+
+# ─────────────────────────────────────────────
+# CORS
+# ─────────────────────────────────────────────
+_cors_origins_raw = os.getenv('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(',') if o.strip()]
+CORS_ALLOW_CREDENTIALS = True
+
+# ─────────────────────────────────────────────
+# Seguridad base (producción lo sobreescribe)
+# ─────────────────────────────────────────────
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# ─────────────────────────────────────────────
+# Messages UI
+# ─────────────────────────────────────────────
+MESSAGE_TAGS = {
+    messages.DEBUG: "alert-info",
+    messages.INFO: "alert-info",
+    messages.SUCCESS: "alert-success",
+    messages.WARNING: "alert-warning",
+    messages.ERROR: "alert-danger",
+}
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# ─────────────────────────────────────────────
+# OpenAI / Terceros
+# ─────────────────────────────────────────────
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+
+# ─────────────────────────────────────────────
+# Matplotlib (no-GUI)
+# ─────────────────────────────────────────────
+import matplotlib
+matplotlib.use('Agg')
+
+# ─────────────────────────────────────────────
+# Dashboard
+# ─────────────────────────────────────────────
+DASHBOARD_CONFIG = {
+    'CHART_TYPES': [
+        ('line', 'Línea'), ('bar', 'Barras'), ('pie', 'Circular'),
+        ('donut', 'Dona'), ('area', 'Área'), ('scatter', 'Dispersión'),
+        ('heatmap', 'Mapa de calor'), ('candlestick', 'Velas'),
+    ],
+    'MAX_CHARTS_PER_PRODUCT': 10,
+    'CHART_IMAGE_QUALITY': 95,
+    'CHART_DPI': 150,
+    'DEFAULT_CHART_WIDTH': 10,
+    'DEFAULT_CHART_HEIGHT': 6,
+    'ENABLE_CHART_CACHING': True,
+    'CHART_CACHE_TIMEOUT': 3600,
+}
+
+# ─────────────────────────────────────────────
+# Logging base (cada entorno puede extenderlo)
+# ─────────────────────────────────────────────
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGS_DIR, exist_ok=True)
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '[{asctime}] {levelname} {name} {module}: {message}',
             'style': '{',
         },
         'simple': {
@@ -249,11 +360,13 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
+            'formatter': 'verbose',
         },
         'file': {
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'debug.log'),
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOGS_DIR, 'app.log'),
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
             'formatter': 'verbose',
         },
     },
@@ -267,55 +380,33 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'django.security': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
         'findempro': {
             'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'simulate': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
             'propagate': False,
         },
     },
 }
 
-# Dashboard Configuration
-DASHBOARD_CONFIG = {
-    'CHART_TYPES': [
-        ('line', 'Línea'),
-        ('bar', 'Barras'),
-        ('pie', 'Circular'),
-        ('donut', 'Dona'),
-        ('area', 'Área'),
-        ('scatter', 'Dispersión'),
-        ('heatmap', 'Mapa de calor'),
-        ('candlestick', 'Velas'),
-    ],
-    'MAX_CHARTS_PER_PRODUCT': 10,
-    'CHART_IMAGE_QUALITY': 95,
-    'CHART_DPI': 150,
-    'DEFAULT_CHART_WIDTH': 10,
-    'DEFAULT_CHART_HEIGHT': 6,
-    'ENABLE_CHART_CACHING': False,  # Desactivar caché en desarrollo
-}
-
-# Matplotlib backend
-import matplotlib
-matplotlib.use('Agg')
-
-# Create necessary directories
-LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-if not os.path.exists(LOGS_DIR):
-    os.makedirs(LOGS_DIR)
-
-if not os.path.exists(MEDIA_ROOT):
-    os.makedirs(MEDIA_ROOT)
-    os.makedirs(os.path.join(MEDIA_ROOT, 'chart_images'))
-
-# Shell Plus para desarrollo
+# ─────────────────────────────────────────────
+# Django Extensions
+# ─────────────────────────────────────────────
 SHELL_PLUS_PRE_IMPORTS = [
     ('django.db', ['connection', 'reset_queries']),
     ('datetime', ['datetime', 'timedelta']),
     ('json', ['loads', 'dumps']),
 ]
 
-# Django Extensions Graph Models
 GRAPH_MODELS = {
     'all_applications': True,
     'group_models': True,

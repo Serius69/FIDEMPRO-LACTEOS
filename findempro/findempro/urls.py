@@ -1,4 +1,5 @@
 # findempro/urls.py
+import os
 from django.contrib import admin
 from django.urls import path, re_path, include
 from rest_framework import permissions
@@ -9,8 +10,9 @@ from .views import MyPasswordChangeView, MyPasswordSetView
 from django.conf.urls.static import static
 from django.conf import settings
 from django.shortcuts import render
-import debug_toolbar
-# Define la vista personalizada para errores 404
+from .health import health_check, health_ready, health_live
+
+
 def error_404(request, exception):
     return render(request, 'pages/404.html', status=404)
 
@@ -32,8 +34,13 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # ── Health checks (sin autenticación) ───────────────────────────────────
+    path('health/', health_check, name='health_check'),
+    path('health/ready/', health_ready, name='health_ready'),
+    path('health/live/', health_live, name='health_live'),
+
     path('admin/', admin.site.urls),
-    
+
     # Dashboard
     path('', include('dashboards.urls')),
     
@@ -76,4 +83,8 @@ handler500 = 'findempro.urls.error_500'
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns = [path('__debug__/', include(debug_toolbar.urls))] + urlpatterns
+    try:
+        import debug_toolbar
+        urlpatterns = [path('__debug__/', include(debug_toolbar.urls))] + urlpatterns
+    except ImportError:
+        pass
