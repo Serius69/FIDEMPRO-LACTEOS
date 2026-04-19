@@ -1,275 +1,164 @@
 import logging
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import TemplateView
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import HttpResponse, JsonResponse
-from .models import Business
-from product.models import Product
-from .forms import BusinessForm
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.generic import TemplateView
+
 from pages.models import Instructions
-from django.urls import reverse
-from django.core.files import File
-from django.core.files.base import ContentFile
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.contrib.auth.models import User
-from django.http import Http404
+from product.models import Product
+
+from .forms import BusinessForm
+from .models import Business
 
 logger = logging.getLogger(__name__)
+
+_AJAX_HEADER = 'XMLHttpRequest'
+_BUSINESS_LIST_URL = 'business:business.list'
+
 
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
 
+
+def _is_ajax(request) -> bool:
+    return request.headers.get('X-Requested-With') == _AJAX_HEADER
+
+
+def _json_ok(message: str, **extra) -> JsonResponse:
+    return JsonResponse({'success': True, 'message': message, **extra})
+
+
+def _json_err(message: str, status: int = 400, **extra) -> JsonResponse:
+    return JsonResponse({'success': False, 'message': message, **extra}, status=status)
+
+
+def _paginate(queryset, request, per_page: int):
+    paginator = Paginator(queryset, per_page)
+    page = request.GET.get('page')
+    try:
+        return paginator.page(page)
+    except PageNotAnInteger:
+        return paginator.page(1)
+    except EmptyPage:
+        return paginator.page(paginator.num_pages)
+
+
 @login_required
 def business_list_view(request):
-    form = BusinessForm()
-    try:
-        businesses = Business.objects.filter(fk_user=request.user, is_active=True).order_by('-id')
-        paginator = Paginator(businesses, 12)
-        page = request.GET.get('page')
-        try:
-            businesses = paginator.page(page)
-        except PageNotAnInteger:
-            businesses = paginator.page(1)
-        except EmptyPage:
-            businesses = paginator.page(paginator.num_pages)
-        
-        instructions = Instructions.objects.filter(fk_user=request.user, is_active=True).order_by('id')
-        context = {
-            'businesses': businesses, 
-            'form': form,
-            'instructions': instructions
-        }
-    except Exception as e:
-        logger.error(f"Error in business_list_view: {str(e)}")
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500)
-
+    businesses = (
+        Business.objects
+        .filter(fk_user=request.user, is_active=True)
+        .order_by('-id')
+    )
+    instructions = (
+        Instructions.objects
+        .filter(fk_user=request.user, is_active=True)
+        .order_by('id')
+    )
+    context = {
+        'businesses': _paginate(businesses, request, per_page=12),
+        'form': BusinessForm(),
+        'instructions': instructions,
+    }
     return render(request, 'business/business-list.html', context)
+
 
 @login_required
 def read_business_view(request, pk):
-    try:
-        business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
-        products = Product.objects.filter(
-            fk_business_id=business.id, 
-            fk_business__fk_user=request.user, 
-            is_active=True
-        ).order_by('-id')
-        
-        paginator = Paginator(products, 10)
-        num_products = products.count()
-        page = request.GET.get('page')
-        
-        try:
-            products = paginator.page(page)
-        except PageNotAnInteger:
-            products = paginator.page(1)
-        except EmptyPage:
-            products = paginator.page(paginator.num_pages)
-        
-        context = {
-            'business': business, 
-            'products': products,
-            'num_products': num_products,
-            'instructions': Instructions.objects.filter(is_active=True).order_by('-id')
-        }
-        
-        return render(request, 'business/business-overview.html', context)
-    except Exception as e:
-        logger.error(f"Error in read_business_view: {str(e)}")
-        messages.error(request, f"An error occurred: {str(e)}")
-        return HttpResponse(status=500) 
+    business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
+    products = (
+        Product.objects
+        .filter(fk_business=business, is_active=True)
+        .order_by('-id')
+    )
+    context = {
+        'business': business,
+        'products': _paginate(products, request, per_page=10),
+        'num_products': products.count(),
+        'instructions': Instructions.objects.filter(is_active=True).order_by('-id'),
+    }
+    return render(request, 'business/business-overview.html', context)
+
 
 @login_required
-def create_or_update_business_view(request, pk=None):
-    # Para crear negocio
-    if pk is None:
-        if request.method == 'POST':
-            try:
-                form = BusinessForm(request.POST, request.FILES)
-                
-                if form.is_valid():
-                    business = form.save(commit=False)
-                    business.fk_user = request.user
-                    business.last_updated = timezone.now()
-                    business.save()
-                    
-                    # Si es una petición AJAX, devolver JSON
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        return JsonResponse({
-                            'success': True, 
-                            'message': 'Negocio creado exitosamente!',
-                            'business_id': business.id
-                        })
-                    else:
-                        messages.success(request, 'Negocio creado exitosamente!')
-                        return redirect('business:business.list')
-                else:
-                    # Si hay errores en el formulario
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        return JsonResponse({
-                            'success': False, 
-                            'message': 'Por favor corrige los errores en el formulario',
-                            'errors': form.errors
-                        }, status=400)
-                    else:
-                        messages.error(request, 'Por favor corrige los errores en el formulario')
-                        return redirect('business:business.list')
-                        
-            except Exception as e:
-                logger.error(f"Error in create_or_update_business_view: {str(e)}")
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': False, 
-                        'message': f'Error interno del servidor: {str(e)}'
-                    }, status=500)
-                else:
-                    messages.error(request, f"An error occurred: {str(e)}")
-                    return redirect('business:business.list')
-        else:
-            # Método no permitido para crear
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Método no permitido'
-                }, status=405)
-            else:
-                return HttpResponse("Método no permitido", status=405)
-    
-    # Para actualizar negocio
-    else:
-        if request.method == 'POST':
-            try:
-                business_instance = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
-                form = BusinessForm(request.POST, request.FILES, instance=business_instance)
-                
-                if form.is_valid():
-                    business = form.save(commit=False)
-                    business.last_updated = timezone.now()
-                    business.save()
-                    
-                    # Si es una petición AJAX, devolver JSON
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        return JsonResponse({
-                            'success': True, 
-                            'message': 'Negocio actualizado exitosamente!',
-                            'business_id': business.id
-                        })
-                    else:
-                        messages.success(request, 'Negocio actualizado exitosamente!')
-                        return redirect('business:business.list')
-                else:
-                    # Si hay errores en el formulario
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        return JsonResponse({
-                            'success': False, 
-                            'message': 'Por favor corrige los errores en el formulario',
-                            'errors': form.errors
-                        }, status=400)
-                    else:
-                        messages.error(request, 'Por favor corrige los errores en el formulario')
-                        return redirect('business:business.list')
-                        
-            except Exception as e:
-                logger.error(f"Error in create_or_update_business_view: {str(e)}")
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': False, 
-                        'message': f'Error interno del servidor: {str(e)}'
-                    }, status=500)
-                else:
-                    messages.error(request, f"An error occurred: {str(e)}")
-                    return redirect('business:business.list')
-        else:
-            # Método no permitido para actualizar
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Método no permitido'
-                }, status=405)
-            else:
-                return HttpResponse("Método no permitido", status=405)
+def create_business_view(request):
+    if request.method != 'POST':
+        return _json_err('Método no permitido', 405) if _is_ajax(request) else HttpResponse(status=405)
+
+    form = BusinessForm(request.POST, request.FILES)
+    if not form.is_valid():
+        if _is_ajax(request):
+            return _json_err('Por favor corrige los errores en el formulario', errors=form.errors)
+        messages.error(request, 'Por favor corrige los errores en el formulario')
+        return redirect(_BUSINESS_LIST_URL)
+
+    business = form.save(commit=False)
+    business.fk_user = request.user
+    business.last_updated = timezone.now()
+    business.save()
+
+    if _is_ajax(request):
+        return _json_ok('Negocio creado exitosamente!', business_id=business.id)
+    messages.success(request, 'Negocio creado exitosamente!')
+    return redirect(_BUSINESS_LIST_URL)
+
+
+@login_required
+def update_business_view(request, pk):
+    if request.method != 'POST':
+        return _json_err('Método no permitido', 405) if _is_ajax(request) else HttpResponse(status=405)
+
+    business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
+    form = BusinessForm(request.POST, request.FILES, instance=business)
+    if not form.is_valid():
+        if _is_ajax(request):
+            return _json_err('Por favor corrige los errores en el formulario', errors=form.errors)
+        messages.error(request, 'Por favor corrige los errores en el formulario')
+        return redirect(_BUSINESS_LIST_URL)
+
+    saved = form.save(commit=False)
+    saved.last_updated = timezone.now()
+    saved.save()
+
+    if _is_ajax(request):
+        return _json_ok('Negocio actualizado exitosamente!', business_id=saved.id)
+    messages.success(request, 'Negocio actualizado exitosamente!')
+    return redirect(_BUSINESS_LIST_URL)
+
 
 @login_required
 def delete_business_view(request, pk):
-    if request.method == 'POST':
-        try:
-            business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
-            business.is_active = False  # Eliminación lógica (soft delete)
-            business.save(update_fields=['is_active'])
-            
-            # Si es una petición AJAX, devolver JSON
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Negocio eliminado exitosamente!'
-                })
-            else:
-                messages.success(request, "Negocio eliminado exitosamente!")
-                return redirect("business:business.list")
-                
-        except Exception as e:
-            logger.error(f"Error in delete_business_view: {str(e)}")
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False,
-                    'message': f'Error al eliminar el negocio: {str(e)}'
-                }, status=500)
-            else:
-                messages.error(request, f"An error occurred: {str(e)}")
-                return redirect("business:business.list")
-    else:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': False,
-                'message': 'Método no permitido. Solo POST es válido.'
-            }, status=405)
-        else:
-            messages.error(request, "Método de request inválido. Solo POST está permitido.")
-            return redirect("business:business.list")
+    if request.method != 'POST':
+        if _is_ajax(request):
+            return _json_err('Método no permitido. Solo POST es válido.', 405)
+        messages.error(request, 'Método de request inválido. Solo POST está permitido.')
+        return redirect(_BUSINESS_LIST_URL)
+
+    business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
+    business.is_active = False
+    business.save(update_fields=['is_active'])
+
+    if _is_ajax(request):
+        return _json_ok('Negocio eliminado exitosamente!')
+    messages.success(request, 'Negocio eliminado exitosamente!')
+    return redirect(_BUSINESS_LIST_URL)
+
 
 @login_required
 def get_business_details_view(request, pk):
-    """
-    CORREGIDA: Vista para obtener detalles de negocio para editar
-    Retorna datos en formato correcto para el frontend
-    """
-    try:
-        business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
-        
-        # Construir URL de imagen correctamente
-        image_url = business.get_photo_url()
-        
-        # CORREGIDO: Asegurar que los campos coincidan con el frontend
-        business_details = {
-            "id": business.id,
-            "name": business.name or "",  # Evitar None
-            "type": str(business.type),   # Convertir a string para el select
-            "location": business.location or "",  # Evitar None
-            "image_src": image_url,       # Campo correcto para imagen
-            "description": business.description or "",  # Evitar None
-            # Campos adicionales que podrían ser útiles
-            "date_created": business.date_created.isoformat() if business.date_created else None,
-            "last_updated": business.last_updated.isoformat() if business.last_updated else None,
-        }
-        
-        # Log para debugging
-        logger.info(f"Returning business details for ID {pk}: {business_details}")
-        
-        return JsonResponse(business_details)
-        
-    except Business.DoesNotExist:
-        logger.warning(f"Business with ID {pk} not found for user {request.user.id}")
-        return JsonResponse({
-            "error": "El negocio no existe o no tienes permisos para verlo"
-        }, status=404)
-    except Exception as e:
-        logger.error(f"Error in get_business_details_view for ID {pk}: {str(e)}")
-        return JsonResponse({
-            "error": "Error interno del servidor",
-            "details": str(e)  # Cambiar por settings.DEBUG check si es necesario
-        }, status=500)
+    business = get_object_or_404(Business, pk=pk, fk_user=request.user, is_active=True)
+    return JsonResponse({
+        'id': business.id,
+        'name': business.name or '',
+        'type': str(business.type),
+        'location': business.location or '',
+        'image_src': business.get_photo_url(),
+        'description': business.description or '',
+        'date_created': business.date_created.isoformat() if business.date_created else None,
+        'last_updated': business.last_updated.isoformat() if business.last_updated else None,
+    })

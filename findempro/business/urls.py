@@ -22,15 +22,15 @@ urlpatterns = [
     
     # Crear nuevo negocio
     path(
-        'create/', 
-        views.create_or_update_business_view, 
+        'create/',
+        views.create_business_view,
         name='business.create'
     ),
-    
+
     # Actualizar negocio existente
     path(
-        '<int:pk>/update/', 
-        views.create_or_update_business_view, 
+        '<int:pk>/update/',
+        views.update_business_view,
         name='business.update'
     ),
     
