@@ -1,4 +1,5 @@
 import re
+import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
@@ -22,6 +23,8 @@ from django.db import models
 
 # Set OpenAI API key
 openai.api_key = settings.OPENAI_API_KEY
+
+logger = logging.getLogger(__name__)
 
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
@@ -178,8 +181,7 @@ def variable_list(request):
     except Exception as e:
         # Log del error para debugging
         import traceback
-        print(f"Error en variable_list: {str(e)}")
-        print(traceback.format_exc())
+        logger.exception("Error en variable_list: %s", e)
         
         messages.error(request, f"Ocurrió un error al cargar las variables: {str(e)}")
         
@@ -238,7 +240,7 @@ def variable_overview(request, pk):
         return render(request, "variable/variable-overview.html", context)
         
     except Exception as e:
-        print(f"Error en variable_overview: {str(e)}")
+        logger.error(f"Error en variable_overview: {str(e)}")
         messages.error(request, f"Ocurrió un error al cargar la variable: {str(e)}")
         return redirect('variable:variable.list')
 
@@ -275,7 +277,7 @@ def create_or_update_variable_view(request, pk=None):
                             raise Exception("OpenAI API key not configured")
                             
                     except Exception as openai_error:
-                        print(f"OpenAI error: {openai_error}")
+                        logger.error(f"OpenAI error: {openai_error}", exc_info=True)
                         # Fallback: generar iniciales del nombre
                         words = variable_name.split()
                         initials = ''.join([word[0].upper() for word in words[:4] if word])
@@ -292,7 +294,7 @@ def create_or_update_variable_view(request, pk=None):
                 return JsonResponse({'success': False, 'errors': form.errors})
                 
         except Exception as e:
-            print(f"Error al guardar variable: {str(e)}")
+            logger.error(f"Error al guardar variable: {str(e)}")
             return JsonResponse({'success': False, 'error': 'Ocurrió un error al guardar la variable'})
     else:
         try:
@@ -310,7 +312,7 @@ def create_or_update_variable_view(request, pk=None):
             return render(request, 'variable/variable-form.html', context)
             
         except Exception as e:
-            print(f"Error al cargar formulario: {str(e)}")
+            logger.error(f"Error al cargar formulario: {str(e)}")
             messages.error(request, "Error al cargar el formulario")
             return redirect('variable:variable.list')
 
@@ -328,7 +330,7 @@ def delete_variable_view(request, pk):
             return HttpResponse("Método de petición inválido", status=405)
             
     except Exception as e:
-        print(f"Error al eliminar variable: {str(e)}")
+        logger.error(f"Error al eliminar variable: {str(e)}")
         messages.error(request, f"Ocurrió un error al eliminar la variable: {str(e)}")
         return redirect("variable:variable.list")
 
@@ -350,7 +352,7 @@ def get_variable_details_view(request, pk):
     except ObjectDoesNotExist:
         return JsonResponse({"error": "La variable no existe"}, status=404)
     except Exception as e:
-        print(f"Error al obtener detalles: {str(e)}")
+        logger.error(f"Error al obtener detalles: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 @login_required
@@ -391,7 +393,7 @@ def create_or_update_equation_view(request, pk=None):
                     return render(request, "variable/equation-form.html", context)
                     
         except Exception as e:
-            print(f"Error al guardar ecuación: {str(e)}")
+            logger.error(f"Error al guardar ecuación: {str(e)}")
             if request.headers.get('Content-Type') == 'application/json' or _is_ajax(request):
                 return JsonResponse({'success': False, 'error': 'Ocurrió un error al guardar la ecuación'})
             else:
@@ -415,7 +417,7 @@ def create_or_update_equation_view(request, pk=None):
             return render(request, 'variable/equation-form.html', context)
             
         except Exception as e:
-            print(f"Error al cargar formulario de ecuación: {str(e)}")
+            logger.error(f"Error al cargar formulario de ecuación: {str(e)}")
             messages.error(request, "Error al cargar el formulario")
             return redirect('variable:variable.list')
 
@@ -434,7 +436,7 @@ def delete_equation_view(request, pk):
             return redirect("variable:variable.list")
             
     except Exception as e:
-        print(f"Error al eliminar ecuación: {str(e)}")
+        logger.error(f"Error al eliminar ecuación: {str(e)}")
         messages.error(request, f"Ocurrió un error al eliminar la ecuación: {str(e)}")
         return redirect("variable:variable.list")
 
@@ -458,7 +460,7 @@ def get_equation_details(request, pk):
     except ObjectDoesNotExist:
         return JsonResponse({"error": "La ecuación no existe"}, status=404)
     except Exception as e:
-        print(f"Error al obtener detalles de ecuación: {str(e)}")
+        logger.error(f"Error al obtener detalles de ecuación: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 # SEGURIDAD: nombres alfabéticos permitidos en una ecuación de usuario.
@@ -532,7 +534,7 @@ def generate_variable_questions(request, variable):
             question = [f"¿Cuál es el valor para {variable.name}?"]
             
     except Exception as e:
-        print(f"Error generando pregunta: {e}")
+        logger.error(f"Error generando pregunta: {e}", exc_info=True)
         # Fallback question
         question = [f"¿Cuál es el valor para {variable.name}?"]
     
@@ -556,6 +558,6 @@ def generate_questions_for_variables(request):
         return render(request, "questionary/questionary-main.html", context)
         
     except Exception as e:
-        print(f"Error generando preguntas: {str(e)}")
+        logger.error(f"Error generando preguntas: {str(e)}")
         messages.error(request, "Error al generar las preguntas")
         return redirect('variable:variable.list')

@@ -23,9 +23,16 @@ class Variable(models.Model):
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the variable was created')
     last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the variable was last updated')
 
+    class Meta:
+        # Índice compuesto para el patrón caliente de variable_list:
+        # filter(is_active=True, fk_product__in=...).
+        indexes = [
+            models.Index(fields=['fk_product', 'is_active'], name='idx_variable_prod_active'),
+        ]
+
     def __str__(self):
         return self.name
-    
+
     def get_photo_url(self):
         if self.image_src and hasattr(self.image_src, 'url'):
             return self.image_src.url
@@ -99,7 +106,13 @@ class Equation(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='Active', help_text='Whether the equation is active or not')
     date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Date Created', help_text='The date the equation was created')
     last_updated = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='Last Updated', help_text='The date the equation was last updated')
-    
+
+    class Meta:
+        # Las ecuaciones se filtran por área + estado en el motor de simulación.
+        indexes = [
+            models.Index(fields=['fk_area', 'is_active'], name='idx_equation_area_active'),
+        ]
+
     def __str__(self):
         return self.name
 

@@ -14,6 +14,11 @@ class Questionary(models.Model):
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['fk_product', 'is_active'], name='idx_quest_prod_active'),
+        ]
+
     def __str__(self):
         return self.questionary
 
@@ -28,6 +33,11 @@ class QuestionaryResult(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
     last_updated = models.DateTimeField(auto_now=True, help_text='The date the question was last updated')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['fk_questionary', 'is_active'], name='idx_questresult_q_active'),
+        ]
 
     def __str__(self):
         return f"Resultado: {self.fk_questionary}"
@@ -53,6 +63,11 @@ class Question(models.Model):
     date_created = models.DateTimeField(default=timezone.now, help_text='The date the question was created')
     last_updated = models.DateTimeField(default=timezone.now, help_text='The date the question was last updated')
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['fk_questionary', 'is_active'], name='idx_question_q_active'),
+        ]
+
     def __str__(self):
         return self.question
 
@@ -67,6 +82,12 @@ class Answer(models.Model):
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['fk_questionary_result', 'is_active'], name='idx_answer_qresult_active'),
+            models.Index(fields=['fk_question', 'is_active'], name='idx_answer_question_active'),
+        ]
 
     def __str__(self):
         return self.answer
